@@ -1,4 +1,4 @@
-# Getting Started with IOTA Wallet Python binding
+# Getting Started with IOTA Wallet Python Binding
 
 ## Security
 :::warning

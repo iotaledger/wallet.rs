@@ -13,7 +13,7 @@ Please make sure you follow our [backup and security recommendations](https://ch
 :::
 
 
-## Account manager and individual accounts
+## Account Manager and Individual Accounts
 You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
 The following example creates a new database and account:

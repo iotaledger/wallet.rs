@@ -9,7 +9,7 @@ To run an example, you can use the following command, replacing `transfer` with 
 cargo run --example transfer # execute the `transfer` example
 ```
 
-## Backup and restore example
+## Backup and Restore Example
 
 1. Create an account manager and set a password:
 ```rust

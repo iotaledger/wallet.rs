@@ -12,7 +12,7 @@ You can run a local server to run the documentation page.
 cargo install mdbook
 ```
 
-### Run it
+### Run It
 
 ```bash
 mdbook serve

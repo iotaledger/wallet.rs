@@ -6,5 +6,5 @@ The [IOTA StackExchange](https://iota.stackexchange.com/) a nice tool for develo
 
 If there isn't a solution at the moment, you can submit your question and share it on the #clients-discussion channel on [Discord](https://discord.iota.org).
 
-## Joining the discussion
+## Joining the Discussion
 If you want to get involved in discussions about this library, or you're looking for support, you can visit the #clients-discussion channel on [Discord](https://discord.iota.org).

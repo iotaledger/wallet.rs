@@ -13,7 +13,7 @@ It is not recommended to store passwords on the host's environment variables, or
 Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
 :::
 
-## Account manager and individual accounts
+## Account Manager and Individual Accounts
 You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
 The following example creates a new database and account:
@@ -99,7 +99,7 @@ The most common methods of `account` instance are:
 * `account.balance()`: returns the balance for the given account.
 * `account.sync()`: sync the account information with the tangle.
 
-## Generating address(es)
+## Generating Address(es)
 Each account can have multiple addresses. Addresses are generated deterministically based on the account and address index. This means that the combination of account and index uniquely identifies the given address.
 
 There are two types of addresses, _internal_ and _public_ (external), and each set of addresses is independent of each other and has independent `index` id.
@@ -146,7 +146,7 @@ async function run() {
 run()
 ```
 
-## Checking balance
+## Checking Balance
 Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
 
 ![faucet screenshot](../../../static/img/libraries/screenshot_faucet.png)
