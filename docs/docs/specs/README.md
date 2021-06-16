@@ -969,7 +969,7 @@ What follows is an Entity Relationship Diagram (ERD)  that shows the logical rep
 
 A `storage adapter` is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
-![Entity Relationship Diagram](../../static/img/specs/erd.jpg)
+![Storage - Entity Relationship Diagram](../../static/img/specs/erd.jpg)
 
 ## Storage Adapter
 

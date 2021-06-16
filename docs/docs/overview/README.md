@@ -5,4 +5,4 @@ The wallet library is a stateful package with a standardized interface for devel
 See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/master/specs/wallet-ENGINEERING-SPEC-0000.md).
 
 ## High Level Layered Overview
-![iota layers overview](../../static/img/overview/iota_layers_overview.svg)
+![High Level Layered Overview](../../static/img/overview/iota_layers_overview.svg)

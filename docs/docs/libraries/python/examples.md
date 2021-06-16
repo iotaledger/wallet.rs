@@ -220,7 +220,7 @@ You can find detailed information about generating addresses at the [Developer g
 ## Checking the balance
 Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
 
-![faucet screenshot](../../../static/img/libraries/screenshot_faucet.png)
+![IOTA Faucet Service](../../../static/img/libraries/screenshot_faucet.png)
 
 You can use the following example to sync your accounts and retrieve their balances.
 

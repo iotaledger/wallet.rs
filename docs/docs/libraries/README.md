@@ -19,4 +19,4 @@ The library is based on a [derivation for multiple accounts from a single seed](
 
 The following image illustrates the relationships between seed, accounts and addresses:
 
-![accounts](../../static/img/libraries/accounts_addresses.svg)
+![Seed, accounts and Addresses](../../static/img/libraries/accounts_addresses.svg)
