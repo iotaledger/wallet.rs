@@ -7,16 +7,16 @@ Initializes the logging system.
 
 | Param         | Type                     | Default                | Description                             |
 | ------------- | ------------------------ | ---------------------- | --------------------------------------- |
-| color_enabled | <code>boolean</code>     | <code>undefined</code> | Whether to enable colored output or not |
-| outputs       | <code>LogOutput[]</code> | <code>undefined</code> | The log outputs                         |
+| color_enabled | `boolean`     | `undefined` | Whether to enable colored output or not |
+| outputs       | `LogOutput[]` | `undefined` | The log outputs                         |
 
 ### LogOutput
 
 | Param          | Type                  | Default                | Description                                          |
 | -------------- | --------------------- | ---------------------- | ---------------------------------------------------- |
-| name           | <code>string</code>   | <code>undefined</code> | 'stdout' or a path to a file                         |
-| level_filter   | <code>string</code>   | <code>'info'</code>    | The maximum log level that this output accepts       |
-| target_filters | <code>string[]</code> | <code>[]</code>        | Filters on the log target (library and module names) |
+| name           | `string`   | `undefined` | 'stdout' or a path to a file                         |
+| level_filter   | `string`   | `'info'`    | The maximum log level that this output accepts       |
+| target_filters | `string[]` | `[]`        | Filters on the log target (library and module names) |
 
 ## addEventListener(event, cb)
 
@@ -40,22 +40,22 @@ Creates a new instance of the AccountManager.
 
 | Param                              | Type                 | Default                | Description                                                                               |
 | ---------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| [ManagerOptions](#manageroptions)  | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [ManagerOptions](#manageroptions)  | `object`  | `undefined` | The options to configure the account manager                                              |
 
 #### ManagerOptions 
 You can use any of the following parameters when constructing the ManagerOptions. All the parameters are optional.   
 
 | Param                            | Type                 | Default                | Description                                                                               |
 | -------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| storagePath                      | <code>string</code>  | <code>undefined</code> | The path where the database file will be saved                                            |
-| storagePassword                  | <code>string</code>  | <code>undefined</code> | The storage password                                                                      |
-| outputConsolidationThreshold     | <code>number</code>  | <code>100</code>       | The number of outputs an address must have to trigger the automatic consolidation process |
-| automaticOutputConsolidation     | <code>boolean</code> | <code>true</code>      | Disables the automatic output consolidation if false                                      |
-| syncSpentOutputs                 | <code>boolean</code> | <code>false</code>     | Enables fetching spent output history on account sync                                     |
-| persistEvents                    | <code>boolean</code> | <code>false</code>     | Enables event persistence                                                                 |
-| allowCreateMultipleEmptyAccounts | <code>boolean</code> | <code>false</code>     | Enables creating accounts with latest account being empty                                 |
-| skipPolling                      | <code>boolean</code> | <code>false</code>     | Enables creating accounts without automatic polling (background syncing)                  |
-| pollingInterval                  | <code>number</code>  | <code>30</code>        | Sets the polling interval in seconds                                                      |
+| storagePath                      | `string`  | `undefined` | The path where the database file will be saved                                            |
+| storagePassword                  | `string`  | `undefined` | The storage password                                                                      |
+| outputConsolidationThreshold     | `number`  | `100`       | The number of outputs an address must have to trigger the automatic consolidation process |
+| automaticOutputConsolidation     | `boolean` | `true`      | Disables the automatic output consolidation if false                                      |
+| syncSpentOutputs                 | `boolean` | `false`     | Enables fetching spent output history on account sync                                     |
+| persistEvents                    | `boolean` | `false`     | Enables event persistence                                                                 |
+| allowCreateMultipleEmptyAccounts | `boolean` | `false`     | Enables creating accounts with latest account being empty                                 |
+| skipPolling                      | `boolean` | `false`     | Enables creating accounts without automatic polling (background syncing)                  |
+| pollingInterval                  | `number`  | `30`        | Sets the polling interval in seconds                                                      |
 
 ### setStrongholdPassword(password): void
 
@@ -63,7 +63,7 @@ Sets the Stronghold password and initialises it.
 
 | Param    | Type                | Default                | Description                      |
 | -------- | ------------------- | ---------------------- | -------------------------------- |
-| password | <code>string</code> | <code>undefined</code> | The Stronghold snapshot password |
+| password | `string` | `undefined` | The Stronghold snapshot password |
 
 ### changeStrongholdPassword(currentPassword, newPassword): void
 
@@ -71,8 +71,8 @@ Changes the Stronghold password.
 
 | Param           | Type                | Default                | Description                     |
 | --------------- | ------------------- | ---------------------- | ------------------------------- |
-| currentPassword | <code>string</code> | <code>undefined</code> | The current Stronghold password |
-| newPassword     | <code>string</code> | <code>undefined</code> | The new Stronghold password     |
+| currentPassword | `string` | `undefined` | The current Stronghold password |
+| newPassword     | `string` | `undefined` | The new Stronghold password     |
 
 ### createAccount(account): Account
 
@@ -80,12 +80,12 @@ Creates a new account.
 
 | Param                 | Type                                         | Default                           | Description                                              |
 | --------------------- | -------------------------------------------- | --------------------------------- | -------------------------------------------------------- |
-| account               | <code>object</code>                          | <code>{}</code>                   | The account to be created                                |
-| account.clientOptions | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code>            | The node configuration                                   |
-| [account.mnemonic]    | <code>string</code>                          | <code>undefined</code>            | The account BIP39 mnemonic                               |
-| [account.alias]       | <code>string</code>                          | <code>Account ${index + 1}</code> | The account alias                                        |
-| [account.createdAt]   | <code>string</code>                          | the current date and time         | The ISO 8601 date string of the account creation         |
-| [account.signerType]  | <code>number</code>                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
+| account               | `object`                          | `{}`                   | The account to be created                                |
+| account.clientOptions | `[ClientOptions](#clientoptions)` | `undefined`            | The node configuration                                   |
+| [account.mnemonic]    | `string`                          | `undefined`            | The account BIP39 mnemonic                               |
+| [account.alias]       | `string`                          | `Account ${index + 1}` | The account alias                                        |
+| [account.createdAt]   | `string`                          | the current date and time         | The ISO 8601 date string of the account creation         |
+| [account.signerType]  | `number`                          | 1 = Stronghold                    | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
 
 ### getAccount(accountId)
 
@@ -93,7 +93,7 @@ Gets the account with the given identifier or index.
 
 | Param     | Type                          | Default           | Description                             |
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
+| accountId | `string \| number` | `null` | The account identifier or account index |
 
 Returns the associated Account instance or undefined if the account wasn't found.
 
@@ -103,7 +103,7 @@ Gets the account with the given alias (case-insensitive).
 
 | Param | Type                | Default           | Description       |
 | ----- | ------------------- | ----------------- | ----------------- |
-| alias | <code>string</code> | <code>null</code> | The account alias |
+| alias | `string` | `null` | The account alias |
 
 Returns the associated Account instance or undefined if the account wasn't found.
 
@@ -119,7 +119,7 @@ Removes the account with the given identifier or index.
 
 | Param     | Type                          | Default           | Description                             |
 | --------- | ----------------------------- | ----------------- | --------------------------------------- |
-| accountId | <code>string \| number</code> | <code>null</code> | The account identifier or account index |
+| accountId | `string \| number` | `null` | The account identifier or account index |
 
 
 ### startBackgroundSync(pollingInterval, automaticOutputConsolidation): Promise<void/>
@@ -128,8 +128,8 @@ Starts the background polling and MQTT monitoring.
 
 | Param                        | Type                 | Default           | Description                                      |
 | ---------------------------- | -------------------- | ----------------- | ------------------------------------------------ |
-| pollingInterval              | <code>number</code>  | <code>null</code> | The polling interval in seconds                  |
-| automaticOutputConsolidation | <code>boolean</code> | <code>null</code> | If outputs should get consolidated automatically |
+| pollingInterval              | `number`  | `null` | The polling interval in seconds                  |
+| automaticOutputConsolidation | `boolean` | `null` | If outputs should get consolidated automatically |
 
 ### stop_background_sync(): void
 
@@ -141,9 +141,9 @@ Synchronize all stored accounts with the Tangle.
 
 | Param                  | Type                | Default                           | Description                                           |
 | ---------------------- | ------------------- | --------------------------------- | ----------------------------------------------------- |
-| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                                      |
-| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first account address to sync        |
-| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check on each account sync |
+| [options]              | `object` | `{}`                   | The sync options                                      |
+| [options.addressIndex] | `number` | `latest address index` | The index of the first account address to sync        |
+| [options.gapLimit]     | `number` | `10`                   | The number of addresses to check on each account sync |
 
 Returns A promise resolving to an array of [SyncedAccount](#syncedaccount).
 
@@ -153,9 +153,9 @@ Transfers an amount from one sub-account to another.
 
 | Param       | Type                             | Default                | Description             |
 | ----------- | -------------------------------- | ---------------------- | ----------------------- |
-| fromAccount | <code>[Account](#account)</code> | <code>null</code>      | The source account      |
-| toAccount   | <code>[Account](#account)</code> | <code>null</code>      | The destination account |
-| amount      | <code>number</code>              | <code>undefined</code> | The transfer amount     |
+| fromAccount | `[Account](#account)` | `null`      | The source account      |
+| toAccount   | `[Account](#account)` | `null`      | The destination account |
+| amount      | `number`              | `undefined` | The transfer amount     |
 
 Returns A promise resolving to the transfer's Message.
 
@@ -165,8 +165,8 @@ Backups the database.
 
 | Param       | Type                | Default                | Description                    |
 | ----------- | ------------------- | ---------------------- | ------------------------------ |
-| destination | <code>string</code> | <code>undefined</code> | The path to the backup file    |
-| password    | <code>string</code> | <code>undefined</code> | The backup Stronghold password |
+| destination | `string` | `undefined` | The path to the backup file    |
+| password    | `string` | `undefined` | The backup Stronghold password |
 
 Returns The full path to the backup file.
 
@@ -176,8 +176,8 @@ Imports a database file.
 
 | Param    | Type                | Default                | Description                    |
 | -------- | ------------------- | ---------------------- | ------------------------------ |
-| source   | <code>string</code> | <code>undefined</code> | The path to the backup file    |
-| password | <code>string</code> | <code>undefined</code> | The backup Stronghold password |
+| source   | `string` | `undefined` | The path to the backup file    |
+| password | `string` | `undefined` | The backup Stronghold password |
 
 ### isLatestAddressUnused()
 
@@ -191,7 +191,7 @@ Updates the client options for all accounts.
 
 | Param   | Type                                         | Default           | Description                    |
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
-| options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+| options | `[ClientOptions](#clientoptions)` | `null` | The new account client options |
 
 ### generateMigrationAddress(address)
 
@@ -199,7 +199,7 @@ Convert a Ed25519 to a Tryte migration address with checksum (last 9 Trytes)
 
 | Param   | Type                | Default           | Description                    |
 | ------- | ------------------- | ----------------- | ------------------------------ |
-| address | <code>string</code> | <code>null</code> | Bech32 encoded Ed25519 address |
+| address | `string` | `null` | Bech32 encoded Ed25519 address |
 
 ### getBalanceChangeEvents([count, skip, fromTimestamp])
 
@@ -207,9 +207,9 @@ Gets the persisted balance change events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [count]         | `number` | `0`    | The number of events to return (`0` to return all)           |
+| [skip]          | `number` | `0`    | The number of events to skip                                 |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { indexationId: string, accountId: string, messageId?: string, remainder?: boolean, balanceChange: { spent: number, received: number } }
 
@@ -219,7 +219,7 @@ Gets the number of persisted balance change events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### getTransactionConfirmationEvents([count, skip, fromTimestamp])
 
@@ -227,9 +227,9 @@ Gets the persisted transaction confirmation change events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [count]         | `number` | `0`    | The number of events to return (`0` to return all)           |
+| [skip]          | `number` | `0`    | The number of events to skip                                 |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
 
@@ -239,7 +239,7 @@ Gets the number of persisted transaction confirmation change events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### getNewTransactionEvents([count, skip, fromTimestamp])
 
@@ -247,9 +247,9 @@ Gets the persisted new transaction events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [count]         | `number` | `0`    | The number of events to return (`0` to return all)           |
+| [skip]          | `number` | `0`    | The number of events to skip                                 |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
@@ -259,7 +259,7 @@ Gets the number of persisted new transaction events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### getReattachmentEvents([count, skip, fromTimestamp])
 
@@ -267,9 +267,9 @@ Gets the persisted transaction reattachment events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [count]         | `number` | `0`    | The number of events to return (`0` to return all)           |
+| [skip]          | `number` | `0`    | The number of events to skip                                 |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
@@ -279,7 +279,7 @@ Gets the number of persisted transaction reattachment events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### getBroadcastEvents([count, skip, fromTimestamp])
 
@@ -287,9 +287,9 @@ Gets the persisted transaction broadcast events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [count]         | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| [skip]          | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [count]         | `number` | `0`    | The number of events to return (`0` to return all)           |
+| [skip]          | `number` | `0`    | The number of events to skip                                 |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { indexationId: string, accountId: string, message: Message }
 
@@ -299,7 +299,7 @@ Gets the number of persisted transaction broadcast events.
 
 | Param           | Type                | Default           | Description                                                  |
 | --------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| [fromTimestamp] | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| [fromTimestamp] | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ## SyncedAccount
 
@@ -331,7 +331,7 @@ Returns: the number of messages associated with the account.
 
 | Param  | Type                | Default           | Description                                                                              |
 | ------ | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| [type] | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+| [type] | `number` | `null` | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
 
 ### listMessages([count, from, type])
 
@@ -339,9 +339,9 @@ Returns: the account's messages.
 
 | Param   | Type                | Default           | Description                                                                              |
 | ------- | ------------------- | ----------------- | ---------------------------------------------------------------------------------------- |
-| [count] | <code>number</code> | <code>0</code>    | The number of messages to return (`0` to return all)                                     |
-| [skip]  | <code>number</code> | <code>0</code>    | The number of messages to skip                                                           |
-| [type]  | <code>number</code> | <code>null</code> | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+| [count] | `number` | `0`    | The number of messages to return (`0` to return all)                                     |
+| [skip]  | `number` | `0`    | The number of messages to skip                                                           |
+| [type]  | `number` | `null` | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
 
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
@@ -350,7 +350,7 @@ Returns: the account's addresses.
 
 | Param     | Type                 | Default           | Description                 |
 | --------- | -------------------- | ----------------- | --------------------------- |
-| [unspent] | <code>boolean</code> | <code>null</code> | The unspent status filter |
+| [unspent] | `boolean` | `null` | The unspent status filter |
 
 Address object: { address: string, keyIndex: number }
 
@@ -360,9 +360,9 @@ Synchronizes the account with the Tangle.
 
 | Param                  | Type                | Default                           | Description                            |
 | ---------------------- | ------------------- | --------------------------------- | -------------------------------------- |
-| [options]              | <code>object</code> | <code>{}</code>                   | The sync options                       |
-| [options.addressIndex] | <code>number</code> | <code>latest address index</code> | The index of the first address to sync |
-| [options.gapLimit]     | <code>number</code> | <code>10</code>                   | The number of addresses to check       |
+| [options]              | `object` | `{}`                   | The sync options                       |
+| [options.addressIndex] | `number` | `latest address index` | The index of the first address to sync |
+| [options.gapLimit]     | `number` | `10`                   | The number of addresses to check       |
 
 Returns: a [SyncedAccount](#syncedaccount) instance.
 
@@ -372,16 +372,16 @@ Send funds to the given address.
 
 | Param   | Type                         | Default                | Description                               |
 | ------- | ---------------------------- | ---------------------- | ----------------------------------------- |
-| address | <code>string</code>          | <code>null</code>      | The bech32 string of the transfer address |
-| amount  | <code>number</code>          | <code>undefined</code> | The transfer amount                       |
-| options | <code>TransferOptions</code> | <code>undefined</code> | The transfer options                      |
+| address | `string`          | `null`      | The bech32 string of the transfer address |
+| amount  | `number`          | `undefined` | The transfer amount                       |
+| options | `TransferOptions` | `undefined` | The transfer options                      |
 
 #### TransferOptions
 
 | Param                  | Type                                              | Default           | Description                                        |
 | ---------------------- | ------------------------------------------------- | ----------------- | -------------------------------------------------- |
-| remainderValueStrategy | <code>RemainderValueStrategy</code>               | <code>null</code> | The strategy to use for the remainder value if any |
-| indexation             | <code>{ index: string, data?: Uint8Array }</code> | <code>null</code> | Message indexation                                 |
+| remainderValueStrategy | `RemainderValueStrategy`               | `null` | The strategy to use for the remainder value if any |
+| indexation             | `{ index: string, data?: Uint8Array }` | `null` | Message indexation                                 |
 
 #### RemainderValueStrategy
 
@@ -400,8 +400,8 @@ Gets information about the node.
 
 | Param   | Type                      | Default                                        | Description                    |
 | ------- | ------------------------- | ---------------------------------------------- | --------------------- |
-| url     | <code>string</code>       |<code>Node from client options</code>           | The node url          |
-| auth    | <code>Auth</code>         | <code>undefined</code>                         | The node auth options |
+| url     | `string`       |`Node from client options`           | The node url          |
+| auth    | `Auth`         | `undefined`                         | The node auth options |
 
 Returns: the [NodeInfoWrapper](#nodeinfowrapper)
 
@@ -409,26 +409,26 @@ Returns: the [NodeInfoWrapper](#nodeinfowrapper)
 
 | Param                  | Type                                              | Default                               | Description    |
 | ---------------------- | ------------------------------------------------- | ------------------------------------- | -------------- |
-| url                    | <code>string</code>                               | <code>Node from client options</code> | The node url   |
-| nodeinfo               | [NodeInfo](#nodeinfo)                             | <code>null</code>                     | The node info  |
+| url                    | `string`                               | `Node from client options` | The node url   |
+| nodeinfo               | [NodeInfo](#nodeinfo)                             | `null`                     | The node info  |
 
 ##### NodeInfo
 | Param                           | Type                              | Default              | Description                                        |
 | ------------------------------- | --------------------------------- | -------------------- | -------------------------------------------------- |
-| [name]                          | <code>string</code>               | <code>null</code>    |                                                    |
-| [version]                       | <code>string</code>               | <code>null</code>    |                                                    |
-| [isHealthy]                     | <code>boolean</code>              | <code>null</code>    |                                                    |
-| [networkId]                     | <code>number</code>               | <code>null</code>    |                                                    |
-| [bech32HRP]                     | <code>string</code>               | <code>null</code>    |                                                    |
-| [minPoWScore]                   | <code>number</code>               | <code>null</code>    |                                                    |
-| [messagesPerSecond]             | <code>number</code>               | <code>null</code>    |                                                    |
-| [referencedMessagesPerSecond]   | <code>number</code>               | <code>null</code>    |                                                    |
-| [referencedRate]                | <code>number</code>               | <code>null</code>    |                                                    |            
-| [latestMilestoneTimestamp]      | <code>number</code>               | <code>null</code>    |                                                    |            
-| [latestMilestoneIndex]          | <code>number</code>               | <code>null</code>    |                                                    |            
-| [confirmedMilestoneIndex]       | <code>number</code>               | <code>null</code>    |                                                    |            
-| [pruningIndex]                  | <code>number</code>               | <code>null</code>    |                                                    |            
-| [features]                      | <code>string[]</code>             | <code>null</code>    |                                                    |
+| [name]                          | `string`               | `null`    |                                                    |
+| [version]                       | `string`               | `null`    |                                                    |
+| [isHealthy]                     | `boolean`              | `null`    |                                                    |
+| [networkId]                     | `number`               | `null`    |                                                    |
+| [bech32HRP]                     | `string`               | `null`    |                                                    |
+| [minPoWScore]                   | `number`               | `null`    |                                                    |
+| [messagesPerSecond]             | `number`               | `null`    |                                                    |
+| [referencedMessagesPerSecond]   | `number`               | `null`    |                                                    |
+| [referencedRate]                | `number`               | `null`    |                                                    |            
+| [latestMilestoneTimestamp]      | `number`               | `null`    |                                                    |            
+| [latestMilestoneIndex]          | `number`               | `null`    |                                                    |            
+| [confirmedMilestoneIndex]       | `number`               | `null`    |                                                    |            
+| [pruningIndex]                  | `number`               | `null`    |                                                    |            
+| [features]                      | `string[]`             | `null`    |                                                    |
 
 ### retry(messageId)
 
@@ -436,7 +436,7 @@ Retries (promotes or reattaches) the given message.
 
 | Param     | Type                | Default           | Description              |
 | --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+| messageId | `string` | `null` | The message's identifier |
 
 ### reattach(messageId)
 
@@ -444,7 +444,7 @@ Reattach the given message.
 
 | Param     | Type                | Default           | Description              |
 | --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+| messageId | `string` | `null` | The message's identifier |
 
 ### promote(messageId)
 
@@ -452,7 +452,7 @@ Promote the given message.
 
 | Param     | Type                | Default           | Description              |
 | --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+| messageId | `string` | `null` | The message's identifier |
 
 ### consolidateOutputs()
 
@@ -470,7 +470,7 @@ Updates the account alias.
 
 | Param | Type                | Default           | Description           |
 | ----- | ------------------- | ----------------- | --------------------- |
-| alias | <code>string</code> | <code>null</code> | The new account alias |
+| alias | `string` | `null` | The new account alias |
 
 ### setClientOptions(options)
 
@@ -478,7 +478,7 @@ Updates the account client options.
 
 | Param   | Type                                         | Default           | Description                    |
 | ------- | -------------------------------------------- | ----------------- | ------------------------------ |
-| options | <code>[ClientOptions](#clientoptions)</code> | <code>null</code> | The new account client options |
+| options | `[ClientOptions](#clientoptions)` | `null` | The new account client options |
 
 ### getMessage(messageId)
 
@@ -486,7 +486,7 @@ Gets the message associated with the given identifier.
 
 | Param     | Type                | Default           | Description              |
 | --------- | ------------------- | ----------------- | ------------------------ |
-| messageId | <code>string</code> | <code>null</code> | The message's identifier |
+| messageId | `string` | `null` | The message's identifier |
 
 ### getAddress(addressBech32)
 
@@ -494,7 +494,7 @@ Gets the address object by its bech32 representation.
 
 | Param         | Type                | Default           | Description                       |
 | ------------- | ------------------- | ----------------- | --------------------------------- |
-| addressBech32 | <code>string</code> | <code>null</code> | The address bech32 representation |
+| addressBech32 | `string` | `null` | The address bech32 representation |
 
 ### generateAddress()
 
@@ -502,7 +502,7 @@ Generates a new unused address and returns it.
 
 | Param  | Type                | Default                | Description             |
 | ------ | ------------------- | ---------------------- | ----------------------- |
-| amount | <code>number</code> | <code>undefined</code> | The amount of addresses |
+| amount | `number` | `undefined` | The amount of addresses |
 
 ### latestAddress()
 
@@ -517,15 +517,15 @@ which is an address without balance.
 
 | Field               | Type                             | Default                | Description                                                                                              |
 | ------------------- | -------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
-| [network]           | <code>number</code>              | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
-| [primaryNode]       | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first                                                                     |
-| [primaryPoWNode]    | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first when using remote PoW, will be used before primaryNode              |
-| [node]              | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to connect to                                                                                 |
-| [nodes]             | <code>NodeUrl | [Node](#node)[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
-| [quorumSize]        | <code>number</code>              | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
-| [quorumThreshold]   | <code>number</code>              | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
-| [localPow]          | <code>boolean</code>             | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
-| [MqttBrokerOptions] | <code>MqttBrokerOptions</code>   | <code>undefined</code> | Options for the MQTT broker                                                                              |
+| [network]           | `number`              | `undefined` | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
+| [primaryNode]       | `NodeUrl | [Node](#node)`   | `undefined` | A node URL to alway connect to first                                                                     |
+| [primaryPoWNode]    | `NodeUrl | [Node](#node)`   | `undefined` | A node URL to alway connect to first when using remote PoW, will be used before primaryNode              |
+| [node]              | `NodeUrl | [Node](#node)`   | `undefined` | A node URL to connect to                                                                                 |
+| [nodes]             | `NodeUrl | [Node](#node)[]` | `undefined` | A list node URL to connect to                                                                            |
+| [quorumSize]        | `number`              | `undefined` | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
+| [quorumThreshold]   | `number`              | `undefined` | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
+| [localPow]          | `boolean`             | `true`      | Whether to use local or remote PoW.                                                                      |
+| [MqttBrokerOptions] | `MqttBrokerOptions`   | `undefined` | Options for the MQTT broker                                                                              |
 
 ## MqttBrokerOptions
 
@@ -533,18 +533,18 @@ All fields are optional.
 
 | Field                   | Type                | Description                                                                                           |
 | ----------------------- | ------------------- | ----------------------------------------------------------------------------------------------------- |
-| automaticDisconnect     | <code>boolean</code> | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
-| timeout                 | <code>number</code> | MQTT connection timeout in seconds                                                                     |
-| useWs                   | <code>boolean</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
-| maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
-| port                    | <code>number</code> | Defines the port to be used for the MQTT connection                                                   |
+| automaticDisconnect     | `boolean` | Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not. |
+| timeout                 | `number` | MQTT connection timeout in seconds                                                                     |
+| useWs                   | `boolean`   | Defines if websockets should be used (true) or TCP (false)                                            |
+| maxReconnectionAttempts | `number` | Defines the maximum reconnection attempts before it returns an error                                  |
+| port                    | `number` | Defines the port to be used for the MQTT connection                                                   |
 
 ### Auth
 | Field      | Type                 | Default                | Description                                |
 | ---------- | -------------------- | ---------------------- | ------------------------------------------ |
-| [jwt]      | <code>string</code>  | <code>undefined</code> | Optional JSON Web Token.                   |
-| [username] | <code>string</code>  | <code>undefined</code> | Optional name for basic authentication     |
-| [password] | <code>string</code>  | <code>undefined</code> | Optional password for basic authentication |
+| [jwt]      | `string`  | `undefined` | Optional JSON Web Token.                   |
+| [username] | `string`  | `undefined` | Optional name for basic authentication     |
+| [password] | `string`  | `undefined` | Optional password for basic authentication |
 
 ### Node
 
@@ -552,6 +552,6 @@ NodeUrl = string
 
 | Field      | Type                 | Default                | Description                                |
 | ---------- | -------------------- | ---------------------- | ------------------------------------------ |
-| [url]      | <code>NodeUrl</code> | <code>undefined</code> | Node url                                   |
-| [auth]     | <code>Auth</code>    | <code>undefined</code> | Optional authentication options            |
-| [disabled] | <code>boolean</code> | <code>false</code>     | Optional password for basic authentication |
+| [url]      | `NodeUrl` | `undefined` | Node url                                   |
+| [auth]     | `Auth`    | `undefined` | Optional authentication options            |
+| [disabled] | `boolean` | `false`     | Optional password for basic authentication |

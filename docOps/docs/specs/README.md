@@ -28,16 +28,16 @@ Account configuration or initialization object. It should support parameters acc
 <table>
   <tr>
     <td>
-      <strong>Property</strong>
+      *Property*
     </td>
     <td>
-      <strong>Required</strong>
+      *Required*
     </td>
     <td>
-      <strong>Type</strong>
+      *Type*
     </td>
     <td>
-      <strong>Description</strong>
+      *Description*
     </td>
   </tr>
   <tr>
@@ -62,7 +62,7 @@ Account configuration or initialization object. It should support parameters acc
     <td>alias</td>
     <td>&#10008;</td>
     <td>string</td>
-    <td>Account name. If not provided, <code>Account + $&#x7B;index}</code> should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
+    <td>Account name. If not provided, `Account + $&#x7B;index}` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
   </tr>
   <tr>
     <td>pow</td>
@@ -136,10 +136,10 @@ Account configuration or initialization object. It should support parameters acc
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>id</td>
@@ -255,10 +255,10 @@ Account configuration or initialization object. It should support parameters acc
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>deposit_address</td>
@@ -284,10 +284,10 @@ Account configuration or initialization object. It should support parameters acc
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>accounts</td>
@@ -351,10 +351,10 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>address</td>
@@ -392,10 +392,10 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>url</td>
@@ -433,10 +433,10 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>format(type: string):string</td>
@@ -456,10 +456,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>amount</td>
@@ -485,10 +485,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>with_denomination():string</td>
@@ -508,16 +508,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Input type. Defaults to <code>0</code>.</td>
+    <td>Input type. Defaults to `0`.</td>
   </tr>
   <tr>
     <td>id</td>
@@ -537,22 +537,22 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>0</code> to denote an Ed25519 address.</td>
+    <td>Set to value `0` to denote an Ed25519 address.</td>
   </tr>
   <tr>
     <td>address</td>
     <td>&#10004;</td>
     <td>string</td>
-    <td>If type is set to <code>0</code>, it should contain an Ed25519 address.</td>
+    <td>If type is set to `0`, it should contain an Ed25519 address.</td>
   </tr>
 </table>
 
@@ -560,16 +560,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Output type. Defaults to <code>0</code>.</td>
+    <td>Output type. Defaults to `0`.</td>
   </tr>
   <tr>
     <td>address</td>
@@ -589,16 +589,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to <code>2</code> to denote a unsigned data payload.</td>
+    <td>Set to `2` to denote a unsigned data payload.</td>
   </tr>
   <tr>
     <td>data</td>
@@ -612,16 +612,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to <code>3</code> to denote a signed data payload.</td>
+    <td>Set to `3` to denote a signed data payload.</td>
   </tr>
   <tr>
     <td>data</td>
@@ -647,10 +647,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>index</td>
@@ -670,16 +670,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Transaction type. Defaults to <code>0</code>.</td>
+    <td>Transaction type. Defaults to `0`.</td>
   </tr>
   <tr>
     <td>inputs_count</td>
@@ -727,16 +727,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>1</code> to denote an Ed25519 signature.</td>
+    <td>Set to value `1` to denote an Ed25519 signature.</td>
   </tr>
   <tr>
     <td>public_key</td>
@@ -756,16 +756,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>0</code> to denote a signature unlock block.</td>
+    <td>Set to value `0` to denote a signature unlock block.</td>
   </tr>
   <tr>
     <td>signature</td>
@@ -781,16 +781,16 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
     <td>&#10004;</td>
     <td>number</td>
-    <td>Set to value <code>1</code> to denote a reference unlock block.</td>
+    <td>Set to value `1` to denote a reference unlock block.</td>
   </tr>
   <tr>
     <td>reference</td>
@@ -804,10 +804,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>type</td>
@@ -842,10 +842,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>version</td>
@@ -924,10 +924,10 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 <table>
   <tr>
-    <td><strong>Property</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Property*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>get(key: string):<a href="#account">Account</a></td>
@@ -1002,13 +1002,13 @@ The following should be considered when initializing an account:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>config</td>
@@ -1017,12 +1017,12 @@ The following should be considered when initializing an account:
     <td>Initialization method receives a configuration object.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>account</td>
@@ -1030,11 +1030,11 @@ The following should be considered when initializing an account:
     <td colspan="3">Account instance.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1062,13 +1062,13 @@ The following should be considered when implementing this method:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>index</td>
@@ -1083,12 +1083,12 @@ The following should be considered when implementing this method:
     <td>Number of address indexes that are generated.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>addresses</td>
@@ -1101,11 +1101,11 @@ The following should be considered when implementing this method:
     <td colspan="3">Message IDs associated with the addresses.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1139,13 +1139,13 @@ The following should be considered when implementing this method:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>ids</td>
@@ -1154,12 +1154,12 @@ The following should be considered when implementing this method:
     <td>Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1167,11 +1167,11 @@ The following should be considered when implementing this method:
     <td colspan="3">Message history</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1203,13 +1203,13 @@ See [Input Selection Process](#input-selection) for implementation details.
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>threshold</td>
@@ -1224,12 +1224,12 @@ See [Input Selection Process](#input-selection) for implementation details.
     <td>Recipient address.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>inputs</td>
@@ -1242,11 +1242,11 @@ See [Input Selection Process](#input-selection) for implementation details.
     <td colspan="3">Remainder address object. Empty or null if there’s no need for a remainder</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1286,13 +1286,13 @@ If you want to send a value transaction, please follow this process:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>transfer</td>
@@ -1301,12 +1301,12 @@ If you want to send a value transaction, please follow this process:
     <td>Transfer object.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>message</td>
@@ -1314,11 +1314,11 @@ If you want to send a value transaction, please follow this process:
     <td colspan="3">Newly made message.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1355,13 +1355,13 @@ If you want to retry broadcasting a failed message, you can use the following pr
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>id</td>
@@ -1370,12 +1370,12 @@ If you want to retry broadcasting a failed message, you can use the following pr
     <td>Message ID</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>message</td>
@@ -1383,11 +1383,11 @@ If you want to retry broadcasting a failed message, you can use the following pr
     <td colspan="3">Newly made message.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1420,13 +1420,13 @@ If you want to sync an account, you can use the following process:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>index</td>
@@ -1449,12 +1449,12 @@ If you want to sync an account, you can use the following process:
     </td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>account</td>
@@ -1462,11 +1462,11 @@ If you want to sync an account, you can use the following process:
     <td colspan="3">Synced account object.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1499,13 +1499,13 @@ The following should be considered when implementing this method:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>id</td>
@@ -1514,12 +1514,12 @@ The following should be considered when implementing this method:
     <td>Message ID.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>message</td>
@@ -1527,11 +1527,11 @@ The following should be considered when implementing this method:
     <td colspan="3">Newly reattached message.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1559,22 +1559,22 @@ The total balance should be read directly from local storage. To read the latest
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td><a href="#value">Value</a></td>
     <td>Account total balance.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td colspan="3">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1600,22 +1600,22 @@ The available balance should be read directly from local storage. If you want to
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td><a href="#value">Value</a></td>
     <td>The accounts available balance.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td colspan="3">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1637,13 +1637,13 @@ Updates an account's alias/name.
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>alias</td>
@@ -1652,11 +1652,11 @@ Updates an account's alias/name.
     <td>New account name.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1678,13 +1678,13 @@ Gets messages. Messages should be read directly from local storage. To ensure th
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>count</td>
@@ -1699,12 +1699,12 @@ Gets messages. Messages should be read directly from local storage. To ensure th
     <td>Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1712,11 +1712,11 @@ Gets messages. Messages should be read directly from local storage. To ensure th
     <td colspan="3">All messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1740,13 +1740,13 @@ Messages should be read directly from local storage. To ensure the local databas
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>count</td>
@@ -1761,12 +1761,12 @@ Messages should be read directly from local storage. To ensure the local databas
     <td>Subset of received messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1774,11 +1774,11 @@ Messages should be read directly from local storage. To ensure the local databas
     <td colspan="3">All received messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1802,13 +1802,13 @@ Messages should be read directly from local storage. To ensure the local databas
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>count</td>
@@ -1823,12 +1823,12 @@ Messages should be read directly from local storage. To ensure the local databas
     <td>Subset of sent messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1836,11 +1836,11 @@ Messages should be read directly from local storage. To ensure the local databas
     <td colspan="3">All sent messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1862,18 +1862,18 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>count</td>
@@ -1888,7 +1888,7 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
     <td>Subset of failed messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1896,11 +1896,11 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
     <td colspan="3">All failed messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1922,13 +1922,13 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>count</td>
@@ -1943,12 +1943,12 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
     <td>Subset of unconfirmed messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>messages</td>
@@ -1956,11 +1956,11 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
     <td colspan="3">All unconfirmed messages.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -1984,13 +1984,13 @@ Messages should be read directly from local storage.  To ensure the local databa
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>id</td>
@@ -1999,12 +1999,12 @@ Messages should be read directly from local storage.  To ensure the local databa
     <td>Message ID.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>message</td>
@@ -2012,11 +2012,11 @@ Messages should be read directly from local storage.  To ensure the local databa
     <td colspan="3">Message object.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2038,12 +2038,12 @@ Gets all addresses.
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>addresses</td>
@@ -2051,11 +2051,11 @@ Gets all addresses.
     <td>All addresses.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td colspan="3">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2077,12 +2077,12 @@ Gets all unspent input addresses
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
     <td>Name</td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>addresses</td>
@@ -2090,11 +2090,11 @@ Gets all unspent input addresses
     <td>All unspent input addresses.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td colspan="3">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2116,12 +2116,12 @@ Gets the latest unused address.
 
 <table>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>address</td>
@@ -2129,11 +2129,11 @@ Gets the latest unused address.
     <td>A new address object.</td>
   </tr>
   <tr>
-    <td colspan="3"><strong>Additional Information</strong></td>
+    <td colspan="3">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2161,13 +2161,13 @@ Initializes the account manager. Account manager initialization should validate 
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>adapter</td>
@@ -2176,12 +2176,12 @@ Initializes the account manager. Account manager initialization should validate 
     <td>Initialisation method receives an optional storage adapter.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>manager</td>
@@ -2189,11 +2189,11 @@ Initializes the account manager. Account manager initialization should validate 
     <td colspan="3">Account manager instance.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2217,13 +2217,13 @@ See account [initialisation](#initialisation) for detailed implementation guidel
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>config</td>
@@ -2234,12 +2234,12 @@ See account [initialisation](#initialisation) for detailed implementation guidel
     <td>Account configuration object.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>accounts</td>
@@ -2249,11 +2249,11 @@ See account [initialisation](#initialisation) for detailed implementation guidel
     <td colspan="3">Newly created account.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2279,13 +2279,13 @@ The following should be considered when removing an account:
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>identifier</td>
@@ -2302,11 +2302,11 @@ The following should be considered when removing an account:
     <td>Identifier. Could be one of address, alias, ID or index.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2330,12 +2330,12 @@ See [Accounts Syncing Process](#accounts-syncing-process) for further details.
 
 <table>
   <tr>
-    <td colspan="3"><strong>Returns</strong></td>
+    <td colspan="3">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>account</td>
@@ -2343,11 +2343,11 @@ See [Accounts Syncing Process](#accounts-syncing-process) for further details.
     <td>Synced accounts.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2373,13 +2373,13 @@ Moves funds from one account to another. This method should use the [send()](#se
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>from</td>
@@ -2416,11 +2416,11 @@ Moves funds from one account to another. This method should use the [send()](#se
     <td>Transaction amount.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2444,13 +2444,13 @@ This method should provide the `Stronghold` instance with the metadata of all ac
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>destination</td>
@@ -2459,11 +2459,11 @@ This method should provide the `Stronghold` instance with the metadata of all ac
     <td>Path where the backup should be stored.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2487,13 +2487,13 @@ Import (backed up) accounts.
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong></td>
+   <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+   <td>*Name*</td>
+   <td>*Required*</td>
+   <td>*Type*</td>
+   <td>*Description*</td>
   </tr>
   <tr>
    <td>accounts</td>
@@ -2503,11 +2503,11 @@ Import (backed up) accounts.
    <td>Account object.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
+<td colspan="4">*Additional Information*</td>
 </tr>
 <tr>
-<td><strong>Name</strong></td>
-<td><strong>Description</strong></td>
+<td>*Name*</td>
+<td>*Description*</td>
 </tr>
 <tr>
 <td>Access modifiers</td>
@@ -2529,14 +2529,14 @@ Returns the account associated with the provided identifier.
 
 <table>
   <tr>
-   <td colspan="4"><strong>Parameters</strong>
+   <td colspan="4">*Parameters*
    </td>
   </tr>
   <tr>
-   <td><strong>Name</strong></td>
-   <td><strong>Required</strong></td>
-   <td><strong>Type</strong></td>
-   <td><strong>Description</strong></td>
+   <td>*Name*</td>
+   <td>*Required*</td>
+   <td>*Type*</td>
+   <td>*Description*</td>
   </tr>
   <tr>
    <td>identifier</td>
@@ -2552,15 +2552,15 @@ Returns the account associated with the provided identifier.
    </td>
   </tr>
   <tr>
-   <td colspan="4"><strong>Returns</strong>
+   <td colspan="4">*Returns*
    </td>
   </tr>
   <tr>
-   <td><strong>Name</strong>
+   <td>*Name*
    </td>
-   <td><strong>Type</strong>
+   <td>*Type*
    </td>
-   <td colspan="3"><strong>Description</strong>
+   <td colspan="3">*Description*
    </td>
   </tr>
   <tr>
@@ -2571,11 +2571,11 @@ Returns the account associated with the provided identifier.
    <td colspan="3">Account associated with IDentifier.</td>
   </tr>
   <tr>
-<td colspan="4"><strong>Additional Information</strong></td>
+<td colspan="4">*Additional Information*</td>
 </tr>
 <tr>
-<td><strong>Name</strong></td>
-<td colspan="3"><strong>Description</strong></td>
+<td>*Name*</td>
+<td colspan="3">*Description*</td>
 </tr>
 <tr>
 <td>Access modifiers</td>
@@ -2599,13 +2599,13 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 
 <table>
   <tr>
-    <td colspan="4"><strong>Parameters</strong></td>
+    <td colspan="4">*Parameters*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Required</strong></td>
-    <td><strong>Type</strong></td>
-    <td><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Required*</td>
+    <td>*Type*</td>
+    <td>*Description*</td>
   </tr>
   <tr>
     <td>identifier</td>
@@ -2628,12 +2628,12 @@ See [reattach()](#reattach) method for implementation details. This method is a 
     <td>Message ID.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Returns</strong></td>
+    <td colspan="4">*Returns*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td><strong>Type</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td>*Type*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>message</td>
@@ -2641,11 +2641,11 @@ See [reattach()](#reattach) method for implementation details. This method is a 
     <td colspan="3">Newly reattached message.</td>
   </tr>
   <tr>
-    <td colspan="4"><strong>Additional Information</strong></td>
+    <td colspan="4">*Additional Information*</td>
   </tr>
   <tr>
-    <td><strong>Name</strong></td>
-    <td colspan="3"><strong>Description</strong></td>
+    <td>*Name*</td>
+    <td colspan="3">*Description*</td>
   </tr>
   <tr>
     <td>Access modifiers</td>
@@ -2677,9 +2677,9 @@ On every update sent from the node software via an event, the wallet library sho
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong>
+   <td colspan="3">*Event*
    </td>
-   <td><strong>Returned Data</strong></td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3" >&lt;Address : Balance></td>
@@ -2696,9 +2696,9 @@ On every update sent from the node software via an event, the wallet library sho
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong>
+   <td colspan="3">*Event*
    </td>
-   <td><strong>Returned Data</strong></td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">&lt;Address : Message></td>
@@ -2715,9 +2715,9 @@ On every update sent from the node software via an event, the wallet library sho
 
 <table>
   <tr>
-   <td colspan="3" ><strong>Event</strong>
+   <td colspan="3" >*Event*
    </td>
-   <td><strong>Returned Data</strong>
+   <td>*Returned Data*
    </td>
   </tr>
   <tr>
@@ -2740,9 +2740,9 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong>
+   <td colspan="3">*Event*
    </td>
-   <td><strong>Returned Data</strong></td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">balances
@@ -2755,9 +2755,9 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong>
+   <td colspan="3">*Event*
    </td>
-   <td><strong>Returned Data</strong></td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">messages</td>
@@ -2769,8 +2769,8 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong></td>
-   <td><strong>Returned Data</strong></td>
+   <td colspan="3">*Event*</td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">confirmations</td>
@@ -2782,8 +2782,8 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3"><strong>Event</strong></td>
-   <td><strong>Returned Data</strong></td>
+   <td colspan="3">*Event*</td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">reattachments</td>
@@ -2795,9 +2795,9 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3" ><strong>Event</strong>
+   <td colspan="3" >*Event*
    </td>
-   <td><strong>Returned Data</strong></td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">broadcasts</td>
@@ -2809,8 +2809,8 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 <table>
   <tr>
-   <td colspan="3" ><strong>Event</strong></td>
-   <td><strong>Returned Data</strong></td>
+   <td colspan="3" >*Event*</td>
+   <td>*Returned Data*</td>
   </tr>
   <tr>
    <td colspan="3">error</td>

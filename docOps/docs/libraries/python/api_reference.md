@@ -9,7 +9,7 @@ For all the optional values, the default values are the same as the ones in the 
 
 | Param  | Type             | Default                | Description              |
 | ------ | ---------------- | ---------------------- | ------------------------ |
-| config | <code>str</code> | <code>undefined</code> | The logger configuration |
+| config | `str` | `undefined` | The logger configuration |
 
 The config is the dumped string from the JSON, which key/value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
 
@@ -23,14 +23,14 @@ Creates a new instance of the AccountManager.
 
 | Param                                  | Type                 | Default                  | Description                                                                                    |
 | -------------------------------------- | -------------------- | ------------------------ | ---------------------------------------------------------------------------------------------- |
-| [storage_path]                         | <code>str</code>     | <code>`./storage`</code> | The path where the database file will be saved                                                 |
-| [storage_password]                     | <code>str</code>     | <code>undefined</code>   | The storage password to encrypt/decrypt accounts                                               |
-| [polling_interval]                     | <code>int</code>     | <code>30000</code>       | The polling interval in seconds                                                                |
-| [automatic_output_consolidation]       | <code>bool</code>    | <code>true</code>        | Disables the automatic output consolidation process                                            |
-| [output_consolidation_threshold]       | <code>int</code>     | <code>100</code>         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
-| [sync_spent_outputs]                   | <code>boolean</code> | <code>false</code>       | Enables fetching spent output history on account sync                                          |
-| [persist_events]                       | <code>boolean</code> | <code>false</code>       | Enables event persistence                                                                      |
-| [allow_create_multiple_empty_accounts] | <code>boolean</code> | <code>false</code>              | Enables creating accounts with latest account being empty                                      |
+| [storage_path]                         | `str`     | ``./storage`` | The path where the database file will be saved                                                 |
+| [storage_password]                     | `str`     | `undefined`   | The storage password to encrypt/decrypt accounts                                               |
+| [polling_interval]                     | `int`     | `30000`       | The polling interval in seconds                                                                |
+| [automatic_output_consolidation]       | `bool`    | `true`        | Disables the automatic output consolidation process                                            |
+| [output_consolidation_threshold]       | `int`     | `100`         | Sets the number of outputs an address must have to trigger the automatic consolidation process |
+| [sync_spent_outputs]                   | `boolean` | `false`       | Enables fetching spent output history on account sync                                          |
+| [persist_events]                       | `boolean` | `false`       | Enables event persistence                                                                      |
+| [allow_create_multiple_empty_accounts] | `boolean` | `false`              | Enables creating accounts with latest account being empty                                      |
 
 :::info
 If the  _storage_path_  is set, then the  _storage_  needs to be set too. An exception will be thrown when errors happened.
@@ -44,8 +44,8 @@ Starts the background polling and MQTT monitoring.
 
 | Param                          | Type                 | Default                | Description                                      |
 | ------------------------------ | -------------------- | ---------------------- | ------------------------------------------------ |
-| polling_interval               | <code>number</code>  | <code>undefined</code> | The polling interval in seconds                  |
-| automatic_output_consolidation | <code>boolean</code> | <code>undefined</code> | If outputs should get consolidated automatically |
+| polling_interval               | `number`  | `undefined` | The polling interval in seconds                  |
+| automatic_output_consolidation | `boolean` | `undefined` | If outputs should get consolidated automatically |
 
 ### stop_background_sync(): void
 
@@ -57,7 +57,7 @@ Sets the password used for encrypting the storage.
 
 | Param    | Type             | Default                | Description          |
 | -------- | ---------------- | ---------------------- | -------------------- |
-| password | <code>str</code> | <code>undefined</code> | The storage password |
+| password | `str` | `undefined` | The storage password |
 
 ### set_stronghold_password(password): void
 
@@ -65,7 +65,7 @@ Sets the Stronghold password.
 
 | Param    | Type             | Default                | Description          |
 | -------- | ---------------- | ---------------------- | -------------------- |
-| password | <code>str</code> | <code>undefined</code> | The storage password |
+| password | `str` | `undefined` | The storage password |
 
 ### is_latest_address_unused(): bool
 
@@ -80,8 +80,8 @@ If the mnemonic is not provided, we'll generate one.
 
 | Param       | Type             | Default                         | Description                                                    |
 | ----------- | ---------------- | ------------------------------- | -------------------------------------------------------------- |
-| signer_type | <code>str</code> | <code>undefined</code>          | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
-| mnemonic    | <code>str</code> | <code>randomly generated</code> | The provided mnemonic or the randomly generated one            |
+| signer_type | `str` | `undefined`          | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
+| mnemonic    | `str` | `randomly generated` | The provided mnemonic or the randomly generated one            |
 
 ### generate_mnemonic(): str
 
@@ -95,7 +95,7 @@ Checks is the mnemonic is valid. If a mnemonic was generated with  _generate_mne
 
 | Param    | Type             | Default                | Description           |
 | -------- | ---------------- | ---------------------- | --------------------- |
-| mnemonic | <code>str</code> | <code>undefined</code> | The provided mnemonic |
+| mnemonic | `str` | `undefined` | The provided mnemonic |
 
 ### create_account(client_options): [AccountInitialiser](#accountinitialiser)
 
@@ -103,7 +103,7 @@ Creat a new account.
 
 | Param          | Type                                         | Default                | Description        |
 | -------------- | -------------------------------------------- | ---------------------- | ------------------ |
-| client_options | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code> | The client options |
+| client_options | `[ClientOptions](#clientoptions)` | `undefined` | The client options |
 
 **Returns** A constructed [AccountInitialiser](#accountinitialiser).
 
@@ -113,7 +113,7 @@ Deletes an account.
 
 | Param      | Type             | Default                | Description                            |
 | ---------- | ---------------- | ---------------------- | -------------------------------------- |
-| account_id | <code>str</code> | <code>undefined</code> | The account with this id to be deleted |
+| account_id | `str` | `undefined` | The account with this id to be deleted |
 
 ### sync_accounts(): [AccountsSynchronizer](#accountssynchronizer)
 
@@ -125,9 +125,9 @@ Transfers an amount from an account to another.
 
 | Param           | Type             | Default                | Description                                      |
 | --------------- | ---------------- | ---------------------- | ------------------------------------------------ |
-| from_account_id | <code>str</code> | <code>undefined</code> | The source of account id in the transfering      |
-| to_account_id   | <code>str</code> | <code>undefined</code> | The destination of account id in the transfering |
-| amount          | <code>int</code> | <code>undefined</code> | The transfer amount                              |
+| from_account_id | `str` | `undefined` | The source of account id in the transfering      |
+| to_account_id   | `str` | `undefined` | The destination of account id in the transfering |
+| amount          | `int` | `undefined` | The transfer amount                              |
 
 **Returns** The transfer's [WalletMessage](#walletmessage).
 
@@ -137,8 +137,8 @@ Backups the storage to the given destination.
 
 | Param               | Type             | Default                | Description                    |
 | ------------------- | ---------------- | ---------------------- | ------------------------------ |
-| destination         | <code>str</code> | <code>undefined</code> | The path to the backup file    |
-| Stronghold_password | <code>str</code> | <code>undefined</code> | The backup Stronghold password |
+| destination         | `str` | `undefined` | The path to the backup file    |
+| Stronghold_password | `str` | `undefined` | The backup Stronghold password |
 
 **Returns** The full path to the backup file.
 
@@ -148,8 +148,8 @@ Imports a database file.
 
 | Param               | Type             | Default                | Description                    |
 | ------------------- | ---------------- | ---------------------- | ------------------------------ |
-| source              | <code>str</code> | <code>undefined</code> | The path to the backup file    |
-| Stronghold_password | <code>str</code> | <code>undefined</code> | The backup Stronghold password |
+| source              | `str` | `undefined` | The path to the backup file    |
+| Stronghold_password | `str` | `undefined` | The backup Stronghold password |
 
 ### get_account(account_id): [AccountHandle](#accounthandle)
 
@@ -157,7 +157,7 @@ Gets the account with the given identifier or index.
 
 | Param      | Type             | Default                | Description                                          |
 | ---------- | ---------------- | ---------------------- | ---------------------------------------------------- |
-| account_id | <code>str</code> | <code>undefined</code> | The account id, alias, index or one of its addresses |
+| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 
 **Returns** the associated AccountHandle object or undefined if the account wasn't found.
 
@@ -173,8 +173,8 @@ Retries (promotes or reattaches) the given message.
 
 | Param      | Type             | Default                | Description                                          |
 | ---------- | ---------------- | ---------------------- | ---------------------------------------------------- |
-| account_id | <code>str</code> | <code>undefined</code> | The account id, alias, index or one of its addresses |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier                             |
+| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
+| message_id | `str` | `undefined` | The message's identifier                             |
 
 **Returns** the retried [WalletMessage](#walletmessage).
 
@@ -184,8 +184,8 @@ Reattach the given message.
 
 | Param      | Type             | Default                | Description                                          |
 | ---------- | ---------------- | ---------------------- | ---------------------------------------------------- |
-| account_id | <code>str</code> | <code>undefined</code> | The account id, alias, index or one of its addresses |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier                             |
+| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
+| message_id | `str` | `undefined` | The message's identifier                             |
 
 **Returns** the reattached [WalletMessage](#walletmessage).
 
@@ -195,8 +195,8 @@ Promote the given message.
 
 | Param      | Type             | Default                | Description                                          |
 | ---------- | ---------------- | ---------------------- | ---------------------------------------------------- |
-| account_id | <code>str</code> | <code>undefined</code> | The account id, alias, index or one of its addresses |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier                             |
+| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
+| message_id | `str` | `undefined` | The message's identifier                             |
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
@@ -206,9 +206,9 @@ Gets the persisted balance change events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| count          | `number` | `0`    | The number of events to return (`0` to return all)           |
+| skip           | `number` | `0`    | The number of events to skip                                 |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { accountId: string, address: string, balanceChange: { spent: number, received: number } }
 
@@ -218,7 +218,7 @@ Gets the number of persisted balance change events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### get_transaction_confirmation_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -226,9 +226,9 @@ Gets the persisted transaction confirmation change events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| count          | `number` | `0`    | The number of events to return (`0` to return all)           |
+| skip           | `number` | `0`    | The number of events to skip                                 |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { accountId: string, message: Message, confirmed: boolean }
 
@@ -238,7 +238,7 @@ Gets the number of persisted transaction confirmation change events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### get_new_transaction_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -246,9 +246,9 @@ Gets the persisted new transaction events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| count          | `number` | `0`    | The number of events to return (`0` to return all)           |
+| skip           | `number` | `0`    | The number of events to skip                                 |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { accountId: string, message: Message }
 
@@ -258,7 +258,7 @@ Gets the number of persisted new transaction events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### get_reattachment_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -266,9 +266,9 @@ Gets the persisted transaction reattachment events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| count          | `number` | `0`    | The number of events to return (`0` to return all)           |
+| skip           | `number` | `0`    | The number of events to skip                                 |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { accountId: string, message: Message }
 
@@ -278,7 +278,7 @@ Gets the number of persisted transaction reattachment events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ### get_broadcast_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -286,9 +286,9 @@ Gets the persisted transaction broadcast events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| count          | <code>number</code> | <code>0</code>    | The number of events to return (`0` to return all)           |
-| skip           | <code>number</code> | <code>0</code>    | The number of events to skip                                 |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| count          | `number` | `0`    | The number of events to return (`0` to return all)           |
+| skip           | `number` | `0`    | The number of events to skip                                 |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 Event object: { accountId: string, message: Message }
 
@@ -298,7 +298,7 @@ Gets the number of persisted transaction broadcast events.
 
 | Param          | Type                | Default           | Description                                                  |
 | -------------- | ------------------- | ----------------- | ------------------------------------------------------------ |
-| from_timestamp | <code>number</code> | <code>null</code> | Filter events that were stored after the given UTC timestamp |
+| from_timestamp | `number` | `null` | Filter events that were stored after the given UTC timestamp |
 
 ## AccountSynchronizer
 
@@ -308,7 +308,7 @@ Set the number of address indexes that are generated.
 
 | Param | Type             | Default                | Description                                      |
 | ----- | ---------------- | ---------------------- | ------------------------------------------------ |
-| limit | <code>int</code> | <code>undefined</code> | The number of address indexes that are generated |
+| limit | `int` | `undefined` | The number of address indexes that are generated |
 
 ### skip_persistence(): void
 
@@ -321,7 +321,7 @@ Set the initial address index to start syncing.
 
 | Param         | Type             | Default                | Description                                |
 | ------------- | ---------------- | ---------------------- | ------------------------------------------ |
-| address_index | <code>int</code> | <code>undefined</code> | The initial address index to start syncing |
+| address_index | `int` | `undefined` | The initial address index to start syncing |
 
 ### execute(): [SyncedAccount](#syncedaccount)
 
@@ -336,7 +336,7 @@ Set the number of address indexes that are generated on each account.
 
 | Param | Type             | Default                | Description                                                      |
 | ----- | ---------------- | ---------------------- | ---------------------------------------------------------------- |
-| limit | <code>int</code> | <code>undefined</code> | The number of address indexes that are generated on each account |
+| limit | `int` | `undefined` | The number of address indexes that are generated on each account |
 
 ### address_index(address_index): void
 
@@ -344,7 +344,7 @@ Set the initial address index to start syncing on each account.
 
 | Param         | Type             | Default                | Description                                                |
 | ------------- | ---------------- | ---------------------- | ---------------------------------------------------------- |
-| address_index | <code>int</code> | <code>undefined</code> | The initial address index to start syncing on each account |
+| address_index | `int` | `undefined` | The initial address index to start syncing on each account |
 
 ### execute(): list[SyncedAccount](#syncedaccount)
 
@@ -358,10 +358,10 @@ The  _Transfer_  object used in [SyncedAccount](#syncedaccount)
 
 | Param                    | Type                                   | Default                | Description                                 |
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
-| amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
-| address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
-| indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
-| remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be  _ReuseAddress_  or  _ChangeAddress_  |
+| amount                   | `int`                       | `undefined` | The amount to transfer                      |
+| address                  | `str`                       | `undefined` | The addree to send                          |
+| indexation               | `[Indexation](#indexation)` | `undefined` | The indexation payload                      |
+| remainder_value_strategy | `str`                       | `undefined` | Should be  _ReuseAddress_  or  _ChangeAddress_  |
 
 ## SyncedAccount
 
@@ -435,7 +435,7 @@ Transfer tokens.
 
 | Param        | Type                               | Default                | Description                  |
 | ------------ | ---------------------------------- | ---------------------- | ---------------------------- |
-| transfer_obj | <code>[Transfer](#transfer)</code> | <code>undefined</code> | The transfer we want to make |
+| transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
 
 **Returns** the [WalletMessage](#walletmessage) which makes the transfering.
 
@@ -445,7 +445,7 @@ Retries (promotes or reattaches) the given message.
 
 | Param      | Type             | Default                | Description              |
 | ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+| message_id | `str` | `undefined` | The message's identifier |
 
 **Returns** the retried [WalletMessage](#walletmessage).
 
@@ -455,7 +455,7 @@ Reattach the given message.
 
 | Param      | Type             | Default                | Description              |
 | ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+| message_id | `str` | `undefined` | The message's identifier |
 
 **Returns** the reattached [WalletMessage](#walletmessage).
 
@@ -465,7 +465,7 @@ Promote the given message.
 
 | Param      | Type             | Default                | Description              |
 | ---------- | ---------------- | ---------------------- | ------------------------ |
-| message_id | <code>str</code> | <code>undefined</code> | The message's identifier |
+| message_id | `str` | `undefined` | The message's identifier |
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
@@ -513,8 +513,8 @@ Gets information about the node.
 
 | Param | Type                   | Default                | Description           |
 | ----- | ---------------------- | ---------------------- | --------------------- |
-| url   | <code>str</code>       | <code>undefined</code> | The node url          |
-| auth  | <code>list[str]</code> | <code>undefined</code> | The node auth options |
+| url   | `str`       | `undefined` | The node url          |
+| auth  | `list[str]` | `undefined` | The node auth options |
 
 **Returns** the [NodeInfoWrapper](#nodeinfowrapper)
 
@@ -524,7 +524,7 @@ Updates the account alias.
 
 | Param | Type             | Default                | Description              |
 | ----- | ---------------- | ---------------------- | ------------------------ |
-| alias | <code>str</code> | <code>undefined</code> | The account alias to set |
+| alias | `str` | `undefined` | The account alias to set |
 
 ### set_client_options(options): void
 
@@ -532,7 +532,7 @@ Updates the account's client options.
 
 | Param   | Type                                         | Default                | Description               |
 | ------- | -------------------------------------------- | ---------------------- | ------------------------- |
-| options | <code>[ClientOptions](#clientoptions)</code> | <code>undefined</code> | The client options to set |
+| options | `[ClientOptions](#clientoptions)` | `undefined` | The client options to set |
 
 ### message_count(message_type (optional)): int
 
@@ -540,7 +540,7 @@ Returns the number of messages associated with the account.
 
 | Param        | Type             | Default                | Description                                                       |
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
-| message_type | <code>str</code> | <code>undefined</code> | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
+| message_type | `str` | `undefined` | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
 
 ### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 
@@ -548,9 +548,9 @@ Get the list of messages of this account.
 
 | Param        | Type             | Default                | Description                                                       |
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
-| count        | <code>int</code> | <code>undefined</code> | The count of the messages to get                                  |
-| from         | <code>int</code> | <code>undefined</code> | The iniital address index                                         |
-| message_type | <code>str</code> | <code>undefined</code> | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
+| count        | `int` | `undefined` | The count of the messages to get                                  |
+| from         | `int` | `undefined` | The iniital address index                                         |
+| message_type | `str` | `undefined` | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
 
 ### list_spent_addresses(): list[[Address](#address)]
 
@@ -568,7 +568,7 @@ Sets the account type.
 
 | Param       | Type             | Default                  | Description                                                    |
 | ----------- | ---------------- | ------------------------ | -------------------------------------------------------------- |
-| signer_type | <code>str</code> | <code>signer_type</code> | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
+| signer_type | `str` | `signer_type` | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
 
 ### alias(alias): void
 
@@ -576,7 +576,7 @@ Defines the account alias. If not defined, we'll generate one.
 
 | Param | Type             | Default                | Description       |
 | ----- | ---------------- | ---------------------- | ----------------- |
-| alias | <code>str</code> | <code>undefined</code> | The account alias |
+| alias | `str` | `undefined` | The account alias |
 
 ### created_at(created_at): void
 
@@ -584,7 +584,7 @@ Time of account creation.
 
 | Param      | Type             | Default                | Description               |
 | ---------- | ---------------- | ---------------------- | ------------------------- |
-| created_at | <code>u64</code> | <code>undefined</code> | The account creation time |
+| created_at | `u64` | `undefined` | The account creation time |
 
 
 ### messages(messages): void
@@ -594,7 +594,7 @@ The account can be initialised with locally stored messages.
 
 | Param    | Type                                               | Default                | Description                 |
 | -------- | -------------------------------------------------- | ---------------------- | --------------------------- |
-| messages | <code>list([WalletMessage](#walletmessage))</code> | <code>undefined</code> | The locally stored messages |
+| messages | `list([WalletMessage](#walletmessage))` | `undefined` | The locally stored messages |
 
 ### addresses(addresses): list([WalletAddress](#walletaddress))
 
@@ -603,7 +603,7 @@ The account can be initialised with locally stored address history.
 
 | Param     | Type                                               | Default                | Description              |
 | --------- | -------------------------------------------------- | ---------------------- | ------------------------ |
-| addresses | <code>list([WalletAddress](#walletaddress))</code> | <code>undefined</code> | The historical addresses |
+| addresses | `list([WalletAddress](#walletaddress))` | `undefined` | The historical addresses |
 
 
 ### skip_persistence(): void
@@ -624,7 +624,7 @@ Listen to balance changes.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -634,7 +634,7 @@ Removes the balance change listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_new_transaction(callback): list[int]
 
@@ -642,7 +642,7 @@ Listen to new messages.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -652,7 +652,7 @@ Removes the new transaction listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_confirmation_state_change(callback): list[int]
 
@@ -660,7 +660,7 @@ Listen to transaction confirmation state change.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -670,7 +670,7 @@ Removes the new transaction listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_reattachment(callback): list[int]
 
@@ -678,7 +678,7 @@ Listen to transaction reattachment.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -688,7 +688,7 @@ Removes the reattachment listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_broadcast(callback): list[int]
 
@@ -696,7 +696,7 @@ Listen to transaction broadcast.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -706,7 +706,7 @@ Removes the broadcast listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_error(callback): list[int]
 
@@ -714,7 +714,7 @@ Listen to errors.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -724,7 +724,7 @@ Removes the error listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_stronghold_status_change(callback): list[int]
 
@@ -732,7 +732,7 @@ Listen to Stronghold status change events.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -742,7 +742,7 @@ Removes the Stronghold status change listener associated with the given identifi
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_transfer_progress(callback): list[int]
 
@@ -750,7 +750,7 @@ Listen to transfer progress events.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -760,7 +760,7 @@ Removes the transfer progress listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ### on_migration_progress(callback): list[int]
 
@@ -768,7 +768,7 @@ Listen to migration progress events.
 
 | Param      | Type                  | Default                | Description           |
 | ---------- | --------------------- | ---------------------- | --------------------- |
-| [callback] | <code>function</code> | <code>undefined</code> | The callback function |
+| [callback] | `function` | `undefined` | The callback function |
 
 **Returns** the event id as list[int].
 
@@ -778,7 +778,7 @@ Removes the migration progress listener associated with the given identifier.
 
 | Param | Type                   | Default                | Description  |
 | ----- | ---------------------- | ---------------------- | ------------ |
-| [id]  | <code>list[int]</code> | <code>undefined</code> | The event id |
+| [id]  | `list[int]` | `undefined` | The event id |
 
 ## WalletAddress
 
