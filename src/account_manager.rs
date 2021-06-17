@@ -633,7 +633,12 @@ impl AccountManager {
         if trytes.is_empty() {
             return Err(crate::Error::MigrationDataNotFound);
         }
-        let output_tx = trytes[0].clone();
+        let output_tx = trytes
+            .iter()
+            .filter(|tx| tx.index().to_inner() == &0)
+            .cloned()
+            .collect::<Vec<BundledTransaction>>()[0]
+            .clone();
         let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
 
         Ok(MigratedBundle {
