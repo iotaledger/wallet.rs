@@ -475,7 +475,7 @@ Consolidates the account addresses outputs.
 
 **Returns** the list of generated [WalletMessage](#walletmessage).
 
-### generate_address(): [Address](#address)
+### generate_address(): list[[Address](#address)]
 
 **Returns** a new unused address and links it to this account.
 
@@ -876,6 +876,8 @@ A dict with the following key/value pairs.
 ```python
 client_options = {
     'nodes': list[[Node](#node)] (optional),
+    'primary_node': [Node](#node)] (optional), 
+    'primary_pow_node': [Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
     'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional),

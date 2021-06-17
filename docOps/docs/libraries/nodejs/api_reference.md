@@ -40,7 +40,7 @@ Creates a new instance of the AccountManager.
 
 | Param                              | Type                 | Default                | Description                                                                               |
 | ---------------------------------- | -------------------- | ---------------------- | ----------------------------------------------------------------------------------------- |
-| [ManagerOptions](#manageroptions)                   | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
+| [ManagerOptions](#manageroptions)  | <code>object</code>  | <code>undefined</code> | The options to configure the account manager                                              |
 
 #### ManagerOptions 
 You can use any of the following parameters when constructing the ManagerOptions. All the parameters are optional.   
@@ -394,6 +394,42 @@ Send the remainder value to its original address.
 ###### accountAddress(address: string)
 Send the remainder value to a specific address that must belong to the account.
 
+### getNodeInfo([url, auth]): NodeInfoWrapper
+
+Gets information about the node.
+
+| Param   | Type                      | Default                                        | Description                    |
+| ------- | ------------------------- | ---------------------------------------------- | --------------------- |
+| url     | <code>string</code>       |<code>Node from client options</code>           | The node url          |
+| auth    | <code>Auth</code>         | <code>undefined</code>                         | The node auth options |
+
+Returns: the [NodeInfoWrapper](#nodeinfowrapper)
+
+#### NodeInfoWrapper
+
+| Param                  | Type                                              | Default                               | Description    |
+| ---------------------- | ------------------------------------------------- | ------------------------------------- | -------------- |
+| url                    | <code>string</code>                               | <code>Node from client options</code> | The node url   |
+| nodeinfo               | [NodeInfo](#nodeinfo)                             | <code>null</code>                     | The node info  |
+
+##### NodeInfo
+| Param                           | Type                              | Default              | Description                                        |
+| ------------------------------- | --------------------------------- | -------------------- | -------------------------------------------------- |
+| [name]                          | <code>string</code>               | <code>null</code>    |                                                    |
+| [version]                       | <code>string</code>               | <code>null</code>    |                                                    |
+| [isHealthy]                     | <code>boolean</code>              | <code>null</code>    |                                                    |
+| [networkId]                     | <code>number</code>               | <code>null</code>    |                                                    |
+| [bech32HRP]                     | <code>string</code>               | <code>null</code>    |                                                    |
+| [minPoWScore]                   | <code>number</code>               | <code>null</code>    |                                                    |
+| [messagesPerSecond]             | <code>number</code>               | <code>null</code>    |                                                    |
+| [referencedMessagesPerSecond]   | <code>number</code>               | <code>null</code>    |                                                    |
+| [referencedRate]                | <code>number</code>               | <code>null</code>    |                                                    |            
+| [latestMilestoneTimestamp]      | <code>number</code>               | <code>null</code>    |                                                    |            
+| [latestMilestoneIndex]          | <code>number</code>               | <code>null</code>    |                                                    |            
+| [confirmedMilestoneIndex]       | <code>number</code>               | <code>null</code>    |                                                    |            
+| [pruningIndex]                  | <code>number</code>               | <code>null</code>    |                                                    |            
+| [features]                      | <code>string[]</code>             | <code>null</code>    |                                                    |
+
 ### retry(messageId)
 
 Retries (promotes or reattaches) the given message.
@@ -464,6 +500,10 @@ Gets the address object by its bech32 representation.
 
 Generates a new unused address and returns it.
 
+| Param  | Type                | Default                | Description             |
+| ------ | ------------------- | ---------------------- | ----------------------- |
+| amount | <code>number</code> | <code>undefined</code> | The amount of addresses |
+
 ### latestAddress()
 
 Returns: the latest address (the one with the biggest keyIndex).
@@ -478,8 +518,10 @@ which is an address without balance.
 | Field               | Type                             | Default                | Description                                                                                              |
 | ------------------- | -------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------- |
 | [network]           | <code>number</code>              | <code>undefined</code> | The tangle network to connect to (Mainnet = 1, Devnet = 1, Comnet = 3)                                   |
-| [node]              | <code>string</code>              | <code>undefined</code> | A node URL to connect to                                                                                 |
-| [nodes]             | <code>string[]</code>            | <code>undefined</code> | A list node URL to connect to                                                                            |
+| [primaryNode]       | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first                                                                     |
+| [primaryPoWNode]    | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to alway connect to first when using remote PoW, will be used before primaryNode              |
+| [node]              | <code>NodeUrl | [Node](#node)</code>   | <code>undefined</code> | A node URL to connect to                                                                                 |
+| [nodes]             | <code>NodeUrl | [Node](#node)[]</code> | <code>undefined</code> | A list node URL to connect to                                                                            |
 | [quorumSize]        | <code>number</code>              | <code>undefined</code> | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum. |
 | [quorumThreshold]   | <code>number</code>              | <code>undefined</code> | Minimum number of nodes from the quorum pool that need to agree to consider a result true.               |
 | [localPow]          | <code>boolean</code>             | <code>true</code>      | Whether to use local or remote PoW.                                                                      |
@@ -496,3 +538,20 @@ All fields are optional.
 | useWs                   | <code>boolean</code>   | Defines if websockets should be used (true) or TCP (false)                                            |
 | maxReconnectionAttempts | <code>number</code> | Defines the maximum reconnection attempts before it returns an error                                  |
 | port                    | <code>number</code> | Defines the port to be used for the MQTT connection                                                   |
+
+### Auth
+| Field      | Type                 | Default                | Description                                |
+| ---------- | -------------------- | ---------------------- | ------------------------------------------ |
+| [jwt]      | <code>string</code>  | <code>undefined</code> | Optional JSON Web Token.                   |
+| [username] | <code>string</code>  | <code>undefined</code> | Optional name for basic authentication     |
+| [password] | <code>string</code>  | <code>undefined</code> | Optional password for basic authentication |
+
+### Node
+
+NodeUrl = string
+
+| Field      | Type                 | Default                | Description                                |
+| ---------- | -------------------- | ---------------------- | ------------------------------------------ |
+| [url]      | <code>NodeUrl</code> | <code>undefined</code> | Node url                                   |
+| [auth]     | <code>Auth</code>    | <code>undefined</code> | Optional authentication options            |
+| [disabled] | <code>boolean</code> | <code>false</code>     | Optional password for basic authentication |

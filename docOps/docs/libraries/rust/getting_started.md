@@ -55,7 +55,7 @@ To use the library, add this to your  _Cargo.toml_ :
 
 ```
 [dependencies]
-iota-wallet = { git = "https://github.com/iotaledger/wallet.rs" }
+iota-wallet = { git = "docOps/docs/libraries/rust/getting_started.md" }
 ```
 
 ### Initialisation
