@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, AddressOutput, AddressWrapper, IotaAddress},
+    address::{Address, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
 };
@@ -76,12 +76,19 @@ pub struct TransferOutput {
     /// The output address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
+    /// The output type
+    #[serde(rename = "outputKind")]
+    pub output_type: OutputKind,
 }
 
 impl TransferOutput {
     /// Creates a new transfer output.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
-        Self { amount, address }
+    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_type: Option<OutputKind>) -> Self {
+        Self {
+            amount,
+            address,
+            output_type: output_type.unwrap_or(OutputKind::SignatureLockedSingle),
+        }
     }
 }
 
@@ -182,9 +189,13 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_type: Option<OutputKind>) -> Self {
         Self {
-            outputs: vec![TransferOutput { amount, address }],
+            outputs: vec![TransferOutput {
+                amount,
+                address,
+                output_type: output_type.unwrap_or(OutputKind::SignatureLockedSingle),
+            }],
             ..Default::default()
         }
     }
@@ -263,8 +274,8 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
-        TransferBuilder::new(address, amount)
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64, output_type: Option<OutputKind>) -> TransferBuilder {
+        TransferBuilder::new(address, amount, output_type)
     }
 
     /// Initialises the transfer builder with multiple outputs.

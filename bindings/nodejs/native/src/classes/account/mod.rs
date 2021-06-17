@@ -6,7 +6,7 @@ use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
-    address::parse as parse_address,
+    address::{parse as parse_address, OutputKind},
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
 };
 use neon::prelude::*;
@@ -30,6 +30,8 @@ struct TransferOptions {
     indexation: Option<IndexationDto>,
     #[serde(rename = "skipSync", default)]
     skip_sync: bool,
+    #[serde(rename = "outputKind", default)]
+    output_kind: Option<OutputKind>,
 }
 
 pub struct AccountWrapper(pub String);
@@ -375,7 +377,8 @@ declare_types! {
 
             let mut transfer_builder = Transfer::builder(
                 parse_address(address).expect("invalid address format"),
-                NonZeroU64::new(amount).expect("amount can't be zero")
+                NonZeroU64::new(amount).expect("amount can't be zero"),
+                options.output_kind
             ).with_remainder_value_strategy(options.remainder_value_strategy);
             if let Some(indexation) = options.indexation {
                 transfer_builder = transfer_builder.with_indexation(
@@ -405,9 +408,11 @@ declare_types! {
                 let js_object = js_value.downcast::<JsObject>().unwrap();
                 let address = js_object.get(&mut cx, "address")?.downcast::<JsString>().or_throw(&mut cx)?;
                 let amount = js_object.get(&mut cx, "amount")?.downcast::<JsNumber>().or_throw(&mut cx)?;
+                let output_kind = js_object.get(&mut cx, "outputKind")?.downcast::<JsString>().or_throw(&mut cx)?.value();
                 outputs.push(TransferOutput::new(
                     parse_address(address.value()).expect("invalid address format"),
                     NonZeroU64::new(amount.value() as u64).expect("amount can't be zero"),
+                    OutputKind::from_str(&output_kind).ok()
                 ));
             }
 
@@ -488,11 +493,20 @@ declare_types! {
         }
 
         method consolidateOutputs(mut cx) {
-            let cb = cx.argument::<JsFunction>(0)?;
+            let (include_dust_allowance_outputs, cb) = match cx.argument_opt(1) {
+                Some(arg) => {
+                    let include_dust_allowance_outputs = arg.downcast::<JsBoolean>().or_throw(&mut cx)?.value();
+                    let cb = cx.argument::<JsFunction>(1)?;
+                    (include_dust_allowance_outputs, cb)
+                }
+                None => (false, cx.argument::<JsFunction>(0)?),
+            };
+
             let this = cx.this();
             let account_id = cx.borrow(&this, |r| r.0.clone());
             let task = tasks::ConsolidateOutputsTask {
                 account_id,
+                include_dust_allowance_outputs,
             };
             task.schedule(cb);
             Ok(cx.undefined().upcast())
