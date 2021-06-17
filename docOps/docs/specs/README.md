@@ -25,426 +25,98 @@ The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, st
 
 Account configuration or initialization object. It should support parameters accepted by high level [client](https://github.com/iotaledger/iota.rs) libraries.
 
-<table>
-  <tr>
-    <td>
-      *Property*
-    </td>
-    <td>
-      *Required*
-    </td>
-    <td>
-      *Type*
-    </td>
-    <td>
-      *Description*
-    </td>
-  </tr>
-  <tr>
-    <td>seed</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>BIP-39 mnemonic. When importing an account from Stronghold backup, the seed will not be required.</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The ID should be provided by Stronghold.</td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Account index in <a href="https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki">BIP-44</a> derivation path.</td>
-  </tr>
-  <tr>
-    <td>alias</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>Account name. If not provided, `Account + $&#x7B;index}` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold.</td>
-  </tr>
-  <tr>
-    <td>pow</td>
-    <td>&#10008;</td>
-    <td>‘local’ | ‘remote’</td>
-    <td>
-    Proof of work settings. Defaults to ‘local’. 
-      <ul>
-        <li>‘local’: Should be performed on device;</li>
-        <li>‘remote’: Should be performed on the node.</li>
-      </ul>
-    </td>
-  </tr>
-  <tr>
-    <td>nodes</td>
-    <td>&#10004;</td>
-    <td><a href="#node">node</a>[]</td>
-    <td>A list of nodes to connect to.</td>
-  </tr>
-  <tr>
-    <td>quorum_size</td>
-    <td>&#10008;</td>
-    <td>number</td>
-    <td>If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.</td>
-  </tr>
-  <tr>
-    <td>quorum_threshold</td>
-    <td>&#10008;</td>
-    <td>number</td>
-    <td>Minimum number of nodes from the quorum pool that need to agree to consider a result true.</td>
-  </tr>
-  <tr>
-    <td>network</td>
-    <td>&#10008;</td>
-    <td>‘mainnet’ | ‘devnet’ | ‘comnet’</td>
-    <td>IOTA public network.</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10008;</td>
-    <td>‘default’ | ‘ledger’</td>
-    <td>Account type. Required for differentiating ledger vs non-ledger accounts.</td>
-  </tr>
-  <tr>
-    <td>provider</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>Node URL.</td>
-  </tr>
-  <tr>
-    <td>created_at</td>
-    <td>&#10008;</td>
-    <td>Date</td>
-    <td>Time of account creation.</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td>&#10008;</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td>Messages associated with account. Accounts can be initialized with locally stored messages.</td>
-  </tr>
-  <tr>
-    <td>addresses</td>
-    <td>&#10008;</td>
-    <td><a href="#address">Address</a>[]</td>
-    <td>Address history associated with the account. Accounts can be initialized with locally stored address history.</td>
-  </tr>
-</table>
+| Property         | Required | Type                                                                                                             | Description                                                                                                                                                            |
+| ---------------- | -------- | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| seed             | ✘        | string                                                                                                           | BIP-39 mnemonic. When importing an account from Stronghold backup, the seed will not be required.                                                                      |
+| id               | ✘        | string                                                                                                           | SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The ID should be provided by Stronghold.             |
+| index            | ✔        | number                                                                                                           | Account index in [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path                                                              |
+| alias            | ✘        | string                                                                                                           | Account name. If not provided, `Account + $&#x7B;index}` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold. |
+| pow              | ✘        | ‘local’,‘remote’                                                                                                 | Proof of work settings. Defaults to ‘local’.<ul><li>‘local’: Should be performed on device;</li><li>‘remote’: Should be performed on the node.</li></ul>               |
+| nodes            | ✔        | [node](#node)[]                                                                                                  | A list of nodes to connect to.                                                                                                                                         |
+| quorum_size      | ✘        | number                                                                                                           | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.                                                               |
+| quorum_threshold | ✘        | number                                                                                                           | Minimum number of nodes from the quorum pool that need to agree to consider a result true.                                                                             |
+| network          | ✘        | `mainnet`\|‘devnet’ \| ‘comnet’                                                                                  | IOTA public network.                                                                                                                                                   |
+| type             | ✘        | ‘default’ or ‘ledger’                                                                                            | Account type. Required for differentiating ledger vs non-ledger accounts.                                                                                              |
+| provider         | ✘        | string                                                                                                           | Node URL.                                                                                                                                                              |
+| created_at       | ✘        | Date                                                                                                             | Time of account creation                                                                                                                                               |
+| messages         | ✘        | [Message](#message)[]Messages associated with account. Accounts can be initialized with locally stored messages. |
+| addresses        | ✘        | [Address](#address)[]                                                                                            | Address history associated with the account. Accounts can be initialized with locally stored address history                                                           |
 
 #### AccountObject
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold.</td>
-  </tr>
-  <tr>
-    <td>alias</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Account name.</td>
-  </tr>
-  <tr>
-    <td>created_at</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Account creation time.</td>
-  </tr>
-  <tr>
-    <td>last_synced_at</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Time the account was last synced with the Tangle.</td>
-  </tr>
-  <tr>
-    <td><a href="#sync">sync()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Syncs account with the Tangle.</td>
-  </tr>
-  <tr>
-    <td><a href="#reattach">reattach()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Reattaches unconfirmed transaction to the Tangle.</td>
-  </tr>
-  <tr>
-    <td><a href="#totalbalance">total_balance()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets total account balance.</td>
-  </tr>
-  <tr>
-    <td><a href="#availablebalance">available_balance()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets available account balance.</td>
-  </tr>
-  <tr>
-    <td><a href="#setalias">set_alias()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Updates account name.</td>
-  </tr>
-  <tr>
-    <td><a href="#listmessages">list_messages()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets messages.</td>
-  </tr>
-  <tr>
-    <td><a href="#listreceivedmessages">list_received_messages()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all received messages.</td>
-  </tr>
-  <tr>
-    <td><a href="#listsentmessages">list_sent_messages()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all sent messages.</td>
-  </tr>
-  <tr>
-    <td><a href="#listfailedmessages">list_failed_messages()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all failed messages.</td>
-  </tr>
-  <tr>
-    <td><a href="#listunconfirmedmessages">list_unconfirmed_messages()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all unconfirmed messages.</td>
-  </tr>
-  <tr>
-    <td><a href="#getmessage">get_message()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets message for providedID.</td>
-  </tr>
-  <tr>
-    <td><a href="#listaddresses">list_addresses()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all addresses.</td>
-  </tr>
-  <tr>
-    <td><a href="#listunspent">list_unspent_addresses()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all unspent input addresses.</td>
-  </tr>
-  <tr>
-    <td><a href="#generateaddress">generate_address()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets the latest unused address.</td>
-  </tr>
-</table>
+| Property                    | Required | Type     | Description                                                                                                     |
+| --------------------------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| id                          | ✔        | string   | SHA-256 hash of the first address on the seed (m/44'/0'/0'/0/0). Required for referencing a seed in Stronghold. |
+| alias                       | ✔        | string   | Account name.                                                                                                   |
+| created_at                  | ✔        | number   | Account creation time.                                                                                          |
+| last_synced_at              | ✔        | string   | Time the account was last synced with the Tangle.                                                               |
+| sync()                      | ✔        | function | Syncs account with the Tangle.                                                                                  |
+| reattach()                  | ✔        | function | Reattaches unconfirmed transaction to the Tangle.                                                               |
+| total_balance()             | ✔        | function | Gets total account balance.                                                                                     |
+| available_balance()         | ✔        | function | Gets available account balance.                                                                                 |
+| set_alias()                 | ✔        | function | Updates account name.                                                                                           |
+| list_messages()             | ✔        | function | Gets messages.                                                                                                  |
+| list_received_messages()    | ✔        | function | Gets all received messages.                                                                                     |
+| list_sent_messages()        | ✔        | function | Gets all sent messages.                                                                                         |
+| list_failed_messages()      | ✔        | function | Gets all failed messages.                                                                                       |
+| list_unconfirmed_messages() | ✔        | function | Gets all unconfirmed messages.                                                                                  |
+| get_message()               | ✔        | function | Gets message for providedID.                                                                                    |
+| list_addresses()            | ✔        | function | Gets all addresses.                                                                                             |
+| list_unspent_addresses()    | ✔        | function | Gets all unspent input addresses.                                                                               |
+| generate_address()          | ✔        | function | Gets the latest unused address.                                                                                 |
 
 #### SyncedAccountObject
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>deposit_address</td>
-    <td>&#10004;</td>
-    <td><a href="#address">Address</a></td>
-    <td>Deposit address. Only exposed on successful completion of account syncing process.</td>
-  </tr>
-  <tr>
-    <td><a href="#send">send()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Send transaction method. Only exposed on successful completion of account syncing process.</td>
-  </tr>
-  <tr>
-    <td><a href="#retry">retry()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Rebroadcasts failed transaction. Only exposed on successful completion of account syncing process.</td>
-  </tr>
-</table>
+| Property        | Required | Type     | Description                                                                                        |
+| --------------- | -------- | -------- | -------------------------------------------------------------------------------------------------- |
+| deposit_address | ✔        | Address  | Deposit address. Only exposed on successful completion of account syncing process.                 |
+| send()          | ✔        | function | Send transaction method. Only exposed on successful completion of account syncing process.         |
+| retry()         | ✔        | function | Rebroadcasts failed transaction. Only exposed on successful completion of account syncing process. |
+
 
 #### AccountManagerObject
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>accounts</td>
-    <td>&#10004;</td>
-    <td><a href="#account">Account</a>[]</td>
-    <td>Account objects.</td>
-  </tr>
-  <tr>
-    <td><a href="#addaccount">add_account()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Adds a new account.</td>
-  </tr>
-  <tr>
-    <td><a href="#removeaccount">remove_account()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Removes an account.</td>
-  </tr>
-  <tr>
-    <td><a href="#syncaccounts">sync_accounts()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Syncs all stored accounts with the Tangle.</td>
-  </tr>
-  <tr>
-    <td><a href="#move">move()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Inititates an internal transaction between accounts.</td>
-  </tr>
-  <tr>
-    <td><a href="#backup">backup()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Creates a backup to a provided destination.</td>
-  </tr>
-  <tr>
-    <td><a href="#importaccounts">import_accounts()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Imports backed up accounts.</td>
-  </tr>
-  <tr>
-    <td><a href="#getaccount">get_account()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Returns the account associated with the provided address.</td>
-  </tr>
-  <tr>
-    <td><a href="#reattach">reattach()</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Reattaches an unconfirmed transaction.</td>
-  </tr>
-</table>
+| Property          | Required | Type      | Description                                               |
+| ----------------- | -------- | --------- | --------------------------------------------------------- |
+| accounts          | ✔        | Account[] | Account objects.                                          |
+| add_account()     | ✔        | function  | Adds a new account.                                       |
+| remove_account()  | ✔        | function  | Removes an account.                                       |
+| sync_accounts()   | ✔        | function  | Syncs all stored accounts with the Tangle.                |
+| move()            | ✔        | function  | Inititates an internal transaction between accounts.      |
+| backup()          | ✔        | function  | Creates a backup to a provided destination.               |
+| import_accounts() | ✔        | function  | Imports backed up accounts.                               |
+| get_account()     | ✔        | function  | Returns the account associated with the provided address. |
+| reattach()        | ✔        | function  | Reattaches an unconfirmed transaction.                    |
+
 
 #### Address 
 
 Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0) for address management in Hierarchical Deterministic (HD) wallets.
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Address <a href="https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md">(Bech32)</a> string.</td>
-  </tr>
-  <tr>
-    <td>balance</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Address balance.</td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Address index.</td>
-  </tr>
-  <tr>
-    <td>internal</td>
-    <td>&#10004;</td>
-    <td>boolean</td>
-    <td>Determines if an address is a public or an internal (change) address. See the concept of <a href="https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0">chain node</a> for more details.</td>
-  </tr>
-  <tr>
-    <td>checksum</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Address checksum.</td>
-  </tr>
-</table>
+| Property | Required | Type    | Description                                                                                                           |
+| -------- | -------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| address  | ✔        | string  | Address (Bech32) string.                                                                                              |
+| balance  | ✔        | number  | Address balance.                                                                                                      |
+| index    | ✔        | number  | Address index.                                                                                                        |
+| internal | ✔        | boolean | Determines if an address is a public or an internal (change) address. See the concept of chain node for more details. |
+| checksum | ✔        | string  | Address checksum.                                                                                                     |
+
 
 #### Node
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>url</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Node URL.</td>
-  </tr>
-  <tr>
-    <td>pow</td>
-    <td>&#10004;</td>
-    <td>boolean</td>
-    <td>Determines if the node accepts proof of work.</td>
-  </tr>
-  <tr>
-    <td>username</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>Node username. Only required if node requires authorisation.</td>
-  </tr>
-  <tr>
-    <td>password</td>
-    <td>&#10008;</td>
-    <td>string</td>
-    <td>Node password. Only required if node requires authorisation.</td>
-  </tr>
-  <tr>
-    <td>network</td>
-    <td>&#10004;</td>
-    <td>‘mainnet’ | ‘devnet’ | ‘comnet’</td>
-    <td>IOTA public network name.</td>
-  </tr>
-</table>
+| Property | Required | Type                                                          | Description                                                  |
+| -------- | -------- | ------------------------------------------------------------- | ------------------------------------------------------------ |
+| url      | ✔        | string                                                        | Node URL.                                                    |
+| pow      | ✔        | boolean                                                       | Determines if the node accepts proof of work.                |
+| username | ✘        | string                                                        | Node username. Only required if node requires authorisation. |
+| password | ✘        | string                                                        | Node password. Only required if node requires authorisation. |
+| network  | ✔        | <ul><li>`mainnet`</li><li>`devnet`</li><li>`comnet`</li></ul> | IOTA public network name.                                    |
 
 #### Timestamp
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>format(type: string):string</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction timestamp in various formats. For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss.</td>
-  </tr>
-</table>
+| Property                    | Required | Type     | Description                                                                             |
+| --------------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
+| format(type: string):string | ✔        | function | Transaction timestamp in various formats. For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss. |
 
 #### Transfer 
 
@@ -454,506 +126,133 @@ Transfer object required for creating a transaction. It allows end-users to spec
 Currently, it is not possible to send multiple payloads as part of the message. That is why the  _tag_  property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
 :::
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>amount</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Transfer amount.</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Transfer address.</td>
-  </tr>
-  <tr>
-    <td>indexation_key</td>
-    <td>&#10008;</td>
-    <td><a href="#indexationpayload">Indexation Payload</a></td>
-    <td>(Optional) Indexation payload.</td>
-  </tr>
-</table>
+| Property       | Required | Type               | Description                    |
+| -------------- | -------- | ------------------ | ------------------------------ |
+| amount         | ✔        | number             | Transfer amount.               |
+| address        | ✔        | string             | Transfer address.              |
+| indexation_key | ✘        | Indexation Payload | (Optional) Indexation payload. |
+
 
 #### Value
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>with_denomination():string</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction amount with unit.</td>
-  </tr>
-  <tr>
-    <td>without_denomination():number</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Transaction amount without unit.</td>
-  </tr>
-</table>
+| Property                     | Required | Type     | Description                      |
+| ----------------------------- | -------- | -------- | -------------------------------- |
+| with_denomination():string    | ✔        | function | Transaction amount with unit.    |
+| without_denomination():number | ✔        | function | Transaction amount without unit. |
+
 
 #### Input
-
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Input type. Defaults to `0`.</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>BLAKE2b-256 hash of the transaction.</td>
-  </tr>
-  <tr>
-    <td>output_index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Index of the output on the referenced transaction.</td>
-  </tr>
-</table>
+| Property     | Required | Type   | Description                                        |
+| ------------ | -------- | ------ | -------------------------------------------------- |
+| type         | ✔        | number | Input type. Defaults to `0`.                       |
+| id           | ✔        | string | BLAKE2b-256 hash of the transaction.               |
+| output_index | ✔        | number | Index of the output on the referenced transaction. |
 
 #### OutputAddress
+| Property | Required | Type   | Description                                                  |
+| -------- | -------- | ------ | ------------------------------------------------------------ |
+| type     | ✔        | number | Set to value `0` to denote an Ed25519 address.               |
+| address  | ✔        | string | If type is set to `0`, it should contain an Ed25519 address. |
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value `0` to denote an Ed25519 address.</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>If type is set to `0`, it should contain an Ed25519 address.</td>
-  </tr>
-</table>
 
 #### Output
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Output type. Defaults to `0`.</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td>&#10004;</td>
-    <td><a href="#outputaddress">OutputAddress</a></td>
-    <td>Output address.</td>
-  </tr>
-  <tr>
-    <td>amount</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Amount of tokens to deposit.</td>
-  </tr>
-</table>
+| Property | Required | Type          | Description                   |
+| -------- | -------- | ------------- | ----------------------------- |
+| type     | ✔        | number        | Output type. Defaults to `0`. |
+| address  | ✔        | OutputAddress | Output address.               |
+| amount   | ✔        | number        | Amount of tokens to deposit.  |
 
 #### UnsignedDataPayload
+| Property | Required | Type   | Description                                   |
+| -------- | -------- | ------ | --------------------------------------------- |
+| type     | ✔        | number | Set to `2` to denote a unsigned data payload. |
+| data     | ✔        | string | Data of unsigned payload.                     |
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to `2` to denote a unsigned data payload.</td>
-  </tr>
-  <tr>
-    <td>data</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Data of unsigned payload.</td>
-  </tr>
-</table>
 
 #### SignedDataPayload
+| Property   | Required | Type   | Description                                      |
+| ---------- | -------- | ------ | ------------------------------------------------ |
+| type       | ✔        | number | Set to `3` to denote a signed data payload.      |
+| data       | ✔        | string | Data of signed data payload.                     |
+| public_key | ✔        | string | Ed25519 public key used to verify the signature. |
+| signature  | ✔        | string | Signature of signing data.                       |
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to `3` to denote a signed data payload.</td>
-  </tr>
-  <tr>
-    <td>data</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Data of signed data payload.</td>
-  </tr>
-  <tr>
-    <td>public_key</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Ed25519 public key used to verify the signature.</td>
-  </tr>
-  <tr>
-    <td>signature</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Signature of signing data.</td>
-  </tr>
-</table>
 
 #### IndexationPayload
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Indexation key.</td>
-  </tr>
-  <tr>
-    <td>data</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Indexation data.</td>
-  </tr>
-</table>
+| *Property* | *Required* | *Type* | *Description*    |
+| ---------- | ---------- | ------ | ---------------- |
+| index      | ✔          | string | Indexation key.  |
+| data       | ✔          | string | Indexation data. |
 
 #### UnsignedTransaction
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Transaction type. Defaults to `0`.</td>
-  </tr>
-  <tr>
-    <td>inputs_count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Amount of inputs proceeding.</td>
-  </tr>
-  <tr>
-    <td>inputs</td>
-    <td>&#10004;</td>
-    <td><a href="#input">Input</a>[]</td>
-    <td>Transaction inputs.</td>
-  </tr>
-  <tr>
-    <td>outputs_count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Amount of outputs proceeding.</td>
-  </tr>
-  <tr>
-    <td>outputs</td>
-    <td>&#10004;</td>
-    <td><a href="#outputs">Output</a>[]</td>
-    <td>Output address.</td>
-  </tr>
-  <tr>
-    <td>payload_length</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Length of optional payload.</td>
-  </tr>
-  <tr>
-    <td>payload</td>
-    <td>&#10004;</td>
-    <td>
-    <a href="#unsigneddatapayload">UnsignedDataPayload</a> | 
-    <a href="#signeddatapayload">SignedDataPayload</a> |
-    <a href="#indexationpayload">IndexationPayload</a>
-    </td>
-    <td>Payload containing data. As multiple payloads are not yet supported, only <a href="#unsigneddatapayload">unsigned data payload</a> should be used.</td>
-  </tr>
-</table>
+| Property       | Required | Type                                                                                                                                                             | Description                                                                                                                             |
+| -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| type           | ✔        | number                                                                                                                                                           | Transaction type. Defaults to 0.                                                                                                        |
+| inputs_count   | ✔        | number                                                                                                                                                           | Amount of inputs proceeding.                                                                                                            |
+| inputs         | ✔        | Input[]                                                                                                                                                          | Transaction inputs.                                                                                                                     |
+| outputs_count  | ✔        | number                                                                                                                                                           | Amount of outputs proceeding.                                                                                                           |
+| outputs        | ✔        | Output[]                                                                                                                                                         | Output address.                                                                                                                         |
+| payload_length | ✔        | number                                                                                                                                                           | Length of optional payload.                                                                                                             |
+| payload        | ✔        | <ul><li>[UnsignedDataPayload](#unsigneddatapayload) </li><li> [SignedDataPayload](#signeddatapayload) </li><li>[IndexationPayload](#indexationpayload)</li></ul> | Payload containing data. As multiple payloads are not yet supported, only [unsigned data payload](#unsigneddatapayload) should be used. |
 
 #### Ed25519Signature
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value `1` to denote an Ed25519 signature.</td>
-  </tr>
-  <tr>
-    <td>public_key</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Public key of the Ed25519 keypair which is used to verify the signature.</td>
-  </tr>
-  <tr>
-    <td>signature</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Signature signing the serialized unsigned transaction.</td>
-  </tr>
-</table>
+| *Property* | *Required* | *Type* | *Description*                                                            |
+| ---------- | ---------- | ------ | ------------------------------------------------------------------------ |
+| type       | ✔          | number | Set to value `1` to denote an Ed25519 signature.                         |
+| public_key | ✔          | number | Public key of the Ed25519 keypair which is used to verify the signature. |
+| signature  | ✔          | string | Signature signing the serialized unsigned transaction.                   |
+
 
 #### SignatureUnblockBlock
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value `0` to denote a signature unlock block.</td>
-  </tr>
-  <tr>
-    <td>signature</td>
-    <td>&#10004;</td>
-    <td>
-        <a href="#ed25519signature">Ed25519Signature</a>
-    </td>
-    <td>An unlock block containing signature(s) unlocking input(s).</td>
-  </tr>
-</table>
+| *Property* | *Required* | *Type*           | *Description*                                               |
+| ---------- | ---------- | ---------------- | ----------------------------------------------------------- |
+| type       | ✔          | number           | Set to value `0` to denote a signature unlock block.        |
+| signature  | ✔          | Ed25519Signature | An unlock block containing signature(s) unlocking input(s). |
+
 
 #### ReferenceUnblockBlock
-
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Set to value `1` to denote a reference unlock block.</td>
-  </tr>
-  <tr>
-    <td>reference</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Index of a previous unlock block.</td>
-  </tr>
-</table>
+| *Property* | *Required* | *Type* | *Description*                                        |
+| ---------- | ---------- | ------ | ---------------------------------------------------- |
+| type       | ✔          | number | Set to value `1` to denote a reference unlock block. |
+| reference  | ✔          | number | Index of a previous unlock block.                    |
 
 #### SignedTransactionPayload
-
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>type</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Payload type. Defaults to `0`.</td>
-  </tr>
-  <tr>
-    <td>transaction</td>
-    <td>&#10004;</td>
-    <td><a href="#unsignedtransaction">UnsignedTransaction</a></td>
-    <td>Essence data making up a transaction by defining its inputs and outputs and an optional payload.</td>
-  </tr>
-  <tr>
-    <td>unblock_blocks_count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of inputs specifed.</td>
-  </tr>
-  <tr>
-    <td>unblock_blocks</td>
-    <td>&#10004;</td>
-    <td>
-        <a href="#signatureunblockblock">SignatureUnblockBlock</a> |
-        <a href="#referenceunblockblock">ReferenceUnblockBlock</a>
-    </td>
-    <td>Holds the unlock blocks unlocking inputs within an Unsigned Transaction</td>
-  </tr>
-</table>
+| *Property*           | *Required* | *Type*                | *Description*                                                                                    |
+| -------------------- | ---------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| type                 | ✔          | number                | Payload type. Defaults to `0`.                                                                   |
+| transaction          | ✔          | UnsignedTransaction   | Essence data making up a transaction by defining its inputs and outputs and an optional payload. |
+| unblock_blocks_count | ✔          | number                | Number of inputs specifed.                                                                       |
+| unblock_blocks       | ✔          | SignatureUnblockBlock | ReferenceUnblockBlock                                                                            | Holds the unlock blocks unlocking inputs within an Unsigned Transaction |
 
 #### Message
+| Property                                    | Required                                                               | Type                                                  | Description                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| version                                     | ✔                                                                      | number                                                | Message version. Defaults to `1`.                                                                                                                                                                                                                                                                                                |
+| parents                                     | ✔                                                                      | string[]                                              | Message ids this message references.                                                                                                                                                                                                                                                                                             |
+| payload_length                              | ✔                                                                      | number                                                | Length of the payload.                                                                                                                                                                                                                                                                                                           |
+| payload                                     | ✔                                                                      | [SignedTransactionPayload](#signedtransactionpayload) |
+| [UnsignedDataPayload](#unsigneddatapayload) |
+| [SignedDataPayload](#signeddatapayload)     | Transaction amount (exposed as a custom type with additional methods). |
+| timestamp                                   | ✔                                                                      | Timestamp                                             | Transaction timestamp (exposed as a custom type with additional methods).                                                                                                                                                                                                                                                        |
+| nonce                                       | ✔                                                                      | string                                                | Transaction nonce.                                                                                                                                                                                                                                                                                                               |
+| confirmed                                   | ✔                                                                      | boolean                                               | Determines if the transaction is confirmed.                                                                                                                                                                                                                                                                                      |
+| broadcasted                                 | ✔                                                                      | boolean                                               | Determines if the transaction was broadcasted to the network. Will be true in the following scenarios:<ul><li>If the transaction was fetched from the network;</li><li>If the transaction was successfully broadcasted from the client itself.</li></ul> This property may only be required for clients with persistent storage. |
+| incoming                                    | ✔                                                                      | boolean                                               | Determines if the message is an incoming transaction or not.                                                                                                                                                                                                                                                                     |
+| value                                       | ✔                                                                      | number                                                | Message transfer value.                                                                                                                                                                                                                                                                                                          |
 
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>version</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Message version. Defaults to `1`.</td>
-  </tr>
-  <tr>
-    <td>parents</td>
-    <td>&#10004;</td>
-    <td>string[]</td>
-    <td>Message IDs this message references.</td>
-  </tr>
-  <tr>
-    <td>payload_length</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Length of the payload.</td>
-  </tr>
-  <tr>
-    <td>payload</td>
-    <td>&#10004;</td>
-    <td>
-        <a href="#signedtransactionpayload">SignedTransactionPayload</a> |
-        <a href="#unsigneddatapayload">UnsignedDataPayload</a> |
-        <a href="#signeddatapayload">SignedDataPayload</a>
-    </td>
-    <td>Transaction amount (exposed as a custom type with additional methods).</td>
-  </tr>
-  <tr>
-    <td>timestamp</td>
-    <td>&#10004;</td>
-    <td><a href="#timestamp">Timestamp</a></td>
-    <td>Transaction timestamp (exposed as a custom type with additional methods).</td>
-  </tr>
-  <tr>
-    <td>nonce</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Transaction nonce.</td>
-  </tr>
-  <tr>
-    <td>confirmed</td>
-    <td>&#10004;</td>
-    <td>boolean</td>
-    <td>Determines if the transaction is confirmed.</td>
-  </tr>
-  <tr>
-    <td>broadcasted</td>
-    <td>&#10004;</td>
-    <td>boolean</td>
-    <td>
-      Determines if the transaction was broadcasted to the network. Will be true in the following scenarios:
-      <ul>
-        <li>If the transaction was fetched from the network;</li>
-        <li>If the transaction was successfully broadcasted from the client itself.</li>
-      </ul>
-      *Note*: This property may only be required for clients with persistent storage.
-    </td>
-  </tr>
-  <tr>
-    <td>incoming</td>
-    <td>&#10004;</td>
-    <td>boolean</td>
-    <td>Determines if the message is an incoming transaction or not.</td>
-  </tr>
-  <tr>
-    <td>value</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Message transfer value.</td>
-  </tr>
-</table>
 
 #### StorageAdapter
-
-<table>
-  <tr>
-    <td>*Property*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>get(key: string):<a href="#account">Account</a></td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets the account object for provided account name or ID.</td>
-  </tr>
-  <tr>
-    <td>getAll(): <a href="#account">Account</a>[]</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Gets all account objects from storage.</td>
-  </tr>
-  <tr>
-    <td>set(key: string, payload: string):void</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Stores account in storage.</td>
-  </tr>
-  <tr>
-    <td>remove(key: string): void</td>
-    <td>&#10004;</td>
-    <td>function</td>
-    <td>Removes account from storage.</td>
-  </tr>
-</table>
+| Property                               | Required | Type     | Description                                              |
+| -------------------------------------- | -------- | -------- | -------------------------------------------------------- |
+| get(key: string):Account               | ✔        | function | Gets the account object for provided account name or ID. |
+| getAll(): Account[]                    | ✔        | function | Gets all account objects from storage.                   |
+| set(key: string, payload: string):void | ✔        | function | Stores account in storage.                               |
+| remove(key: string): void              | ✔        | function | Removes account from storage.                            |
 
 ## Storage 
 
@@ -1000,55 +299,24 @@ The following should be considered when initializing an account:
 - The  _nodes_  property should validate and remove duplicate node URLs.
 - All the properties of the returned account object should be read-only. It should not be possible to manipulate them directly.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>config</td>
-    <td>&#10004;</td>
-    <td><a href="#accountconfiguration">AccountConfig</a></td>
-    <td>Initialization method receives a configuration object.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>account</td>
-    <td><a href="#accountobject">Account</a></td>
-    <td colspan="3">Account instance.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type*        | *Description*                                          |
+| ------ | ---------- | ------------- | ------------------------------------------------------ |
+| config | ✔          | AccountConfig | Initialization method receives a configuration object. |
+
+##### Returns
+
+| *Name*  | *Type*  | *Description*     |
+| ------- | ------- | ----------------- |
+| account | Account | Account instance. |
+
+##### Additional Information
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### sync_addresses() 
 
@@ -1060,72 +328,29 @@ The following should be considered when implementing this method:
 - To sync addresses for an account from scratch, _index = 0_ and _gap_limit = 10_ should be sent as arguments.
 *   To sync addresses from the latest address, _index = latest address index_ and _gap_limit = 1_ should be sent as arguments. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
-  </tr>
-  <tr>
-    <td>gap_limit</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of address indexes that are generated.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>addresses</td>
-    <td><a href="#address">Address</a>[]</td>
-    <td colspan="3">Address history upto latest unused address.</td>
-  </tr>
-  <tr>
-    <td>ids</td>
-    <td>string[]</td>
-    <td colspan="3">Message IDs associated with the addresses.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Private</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs">find_outputs()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name*    | *Required* | *Type* | *Description*                                                                                         |
+| --------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| index     | ✔          | number | Address index. By default the length of addresses stored for this account should be used as an index. |
+| gap_limit | ✔          | number | Number of address indexes that are generated.                                                         |
+
+
+##### Returns
+| *Name*    | *Type*    | *Description*                                |
+| --------- | --------- | -------------------------------------------- |
+| addresses | Address[] | Address history up to latest unused address. |
+| ids       | string[]  | Message IDs associated with the addresses.   |
+
+##### Additional Information
+
+
+      
+| *Name*                          | *Description*                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Access modifiers                | Private                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Errors                          | List of error messages [TBD]                                                                                                                                                                                                                                                                                                                                                                                       |
+| Required client library methods | <ul><li>[get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)</li><li>[find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)</li><li>[find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs)</li></ul> |
 
 #### sync_messages() 
 
@@ -1137,59 +362,28 @@ The following should be considered when implementing this method:
 - This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true.
 - For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>ids</td>
-    <td>&#10004;</td>
-    <td>string[]</td>
-    <td>Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">Message history</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Private</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+
+##### Parameters
+| *Name* | *Required* | *Type*   | *Description*                                                                                                                         |
+| ------ | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| ids    | ✔          | string[] | Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle. |
+
+
+##### Returns
+
+| *Name*   | *Type*                | *Description*   |
+| -------- | --------------------- | --------------- |
+| messages | [Message](#message)[] | Message history |
+
+##### Additional Information
+| *Name*                          | *Description*                                                                                                          |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Access modifiers                | Private                                                                                                                |
+| Errors                          | List of error messages [TBD]                                                                                           |
+| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) |
+
+##### Required client library methods
+- 
 
 #### select_inputs() 
 
@@ -1201,66 +395,29 @@ This method should only be used internally by [send()](#send). The input selecti
 
 See [Input Selection Process](#input-selection) for implementation details.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>threshold</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Amount user wants to spend.</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Recipient address.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>inputs</td>
-    <td><a href="#address">Address</a>[]</td>
-    <td colspan="3">Selected Inputs</td>
-  </tr>
-  <tr>
-    <td>remainder</td>
-    <td><a href="#address">Address</a></td>
-    <td colspan="3">Remainder address object. Empty or null if there’s no need for a remainder</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Private</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name*    | *Required* | *Type* | *Description*               |
+| --------- | ---------- | ------ | --------------------------- |
+| threshold | ✔          | number | Amount user wants to spend. |
+| address   | ✔          | string | Recipient address.          |
+
+
+##### Returns
+
+| *Name*    | *Type*    | *Description*                                                              |
+| --------- | --------- | -------------------------------------------------------------------------- |
+| inputs    | Address[] | Selected Inputs                                                            |
+| remainder | Address   | Remainder address object. Empty or null if there’s no need for a remainder |
+
+
+##### Additional Information
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Private                      |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### send() 
 
@@ -1277,67 +434,36 @@ If you want to send a value transaction, please follow this process:
 2. Ensure  _amount_  does not exceed the total balance.
 3. Ensure recipient address has correct checksum.
 4. Validate  _data_  property semantics and size.
-5. Select inputs by using [select_inputs()](#selectinputs).
+5. Select inputs by using [select_inputs()](#select_inputs).
 6. Pass the serialized [unsigned transaction](#unsignedtransaction) to the `Stronghold` for signing with its “signTransaction” method.
 7. Perform proof-of-work. The  _pow_  property in the account object should determine if the proof of work should be offloaded.
 8. Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage.
 9. After persisting the transaction, the transaction should be broadcast to the network.
 10.  In the event of a broadcast error, there should be three attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate, and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>transfer</td>
-    <td>&#10004;</td>
-    <td><a href="#transfer">Transfer</a></td>
-    <td>Transfer object.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td><a href="#message">Message</a></td>
-    <td colspan="3">Newly made message.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Private</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send">send()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+
+##### Parameters
+
+| *Name*   | *Required* | *Type*   | *Description*    |
+| -------- | ---------- | -------- | ---------------- |
+| transfer | ✔          | Transfer | Transfer object. |
+
+
+##### Returns
+
+| *Name*  | *Type*              | *Description*       |
+| ------- | ------------------- | ------------------- |
+| message | [Message](#message) | Newly made message. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                                                                                                                                                                                                              |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Access modifiers                | Private                                                                                                                                                                                                                    |
+| Errors                          | List of error messages [TBD]                                                                                                                                                                                               |
+| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)[send()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send) |
+
 
 #### retry() 
 
@@ -1349,63 +475,31 @@ This method should only be used after a successful response from [sync()](#sync)
 
 If you want to retry broadcasting a failed message, you can use the following process:
 
-1. Get the message by using [get_message()](#getmessage).
+1. Get the message by using [get_message()](#get_message).
 2. Rebroadcast the message.
 3. Update the account in persistent storage.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Message ID</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td><a href="#message">Message</a></td>
-    <td colspan="3">Newly made message.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Private</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message">post_message()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description* |
+| ------ | ---------- | ------ | ------------- |
+| id     | ✔          | string | Message ID    |
+
+##### Returns
+
+| *Name*  | *Type*  | *Description*       |
+| ------- | ------- | ------------------- |
+| message | Message | Newly made message. |
+
+
+##### Additional Information
+
+| *Name*                          | *Description*                                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Access modifiers                | Private                                                                                                              |
+| Errors                          | List of error messages [TBD]                                                                                         |
+| Required client library methods | [post_message()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message) |
+
 
 #### sync()
 
@@ -1414,78 +508,33 @@ Please note that it is a proposed design decision to enforce account syncing bef
 
 If you want to sync an account, you can use the following process:
 
-1. Sync addresses using [sync_addresses()](#syncaddresses).
-2. Sync messages using [sync_messages()](#syncmessages).
+1. Sync addresses using [sync_addresses()](#sync_addresses).
+2. Sync messages using [sync_messages()](#sync_messages).
 3. Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10008;</td>
-    <td>number</td>
-    <td>Address index. By default the number of addresses stored for this account should be used as an index.</td>
-  </tr>
-  <tr>
-    <td>gap_limit</td>
-    <td>&#10008;</td>
-    <td>number</td>
-    <td>Number of address indexes that are generated.</td>
-  </tr>
-  <tr>
-    <td>skip_persistence</td>
-    <td>&#10008;</td>
-    <td>boolean</td>
-    <td>
-      Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition") provided by Trinity.
-    </td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>account</td>
-    <td><a href="#syncedaccountobject">SyncedAccount</a></td>
-    <td colspan="3">Synced account object.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages">find_messages()</a></li>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances">get_address_balances()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name*           | *Required* | *Type*  | *Description*                                                                                                                                                                                                                                                                                               |
+| ---------------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| index            | ✘          | number  | Address index. By default the number of addresses stored for this account should be used as an index.                                                                                                                                                                                                       |
+| gap_limit        | ✘          | number  | Number of address indexes that are generated.                                                                                                                                                                                                                                                               |
+| skip_persistence | ✘          | boolean | Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition") provided by Trinity. |
+
+
+##### Returns
+
+| *Name*  | *Type*                                | *Description*          |
+| ------- | ------------------------------------- | ---------------------- |
+| account | [SyncedAccount](#syncedaccountobject) | Synced account object. |
+
+
+##### Additional Information
+
+| *Name*                          | *Description*                                                                                                                                                                                                                                              |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Access modifiers                | Public                                                                                                                                                                                                                                                     |
+| Errors                          | List of error messages [TBD]                                                                                                                                                                                                                               |
+| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)[get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances) |
 
 ####  reattach() 
 
@@ -1497,59 +546,28 @@ The following should be considered when implementing this method:
 - Once reattached, the message should be stored in the persistent storage.
 - If the message was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Message ID.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td><a href="#message">Message</a></td>
-    <td colspan="3">Newly reattached message.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-      <ul>
-        <li><a href="https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#reattach">reattach()</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
+
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description* |
+| ------ | ---------- | ------ | ------------- |
+| id     | ✔          | string | Message ID.   |
+
+
+##### Returns
+
+| *Name*  | *Type*  | *Description*             |
+| ------- | ------- | ------------------------- |
+| message | Message | Newly reattached message. |
+
+##### Additional Information
+
+| *Name*                          | *Description*                                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Access modifiers                | Public                                                                                                       |
+| Errors                          | List of error messages [TBD]                                                                                 |
+| Required client library methods | [reattach()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#reattach) |
+
 
 #### total_balance()
 
@@ -1557,38 +575,21 @@ Gets total account balance.
 
 The total balance should be read directly from local storage. To read the latest account balance from the network, [sync()](#sync) should be used first. 
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td><a href="#value">Value</a></td>
-    <td>Account total balance.</td>
-  </tr>
-  <tr>
-    <td colspan="3">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+
+| *Type* | *Description*          |
+| ------ | ---------------------- |
+| Value  | Account total balance. |
+
+
+##### Additional Information
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### available_balance()
 
@@ -1598,139 +599,66 @@ For example, if a user with _50i_ total account balance has made a transaction s
 
 The available balance should be read directly from local storage. If you want to read the latest account balance from the network, you should use [sync()](#sync) first.
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td><a href="#value">Value</a></td>
-    <td>The accounts available balance.</td>
-  </tr>
-  <tr>
-    <td colspan="3">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+
+| *Type* | *Description*                   |
+| ------ | ------------------------------- |
+| Value  | The accounts available balance. |
+
+
+##### Additional Information
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### set_alias() 
 
 Updates an account's alias/name.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>alias</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>New account name.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description*     |
+| ------ | ---------- | ------ | ----------------- |
+| alias  | ✔          | string | New account name. |
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### list_messages() 
 
 Gets messages. Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of (most recent) messages.</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">All messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description*                                                                                                                |
+| ------ | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
+| count  | ✔          | number | Number of (most recent) messages.                                                                                            |
+| from   | ✔          | number | Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages. |
+
+##### Returns
+
+| *Name*   | *Type*    | *Description* |
+| -------- | --------- | ------------- |
+| messages | Message[] | All messages. |
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### list_received_messages()
 
@@ -1738,61 +666,26 @@ Gets all received messages.
 
 Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of most recent received messages.</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Subset of received messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">All received messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description*                            |
+| ------ | ---------- | ------ | ---------------------------------------- |
+| count  | ✔          | number | Number of most recent received messages. |
+| from   | ✔          | number | Subset of received messages.             |
+
+##### Returns
+
+| *Name*   | *Type*    | *Description*          |
+| -------- | --------- | ---------------------- |
+| messages | Message[] | All received messages. |
+
+
+##### Additional Information 
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### list_sent_messages()
 
@@ -1800,181 +693,83 @@ Gets all sent messages.
 
 Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of (most recent) sent messages.</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Subset of sent messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">All sent messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description*                          |
+| ------ | ---------- | ------ | -------------------------------------- |
+| count  | ✔          | number | Number of (most recent) sent messages. |
+| from   | ✔          | number | Subset of sent messages.               |
+
+
+##### Returns 
+
+| *Name*   | *Type*    | *Description*      |
+| -------- | --------- | ------------------ |
+| messages | Message[] | All sent messages. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### list_failed_messages()
 
 Gets all failed (broadcasted = false) messages. Messages should be read directly from local storage.
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of (most recent) failed messages.</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Subset of failed messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">All failed messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type* | *Description*                            |
+| ------ | ---------- | ------ | ---------------------------------------- |
+| count  | ✔          | number | Number of (most recent) failed messages. |
+| from   | ✔          | number | Subset of failed messages.               |
+
+
+##### Returns
+
+| *Name*   | *Type*    | *Description*        |
+| -------- | --------- | -------------------- |
+| messages | Message[] | All failed messages. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### list_unconfirmed_messages()
 
 Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from local storage.  
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>count</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Number of (most recent) unconfirmed messages.</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Subset of unconfirmed messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>messages</td>
-    <td><a href="#message">Message</a>[]</td>
-    <td colspan="3">All unconfirmed messages.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+| *Name* | *Required* | *Type* | *Description*                                 |
+| ------ | ---------- | ------ | --------------------------------------------- |
+| count  | ✔          | number | Number of (most recent) unconfirmed messages. |
+| from   | ✔          | number | Subset of unconfirmed messages.               |
+
+
+##### Returns
+
+| *Name*   | *Type*    | *Description*             |
+| -------- | --------- | ------------------------- |
+| messages | Message[] | All unconfirmed messages. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### get_message()
 
@@ -1982,172 +777,83 @@ Gets message for provided ID.
 
 Messages should be read directly from local storage.  To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Message ID.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td><a href="#message">Message</a></td>
-    <td colspan="3">Message object.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+| *Name* | *Required* | *Type* | *Description* |
+| ------ | ---------- | ------ | ------------- |
+| id     | ✔          | string | Message ID.   |
+
+
+##### Returns 
+
+| *Name*  | *Type*  | *Description*   |
+| ------- | ------- | --------------- |
+| message | Message | Message object. |
+
+
+##### Additional Information 
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### list_addresses()
 
 Gets all addresses.
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>addresses</td>
-    <td><a href="#address">Address</a>[]</td>
-    <td>All addresses.</td>
-  </tr>
-  <tr>
-    <td colspan="3">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+
+| *Name*    | *Type*                | *Description*  |
+| --------- | --------------------- | -------------- |
+| addresses | [Address](#address)[] | All addresses. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### list_unspent_addresses()
 
 Gets all unspent input addresses
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>Name</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>addresses</td>
-    <td><a href="#address">Address</a>[]</td>
-    <td>All unspent input addresses.</td>
-  </tr>
-  <tr>
-    <td colspan="3">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+
+| Name      | *Type*                  | *Description*                |
+| --------- | ----------------------- | ---------------------------- |
+| addresses | [Address](#address)[] | All unspent input addresses. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### generate_address()
 
 Gets the latest unused address.
 
-<table>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>address</td>
-    <td><a href="#address">Address</a></td>
-    <td>A new address object.</td>
-  </tr>
-  <tr>
-    <td colspan="3">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Returns
+
+| *Name*  | *Type*  | *Description*         |
+| ------- | ------- | --------------------- |
+| address | Address | A new address object. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 ## Account Manager
 
@@ -2159,55 +865,27 @@ An account manager class should be publicly available for users. With the accoun
 
 Initializes the account manager. Account manager initialization should validate the adapter object semantics and return an  _AccountManager_  instance.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>adapter</td>
-    <td>&#10008;</td>
-    <td><a href="#storageadapter">Adapter</a></td>
-    <td>Initialisation method receives an optional storage adapter.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>manager</td>
-    <td><a href="#accountsmanagerobject">AccountManager</a></td>
-    <td colspan="3">Account manager instance.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name*  | *Required* | *Type*                     | *Description*                                               |
+| ------- | ---------- | -------------------------- | ----------------------------------------------------------- |
+| adapter | ✘          | [Adapter](#storageadapter) | Initialisation method receives an optional storage adapter. |
+
+
+##### Returns 
+
+| *Name*  | *Type*                                   | *Description*             |
+| ------- | ---------------------------------------- | ------------------------- |
+| manager | [AccountManager](#accountmanagerobject) | Account manager instance. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
 
 #### add_account()
 
@@ -2215,59 +893,27 @@ Adds new account
 
 See account [initialisation](#initialisation) for detailed implementation guidelines.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>config</td>
-    <td>&#10004;</td>
-    <td>
-      <a href="#accountconfiguration">AccountConfig</a>
-    </td>
-    <td>Account configuration object.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>accounts</td>
-    <td>
-      <a href="#account">Account</a>
-    </td>
-    <td colspan="3">Newly created account.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name* | *Required* | *Type*                                 | *Description*                 |
+| ------ | ---------- | -------------------------------------- | ----------------------------- |
+| config | ✔          | [AccountConfig](#accountconfiguration) | Account configuration object. |
+
+##### Returns
+
+| *Name*   | *Type*              | *Description*          |
+| -------- | ------------------- | ---------------------- |
+| accounts | [Account](#account) | Newly created account. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### remove_account()
 
@@ -2277,164 +923,63 @@ The following should be considered when removing an account:
 - An account should first be removed from the  `Stronghold`  using its _removeAccount_ method.
 - Once the account references have been removed from the `Stronghold`, the account should be deleted from the persistent storage.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>identifier</td>
-    <td>&#10004;</td>
-    <td>
-      &#x7B; address: &lt;string> } | &#x7B; alias: &lt;string> } |
-      <p>
-        &#x7B; ID: &lt;number> } |
-      </p>
-      <p>
-        &#x7B; index: &lt;number }
-      </p>
-    </td>
-    <td>Identifier. Could be one of address, alias, ID or index.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+
+##### Parameters
+
+| *Name*     | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> }  </li><li>&#x7B; alias: &lt;string> }  </li><li>&#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number }</li></ul> | Identifier. Could be one of address, alias, ID or index. |
+
+##### Additional Information
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### sync_accounts() 
 
 Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.
 
-See [Accounts Syncing Process](#accounts-syncing-process) for further details.
+See [Accounts Syncing Process](#account-syncing-process) for further details.
 
-<table>
-  <tr>
-    <td colspan="3">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>account</td>
-    <td><a href="#syncedaccountobject">SyncedAccount</a>[]</td>
-    <td>Synced accounts.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">
-    <ul>
-      <li><a href="#sync">sync()</a></li>
-    </ul>
-    </td>
-  </tr>
-</table>
+##### Returns
+
+| *Name*  | *Type*                                  | *Description*    |
+| ------- | --------------------------------------- | ---------------- |
+| account | [SyncedAccount](#syncedaccountobject)[] | Synced accounts. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | [sync()](#sync)              |
+
 
 #### move()
 
 Moves funds from one account to another. This method should use the [send()](#send) method from the sender account and initiate a message to the receiver account.
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>from</td>
-    <td>&#10004;</td>
-    <td>
-      &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
-      <p>
-        &#x7B; ID: &lt;number> } |
-      </p>
-      <p>
-        &#x7B; index: &lt;number }
-      </p>
-    </td>
-    <td>Identifier. Could be one of address, alias, ID or index.</td>
-  </tr>
-  <tr>
-    <td>to</td>
-    <td>&#10004;</td>
-    <td>
-      &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
-      <p>
-        &#x7B; ID: &lt;number> } |
-      </p>
-      <p>
-        &#x7B; index: &lt;number }
-      </p>
-    </td>
-    <td>Identifier. Could be one of address, alias, ID or index.</td>
-  </tr>
-  <tr>
-    <td>amount</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Transaction amount.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+| *Name* | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
+| ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| from   | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li>  &#x7B; alias: &lt;string> } </li><li>&#x7B; ID: &lt;number></li><li>&#x7B; index: &lt;number }</li></ul>    | Identifier. Could be one of address, alias, ID or index. |
+| to     | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li>  &#x7B; alias: &lt;string> } </li><li> &#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number </li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| amount | ✔          | number                                                                                                                                                       | Transaction amount.                                      |
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### backup()
 
@@ -2442,42 +987,20 @@ Safely creates a backup of the accounts to a destination. The file could simply 
 
 This method should provide the `Stronghold` instance with the metadata of all accounts. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>destination</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Path where the backup should be stored.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+##### Parameters
+
+| *Name*      | *Required* | *Type* | *Description*                           |
+| ----------- | ---------- | ------ | --------------------------------------- |
+| destination | ✔          | string | Path where the backup should be stored. |
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### import_accounts
 
@@ -2485,111 +1008,49 @@ Import (backed up) accounts.
 
 **The implementation details are not finalized.**
 
-<table>
-  <tr>
-   <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-   <td>*Name*</td>
-   <td>*Required*</td>
-   <td>*Type*</td>
-   <td>*Description*</td>
-  </tr>
-  <tr>
-   <td>accounts</td>
-   <td>&#10004;</td>
-<td><a href="#account">Account</a>[]
-   </td>
-   <td>Account object.</td>
-  </tr>
-  <tr>
-<td colspan="4">*Additional Information*</td>
-</tr>
-<tr>
-<td>*Name*</td>
-<td>*Description*</td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td colspan="3">None</td>
-</tr>
-</table>
+##### Parameters
+
+| *Name*   | *Required* | *Type*                | *Description*   |
+| -------- | ---------- | --------------------- | --------------- |
+| accounts | ✔          | [Account](#account)[] | Account object. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### get_account() 
 
 Returns the account associated with the provided identifier.
 
-<table>
-  <tr>
-   <td colspan="4">*Parameters*
-   </td>
-  </tr>
-  <tr>
-   <td>*Name*</td>
-   <td>*Required*</td>
-   <td>*Type*</td>
-   <td>*Description*</td>
-  </tr>
-  <tr>
-   <td>identifier</td>
-   <td>&#10004;</td>
-   <td>&#x7B; address: &lt;string> } |  \
-&#x7B; alias: &lt;string>  } |
-<p>
-&#x7B; ID: &lt;number> }</p> |
-<p>
-&#x7B; index: &lt;number }</p>
-   </td>
-   <td>Identifier. Could be one of address, alias, ID or index. 
-   </td>
-  </tr>
-  <tr>
-   <td colspan="4">*Returns*
-   </td>
-  </tr>
-  <tr>
-   <td>*Name*
-   </td>
-   <td>*Type*
-   </td>
-   <td colspan="3">*Description*
-   </td>
-  </tr>
-  <tr>
-   <td>account</td>
-   <td>
-<a href="#account">Account</a>
-   </td>
-   <td colspan="3">Account associated with IDentifier.</td>
-  </tr>
-  <tr>
-<td colspan="4">*Additional Information*</td>
-</tr>
-<tr>
-<td>*Name*</td>
-<td colspan="3">*Description*</td>
-</tr>
-<tr>
-<td>Access modifiers</td>
-<td colspan="3">Public</td>
-</tr>
-<tr>
-<td>Errors</td>
-<td colspan="3">List of error messages [TBD]</td>
-</tr>
-<tr>
-<td>Required client library methods</td>
-<td colspan="3">None</td>
-</tr>
-</table>
+
+##### Parameters
+
+| *Name*     | *Required* | *Type*                                                                                                                                                     | *Description*                                            |
+| ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> }</li><li> &#x7B; alias: &lt;string>  } </li><li>&#x7B; ID: &lt;number> }</li><li>&#x7B; index: &lt;number }</li></ul> | Identifier. Could be one of address, alias, ID or index. |
+
+
+##### Returns
+
+| *Name*  | *Type*              | *Description*                       |
+| ------- | ------------------- | ----------------------------------- |
+| account | [Account](#account) | Account associated with identifier. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 #### reattach()
 
@@ -2597,69 +1058,31 @@ Reattaches an unconfirmed message.
 
 See [reattach()](#reattach) method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the [reattach()](#reattach) method on an account object. 
 
-<table>
-  <tr>
-    <td colspan="4">*Parameters*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Required*</td>
-    <td>*Type*</td>
-    <td>*Description*</td>
-  </tr>
-  <tr>
-    <td>identifier</td>
-    <td>&#10004;</td>
-    <td>
-      &#x7B; address: &lt;string> } | \ &#x7B; alias: &lt;string> } |
-      <p>
-        &#x7B; ID: &lt;number> } |
-      </p>
-      <p>
-        &#x7B; index: &lt;number }
-      </p>
-    </td>
-    <td>Identifier. Could be one of address, alias, ID or index.</td>
-  </tr>
-  <tr>
-    <td>id</td>
-    <td>&#10004;</td>
-    <td>string</td>
-    <td>Message ID.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Returns*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td>*Type*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>message</td>
-    <td><a href="#message">Message</a></td>
-    <td colspan="3">Newly reattached message.</td>
-  </tr>
-  <tr>
-    <td colspan="4">*Additional Information*</td>
-  </tr>
-  <tr>
-    <td>*Name*</td>
-    <td colspan="3">*Description*</td>
-  </tr>
-  <tr>
-    <td>Access modifiers</td>
-    <td colspan="3">Public</td>
-  </tr>
-  <tr>
-    <td>Errors</td>
-    <td colspan="3">List of error messages [TBD]</td>
-  </tr>
-  <tr>
-    <td>Required client library methods</td>
-    <td colspan="3">None</td>
-  </tr>
-</table>
+
+##### Parameters
+
+| *Name*     | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
+| ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li> &#x7B; alias: &lt;string> } </li><li>&#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number } </li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| id         | ✔          | string                                                                                                                                                       | Message ID.                                              |
+
+
+
+##### Returns 
+
+| *Name*  | *Type*              | *Description*             |
+| ------- | ------------------- | ------------------------- |
+| message | [Message](#message) | Newly reattached message. |
+
+
+##### Additional Information 
+
+| *Name*                          | *Description*                |
+| ------------------------------- | ---------------------------- |
+| Access modifiers                | Public                       |
+| Errors                          | List of error messages [TBD] |
+| Required client library methods | None                         |
+
 
 ## Events 
 
@@ -2675,148 +1098,64 @@ On every update sent from the node software via an event, the wallet library sho
 
 #### Monitor address for balance changes
 
-<table>
-  <tr>
-   <td colspan="3">*Event*
-   </td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3" >&lt;Address : Balance></td>
-   <td>
-    <ul>
-      <li>Index 1: Address</li>
-      <li>Index 2: New balance on the address</li>
-    </ul>
-   </td>
-  </tr>
-</table>
-
+| *Event*                 | *Returned Data*                                                                |
+| ----------------------- | ------------------------------------------------------------------------------ |
+| &lt; Address : Balance> | <ul><li>Index 1: Address</li><li>Index 2: New balance on the address</li></ul> |
+    
 #### Monitor address for new messages 
 
-<table>
-  <tr>
-   <td colspan="3">*Event*
-   </td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">&lt;Address : Message></td>
-   <td>
-   <ul>
-      <li>Index 1: Address</li>
-      <li>Index 2: Id of the new message</li>
-    </ul>
-   </td>
-  </tr>
-</table>
+| *Event*                | *Returned Data*                                                           |
+| ---------------------- | ------------------------------------------------------------------------- |
+| &lt;Address : Message> | <ul><li>Index 1: Address</li><li>Index 2: Id of the new message</li></ul> |
 
 #### Monitor message for confirmation state 
 
-<table>
-  <tr>
-   <td colspan="3" >*Event*
-   </td>
-   <td>*Returned Data*
-   </td>
-  </tr>
-  <tr>
-   <td colspan="3">&lt;MessageId>
-   </td>
-   <td>
-    <ul>
-      <li>Index 1: Message Id</li>
-      <li>Index 2: Confirmation state</li>
-    </ul>
-   </td>
-  </tr>
-</table>
-
+| *Event*        | *Returned Data*                                                           |
+| -------------- | ------------------------------------------------------------------------- |
+| &lt;MessageId> | <ul><li>Index 1: Message Id</li><li>Index 2: Confirmation state</li></ul> |
+    
 ### Category 2 events
 
 They could be triggered via events from [category 1](#category-1-events) or through [polling](#polling). 
 
 #### Monitor for balance changes
 
-<table>
-  <tr>
-   <td colspan="3">*Event*
-   </td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">balances
-   </td>
-   <td>[&#x7B; accountId, address, balance }]</td>
-  </tr>
-</table>
+| *Event*  | *Returned Data*                   |
+| -------- | --------------------------------- |
+| balances | [{ accountId, address, balance }] |
+
 
 #### Monitor for new messages 
 
-<table>
-  <tr>
-   <td colspan="3">*Event*
-   </td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">messages</td>
-   <td>[&#x7B; accountId, messages }]</td>
-  </tr>
-</table>
+| *Event*  | *Returned Data*           |
+| -------- | ------------------------- |
+| messages | [{ accountId, messages }] |
+
 
 #### Monitor for confirmation state 
 
-<table>
-  <tr>
-   <td colspan="3">*Event*</td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">confirmations</td>
-   <td>[&#x7B; accountId, messages  }]</td>
-  </tr>
-</table>
+| *Event*       | *Returned Data*            |
+| ------------- | -------------------------- |
+| confirmations | [{ accountId, messages  }] |
 
 #### Monitor for reattachments 
 
-<table>
-  <tr>
-   <td colspan="3">*Event*</td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">reattachments</td>
-   <td>[&#x7B; accountId, messages  }]</td>
-  </tr>
-</table>
+| *Event*       | *Returned Data*            |
+| ------------- | -------------------------- |
+| reattachments | [{ accountId, messages  }] |
+
 
 #### Monitor for broadcasts 
 
-<table>
-  <tr>
-   <td colspan="3" >*Event*
-   </td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">broadcasts</td>
-   <td>[&#x7B; accountId, messages  }]</td>
-  </tr>
-</table>
+| *Event*    | *Returned Data*            |
+| ---------- | -------------------------- |
+| broadcasts | [{ accountId, messages  }] |
 
 #### Monitor for errors 
 
-<table>
-  <tr>
-   <td colspan="3" >*Event*</td>
-   <td>*Returned Data*</td>
-  </tr>
-  <tr>
-   <td colspan="3">error</td>
-   <td>&#x7B; type, error  }</td>
-  </tr>
-</table>
+| *Event* | *Returned Data*  |
+| ------- | ---------------- |
+| error   | { type, error  } |
 
 ## Privacy
 
@@ -2866,7 +1205,7 @@ Treat accounts like addresses. Only allow 1 latest unused account.
 
  A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:  
 
-- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#syncaccounts) method. 
+- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#sync_accounts) method. 
   - If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. 
   - If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. 
   - If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers.
