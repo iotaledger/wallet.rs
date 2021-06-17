@@ -3,11 +3,11 @@ name: Build and run tests
 on:
   push:
     branches:
-      - master
-      - develop
+      - main
+      - dev
   pull_request:
     branches:
-      - develop
+      - dev
     paths-ignore:
       - 'specs/**'
       - 'docs/**'

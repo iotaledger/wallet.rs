@@ -3,12 +3,12 @@ name: Udeps
 on:
   push:
     branches:
-      - develop
-      - master
+      - dev
+      - main
   pull_request:
     branches:
-      - develop
-      - master
+      - dev
+      - main
 
 jobs:
   udeps:

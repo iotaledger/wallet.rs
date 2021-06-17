@@ -3,11 +3,11 @@ name: Clippy
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
-      - develop
+      - main
+      - dev
     paths-ignore:
       - 'specs/**'
 

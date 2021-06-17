@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
-    account_manager::{MigratedBundle, MigrationBundle, MigrationData},
+    account_manager::{MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -277,6 +277,24 @@ pub enum MessageType {
     },
     /// Get seed checksum.
     GetSeedChecksum(String),
+    /// Get migration address
+    GetMigrationAddress,
+    /// Mine bundle
+    MineBundle {
+        /// Prepared bundle.
+        #[serde(rename = "preparedBundle")]
+        prepared_bundle: Vec<String>,
+        /// Known spent bundle hashes.
+        #[serde(rename = "spentBundleHashes")]
+        spent_bundle_hashes: Vec<String>,
+        /// Security level.
+        #[serde(rename = "securityLevel")]
+        security_level: u8,
+        /// Mining timeout in seconds.
+        timeout: u64,
+        /// Mining offset.
+        offset: i64,
+    },
 }
 
 impl Serialize for MessageType {
@@ -377,6 +395,16 @@ impl Serialize for MessageType {
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
+            MessageType::GetMigrationAddress => {
+                serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
+            }
+            MessageType::MineBundle {
+                prepared_bundle: _,
+                spent_bundle_hashes: _,
+                security_level: _,
+                timeout: _,
+                offset: _,
+            } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
         }
     }
 }
@@ -555,6 +583,10 @@ pub enum ResponseType {
     SentMigrationBundle(MigratedBundle),
     /// GetSeedChecksum response.
     SeedChecksum(String),
+    /// GetMigrationAddress response.
+    MigrationAddress(String),
+    /// GetMigrationAddress response.
+    MineBundle(MinedBundle),
 }
 
 /// The message type.

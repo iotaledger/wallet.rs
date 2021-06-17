@@ -27,7 +27,10 @@ use std::{
     ops::{Deref, Range},
     panic::AssertUnwindSafe,
     path::{Path, PathBuf},
-    sync::Arc,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc, Mutex as StdMutex,
+    },
     thread,
     time::Duration,
 };
@@ -50,6 +53,9 @@ use tokio::{
 use zeroize::Zeroize;
 
 mod migration;
+use iota_migration::client::migration::{
+    add_tryte_checksum, encode_migration_address, get_trytes_from_bundle, mine_bundle,
+};
 pub use migration::*;
 
 /// The default storage folder.
@@ -255,12 +261,12 @@ impl AccountManagerBuilder {
         };
         let mut instance = AccountManager {
             storage_folder: self.storage_folder,
-            loaded_accounts,
+            loaded_accounts: AtomicBool::new(loaded_accounts),
             storage_path: storage_file_path,
             accounts,
             stop_polling_sender: None,
             polling_handle: None,
-            generated_mnemonic: None,
+            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock,
             cached_migration_data: Default::default(),
@@ -322,6 +328,16 @@ pub struct MigratedBundle {
     value: u64,
 }
 
+/// Response from `mine_bundle`.
+#[derive(Debug, Getters, Serialize)]
+#[getset(get = "pub")]
+pub struct MinedBundle {
+    /// Crackability
+    crackability: f64,
+    /// The mined bundle.
+    bundle: Vec<String>,
+}
+
 type CachedMigrationBundle = (Vec<BundledTransaction>, AddressWrapper, u64);
 
 /// The account manager.
@@ -330,7 +346,7 @@ type CachedMigrationBundle = (Vec<BundledTransaction>, AddressWrapper, u64);
 #[derive(Getters)]
 pub struct AccountManager {
     storage_folder: PathBuf,
-    loaded_accounts: bool,
+    loaded_accounts: AtomicBool,
     /// the path to the storage.
     #[getset(get = "pub")]
     storage_path: PathBuf,
@@ -339,7 +355,7 @@ pub struct AccountManager {
     accounts: AccountStore,
     stop_polling_sender: Option<BroadcastSender<()>>,
     polling_handle: Option<thread::JoinHandle<()>>,
-    generated_mnemonic: Option<String>,
+    generated_mnemonic: StdMutex<Option<String>>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
     cached_migration_data: Mutex<HashMap<u64, CachedMigrationData>>,
@@ -354,12 +370,12 @@ impl Clone for AccountManager {
     fn clone(&self) -> Self {
         Self {
             storage_folder: self.storage_folder.clone(),
-            loaded_accounts: self.loaded_accounts,
+            loaded_accounts: AtomicBool::new(self.loaded_accounts.load(Ordering::SeqCst)),
             storage_path: self.storage_path.clone(),
             accounts: self.accounts.clone(),
             stop_polling_sender: self.stop_polling_sender.clone(),
             polling_handle: None,
-            generated_mnemonic: None,
+            generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
             cached_migration_data: Default::default(),
@@ -424,6 +440,44 @@ impl AccountManager {
             last_checked_address_index: metadata.last_checked_address_index,
             inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
+    }
+
+    /// Convert the first address from the first account to a migration tryte address
+    pub async fn get_migration_address(&self) -> crate::Result<String> {
+        let deposit_address = self.get_account(0).await?.latest_address().await;
+        let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
+            Ok(MigrationAddress::Ed25519(a)) => a,
+            _ => return Err(crate::Error::InvalidAddress),
+        };
+        let deposit_address_trytes = encode_migration_address(deposit_address)?;
+        Ok(add_tryte_checksum(deposit_address_trytes)?)
+    }
+
+    /// Mine bundle
+    pub async fn mine_bundle(
+        &self,
+        prepared_bundle: Vec<String>,
+        spent_bundle_hashes: Vec<String>,
+        security_level: u8,
+        timeout: u64,
+        offset: i64,
+    ) -> crate::Result<MinedBundle> {
+        // Convert Tryte Strings back to Transactions
+        let mut prepared_bundle: Vec<BundledTransaction> = prepared_bundle
+            .into_iter()
+            .map(|tx| {
+                BundledTransaction::from_trits(&TryteBuf::try_from_str(&tx).unwrap().as_trits())
+                    .expect("Can't build transaction from String")
+            })
+            .collect();
+        // Reverse for correct attachment order
+        prepared_bundle.reverse();
+
+        let mining_result = mine_bundle(prepared_bundle, security_level, spent_bundle_hashes, timeout, offset).await?;
+        let crackability = mining_result.0.crackability;
+        let bundle = get_trytes_from_bundle(mining_result.1)?;
+
+        Ok(MinedBundle { crackability, bundle })
     }
 
     /// Creates the bundle for migration associated with the given input indexes,
@@ -590,7 +644,7 @@ impl AccountManager {
 
     // error out if the storage is encrypted
     fn check_storage_encryption(&self) -> crate::Result<()> {
-        if self.loaded_accounts {
+        if self.loaded_accounts.load(Ordering::SeqCst) {
             Ok(())
         } else {
             Err(crate::Error::StorageIsEncrypted)
@@ -635,7 +689,7 @@ impl AccountManager {
     }
 
     /// Sets the password for the stored accounts.
-    pub async fn set_storage_password<P: AsRef<str>>(&mut self, password: P) -> crate::Result<()> {
+    pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
         // safe to unwrap because the storage is always defined at this point
         crate::storage::set_encryption_key(&self.storage_path, key)
@@ -650,7 +704,7 @@ impl AccountManager {
                 self.sync_accounts_lock.clone(),
             )
             .await?;
-            self.loaded_accounts = true;
+            self.loaded_accounts.store(true, Ordering::SeqCst);
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
             // save the accounts and messages again to reencrypt with the new key
@@ -666,7 +720,7 @@ impl AccountManager {
     }
 
     /// Sets the stronghold password.
-    pub async fn set_stronghold_password<P: Into<String>>(&mut self, password: P) -> crate::Result<()> {
+    pub async fn set_stronghold_password<P: Into<String>>(&self, password: P) -> crate::Result<()> {
         let stronghold_path = if crate::storage::get(&self.storage_path).await.unwrap().lock().await.id()
             == crate::storage::stronghold::STORAGE_ID
         {
@@ -684,7 +738,7 @@ impl AccountManager {
                 self.sync_accounts_lock.clone(),
             )
             .await?;
-            self.loaded_accounts = true;
+            self.loaded_accounts.store(true, Ordering::SeqCst);
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         }
 
@@ -807,7 +861,7 @@ impl AccountManager {
 
     /// Stores a mnemonic for the given signer type.
     /// If the mnemonic is not provided, we'll generate one.
-    pub async fn store_mnemonic(&mut self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
+    pub async fn store_mnemonic(&self, signer_type: SignerType, mnemonic: Option<String>) -> crate::Result<()> {
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;
@@ -820,7 +874,12 @@ impl AccountManager {
         let mut signer = signer.lock().await;
         signer.store_mnemonic(&self.storage_path, mnemonic).await?;
 
-        if let Some(mut mnemonic) = self.generated_mnemonic.take() {
+        if let Some(mut mnemonic) = self
+            .generated_mnemonic
+            .lock()
+            .map_err(|_| crate::Error::PoisonError)?
+            .take()
+        {
             mnemonic.zeroize();
         }
 
@@ -828,25 +887,33 @@ impl AccountManager {
     }
 
     /// Generates a new mnemonic.
-    pub fn generate_mnemonic(&mut self) -> crate::Result<String> {
+    pub fn generate_mnemonic(&self) -> crate::Result<String> {
         let mut entropy = [0u8; 32];
         crypto::utils::rand::fill(&mut entropy).map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
         let mnemonic = crypto::keys::bip39::wordlist::encode(&entropy, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::MnemonicEncode(format!("{:?}", e)))?;
-        self.generated_mnemonic.replace(mnemonic.clone());
+        self.generated_mnemonic
+            .lock()
+            .map_err(|_| crate::Error::PoisonError)?
+            .replace(mnemonic.clone());
         Ok(mnemonic)
     }
 
     /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
     /// should match the generated.
-    pub fn verify_mnemonic<S: AsRef<str>>(&mut self, mnemonic: S) -> crate::Result<()> {
+    pub fn verify_mnemonic<S: AsRef<str>>(&self, mnemonic: S) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
         crypto::keys::bip39::wordlist::verify(mnemonic.as_ref(), &crypto::keys::bip39::wordlist::ENGLISH)
             // TODO: crypto::bip39::wordlist::Error should impl Display
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
 
         // then we check if the provided mnemonic matches the mnemonic generated with `generate_mnemonic`
-        if let Some(generated_mnemonic) = &self.generated_mnemonic {
+        if let Some(generated_mnemonic) = self
+            .generated_mnemonic
+            .lock()
+            .map_err(|_| crate::Error::PoisonError)?
+            .as_ref()
+        {
             if generated_mnemonic != mnemonic.as_ref() {
                 return Err(crate::Error::InvalidMnemonic(
                     "doesn't match the generated mnemonic".to_string(),
@@ -999,11 +1066,7 @@ impl AccountManager {
     }
 
     /// Import backed up accounts.
-    pub async fn import_accounts<S: AsRef<Path>>(
-        &mut self,
-        source: S,
-        stronghold_password: String,
-    ) -> crate::Result<()> {
+    pub async fn import_accounts<S: AsRef<Path>>(&self, source: S, stronghold_password: String) -> crate::Result<()> {
         let source = source.as_ref();
         if source.is_dir() || !source.exists() {
             return Err(crate::Error::InvalidBackupFile);
@@ -1016,7 +1079,7 @@ impl AccountManager {
 
         fs::create_dir_all(&self.storage_folder)?;
 
-        let mut stronghold_manager = Self::builder()
+        let stronghold_manager = Self::builder()
             .with_storage(source.parent().unwrap(), None)
             .unwrap() // safe to unwrap - password is None
             .with_storage_file_name(
@@ -2107,7 +2170,7 @@ mod tests {
 
     #[tokio::test]
     async fn backup_and_restore_storage_already_exists() {
-        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let backup_path = PathBuf::from("./backup/account-exists");
             let _ = std::fs::remove_dir_all(&backup_path);
             std::fs::create_dir_all(&backup_path).unwrap();
@@ -2138,7 +2201,7 @@ mod tests {
 
     #[tokio::test]
     async fn storage_password_reencrypt() {
-        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |mut manager, _| async move {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             crate::test_utils::AccountCreator::new(&manager).create().await;
             manager.set_storage_password("new-password").await.unwrap();
             let account_store = super::AccountStore::new(Default::default());

@@ -17,7 +17,7 @@ async fn main() -> iota_wallet::Result<()> {
     let config = LoggerConfig::build().with_output(output_config).finish();
     logger_init(config).unwrap();
 
-    let mut manager = AccountManager::builder()
+    let manager = AccountManager::builder()
         .with_storage("./backup", None)?
         .with_skip_polling()
         .finish()

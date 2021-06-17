@@ -72,7 +72,7 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&mut self, mut message: Message) {
+    pub async fn handle(&self, mut message: Message) {
         let response: Result<ResponseType> = match message.message_type_mut() {
             MessageType::RemoveAccount(account_id) => {
                 convert_async_panics(|| async { self.remove_account(account_id).await }).await
@@ -289,6 +289,35 @@ impl WalletMessageHandler {
                 let checksum = AccountManager::get_seed_checksum(seed.clone())?;
                 Ok(ResponseType::SeedChecksum(checksum))
             }),
+            MessageType::GetMigrationAddress => {
+                convert_async_panics(|| async {
+                    let address = self.account_manager.get_migration_address().await?;
+                    Ok(ResponseType::MigrationAddress(address))
+                })
+                .await
+            }
+            MessageType::MineBundle {
+                prepared_bundle,
+                spent_bundle_hashes,
+                security_level,
+                timeout,
+                offset,
+            } => {
+                convert_async_panics(|| async {
+                    let mined_bundle = self
+                        .account_manager
+                        .mine_bundle(
+                            prepared_bundle.to_vec(),
+                            spent_bundle_hashes.to_vec(),
+                            *security_level,
+                            *timeout,
+                            *offset,
+                        )
+                        .await?;
+                    Ok(ResponseType::MineBundle(mined_bundle))
+                })
+                .await
+            }
         };
 
         let response = match response {
@@ -305,7 +334,7 @@ impl WalletMessageHandler {
         Ok(ResponseType::BackupSuccessful)
     }
 
-    async fn restore_backup(&mut self, backup_path: &str, password: String) -> Result<ResponseType> {
+    async fn restore_backup(&self, backup_path: &str, password: String) -> Result<ResponseType> {
         self.account_manager.import_accounts(backup_path, password).await?;
         Ok(ResponseType::BackupRestored)
     }
@@ -483,13 +512,13 @@ impl WalletMessageHandler {
         Ok(ResponseType::ReadAccounts(accounts_))
     }
 
-    async fn set_storage_password(&mut self, password: &str) -> Result<ResponseType> {
+    async fn set_storage_password(&self, password: &str) -> Result<ResponseType> {
         self.account_manager.set_storage_password(password).await?;
         Ok(ResponseType::StoragePasswordSet)
     }
 
     #[cfg(feature = "stronghold")]
-    async fn set_stronghold_password(&mut self, password: &str) -> Result<ResponseType> {
+    async fn set_stronghold_password(&self, password: &str) -> Result<ResponseType> {
         self.account_manager.set_stronghold_password(password).await?;
         Ok(ResponseType::StrongholdPasswordSet)
     }
