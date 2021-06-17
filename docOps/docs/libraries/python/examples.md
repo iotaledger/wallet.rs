@@ -2,6 +2,7 @@
 This section will guide you through several examples using the python binding of the `Wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/python/examples).
 
 All the examples in this section expect your custom password  to be set in the  _.env_  file:
+
 ```bash
 SH_PASSWORD="here is your super secure password"
 ```
