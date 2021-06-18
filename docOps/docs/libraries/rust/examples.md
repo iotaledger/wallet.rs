@@ -4,7 +4,7 @@ You can list all available examples by running the following command:
 ```
 cargo run --example # lists the available examples
 ```
-To run an example, you can use the following command, replacing  _transfer_  with the desired example:
+To run an example, you can use the following command, replacing _transfer_ with the desired example:
 ```
 cargo run --example transfer # execute the `transfer` example
 ```
@@ -60,7 +60,8 @@ That's it! You can now backup and restore your account!
 You can see the full code for the example in the [`Wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
 
 
-## Transfer example:
+## Transfer Example:
+You use the following example to generate an account, and transfer funds. 
 
 ```rust
 // Copyright 2020 IOTA Stiftung
@@ -113,7 +114,9 @@ async fn main() -> iota_wallet::Result<()> {
 ```
 
 ## Events example:
+`Wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
+You can use the following example to fetch an existing _Account_ and listen to transaction events related to that _Account_ :
 ```rust
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
@@ -193,7 +196,7 @@ async fn get_funds(address: &Address) -> Result<MessageId> {
 
 ```
 
-Logger example:
+## Logger example:
 
 ```rust
 // Copyright 2020 IOTA Stiftung

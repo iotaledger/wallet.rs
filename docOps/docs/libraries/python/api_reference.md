@@ -11,7 +11,7 @@ For all the optional values, the default values are the same as the ones in the 
 | ------ | ---------------- | ---------------------- | ------------------------ |
 | config | `str` | `undefined` | The logger configuration |
 
-The config is the dumped string from the JSON, which key/value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
+The config is the dumped string from the JSON, which key:value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
 
 Please check the `example/logger_example.py` to see how to use it.
 
@@ -33,7 +33,7 @@ Creates a new instance of the AccountManager.
 | [allow_create_multiple_empty_accounts] | `boolean` | `false`              | Enables creating accounts with latest account being empty                                      |
 
 :::info
-If the  _storage_path_  is set, then the  _storage_  needs to be set too. An exception will be thrown when errors happened.
+If the _storage_path_ is set, then the _storage_ needs to be set too. An exception will be thrown when errors happened.
 :::
 
 **Returns** The constructed [AccountManager](#accountmanager).
@@ -71,7 +71,7 @@ Sets the Stronghold password.
 
 Determines whether all accounts have the latest address unused.
 
-**Returns**  _true_  if the latest address is unused.
+**Returns** _true_ if the latest address is unused.
 
 ### store_mnemonic(signer_type, mnemonic (optional)): bool
 
@@ -80,7 +80,7 @@ If the mnemonic is not provided, we'll generate one.
 
 | Param       | Type             | Default                         | Description                                                    |
 | ----------- | ---------------- | ------------------------------- | -------------------------------------------------------------- |
-| signer_type | `str` | `undefined`          | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
+| signer_type | `str` | `undefined`          | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
 | mnemonic    | `str` | `randomly generated` | The provided mnemonic or the randomly generated one            |
 
 ### generate_mnemonic(): str
@@ -91,7 +91,7 @@ Generates a new mnemonic.
 
 ### verify_mnemonic(mnemonic): void
 
-Checks is the mnemonic is valid. If a mnemonic was generated with  _generate_mnemonic()_ , the mnemonic here should match the generated.
+Checks is the mnemonic is valid. If a mnemonic was generated with _generate_mnemonic()_ , the mnemonic here should match the generated.
 
 | Param    | Type             | Default                | Description           |
 | -------- | ---------------- | ---------------------- | --------------------- |
@@ -313,7 +313,7 @@ Set the number of address indexes that are generated.
 ### skip_persistence(): void
 
 Skip saving new messages and addresses on the account object.
-The found [SyncedAccount](#syncedaccount) is returned on the  _execute_  call but won't be persisted on the database.
+The found [SyncedAccount](#syncedaccount) is returned on the _execute_ call but won't be persisted on the database.
 
 ### address_index(address_index): void
 
@@ -354,18 +354,18 @@ Syncs the accounts with the tangle.
 
 ### constructor(amount, address, indexation (optional), remainder_value_strategy: str): [Transfer](#transfer)
 
-The  _Transfer_  object used in [SyncedAccount](#syncedaccount)
+The _Transfer_ object used in [SyncedAccount](#syncedaccount)
 
 | Param                    | Type                                   | Default                | Description                                 |
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
 | amount                   | `int`                       | `undefined` | The amount to transfer                      |
 | address                  | `str`                       | `undefined` | The addree to send                          |
 | indexation               | `[Indexation](#indexation)` | `undefined` | The indexation payload                      |
-| remainder_value_strategy | `str`                       | `undefined` | Should be  _ReuseAddress_  or  _ChangeAddress_  |
+| remainder_value_strategy | `str`                       | `undefined` | Should be _ReuseAddress_ or _ChangeAddress_ |
 
 ## SyncedAccount
 
-The result of a  _sync_  operation on an Account.
+The result of a _sync_ operation on an Account.
 
 ### account_handle(): [AccountHandle](#accounthandle)
 
@@ -399,7 +399,7 @@ Get the addresses of this account.
 
 ### signer_type(): str
 
-**Returns** the singer type of this account.
+**Returns** the signer type of this account.
 
 ### index(): int
 
@@ -491,7 +491,7 @@ Syncs the latest address with the Tangle and determines whether it's unused or n
 An unused address is an address without balance and associated message history.
 Note that such address might have been used in the past, because the message history might have been pruned by the node.
 
-**Returns**  _true_  if the latest address in the account is unused.
+**Returns** _true_ if the latest address in the account is unused.
 
 ### latest_address(): [Address](#address)
 
@@ -540,7 +540,7 @@ Returns the number of messages associated with the account.
 
 | Param        | Type             | Default                | Description                                                       |
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
-| message_type | `str` | `undefined` | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
+| message_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
 
 ### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
 
@@ -550,7 +550,7 @@ Get the list of messages of this account.
 | ------------ | ---------------- | ---------------------- | ----------------------------------------------------------------- |
 | count        | `int` | `undefined` | The count of the messages to get                                  |
 | from         | `int` | `undefined` | The iniital address index                                         |
-| message_type | `str` | `undefined` | Should be  _Received_ ,  _Sent_ ,  _Failed_ ,  _Unconfirmed_ , or  _Value_  |
+| message_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
 
 ### list_spent_addresses(): list[[Address](#address)]
 
@@ -568,7 +568,7 @@ Sets the account type.
 
 | Param       | Type             | Default                  | Description                                                    |
 | ----------- | ---------------- | ------------------------ | -------------------------------------------------------------- |
-| signer_type | `str` | `signer_type` | Should be  _Stronghold_ ,  _LedgerNano_ , or  _LedgerNanoSimulator_  |
+| signer_type | `str` | `signer_type` | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
 
 ### alias(alias): void
 
@@ -782,7 +782,7 @@ Removes the migration progress listener associated with the given identifier.
 
 ## WalletAddress
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_address = {
@@ -798,7 +798,7 @@ Please refer to [WalletAddressOutput](#walletaddressoutput) for the details of t
 
 ## WalletAddressOutput
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_address_output = {
@@ -815,7 +815,7 @@ wallet_address_output = {
 
 ## Address
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address = {
@@ -831,7 +831,7 @@ Please refer to [AddressWrapper](#addresswrapper) and [AddressOutput](#addressou
 
 ## AddressWrapper
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address_wrapper = {
@@ -841,7 +841,7 @@ address_wrapper = {
 
 ## AddressOutput
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address_output = {
@@ -858,7 +858,7 @@ Please refer to [AddressWrapper](#addresswrapper) for the details of this type.
 
 ## AccountBalance
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 account_balance = {
@@ -871,7 +871,7 @@ account_balance = {
 
 ## ClientOptions
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 client_options = {
@@ -897,7 +897,7 @@ Note that this message object in `Wallet.rs` is not the same as the message obje
 
 ## Node
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 node = {
@@ -908,7 +908,7 @@ node = {
 
 ## NodeAuth
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 node = {
@@ -919,7 +919,7 @@ node = {
 
 ## BrokerOptions
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 broker_options = {
@@ -933,7 +933,7 @@ broker_options = {
 
 ## WalletMessage
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_message = {
@@ -953,7 +953,7 @@ Please refer to [Payload](#payload) for the details of this type.
 
 ## Payload
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 payload = {
@@ -967,7 +967,7 @@ Please refer to [Transaction](#transaction), [Milestone](#milestone), and [Index
 
 ## Transaction
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 transaction = {
@@ -982,7 +982,7 @@ Please refer to [RegularEssence](#regularessence) and [UnlockBlock](#unlockblock
 
 ## Milestone
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 milestone = {
@@ -995,7 +995,7 @@ Please refer to [MilestonePayloadEssence](#milestonepayloadessence) for the deta
 
 ## MilestonePayloadEssence
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 milestone_payload_essence = {
@@ -1009,7 +1009,7 @@ milestone_payload_essence = {
 
 ## Indexation
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 indexation = {
@@ -1020,7 +1020,7 @@ indexation = {
 
 ## RegularEssenceEssence
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 transaction_regular_essence = {
@@ -1037,7 +1037,7 @@ Please refer to [Input](#input), [Output](#output), and [Payload](#payload) for 
 
 ## Output
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 output = {
@@ -1048,7 +1048,7 @@ output = {
 
 ## Input
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 input = {
@@ -1059,7 +1059,7 @@ input = {
 
 ## UnlockBlock
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 unlock_block = {
@@ -1072,7 +1072,7 @@ Please refer to [Ed25519Signature](#ed25519signature) for the details of this ty
 
 ## Ed25519Signature
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 ed25519_signature = {

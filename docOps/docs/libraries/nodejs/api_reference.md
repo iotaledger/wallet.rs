@@ -145,7 +145,7 @@ Synchronize all stored accounts with the Tangle.
 | [options.addressIndex] | `number` | `latest address index` | The index of the first account address to sync        |
 | [options.gapLimit]     | `number` | `10`                   | The number of addresses to check on each account sync |
 
-Returns A promise resolving to an array of [SyncedAccount](#syncedaccount).
+Returns a promise resolving to an array of [SyncedAccount](#syncedaccount).
 
 ### internalTransfer(fromAccount, toAccount, amount)
 
@@ -157,7 +157,7 @@ Transfers an amount from one sub-account to another.
 | toAccount   | `[Account](#account)` | `null`      | The destination account |
 | amount      | `number`              | `undefined` | The transfer amount     |
 
-Returns A promise resolving to the transfer's Message.
+Returns a promise resolving to the transfer's Message.
 
 ### backup(destination, password)
 
@@ -168,7 +168,7 @@ Backups the database.
 | destination | `string` | `undefined` | The path to the backup file    |
 | password    | `string` | `undefined` | The backup Stronghold password |
 
-Returns The full path to the backup file.
+Returns the full path to the backup file.
 
 ### importAccounts(source)
 
@@ -303,31 +303,31 @@ Gets the number of persisted transaction broadcast events.
 
 ## SyncedAccount
 
-The result of a  _sync_  operation on an Account.
+The result of a `sync` operation on an Account.
 
 ## Account
 
 ### id()
 
-Returns: the account's identifier.
+Returns the account's identifier.
 
 ### index()
 
-Returns: the account's index.
+Returns the account's index.
 
 ### alias()
 
-Returns: the account's alias.
+Returns the account's alias.
 
 ### balance(): AccountBalance
 
-Returns: the account's balance information object.
+Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
 ### messageCount([type])
 
-Returns: the number of messages associated with the account.
+Returns the number of messages associated with the account.
 
 | Param  | Type     | Default | Description                                                                              |
 | ------ | -------- | ------- | ---------------------------------------------------------------------------------------- |
@@ -335,7 +335,7 @@ Returns: the number of messages associated with the account.
 
 ### listMessages([count, from, type])
 
-Returns: the account's messages.
+Returns the account's messages.
 
 | Param   | Type     | Default | Description                                                                              |
 | ------- | -------- | ------- | ---------------------------------------------------------------------------------------- |
@@ -346,7 +346,7 @@ Returns: the account's messages.
 Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
 ### listAddresses([unspent])
-Returns: the account's addresses.
+Returns the account's addresses.
 
 | Param     | Type      | Default | Description               |
 | --------- | --------- | ------- | ------------------------- |
@@ -364,7 +364,7 @@ Synchronizes the account with the Tangle.
 | [options.addressIndex] | `number` | `latest address index` | The index of the first address to sync |
 | [options.gapLimit]     | `number` | `10`                   | The number of addresses to check       |
 
-Returns: a [SyncedAccount](#syncedaccount) instance.
+Returns a [SyncedAccount](#syncedaccount) instance.
 
 ### send(address, amount[, options])
 
@@ -403,7 +403,7 @@ Gets information about the node.
 | url   | `string` | `Node from client options` | The node url          |
 | auth  | `Auth`   | `undefined`                | The node auth options |
 
-Returns: the [NodeInfoWrapper](#nodeinfowrapper)
+Returns the [NodeInfoWrapper](#nodeinfowrapper)
 
 #### NodeInfoWrapper
 
@@ -465,7 +465,7 @@ Consolidate the outputs on all account addresses.
 
 Determines whether the account has unused latest address after syncing with the Tangle.
 
-Returns: a promise resolving to the boolean value.
+Returns a promise resolving to the boolean value.
 
 ### setAlias(alias)
 
@@ -509,7 +509,7 @@ Generates a new unused address and returns it.
 
 ### latestAddress()
 
-Returns: the latest address (the one with the biggest keyIndex).
+Returns the latest address (the one with the biggest keyIndex).
 
 ### getUnusedAddress()
 

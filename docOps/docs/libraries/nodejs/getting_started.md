@@ -8,12 +8,11 @@ You can find a guide for exchanges and the most common use cases in the [Chrysal
 
 ## Security
 :::warning
-It is not recommended to store passwords on the host's environment variables, or in the source code in a production setup. 
-Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
+In a production setup, do not store passwords in the host's environment variables or in the source code.  See our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production setups.
 :::
 ## Installation
 
-The package is published in the [npmjs](https://www.npmjs.com/package/@iota/wallet). We also use  _dotenv_  for password management in the examples.
+The package is published in the [npmjs](https://www.npmjs.com/package/@iota/wallet). We also use _dotenv_ for password management in the examples.
 
 - To install with NPM, you can run the following command:
 ```

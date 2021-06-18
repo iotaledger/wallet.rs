@@ -16,10 +16,12 @@ In order to properly test value-based transactions on testnet network, you are g
 
 ## The Library in a Nutshell
 
-`Wallet.rs` uses an account model, so you can create an account for each of your users. You could also take another approach and use one account and generate many addresses, which you can link to your users in your database. The library allows users to assign a meaningful alias to each account. It also leaves the choice to users if they want to segregate their funds across multiple accounts or multiple addresses. Basically, it is up to a developer to decide whether a _single-account approach_ or _multi-account approach_ is chosen. The library provides a support to any of the scenarios.
+`Wallet.rs` uses an account model, so you can create an account for each of your users. You could also take another approach and use one account and generate many addresses, which you can link to your users in your database. 
+
+The library allows users to assign a meaningful alias to each account. Users may also segregate their funds across multiple accounts or multiple addresses. It is up to a developer whether he chooses a single-account approach or multi-account approach.
 
 The library is based on a [derivation for multiple accounts from a single seed](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space). An account is simply a deterministic identifier from which multiple addresses can be further derived. 
 
-The following image illustrates the relationships between seed, accounts and addresses:
+The following image illustrates the relationships between seed, accounts and addresses.  A single seed can contain multiple accounts.  Each account can also have multiple addresses which can be linked to users in your database. 
 
 ![Seed, accounts and Addresses](../../static/img/libraries/accounts_addresses.svg)
