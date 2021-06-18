@@ -6,11 +6,11 @@
 
 We recommend you update _Rust_ to the latest stable version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). The nightly version should be fine, but there is a chance some changes are not compatible.
 
- _no_std_ is not currently supported, but we are working on it, and we will provide it as a feature once the new implementation is ready.
+ [_no_std_](https://docs.rust-embedded.org/book/intro/no-std.html) is not currently supported, but we are working on it, and we will provide it as a feature once the new implementation is ready.
 
 ### Dependencies
 
- _cmake_ and _openssl_ are required. In order to run the build process successfully using Cargo you may need install additional build tools on your system. 
+ [_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/) are required. In order to run the build process successfully using Cargo you may need install additional build tools on your system. 
 
 ### Windows
 
@@ -36,7 +36,7 @@ We recommend you update _Rust_ to the latest stable version [rustup update stabl
 
 ### macOS
 
- _cmake_ and _openssl_ can be installed with _Homebrew_ by running the following commands:
+ _cmake_ and _openssl_ can be installed with [_Homebrew_](https://docs.brew.sh/) by running the following commands:
 
 ```
 $ brew install cmake
@@ -47,7 +47,7 @@ $ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 
 ### Linux
 
-You can install _cmake_ and _openssl_ with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need the `build-essential` meta-package.
+You can install _cmake_ and _openssl_ with your distro's package manager or download from their websites. On Debian and Ubuntu you will also need the [_build-essential_](https://packages.debian.org/sid/build-essential) package.
 
 ## Usage
 

@@ -36,7 +36,7 @@ Creates a new instance of the AccountManager.
 If the _storage_path_ is set, then the _storage_ needs to be set too. An exception will be thrown when errors happened.
 :::
 
-**Returns** The constructed [AccountManager](#accountmanager).
+Returns the constructed [AccountManager](#accountmanager).
 
 ### start_background_sync(polling_interval, automatic_output_consolidation): void
 
@@ -71,7 +71,7 @@ Sets the Stronghold password.
 
 Determines whether all accounts have the latest address unused.
 
-**Returns** _true_ if the latest address is unused.
+Returns _true_ if the latest address is unused.
 
 ### store_mnemonic(signer_type, mnemonic (optional)): bool
 
@@ -87,7 +87,7 @@ If the mnemonic is not provided, we'll generate one.
 
 Generates a new mnemonic.
 
-**Returns** The generated mnemonic string.
+Returns the generated mnemonic string.
 
 ### verify_mnemonic(mnemonic): void
 
@@ -105,7 +105,7 @@ Creat a new account.
 | -------------- | -------------------------------------------- | ---------------------- | ------------------ |
 | client_options | `[ClientOptions](#clientoptions)` | `undefined` | The client options |
 
-**Returns** A constructed [AccountInitialiser](#accountinitialiser).
+Returns a constructed [AccountInitialiser](#accountinitialiser).
 
 ### remove_account(account_id): void
 
@@ -117,7 +117,7 @@ Deletes an account.
 
 ### sync_accounts(): [AccountsSynchronizer](#accountssynchronizer)
 
-**Returns** the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
+Returns the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
 ### internal_transfer(from_account_id, to_account_id, amount): WalletMessage
 
@@ -129,7 +129,7 @@ Transfers an amount from an account to another.
 | to_account_id   | `str` | `undefined` | The destination of account id in the transfering |
 | amount          | `int` | `undefined` | The transfer amount                              |
 
-**Returns** The transfer's [WalletMessage](#walletmessage).
+Returns the transfer's [WalletMessage](#walletmessage).
 
 ### backup(destination, Stronghold_password): str
 
@@ -140,7 +140,7 @@ Backups the storage to the given destination.
 | destination         | `str` | `undefined` | The path to the backup file    |
 | Stronghold_password | `str` | `undefined` | The backup Stronghold password |
 
-**Returns** The full path to the backup file.
+Returns the full path to the backup file.
 
 ### import_accounts(source, Stronghold_password): void
 
@@ -159,13 +159,13 @@ Gets the account with the given identifier or index.
 | ---------- | ---------------- | ---------------------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 
-**Returns** the associated AccountHandle object or undefined if the account wasn't found.
+Returns the associated AccountHandle object or undefined if the account wasn't found.
 
 ### get_accounts(): list[[AccountHandle](#accounthandle)]
 
 Gets all stored accounts.
 
-**Returns** an list of [AccountHandle](#accounthandle).
+Returns a list of [AccountHandle](#accounthandle).
 
 ### retry(account_id, message_id): [WalletMessage](#walletmessage)
 
@@ -176,7 +176,7 @@ Retries (promotes or reattaches) the given message.
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 | message_id | `str` | `undefined` | The message's identifier                             |
 
-**Returns** the retried [WalletMessage](#walletmessage).
+Returns the retried [WalletMessage](#walletmessage).
 
 ### reattach(account_id, message_id): [WalletMessage](#walletmessage)
 
@@ -187,7 +187,7 @@ Reattach the given message.
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 | message_id | `str` | `undefined` | The message's identifier                             |
 
-**Returns** the reattached [WalletMessage](#walletmessage).
+Returns the reattached [WalletMessage](#walletmessage).
 
 ### promote(account_id, message_id): [WalletMessage](#walletmessage)
 
@@ -198,7 +198,7 @@ Promote the given message.
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 | message_id | `str` | `undefined` | The message's identifier                             |
 
-**Returns** the promoted [WalletMessage](#walletmessage).
+Returns the promoted [WalletMessage](#walletmessage).
 
 ### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -371,63 +371,63 @@ The result of a _sync_ operation on an Account.
 
 Get the [AccountHandle](#accounthandle) of this account
 
-**Returns** the [AccountHandle](#accounthandle).
+Returns the [AccountHandle](#accounthandle).
 
 ### deposit_address(): [Address](#address)
 
 Get the deposit_address of this account.
 
-**Returns** the [Address](#address).
+Returns the [Address](#address).
 
 ### messages(): [WalletMessage](#walletmessage)
 
 Get the messages of this account.
 
-**Returns** the [WalletMessage](#walletmessage).
+Returns the [WalletMessage](#walletmessage).
 
 ### addresses()
 
 Get the addresses of this account.
 
-**Returns** the list of [WalletMessage](#walletmessage).
+Returns the list of [WalletMessage](#walletmessage).
 
 ## AccountHandle
 
 ### id(): str
 
-**Returns** the account ID.
+Returns the account ID.
 
 ### signer_type(): str
 
-**Returns** the signer type of this account.
+Returns the signer type of this account.
 
 ### index(): int
 
-**Returns** the account index.
+Returns the account index.
 
 ### alias(): str
 
-**Returns** the account alias.
+Returns the account alias.
 
 ### created_at(): int
 
-**Returns** the created UNIX timestamp.
+Returns the created UNIX timestamp.
 
 ### last_synced_at(): int or None (it did not be synced before)
 
-**Returns** the last synced UNIX timestamp.
+Returns the last synced UNIX timestamp.
 
 ### client_options(): [ClientOptions](#clientoptions)
 
-**Returns** the client options of this account.
+Returns the client options of this account.
 
 ### bech32_hrp(): str
 
-**Returns** the Bech32 HRP string.
+Returns the Bech32 HRP string.
 
 ### sync(): [AccountSynchronizer](#accountsynchronizer)
 
-**Returns** the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
+Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
 
 ### transfer(transfer_obj): [WalletMessage](#walletmessage)
 
@@ -437,7 +437,7 @@ Transfer tokens.
 | ------------ | ---------------------------------- | ---------------------- | ---------------------------- |
 | transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
 
-**Returns** the [WalletMessage](#walletmessage) which makes the transfering.
+Returns the [WalletMessage](#walletmessage) which makes the transfering.
 
 ### retry(message_id): [WalletMessage](#walletmessage)
 
@@ -447,7 +447,7 @@ Retries (promotes or reattaches) the given message.
 | ---------- | ---------------- | ---------------------- | ------------------------ |
 | message_id | `str` | `undefined` | The message's identifier |
 
-**Returns** the retried [WalletMessage](#walletmessage).
+Returns the retried [WalletMessage](#walletmessage).
 
 ### reattach(message_id): [WalletMessage](#walletmessage)
 
@@ -457,7 +457,7 @@ Reattach the given message.
 | ---------- | ---------------- | ---------------------- | ------------------------ |
 | message_id | `str` | `undefined` | The message's identifier |
 
-**Returns** the reattached [WalletMessage](#walletmessage).
+Returns the reattached [WalletMessage](#walletmessage).
 
 ### promote(message_id): [WalletMessage](#walletmessage)
 
@@ -467,23 +467,23 @@ Promote the given message.
 | ---------- | ---------------- | ---------------------- | ------------------------ |
 | message_id | `str` | `undefined` | The message's identifier |
 
-**Returns** the promoted [WalletMessage](#walletmessage).
+Returns the promoted [WalletMessage](#walletmessage).
 
 ### consolidate_outputs(): list[WalletMessage](#walletmessage)
 
 Consolidates the account addresses outputs.
 
-**Returns** the list of generated [WalletMessage](#walletmessage).
+Returns the list of generated [WalletMessage](#walletmessage).
 
 ### generate_address(): list[[Address](#address)]
 
-**Returns** a new unused address and links it to this account.
+Returns a new unused address and links it to this account.
 
 ### get_unused_address(): [Address](#address)
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account, which is an address without balance.
 
-**Returns** the latest address in the account.
+Returns the latest address in the account.
 
 ### is_latest_address_unused(): bool
 
@@ -491,21 +491,21 @@ Syncs the latest address with the Tangle and determines whether it's unused or n
 An unused address is an address without balance and associated message history.
 Note that such address might have been used in the past, because the message history might have been pruned by the node.
 
-**Returns** _true_ if the latest address in the account is unused.
+Returns _true_ if the latest address in the account is unused.
 
 ### latest_address(): [Address](#address)
 
-**Returns** the most recent address of the account.
+Returns the most recent address of the account.
 
 ### addresses(): list[[Address](#address)]
 
-**Returns** a list of [Address](#address) in the account.
+Returns a list of [Address](#address) in the account.
 
 ### balance(): [AccountBalance](#accountbalance)
 
 Gets the account balance information.
 
-**Returns** the [AccountBalance](#accountbalance) in this account.
+Returns the [AccountBalance](#accountbalance) in this account.
 
 ### get_node_info(url (optional), auth (optional)): NodeInfoWrapper
 
@@ -516,7 +516,7 @@ Gets information about the node.
 | url   | `str`       | `undefined` | The node url          |
 | auth  | `list[str]` | `undefined` | The node auth options |
 
-**Returns** the [NodeInfoWrapper](#nodeinfowrapper)
+Returns the [NodeInfoWrapper](#nodeinfowrapper)
 
 ### set_alias(alias): void
 
@@ -554,7 +554,7 @@ Get the list of messages of this account.
 
 ### list_spent_addresses(): list[[Address](#address)]
 
-**Returns** the list of spent [Address](#address) in the account.
+Returns the list of spent [Address](#address) in the account.
 
 ### get_message(message_id): WalletMessage](#walletmessage) (optional)
 
@@ -614,7 +614,7 @@ Skips storing the account to the database.
 
 Initialises the account.
 
-**Returns** the initilized [AccountHandle](#accounthandle)
+Returns the initilized [AccountHandle](#accounthandle)
 
 ## Event Listeners
 
@@ -626,7 +626,7 @@ Listen to balance changes.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_balance_change_listener(list[int]): void
 
@@ -644,7 +644,7 @@ Listen to new messages.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_new_transaction_listener(list[int]): void
 
@@ -662,7 +662,7 @@ Listen to transaction confirmation state change.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_confirmation_state_change_listener(list[int]): void
 
@@ -680,7 +680,7 @@ Listen to transaction reattachment.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_reattachment_listener(list[int]): void
 
@@ -698,7 +698,7 @@ Listen to transaction broadcast.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_broadcast_listener(list[int]): void
 
@@ -716,7 +716,7 @@ Listen to errors.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_error_listener(list[int]): void
 
@@ -734,7 +734,7 @@ Listen to Stronghold status change events.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_stronghold_status_change_listener(list[int]): void
 
@@ -752,7 +752,7 @@ Listen to transfer progress events.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_transfer_progress_listener(list[int]): void
 
@@ -770,7 +770,7 @@ Listen to migration progress events.
 | ---------- | --------------------- | ---------------------- | --------------------- |
 | [callback] | `function` | `undefined` | The callback function |
 
-**Returns** the event id as list[int].
+Returns the event id as list[int].
 
 ### remove_migration_progress_listener(list[int]): void
 

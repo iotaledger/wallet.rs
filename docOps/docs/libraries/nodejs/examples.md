@@ -77,7 +77,10 @@ Any account can be then referred to by its _index_ , _alias_ or one of its gener
 Several API calls can be performed via an _account_ instance.
 
 :::info
-It is a good practice to sync the given account with the Tangle every time you work with an _account_ instance.  This way you can ensure that you rely on the latest available information.  You can do this using _account.sync()_. By default, _account.sync()_ is performed automatically on _send_, _retry_, _reattach_ and _promote_ API calls.:::
+It is a good practice to sync accounts with the Tangle every time you work with an _account_ instance.  This way you can ensure that you rely on the latest available information.
+
+You can do this using _account.sync()_. _account.sync()_ is performed automatically on _send_, _retry_, _reattach_ and _promote_ API calls.
+:::
 
 Once an account has been created, you can retrieve an instance using the following methods: 
 - [ _AccountManager.getAccount(accountId)_ ](api_reference.md#getaccountaccountid)

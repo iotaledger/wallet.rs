@@ -17,6 +17,9 @@ module.exports = {
         src: 'static/img/logo/Logo_Swirl_Dark.png',
       },
     },
+    prism: {
+        additionalLanguages: ['rust'],
+    },
   },
   presets: [
     [
@@ -27,7 +30,7 @@ module.exports = {
           routeBasePath:'/',
           // Please change this to your repo.
           editUrl:
-            'https://github.com/iotaledger/wallet.rs/tree/develop/docs',
+            'https://github.com/iotaledger/wallet.rs/tree/main/docs',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

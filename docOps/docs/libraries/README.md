@@ -1,6 +1,6 @@
 # IOTA Wallet Libraries
 
-At the moment there are two available official bindings to `Wallet.rs`, as well as the Rust source.:
+At the moment there are two available official bindings to `Wallet.rs`, as well as the Rust source:
 
 - [Rust](rust/README.md)
 - [Node.js](nodejs/README.md) 

@@ -116,7 +116,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 
 | Property                    | Required | Type     | Description                                                                             |
 | --------------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
-| format(type: string):string | ✔        | function | Transaction timestamp in various formats. For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss. |
+| format(type: string):string | ✔        | function | Transaction timestamp in various formats.<br/> For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss. |
 
 #### Transfer 
 
