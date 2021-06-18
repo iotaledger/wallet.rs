@@ -8,9 +8,9 @@ At the moment there are two available official bindings to `Wallet.rs`, as well 
 
 
 ## Getting Started
-We recommended that you start your interactions with IOTA on a _testnet_ network.  You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
+We recommended that you start your interactions with IOTA on a _testnet_ network. The _test_net_ will allow you to safely get acquainted with the `Wallet.rs` library, without the risk losing any funds if you make a mistake along the way. You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
 
-A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).
+A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).  You can use the network explorer to view transactions and data stored in the IOTA Tangle.    
 
 In order to properly test value-based transactions on testnet network, you are going to need some tokens! You can get some testnet tokens through our [faucet](https://faucet.testnet.chrysalis2.com/).
 

@@ -30,13 +30,13 @@ Account configuration or initialization object. It should support parameters acc
 | seed             | ✘        | string                                                                                                           | BIP-39 mnemonic. When importing an account from Stronghold backup, the seed will not be required.                                                                      |
 | id               | ✘        | string                                                                                                           | SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The ID should be provided by Stronghold.             |
 | index            | ✔        | number                                                                                                           | Account index in [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path                                                              |
-| alias            | ✘        | string                                                                                                           | Account name. If not provided, `Account + $&#x7B;index}` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold. |
-| pow              | ✘        | ‘local’,‘remote’                                                                                                 | Proof of work settings. Defaults to ‘local’.<ul><li>‘local’: Should be performed on device;</li><li>‘remote’: Should be performed on the node.</li></ul>               |
+| alias            | ✘        | string                                                                                                           | Account name. If not provided, `Account + { index }` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold. |
+| pow              | ✘        | `local`,`remote`                                                                                                 | Proof of work settings. Defaults to `local`.<ul><li>`local`: Should be performed on device;</li><li>`remote`: Should be performed on the node.</li></ul>               |
 | nodes            | ✔        | [node](#node)[]                                                                                                  | A list of nodes to connect to.                                                                                                                                         |
 | quorum_size      | ✘        | number                                                                                                           | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.                                                               |
 | quorum_threshold | ✘        | number                                                                                                           | Minimum number of nodes from the quorum pool that need to agree to consider a result true.                                                                             |
-| network          | ✘        | `mainnet`\|‘devnet’ \| ‘comnet’                                                                                  | IOTA public network.                                                                                                                                                   |
-| type             | ✘        | ‘default’ or ‘ledger’                                                                                            | Account type. Required for differentiating ledger vs non-ledger accounts.                                                                                              |
+| network          | ✘        | `mainnet`\|`devnet` \| `comnet`                                                                                  | IOTA public network.                                                                                                                                                   |
+| type             | ✘        | `default` or `ledger`                                                                                            | Account type. Required for differentiating ledger vs non-ledger accounts.                                                                                              |
 | provider         | ✘        | string                                                                                                           | Node URL.                                                                                                                                                              |
 | created_at       | ✘        | Date                                                                                                             | Time of account creation                                                                                                                                               |
 | messages         | ✘        | [Message](#message)[]Messages associated with account. Accounts can be initialized with locally stored messages. |
@@ -264,7 +264,7 @@ You should consider multiple storage options should for managing data that requi
 - You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options. 
 - For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite). 
 
-What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An  _account_  is the basic entity in this database design. It has a one-to-many relationship with  _addresses_  (i.e. an  _account_  could have multiple  _addresses_ , but an  __address__  can only belong to a single  _account_ . An  _account_  has a many-to-many relationship with  _transactions_ (i.e. an  _account_  could have multiple  _transactions_ , but it’s possible that a  _transaction_  belongs to multiple  _accounts_ . To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
+What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An  _account_  is the basic entity in this database design. It has a one-to-many relationship with  _addresses_  (i.e. an  _account_  could have multiple  _addresses_ , but an  __address__  can only belong to a single  _account_ . An  _account_  has a many-to-many relationship with  _transactions_ (i.e. an  _account_  could have multiple  _transactions_ , but it`s possible that a  _transaction_  belongs to multiple  _accounts_ . To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
 
 A  _storage adapter_  is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
@@ -390,7 +390,7 @@ The following should be considered when implementing this method:
 Select inputs for funds transfer.
 
 :::info
-This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn’t match the remainder address. 
+This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn't match the remainder address. 
 :::
 
 See [Input Selection Process](#input-selection) for implementation details.
@@ -408,7 +408,7 @@ See [Input Selection Process](#input-selection) for implementation details.
 | *Name*    | *Type*    | *Description*                                                              |
 | --------- | --------- | -------------------------------------------------------------------------- |
 | inputs    | Address[] | Selected Inputs                                                            |
-| remainder | Address   | Remainder address object. Empty or null if there’s no need for a remainder |
+| remainder | Address   | Remainder address object. Empty or null if there's no need for a remainder |
 
 
 ##### Additional Information
@@ -1219,4 +1219,4 @@ The following should be considered for implementation:
 *   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts and a user explicitly calls [sync()](#sync), it should throw an error.
 *   Errors during the polling process should be communicated to subscribers via error events.
 
-The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity’s implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 
+The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity's implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 
