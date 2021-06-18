@@ -1,10 +1,11 @@
 # IOTA Wallet Libraries
 
-At the moment there are two available official bindings to `Wallet.rs`:
+At the moment there are two available official bindings to `Wallet.rs`, as well as the Rust source.:
+
+- [Rust](rust/README.md)
 - [Node.js](nodejs/README.md) 
 - [Python](python/README.md)
 
-As well as the [Rust](rust/README.md) source.
 
 ## Getting Started
 We recommended that you start your interactions with IOTA on a _testnet_ network.  You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
