@@ -542,9 +542,13 @@ Promote the given message.
 
 **Returns** the promoted [WalletMessage](#walletmessage).
 
-#### consolidate_outputs(): list[WalletMessage](#walletmessage)
+#### consolidate_outputs(include_dust_allowance_outputs): list[WalletMessage](#walletmessage)
 
 Consolidates the account addresses outputs.
+
+| Param                          | Type              | Default            | Description                                                  |
+| ------------------------------ | ----------------- | ------------------ | ------------------------------------------------------------ |
+| include_dust_allowance_outputs | <code>bool</code> | <code>false</code> | Defines if dust_allowance_output should also be consolidated |
 
 **Returns** the list of generated [WalletMessage](#walletmessage).
 

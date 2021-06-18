@@ -407,14 +407,14 @@ foreign_class!(
     class Transfer {
         self_type Transfer;
         private constructor = empty;
-        fn Transfer::builder(address: AddressWrapper, amount: u64) -> TransferBuilder;
+        fn Transfer::builder(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
     }
 );
 
 foreign_class!(
     class TransferBuilder {
         self_type TransferBuilder;
-        constructor TransferBuilder::new(address: AddressWrapper, amount: u64) -> TransferBuilder;
+        constructor TransferBuilder::new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
         fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
         fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; alias withRemainderToAccountWithAddress;
         fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;

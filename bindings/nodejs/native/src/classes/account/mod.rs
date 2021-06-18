@@ -408,11 +408,14 @@ declare_types! {
                 let js_object = js_value.downcast::<JsObject>().unwrap();
                 let address = js_object.get(&mut cx, "address")?.downcast::<JsString>().or_throw(&mut cx)?;
                 let amount = js_object.get(&mut cx, "amount")?.downcast::<JsNumber>().or_throw(&mut cx)?;
-                let output_kind = js_object.get(&mut cx, "outputKind")?.downcast::<JsString>().or_throw(&mut cx)?.value();
+                let output_kind = match js_object.get(&mut cx, "outputKind")?.downcast::<JsString>(){
+                    Ok(value) =>OutputKind::from_str(&value.value()).ok(),
+                    _ => None,
+                };
                 outputs.push(TransferOutput::new(
                     parse_address(address.value()).expect("invalid address format"),
                     NonZeroU64::new(amount.value() as u64).expect("amount can't be zero"),
-                    OutputKind::from_str(&output_kind).ok()
+                    output_kind
                 ));
             }
 

@@ -1727,7 +1727,7 @@ async fn consolidate_outputs_if_needed(
             }
         }
         if automatic_consolidation {
-            synced.consolidate_outputs(true).await?;
+            synced.consolidate_outputs(false).await?;
         }
     }
     Ok(())

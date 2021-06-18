@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
         wait_for_message_confirmation(&iota_client, message_id).await;
     }
 
-    let messages = account.consolidate_outputs().await?;
+    let messages = account.consolidate_outputs(false).await?;
     println!("MESSAGES {:?}", messages);
 
     Ok(())

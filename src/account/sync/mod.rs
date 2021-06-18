@@ -1292,7 +1292,7 @@ impl SyncedAccount {
                     if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
                         for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
                             // Only create dust_allowance_output if an input is also a dust_allowance_outputs
-                            let output_type = if include_dust_allowance_outputs
+                            let output_kind = if include_dust_allowance_outputs
                                 && outputs
                                     .iter()
                                     .any(|addr| addr.kind == OutputKind::SignatureLockedDustAllowance)
@@ -1305,7 +1305,7 @@ impl SyncedAccount {
                                 Transfer::builder(
                                     address.address().clone(),
                                     NonZeroU64::new(outputs.iter().fold(0, |v, o| v + o.amount)).unwrap(),
-                                    output_type,
+                                    output_kind,
                                 )
                                 .with_input(
                                     address.address().clone(),
@@ -1529,7 +1529,7 @@ async fn perform_transfer(
 
     let mut outputs_for_essence: Vec<Output> = Vec::new();
     for output in transfer_obj.outputs.iter() {
-        match output.output_type {
+        match output.output_kind {
             crate::address::OutputKind::SignatureLockedSingle => {
                 outputs_for_essence
                     .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
