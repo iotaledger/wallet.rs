@@ -7,12 +7,6 @@ All the examples in this section expect your custom password  to be set in the  
 SH_PASSWORD="here is your super secure password"
 ```
 
-## Security
-:::warning
-It is not recommended to store passwords on the host's environment variables, or in the source code in a production setup. 
-Please make sure you follow our [backup and security recommendations](https://chrysalis.docs.iota.org/guides/backup_security.html) for production use.
-:::
-
 ## Account Manager and Individual Accounts
 You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
