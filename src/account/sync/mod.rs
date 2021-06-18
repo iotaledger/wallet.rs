@@ -2041,7 +2041,7 @@ mod tests {
                     .finish(),
             )
             .await;
-        assert_eq!(res.is_err(), true);
+        assert!(res.is_err());
         match res.unwrap_err() {
             crate::Error::DustError(_) => {}
             _ => panic!("unexpected response"),
