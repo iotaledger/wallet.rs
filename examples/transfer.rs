@@ -4,11 +4,8 @@
 //! cargo run --example transfer --release
 
 use iota_wallet::{
-    account_manager::AccountManager,
-    address::parse,
-    client::ClientOptionsBuilder,
-    message::{OutputKind, Transfer},
-    signing::SignerType,
+    account_manager::AccountManager, address::parse, address::OutputKind, client::ClientOptionsBuilder,
+    message::Transfer, signing::SignerType,
 };
 use std::num::NonZeroU64;
 
