@@ -3,7 +3,7 @@ module.exports = {
   title: 'IOTA Wallet Library',
   tagline: 'Official IOTA Wallet Library Software',
   url: 'https://wallet-lib.docs.iota.org/',
-  baseUrl: '/',
+  baseUrl: '/wallet.rs/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
   favicon: 'img/logo/favicon.ico',
