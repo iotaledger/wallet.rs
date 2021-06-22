@@ -38,7 +38,7 @@ slog = "2.7"
 iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", branch = "develop", optional = true  }
 
 # migration
-iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "f2e9ce6526eba3a55924f5fa5df3c8c8a7da6cd0", package = "iota-core" }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "c9509f8c911ef0dcca70dda83247e2dcbd85aa81", package = "iota-core" }
 bytemuck = "1.5"
 
 [dependencies.iota-crypto]

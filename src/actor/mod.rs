@@ -345,9 +345,9 @@ impl WalletMessageHandler {
                 let checksum = AccountManager::get_seed_checksum(seed.clone())?;
                 Ok(ResponseType::SeedChecksum(checksum))
             }),
-            MessageType::GetMigrationAddress => {
+            MessageType::GetMigrationAddress(ledger_prompt) => {
                 convert_async_panics(|| async {
-                    let address = self.account_manager.get_migration_address().await?;
+                    let address = self.account_manager.get_migration_address(*ledger_prompt).await?;
                     Ok(ResponseType::MigrationAddress(address))
                 })
                 .await

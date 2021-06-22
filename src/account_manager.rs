@@ -6,6 +6,7 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
+    account_manager::migration::MigrationAddress,
     address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
@@ -14,7 +15,7 @@ use crate::{
         TransactionReattachmentEvent,
     },
     message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
-    signing::SignerType,
+    signing::{GenerateAddressMetadata, SignerType},
     storage::{StorageAdapter, Timestamp},
 };
 
@@ -52,7 +53,7 @@ use tokio::{
 };
 use zeroize::Zeroize;
 
-mod migration;
+pub(crate) mod migration;
 use iota_migration::client::migration::{
     add_tryte_checksum, decode_migration_address, encode_migration_address, get_trytes_from_bundle, mine_bundle,
 };
@@ -477,14 +478,34 @@ impl AccountManager {
     }
 
     /// Convert the first address from the first account to a migration tryte address
-    pub async fn get_migration_address(&self) -> crate::Result<String> {
-        let deposit_address = self.get_account(0).await?.latest_address().await;
-        let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
-            Ok(MigrationAddress::Ed25519(a)) => a,
+    pub async fn get_migration_address(&self, ledger_prompt: bool) -> crate::Result<MigrationAddress> {
+        let account_handle = self.get_account(0).await?;
+        let account = account_handle.read().await;
+        let deposit_address = if ledger_prompt {
+            crate::address::get_address_with_index(
+                &account,
+                0,
+                account.bech32_hrp(),
+                GenerateAddressMetadata {
+                    syncing: false,
+                    network: account.network(),
+                },
+            )
+            .await?
+        } else {
+            // Safe to unwrap since an account always needs to have an address
+            account.addresses().first().expect("Account has no address").clone()
+        };
+        let bech32_address = deposit_address.address().to_bech32();
+        let deposit_address = match BeeAddress::try_from_bech32(&bech32_address) {
+            Ok(BeeAddress::Ed25519(a)) => a,
             _ => return Err(crate::Error::InvalidAddress),
         };
         let deposit_address_trytes = encode_migration_address(deposit_address)?;
-        Ok(add_tryte_checksum(deposit_address_trytes)?)
+        Ok(MigrationAddress {
+            bech32: bech32_address,
+            trytes: add_tryte_checksum(deposit_address_trytes)?,
+        })
     }
 
     /// Mine bundle

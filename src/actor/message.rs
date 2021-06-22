@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
-    account_manager::{MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
+    account_manager::{migration::MigrationAddress, MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -299,7 +299,7 @@ pub enum MessageType {
     /// Get seed checksum.
     GetSeedChecksum(String),
     /// Get migration address
-    GetMigrationAddress,
+    GetMigrationAddress(bool),
     /// Mine bundle
     MineBundle {
         /// Prepared bundle.
@@ -416,7 +416,7 @@ impl Serialize for MessageType {
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
-            MessageType::GetMigrationAddress => {
+            MessageType::GetMigrationAddress(_) => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
             MessageType::MineBundle {
@@ -616,7 +616,7 @@ pub enum ResponseType {
     /// GetSeedChecksum response.
     SeedChecksum(String),
     /// GetMigrationAddress response.
-    MigrationAddress(String),
+    MigrationAddress(MigrationAddress),
     /// GetMigrationAddress response.
     MineBundle(MinedBundle),
 }
