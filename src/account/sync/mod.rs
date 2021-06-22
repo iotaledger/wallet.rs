@@ -41,7 +41,10 @@ mod input_selection;
 const MAX_ALLOWED_DUST_OUTPUTS: i64 = 100;
 const DUST_DIVISOR: i64 = 100_000;
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
+#[cfg(not(any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
 const DEFAULT_GAP_LIMIT: usize = 10;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+const DEFAULT_GAP_LIMIT: usize = 5;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 const LEDGER_MAX_IN_OUTPUTS: usize = 17;
 const SYNC_CHUNK_SIZE: usize = 500;
