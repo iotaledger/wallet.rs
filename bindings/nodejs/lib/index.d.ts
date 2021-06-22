@@ -201,6 +201,8 @@ export declare interface ClientOptions {
   quorumSize?: number;
   quorumThreshold?: number;
   localPow?: boolean;
+  nodeSyncDisabled?: boolean;
+  mqttDisabled?: boolean;
 }
 
 export declare interface MqttBrokerOptions {

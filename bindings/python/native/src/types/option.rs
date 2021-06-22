@@ -77,6 +77,7 @@ pub struct ClientOptions {
     /// in mllisecond
     pub node_sync_interval: Option<u64>,
     pub node_sync_enabled: Option<bool>,
+    pub mqtt_enabled: Option<bool>,
     /// in mllisecond
     pub request_timeout: Option<u64>,
     /// in mllisecond
@@ -180,6 +181,9 @@ impl From<ClientOptions> for RustClientOptions {
         if !client_options.node_sync_enabled.unwrap_or(true) {
             builder = builder.with_node_sync_disabled();
         }
+        if !client_options.mqtt_enabled.unwrap_or(true) {
+            builder = builder.with_mqtt_disabled();
+        }
         if let Some(request_timeout) = client_options.request_timeout {
             builder = builder.with_request_timeout(Duration::from_millis(request_timeout));
         }
@@ -219,6 +223,7 @@ impl From<RustClientOptions> for ClientOptions {
                     .collect(),
             ),
             network: client_options.network().as_ref().map(|s| s.to_string()),
+            mqtt_enabled: Some(*client_options.mqtt_enabled()),
             mqtt_broker_options: client_options
                 .mqtt_broker_options()
                 .as_ref()
