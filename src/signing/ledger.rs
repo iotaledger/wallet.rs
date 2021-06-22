@@ -78,7 +78,7 @@ impl super::Signer for LedgerNanoSigner {
 
             // get ledger
             let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
-
+/*
             let compiled_for = match ledger.is_debug_app() {
                 true => Network::Testnet,
                 false => Network::Mainnet,
@@ -88,7 +88,7 @@ impl super::Signer for LedgerNanoSigner {
             if compiled_for != meta.network {
                 return Err(crate::Error::LedgerNetMismatch);
             }
-
+*/
             // and generate a single address that is shown to the user
             let addr = ledger.get_addresses(true, bip32, 1)?;
             return Ok(iota_client::bee_message::address::Address::Ed25519(
@@ -113,7 +113,7 @@ impl super::Signer for LedgerNanoSigner {
 
             let count = 15;
             let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
-
+/*
             let compiled_for = match ledger.is_debug_app() {
                 true => Network::Testnet,
                 false => Network::Mainnet,
@@ -123,7 +123,7 @@ impl super::Signer for LedgerNanoSigner {
             if compiled_for != meta.network {
                 return Err(crate::Error::LedgerNetMismatch);
             }
-
+*/
             let addresses = ledger.get_addresses(false, bip32, count)?;
 
             // now put all addresses into the pool
@@ -163,7 +163,7 @@ impl super::Signer for LedgerNanoSigner {
 
         let bip32_account = *account.index() as u32 | HARDENED;
         let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
-
+/*
         let compiled_for = match ledger.is_debug_app() {
             true => Network::Testnet,
             false => Network::Mainnet,
@@ -173,7 +173,7 @@ impl super::Signer for LedgerNanoSigner {
         if compiled_for != meta.network {
             return Err(crate::Error::LedgerNetMismatch);
         }
-
+*/
         let input_len = inputs.len();
 
         // on essence finalization, inputs are sorted lexically before they are packed into bytes.
