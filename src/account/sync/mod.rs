@@ -239,6 +239,7 @@ async fn sync_address_list(
     account_messages: Vec<(MessageId, Option<bool>)>,
     options: AccountOptions,
     client_options: ClientOptions,
+    return_all_addresses: bool,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut found_addresses = Vec::new();
     let mut found_messages = Vec::new();
@@ -277,7 +278,7 @@ async fn sync_address_list(
         let results = futures::future::try_join_all(tasks).await?;
         for res in results {
             let (messages, address) = res?;
-            if !address.outputs().is_empty() {
+            if !address.outputs().is_empty() || return_all_addresses {
                 found_addresses.push(address);
             }
             found_messages.extend(messages);
@@ -309,6 +310,7 @@ async fn sync_addresses(
     address_index: usize,
     gap_limit: usize,
     options: AccountOptions,
+    return_all_addresses: bool,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     let mut address_index = address_index;
 
@@ -365,8 +367,14 @@ async fn sync_addresses(
             addresses_to_sync.push(address);
         }
 
-        let (found_addresses_, found_messages_) =
-            sync_address_list(addresses_to_sync, account_messages, options, client_options.clone()).await?;
+        let (found_addresses_, found_messages_) = sync_address_list(
+            addresses_to_sync,
+            account_messages,
+            options,
+            client_options.clone(),
+            return_all_addresses,
+        )
+        .await?;
         curr_generated_addresses.extend(found_addresses_);
         curr_found_messages.extend(found_messages_);
 
@@ -552,6 +560,7 @@ async fn perform_sync(
     change_addresses_to_sync: HashSet<AddressWrapper>,
     steps: &[AccountSynchronizeStep],
     options: AccountOptions,
+    return_all_addresses: bool,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
         "[SYNC] syncing with address_index = {}, gap_limit = {}",
@@ -591,11 +600,19 @@ async fn perform_sync(
                     account_messages,
                     options,
                     account_handle.read().await.clone().client_options().clone(),
+                    return_all_addresses,
                 )
                 .await?
             } else {
-                let (found_public_addresses, mut messages) =
-                    sync_addresses(&account_handle, false, address_index, gap_limit, options).await?;
+                let (found_public_addresses, mut messages) = sync_addresses(
+                    &account_handle,
+                    false,
+                    address_index,
+                    gap_limit,
+                    options,
+                    return_all_addresses,
+                )
+                .await?;
                 let account = account_handle.read().await.clone();
                 let (found_change_addresses, synced_messages) = sync_addresses(
                     &account_handle,
@@ -610,6 +627,7 @@ async fn perform_sync(
                         .unwrap_or_default(),
                     gap_limit,
                     options,
+                    return_all_addresses,
                 )
                 .await?;
                 let mut found_addresses = found_public_addresses;
@@ -658,6 +676,18 @@ async fn perform_sync(
         &account,
         found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
     ));
+
+    // Add first public address if there is none, required for account discovery because we always need a public address
+    // in an account
+    if addresses_to_save
+        .iter()
+        .filter(|a| !a.internal())
+        .collect::<Vec<&Address>>()
+        .len()
+        == 0
+    {
+        addresses_to_save.extend(found_addresses.iter().find(|a| !a.internal()).cloned());
+    }
 
     Ok(SyncedAccountData {
         messages: new_messages,
@@ -900,7 +930,7 @@ impl AccountSynchronizer {
         self
     }
 
-    pub(crate) async fn get_new_history(&self) -> crate::Result<SyncedAccountData> {
+    pub(crate) async fn get_new_history(&self, return_all_addresses: bool) -> crate::Result<SyncedAccountData> {
         let change_addresses_to_sync = self.account_handle.change_addresses_to_sync.lock().await.clone();
         perform_sync(
             self.account_handle.clone(),
@@ -910,6 +940,7 @@ impl AccountSynchronizer {
             change_addresses_to_sync,
             &self.steps,
             self.account_handle.account_options,
+            return_all_addresses,
         )
         .await
     }
@@ -978,7 +1009,7 @@ impl AccountSynchronizer {
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
         self.account_handle.disable_mqtt();
         let syc_start_time = std::time::Instant::now();
-        let return_value = match self.get_new_history().await {
+        let return_value = match self.get_new_history(false).await {
             Ok(data) => {
                 let is_empty = data
                     .addresses
