@@ -10,7 +10,7 @@ use iota_client::bee_message::unlock::UnlockBlock;
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
-//use crate::signing::Network;
+// use crate::signing::Network;
 
 pub const HARDENED: u32 = 0x80000000;
 
@@ -163,17 +163,15 @@ impl super::Signer for LedgerNanoSigner {
 
         let bip32_account = *account.index() as u32 | HARDENED;
         let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
-        /*
-                let compiled_for = match ledger.is_debug_app() {
-                    true => Network::Testnet,
-                    false => Network::Mainnet,
-                };
-
-                // check if ledger app is compiled for the same network
-                if compiled_for != meta.network {
-                    return Err(crate::Error::LedgerNetMismatch);
-                }
-        */
+        // let compiled_for = match ledger.is_debug_app() {
+        // true => Network::Testnet,
+        // false => Network::Mainnet,
+        // };
+        //
+        // check if ledger app is compiled for the same network
+        // if compiled_for != meta.network {
+        // return Err(crate::Error::LedgerNetMismatch);
+        // }
         let input_len = inputs.len();
 
         // on essence finalization, inputs are sorted lexically before they are packed into bytes.
