@@ -180,10 +180,7 @@ pub(crate) async fn sync_address(
         });
     }
 
-    for res in futures::future::try_join_all(tasks)
-        .await
-        .expect("failed to sync address")
-    {
+    for res in futures::future::try_join_all(tasks).await? {
         let (found_output, found_message) = res?;
         outputs.insert(found_output.id()?, found_output);
         if let Some(m) = found_message {
@@ -279,9 +276,7 @@ async fn sync_address_list(
                 .await
             });
         }
-        let results = futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to sync addresses");
+        let results = futures::future::try_join_all(tasks).await?;
         for res in results {
             let (messages, address) = res?;
             if !address.outputs().is_empty() {
@@ -539,10 +534,7 @@ async fn sync_messages(
                 .await
             });
         }
-        for res in futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to sync messages")
-        {
+        for res in futures::future::try_join_all(tasks).await? {
             let (address, found_messages) = res?;
             if !address.outputs().is_empty() {
                 addresses.push(address);
@@ -783,10 +775,7 @@ impl SyncedAccountData {
             });
         }
         let mut parsed_messages = Vec::new();
-        for message in futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to parse messages")
-        {
+        for message in futures::future::try_join_all(tasks).await? {
             parsed_messages.push(message?);
         }
         Ok(parsed_messages)
