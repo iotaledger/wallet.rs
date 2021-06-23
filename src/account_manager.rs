@@ -1401,10 +1401,7 @@ impl AccountsSynchronizer {
         }
 
         let mut synced_data = Vec::new();
-        for res in futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to sync accounts")
-        {
+        for res in futures::future::try_join_all(tasks).await? {
             let (account_handle, data) = res?;
             let account_handle_ = account_handle.clone();
             let mut account = account_handle_.write().await;

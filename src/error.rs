@@ -219,6 +219,9 @@ pub enum Error {
     /// Mutex lock failed.
     #[error("Mutex lock failed")]
     PoisonError,
+    /// Tokio task join error
+    #[error("{0}")]
+    TaskJoinError(#[from] tokio::task::JoinError),
 }
 
 impl Drop for Error {
@@ -358,6 +361,7 @@ impl serde::Serialize for Error {
             Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
             Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
             Self::PoisonError => serialize_variant(self, serializer, "PoisonError"),
+            Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
         }
     }
 }
