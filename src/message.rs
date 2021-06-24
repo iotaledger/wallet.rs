@@ -77,8 +77,12 @@ pub struct TransferOutput {
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
     /// The output type
-    #[serde(rename = "outputKind")]
+    #[serde(default = "default_output_kind", rename = "outputKind")]
     pub output_kind: OutputKind,
+}
+
+fn default_output_kind() -> OutputKind {
+    OutputKind::SignatureLockedSingle
 }
 
 impl TransferOutput {
