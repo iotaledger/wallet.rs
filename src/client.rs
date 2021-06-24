@@ -141,6 +141,7 @@ pub struct ClientOptionsBuilder {
     node_pool_urls: Vec<Url>,
     network: Option<String>,
     mqtt_broker_options: Option<BrokerOptions>,
+    mqtt_enabled: bool,
     local_pow: bool,
     node_sync_interval: Option<Duration>,
     node_sync_enabled: bool,
@@ -185,6 +186,7 @@ impl Default for ClientOptionsBuilder {
             node_pool_urls: Vec::new(),
             network: None,
             mqtt_broker_options: None,
+            mqtt_enabled: default_mqtt_enabled(),
             local_pow: default_local_pow(),
             node_sync_interval: None,
             node_sync_enabled: default_node_sync_enabled(),
@@ -333,6 +335,12 @@ impl ClientOptionsBuilder {
         self
     }
 
+    /// Sets the MQTT broker options.
+    pub fn with_mqtt_disabled(mut self) -> Self {
+        self.mqtt_enabled = false;
+        self
+    }
+
     /// Sets whether the PoW should be done locally or remotely.
     pub fn with_local_pow(mut self, local: bool) -> Self {
         self.local_pow = local;
@@ -360,6 +368,7 @@ impl ClientOptionsBuilder {
             node_pool_urls: self.node_pool_urls,
             network: self.network,
             mqtt_broker_options: self.mqtt_broker_options,
+            mqtt_enabled: self.mqtt_enabled,
             local_pow: self.local_pow,
             node_sync_interval: self.node_sync_interval,
             node_sync_enabled: self.node_sync_enabled,
@@ -543,6 +552,9 @@ pub struct ClientOptions {
     /// Enable node synchronization or not.
     #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
     node_sync_enabled: bool,
+    /// Enable mqtt or not.
+    #[serde(rename = "mqttEnabled", default = "default_mqtt_enabled")]
+    mqtt_enabled: bool,
     /// The request timeout.
     #[serde(rename = "requestTimeout")]
     request_timeout: Option<Duration>,
@@ -589,6 +601,10 @@ fn default_local_pow() -> bool {
 }
 
 fn default_node_sync_enabled() -> bool {
+    true
+}
+
+fn default_mqtt_enabled() -> bool {
     true
 }
 

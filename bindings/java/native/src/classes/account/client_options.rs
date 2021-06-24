@@ -153,6 +153,11 @@ impl ClientOptionsBuilder {
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
+    pub fn with_mqtt_disabled(&mut self) -> ClientOptionsBuilder {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_disabled();
+        ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
     /// Sets the MQTT broker options.
     pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
         let new_builder = self

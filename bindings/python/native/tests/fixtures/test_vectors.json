@@ -82,6 +82,7 @@
                 "PostMessage": 3000
             },
             "mqtt_broker_options": null,
+            "mqtt_enabled": true,
             "network": null,
             "node_pool_urls": [],
             "node_sync_enabled": true,
@@ -103,6 +104,7 @@
                 "PostMessage": 60000
             },
             "mqtt_broker_options": null,
+            "mqtt_enabled": true,
             "network": null,
             "node_pool_urls": [],
             "node_sync_enabled": true,
