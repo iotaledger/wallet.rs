@@ -57,6 +57,7 @@ If you also want to store a seed somewhere else, you can use the _AccountManager
 You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
 
 ### Accounts
+
 The `Wallet.rs` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
 Once the backend storage has been created, individual accounts for individual users can be created by running the _manager.createAccount()_ method:
