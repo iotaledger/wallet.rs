@@ -64,9 +64,9 @@ You can find detailed information about seed generation at [Developer Guide to C
 
 ### Accounts
 
-The `wallet.rs` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically. 
+The `wallet.rs` library uses a model of individual accounts to separate individual users and clients from each other. It is possible to generate multiple addresses for each account deterministically. 
 
-Each account is related to a specific IOTA network (mainnet / testnet), which is referenced by node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
+Each account is related to a specific IOTA network (mainnet or testnet), which is referenced by node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
 
 For more information about _client_options_ , please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
 

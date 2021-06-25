@@ -57,6 +57,7 @@ If you also want to store a seed somewhere else, you can use the `AccountManager
 You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
 
 ### Accounts
+
 The `wallet.rs` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically.  You can find more information about account management in the  [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/exchange_guide.html#how-do-i-implement-it-to-my-exchange).
 
 Once the backend storage has been created, individual accounts for individual users can be created by running the `manager.createAccount()` method:
@@ -219,7 +220,8 @@ You can use the default options. However, you can provide additional options, su
 
 The `Account.send()` function returns a _wallet message_ that fully describes the given transaction. You can use the _messageId_ to check confirmation status. You can retrieve individual messages related to any given account using the `Account.listMessages()` function.
 
-### Dust protection
+### Dust Protection
+
 The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
