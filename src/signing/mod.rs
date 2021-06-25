@@ -90,6 +90,8 @@ pub struct SignMessageMetadata<'a> {
 /// Signer interface.
 #[async_trait::async_trait]
 pub trait Signer {
+    /// Get the ledger status.
+    async fn get_ledger_status(&self, is_simulator: bool) -> crate::LedgerStatus;
     /// Initialises a mnemonic.
     async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::account::Account;
+use crate::LedgerStatus;
 
 use std::{collections::HashMap, fmt, path::Path};
 
@@ -50,6 +51,16 @@ impl fmt::Display for AddressPoolEntry {
 
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
+    async fn get_ledger_status(&self, is_simulator: bool) -> LedgerStatus {
+        // lock the mutex
+        let _lock = self.mutex.lock().await;
+        match iota_ledger::get_ledger(crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+            Ok(_) => LedgerStatus::Connected,
+            Err(crate::Error::LedgerDongleLocked) => LedgerStatus::Locked,
+            Err(_) => LedgerStatus::Disconnected,
+        }
+    }
+
     async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
         Err(crate::Error::InvalidMnemonic(String::from("")))
     }
