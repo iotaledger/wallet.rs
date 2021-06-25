@@ -220,7 +220,8 @@ You can use the default options. However, you can provide additional options, su
 
 The _Account.send()_ function returns a _wallet message_ that fully describes the given transaction. You can use the _messageId_ to check confirmation status. You can retrieve individual messages related to any given account using the _Account.listMessages()_ function.
 
-### Dust protection
+### Dust Protection
+
 The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
