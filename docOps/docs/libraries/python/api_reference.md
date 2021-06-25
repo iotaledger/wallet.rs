@@ -893,7 +893,7 @@ client_options = {
 }
 ```
 
-Note that this message object in `Wallet.rs` is not the same as the message object in `Iota.rs`.
+Note that this message object in `wallet.rs` is not the same as the message object in `iota.rs`.
 
 ## Node
 

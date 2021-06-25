@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The `Wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
+The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
 
 The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
 
@@ -31,7 +31,7 @@ Account configuration or initialization object. It should support parameters acc
 | id               | ✘        | string                                                                                                           | SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in Stronghold. The ID should be provided by Stronghold.             |
 | index            | ✔        | number                                                                                                           | Account index in [BIP-44](https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki) derivation path                                                              |
 | alias            | ✘        | string                                                                                                           | Account name. If not provided, `Account + { index }` should be used. When importing an account from Stronghold backup, the alias will be required from Stronghold. |
-| pow              | ✘        | `local`,`remote`                                                                                                 | Proof of work settings. Defaults to `local`.<ul><li>`local`: Should be performed on device;</li><li>`remote`: Should be performed on the node.</li></ul>               |
+| pow              | ✘        | `local`,`remote`                                                                                                 | Proof of work settings. Defaults to `local`.  `local` PoW  should be performed on device; `remote` PoW should be performed on the node.               |
 | nodes            | ✔        | [node](#node)[]                                                                                                  | A list of nodes to connect to.                                                                                                                                         |
 | quorum_size      | ✘        | number                                                                                                           | If multiple nodes are provided, quorum size determines the number of nodes to query to check for quorum.                                                               |
 | quorum_threshold | ✘        | number                                                                                                           | Minimum number of nodes from the quorum pool that need to agree to consider a result true.                                                                             |
@@ -39,7 +39,7 @@ Account configuration or initialization object. It should support parameters acc
 | type             | ✘        | `default` or `ledger`                                                                                            | Account type. Required for differentiating ledger vs non-ledger accounts.                                                                                              |
 | provider         | ✘        | string                                                                                                           | Node URL.                                                                                                                                                              |
 | created_at       | ✘        | Date                                                                                                             | Time of account creation                                                                                                                                               |
-| messages         | ✘        | [Message](#message)[]Messages associated with account. Accounts can be initialized with locally stored messages. |
+| messages         | ✘        | [Message](#message)[] Messages associated with account. Accounts can be initialized with locally stored messages. |
 | addresses        | ✘        | [Address](#address)[]                                                                                            | Address history associated with the account. Accounts can be initialized with locally stored address history                                                           |
 
 #### AccountObject
@@ -110,7 +110,7 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 | pow      | ✔        | boolean                                                       | Determines if the node accepts proof of work.                |
 | username | ✘        | string                                                        | Node username. Only required if node requires authorisation. |
 | password | ✘        | string                                                        | Node password. Only required if node requires authorisation. |
-| network  | ✔        | <ul><li>`mainnet`</li><li>`devnet`</li><li>`comnet`</li></ul> | IOTA public network name.                                    |
+| network  | ✔        | `mainnet` \| `devnet` \| `comnet` | IOTA public network name.                                    |
 
 #### Timestamp
 
@@ -142,6 +142,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 
 #### Input
+
 | Property     | Required | Type   | Description                                        |
 | ------------ | -------- | ------ | -------------------------------------------------- |
 | type         | ✔        | number | Input type. Defaults to `0`.                       |
@@ -149,6 +150,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | output_index | ✔        | number | Index of the output on the referenced transaction. |
 
 #### OutputAddress
+
 | Property | Required | Type   | Description                                                  |
 | -------- | -------- | ------ | ------------------------------------------------------------ |
 | type     | ✔        | number | Set to value `0` to denote an Ed25519 address.               |
@@ -164,6 +166,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | amount   | ✔        | number        | Amount of tokens to deposit.  |
 
 #### UnsignedDataPayload
+
 | Property | Required | Type   | Description                                   |
 | -------- | -------- | ------ | --------------------------------------------- |
 | type     | ✔        | number | Set to `2` to denote a unsigned data payload. |
@@ -171,6 +174,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 
 #### SignedDataPayload
+
 | Property   | Required | Type   | Description                                      |
 | ---------- | -------- | ------ | ------------------------------------------------ |
 | type       | ✔        | number | Set to `3` to denote a signed data payload.      |
@@ -196,7 +200,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | outputs_count  | ✔        | number                                                                                                                                                           | Amount of outputs proceeding.                                                                                                           |
 | outputs        | ✔        | Output[]                                                                                                                                                         | Output address.                                                                                                                         |
 | payload_length | ✔        | number                                                                                                                                                           | Length of optional payload.                                                                                                             |
-| payload        | ✔        | <ul><li>[UnsignedDataPayload](#unsigneddatapayload) </li><li> [SignedDataPayload](#signeddatapayload) </li><li>[IndexationPayload](#indexationpayload)</li></ul> | Payload containing data. As multiple payloads are not yet supported, only [unsigned data payload](#unsigneddatapayload) should be used. |
+| payload        | ✔        | [UnsignedDataPayload](#unsigneddatapayload) \| [SignedDataPayload](#signeddatapayload) \| [IndexationPayload](#indexationpayload) | Payload containing data. As multiple payloads are not yet supported, only [unsigned data payload](#unsigneddatapayload) should be used. |
 
 #### Ed25519Signature
 
@@ -216,12 +220,14 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 
 
 #### ReferenceUnblockBlock
+
 | *Property* | *Required* | *Type* | *Description*                                        |
 | ---------- | ---------- | ------ | ---------------------------------------------------- |
 | type       | ✔          | number | Set to value `1` to denote a reference unlock block. |
 | reference  | ✔          | number | Index of a previous unlock block.                    |
 
 #### SignedTransactionPayload
+
 | *Property*           | *Required* | *Type*                | *Description*                                                                                    |
 | -------------------- | ---------- | --------------------- | ------------------------------------------------------------------------------------------------ |
 | type                 | ✔          | number                | Payload type. Defaults to `0`.                                                                   |
@@ -230,6 +236,7 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | unblock_blocks       | ✔          | SignatureUnblockBlock | ReferenceUnblockBlock                                                                            | Holds the unlock blocks unlocking inputs within an Unsigned Transaction |
 
 #### Message
+
 | Property                                    | Required                                                               | Type                                                  | Description                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | version                                     | ✔                                                                      | number                                                | Message version. Defaults to `1`.                                                                                                                                                                                                                                                                                                |
@@ -241,12 +248,13 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | timestamp                                   | ✔                                                                      | Timestamp                                             | Transaction timestamp (exposed as a custom type with additional methods).                                                                                                                                                                                                                                                        |
 | nonce                                       | ✔                                                                      | string                                                | Transaction nonce.                                                                                                                                                                                                                                                                                                               |
 | confirmed                                   | ✔                                                                      | boolean                                               | Determines if the transaction is confirmed.                                                                                                                                                                                                                                                                                      |
-| broadcasted                                 | ✔                                                                      | boolean                                               | Determines if the transaction was broadcasted to the network. Will be true in the following scenarios:<ul><li>If the transaction was fetched from the network;</li><li>If the transaction was successfully broadcasted from the client itself.</li></ul> This property may only be required for clients with persistent storage. |
+| broadcasted                                 | ✔                                                                      | boolean                                               | Determines if the transaction was broadcasted to the network. This will be true if the transaction was fetched from the network or if the transaction was successfully broadcasted from the client itself. This property may only be required for clients with persistent storage. |
 | incoming                                    | ✔                                                                      | boolean                                               | Determines if the message is an incoming transaction or not.                                                                                                                                                                                                                                                                     |
 | value                                       | ✔                                                                      | number                                                | Message transfer value.                                                                                                                                                                                                                                                                                                          |
 
 
 #### StorageAdapter
+
 | Property                               | Required | Type     | Description                                              |
 | -------------------------------------- | -------- | -------- | -------------------------------------------------------- |
 | get(key: string):Account               | ✔        | function | Gets the account object for provided account name or ID. |
@@ -264,7 +272,7 @@ You should consider multiple storage options should for managing data that requi
 - You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options. 
 - For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite). 
 
-What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An _account_ is the basic entity in this database design. It has a one-to-many relationship with _addresses_. This means an _account_ could have multiple _addresses_ , but an __address__ can only belong to a single _account_. An _account_ has a many-to-many relationship with _transactions_ .  Therefore, an _account_ could have multiple _transactions_, but it`s possible that a _transaction_ belongs to multiple _accounts_. To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
+What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An _account_ is the basic entity in this database design. It has a one-to-many relationship with _addresses_. This means an account could have multiple addresses , but an address can only belong to a single account. An account has a many-to-many relationship with _transactions_ .  Therefore, an account could have multiple transactions, but it is possible that a transaction belongs to multiple accounts. To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
 
 A _storage adapter_ is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
@@ -285,8 +293,8 @@ See [storage adapter](#storageadapter) for adapter interface.
 Initializes account
 There are several scenarios in which an account can be initialized:
 
-- *Seed generated outside the Stronghold*: In this case, the _account_ should be initialized with a seed. It should communicate with the Stronghold using the _import_accounts_ method and should expect an ID as a response. 
-- *Seed generated inside the Stronghold8*: In this case, the _account_ should be initialized without a seed. It should communicate with the Stronghold using its _create_account_ method and should expect an “id” in response;
+- *Seed generated outside the Stronghold*: In this case, the _account_ should be initialized with a seed. It should communicate with the Stronghold using the `import_accounts` method and should expect an ID as a response. 
+- *Seed generated inside the Stronghold*: In this case, the _account_ should be initialized without a seed. It should communicate with the Stronghold using its `create_account` method and should expect an “id” in response;
 - *Importing accounts from Stronghold backup*: In this case, the _account_ should receive all the initialization properties from the `Stronghold`. Please note that during backup, these configuration settings should be passed to the `Stronghold`. See [import_accounts()](#import_accounts).
 
 The following should be considered when initializing an account:
@@ -337,6 +345,7 @@ The following should be considered when implementing this method:
 
 
 ##### Returns
+
 | *Name*    | *Type*    | *Description*                                |
 | --------- | --------- | -------------------------------------------- |
 | addresses | Address[] | Address history up to latest unused address. |
@@ -350,7 +359,7 @@ The following should be considered when implementing this method:
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Access modifiers                | Private                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                                                                                                                                                                                                                       |
-| Required client library methods | <ul><li>[get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)</li><li>[find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)</li><li>[find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs)</li></ul> |
+| Required client library methods | [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)\| [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs) |
 
 #### sync_messages() 
 
@@ -364,6 +373,7 @@ The following should be considered when implementing this method:
 
 
 ##### Parameters
+
 | *Name* | *Required* | *Type*   | *Description*                                                                                                                         |
 | ------ | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | ids    | ✔          | string[] | Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle. |
@@ -376,6 +386,7 @@ The following should be considered when implementing this method:
 | messages | [Message](#message)[] | Message history |
 
 ##### Additional Information
+
 | *Name*                          | *Description*                                                                                                          |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Private                                                                                                                |
@@ -462,7 +473,7 @@ If you want to send a value transaction, please follow this process:
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Private                                                                                                                                                                                                                    |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                               |
-| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)[send()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send) |
+| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [send()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send) |
 
 
 #### retry() 
@@ -534,7 +545,7 @@ If you want to sync an account, you can use the following process:
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Public                                                                                                                                                                                                                                                     |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                                                               |
-| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages)[get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances) |
+| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances) |
 
 ####  reattach() 
 
@@ -750,6 +761,7 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
 Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from local storage.  
 
 ##### Returns
+
 | *Name* | *Required* | *Type* | *Description*                                 |
 | ------ | ---------- | ------ | --------------------------------------------- |
 | count  | ✔          | number | Number of (most recent) unconfirmed messages. |
@@ -778,6 +790,7 @@ Gets message for provided ID.
 Messages should be read directly from local storage.  To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
 
 ##### Parameters
+
 | *Name* | *Required* | *Type* | *Description* |
 | ------ | ---------- | ------ | ------------- |
 | id     | ✔          | string | Message ID.   |
@@ -789,8 +802,8 @@ Messages should be read directly from local storage.  To ensure the local databa
 | ------- | ------- | --------------- |
 | message | Message | Message object. |
 
-
 ##### Additional Information 
+
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
 | Access modifiers                | Public                       |
@@ -826,7 +839,6 @@ Gets all unspent input addresses
 | --------- | ----------------------- | ---------------------------- |
 | addresses | [Address](#address)[] | All unspent input addresses. |
 
-
 ##### Additional Information 
 
 | *Name*                          | *Description*                |
@@ -845,7 +857,6 @@ Gets the latest unused address.
 | ------- | ------- | --------------------- |
 | address | Address | A new address object. |
 
-
 ##### Additional Information 
 
 | *Name*                          | *Description*                |
@@ -853,7 +864,6 @@ Gets the latest unused address.
 | Access modifiers                | Public                       |
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
-
 
 ## Account Manager
 
@@ -928,7 +938,7 @@ The following should be considered when removing an account:
 
 | *Name*     | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
 | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> }  </li><li>&#x7B; alias: &lt;string> }  </li><li>&#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number }</li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| identifier | ✔          | &#x7B; address: &lt;string> } \| &#x7B; alias: &lt;string> }  \| &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number } | Identifier. Could be one of address, alias, ID or index. |
 
 ##### Additional Information
 
@@ -966,10 +976,11 @@ See [Accounts Syncing Process](#account-syncing-process) for further details.
 Moves funds from one account to another. This method should use the [send()](#send) method from the sender account and initiate a message to the receiver account.
 
 ##### Parameters
+
 | *Name* | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
 | ------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| from   | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li>  &#x7B; alias: &lt;string> } </li><li>&#x7B; ID: &lt;number></li><li>&#x7B; index: &lt;number }</li></ul>    | Identifier. Could be one of address, alias, ID or index. |
-| to     | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li>  &#x7B; alias: &lt;string> } </li><li> &#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number </li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| from   | ✔          | &#x7B; address: &lt;string> } \|   &#x7B; alias: &lt;string> } \| &#x7B; ID: &lt;number>\| &#x7B; index: &lt;number> }    | Identifier. Could be one of address, alias, ID or index. |
+| to     | ✔          | &#x7B; address: &lt;string> } \|   &#x7B; alias: &lt;string> } \|  &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number> } | Identifier. Could be one of address, alias, ID or index. |
 | amount | ✔          | number                                                                                                                                                       | Transaction amount.                                      |
 
 ##### Additional Information 
@@ -1033,7 +1044,7 @@ Returns the account associated with the provided identifier.
 
 | *Name*     | *Required* | *Type*                                                                                                                                                     | *Description*                                            |
 | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> }</li><li> &#x7B; alias: &lt;string>  } </li><li>&#x7B; ID: &lt;number> }</li><li>&#x7B; index: &lt;number }</li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| identifier | ✔          | &#x7B; address: &lt;string> } \|  &#x7B; alias: &lt;string>  } \| &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number> } | Identifier. Could be one of address, alias, ID or index. |
 
 
 ##### Returns
@@ -1063,7 +1074,7 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 
 | *Name*     | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
 | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
-| identifier | ✔          | <ul><li>&#x7B; address: &lt;string> } </li><li> &#x7B; alias: &lt;string> } </li><li>&#x7B; ID: &lt;number> } </li><li>&#x7B; index: &lt;number } </li></ul> | Identifier. Could be one of address, alias, ID or index. |
+| identifier | ✔          | &#x7B; address: &lt;string> } \|  &#x7B; alias: &lt;string> } \| &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number }  | Identifier. Could be one of address, alias, ID or index. |
 | id         | ✔          | string                                                                                                                                                       | Message ID.                                              |
 
 
@@ -1100,19 +1111,19 @@ On every update sent from the node software via an event, the wallet library sho
 
 | *Event*                 | *Returned Data*                                                                |
 | ----------------------- | ------------------------------------------------------------------------------ |
-| &lt; Address : Balance> | <ul><li>Index 1: Address</li><li>Index 2: New balance on the address</li></ul> |
+| &lt; Address : Balance> | Index 1: Address \| Index 2: New balance on the address |
     
 #### Monitor address for new messages 
 
 | *Event*                | *Returned Data*                                                           |
 | ---------------------- | ------------------------------------------------------------------------- |
-| &lt;Address : Message> | <ul><li>Index 1: Address</li><li>Index 2: Id of the new message</li></ul> |
+| &lt;Address : Message> | Index 1: Address \| Index 2: Id of the new message |
 
 #### Monitor message for confirmation state 
 
 | *Event*        | *Returned Data*                                                           |
 | -------------- | ------------------------------------------------------------------------- |
-| &lt;MessageId> | <ul><li>Index 1: Message Id</li><li>Index 2: Confirmation state</li></ul> |
+| &lt;MessageId> | Index 1: Message Id | Index 2: Confirmation state |
     
 ### Category 2 events
 
@@ -1205,7 +1216,7 @@ Treat accounts like addresses. Only allow 1 latest unused account.
 
  A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:  
 
-- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [sync_accounts()](#sync_accounts) method. 
+- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [`sync_accounts()`](#sync_accounts) method. 
   - If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. 
   - If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. 
   - If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers.
@@ -1216,7 +1227,7 @@ If there are multiple failed messages, priority should be given to the old ones.
 
 The following should be considered for implementation:
 
-*   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts and a user explicitly calls [sync()](#sync), it should throw an error.
+*   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts, and a user explicitly calls [sync()](#sync), it should throw an error.
 *   Errors during the polling process should be communicated to subscribers via error events.
 
 The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity's implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 

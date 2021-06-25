@@ -1,4 +1,5 @@
 # Examples
+
 You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples).
 You can list all available examples by running the following command:
 ```
@@ -57,10 +58,11 @@ let imported_account = imported_account_handle.read().await;
 
 That's it! You can now backup and restore your account!
 
-You can see the full code for the example in the [`Wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
+You can see the full code for the example in the [`wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
 
 
 ## Transfer Example:
+
 You use the following example to generate an account, and transfer funds. 
 
 ```rust
@@ -114,7 +116,8 @@ async fn main() -> iota_wallet::Result<()> {
 ```
 
 ## Events example:
-`Wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
+
+`wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
 You can use the following example to fetch an existing _Account_ and listen to transaction events related to that _Account_ :
 ```rust

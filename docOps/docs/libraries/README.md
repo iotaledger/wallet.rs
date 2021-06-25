@@ -1,6 +1,6 @@
 # IOTA Wallet Libraries
 
-At the moment there are two available official bindings to `Wallet.rs`, as well as the Rust source:
+The `wallet.rs` library is writen in Rust.  You can also find two bindings writen in Node.js and Python:
 
 - [Rust](rust/README.md)
 - [Node.js](nodejs/README.md) 
@@ -8,7 +8,7 @@ At the moment there are two available official bindings to `Wallet.rs`, as well 
 
 
 ## Getting Started
-We recommended that you start your interactions with IOTA on a _testnet_ network. The _test_net_ will allow you to safely get acquainted with the `Wallet.rs` library, without the risk losing any funds if you make a mistake along the way. You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
+We recommended that you start your interactions with IOTA on a _testnet_ network. The _testnet_ will allow you to safely get acquainted with the `wallet.rs` library, without the risk of losing any funds if you make a mistake along the way. You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
 
 A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).  You can use the network explorer to view transactions and data stored in the IOTA Tangle.    
 
@@ -16,7 +16,7 @@ In order to properly test value-based transactions on testnet network, you are g
 
 ## The Library in a Nutshell
 
-`Wallet.rs` uses an account model, so you can create an account for each of your users. You could also take another approach and use one account and generate many addresses, which you can link to your users in your database. 
+`wallet.rs` uses an account model, so you can create an account for each of your users. You could also take another approach and use one account and generate many addresses, which you can link to your users in your database. 
 
 The library allows users to assign a meaningful alias to each account. Users may also segregate their funds across multiple accounts or multiple addresses. It is up to a developer whether he chooses a single-account approach or multi-account approach.
 

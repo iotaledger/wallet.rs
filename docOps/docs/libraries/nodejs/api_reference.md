@@ -463,7 +463,7 @@ Consolidate the outputs on all account addresses.
 
 ### isLatestAddressUnused()
 
-Determines whether the account has unused latest address after syncing with the Tangle.
+Determines whether the account has an unused latest address after syncing with the Tangle.
 
 Returns a promise resolving to the boolean value.
 
