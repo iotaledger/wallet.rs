@@ -1862,7 +1862,7 @@ mod tests {
             .alias(alias)
             .initialise()
             .await;
-        assert_eq!(second_create_response.is_err(), true);
+        assert!(second_create_response.is_err());
         match second_create_response.unwrap_err() {
             crate::Error::AccountAliasAlreadyExists => {}
             _ => panic!("unexpected create account response; expected AccountAliasAlreadyExists"),
