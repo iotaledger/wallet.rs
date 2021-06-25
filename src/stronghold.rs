@@ -696,7 +696,7 @@ mod tests {
 
                 std::thread::sleep(Duration::from_millis(interval * 3));
                 let res = super::get_record(&snapshot_path, "passwordexpires").await;
-                assert_eq!(res.is_err(), true);
+                assert!(res.is_err());
                 let error = res.unwrap_err();
                 if let super::Error::PasswordNotSet = error {
                     let status = super::get_status(&snapshot_path).await;
@@ -748,12 +748,12 @@ mod tests {
 
                 let id = "actionkeepspassword1".to_string();
                 let res = super::get_record(&snapshot_path, &id).await;
-                assert_eq!(res.is_ok(), true);
+                assert!(res.is_ok());
 
                 std::thread::sleep(interval * 2);
 
                 let res = super::get_record(&snapshot_path, &id).await;
-                assert_eq!(res.is_err(), true);
+                assert!(res.is_err());
                 if let super::Error::PasswordNotSet = res.unwrap_err() {
                     let status = super::get_status(&snapshot_path).await;
                     if let super::SnapshotStatus::Unlocked(_) = status.snapshot {

@@ -1714,7 +1714,16 @@ async fn consolidate_outputs_if_needed(
         {
             let account = synced.account_handle.read().await;
             let signer_type = account.signer_type();
-            if signer_type == &SignerType::LedgerNano || signer_type == &SignerType::LedgerNanoSimulator {
+            let mut ledger_or_simulator = false;
+            #[cfg(feature = "ledger-nano")]
+            if signer_type == &SignerType::LedgerNano {
+                ledger_or_simulator = true;
+            }
+            #[cfg(feature = "ledger-nano-simulator")]
+            if signer_type == &SignerType::LedgerNanoSimulator {
+                ledger_or_simulator = true;
+            }
+            if ledger_or_simulator {
                 let addresses = synced.account_handle.output_consolidation_addresses().await?;
                 for address in addresses {
                     crate::event::emit_address_consolidation_needed(&account, address).await;
@@ -1853,7 +1862,7 @@ mod tests {
             .alias(alias)
             .initialise()
             .await;
-        assert_eq!(second_create_response.is_err(), true);
+        assert!(second_create_response.is_err());
         match second_create_response.unwrap_err() {
             crate::Error::AccountAliasAlreadyExists => {}
             _ => panic!("unexpected create account response; expected AccountAliasAlreadyExists"),
