@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
+pub use crate::{
     account::AccountIdentifier,
     account_manager::{AccountManager, MigrationDataFinder},
     message::{Message as WalletMessage, Transfer},
