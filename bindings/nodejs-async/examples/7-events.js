@@ -3,8 +3,8 @@
  */
 
 async function run() {
-    const { MessageHandler, EventListener } = require('../lib/index.js');
-    const manager = new MessageHandler({
+    const { AccountManager, EventListener } = require('../lib/index.js');
+    const manager = new AccountManager({
         storagePath: './alice-database',
     });
     try {
