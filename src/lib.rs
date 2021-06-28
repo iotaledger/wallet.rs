@@ -140,6 +140,26 @@ pub async fn get_ledger_opened_app(is_simulator: bool) -> Result<LedgerAppInfo> 
     Err(crate::Error::NoLedgerSignerError)
 }
 
+/// Gets the opened app from the Ledger device/simulator.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn get_ledger_opened_app(is_simulator: bool) -> Result<LedgerAppInfo> {
+    #[cfg(feature = "ledger-nano")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
+        let signer = signer.lock().await;
+        return signer.get_ledger_opened_app(is_simulator).await;
+    }
+
+    #[allow(unreachable_code)]
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
+        let signer = signer.lock().await;
+        signer.get_ledger_opened_app(is_simulator).await
+    }
+}
+
 #[cfg(test)]
 mod test_utils {
     use super::{
