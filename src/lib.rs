@@ -95,43 +95,49 @@ pub struct LedgerAppInfo {
 }
 
 /// Gets the status of the Ledger device/simulator.
+#[allow(unreachable_code)]
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub async fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
-    #[cfg(feature = "ledger-nano")]
-    {
-        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
-        let signer = signer.lock().await;
-        return signer.get_ledger_status(is_simulator).await;
+    if is_simulator {
+        #[cfg(feature = "ledger-nano-simulator")]
+        {
+            let simulator_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
+            let signer = simulator_signer.lock().await;
+            return signer.get_ledger_status(is_simulator).await;
+        }
+    } else {
+        #[cfg(feature = "ledger-nano")]
+        {
+            let ledger_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
+            let signer = ledger_signer.lock().await;
+            return signer.get_ledger_status(is_simulator).await;
+        }
     }
-
-    #[allow(unreachable_code)]
-    #[cfg(feature = "ledger-nano-simulator")]
-    {
-        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
-        let signer = signer.lock().await;
-        signer.get_ledger_status(is_simulator).await
-    }
+    LedgerStatus::Disconnected
 }
 
 /// Gets the opened app from the Ledger device/simulator.
+#[allow(unreachable_code)]
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub async fn get_ledger_opened_app(is_simulator: bool) -> Result<LedgerAppInfo> {
-    #[cfg(feature = "ledger-nano")]
-    {
-        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
-        let signer = signer.lock().await;
-        return signer.get_ledger_opened_app(is_simulator).await;
+    if is_simulator {
+        #[cfg(feature = "ledger-nano-simulator")]
+        {
+            let simulator_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
+            let signer = simulator_signer.lock().await;
+            return signer.get_ledger_opened_app(is_simulator).await;
+        }
+    } else {
+        #[cfg(feature = "ledger-nano")]
+        {
+            let ledger_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
+            let signer = ledger_signer.lock().await;
+            return signer.get_ledger_opened_app(is_simulator).await;
+        }
     }
-
-    #[allow(unreachable_code)]
-    #[cfg(feature = "ledger-nano-simulator")]
-    {
-        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
-        let signer = signer.lock().await;
-        signer.get_ledger_opened_app(is_simulator).await
-    }
+    Err(crate::Error::NoLedgerSignerError)
 }
 
 #[cfg(test)]

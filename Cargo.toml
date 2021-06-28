@@ -35,7 +35,7 @@ riker = "0.4"
 slog = "2.7"
 
 # ledger hardware wallets
-iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "d4538b54d922888ed087ca27bf6184f61f84b39c", optional = true  }
+iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "79153530377a4c0659e81ad2d5be749aedbf4a61", optional = true  }
 
 # migration
 iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "c9509f8c911ef0dcca70dda83247e2dcbd85aa81", package = "iota-core" }
