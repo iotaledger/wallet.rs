@@ -1491,7 +1491,7 @@ impl AccountsSynchronizer {
                         if let Some(steps) = steps {
                             sync = sync.steps(steps);
                         }
-                        let synced_data = sync.get_new_history().await?;
+                        let synced_data = sync.get_new_history(false).await?;
                         crate::Result::Ok((account_handle, synced_data))
                     })
                     .await
@@ -1769,7 +1769,7 @@ async fn discover_accounts(
         if let Some(gap_limit) = gap_limit {
             synchronizer = synchronizer.gap_limit(gap_limit);
         }
-        match synchronizer.get_new_history().await {
+        match synchronizer.get_new_history(true).await {
             Ok(synced_account_data) => {
                 let is_empty = synced_account_data
                     .addresses
