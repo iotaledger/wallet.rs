@@ -30,7 +30,6 @@ pub use iota_wallet::{
 use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
 
 static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
-// type MessageReceivers = Arc<Mutex<HashMap<String, MessageReceiver>>>;
 
 // #[derive(Deserialize)]
 // pub struct ClientOptionsDto {
