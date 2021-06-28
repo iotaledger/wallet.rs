@@ -142,6 +142,9 @@ pub enum Error {
     /// accounts)
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
+    /// No ledger signer error
+    #[error("no ledger signer")]
+    NoLedgerSignerError,
     /// Ledger transport error
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger transport error")]
@@ -334,6 +337,7 @@ impl serde::Serialize for Error {
             Self::RecordEncrypt(_) => serialize_variant(self, serializer, "RecordEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            Self::NoLedgerSignerError => serialize_variant(self, serializer, "NoLedgerSignerError"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]

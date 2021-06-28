@@ -1325,9 +1325,9 @@ dependencies = [
 
 [[package]]
 name = "hermit-abi"
-version = "0.1.18"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "322f4de77956e22ed0e5032c359a0f1273f1f7f0d79bfa3b8ffbc730d7fbcc5c"
+checksum = "62b467343b94ba476dcb2500d242dadbb39557df889310ac77c5d99100aaac33"
 dependencies = [
  "libc",
 ]
@@ -1685,7 +1685,7 @@ dependencies = [
 [[package]]
 name = "iota-ledger"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/ledger.rs?branch=develop#f234447a844278f1ed5d3da13d0f3abb55ecac62"
+source = "git+https://github.com/Thoralf-M/ledger.rs?rev=dab2aa248282c70b42e59079f0ea6b94712dc516#dab2aa248282c70b42e59079f0ea6b94712dc516"
 dependencies = [
  "bech32 0.7.3",
  "enum-iterator",
@@ -1838,13 +1838,13 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 
 [[package]]
 name = "ledger-apdu"
-version = "0.7.0"
-source = "git+https://github.com/Zondax/ledger-rs?rev=27cb6bc#27cb6bcdf914f44effbfab40b793c670dfbb7705"
+version = "0.8.0"
+source = "git+https://github.com/Thoralf-M/ledger-rs?rev=517c94266a78782055d239d1a8bce6b62eb3cc28#517c94266a78782055d239d1a8bce6b62eb3cc28"
 
 [[package]]
 name = "ledger-transport"
-version = "0.7.0"
-source = "git+https://github.com/Zondax/ledger-rs?rev=27cb6bc#27cb6bcdf914f44effbfab40b793c670dfbb7705"
+version = "0.8.0"
+source = "git+https://github.com/Thoralf-M/ledger-rs?rev=517c94266a78782055d239d1a8bce6b62eb3cc28#517c94266a78782055d239d1a8bce6b62eb3cc28"
 dependencies = [
  "byteorder",
  "futures",
@@ -1862,8 +1862,8 @@ dependencies = [
 
 [[package]]
 name = "ledger-transport-hid"
-version = "0.7.0"
-source = "git+https://github.com/Zondax/ledger-rs?rev=27cb6bc#27cb6bcdf914f44effbfab40b793c670dfbb7705"
+version = "0.8.0"
+source = "git+https://github.com/Thoralf-M/ledger-rs?rev=517c94266a78782055d239d1a8bce6b62eb3cc28#517c94266a78782055d239d1a8bce6b62eb3cc28"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -1880,7 +1880,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-tcp"
 version = "0.0.1"
-source = "git+https://github.com/Zondax/ledger-rs?rev=27cb6bc#27cb6bcdf914f44effbfab40b793c670dfbb7705"
+source = "git+https://github.com/Thoralf-M/ledger-rs?rev=517c94266a78782055d239d1a8bce6b62eb3cc28#517c94266a78782055d239d1a8bce6b62eb3cc28"
 dependencies = [
  "hex",
  "ledger-apdu",
@@ -2027,13 +2027,14 @@ dependencies = [
 
 [[package]]
 name = "libsodium-sys"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a685b64f837b339074115f2e7f7b431ac73681d08d75b389db7498b8892b8a58"
+checksum = "6b779387cd56adfbc02ea4a668e704f729be8d6a6abd2c27ca5ee537849a92fd"
 dependencies = [
  "cc",
  "libc",
  "pkg-config",
+ "walkdir",
 ]
 
 [[package]]
@@ -2497,9 +2498,9 @@ dependencies = [
 
 [[package]]
 name = "pin-project-lite"
-version = "0.2.6"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc0e1f259c92177c30a4c9d177246edd0a3568b25756a977d0632cf8fa37e905"
+checksum = "8d31d11c69a6b52a174b42bdc0c30e5e11670f90788b2c471c31c1d17d449443"
 
 [[package]]
 name = "pin-utils"

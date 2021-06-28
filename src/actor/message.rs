@@ -217,6 +217,10 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     GetLedgerStatus(bool),
+    /// Get the app that's open on the Ledger Nano or Speculos simulator.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    GetLedgerOpenedApp(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -437,6 +441,10 @@ impl Serialize for MessageType {
                 bundle: _,
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::GetLedgerOpenedApp(_) => {
+                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
+            }
         }
     }
 }
@@ -597,6 +605,10 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     LedgerStatus(crate::LedgerStatus),
+    /// GetLedgerOpenedApp response.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    LedgerOpenedApp(crate::LedgerAppInfo),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.

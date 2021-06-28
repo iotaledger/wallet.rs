@@ -84,6 +84,16 @@ pub enum LedgerStatus {
     Locked,
 }
 
+/// The Ledger app info.
+#[derive(Debug, ::serde::Serialize)]
+#[serde(tag = "type")]
+pub struct LedgerAppInfo {
+    /// App name
+    name: String,
+    /// App version
+    version: String,
+}
+
 /// Gets the status of the Ledger device/simulator.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
@@ -101,6 +111,26 @@ pub async fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
         let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
         let signer = signer.lock().await;
         signer.get_ledger_status(is_simulator).await
+    }
+}
+
+/// Gets the opened app from the Ledger device/simulator.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn get_ledger_opened_app(is_simulator: bool) -> Result<LedgerAppInfo> {
+    #[cfg(feature = "ledger-nano")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
+        let signer = signer.lock().await;
+        return signer.get_ledger_opened_app(is_simulator).await;
+    }
+
+    #[allow(unreachable_code)]
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
+        let signer = signer.lock().await;
+        signer.get_ledger_opened_app(is_simulator).await
     }
 }
 
@@ -140,6 +170,10 @@ mod test_utils {
     impl crate::signing::Signer for TestSigner {
         async fn get_ledger_status(&self, _is_simulator: bool) -> crate::LedgerStatus {
             crate::LedgerStatus::Connected
+        }
+
+        async fn get_ledger_opened_app(&self, _is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
+            Err(crate::Error::NoLedgerSignerError)
         }
 
         async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {

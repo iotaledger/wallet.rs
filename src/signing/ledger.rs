@@ -1,8 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::Account;
-use crate::LedgerStatus;
+use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
@@ -59,6 +58,17 @@ impl super::Signer for LedgerNanoSigner {
             Err(crate::Error::LedgerDongleLocked) => LedgerStatus::Locked,
             Err(_) => LedgerStatus::Disconnected,
         }
+    }
+
+    async fn get_ledger_opened_app(&self, is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
+        // lock the mutex
+        let _lock = self.mutex.lock().await;
+        let transport_type = match is_simulator {
+            true => iota_ledger::TransportTypes::TCP,
+            false => iota_ledger::TransportTypes::NativeHID,
+        };
+        let (name, version) = iota_ledger::get_opened_app(&transport_type)?;
+        Ok(crate::LedgerAppInfo { name, version })
     }
 
     async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
