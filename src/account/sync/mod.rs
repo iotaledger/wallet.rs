@@ -43,6 +43,8 @@ const DUST_DIVISOR: i64 = 100_000;
 const DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
 const DEFAULT_GAP_LIMIT: usize = 10;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+const DEFAULT_LEDGER_GAP_LIMIT: usize = 10;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 const LEDGER_MAX_IN_OUTPUTS: usize = 17;
 const SYNC_CHUNK_SIZE: usize = 500;
 
@@ -849,12 +851,19 @@ impl AccountSynchronizer {
     /// Initialises a new instance of the sync helper.
     pub(super) async fn new(account_handle: AccountHandle) -> Self {
         let latest_address_index = *account_handle.read().await.latest_address().key_index();
+        let default_gap_limit = match account_handle.read().await.signer_type() {
+            #[cfg(feature = "ledger-nano")]
+            SignerType::LedgerNano => DEFAULT_LEDGER_GAP_LIMIT,
+            #[cfg(feature = "ledger-nano-simulator")]
+            SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_GAP_LIMIT,
+            _ => DEFAULT_GAP_LIMIT,
+        };
         Self {
             account_handle,
             // by default we synchronize from the latest address (supposedly unspent)
             address_index: latest_address_index,
             gap_limit: if latest_address_index == 0 {
-                DEFAULT_GAP_LIMIT
+                default_gap_limit
             } else {
                 1
             },

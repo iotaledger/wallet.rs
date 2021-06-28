@@ -73,8 +73,6 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 }
 
 /// The Ledger device status.
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 #[derive(Debug, ::serde::Serialize)]
 #[serde(tag = "type")]
 pub enum LedgerStatus {
@@ -89,11 +87,20 @@ pub enum LedgerStatus {
 /// Gets the status of the Ledger device/simulator.
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-pub fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
-    match iota_ledger::get_ledger(signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
-        Ok(_) => LedgerStatus::Connected,
-        Err(Error::LedgerDongleLocked) => LedgerStatus::Locked,
-        Err(_) => LedgerStatus::Disconnected,
+pub async fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
+    #[cfg(feature = "ledger-nano")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
+        let signer = signer.lock().await;
+        return signer.get_ledger_status(is_simulator).await;
+    }
+
+    #[allow(unreachable_code)]
+    #[cfg(feature = "ledger-nano-simulator")]
+    {
+        let signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
+        let signer = signer.lock().await;
+        signer.get_ledger_status(is_simulator).await
     }
 }
 
@@ -131,6 +138,10 @@ mod test_utils {
 
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
+        async fn get_ledger_status(&self, _is_simulator: bool) -> crate::LedgerStatus {
+            crate::LedgerStatus::Connected
+        }
+
         async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
             Ok(())
         }

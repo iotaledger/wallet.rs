@@ -197,6 +197,9 @@ pub enum Error {
     // #[cfg(feature = "migration")]
     #[error(transparent)]
     LegacyClientError(Box<iota_migration::client::Error>),
+    /// Ternary error.
+    #[error("Ternary error")]
+    TernaryError,
     /// Invalid legacy seed.
     #[error("invalid seed")]
     InvalidSeed,
@@ -354,6 +357,7 @@ impl serde::Serialize for Error {
             Self::InputAddressNotFound => serialize_variant(self, serializer, "InputAddressNotFound"),
             // #[cfg(feature = "migration")]
             Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
+            Self::TernaryError => serialize_variant(self, serializer, "TernaryError"),
             Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
             Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
             Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
