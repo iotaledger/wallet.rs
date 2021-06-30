@@ -13,7 +13,7 @@ use tokio::sync::Mutex;
 // use crate::signing::Network;
 
 pub const HARDENED: u32 = 0x80000000;
-const MAX_POOL_SIZE: u32 = 10_000;
+const MAX_POOL_SIZE: usize = 10_000;
 
 #[derive(Default)]
 pub struct LedgerNanoSigner {
@@ -109,7 +109,7 @@ impl super::Signer for LedgerNanoSigner {
             // if not, we add new entries to the pool but limit the pool size
             if addr_pool.len() > MAX_POOL_SIZE {
                 log::debug!("address pool has too many entries");
-                addr_pool = HashMap::new();
+                *addr_pool = HashMap::new();
             }
 
             let count = 15;
