@@ -3,7 +3,11 @@
 
 use crate::{account::Account, LedgerStatus};
 
-use std::{collections::HashMap, fmt, path::Path};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    fmt,
+    path::Path,
+};
 
 use bee_common::packable::Packable;
 use iota_client::bee_message::unlock::UnlockBlock;
@@ -123,7 +127,7 @@ impl super::Signer for LedgerNanoSigner {
             bip32_index: bip32.bip32_index,
             bip32_change: bip32.bip32_change,
         };
-        use std::collections::hash_map::Entry;
+
         let mut global_address_pool = self.address_pool.lock().await;
         let addr_pool = match global_address_pool.entry(*account.index()) {
             Entry::Occupied(o) => o.into_mut(),
