@@ -117,6 +117,8 @@ pub(crate) async fn sync_address(
     let client = client_guard.read().await;
 
     let address_outputs = get_address_outputs(iota_address.to_bech32(), &client, options.sync_spent_outputs).await?;
+    drop(client);
+
     let mut found_messages = vec![];
 
     log::debug!(
