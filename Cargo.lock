@@ -1589,13 +1589,13 @@ dependencies = [
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
 
 [[package]]
 name = "iota-constants"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87bd27fb99929629a01f3b596c93aec5b6609854c882c45f9b5ded9cc0e24f61"
+source = "git+https://github.com/iotaledger/iota.rs?rev=0aa7e11b075bea17ae52b1f7dff51f3a13c9d914#0aa7e11b075bea17ae52b1f7dff51f3a13c9d914"
 
 [[package]]
 name = "iota-conversion"
