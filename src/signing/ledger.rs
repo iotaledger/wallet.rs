@@ -18,7 +18,7 @@ const MAX_POOL_SIZE: usize = 10_000;
 #[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
-    pub address_pool: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
+    pub address_pool: Mutex<HashMap<usize, HashMap<AddressPoolEntry, [u8; 32]>>>,
     pub mutex: Mutex<()>,
 }
 
@@ -123,8 +123,45 @@ impl super::Signer for LedgerNanoSigner {
             bip32_index: bip32.bip32_index,
             bip32_change: bip32.bip32_change,
         };
+        use std::collections::hash_map::Entry;
+        let mut global_address_pool = self.address_pool.lock().await;
+        let addr_pool = match global_address_pool.entry(*account.index()) {
+            Entry::Occupied(o) => o.into_mut(),
+            Entry::Vacant(v) => {
+                log::info!("Ledger address pool entry found, creating new one");
+                // generate first address to check if the ledger has the correct seed
+                let bip32 = iota_ledger::LedgerBIP32Index {
+                    bip32_index: 0x80000000,
+                    bip32_change: 0x80000000,
+                };
+                // get ledger
+                let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
 
-        let mut addr_pool = self.address_pool.lock().await;
+                // generate first address
+                let addr = ledger.get_addresses(false, bip32, 1)?;
+                let iota_address = iota_client::bee_message::address::Address::Ed25519(
+                    iota_client::bee_message::address::Ed25519Address::new(*addr.first().unwrap()),
+                );
+                // compare with first address from account to see if it's the correct seed
+                if let Some(first_address) = account.addresses().first() {
+                    if first_address.address().inner != iota_address {
+                        return Err(crate::Error::WrongLedgerSeedError);
+                    }
+                }
+                let mut address_pool = HashMap::new();
+                address_pool.insert(
+                    AddressPoolEntry {
+                        bip32_account,
+                        bip32_index: 0,
+                        bip32_change: 0,
+                    },
+                    *addr.first().unwrap(),
+                );
+
+                v.insert(address_pool)
+            }
+        };
+
         if !addr_pool.contains_key(&pool_key) {
             log::info!("Adress {} not found in address pool", pool_key);
             // if not, we add new entries to the pool but limit the pool size

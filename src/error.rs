@@ -169,6 +169,10 @@ pub enum Error {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger app compiled for testnet but used with mainnet or vice versa")]
     LedgerNetMismatch,
+    /// Wrong ledger seed error
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[error("wrong ledger seed")]
+    WrongLedgerSeedError,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -350,6 +354,8 @@ impl serde::Serialize for Error {
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerNetMismatch => serialize_variant(self, serializer, "LedgerNetMismatch"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            Self::WrongLedgerSeedError => serialize_variant(self, serializer, "WrongLedgerSeedError"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),
