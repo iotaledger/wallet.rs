@@ -26,7 +26,7 @@ If you want to get involved in discussions about this library, or you're looking
 
 ## What You Will Find Here
 This documentation has four paths:
-1. The [Overview](overview/index.md): a detailed overview of the wallet library. 
-2. [Libraries](libraries/index.md): all available programming languages and their resources.
-3. The [Specification](specs/index.md): a detailed explanation requirements and functionality.
+1. The [Overview](overview.md): a detailed overview of the wallet library. 
+2. [Libraries](libraries/overview.md): all available programming languages and their resources.
+3. The [Specification](specification.md): a detailed explanation requirements and functionality.
 4. [Contribute](contribute.md): how you can work on the wallet software, get in touch, join the community and become part of the X-Team!

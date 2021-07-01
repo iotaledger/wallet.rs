@@ -7,7 +7,7 @@ module.exports = {
   tagline: '',
   url: 'https://wallet-lib.docs.iota.org/',
   baseUrl: '/',
-  onBrokenLinks: 'warn',
+  onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'throw',
   favicon: 'img/logo/favicon.ico',
   organizationName: 'iotaledger', // Usually your GitHub org/user name.
@@ -50,15 +50,15 @@ module.exports = {
             },
             {
               label: 'Overview',
-              to: '/overview/index',
+              to: '/overview',
             },
             {
               label: 'Libraries',
-              to: '/libraries/index',
+              to: '/libraries/overview',
             },
             {
               label: 'Specification',
-              to: '/specs/index',
+              to: '/specification',
             },
             {
               label: 'Contribute',

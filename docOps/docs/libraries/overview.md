@@ -2,9 +2,9 @@
 
 The `wallet.rs` library is writen in Rust.  You can also find two bindings writen in Node.js and Python:
 
-- [Rust](rust/index.md)
-- [Node.js](nodejs/index.md) 
-- [Python](python/index.md)
+- [Rust](rust/overview.md)
+- [Node.js](nodejs/overview.md) 
+- [Python](python/overview.md)
 
 
 ## Getting Started
