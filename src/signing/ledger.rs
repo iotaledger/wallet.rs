@@ -22,7 +22,7 @@ const MAX_POOL_SIZE: usize = 10_000;
 #[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
-    pub address_pool: Mutex<HashMap<usize, HashMap<AddressPoolEntry, [u8; 32]>>>,
+    pub address_pool: Mutex<HashMap<iota_client::bee_message::address::Address, HashMap<AddressPoolEntry, [u8; 32]>>>,
     pub mutex: Mutex<()>,
 }
 
@@ -129,10 +129,9 @@ impl super::Signer for LedgerNanoSigner {
         };
 
         let mut global_address_pool = self.address_pool.lock().await;
-        let addr_pool = match global_address_pool.entry(*account.index()) {
-            Entry::Occupied(o) => o.into_mut(),
-            Entry::Vacant(v) => {
-                log::info!("Ledger address pool entry found, creating new one");
+        let addr_pool = {
+            if account.addresses().is_empty() {
+                log::info!("Account addresses empty, creating new one for ledger address pool");
                 // generate first address to check if the ledger has the correct seed
                 let bip32 = iota_ledger::LedgerBIP32Index {
                     bip32_index: 0x80000000,
@@ -162,7 +161,54 @@ impl super::Signer for LedgerNanoSigner {
                     *addr.first().unwrap(),
                 );
 
-                v.insert(address_pool)
+                global_address_pool.insert(iota_address, address_pool);
+                global_address_pool
+                    .get_mut(&iota_address)
+                    .expect("Missing pool address entry")
+            } else {
+                match global_address_pool.entry(
+                    account
+                        .addresses()
+                        .first()
+                        .expect("Missing first address")
+                        .address()
+                        .inner,
+                ) {
+                    Entry::Occupied(o) => o.into_mut(),
+                    Entry::Vacant(v) => {
+                        log::info!("Ledger address pool entry found, creating new one");
+                        // generate first address to check if the ledger has the correct seed
+                        let bip32 = iota_ledger::LedgerBIP32Index {
+                            bip32_index: 0x80000000,
+                            bip32_change: 0x80000000,
+                        };
+                        // get ledger
+                        let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+
+                        // generate first address
+                        let addr = ledger.get_addresses(false, bip32, 1)?;
+                        let iota_address = iota_client::bee_message::address::Address::Ed25519(
+                            iota_client::bee_message::address::Ed25519Address::new(*addr.first().unwrap()),
+                        );
+                        // compare with first address from account to see if it's the correct seed
+                        if let Some(first_address) = account.addresses().first() {
+                            if first_address.address().inner != iota_address {
+                                return Err(crate::Error::WrongLedgerSeedError);
+                            }
+                        }
+                        let mut address_pool = HashMap::new();
+                        address_pool.insert(
+                            AddressPoolEntry {
+                                bip32_account,
+                                bip32_index: 0,
+                                bip32_change: 0,
+                            },
+                            *addr.first().unwrap(),
+                        );
+
+                        v.insert(address_pool)
+                    }
+                }
             }
         };
 
