@@ -556,6 +556,7 @@ async fn sync_messages(
     Ok((addresses, messages))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn perform_sync(
     account_handle: AccountHandle,
     address_index: usize,
