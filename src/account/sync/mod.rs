@@ -1347,6 +1347,36 @@ impl SyncedAccount {
     pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
 
+        // validate ledger seed for ledger accounts
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let ledger = match account_.signer_type() {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => true,
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => true,
+                _ => false,
+            };
+            // validate that the first address matches the first address of the account
+            if ledger {
+                log::debug!("[TRANSFER] validate ledger seed with first address");
+                let generated_address = crate::address::get_address_with_index(
+                    &account_,
+                    0,
+                    account_.bech32_hrp(),
+                    GenerateAddressMetadata {
+                        syncing: true,
+                        network: account_.network(),
+                    },
+                )
+                .await?;
+
+                if account_.addresses().first().expect("No first address") != &generated_address {
+                    return Err(crate::Error::WrongLedgerSeedError);
+                }
+            }
+        }
+
         // if any of the deposit addresses belongs to the account, we'll reuse the input address
         // for remainder value output. This is the only way to know the transaction value for
         // transactions between account addresses.
