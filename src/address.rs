@@ -478,7 +478,7 @@ mod tests {
                 .unwrap(),
             address.address(),
         );
-        assert_eq!(response, false);
+        assert!(!response);
     }
 
     #[tokio::test]
@@ -494,6 +494,6 @@ mod tests {
                 .unwrap(),
             &address,
         );
-        assert_eq!(response, true);
+        assert!(response);
     }
 }

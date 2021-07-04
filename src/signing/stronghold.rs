@@ -27,6 +27,11 @@ pub(crate) async fn stronghold_path(storage_path: &Path) -> crate::Result<PathBu
 
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
+    async fn get_ledger_status(&self, _is_simulator: bool) -> crate::LedgerStatus {
+        // dummy ledger status
+        crate::LedgerStatus::Connected
+    }
+
     async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()> {
         crate::stronghold::store_mnemonic(&stronghold_path(storage_path).await?, mnemonic).await?;
         Ok(())

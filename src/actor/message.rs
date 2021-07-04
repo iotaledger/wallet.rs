@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
-    account_manager::{MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
+    account_manager::{migration::MigrationAddress, MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -247,6 +247,18 @@ pub enum MessageType {
         #[serde(rename = "initialAddressIndex")]
         initial_address_index: Option<u64>,
     },
+    /// Get legacy network balance for addresses.
+    GetLedgerMigrationData {
+        /// The nodes to connect to.
+        nodes: Vec<String>,
+        /// The permanode to use.
+        permanode: Option<String>,
+        /// Address objects as String converted with address and index
+        addresses: Vec<String>,
+        /// The WOTS address security level.
+        #[serde(rename = "securityLevel")]
+        security_level: Option<u8>,
+    },
     /// Creates the bundle for migration, performs bundle mining if the address was spent and signs the bundle.
     CreateMigrationBundle {
         /// The legacy seed.
@@ -275,10 +287,19 @@ pub enum MessageType {
         /// Minimum weight magnitude.
         mwm: u8,
     },
+    /// Sends the migration bundle associated with the hash.
+    SendLedgerMigrationBundle {
+        /// Node URLs.
+        nodes: Vec<String>,
+        /// Bundle tx trytes.
+        bundle: Vec<String>,
+        /// Minimum weight magnitude.
+        mwm: u8,
+    },
     /// Get seed checksum.
     GetSeedChecksum(String),
     /// Get migration address
-    GetMigrationAddress,
+    GetMigrationAddress(bool),
     /// Mine bundle
     MineBundle {
         /// Prepared bundle.
@@ -395,7 +416,7 @@ impl Serialize for MessageType {
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
-            MessageType::GetMigrationAddress => {
+            MessageType::GetMigrationAddress(_) => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
             MessageType::MineBundle {
@@ -405,6 +426,17 @@ impl Serialize for MessageType {
                 timeout: _,
                 offset: _,
             } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
+            MessageType::GetLedgerMigrationData {
+                nodes: _,
+                permanode: _,
+                addresses: _,
+                security_level: _,
+            } => serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData"),
+            MessageType::SendLedgerMigrationBundle {
+                nodes: _,
+                bundle: _,
+                mwm: _,
+            } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
         }
     }
 }
@@ -584,7 +616,7 @@ pub enum ResponseType {
     /// GetSeedChecksum response.
     SeedChecksum(String),
     /// GetMigrationAddress response.
-    MigrationAddress(String),
+    MigrationAddress(MigrationAddress),
     /// GetMigrationAddress response.
     MineBundle(MinedBundle),
 }

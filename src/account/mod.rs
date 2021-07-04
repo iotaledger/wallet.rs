@@ -836,7 +836,7 @@ impl Account {
     }
 
     /// Returns the address bech32 human readable part.
-    fn network(&self) -> crate::signing::Network {
+    pub(crate) fn network(&self) -> crate::signing::Network {
         match self.addresses().first().unwrap().address().bech32_hrp() {
             "iota" => crate::signing::Network::Mainnet,
             _ => crate::signing::Network::Testnet,
