@@ -1,8 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::Account;
-use crate::LedgerStatus;
+use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
