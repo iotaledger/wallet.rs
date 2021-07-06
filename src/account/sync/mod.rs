@@ -280,10 +280,15 @@ async fn sync_address_list(
             });
         }
         let results = futures::future::try_join_all(tasks).await?;
+        let mut inserted_remainder_address = false;
         for res in results {
             let (messages, address) = res?;
             if !address.outputs().is_empty() || return_all_addresses {
                 found_addresses.push(address);
+            } else if !inserted_remainder_address {
+                // We want to insert one unused address to have an unused remainder address
+                found_addresses.push(address);
+                inserted_remainder_address = true;
             }
             found_messages.extend(messages);
         }
