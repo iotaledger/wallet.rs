@@ -1356,10 +1356,11 @@ impl SyncedAccount {
                 SignerType::LedgerNanoSimulator => true,
                 _ => false,
             };
-            // validate that the first address matches the first address of the account
+            // validate that the first address matches the first address of the account, validation happens inside of
+            // get_address_with_index
             if ledger {
                 log::debug!("[TRANSFER] validate ledger seed with first address");
-                let generated_address = crate::address::get_address_with_index(
+                let _ = crate::address::get_address_with_index(
                     &account_,
                     0,
                     account_.bech32_hrp(),
@@ -1369,10 +1370,6 @@ impl SyncedAccount {
                     },
                 )
                 .await?;
-
-                if account_.addresses().first().expect("No first address") != &generated_address {
-                    return Err(crate::Error::WrongLedgerSeedError);
-                }
             }
         }
 
