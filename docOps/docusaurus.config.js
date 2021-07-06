@@ -6,10 +6,10 @@ module.exports = {
   title: 'IOTA Wallet Library',
   tagline: 'Official IOTA Wallet Library Software',
   url: 'https://wallet-lib.docs.iota.org/',
-  baseUrl: '/',
+  baseUrl: '/wallet.rs/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
-  favicon: 'img/logo/favicon.ico',
+  favicon: '/img/logo/favicon.ico',
   organizationName: 'iotaledger', // Usually your GitHub org/user name.
   projectName: 'wallet.rs', // Usually your repo name.
   stylesheets: [
@@ -21,7 +21,7 @@ module.exports = {
       title: 'Wallet.rs',
       logo: {
         alt: 'IOTA',
-        src: 'static/img/logo/Logo_Swirl_Dark.png',
+        src: '/img/logo/Logo_Swirl_Dark.png',
       },
       items: [
         {
@@ -45,23 +45,23 @@ module.exports = {
           items: [
             {
               label: 'Welcome',
-              to: '/',
+              to: '/docs/',
             },
             {
               label: 'Overview',
-              to: '/overview',
+              to: '/docs/overview',
             },
             {
               label: 'Libraries',
-              to: '/libraries/overview',
+              to: '/docs/libraries/overview',
             },
             {
               label: 'Specification',
-              to: '/specification',
+              to: '/docs/specification',
             },
             {
               label: 'Contribute',
-              to: '/contribute',
+              to: '/docs/contribute',
             },
           ],
         },
