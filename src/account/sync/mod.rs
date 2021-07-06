@@ -675,11 +675,11 @@ async fn perform_sync(
     // we have two address spaces so we find change & public addresses to save separately
     let mut addresses_to_save = find_addresses_to_save(
         &account,
-        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
+        found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
     );
     addresses_to_save.extend(find_addresses_to_save(
         &account,
-        found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
+        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
 
     // Add first public address if there is none, required for account discovery because we always need a public address
