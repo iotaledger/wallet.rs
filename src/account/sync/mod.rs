@@ -1654,6 +1654,36 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 let change_address = if let Some(address) = account_.latest_change_address() {
+                    log::debug!(
+                        "[TRANSFER] using latest latest_change_address as remainder target: {}",
+                        address.address().to_bech32()
+                    );
+                    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                    {
+                        let ledger = match account_.signer_type() {
+                            #[cfg(feature = "ledger-nano")]
+                            SignerType::LedgerNano => true,
+                            #[cfg(feature = "ledger-nano-simulator")]
+                            SignerType::LedgerNanoSimulator => true,
+                            _ => false,
+                        };
+                        if ledger {
+                            log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
+                            let regenrated_address = crate::address::get_new_change_address(
+                                &account_,
+                                *address.key_index(),
+                                account_.bech32_hrp(),
+                                GenerateAddressMetadata {
+                                    syncing: false,
+                                    network: account_.network(),
+                                },
+                            )
+                            .await?;
+                            if address.address().inner != regenrated_address.address().inner {
+                                return Err(crate::Error::WrongLedgerSeedError);
+                            }
+                        }
+                    }
                     address.address().clone()
                 } else {
                     transfer_obj
@@ -1664,6 +1694,7 @@ async fn perform_transfer(
                         .await;
                     let change_address = crate::address::get_new_change_address(
                         &account_,
+                        // Index 0 because it's the first address
                         0,
                         account_.bech32_hrp(),
                         GenerateAddressMetadata {
