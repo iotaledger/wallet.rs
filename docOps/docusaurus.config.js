@@ -1,9 +1,12 @@
+const lightCodeTheme = require('prism-react-renderer/themes/github');
+const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
   title: 'IOTA Wallet Library',
   tagline: 'Official IOTA Wallet Library Software',
   url: 'https://wallet-lib.docs.iota.org/',
-  baseUrl: '/wallet.rs/',
+  baseUrl: '/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
   favicon: 'img/logo/favicon.ico',
@@ -11,6 +14,7 @@ module.exports = {
   projectName: 'wallet.rs', // Usually your repo name.
   stylesheets: [
     'https://fonts.googleapis.com/css?family=Material+Icons',
+    'https://iota-community.github.io/iota-wiki/assets/css/styles.f9f708da.css',//replace this URL
   ],
   themeConfig: {
     navbar: {
@@ -26,16 +30,57 @@ module.exports = {
           position: 'left',
           label: 'Documentation',
         },
-        // {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/iotaledger/wallet.rs',
           label: 'GitHub',
           position: 'right',
         },
-      ]
+      ],
+    },
+        footer: {
+      style: 'dark',
+      links: [
+        {
+          title: 'Documentation',
+          items: [
+            {
+              label: 'Welcome',
+              to: '/',
+            },
+            {
+              label: 'Overview',
+              to: '/overview',
+            },
+            {
+              label: 'Libraries',
+              to: '/libraries/overview',
+            },
+            {
+              label: 'Specification',
+              to: '/specification',
+            },
+            {
+              label: 'Contribute',
+              to: '/contribute',
+            },
+          ],
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'GitHub',
+              href: 'https://github.com/iotaledger/wallet.rs',
+            },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} IOTA Foundation, Built with Docusaurus.`,
     },
     prism: {
         additionalLanguages: ['rust'],
+        theme: lightCodeTheme,
+        darkTheme: darkCodeTheme,
     },
   },
   presets: [

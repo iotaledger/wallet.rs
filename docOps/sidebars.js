@@ -16,14 +16,14 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'overview/README',
+      id: 'overview',
     },
     {
       type: 'category',
       label: 'Libraries',
       items: [{
           type: 'doc',
-          id: 'libraries/README',
+          id: 'libraries/overview',
           label: 'Overview',
         },
         {
@@ -31,7 +31,7 @@ module.exports = {
           label: 'Rust',
           items: [{
               type: 'doc',
-              id: 'libraries/rust/README',
+              id: 'libraries/rust/overview',
               label: 'Overview'
             },
             {
@@ -61,7 +61,7 @@ module.exports = {
           label: 'Node.js',
           items: [{
               type: 'doc',
-              id: 'libraries/nodejs/README',
+              id: 'libraries/nodejs/overview',
               label: 'Overview'
             },
             {
@@ -91,7 +91,7 @@ module.exports = {
           label: 'Python',
           items: [{
               type: 'doc',
-              id: 'libraries/python/README',
+              id: 'libraries/python/overview',
               label: 'Overview'
             },
             {
@@ -120,7 +120,7 @@ module.exports = {
     },
     {
       type: 'doc',
-      id: 'specs/README',
+      id: 'specification',
       label: 'Specification',
     },
     {
