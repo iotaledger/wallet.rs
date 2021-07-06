@@ -1,39 +1,52 @@
-name: github pages
+name: deploy
 
 on:
+  pull_request:
+    branches: [migrateToDocusaurus]
   push:
-    branches:
-      - dev
+    branches: [migrateToDocusaurus]
+
 jobs:
-  deploy:
+  checks:
+    if: github.event_name != 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Install rust-docs with nightly toolchain
-        uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
         with:
-            profile: minimal
-            toolchain: nightly
-            override: true
-            components: rust-docs
-          
-      - name: Setup mdBook
-        uses: peaceiris/actions-mdbook@v1
-        with:
-          mdbook-version: 'latest'
-
-      - run: mdbook build
-      - name: Install required packages (Ubuntu)
+          node-version: '12.x'
+      - name: Test Build
         run: |
-          sudo apt-get update
-          sudo apt-get install libudev-dev libusb-1.0-0-dev
-      - run: DOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --document-private-items --no-deps --release
-      - run: cp -r target/doc book/docs
-      
-      - name: Deploy
+          cd docOps
+          if [ -e yarn.lock ]; then
+          yarn install --frozen-lockfile
+          elif [ -e package-lock.json ]; then
+          npm ci
+          else
+          npm i
+          fi
+          npm run build
+  gh-release:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+      - name: Build
+        run: |
+          cd docOps
+          if [ -e yarn.lock ]; then
+          yarn install --frozen-lockfile
+          elif [ -e package-lock.json ]; then
+          npm ci
+          else
+          npm i
+          fi
+          npm run build
+      - name: Release to GitHub Pages
         uses: iotaledger/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./book
-          cname: wallet-lib.docs.iota.org
+          publish_dir: ./docOps/build

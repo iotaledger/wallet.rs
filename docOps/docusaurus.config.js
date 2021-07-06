@@ -4,24 +4,24 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 /** @type {import('@docusaurus/types').DocusaurusConfig} */
 module.exports = {
   title: 'IOTA Wallet Library',
-  tagline: '',
+  tagline: 'Official IOTA Wallet Library Software',
   url: 'https://wallet-lib.docs.iota.org/',
-  baseUrl: '/',
-  onBrokenLinks: 'throw',
+  baseUrl: '/wallet.rs/',
+  onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
-  favicon: 'img/logo/favicon.ico',
+  favicon: '/img/logo/favicon.ico',
   organizationName: 'iotaledger', // Usually your GitHub org/user name.
   projectName: 'wallet.rs', // Usually your repo name.
   stylesheets: [
     'https://fonts.googleapis.com/css?family=Material+Icons',
-    'http://v2202102141633143571.bestsrv.de/assets/css/styles.c88dfa6b.css',//replace this URL
+    'https://iota-community.github.io/iota-wiki/assets/css/styles.f9f708da.css',//replace this URL
   ],
   themeConfig: {
     navbar: {
-      title: 'Wallet.rs documentation',
+      title: 'Wallet.rs',
       logo: {
         alt: 'IOTA',
-        src: 'static/img/logo/Logo_Swirl_Dark.png',
+        src: '/img/logo/Logo_Swirl_Dark.png',
       },
       items: [
         {
@@ -30,7 +30,6 @@ module.exports = {
           position: 'left',
           label: 'Documentation',
         },
-//        {to: '/blog', label: 'Blog', position: 'left'},
         {
           href: 'https://github.com/iotaledger/wallet.rs',
           label: 'GitHub',
@@ -46,50 +45,29 @@ module.exports = {
           items: [
             {
               label: 'Welcome',
-              to: '/',
+              to: '/docs/',
             },
             {
               label: 'Overview',
-              to: '/overview',
+              to: '/docs/overview',
             },
             {
               label: 'Libraries',
-              to: '/libraries/overview',
+              to: '/docs/libraries/overview',
             },
             {
               label: 'Specification',
-              to: '/specification',
+              to: '/docs/specification',
             },
             {
               label: 'Contribute',
-              to: '/contribute',
-            },
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
-            },
-            {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
-            },
-            {
-              label: 'Twitter',
-              href: 'https://twitter.com/docusaurus',
+              to: '/docs/contribute',
             },
           ],
         },
         {
           title: 'More',
           items: [
-//            {
-//              label: 'Blog',
-//              to: '/blog',
-//            },
             {
               label: 'GitHub',
               href: 'https://github.com/iotaledger/wallet.rs',
@@ -111,7 +89,6 @@ module.exports = {
       {
         docs: {
           sidebarPath: require.resolve('./sidebars.js'),
-          routeBasePath:'/',
           // Please change this to your repo.
           editUrl:
             'https://github.com/iotaledger/wallet.rs/tree/main/docs',
