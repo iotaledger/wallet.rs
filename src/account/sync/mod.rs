@@ -677,16 +677,15 @@ async fn perform_sync(
         &account,
         found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
     );
+    // Add first public address if there is none, required for account discovery because we always need a public address
+    // in an account
+    if addresses_to_save.is_empty() && return_all_addresses {
+        addresses_to_save.extend(found_addresses.iter().find(|a| !a.internal()).cloned());
+    }
     addresses_to_save.extend(find_addresses_to_save(
         &account,
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
-
-    // Add first public address if there is none, required for account discovery because we always need a public address
-    // in an account
-    if addresses_to_save.iter().filter(|a| !a.internal()).count() == 0 && return_all_addresses {
-        addresses_to_save.extend(found_addresses.iter().find(|a| !a.internal()).cloned());
-    }
 
     Ok(SyncedAccountData {
         messages: new_messages,
