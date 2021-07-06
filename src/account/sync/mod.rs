@@ -8,7 +8,7 @@ use crate::{
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
-        TransactionEventType, TransferProgressType,
+        PreparedTransactionData, TransactionEventType, TransferProgressType,
     },
     message::{Message, MessageType, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
@@ -1528,10 +1528,12 @@ async fn perform_transfer(
     let mut dust_and_allowance_recorders = Vec::new();
     let transfer_amount = transfer_obj.amount();
 
-    if transfer_amount < DUST_ALLOWANCE_VALUE {
-        for output in transfer_obj.outputs.iter() {
+    let mut outputs_for_event: Vec<(String, u64, bool)> = Vec::new();
+    for output in transfer_obj.outputs.iter() {
+        if transfer_amount < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((output.amount.get(), output.address.to_bech32(), true));
         }
+        outputs_for_event.push((output.address.to_bech32(), u64::from(output.amount), false));
     }
 
     let account_ = account_handle.read().await;
@@ -1561,21 +1563,25 @@ async fn perform_transfer(
             .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
     }
     let mut inputs_for_essence: Vec<Input> = Vec::new();
+    let mut inputs_for_event: Vec<(String, u64)> = Vec::new();
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
     for (utxo, address_index, address_internal) in utxos {
-        match utxo.kind {
+        let (amount, address) = match utxo.kind {
             OutputKind::SignatureLockedSingle => {
                 if utxo.amount < DUST_ALLOWANCE_VALUE {
                     dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
                 }
+                (utxo.amount, utxo.address.to_bech32())
             }
             OutputKind::SignatureLockedDustAllowance => {
                 dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
+                (utxo.amount, utxo.address.to_bech32())
             }
-            OutputKind::Treasury => {}
-        }
+            OutputKind::Treasury => return Err(crate::Error::InvalidOutputKind("Treasury".to_string())),
+        };
+        inputs_for_event.push((address, amount));
 
         let input: Input = UtxoInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         inputs_for_essence.push(input.clone());
@@ -1743,6 +1749,7 @@ async fn perform_transfer(
         if remainder_value < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
         }
+        outputs_for_event.push((remainder_deposit_address.to_bech32(), remainder_value, true));
     }
 
     let client = crate::client::get_client(account_.client_options()).await?;
@@ -1773,13 +1780,27 @@ async fn perform_transfer(
     outputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
     essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
+    let mut indexation_data = None;
     if let Some(indexation) = &transfer_obj.indexation {
+        if !indexation.data().is_empty() {
+            indexation_data = Some(hex::encode(&*indexation.data()));
+        }
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
     }
 
     let essence = essence_builder.finish()?;
     let essence = Essence::Regular(essence);
 
+    transfer_obj
+        .emit_event_if_needed(
+            account_.id().to_string(),
+            TransferProgressType::PreparedTransaction(PreparedTransactionData {
+                inputs: inputs_for_event,
+                outputs: outputs_for_event,
+                data: indexation_data,
+            }),
+        )
+        .await;
     transfer_obj
         .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SigningTransaction)
         .await;
