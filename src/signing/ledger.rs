@@ -129,7 +129,13 @@ impl super::Signer for LedgerNanoSigner {
 
         let mut global_address_pool = self.address_pool.lock().await;
         let addr_pool = {
-            let entry = match account.addresses().first() {
+            // get first address
+            let filtered_addresses : Vec<_> = account.addresses()
+                .iter()
+                .filter(|e| *e.key_index() == 0 && !e.internal())
+                .collect();
+
+            let entry = match &filtered_addresses.first() {
                 Some(address) => global_address_pool.get_mut(&address.address().inner),
                 None => None,
             };
@@ -148,8 +154,8 @@ impl super::Signer for LedgerNanoSigner {
                     let iota_address = iota_client::bee_message::address::Address::Ed25519(
                         iota_client::bee_message::address::Ed25519Address::new(addr),
                     );
-                    // compare with first address from account to see if it's the correct seed
-                    if let Some(first_address) = account.addresses().first() {
+
+                    if let Some(first_address) = &filtered_addresses.first() {
                         if first_address.address().inner != iota_address {
                             return Err(crate::Error::WrongLedgerSeedError);
                         }
