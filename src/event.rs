@@ -137,6 +137,18 @@ pub struct TransactionReattachmentEvent {
     pub reattached_message_id: MessageId,
 }
 
+/// Transaction reattachment event data.
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct PreparedTransactionData {
+    /// Transaction inputs. (address, amount)
+    pub inputs: Vec<(String, u64)>,
+    /// Transaction outputs. (address, amount, remainder)
+    pub outputs: Vec<(String, u64, bool)>,
+    /// The indexation data.
+    pub data: Option<String>,
+}
+
 /// Transfer event type.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -147,6 +159,8 @@ pub enum TransferProgressType {
     SelectingInputs,
     /// Generating remainder value deposit address.
     GeneratingRemainderDepositAddress,
+    /// Prepared transaction.
+    PreparedTransaction(PreparedTransactionData),
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.
