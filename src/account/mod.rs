@@ -665,7 +665,36 @@ impl AccountHandle {
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
-        Ok(self.latest_address().await)
+        let address = self.latest_address().await;
+        // regenerate address for ledger accounts
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let account = self.read().await;
+            let ledger = match account.signer_type() {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => true,
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => true,
+                _ => false,
+            };
+            if ledger {
+                log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
+                let regenrated_address = crate::address::get_address_with_index(
+                    &account,
+                    *address.key_index(),
+                    account.bech32_hrp(),
+                    GenerateAddressMetadata {
+                        syncing: false,
+                        network: account.network(),
+                    },
+                )
+                .await?;
+                if address.address().inner != regenrated_address.address().inner {
+                    return Err(crate::Error::WrongLedgerSeedError);
+                }
+            }
+        }
+        Ok(address)
     }
 
     /// Syncs the latest address with the Tangle and determines whether it's unused or not.
