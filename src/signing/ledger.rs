@@ -64,8 +64,10 @@ impl super::Signer for LedgerNanoSigner {
             Ok((name, version)) => LedgerStatus {
                 connected: true,
                 locked: false,
-                app_name: Some(name),
-                app_version: Some(version),
+                app: Some(crate::LedgerApp {
+                    app_name: name,
+                    app_version: version,
+                }),
             },
             Err(_) => {
                 log::info!("get_ledger");
@@ -78,8 +80,7 @@ impl super::Signer for LedgerNanoSigner {
                 LedgerStatus {
                     connected,
                     locked,
-                    app_name: None,
-                    app_version: None,
+                    app: None,
                 }
             }
         }

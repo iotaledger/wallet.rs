@@ -32,8 +32,7 @@ impl super::Signer for StrongholdSigner {
         crate::LedgerStatus {
             connected: false,
             locked: false,
-            app_name: None,
-            app_version: None,
+            app: None,
         }
     }
 

@@ -75,17 +75,25 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 /// The Ledger device status.
 #[derive(Debug, ::serde::Serialize)]
 #[serde(tag = "type")]
+pub struct LedgerApp {
+    /// Opened app name.
+    #[serde(rename = "appName")]
+    app_name: String,
+    /// Opened app version.
+    #[serde(rename = "appVersion")]
+    app_version: String,
+}
+
+/// The Ledger device status.
+#[derive(Debug, ::serde::Serialize)]
+#[serde(tag = "type")]
 pub struct LedgerStatus {
     /// Ledger is available and ready to be used.
     connected: bool,
     /// Ledger is connected and locked.
     locked: bool,
-    /// Opened app name.
-    #[serde(rename = "appName")]
-    app_name: Option<String>,
-    /// Opened app version.
-    #[serde(rename = "appVersion")]
-    app_version: Option<String>,
+    /// Ledger opened app.
+    app: Option<LedgerApp>,
 }
 
 /// Gets the status of the Ledger device/simulator.
@@ -112,8 +120,7 @@ pub async fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
     LedgerStatus {
         connected: false,
         locked: false,
-        app_name: None,
-        app_version: None,
+        app: None,
     }
 }
 
@@ -156,8 +163,7 @@ mod test_utils {
             crate::LedgerStatus {
                 connected: false,
                 locked: false,
-                app_name: None,
-                app_version: None,
+                app: None,
             }
         }
 
