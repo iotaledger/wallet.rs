@@ -77,11 +77,9 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 #[serde(tag = "type")]
 pub struct LedgerApp {
     /// Opened app name.
-    #[serde(rename = "appName")]
-    app_name: String,
+    name: String,
     /// Opened app version.
-    #[serde(rename = "appVersion")]
-    app_version: String,
+    version: String,
 }
 
 /// The Ledger device status.
