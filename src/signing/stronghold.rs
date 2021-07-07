@@ -32,6 +32,10 @@ impl super::Signer for StrongholdSigner {
         crate::LedgerStatus::Connected
     }
 
+    async fn get_ledger_opened_app(&self, _is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
+        Err(crate::Error::NoLedgerSignerError)
+    }
+
     async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()> {
         crate::stronghold::store_mnemonic(&stronghold_path(storage_path).await?, mnemonic).await?;
         Ok(())

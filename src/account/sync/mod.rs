@@ -117,6 +117,8 @@ pub(crate) async fn sync_address(
     let client = client_guard.read().await;
 
     let address_outputs = get_address_outputs(iota_address.to_bech32(), &client, options.sync_spent_outputs).await?;
+    drop(client);
+
     let mut found_messages = vec![];
 
     log::debug!(
@@ -673,18 +675,17 @@ async fn perform_sync(
     // we have two address spaces so we find change & public addresses to save separately
     let mut addresses_to_save = find_addresses_to_save(
         &account,
-        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
-    );
-    addresses_to_save.extend(find_addresses_to_save(
-        &account,
         found_addresses.iter().filter(|a| !a.internal()).cloned().collect(),
-    ));
-
+    );
     // Add first public address if there is none, required for account discovery because we always need a public address
     // in an account
-    if addresses_to_save.iter().filter(|a| !a.internal()).count() == 0 && return_all_addresses {
+    if addresses_to_save.is_empty() && return_all_addresses {
         addresses_to_save.extend(found_addresses.iter().find(|a| !a.internal()).cloned());
     }
+    addresses_to_save.extend(find_addresses_to_save(
+        &account,
+        found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
+    ));
 
     Ok(SyncedAccountData {
         messages: new_messages,
@@ -1344,6 +1345,33 @@ impl SyncedAccount {
     /// Send messages.
     pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         let account_ = self.account_handle.read().await;
+
+        // validate ledger seed for ledger accounts
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let ledger = match account_.signer_type() {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => true,
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => true,
+                _ => false,
+            };
+            // validate that the first address matches the first address of the account, validation happens inside of
+            // get_address_with_index
+            if ledger {
+                log::debug!("[TRANSFER] validate ledger seed with first address");
+                let _ = crate::address::get_address_with_index(
+                    &account_,
+                    0,
+                    account_.bech32_hrp(),
+                    GenerateAddressMetadata {
+                        syncing: true,
+                        network: account_.network(),
+                    },
+                )
+                .await?;
+            }
+        }
 
         // if any of the deposit addresses belongs to the account, we'll reuse the input address
         // for remainder value output. This is the only way to know the transaction value for

@@ -142,6 +142,9 @@ pub enum Error {
     /// accounts)
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
+    /// No ledger signer error
+    #[error("no ledger signer")]
+    NoLedgerSignerError,
     /// Ledger transport error
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger transport error")]
@@ -166,6 +169,10 @@ pub enum Error {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[error("ledger app compiled for testnet but used with mainnet or vice versa")]
     LedgerNetMismatch,
+    /// Wrong ledger seed error
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[error("wrong ledger seed")]
+    WrongLedgerSeedError,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -334,6 +341,7 @@ impl serde::Serialize for Error {
             Self::RecordEncrypt(_) => serialize_variant(self, serializer, "RecordEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
+            Self::NoLedgerSignerError => serialize_variant(self, serializer, "NoLedgerSignerError"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
@@ -346,6 +354,8 @@ impl serde::Serialize for Error {
             Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerNetMismatch => serialize_variant(self, serializer, "LedgerNetMismatch"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            Self::WrongLedgerSeedError => serialize_variant(self, serializer, "WrongLedgerSeedError"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),

@@ -190,6 +190,15 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::GetLedgerOpenedApp(is_simulator) => {
+                convert_async_panics(|| async {
+                    Ok(ResponseType::LedgerOpenedApp(
+                        crate::get_ledger_opened_app(*is_simulator).await?,
+                    ))
+                })
+                .await
+            }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
                     self.account_manager.delete_internal().await?;

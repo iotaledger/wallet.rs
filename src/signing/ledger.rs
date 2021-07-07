@@ -1,8 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::Account;
-use crate::LedgerStatus;
+use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
@@ -12,6 +11,7 @@ use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
 // use crate::signing::Network;
+// ledger status codes https://github.com/iotaledger/ledger-iota-app/blob/53c1f96d15f8b014ba8ba31a85f0401bb4d33e18/src/iota_io.h#L54
 
 pub const HARDENED: u32 = 0x80000000;
 const MAX_POOL_SIZE: usize = 10_000;
@@ -19,7 +19,7 @@ const MAX_POOL_SIZE: usize = 10_000;
 #[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
-    pub address_pool: Mutex<HashMap<AddressPoolEntry, [u8; 32]>>,
+    pub address_pool: Mutex<HashMap<iota_client::bee_message::address::Address, HashMap<AddressPoolEntry, [u8; 32]>>>,
     pub mutex: Mutex<()>,
 }
 
@@ -53,6 +53,7 @@ impl fmt::Display for AddressPoolEntry {
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
     async fn get_ledger_status(&self, is_simulator: bool) -> LedgerStatus {
+        log::info!("get_ledger_status");
         // lock the mutex
         let _lock = self.mutex.lock().await;
         match iota_ledger::get_ledger(crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
@@ -60,6 +61,18 @@ impl super::Signer for LedgerNanoSigner {
             Err(crate::Error::LedgerDongleLocked) => LedgerStatus::Locked,
             Err(_) => LedgerStatus::Disconnected,
         }
+    }
+
+    async fn get_ledger_opened_app(&self, is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
+        log::info!("get_ledger_opened_app");
+        // lock the mutex
+        let _lock = self.mutex.lock().await;
+        let transport_type = match is_simulator {
+            true => iota_ledger::TransportTypes::TCP,
+            false => iota_ledger::TransportTypes::NativeHID,
+        };
+        let (name, version) = iota_ledger::get_opened_app(&transport_type)?;
+        Ok(crate::LedgerAppInfo { name, version })
     }
 
     async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
@@ -114,7 +127,57 @@ impl super::Signer for LedgerNanoSigner {
             bip32_change: bip32.bip32_change,
         };
 
-        let mut addr_pool = self.address_pool.lock().await;
+        let mut global_address_pool = self.address_pool.lock().await;
+        let addr_pool = {
+            // get first address
+            let first_public_address = account
+                .addresses()
+                .iter()
+                .find(|e| *e.key_index() == 0 && !e.internal());
+
+            let entry = match &first_public_address {
+                Some(address) => global_address_pool.get_mut(&address.address().inner),
+                None => None,
+            };
+            match entry {
+                Some(address_entry) => address_entry,
+                None => {
+                    log::info!(
+                        "Account {} addresses or leder pool entry empty, creating first address for ledger address pool", account.index()
+                    );
+
+                    // get ledger
+                    let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+
+                    // generate first address to check if the ledger has the correct seed
+                    let addr = ledger.get_first_address()?;
+                    let iota_address = iota_client::bee_message::address::Address::Ed25519(
+                        iota_client::bee_message::address::Ed25519Address::new(addr),
+                    );
+
+                    if let Some(first_address) = &first_public_address {
+                        if first_address.address().inner != iota_address {
+                            return Err(crate::Error::WrongLedgerSeedError);
+                        }
+                    }
+                    let mut address_pool = HashMap::new();
+                    address_pool.insert(
+                        AddressPoolEntry {
+                            bip32_account,
+                            bip32_index: HARDENED,
+                            bip32_change: HARDENED,
+                        },
+                        addr,
+                    );
+
+                    global_address_pool.insert(iota_address, address_pool);
+                    global_address_pool
+                        .get_mut(&iota_address)
+                        .expect("Missing pool address entry")
+                }
+            }
+        };
+
         if !addr_pool.contains_key(&pool_key) {
             log::info!("Adress {} not found in address pool", pool_key);
             // if not, we add new entries to the pool but limit the pool size
