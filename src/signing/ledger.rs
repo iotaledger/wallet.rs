@@ -53,26 +53,36 @@ impl fmt::Display for AddressPoolEntry {
 #[async_trait::async_trait]
 impl super::Signer for LedgerNanoSigner {
     async fn get_ledger_status(&self, is_simulator: bool) -> LedgerStatus {
-        log::info!("get_ledger_status");
-        // lock the mutex
-        let _lock = self.mutex.lock().await;
-        match iota_ledger::get_ledger(crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
-            Ok(_) => LedgerStatus::Connected,
-            Err(crate::Error::LedgerDongleLocked) => LedgerStatus::Locked,
-            Err(_) => LedgerStatus::Disconnected,
-        }
-    }
-
-    async fn get_ledger_opened_app(&self, is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
-        log::info!("get_ledger_opened_app");
+        log::info!("ledger get_opened_app");
         // lock the mutex
         let _lock = self.mutex.lock().await;
         let transport_type = match is_simulator {
             true => iota_ledger::TransportTypes::TCP,
             false => iota_ledger::TransportTypes::NativeHID,
         };
-        let (name, version) = iota_ledger::get_opened_app(&transport_type)?;
-        Ok(crate::LedgerAppInfo { name, version })
+        match iota_ledger::get_opened_app(&transport_type) {
+            Ok((name, version)) => LedgerStatus {
+                connected: true,
+                locked: false,
+                app_name: Some(name),
+                app_version: Some(version),
+            },
+            Err(_) => {
+                log::info!("get_ledger");
+                let (connected, locked) =
+                    match iota_ledger::get_ledger(crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+                        Ok(_) => (true, false),
+                        Err(crate::Error::LedgerDongleLocked) => (true, true),
+                        Err(_) => (false, false),
+                    };
+                LedgerStatus {
+                    connected,
+                    locked,
+                    app_name: None,
+                    app_version: None,
+                }
+            }
+        }
     }
 
     async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
