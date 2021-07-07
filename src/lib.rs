@@ -74,7 +74,6 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 
 /// The Ledger device status.
 #[derive(Debug, ::serde::Serialize)]
-#[serde(tag = "type")]
 pub struct LedgerApp {
     /// Opened app name.
     name: String,
@@ -84,7 +83,6 @@ pub struct LedgerApp {
 
 /// The Ledger device status.
 #[derive(Debug, ::serde::Serialize)]
-#[serde(tag = "type")]
 pub struct LedgerStatus {
     /// Ledger is available and ready to be used.
     connected: bool,
