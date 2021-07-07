@@ -3,11 +3,7 @@
 
 use crate::{account::Account, LedgerStatus};
 
-use std::{
-    collections::{hash_map::Entry, HashMap},
-    fmt,
-    path::Path,
-};
+use std::{collections::HashMap, fmt, path::Path};
 
 use bee_common::packable::Packable;
 use iota_client::bee_message::unlock::UnlockBlock;
