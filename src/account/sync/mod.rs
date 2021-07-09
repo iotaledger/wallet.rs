@@ -7,7 +7,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
     client::ClientOptions,
     event::{
-        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, AddressData, BalanceChange,
         PreparedTransactionData, TransactionEventType, TransferProgressType,
     },
     message::{Message, MessageType, RemainderValueStrategy, Transfer},
@@ -1682,9 +1682,9 @@ async fn perform_transfer(
                             transfer_obj
                                 .emit_event_if_needed(
                                     account_.id().to_string(),
-                                    TransferProgressType::GeneratingRemainderDepositAddress(
-                                        address.address().to_bech32(),
-                                    ),
+                                    TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                        address: address.address().to_bech32(),
+                                    }),
                                 )
                                 .await;
                             log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
@@ -1721,9 +1721,9 @@ async fn perform_transfer(
                     transfer_obj
                         .emit_event_if_needed(
                             account_.id().to_string(),
-                            TransferProgressType::GeneratingRemainderDepositAddress(
-                                change_address_for_event.address().to_bech32(),
-                            ),
+                            TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                address: change_address_for_event.address().to_bech32(),
+                            }),
                         )
                         .await;
                     let change_address = crate::address::get_new_change_address(

@@ -137,6 +137,14 @@ pub struct TransactionReattachmentEvent {
     pub reattached_message_id: MessageId,
 }
 
+/// Remainder address event data.
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct AddressData {
+    /// The remainder address.
+    pub address: String,
+}
+
 /// Transaction reattachment event data.
 #[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
@@ -158,7 +166,7 @@ pub enum TransferProgressType {
     /// Performing input selection.
     SelectingInputs,
     /// Generating remainder value deposit address.
-    GeneratingRemainderDepositAddress(String),
+    GeneratingRemainderDepositAddress(AddressData),
     /// Prepared transaction.
     PreparedTransaction(PreparedTransactionData),
     /// Signing the transaction.
