@@ -1679,6 +1679,14 @@ async fn perform_transfer(
                             _ => false,
                         };
                         if ledger {
+                            transfer_obj
+                                .emit_event_if_needed(
+                                    account_.id().to_string(),
+                                    TransferProgressType::GeneratingRemainderDepositAddress(
+                                        address.address().to_bech32(),
+                                    ),
+                                )
+                                .await;
                             log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
                             let regenrated_address = crate::address::get_new_change_address(
                                 &account_,
@@ -1697,10 +1705,25 @@ async fn perform_transfer(
                     }
                     address.address().clone()
                 } else {
+                    // Generate an address with syncing: true so it doesn't get displayed, then generate it with
+                    // syncing:false so the user can verify it on the ledger
+                    let change_address_for_event = crate::address::get_new_change_address(
+                        &account_,
+                        // Index 0 because it's the first address
+                        0,
+                        account_.bech32_hrp(),
+                        GenerateAddressMetadata {
+                            syncing: false,
+                            network: account_.network(),
+                        },
+                    )
+                    .await?;
                     transfer_obj
                         .emit_event_if_needed(
                             account_.id().to_string(),
-                            TransferProgressType::GeneratingRemainderDepositAddress,
+                            TransferProgressType::GeneratingRemainderDepositAddress(
+                                change_address_for_event.address().to_bech32(),
+                            ),
                         )
                         .await;
                     let change_address = crate::address::get_new_change_address(

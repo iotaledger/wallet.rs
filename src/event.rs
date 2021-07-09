@@ -158,7 +158,7 @@ pub enum TransferProgressType {
     /// Performing input selection.
     SelectingInputs,
     /// Generating remainder value deposit address.
-    GeneratingRemainderDepositAddress,
+    GeneratingRemainderDepositAddress(String),
     /// Prepared transaction.
     PreparedTransaction(PreparedTransactionData),
     /// Signing the transaction.
