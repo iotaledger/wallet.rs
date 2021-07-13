@@ -57,6 +57,27 @@ class AccountManager {
     });
   }
 
+  async backup(destination, password) {
+    return this.messageHandler.sendMessage({
+      id: _id,
+      cmd: "Backup",
+      payload: {
+          destination,
+          password,
+      },
+    });
+  }
+
+  async importAccounts(backupPath, password) {
+    return this.messageHandler.sendMessage({
+      id: _id,
+      cmd: "RestoreBackup",
+      payload: {
+          destination,
+          password,
+      },
+    });
+  }
 };
 
 module.exports.AccountManager = AccountManager;

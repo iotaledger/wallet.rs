@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const addon = require('../index.node');
-const mh = require("./messageHandler.js");
-const el = require("./eventListener.js");
-const am = require("./accountManager.js");
+// const mh = require("./messageHandler.js");
+// const el = require("./eventListener.js");
+// const am = require("./messages/accountManager.js");
+const am = require("./binding/accountManager.js");
 
 let { initLogger } = addon;
-let { MessageHandler } = mh;
-let { EventListener } = el;
+// let { MessageHandler } = mh;
+// let { EventListener } = el;
 let { AccountManager } = am;
 
 initLogger(JSON.stringify({
@@ -20,8 +21,8 @@ initLogger(JSON.stringify({
 }));
 
 module.exports = {
-  MessageHandler,
-  EventListener,
+//   MessageHandler,
+//   EventListener,
   AccountManager,
   initLogger
 };
