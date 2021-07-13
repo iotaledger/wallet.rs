@@ -2,28 +2,25 @@
  * This example creates a new database and account
  */
 
+require('dotenv').config()
+
 async function run() {
-    const { AccountManager } = require('../lib/index.js');
+	const { AccountManager } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-    });
-    try {
-        await manager.setStrongholdPassword("A12345678*");
+        storagePath: './alice-database'
+    })
 
-        const account = await manager.getAccount('Alice')
-        console.log('Account:', account)
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
-        // Always sync before doing anything with the account
-        const synced = await account.sync()
-        console.log('Syncing... - ' + synced)
+    const account = manager.getAccount('Alice')
+    
+    console.log('Account:', account.alias())
+    
+    // Always sync before doing anything with the account
+    const synced = await account.sync()
+    console.log('Syncing...')
 
-        console.log('Available balance', await account.balance())
-
-        // Use the Chrysalis Faucet to send testnet tokens to your address:
-        // console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")
-    } catch (error) {
-        console.log("Error: " + error)
-    }
+    console.log('Available balance', account.balance().available)
 }
 
 run()

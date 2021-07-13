@@ -62,6 +62,19 @@ class Account {
     }));
   }
 
+  async latestAddress() {
+    return JSON.parse(await this.messageHandler.sendMessage({
+      id: "1",
+      cmd: "CallAccountMethod",
+      payload: {
+        accountId: this.accountData.id,
+        method: {
+          name: "GetLatestAddress",
+        },
+      },
+    }));
+  }
+
   async balance() {
     return JSON.parse(await this.messageHandler.sendMessage({
       id: "1",

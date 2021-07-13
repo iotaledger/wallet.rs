@@ -4,14 +4,15 @@
   "description": "Node.js binding to the wallet library",
   "main": "index.node",
   "scripts": {
-    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --message-format=json-render-diagnostics",
+    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --message-format=json-render-diagnostics && tsc",
     "install": "npm run build",
     "test": "cargo test"
   },
   "author": "Antoni Dikov <antoni.dikov@iota.org>",
   "license": "MIT",
   "devDependencies": {
-    "cargo-cp-artifact": "^0.1"
+    "cargo-cp-artifact": "^0.1",
+    "typescript": "^4.3.4"
   },
   "repository": {
     "type": "git",

@@ -2,40 +2,34 @@
  * This example sends IOTA Toens to an address.
  */
 
- async function run() {
-    const { AccountManager } = require('../lib/index.js');
+ require('dotenv').config();
+
+async function run() {
+	const { AccountManager, RemainderValueStrategy } = require('@iota/wallet')
     const manager = new AccountManager({
-        storagePath: './alice-database',
-    });
-    try {
-        await manager.setStrongholdPassword("A12345678*");
+        storagePath: './alice-database'
+    })
 
-        const account = await manager.getAccount('Alice')
-        console.log('Account:', account)
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
-        // Always sync before doing anything with the account
-        const synced = await account.sync()
-        console.log('Syncing... - ' + synced)
+    const account = manager.getAccount('Alice')
 
-        console.log('Available balance', await account.balance())
+    console.log('alias', account.alias())
+    console.log('syncing...')
+    const synced = await account.sync()
+    console.log('available balance', account.balance().available)
 
-        //TODO: Replace with the address of your choice!
-        const address = 'atoi1qq4yjuenvm63sklmztfseqxa90xeumxnx4rt79j5vstwqqy0jn9lujjnmh0'
-        const amount = 10000000
+    //TODO: Replace with the address of your choice!
+	const addr = 'atoi1qykf7rrdjzhgynfkw6z7360avhaaywf5a4vtyvvk6a06gcv5y7sksu7n5cs'
+	const amount = 10000000
 
-        const node_response = await account.send({
-                address,
-                amount,
-                remainder_value_strategy: {
-                    strategy: 'ReuseAddress',
-                },
-        });
-        console.log(node_response);
+	const node_response = await account.send(
+		addr,
+		amount,
+        {remainderValueStrategy: RemainderValueStrategy.reuseAddress()}
+    ) 
 
-        console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
-    } catch (error) {
-        console.log("Error: " + error)
-    }
+    console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
 }
 
 run()
