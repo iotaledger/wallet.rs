@@ -7,13 +7,13 @@ use crate::{
 };
 
 use chrono::prelude::Utc;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use iota_migration::crypto::hashes::ternary::{curl_p::CurlP, Hash as TernaryHash};
 pub(crate) use iota_migration::{
     client::{
         migration::{
-            create_migration_bundle, encode_migration_address, mine, sign_migration_bundle, Address as MigrationAddress,
+            create_migration_bundle, encode_migration_address, mine, sign_migration_bundle, Address as BeeAddress,
         },
         response::InputData,
     },
@@ -31,6 +31,15 @@ use std::{
     path::Path,
     time::Duration,
 };
+
+/// Migration address
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MigrationAddress {
+    // address tryte encoded
+    pub trytes: String,
+    // address bech32 encoded
+    pub bech32: String,
+}
 
 /// Migration data.
 #[derive(Debug, Clone)]
@@ -223,8 +232,8 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
 
     let deposit_address = account_handle.latest_address().await;
     let deposit_address_bech32 = deposit_address.address().to_bech32();
-    let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
-        Ok(MigrationAddress::Ed25519(a)) => a,
+    let deposit_address = match BeeAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
+        Ok(BeeAddress::Ed25519(a)) => a,
         _ => return Err(crate::Error::InvalidAddress),
     };
     let deposit_address_trytes = encode_migration_address(deposit_address)?;

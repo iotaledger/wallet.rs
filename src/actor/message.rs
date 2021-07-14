@@ -3,7 +3,7 @@
 
 use crate::{
     account::{Account, AccountBalance, AccountIdentifier, SyncedAccount},
-    account_manager::{MigratedBundle, MigrationBundle, MigrationData},
+    account_manager::{migration::MigrationAddress, MigratedBundle, MigrationBundle, MigrationData, MinedBundle},
     address::Address,
     client::ClientOptions,
     message::{Message as WalletMessage, MessageType as WalletMessageType, TransferBuilder},
@@ -217,6 +217,10 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     GetLedgerStatus(bool),
+    /// Get the app that's open on the Ledger Nano or Speculos simulator.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    GetLedgerOpenedApp(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -247,6 +251,18 @@ pub enum MessageType {
         #[serde(rename = "initialAddressIndex")]
         initial_address_index: Option<u64>,
     },
+    /// Get legacy network balance for addresses.
+    GetLedgerMigrationData {
+        /// The nodes to connect to.
+        nodes: Vec<String>,
+        /// The permanode to use.
+        permanode: Option<String>,
+        /// Address objects as String converted with address and index
+        addresses: Vec<String>,
+        /// The WOTS address security level.
+        #[serde(rename = "securityLevel")]
+        security_level: Option<u8>,
+    },
     /// Creates the bundle for migration, performs bundle mining if the address was spent and signs the bundle.
     CreateMigrationBundle {
         /// The legacy seed.
@@ -275,8 +291,35 @@ pub enum MessageType {
         /// Minimum weight magnitude.
         mwm: u8,
     },
+    /// Sends the migration bundle associated with the hash.
+    SendLedgerMigrationBundle {
+        /// Node URLs.
+        nodes: Vec<String>,
+        /// Bundle tx trytes.
+        bundle: Vec<String>,
+        /// Minimum weight magnitude.
+        mwm: u8,
+    },
     /// Get seed checksum.
     GetSeedChecksum(String),
+    /// Get migration address
+    GetMigrationAddress(bool),
+    /// Mine bundle
+    MineBundle {
+        /// Prepared bundle.
+        #[serde(rename = "preparedBundle")]
+        prepared_bundle: Vec<String>,
+        /// Known spent bundle hashes.
+        #[serde(rename = "spentBundleHashes")]
+        spent_bundle_hashes: Vec<String>,
+        /// Security level.
+        #[serde(rename = "securityLevel")]
+        security_level: u8,
+        /// Mining timeout in seconds.
+        timeout: u64,
+        /// Mining offset.
+        offset: i64,
+    },
 }
 
 impl Serialize for MessageType {
@@ -377,6 +420,31 @@ impl Serialize for MessageType {
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
+            MessageType::GetMigrationAddress(_) => {
+                serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
+            }
+            MessageType::MineBundle {
+                prepared_bundle: _,
+                spent_bundle_hashes: _,
+                security_level: _,
+                timeout: _,
+                offset: _,
+            } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
+            MessageType::GetLedgerMigrationData {
+                nodes: _,
+                permanode: _,
+                addresses: _,
+                security_level: _,
+            } => serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData"),
+            MessageType::SendLedgerMigrationBundle {
+                nodes: _,
+                bundle: _,
+                mwm: _,
+            } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::GetLedgerOpenedApp(_) => {
+                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
+            }
         }
     }
 }
@@ -537,6 +605,10 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     LedgerStatus(crate::LedgerStatus),
+    /// GetLedgerOpenedApp response.
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+    LedgerOpenedApp(crate::LedgerAppInfo),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.
@@ -555,6 +627,10 @@ pub enum ResponseType {
     SentMigrationBundle(MigratedBundle),
     /// GetSeedChecksum response.
     SeedChecksum(String),
+    /// GetMigrationAddress response.
+    MigrationAddress(MigrationAddress),
+    /// GetMigrationAddress response.
+    MineBundle(MinedBundle),
 }
 
 /// The message type.
