@@ -36,17 +36,22 @@ let { syncAsync, getNodeInfoAsync, generateAddress, latestAddress, balance, send
 */
 
 class Account {
-    constructor(accountId, account) {
+    constructor(account) {
       console.log("Account constructor called.");
-      this.accountId = accountId;
+    //   this.accountId = accountId;
       this.account = account;
     }
     async sync(options) {
         return await syncAsync(JSON.stringify(options), this.account);
     }
 
+
     async getNodeInfo(url) {
         return await getNodeInfoAsync(url, this.account);
+    }
+
+    id() {
+        return id(this.account);
     }
 
     generateAddress() {
