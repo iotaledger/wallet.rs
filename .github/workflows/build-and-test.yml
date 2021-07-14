@@ -90,7 +90,7 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: test
-        args: --all-features --release
+        args: --all-features --release -- --test-threads 1
 
   nodejs-bindings:
     runs-on: ${{ matrix.os }}
