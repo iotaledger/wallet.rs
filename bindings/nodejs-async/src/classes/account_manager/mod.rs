@@ -258,10 +258,12 @@ pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined>
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
+    let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
-        wrapper.account_manager.set_stronghold_password(password).await
+        let result = wrapper.account_manager.set_stronghold_password(password).await;
+        let _ = sender.send(result);
     });
-
+    let _ = receiver.recv().unwrap();
     Ok(cx.undefined())
 }
 
@@ -311,6 +313,8 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
     let account_to_create = account_to_create.value(&mut cx);
     let account_to_create = serde_json::from_str::<AccountToCreate>(&account_to_create).unwrap();
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
+
+    // log::debug!(&account_to_create);
 
     let mut builder = wrapper
         .account_manager

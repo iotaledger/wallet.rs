@@ -44,8 +44,8 @@ class AccountManager {
 
     createAccount(account) {
         let acc = createAccount(JSON.stringify(account), this.accountManager);
-        let id = id(acc);
-        return new Account(id, acc);
+        // console.log(acc);
+        return new Account(acc);
     }
 
     setStrongholdPassword(password) {
