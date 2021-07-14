@@ -15,7 +15,7 @@
           clientOptions: { node: { url: "https://api.lb-0.testnet.chrysalis2.com" }, localPow: true },
           alias: 'Alice',
         });
-        console.log('Account created:', account)
+        console.log('Account created:', account.id())
       } catch (error) {
         console.log("Error: " + error)
       }
