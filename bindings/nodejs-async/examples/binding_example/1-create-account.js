@@ -3,14 +3,14 @@
  */
 
  async function run() {
-    const { AccountManager } = require('../lib/index.js');
+    const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database',
       });
     try {
         manager.setStrongholdPassword("A12345678*");
-        manager.storeMnemonic();
-        console.log("11111111111")
+        manager.storeMnemonic(1);
+
         const account = manager.createAccount({
           clientOptions: { node: { url: "https://api.lb-0.testnet.chrysalis2.com" }, localPow: true },
           alias: 'Alice',

@@ -168,10 +168,11 @@ impl Finalize for AccountManagerWrapper {}
 
 impl AccountManagerWrapper {
     fn new(queue: EventQueue, options: String) -> Arc<Self> {
+        log::debug!("------------------------------------- AccountManagerWrapper");
         let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
             Ok(options) => options,
             Err(e) => {
-                log::debug!("{:?}", e);
+                log::debug!("------------------------------------- AccountManagerWrapper error - {:?}", e);
                 crate::types::ManagerOptions::default()
             }
         };
@@ -204,6 +205,7 @@ impl AccountManagerWrapper {
             .block_on(manager.finish())
             .expect("error initializing account manager");
 
+            log::debug!("------------------------------------- AccountManagerWrapper end");
         Arc::new(Self {
             queue,
             account_manager: manager,
@@ -212,6 +214,7 @@ impl AccountManagerWrapper {
 }
 
 pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountManagerWrapper>>> {
+    log::debug!("------------------------------------- account_manager_new");
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
     let queue = cx.queue();
@@ -287,12 +290,14 @@ pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let signer_type = match signer_type {
         AccountSignerType::Stronghold => SignerType::Stronghold,
     };
-    let mnemonic = match cx.argument_opt(1) {
-        Some(arg) => Some(arg.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx)),
-        None => None,
-    };
 
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
+    let (mnemonic, wrapper) = match cx.argument_opt(2) {
+        Some(_) => {
+            (Some(cx.argument::<JsString>(1)?.value(&mut cx)),
+            Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?))
+        },
+        None => (None, Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?)),
+    };
 
     crate::RUNTIME.spawn(async move {
         let _ = wrapper.account_manager.store_mnemonic(signer_type, mnemonic).await;
