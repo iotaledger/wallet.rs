@@ -26,6 +26,7 @@ class AccountManager {
         console.log(options)
         console.log(JSON.stringify(options));
         this.accountManager = accountManagerNew(JSON.stringify(options));
+        console.log(this.accountManager);
     }
     getAccount(accountId) {
         let inner_account = getAccount(accountId, this.accountManager);
@@ -52,6 +53,10 @@ class AccountManager {
     }
 
     storeMnemonic(signerType, mnemonic) {
+        console.log(signerType, mnemonic);
+        if (mnemonic == undefined) {
+            return storeMnemonic(signerType, this.accountManager);
+        }
         return storeMnemonic(signerType, mnemonic, this.accountManager);
     }
 
