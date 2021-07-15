@@ -27,18 +27,18 @@ We recommend you update Rust to the latest stable version [`rustup update stable
 - Installing `openssl` with `vcpkg`:
 
 ```
-$ ./vcpkg.exe install openssl:x64-windows
-$ ./vcpkg.exe integrate install
+./vcpkg.exe install openssl:x64-windows
+./vcpkg.exe integrate install
 # you may want to add this to the system environment variables since you'll need it to compile the crate
-$ set VCPKGRS_DYNAMIC=1
+set VCPKGRS_DYNAMIC=1
 ```
 
 - Installing `openssl` with `chocolatey`:
 
 ```
-$ choco install openssl
+choco install openssl
 # you may need to set the OPENSSL_DIR environment variable
-$ set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
+set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 ```
 
 ### macOS
@@ -46,7 +46,7 @@ $ set OPENSSL_DIR="C:\Program Files\OpenSSL-Win64"
 `cmake` and `openssl` can be installed with `Homebrew`:
 
 ```
-$ brew install cmake openssl@1.1
+brew install cmake openssl@1.1
 ```
 
 ### Linux

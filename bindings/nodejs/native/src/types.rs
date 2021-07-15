@@ -27,6 +27,10 @@ fn default_node_sync_enabled() -> bool {
     true
 }
 
+fn default_mqtt_enabled() -> bool {
+    true
+}
+
 fn default_local_pow() -> bool {
     true
 }
@@ -51,6 +55,8 @@ pub struct ClientOptionsDto {
     node_sync_interval: Option<Duration>,
     #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
     node_sync_enabled: bool,
+    #[serde(rename = "mqttEnabled", default = "default_mqtt_enabled")]
+    mqtt_enabled: bool,
     #[serde(rename = "requestTimeout")]
     request_timeout: Option<Duration>,
     #[serde(rename = "apiTimeout", default)]
@@ -136,6 +142,10 @@ impl From<ClientOptionsDto> for ClientOptions {
 
         if !options.node_sync_enabled {
             client_builder = client_builder.with_node_sync_disabled();
+        }
+
+        if !options.mqtt_enabled {
+            client_builder = client_builder.with_mqtt_disabled();
         }
 
         client_builder = bind_client_option!(client_builder, options.request_timeout, with_request_timeout);

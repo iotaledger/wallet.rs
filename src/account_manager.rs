@@ -6,6 +6,7 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
+    account_manager::migration::MigrationAddress,
     address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
@@ -14,7 +15,7 @@ use crate::{
         TransactionReattachmentEvent,
     },
     message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
-    signing::SignerType,
+    signing::{GenerateAddressMetadata, SignerType},
     storage::{StorageAdapter, Timestamp},
 };
 
@@ -39,7 +40,7 @@ use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
 use iota_client::{
-    bee_message::prelude::{MessageId, OutputId},
+    bee_message::prelude::{Address, MessageId, OutputId},
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
@@ -52,9 +53,9 @@ use tokio::{
 };
 use zeroize::Zeroize;
 
-mod migration;
+pub(crate) mod migration;
 use iota_migration::client::migration::{
-    add_tryte_checksum, encode_migration_address, get_trytes_from_bundle, mine_bundle,
+    add_tryte_checksum, decode_migration_address, encode_migration_address, get_trytes_from_bundle, mine_bundle,
 };
 pub use migration::*;
 
@@ -442,15 +443,69 @@ impl AccountManager {
         })
     }
 
+    /// Gets ledger legacy migration data for provided addresses.
+    pub async fn get_ledger_migration_data(
+        &self,
+        addresses: Vec<iota_migration::client::extended::AddressInput>,
+        nodes: Vec<&str>,
+        permanode: Option<String>,
+    ) -> crate::Result<MigrationData> {
+        let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
+        if let Some(permanode) = permanode {
+            legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+        }
+        for node in nodes {
+            legacy_client_builder = legacy_client_builder.node(node)?;
+        }
+        let mut legacy_client = legacy_client_builder.build()?;
+
+        let last_checked_address_index = match addresses.last() {
+            Some(address) => address.index,
+            None => 0,
+        };
+
+        let migration_inputs = legacy_client
+            .get_ledger_account_data_for_migration()
+            .with_addresses(addresses)
+            .finish()
+            .await?;
+
+        Ok(MigrationData {
+            balance: migration_inputs.0,
+            last_checked_address_index,
+            inputs: migration_inputs.1,
+        })
+    }
+
     /// Convert the first address from the first account to a migration tryte address
-    pub async fn get_migration_address(&self) -> crate::Result<String> {
-        let deposit_address = self.get_account(0).await?.latest_address().await;
-        let deposit_address = match MigrationAddress::try_from_bech32(&deposit_address.address().to_bech32()) {
-            Ok(MigrationAddress::Ed25519(a)) => a,
+    pub async fn get_migration_address(&self, ledger_prompt: bool) -> crate::Result<MigrationAddress> {
+        let account_handle = self.get_account(0).await?;
+        let account = account_handle.read().await;
+        let deposit_address = if ledger_prompt {
+            crate::address::get_address_with_index(
+                &account,
+                0,
+                account.bech32_hrp(),
+                GenerateAddressMetadata {
+                    syncing: false,
+                    network: account.network(),
+                },
+            )
+            .await?
+        } else {
+            // Safe to unwrap since an account always needs to have an address
+            account.addresses().first().expect("Account has no address").clone()
+        };
+        let bech32_address = deposit_address.address().to_bech32();
+        let deposit_address = match BeeAddress::try_from_bech32(&bech32_address) {
+            Ok(BeeAddress::Ed25519(a)) => a,
             _ => return Err(crate::Error::InvalidAddress),
         };
         let deposit_address_trytes = encode_migration_address(deposit_address)?;
-        Ok(add_tryte_checksum(deposit_address_trytes)?)
+        Ok(MigrationAddress {
+            bech32: bech32_address,
+            trytes: add_tryte_checksum(deposit_address_trytes)?,
+        })
     }
 
     /// Mine bundle
@@ -575,6 +630,50 @@ impl AccountManager {
                 .collect::<String>(),
             address,
             value,
+        })
+    }
+
+    /// Sends the migration bundle to the given node.
+    pub async fn send_ledger_migration_bundle(
+        &self,
+        nodes: &[&str],
+        bundle: Vec<String>,
+        mwm: u8,
+    ) -> crate::Result<MigratedBundle> {
+        let trytes = bundle
+            .into_iter()
+            .map(|tx| {
+                BundledTransaction::from_trits(
+                    &TryteBuf::try_from_str(&tx)
+                        .map_err(|_| crate::error::Error::TernaryError)?
+                        .as_trits(),
+                )
+                .map_err(|_| crate::error::Error::TernaryError)
+            })
+            .collect::<crate::Result<Vec<BundledTransaction>>>()?;
+        if trytes.is_empty() {
+            return Err(crate::Error::MigrationDataNotFound);
+        }
+        let output_tx = trytes
+            .iter()
+            .filter(|tx| tx.index().to_inner() == &0)
+            .cloned()
+            .collect::<Vec<BundledTransaction>>()[0]
+            .clone();
+        let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
+
+        Ok(MigratedBundle {
+            tail_transaction_hash: tail_transaction_hash
+                .to_inner()
+                .encode::<T3B1Buf>()
+                .iter_trytes()
+                .map(char::from)
+                .collect::<String>(),
+            value: *output_tx.value().to_inner() as u64,
+            address: AddressWrapper::new(
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
+                "iota".to_string(),
+            ),
         })
     }
 
@@ -1392,7 +1491,7 @@ impl AccountsSynchronizer {
                         if let Some(steps) = steps {
                             sync = sync.steps(steps);
                         }
-                        let synced_data = sync.get_new_history().await?;
+                        let synced_data = sync.get_new_history(false).await?;
                         crate::Result::Ok((account_handle, synced_data))
                     })
                     .await
@@ -1401,10 +1500,7 @@ impl AccountsSynchronizer {
         }
 
         let mut synced_data = Vec::new();
-        for res in futures::future::try_join_all(tasks)
-            .await
-            .expect("failed to sync accounts")
-        {
+        for res in futures::future::try_join_all(tasks).await? {
             let (account_handle, data) = res?;
             let account_handle_ = account_handle.clone();
             let mut account = account_handle_.write().await;
@@ -1673,7 +1769,7 @@ async fn discover_accounts(
         if let Some(gap_limit) = gap_limit {
             synchronizer = synchronizer.gap_limit(gap_limit);
         }
-        match synchronizer.get_new_history().await {
+        match synchronizer.get_new_history(true).await {
             Ok(synced_account_data) => {
                 let is_empty = synced_account_data
                     .addresses
@@ -1717,7 +1813,16 @@ async fn consolidate_outputs_if_needed(
         {
             let account = synced.account_handle.read().await;
             let signer_type = account.signer_type();
-            if signer_type == &SignerType::LedgerNano || signer_type == &SignerType::LedgerNanoSimulator {
+            let mut ledger_or_simulator = false;
+            #[cfg(feature = "ledger-nano")]
+            if signer_type == &SignerType::LedgerNano {
+                ledger_or_simulator = true;
+            }
+            #[cfg(feature = "ledger-nano-simulator")]
+            if signer_type == &SignerType::LedgerNanoSimulator {
+                ledger_or_simulator = true;
+            }
+            if ledger_or_simulator {
                 let addresses = synced.account_handle.output_consolidation_addresses().await?;
                 for address in addresses {
                     crate::event::emit_address_consolidation_needed(&account, address).await;
@@ -1856,7 +1961,7 @@ mod tests {
             .alias(alias)
             .initialise()
             .await;
-        assert_eq!(second_create_response.is_err(), true);
+        assert!(second_create_response.is_err());
         match second_create_response.unwrap_err() {
             crate::Error::AccountAliasAlreadyExists => {}
             _ => panic!("unexpected create account response; expected AccountAliasAlreadyExists"),
