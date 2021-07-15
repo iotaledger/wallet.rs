@@ -1,19 +1,17 @@
 /**
- * This example genrates a new address.
+ * This example generates a new address.
  */
 
-require('dotenv').config()
-
-async function run() {
-	const { AccountManager } = require('@iota/wallet')
+ async function run() {
+    const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
 
-    manager.setStrongholdPassword(process.env.SH_PASSWORD)
+    manager.setStrongholdPassword("A12345678*")
 
     const account = manager.getAccount('Alice')
-    console.log('Account:', account.alias())
+    // console.log('Account:', account.alias())
 
     // Always sync before doing anything with the account
     const synced = await account.sync()

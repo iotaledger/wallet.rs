@@ -340,18 +340,18 @@ pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
 //     })
 // }
 
-// pub fn generateAddress(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let address = {
-//         let this = cx.this();
-//         let guard = cx.lock();
-//         let id = &this.borrow(&guard).0;
-//         crate::RUNTIME.spawn(async move {
-//             let account_handle = crate::get_account(id).await;
-//             account_handle.generate_address().await.expect("error generating address")
-//         })
-//     };
-//     Ok( serde_json::to_string(&address)?)
-// }
+pub fn generate_address(mut cx: FunctionContext) -> JsResult<JsString> {
+    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(0)?);
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(wrapper.account_id.as_str()).await;
+        let address = account_handle.generate_address().await.expect("error generating address");
+        let _ = sender.send(address);
+    });
+    let address = receiver.recv().unwrap();
+
+    Ok(cx.string(serde_json::to_string(&address).unwrap()))
+}
 
 // pub fn generateAddresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     let amount = cx.argument::<JsNumber>(0)?.value() as usize;

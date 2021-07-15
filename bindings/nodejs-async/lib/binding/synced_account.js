@@ -4,7 +4,7 @@
 const addon = require('../../index.node');
 const utils = require('../utils.js');
 
-let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id  } = addon;
+let {  } = addon;
 
 
 
@@ -35,13 +35,10 @@ let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id  } = 
     isLatestAddressUnused(): Promise<boolean>
 */
 
-const syncAsync = utils.promisify(sync);
-const sendAsync = utils.promisify(send);
-const getNodeInfoAsync = utils.promisify(getNodeInfo);
 
-class Account {
+class SyncedAccount {
     constructor(account) {
-      console.log("Account constructor called.");
+      console.log("Synced account constructor called.");
     //   this.accountId = accountId;
       this.account = account;
     }
@@ -63,7 +60,7 @@ class Account {
     }
 
     generateAddress() {
-        return generateAddress(this.account);
+        return generateAddress();
     }
 
     latestAddress() {

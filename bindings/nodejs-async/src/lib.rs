@@ -150,8 +150,9 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("id", classes::account::id)?;
     cx.export_function("index", classes::account::index)?;
     cx.export_function("alias", classes::account::alias)?;
-    cx.export_function("message_count", classes::account::message_count)?;
+    cx.export_function("messageCount", classes::account::message_count)?;
     cx.export_function("sync", classes::account::sync)?;
+    cx.export_function("generateAddress", classes::account::generate_address)?;
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
