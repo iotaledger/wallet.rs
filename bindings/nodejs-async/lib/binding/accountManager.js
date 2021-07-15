@@ -30,14 +30,14 @@ class AccountManager {
     }
     getAccount(accountId) {
         let inner_account = getAccount(accountId, this.accountManager);
-        return new Account(accountId, inner_account);
+        return new Account(inner_account);
     }
 
     getAccounts() {
         let inner_accounts = getAccounts(this.accountManager);
         let result = [];
         for (acc in inner_accounts) {
-            result.push(new Account(id(acc), acc));
+            result.push(new Account(acc));
         }
         return result;
     }
