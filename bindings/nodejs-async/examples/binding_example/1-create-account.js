@@ -16,6 +16,9 @@
           alias: 'Alice',
         });
         console.log('Account created:', account.id())
+
+        let a = await account.sync();
+        console.log(a);
       } catch (error) {
         console.log("Error: " + error)
       }

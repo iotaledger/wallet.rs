@@ -395,17 +395,17 @@ pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
 // }
 
 pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let (options, callback) = match cx.argument_opt(1) {
+    let (options, account_wrapper, callback) = match cx.argument_opt(2) {
         Some(arg) => {
             let cb = arg.downcast::<JsFunction, FunctionContext>(&mut cx).or_throw(&mut cx)?.root(&mut cx);
             let options = cx.argument::<JsString>(0)?;
             let options = serde_json::from_str::<SyncOptions>(options.value(&mut cx).as_str()).unwrap();
-            (options, cb)
+            let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(1)?);
+            (options, account_wrapper, cb)
         }
-        None => (Default::default(), cx.argument::<JsFunction>(0)?.root(&mut cx)),
+        None => (Default::default(),  Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(0)?) ,cx.argument::<JsFunction>(1)?.root(&mut cx)),
     };
 
-    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(1)?);
     let id = account_wrapper.account_id.clone();
     crate::RUNTIME.spawn(async move {
             let account = crate::get_account(id.as_str()).await;
@@ -416,7 +416,7 @@ pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             if let Some(gap_limit) = options.gap_limit {
                 synchronizer = synchronizer.gap_limit(gap_limit);
             }
-            synchronizer.execute().await;
+            let _synced_account = synchronizer.execute().await;
 
             account_wrapper.queue.send(move |mut cx| {
                 let cb = callback.into_inner(&mut cx);
