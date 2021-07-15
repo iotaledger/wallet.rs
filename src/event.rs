@@ -145,16 +145,29 @@ pub struct AddressData {
     pub address: String,
 }
 
-/// Transaction reattachment event data.
+/// Prepared transaction event data.
 #[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct PreparedTransactionData {
-    /// Transaction inputs. (address, amount)
-    pub inputs: Vec<(String, u64)>,
-    /// Transaction outputs. (address, amount, remainder)
-    pub outputs: Vec<(String, u64, bool)>,
+    /// Transaction inputs.
+    pub inputs: Vec<TransactionIO>,
+    /// Transaction outputs.
+    pub outputs: Vec<TransactionIO>,
     /// The indexation data.
     pub data: Option<String>,
+}
+
+/// Input or output data for PreparedTransactionData
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct TransactionIO {
+    /// Address
+    pub address: String,
+    /// Amount
+    pub amount: u64,
+    /// Remainder
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remainder: Option<bool>,
 }
 
 /// Transfer event type.

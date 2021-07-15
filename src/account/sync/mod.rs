@@ -8,7 +8,7 @@ use crate::{
     client::ClientOptions,
     event::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, AddressData, BalanceChange,
-        PreparedTransactionData, TransactionEventType, TransferProgressType,
+        PreparedTransactionData, TransactionEventType, TransactionIO, TransferProgressType,
     },
     message::{Message, MessageType, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
@@ -1528,12 +1528,16 @@ async fn perform_transfer(
     let mut dust_and_allowance_recorders = Vec::new();
     let transfer_amount = transfer_obj.amount();
 
-    let mut outputs_for_event: Vec<(String, u64, bool)> = Vec::new();
+    let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
     for output in transfer_obj.outputs.iter() {
         if transfer_amount < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((output.amount.get(), output.address.to_bech32(), true));
         }
-        outputs_for_event.push((output.address.to_bech32(), u64::from(output.amount), false));
+        outputs_for_event.push(TransactionIO {
+            address: output.address.to_bech32(),
+            amount: u64::from(output.amount),
+            remainder: Some(false),
+        });
     }
 
     let account_ = account_handle.read().await;
@@ -1563,7 +1567,7 @@ async fn perform_transfer(
             .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
     }
     let mut inputs_for_essence: Vec<Input> = Vec::new();
-    let mut inputs_for_event: Vec<(String, u64)> = Vec::new();
+    let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
@@ -1581,7 +1585,11 @@ async fn perform_transfer(
             }
             OutputKind::Treasury => return Err(crate::Error::InvalidOutputKind("Treasury".to_string())),
         };
-        inputs_for_event.push((address, amount));
+        inputs_for_event.push(TransactionIO {
+            address,
+            amount,
+            remainder: None,
+        });
 
         let input: Input = UtxoInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         inputs_for_essence.push(input.clone());
@@ -1772,7 +1780,11 @@ async fn perform_transfer(
         if remainder_value < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
         }
-        outputs_for_event.push((remainder_deposit_address.to_bech32(), remainder_value, true));
+        outputs_for_event.push(TransactionIO {
+            address: remainder_deposit_address.to_bech32(),
+            amount: remainder_value,
+            remainder: Some(true),
+        });
     }
 
     let client = crate::client::get_client(account_.client_options()).await?;
