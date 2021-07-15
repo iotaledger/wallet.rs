@@ -14,9 +14,11 @@ module.exports = {
   projectName: 'wallet.rs', // Usually your repo name.
   stylesheets: [
     'https://fonts.googleapis.com/css?family=Material+Icons',
-    'https://iota-community.github.io/iota-wiki/assets/css/styles.f9f708da.css',//replace this URL
   ],
   themeConfig: {
+    colorMode: {
+          defaultMode: "dark",
+          },
     navbar: {
       title: 'Wallet.rs',
       logo: {
@@ -94,7 +96,7 @@ module.exports = {
             'https://github.com/iotaledger/wallet.rs/tree/main/docs',
         },
         theme: {
-          customCss: require.resolve('./src/css/custom.css'),
+          customCss: require.resolve('./src/css/iota.css'),
         },
       },
     ],
