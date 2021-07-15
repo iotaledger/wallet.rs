@@ -45,6 +45,13 @@ jobs:
           npm i
           fi
           npm run build
+      - name: Install rust-docs with nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+            profile: minimal
+            toolchain: nightly
+            override: true
+            components: rust-docs
       - name: Deploy Rust Docs
         run: |
           sudo apt-get update
