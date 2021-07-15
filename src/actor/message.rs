@@ -316,6 +316,8 @@ pub enum MessageType {
         /// Mining offset.
         offset: i64,
     },
+    /// Get the checksum for a legacy address.
+    GetLegacyAddressChecksum(String),
 }
 
 impl Serialize for MessageType {
@@ -437,6 +439,13 @@ impl Serialize for MessageType {
                 bundle: _,
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            MessageType::GetLedgerOpenedApp(_) => {
+                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
+            }
+            MessageType::GetLegacyAddressChecksum(_) => {
+                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
+            }
         }
     }
 }
@@ -619,6 +628,8 @@ pub enum ResponseType {
     MigrationAddress(MigrationAddress),
     /// GetMigrationAddress response.
     MineBundle(MinedBundle),
+    /// GetLegacyAddressChecksum response.
+    GetLegacyAddressChecksum(String),
 }
 
 /// The message type.
