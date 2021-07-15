@@ -15,7 +15,7 @@ const ActionList = [
   },
   {
     title: 'Build',
-    link: '/docs/libraries/README',
+    link: 'docs/libraries/overview',
     description: (
       <>
         Follow our tutorial to build your own IOTA  application. The IOTA Wallet.rs Library supports Rust, Python and Javascript.
@@ -24,7 +24,7 @@ const ActionList = [
   },
   {
     title: 'Participate',
-    link: '/docs/contribute',
+    link: 'docs/contribute',
     description: (
       <>
         You want to be a part of the IOTA mission? Join the IOTA community or join the IOTA Libraries X-Team.
