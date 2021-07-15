@@ -46,6 +46,10 @@ class Account {
       this.account = account;
     }
     async sync(options) {
+        if (options == undefined) {
+            return await syncAsync(this.account);
+        }
+
         return await syncAsync(JSON.stringify(options), this.account);
     }
 
