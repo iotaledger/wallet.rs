@@ -332,7 +332,7 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
     if account_to_create.skip_persistence {
         builder = builder.skip_persistence();
     }
-
+ 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account = builder.initialise().await;
