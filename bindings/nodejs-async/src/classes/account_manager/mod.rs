@@ -223,25 +223,28 @@ pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<Accoun
     Ok(cx.boxed(account_wrapper))
 }
 
-// pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let polling_interval = cx.argument::<JsNumber>(0)?.value(&mut cx) as u64;
-//     let automatic_output_consolidation = cx.argument::<JsBoolean>(1)?.value(&mut cx);
-//     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
+pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let polling_interval = cx.argument::<JsNumber>(0)?.value(&mut cx) as u64;
+    let automatic_output_consolidation = cx.argument::<JsBoolean>(1)?.value(&mut cx);
+    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
 
-//     crate::RUNTIME.spawn(async move {
-//         wrapper.account_manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation).await;
-//     });
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let result = wrapper.account_manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation).await;
+        let _ = sender.send(result);
+    });
 
-//     Ok(cx.undefined())
-// }
+    let _ = receiver.recv().unwrap();
+    Ok(cx.undefined())
+}
 
-// pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(0)?);
+pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(0)?);
 
-//     wrapper.account_manager.stop_background_sync();
+    wrapper.account_manager.stop_background_sync();
 
-//     Ok(cx.undefined())
-// }
+    Ok(cx.undefined())
+}
 
 pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
@@ -332,7 +335,7 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
     if account_to_create.skip_persistence {
         builder = builder.skip_persistence();
     }
- 
+
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account = builder.initialise().await;
