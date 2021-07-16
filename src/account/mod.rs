@@ -680,7 +680,7 @@ impl AccountHandle {
                 _ => false,
             };
             if ledger {
-                // Send address event so it can already be displayed and compared with the displayed one
+                // Send address event so it can be displayed before and then compared with the prompt on the ledger
                 emit_ledger_address_generation(&account, address.address().to_bech32()).await;
 
                 log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
