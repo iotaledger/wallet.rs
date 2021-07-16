@@ -13,32 +13,11 @@ SH_PASSWORD="here is your super secure password"
 You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
 The following example creates a new database and account:
+
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)  # note: `storage` and `storage_path` have to be declared together
-
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-# mnemonic (seed) should be set only for new storage
-# once the storage has been initialized earlier then you should omit this step
-account_manager.store_mnemonic("Stronghold")
+{@include ../../../bindings/python/examples/1a_create_account_manager.py}
 ```
+
 * Storage is initialized under the given path (`./alice-database`)
 * The password is set based on your password in _.env_ file ( `manager.setStrongholdPassword(process.env.SH_PASSWORD)` )
 * When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default ( `manager.storeMnemonic(SignerType.Stronghold)` ).
@@ -71,28 +50,7 @@ Each account is related to a specific IOTA network (mainnet or testnet), which i
 For more information about _client_options_ , please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
 
 ```python
-# ... continue from prev example 1a
-
-# general Tangle specific options
-client_options = {
-    "nodes": [
-        {
-            "url": "https://api.hornet-0.testnet.chrysalis2.com",
-            "auth": None,
-            "disabled": False
-        }
-    ],
-    "local_pow": True
-}
-
-# an account is generated with the given alias via `account_initialiser`
-account_initialiser = account_manager.create_account(client_options)
-account_initialiser.alias('Alice')
-
-# initialise account based via `account_initialiser`
-# store it to db and sync with Tangle
-account = account_initialiser.initialise()
-print(f'Account created: {account.alias()}')
+{@include ../../../bindings/python/examples/1b_create_account.py}
 ```
 _Alias_ should be unique, and it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time new account is created. 
 Any account can be then referred to by its _index_ , _alias_ or one of its generated _addresses_ .
@@ -103,12 +61,14 @@ Once an account has been created, you retrieve an instance of it using the follo
 
 
 You can get an overview of all available accounts by running the following snippet:
+
 ```python
 for acc in account_manager.get_accounts():
   print(f"Account alias: {acc.alias()}; network: {acc.bech32_hrp()}")
 ```
 
 You can get and instance of a specific account using the `account_manager.get_account("ALIAS")`, replacing _"ALIAS"_ for the given alias:
+
 ```python
 account = account_manager.get_account("Alice")
 ```
@@ -145,48 +105,7 @@ The IOTA 1.5 (Chrysalis) network supports reusing addresses multiple times.
 
 You can use the following example to generate a new address via an instance of _account_ which was retrieved using an _account_manager_ instance:
 
-```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example generates a new address.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-# get a specific instance of some account
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()}')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-# generate new address
-address = account.generate_address()
-print(f'New address: {address}')
-
-# print all addresses generated so far
-print("List of addresses:")
-print(account.addresses())
-
-# You can also get the latest unused address
-last_address_obj = account.latest_address()
-print(f"Last address: {last_address_obj['address']}")
-```
+{@include ../../../bindings/python/examples/2_generate_address.py}
 
 Example output:
 ```json
@@ -222,43 +141,8 @@ Before we continue further, please visit the [IOTA testnet faucet service](https
 
 You can use the following example to sync your accounts and retrieve their balances.
 
-
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example checks the account balance.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-# get a specific instance of some account
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()}')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-# get total balance for the account
-print("Total balance:")
-print(account.balance())
-
-print("Balance per individual addresses:")
-print(account.addresses())
+{@include ../../../bindings/python/examples/3_check_balance.py}
 ```
 
 Example output:
@@ -332,49 +216,7 @@ We highly recommend that you sync the account information with the Tangle by run
 :::
 
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example sends IOTA toens to an address.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-print("Selecting a specific account")
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()} selected')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-print(f"Available balance {account.balance()['available']}")
-
-# TODO: Replace with the address of your choice!
-transfer = iw.Transfer(
-    amount=1_000_000,
-    address='atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r',
-    remainder_value_strategy='ReuseAddress'
-)
-
-# Propogate the Transfer to Tangle
-# and get a response from the Tangle
-node_response = account.transfer(transfer)
-print(
-    node_response
-)
+{@include ../../../bindings/python/examples/4_send.py}
 ```
 
 The previous snippet should have a similar output to the following JSON object:
@@ -460,35 +302,7 @@ You can use those methods to check whether a message is confirmed, broadcast, et
 
 You can use the following example to _sync_ an _account_ , and list all the messages related to the _account_ . 
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example sends IOTA toens to an address.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()} selected')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-for ac in account.list_messages():
-    print(f"message {ac['id']}; confirmation status = {ac['confirmed']}'")
+{@include ../../../bindings/python/examples/4b_list_messages.py}
 ```
 
 ### Dust Protection
@@ -509,33 +323,7 @@ Due to security practices that are incorporated in the `Stronghold's` DNA, there
 The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example backups your data in a secure file.
-# You can move this file to another app or device and restore it.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-backup_dir_path = './backup'
-if not os.path.exists(backup_dir_path):
-    os.makedirs(backup_dir_path)
-backup_file_path = account_manager.backup(backup_dir_path, STRONGHOLD_PASSWORD)
-
-print(f'Backup path: {backup_file_path}')
+{@include ../../../bindings/python/examples/5_backup.py}
 ```
 
 Output:
@@ -553,36 +341,7 @@ To restore a database via `wallet.rs`, you will need to:
 The following example restores a secured backup file:
 
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example restores a secured backup file.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database-restored'
-)
-
-# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-#  Add the path to the file from example 5-backup.js
-#  for example: ./backup/2021-03-04T15-31-04-iota-wallet-backup-wallet.stronghold
-backup_file_path = r'./backup/2021-03-31T14-45-23-iota-wallet-backup-wallet.stronghold'
-
-# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
-account_manager.import_accounts(backup_file_path, STRONGHOLD_PASSWORD)
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()}')
+{@include ../../../bindings/python/examples/6_restore.py}
 ```
 
 Since the backup file is just a copy of the original database it can be also be renamed to _wallet.stronghold_ and opened in a standard way.
@@ -619,60 +378,9 @@ You can later use this _id_ to remove a listener by using the corresponding meth
 * `remove_stronghold_status_change_listener(id)` 
 
 The following example set's up a listener for the _on_balance_change_ event using an event-based pattern:
+
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-import threading
-import time
-import iota_wallet as iw
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-result_available = threading.Event()
-
-
-def balance_changed_event_processing(event):
-    print(f'On balanced changed: {event}')
-    result_available.set()
-
-
-# This example shows some events.
-account_manager = iw.AccountManager(
-    storage_path='./alice-database'
-)
-
-# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
-account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-account = account_manager.get_account('Alice')
-print(f'Account: {account.alias()}')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-# Get the latest unused address
-last_address_obj = account.latest_address()
-print(f"Address: {last_address_obj['address']}")
-
-# Use the Chrysalis Faucet to send testnet tokens to your address:
-print('Fill your address with the Faucet: https://faucet.tanglekit.de/')
-
-iw.on_balance_change(balance_changed_event_processing)
-print("Waiting for external event (on_balance_changed)...")
-
-# wait for results to be available before continue
-# will not wait longer than 360 seconds
-result_available.wait(timeout=360)
-
-print("Done.")
+{@include ../../../bindings/python/examples/7b_event_simple_event.py}
 ```
 
 Expected output:
@@ -689,77 +397,5 @@ Done.
 Alternatively, events can be consumed via queue-base pattern as shown in the following example:
 
 ```python
-# Copyright 2020 IOTA Stiftung
-# SPDX-License-Identifier: Apache-2.0
-
-
-import iota_wallet
-import threading
-import queue
-import time
-import os
-from dotenv import load_dotenv
-
-# Load the env variables
-load_dotenv()
-
-# Get the Stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
-
-# This example shows how to listen to on_balance_change event.
-
-# The queue to store received events
-q = queue.Queue()
-
-
-def worker():
-    """The worker to process the queued events.
-    """
-    while True:
-        item = q.get(True)
-        print(f'Get event: {item}')
-        q.task_done()
-
-
-def balance_changed_event_processing(event):
-    """Processing function when event is received.
-    """
-    print(f'On balanced changed: {event}')
-    q.put(event)
-
-
-# Get the acount manager
-manager = iota_wallet.AccountManager(
-    storage_path='./alice-database')
-
-# NOTE: In real use cases you need to set the password in a safer way, like getting it from env variables
-manager.set_stronghold_password(STRONGHOLD_PASSWORD)
-
-# Get the account
-account = manager.get_account('Alice')
-print(f'Account: {account.alias()}')
-
-# Always sync before doing anything with the account
-print('Syncing...')
-synced = account.sync().execute()
-
-# Get the latest unused address
-last_address_obj = account.latest_address()
-print(f"Address: {last_address_obj['address']}")
-
-# turn-on the worker thread
-threading.Thread(target=worker, daemon=True).start()
-
-# listen to the on_balance_change event
-iota_wallet.on_balance_change(balance_changed_event_processing)
-
-# Use the Chrysalis Faucet to send testnet tokens to your address:
-print(
-    f"Fill your Address ({last_address_obj['address']['inner']}) with the Faucet: https://faucet.tanglekit.de/")
-print("To see how the on_balance_change is called, please send tokens to the address in 1 min")
-time.sleep(60)
-
-# block until all tasks are done
-q.join()
-print('All work completed')
+{@include ../../../bindings/python/examples/7_event_queue.py}
 ```

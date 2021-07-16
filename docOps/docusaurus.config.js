@@ -6,7 +6,7 @@ module.exports = {
   title: 'IOTA Wallet Library',
   tagline: 'Official IOTA Wallet Library Software',
   url: 'https://wallet-lib.docs.iota.org/',
-  baseUrl: '/',
+  baseUrl: '/wallet.rs/',
   onBrokenLinks: 'warn',
   onBrokenMarkdownLinks: 'throw',
   favicon: '/img/logo/favicon.ico',
@@ -98,6 +98,19 @@ module.exports = {
         theme: {
           customCss: require.resolve('./src/css/iota.css'),
         },
+      },
+    ],
+  ],
+  plugins: [
+    [
+      'docusaurus-plugin-includes',
+      {
+        sharedFolders: [
+          { source: '../../bindings/nodejs/examples', target: 'docs/nodejs/examples/'},
+          { source: '../../bindings/python/examples', target: 'docs/python/examples/'},
+          { source: '../../bindings/java/examples', target: 'docs/java/examples/'},
+          { source: '../../examples/', target: 'docs/rust/examples/'},
+        ],
       },
     ],
   ],

@@ -21,6 +21,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Libraries',
+      collapsed: false,
       items: [{
           type: 'doc',
           id: 'libraries/overview',
@@ -29,11 +30,7 @@ module.exports = {
         {
           type: 'category',
           label: 'Rust',
-          items: [{
-              type: 'doc',
-              id: 'libraries/rust/overview',
-              label: 'Overview'
-            },
+          items: [
             {
               type: 'doc',
               id: 'libraries/rust/getting_started',
@@ -49,21 +46,12 @@ module.exports = {
               id: 'libraries/rust/api_reference',
               label: 'API Reference'
             },
-            {
-              type: 'doc',
-              id: 'libraries/rust/troubleshooting',
-              label: 'Troubleshooting'
-            },
           ]
         },
         {
           type: 'category',
           label: 'Node.js',
-          items: [{
-              type: 'doc',
-              id: 'libraries/nodejs/overview',
-              label: 'Overview'
-            },
+          items: [
             {
               type: 'doc',
               id: 'libraries/nodejs/getting_started',
@@ -79,21 +67,12 @@ module.exports = {
               id: 'libraries/nodejs/api_reference',
               label: 'API Reference'
             },
-            {
-              type: 'doc',
-              id: 'libraries/nodejs/troubleshooting',
-              label: 'Troubleshooting'
-            },
           ]
         },
         {
           type: 'category',
           label: 'Python',
-          items: [{
-              type: 'doc',
-              id: 'libraries/python/overview',
-              label: 'Overview'
-            },
+          items: [
             {
               type: 'doc',
               id: 'libraries/python/getting_started',
@@ -109,11 +88,6 @@ module.exports = {
               id: 'libraries/python/api_reference',
               label: 'API Reference'
             },
-            {
-              type: 'doc',
-              id: 'libraries/python/troubleshooting',
-              label: 'Troubleshooting'
-            },
           ]
         }
       ]
@@ -122,6 +96,11 @@ module.exports = {
       type: 'doc',
       id: 'specification',
       label: 'Specification',
+    },
+    {
+      type: 'doc',
+      id: 'troubleshooting',
+      label: 'Troubleshooting'
     },
     {
       type: 'doc',

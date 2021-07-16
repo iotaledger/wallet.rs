@@ -2,12 +2,13 @@
 
 The `wallet.rs` library is writen in Rust.  You can also find two bindings writen in Node.js and Python:
 
-- [Rust](rust/overview.md)
-- [Node.js](nodejs/overview.md) 
-- [Python](python/overview.md)
+- [Rust](rust/getting_started.md)
+- [Node.js](nodejs/getting_started.md) 
+- [Python](python/getting_started.md)
 
 
 ## Getting Started
+
 We recommended that you start your interactions with IOTA on a _testnet_ network. The _testnet_ will allow you to safely get acquainted with the `wallet.rs` library, without the risk of losing any funds if you make a mistake along the way. You can use this API load balancer: `api.lb-0.testnet.chrysalis2.com`  
 
 A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).  You can use the network explorer to view transactions and data stored in the IOTA Tangle.    
