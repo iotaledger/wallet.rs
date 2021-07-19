@@ -75,6 +75,7 @@ foreign_enum!(
         GET_TIPS = Api::GetTips,
         POST_MESSAGE = Api::PostMessage,
         GET_OUTPUT = Api::GetOutput,
+        GET_BALANCE = Api::GetBalance,
     }
 );
 
