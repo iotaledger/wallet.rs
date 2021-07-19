@@ -515,8 +515,24 @@ async fn sync_messages(
                                 output
                             }
                             None => {
-                                let output = client.get_output(utxo_input).await?;
-                                AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                // if the output got spent and we didn't get it from the node we ignore it and don't return an error
+                                if *is_spent {
+                                    match client.get_output(utxo_input).await{
+                                        Ok(output) => {
+                                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                        }
+                                        Err(_) =>{
+                                            log::debug!(
+                                                "[SYNC] couldn't get spent output: {}",
+                                                utxo_input.output_id().transaction_id().to_string(),
+                                            );  
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    let output = client.get_output(utxo_input).await?;
+                                    AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                }
                             }
                         };
 
