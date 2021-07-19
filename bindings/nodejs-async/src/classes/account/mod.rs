@@ -424,7 +424,7 @@ pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
                 let args = vec![
                     cx.undefined().upcast::<JsValue>(),
-                    cx.undefined().upcast::<JsValue>(),
+                    cx.string(id).upcast::<JsValue>(),
                 ];
 
                 cb.call(&mut cx, this, args)?;

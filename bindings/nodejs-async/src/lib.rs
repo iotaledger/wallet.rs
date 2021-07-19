@@ -166,6 +166,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("setStoragePassword", classes::account_manager::set_storage_password)?;
     cx.export_function("changeStrongholdPassword", classes::account_manager::change_stronghold_password)?;
     cx.export_function("generateMnemonic", classes::account_manager::generate_mnemonic)?;
+    cx.export_function("startBackgroundSync", classes::account_manager::start_background_sync)?;
+    cx.export_function("stopBackgroundSync", classes::account_manager::stop_background_sync)?;
 
 
     // Message handler methods.

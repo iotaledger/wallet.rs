@@ -3,6 +3,7 @@
 
 const addon = require('../../index.node');
 const utils = require('../utils.js');
+const utils = require('./synced_account.js');
 
 let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id  } = addon;
 
@@ -50,9 +51,8 @@ class Account {
             return await syncAsync(this.account);
         }
 
-        return await syncAsync(JSON.stringify(options), this.account);
+        return await syncAsync(JSON.stringify(options), this.account).then(id => new SyncedAccount(id));
     }
-
 
     async getNodeInfo(url) {
         return await getNodeInfoAsync(url, this.account);
