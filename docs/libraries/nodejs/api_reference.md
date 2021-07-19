@@ -411,10 +411,13 @@ Promote the given message.
 | --------- | ------------------- | ----------------- | ------------------------ |
 | messageId | <code>string</code> | <code>null</code> | The message's identifier |
 
-#### consolidateOutputs()
+#### consolidateOutputs(includeDustAllowanceOutputs)
 
 Consolidate the outputs on all account addresses.
 
+| Param                       | Type                 | Default            | Description                                                  |
+| --------------------------- | -------------------- | ------------------ | ------------------------------------------------------------ |
+| includeDustAllowanceOutputs | <code>boolean</code> | <code>false</code> | Defines if dust_allowance_output should also be consolidated |
 #### isLatestAddressUnused()
 
 Determines whether the account has unused latest address after syncing with the Tangle.

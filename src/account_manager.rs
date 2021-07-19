@@ -1087,7 +1087,7 @@ impl AccountManager {
         let message = self
             .get_account(from_account_id)
             .await?
-            .transfer(Transfer::builder(to_address, amount).finish())
+            .transfer(Transfer::builder(to_address, amount, None).finish())
             .await?;
 
         // store the message on the receive account
@@ -1832,7 +1832,7 @@ async fn consolidate_outputs_if_needed(
             }
         }
         if automatic_consolidation {
-            synced.consolidate_outputs().await?;
+            synced.consolidate_outputs(false).await?;
         }
     }
     Ok(())
