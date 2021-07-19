@@ -55,6 +55,8 @@ To use the library, add this to your `Cargo.toml`:
 ```
 [dependencies]
 iota-wallet = { git = "https://github.com/iotaledger/wallet.rs" }
+# asynchronous runtime
+tokio = { version = "1.5", features = ["full"] }
 ```
 
 ### Initialisation
