@@ -8,7 +8,6 @@ async fn main() -> iota_wallet::Result<()> {
     // commented because test fails otherwise
     // use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType};
     // println!("Ledger status: {:?}", iota_wallet::get_ledger_status(false).await);
-    // println!("Open app: {:?}", iota_wallet::get_ledger_opened_app(false).await?);
 
     // let manager = AccountManager::builder().finish().await.unwrap();
 
