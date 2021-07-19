@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+use crate::event::{emit_ledger_address_generation, LedgerAddressGeneration};
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
@@ -678,6 +680,9 @@ impl AccountHandle {
                 _ => false,
             };
             if ledger {
+                // Send address event so it can be displayed before and then compared with the prompt on the ledger
+                emit_ledger_address_generation(&account, address.address().to_bech32()).await;
+
                 log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
                 let regenrated_address = crate::address::get_address_with_index(
                     &account,
