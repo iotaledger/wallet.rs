@@ -3,7 +3,7 @@
 
 const addon = require('../../index.node');
 const utils = require('../utils.js');
-const utils = require('./synced_account.js');
+const { SyncedAccount } = require('./synced_account.js');
 
 let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id  } = addon;
 

@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 const addon = require('../../index.node');
-const utils = require('../utils.js');
 
 let {  } = addon;
 
