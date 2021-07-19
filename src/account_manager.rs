@@ -260,13 +260,13 @@ impl AccountManagerBuilder {
             .await;
             (accounts, res.is_ok())
         };
-        let mut instance = AccountManager {
+        let instance = AccountManager {
             storage_folder: self.storage_folder,
             loaded_accounts: AtomicBool::new(loaded_accounts),
             storage_path: storage_file_path,
             accounts,
-            stop_polling_sender: None,
-            polling_handle: None,
+            stop_polling_sender: StdMutex::new(None),
+            polling_handle: StdMutex::new(None),
             generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock,
@@ -354,8 +354,8 @@ pub struct AccountManager {
     /// Returns a handle to the accounts store.
     #[getset(get = "pub")]
     accounts: AccountStore,
-    stop_polling_sender: Option<BroadcastSender<()>>,
-    polling_handle: Option<thread::JoinHandle<()>>,
+    stop_polling_sender: StdMutex<Option<BroadcastSender<()>>>,
+    polling_handle: StdMutex<Option<thread::JoinHandle<()>>>,
     generated_mnemonic: StdMutex<Option<String>>,
     account_options: AccountOptions,
     sync_accounts_lock: Arc<Mutex<()>>,
@@ -374,8 +374,8 @@ impl Clone for AccountManager {
             loaded_accounts: AtomicBool::new(self.loaded_accounts.load(Ordering::SeqCst)),
             storage_path: self.storage_path.clone(),
             accounts: self.accounts.clone(),
-            stop_polling_sender: self.stop_polling_sender.clone(),
-            polling_handle: None,
+            stop_polling_sender: StdMutex::new(self.stop_polling_sender.lock().expect("Mutex failed on AccountManager clone.").clone()),
+            polling_handle: StdMutex::new(None),
             generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
             sync_accounts_lock: self.sync_accounts_lock.clone(),
@@ -758,17 +758,19 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    pub async fn start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) {
+    pub async fn start_background_sync(&self, polling_interval: Duration, automatic_output_consolidation: bool) {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
         self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
-        self.stop_polling_sender.replace(stop_polling_sender);
+        self.stop_polling_sender.lock().unwrap().replace(stop_polling_sender);
     }
 
     /// Stops the background polling and MQTT monitoring.
-    pub fn stop_background_sync(&mut self) {
-        if let Some(polling_handle) = self.polling_handle.take() {
+    pub fn stop_background_sync(&self) {
+        if let Some(polling_handle) = self.polling_handle.lock().unwrap().take() {
             self.stop_polling_sender
+                .lock()
+                .unwrap()
                 .take()
                 .unwrap()
                 .send(())
@@ -882,7 +884,7 @@ impl AccountManager {
 
     /// Starts the polling mechanism.
     fn start_polling(
-        &mut self,
+        &self,
         polling_interval: Duration,
         mut stop: BroadcastReceiver<()>,
         automatic_output_consolidation: bool,
@@ -955,7 +957,7 @@ impl AccountManager {
                 }
             });
         });
-        self.polling_handle.replace(handle);
+        self.polling_handle.lock().unwrap().replace(handle);
     }
 
     /// Stores a mnemonic for the given signer type.
