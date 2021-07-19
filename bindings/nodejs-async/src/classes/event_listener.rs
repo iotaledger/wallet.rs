@@ -10,8 +10,8 @@
 // };
 
 // use iota_wallet::event::{
-//     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress, on_new_transaction,
-//     on_reattachment, on_transfer_progress, EventId,
+//     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
+// on_new_transaction,     on_reattachment, on_transfer_progress, EventId,
 // };
 // use neon::prelude::*;
 
@@ -125,8 +125,8 @@
 // declare_types! {
 //     pub class JsEventListener for EventListener {
 //         init(mut cx) {
-//             let event = EventType::try_from(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid event type");
-//             let (tx, rx) = channel();
+//             let event = EventType::try_from(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid event
+// type");             let (tx, rx) = channel();
 
 //             crate::block_on(listen(event, tx));
 
@@ -148,8 +148,6 @@
 //         }
 //     }
 // }
-
-
 
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
@@ -375,7 +373,10 @@ pub(crate) fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         let cloned_eh = event_handler.clone();
         let event_id = EventListener::add_event_listener(event_type, move |message: String, event_type: EventType| {
             log::debug!("--------------------------------------------------------------------------------------------");
-            log::debug!("--------------------------------------------{:?}------------------------------------------------", event_type);
+            log::debug!(
+                "--------------------------------------------{:?}------------------------------------------------",
+                event_type
+            );
             cloned_eh.call(message, event_type);
         })
         .await;

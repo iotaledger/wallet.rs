@@ -5,22 +5,22 @@ use classes::*;
 pub mod types;
 
 use neon::prelude::*;
+use once_cell::sync::Lazy;
+use serde::Deserialize;
 use std::{
     any::Any,
     collections::HashMap,
     panic::AssertUnwindSafe,
     sync::{Arc, Mutex},
 };
-use once_cell::sync::Lazy;
 use tokio::{runtime::Runtime, sync::RwLock};
-use serde::Deserialize;
 
 use std::{path::PathBuf, time::Duration};
 
 pub use iota_wallet::{
-    account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
     account::{AccountHandle, SyncedAccount},
-    actor::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler, AccountIdentifier},
+    account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
+    actor::{AccountIdentifier, Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
     address::parse as parse_address,
     event::{
         on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
@@ -33,13 +33,6 @@ pub use iota_wallet::{
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
     Error,
 };
-
-
-
-
-
-
-
 
 // use futures::{Future, FutureExt};
 // use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
@@ -122,14 +115,12 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> String {
     format!("{}\n\n{:?}", msg, current_backtrace)
 }
 
-// pub async fn convert_async_panics<T, F: Future<Output = Result<T, Error>>>(f: impl FnOnce() -> F) -> Result<T, Error> {
-//     match AssertUnwindSafe(f()).catch_unwind().await {
+// pub async fn convert_async_panics<T, F: Future<Output = Result<T, Error>>>(f: impl FnOnce() -> F) -> Result<T, Error>
+// {     match AssertUnwindSafe(f()).catch_unwind().await {
 //         Ok(result) => result,
 //         Err(panic) => Err(Error::Panic(panic_to_response_message(panic))),
 //     }
 // }
-
-
 
 pub static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
@@ -144,7 +135,6 @@ pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
-
     // Account methods.
     cx.export_function("accountNew", classes::account::account_new)?;
     cx.export_function("id", classes::account::id)?;
@@ -153,22 +143,28 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("messageCount", classes::account::message_count)?;
     cx.export_function("sync", classes::account::sync)?;
     cx.export_function("generateAddress", classes::account::generate_address)?;
+    cx.export_function("getNodeInfo", classes::account::get_node_info)?;
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
     cx.export_function("getAccount", classes::account_manager::get_account)?;
     cx.export_function("getAccounts", classes::account_manager::get_accounts)?;
     cx.export_function("createAccount", classes::account_manager::create_account)?;
-    cx.export_function("setStrongholdPassword", classes::account_manager::set_stronghold_password)?;
+    cx.export_function(
+        "setStrongholdPassword",
+        classes::account_manager::set_stronghold_password,
+    )?;
     cx.export_function("storeMnemonic", classes::account_manager::store_mnemonic)?;
     cx.export_function("backup", classes::account_manager::backup)?;
     cx.export_function("importAccounts", classes::account_manager::import_accounts)?;
     cx.export_function("setStoragePassword", classes::account_manager::set_storage_password)?;
-    cx.export_function("changeStrongholdPassword", classes::account_manager::change_stronghold_password)?;
+    cx.export_function(
+        "changeStrongholdPassword",
+        classes::account_manager::change_stronghold_password,
+    )?;
     cx.export_function("generateMnemonic", classes::account_manager::generate_mnemonic)?;
     cx.export_function("startBackgroundSync", classes::account_manager::start_background_sync)?;
     cx.export_function("stopBackgroundSync", classes::account_manager::stop_background_sync)?;
-
 
     // Message handler methods.
     cx.export_function("sendMessage", classes::message_handler::send_message)?;

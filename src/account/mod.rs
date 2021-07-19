@@ -53,7 +53,8 @@ pub enum AccountIdentifier {
 
 impl<'de> Deserialize<'de> for AccountIdentifier {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where D: Deserializer<'de>
+    where
+        D: Deserializer<'de>,
     {
         let s = String::deserialize(deserializer)?;
         Ok(AccountIdentifier::from(s))
@@ -1095,9 +1096,9 @@ impl Account {
             });
     }
 
-    // Gets the node info from /api/v1/info endpoint
+    /// Gets the node info from /api/v1/info endpoint
     // TODO: Add auth and url in one NodeInfoOptions struct.
-    pub(crate) async fn get_node_info(
+    pub async fn get_node_info(
         &self,
         url: Option<&str>,
         jwt: Option<&str>,

@@ -3,15 +3,10 @@
 
 use iota_wallet::client::{Api, BrokerOptions, ClientOptions, Node};
 use serde::Deserialize;
+use std::{collections::HashMap, path::PathBuf, time::Duration};
 use url::Url;
-use std::{path::PathBuf, time::Duration, collections::HashMap};
 
-
-
-
-
-pub use iota_wallet::{ account_manager::{ AccountManager, DEFAULT_STORAGE_FOLDER } };
-
+pub use iota_wallet::account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER};
 
 #[derive(Deserialize)]
 #[serde(untagged)]

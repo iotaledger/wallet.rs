@@ -5,7 +5,7 @@ const addon = require('../../index.node');
 const utils = require('../utils.js');
 const { SyncedAccount } = require('./synced_account.js');
 
-let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id  } = addon;
+let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id } = addon;
 
 
 
@@ -42,9 +42,9 @@ const getNodeInfoAsync = utils.promisify(getNodeInfo);
 
 class Account {
     constructor(account) {
-      console.log("Account constructor called.");
-    //   this.accountId = accountId;
-      this.account = account;
+        console.log("Account constructor called.");
+        //   this.accountId = accountId;
+        this.account = account;
     }
     async sync(options) {
         if (options == undefined) {
@@ -55,6 +55,10 @@ class Account {
     }
 
     async getNodeInfo(url) {
+        //todo optional auth
+        if (url == undefined) {
+            return await getNodeInfoAsync(this.account);
+        }
         return await getNodeInfoAsync(url, this.account);
     }
 
@@ -78,9 +82,9 @@ class Account {
         return await sendAsync(JSON.stringify(transfer), this.account);
     }
 
-  };
+};
 
-  module.exports.Account = Account;
+module.exports.Account = Account;
 
 
 module.exports.Account = Account;

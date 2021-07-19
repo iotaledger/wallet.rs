@@ -172,7 +172,10 @@ impl AccountManagerWrapper {
         let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
             Ok(options) => options,
             Err(e) => {
-                log::debug!("------------------------------------- AccountManagerWrapper error - {:?}", e);
+                log::debug!(
+                    "------------------------------------- AccountManagerWrapper error - {:?}",
+                    e
+                );
                 crate::types::ManagerOptions::default()
             }
         };
@@ -205,7 +208,7 @@ impl AccountManagerWrapper {
             .block_on(manager.finish())
             .expect("error initializing account manager");
 
-            log::debug!("------------------------------------- AccountManagerWrapper end");
+        log::debug!("------------------------------------- AccountManagerWrapper end");
         Arc::new(Self {
             queue,
             account_manager: manager,
@@ -230,7 +233,10 @@ pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
-        let result = wrapper.account_manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation).await;
+        let result = wrapper
+            .account_manager
+            .start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation)
+            .await;
         let _ = sender.send(result);
     });
 
@@ -250,9 +256,7 @@ pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
-    crate::RUNTIME.spawn(async move {
-        wrapper.account_manager.set_storage_password(password).await
-    });
+    crate::RUNTIME.spawn(async move { wrapper.account_manager.set_storage_password(password).await });
 
     Ok(cx.undefined())
 }
@@ -276,7 +280,10 @@ pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefin
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     crate::RUNTIME.spawn(async move {
-        wrapper.account_manager.change_stronghold_password(current_password, new_password).await
+        wrapper
+            .account_manager
+            .change_stronghold_password(current_password, new_password)
+            .await
     });
 
     Ok(cx.undefined())
@@ -284,7 +291,10 @@ pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefin
 
 pub fn generate_mnemonic(mut cx: FunctionContext) -> JsResult<JsString> {
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
-    let mnemonic = wrapper.account_manager.generate_mnemonic().expect("failed to generate mnemonic");
+    let mnemonic = wrapper
+        .account_manager
+        .generate_mnemonic()
+        .expect("failed to generate mnemonic");
 
     Ok(cx.string(&mnemonic))
 }
@@ -297,10 +307,10 @@ pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     };
 
     let (mnemonic, wrapper) = match cx.argument_opt(2) {
-        Some(_) => {
-            (Some(cx.argument::<JsString>(1)?.value(&mut cx)),
-            Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?))
-        },
+        Some(_) => (
+            Some(cx.argument::<JsString>(1)?.value(&mut cx)),
+            Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?),
+        ),
         None => (None, Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?)),
     };
 
@@ -485,14 +495,11 @@ pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
     let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
 
-
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let result = wrapper.account_manager.backup(backup_path, password).await;
         let result = match result {
-            Ok(path) => {
-                Ok(path.display().to_string())
-            }
+            Ok(path) => Ok(path.display().to_string()),
             Err(e) => Err(e.to_string()),
         };
 

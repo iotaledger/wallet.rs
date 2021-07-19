@@ -10,7 +10,7 @@ use std::{path::PathBuf, time::Duration};
 
 pub use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    actor::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler, AccountIdentifier},
+    actor::{AccountIdentifier, Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
     address::parse as parse_address,
     event::{
         on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
@@ -25,7 +25,6 @@ pub use iota_wallet::{
 };
 
 use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
-
 
 #[derive(Deserialize, Clone)]
 pub(crate) struct DispatchMessage {
