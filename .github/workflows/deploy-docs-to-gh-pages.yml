@@ -17,7 +17,7 @@ jobs:
           node-version: '12.x'
       - name: Test Build
         run: |
-          cd docOps
+          cd documentation
           if [ -e yarn.lock ]; then
           yarn install --frozen-lockfile
           elif [ -e package-lock.json ]; then
@@ -36,7 +36,7 @@ jobs:
           node-version: '12.x'
       - name: Build
         run: |
-          cd docOps
+          cd documentation
           if [ -e yarn.lock ]; then
           yarn install --frozen-lockfile
           elif [ -e package-lock.json ]; then
@@ -57,10 +57,10 @@ jobs:
 #          sudo apt-get update
 #          sudo apt-get install libudev-dev libusb-1.0-0-dev
 #          DOCFLAGS="--cfg docsrs" cargo +nightly doc --all-features --document-private-items --no-deps --release
-#          cp -r target/doc docOps/build/rust
+#          cp -r target/doc documentation/build/rust
       - name: Release to GitHub Pages
         uses: iotaledger/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docOps/build
+          publish_dir: ./documentation/build
           cname: wallet-lib.docs.iota.org
