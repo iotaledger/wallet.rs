@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://wallet-lib.docs.iota.org/blog</id>
+    <title>IOTA Wallet Library Blog</title>
+    <updated>2015-10-25T23:29:00.000Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://wallet-lib.docs.iota.org/blog"/>
+    <subtitle>IOTA Wallet Library Blog</subtitle>
+    <icon>https://wallet-lib.docs.iota.org/img/logo/favicon.ico</icon>
+</feed>

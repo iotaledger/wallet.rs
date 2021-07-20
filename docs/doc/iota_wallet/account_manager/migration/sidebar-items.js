@@ -1,1 +1,0 @@
-initSidebarItems({"fn":[["check_confirmation",""],["create_bundle",""],["send_bundle",""]],"struct":[["LogAddress",""],["MigrationBundle",""],["MigrationData","Migration data."],["MigrationDataFinder","Finds account data for the migration from legacy network."],["MigrationMetadata","Migration metadata."]]});
