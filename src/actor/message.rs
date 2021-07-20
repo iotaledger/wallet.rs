@@ -496,11 +496,14 @@ pub struct MigrationDataDto {
     #[serde(rename = "lastCheckedAddressIndex")]
     last_checked_address_index: u64,
     inputs: Vec<MigrationInputDto>,
+    #[serde(rename = "spentAddresses")]
+    spent_addresses: bool,
 }
 
 impl From<MigrationData> for MigrationDataDto {
     fn from(data: MigrationData) -> Self {
         let mut inputs: Vec<MigrationInputDto> = Vec::new();
+        let mut spent_addresses = false;
         for input in data.inputs {
             let address = input
                 .address
@@ -509,6 +512,9 @@ impl From<MigrationData> for MigrationDataDto {
                 .iter_trytes()
                 .map(char::from)
                 .collect::<String>();
+            if input.spent {
+                spent_addresses = true;
+            }
             inputs.push(MigrationInputDto {
                 address,
                 security_level: input.security_lvl,
@@ -522,6 +528,7 @@ impl From<MigrationData> for MigrationDataDto {
             balance: data.balance,
             last_checked_address_index: data.last_checked_address_index,
             inputs,
+            spent_addresses,
         }
     }
 }
