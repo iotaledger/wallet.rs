@@ -74,24 +74,22 @@ pub async fn with_actor_system<F: FnOnce(&riker::actors::ActorSystem)>(cb: F) {
 
 /// The Ledger device status.
 #[derive(Debug, ::serde::Serialize)]
-#[serde(tag = "type")]
-pub enum LedgerStatus {
-    /// Ledger is available and ready to be used.
-    Connected,
-    /// Ledger is disconnected.
-    Disconnected,
-    /// Ledger is locked.
-    Locked,
+pub struct LedgerApp {
+    /// Opened app name.
+    name: String,
+    /// Opened app version.
+    version: String,
 }
 
-/// The Ledger app info.
+/// The Ledger device status.
 #[derive(Debug, ::serde::Serialize)]
-#[serde(tag = "type")]
-pub struct LedgerAppInfo {
-    /// App name
-    name: String,
-    /// App version
-    version: String,
+pub struct LedgerStatus {
+    /// Ledger is available and ready to be used.
+    connected: bool,
+    /// Ledger is connected and locked.
+    locked: bool,
+    /// Ledger opened app.
+    app: Option<LedgerApp>,
 }
 
 /// Gets the status of the Ledger device/simulator.
@@ -114,30 +112,12 @@ pub async fn get_ledger_status(is_simulator: bool) -> LedgerStatus {
             return signer.get_ledger_status(is_simulator).await;
         }
     }
-    LedgerStatus::Disconnected
-}
-
-/// Gets the opened app from the Ledger device/simulator.
-#[allow(unreachable_code)]
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-pub async fn get_ledger_opened_app(is_simulator: bool) -> Result<LedgerAppInfo> {
-    if is_simulator {
-        #[cfg(feature = "ledger-nano-simulator")]
-        {
-            let simulator_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNanoSimulator).await;
-            let signer = simulator_signer.lock().await;
-            return signer.get_ledger_opened_app(is_simulator).await;
-        }
-    } else {
-        #[cfg(feature = "ledger-nano")]
-        {
-            let ledger_signer = crate::signing::get_signer(&crate::signing::SignerType::LedgerNano).await;
-            let signer = ledger_signer.lock().await;
-            return signer.get_ledger_opened_app(is_simulator).await;
-        }
+    // dummy response
+    LedgerStatus {
+        connected: false,
+        locked: false,
+        app: None,
     }
-    Err(crate::Error::NoLedgerSignerError)
 }
 
 #[cfg(test)]
@@ -175,11 +155,12 @@ mod test_utils {
     #[async_trait::async_trait]
     impl crate::signing::Signer for TestSigner {
         async fn get_ledger_status(&self, _is_simulator: bool) -> crate::LedgerStatus {
-            crate::LedgerStatus::Connected
-        }
-
-        async fn get_ledger_opened_app(&self, _is_simulator: bool) -> crate::Result<crate::LedgerAppInfo> {
-            Err(crate::Error::NoLedgerSignerError)
+            // dummy status
+            crate::LedgerStatus {
+                connected: false,
+                locked: false,
+                app: None,
+            }
         }
 
         async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {

@@ -90,6 +90,18 @@ pub struct AddressConsolidationNeeded {
     pub address: AddressWrapper,
 }
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+/// Ledger generate address event data.
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct LedgerAddressGeneration {
+    #[serde(rename = "accountId")]
+    /// The associated account identifier.
+    pub account_id: String,
+    /// The transfer event type.
+    pub event: AddressData,
+}
+
 /// A transaction-related event data.
 #[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
@@ -137,6 +149,39 @@ pub struct TransactionReattachmentEvent {
     pub reattached_message_id: MessageId,
 }
 
+/// Address event data.
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct AddressData {
+    /// The address.
+    pub address: String,
+}
+
+/// Prepared transaction event data.
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct PreparedTransactionData {
+    /// Transaction inputs.
+    pub inputs: Vec<TransactionIO>,
+    /// Transaction outputs.
+    pub outputs: Vec<TransactionIO>,
+    /// The indexation data.
+    pub data: Option<String>,
+}
+
+/// Input or output data for PreparedTransactionData
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
+#[getset(get = "pub")]
+pub struct TransactionIO {
+    /// Address
+    pub address: String,
+    /// Amount
+    pub amount: u64,
+    /// Remainder
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub remainder: Option<bool>,
+}
+
 /// Transfer event type.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -146,7 +191,9 @@ pub enum TransferProgressType {
     /// Performing input selection.
     SelectingInputs,
     /// Generating remainder value deposit address.
-    GeneratingRemainderDepositAddress,
+    GeneratingRemainderDepositAddress(AddressData),
+    /// Prepared transaction.
+    PreparedTransaction(PreparedTransactionData),
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.
@@ -291,6 +338,16 @@ struct AddressConsolidationNeededHandler {
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 event_handler_impl!(AddressConsolidationNeededHandler);
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+struct LedgerAddressGenerationHandler {
+    id: EventId,
+    /// The on event callback.
+    on_event: Box<dyn Fn(&LedgerAddressGeneration) + Send>,
+}
+
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+event_handler_impl!(LedgerAddressGenerationHandler);
+
 struct TransferProgressHandler {
     id: EventId,
     /// The on event callback.
@@ -316,6 +373,8 @@ type ErrorListeners = Arc<StdMutex<Vec<ErrorHandler>>>;
 type StrongholdStatusChangeListeners = Arc<Mutex<Vec<StrongholdStatusChangeEventHandler>>>;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 type AddressConsolidationNeededListeners = Arc<Mutex<Vec<AddressConsolidationNeededHandler>>>;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+type LedgerAddressGenerationListeners = Arc<Mutex<Vec<LedgerAddressGenerationHandler>>>;
 type TransferProgressListeners = Arc<Mutex<Vec<TransferProgressHandler>>>;
 type MigrationProgressListeners = Arc<Mutex<Vec<MigrationProgressHandler>>>;
 
@@ -373,6 +432,13 @@ fn stronghold_status_change_listeners() -> &'static StrongholdStatusChangeListen
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 fn address_consolidation_needed_listeners() -> &'static AddressConsolidationNeededListeners {
     static LISTENERS: Lazy<AddressConsolidationNeededListeners> = Lazy::new(Default::default);
+    &LISTENERS
+}
+
+/// Gets address that will be generated with a prompt on the ledger.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+fn ledger_address_generation_listeners() -> &'static LedgerAddressGenerationListeners {
+    static LISTENERS: Lazy<LedgerAddressGenerationListeners> = Lazy::new(Default::default);
     &LISTENERS
 }
 
@@ -695,6 +761,40 @@ pub(crate) async fn emit_address_consolidation_needed(account: &Account, address
     let event = AddressConsolidationNeeded {
         account_id: account.id().to_string(),
         address,
+    };
+
+    for listener in listeners.deref() {
+        (listener.on_event)(&event);
+    }
+}
+
+/// Listen to `ledger address generation` events.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn on_ledger_address_generation<F: Fn(&LedgerAddressGeneration) + Send + 'static>(cb: F) -> EventId {
+    let mut l = ledger_address_generation_listeners().lock().await;
+    let id = generate_event_id();
+    l.push(LedgerAddressGenerationHandler {
+        id,
+        on_event: Box::new(cb),
+    });
+    id
+}
+
+/// Removes the balance change listener associated with the given identifier.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
+pub async fn remove_ledger_address_generation_listener(id: &EventId) {
+    remove_event_listener(id, ledger_address_generation_listeners()).await;
+}
+
+/// Emits a balance change event.
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+pub(crate) async fn emit_ledger_address_generation(account: &Account, address: String) {
+    let listeners = ledger_address_generation_listeners().lock().await;
+    let event = LedgerAddressGeneration {
+        account_id: account.id().to_string(),
+        event: AddressData { address },
     };
 
     for listener in listeners.deref() {
