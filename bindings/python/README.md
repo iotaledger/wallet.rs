@@ -86,7 +86,7 @@ Also for all the optional values, the default values are the same as the ones in
 | ------ | ---------------- | ---------------------- | ------------------------ |
 | config | <code>str</code> | <code>undefined</code> | The logger configuration |
 
-The config is the dumped string from the JSON, which key/value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
+The config is the dumped string from the JSON, which key:value pairs are from the [bee logger](https://github.com/iotaledger/bee/blob/dev/bee-common/bee-common/src/logger/config.rs).
 
 Please check the `example/logger_example.py` to see how to use it.
 
@@ -867,7 +867,7 @@ Removes the migration progress listener associated with the given identifier.
 
 ### WalletAddress
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_address = {
@@ -883,7 +883,7 @@ Please refer to [WalletAddressOutput](#walletaddressoutput) for the details of t
 
 ### WalletAddressOutput
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_address_output = {
@@ -900,7 +900,7 @@ wallet_address_output = {
 
 ### Address
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address = {
@@ -916,7 +916,7 @@ Please refer to [AddressWrapper](#addresswrapper) and [AddressOutput](#addressou
 
 ### AddressWrapper
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address_wrapper = {
@@ -926,7 +926,7 @@ address_wrapper = {
 
 ### AddressOutput
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 address_output = {
@@ -943,7 +943,7 @@ Please refer to [AddressWrapper](#addresswrapper) for the details of this type.
 
 ### AccountBalance
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 account_balance = {
@@ -956,7 +956,7 @@ account_balance = {
 
 ### ClientOptions
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 client_options = {
@@ -983,7 +983,7 @@ Note that this message object in `wallet.rs` is not the same as the message obje
 
 ### Node
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 node = {
@@ -994,7 +994,7 @@ node = {
 
 ### NodeAuth
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 node = {
@@ -1005,7 +1005,7 @@ node = {
 
 ### BrokerOptions
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 broker_options = {
@@ -1019,7 +1019,7 @@ broker_options = {
 
 ### WalletMessage
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 wallet_message = {
@@ -1039,7 +1039,7 @@ Please refer to [Payload](#payload) for the details of this type.
 
 ### Payload
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 payload = {
@@ -1053,7 +1053,7 @@ Please refer to [Transaction](#transaction), [Milestone](#milestone), and [Index
 
 ### Transaction
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 transaction = {
@@ -1068,7 +1068,7 @@ Please refer to [RegularEssence](#regularessence) and [UnlockBlock](#unlockblock
 
 ### Milestone
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 milestone = {
@@ -1081,7 +1081,7 @@ Please refer to [MilestonePayloadEssence](#milestonepayloadessence) for the deta
 
 ### MilestonePayloadEssence
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 milestone_payload_essence = {
@@ -1095,7 +1095,7 @@ milestone_payload_essence = {
 
 ### Indexation
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 indexation = {
@@ -1106,7 +1106,7 @@ indexation = {
 
 ### RegularEssenceEssence
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 transaction_regular_essence = {
@@ -1123,7 +1123,7 @@ Please refer to [Input](#input), [Output](#output), and [Payload](#payload) for 
 
 ### Output
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 output = {
@@ -1134,7 +1134,7 @@ output = {
 
 ### Input
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 input = {
@@ -1145,7 +1145,7 @@ input = {
 
 ### UnlockBlock
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 unlock_block = {
@@ -1158,7 +1158,7 @@ Please refer to [Ed25519Signature](#ed25519signature) for the details of this ty
 
 ### Ed25519Signature
 
-A dict with the following key/value pairs.
+A dict with the following key:value pairs.
 
 ```python
 ed25519_signature = {
