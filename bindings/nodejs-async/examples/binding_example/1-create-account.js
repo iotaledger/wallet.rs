@@ -16,10 +16,11 @@ async function run() {
       alias: 'Alice',
     });
     console.log('Account created:', account.id())
-    //todo get this working
-    // console.log("nodeinfo", await account.getNodeInfo());
+
     let a = await account.sync();
     console.log("synced", a);
+
+    console.log("nodeinfo", await account.getNodeInfo());
   } catch (error) {
     console.log("Error: " + error)
   }

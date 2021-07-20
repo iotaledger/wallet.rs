@@ -38,7 +38,6 @@ let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id } = a
 
 const syncAsync = utils.promisify(sync);
 const sendAsync = utils.promisify(send);
-const getNodeInfoAsync = utils.promisify(getNodeInfo);
 
 class Account {
     constructor(account) {
@@ -54,12 +53,15 @@ class Account {
         return await syncAsync(JSON.stringify(options), this.account).then(id => new SyncedAccount(id));
     }
 
-    async getNodeInfo(url) {
-        //todo optional auth
-        if (url == undefined) {
-            return await getNodeInfoAsync(this.account);
+    async getNodeInfo(url, auth) {
+        //todo fix optional url and auth
+        if (url == undefined && auth === undefined) {
+            return await getNodeInfo(this.account);
+        } else if (auth == undefined) {
+            return await getNodeInfo(url, this.account);
+        } else {
+            return await getNodeInfo(url, auth, this.account);
         }
-        return await getNodeInfoAsync(url, this.account);
     }
 
     id() {

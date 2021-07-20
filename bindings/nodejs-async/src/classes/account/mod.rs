@@ -149,18 +149,20 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(0)?);
+    //todo fix optional url and auth
+    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 1)?);
     let id = account_wrapper.account_id.clone();
 
-    let url: Option<String> = match cx.argument_opt(1) {
+    let url: Option<String> = match cx.argument_opt(0) {
         Some(arg) => match arg.downcast::<JsString, FunctionContext>(&mut cx) {
+            // Ok(type_) => Some(type_.value(&mut cx).to_string()),
             Ok(type_) => Some(serde_json::from_str(type_.value(&mut cx).as_str()).unwrap()),
             _ => None,
         },
         None => None,
     };
 
-    let (jwt, auth) = match cx.argument_opt(2) {
+    let (jwt, auth) = match cx.argument_opt(1) {
         Some(arg) => match cx.argument::<JsString>(0) {
             Ok(options) => {
                 let options = serde_json::from_str::<NodeInfoOptions>(options.value(&mut cx).as_str()).unwrap();
