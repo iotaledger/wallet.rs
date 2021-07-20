@@ -684,7 +684,7 @@ impl AccountHandle {
                 emit_ledger_address_generation(&account, address.address().to_bech32()).await;
 
                 log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
-                let regenrated_address = crate::address::get_address_with_index(
+                let regenerated_address = crate::address::get_address_with_index(
                     &account,
                     *address.key_index(),
                     account.bech32_hrp(),
@@ -694,7 +694,7 @@ impl AccountHandle {
                     },
                 )
                 .await?;
-                if address.address().inner != regenrated_address.address().inner {
+                if address.address().inner != regenerated_address.address().inner {
                     return Err(crate::Error::WrongLedgerSeedError);
                 }
             }

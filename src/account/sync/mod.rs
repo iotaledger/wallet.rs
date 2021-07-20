@@ -1696,7 +1696,7 @@ async fn perform_transfer(
                                 )
                                 .await;
                             log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
-                            let regenrated_address = crate::address::get_new_change_address(
+                            let regenerated_address = crate::address::get_new_change_address(
                                 &account_,
                                 *address.key_index(),
                                 account_.bech32_hrp(),
@@ -1706,7 +1706,7 @@ async fn perform_transfer(
                                 },
                             )
                             .await?;
-                            if address.address().inner != regenrated_address.address().inner {
+                            if address.address().inner != regenerated_address.address().inner {
                                 return Err(crate::Error::WrongLedgerSeedError);
                             }
                         }
