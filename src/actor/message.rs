@@ -217,10 +217,6 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     GetLedgerStatus(bool),
-    /// Get the app that's open on the Ledger Nano or Speculos simulator.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    GetLedgerOpenedApp(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -322,6 +318,17 @@ pub enum MessageType {
     },
     /// Get the checksum for a legacy address.
     GetLegacyAddressChecksum(String),
+    /// Start background syncing.
+    StartBackgroundSync {
+        /// Polling interval, time between each syncing operation
+        #[serde(rename = "pollingInterval")]
+        polling_interval: Duration,
+        /// If outputs should get automatically consolidated
+        #[serde(rename = "automaticOutputConsolidation")]
+        automatic_output_consolidation: bool,
+    },
+    /// Stop background syncing.
+    StopBackgroundSync,
 }
 
 impl Serialize for MessageType {
@@ -443,12 +450,15 @@ impl Serialize for MessageType {
                 bundle: _,
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
-            }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
+            }
+            MessageType::StartBackgroundSync {
+                polling_interval: _,
+                automatic_output_consolidation: _,
+            } => serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync"),
+            MessageType::StopBackgroundSync => {
+                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
             }
         }
     }
@@ -610,10 +620,6 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     LedgerStatus(crate::LedgerStatus),
-    /// GetLedgerOpenedApp response.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    LedgerOpenedApp(crate::LedgerAppInfo),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.
@@ -638,6 +644,8 @@ pub enum ResponseType {
     MineBundle(MinedBundle),
     /// GetLegacyAddressChecksum response.
     GetLegacyAddressChecksum(String),
+    /// All went fine.
+    Ok(()),
 }
 
 /// The message type.

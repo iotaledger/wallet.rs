@@ -191,15 +191,6 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(is_simulator) => {
-                convert_async_panics(|| async {
-                    Ok(ResponseType::LedgerOpenedApp(
-                        crate::get_ledger_opened_app(*is_simulator).await?,
-                    ))
-                })
-                .await
-            }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
                     self.account_manager.delete_internal().await?;
@@ -399,6 +390,25 @@ impl WalletMessageHandler {
                 let address_with_checksum = add_tryte_checksum(address)?;
                 Ok(ResponseType::GetLegacyAddressChecksum(address_with_checksum))
             }),
+            MessageType::StartBackgroundSync {
+                polling_interval,
+                automatic_output_consolidation,
+            } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .start_background_sync(*polling_interval, *automatic_output_consolidation)
+                        .await?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
+            MessageType::StopBackgroundSync => {
+                convert_async_panics(|| async {
+                    self.account_manager.stop_background_sync()?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
         };
 
         let response = match response {

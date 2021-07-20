@@ -66,6 +66,7 @@ pub enum Network {
 pub struct GenerateAddressMetadata {
     /// Indicates that the address is being generated as part of the account syncing process.
     /// This means that the account might not be saved.
+    /// If it is false, the prompt will be displayed on ledger devices.
     pub syncing: bool,
     /// The network which is used so the correct BIP32 path is used for the ledger. Debug mode starts with 44'/1' and
     /// in mainnet-mode it's 44'/4218'
@@ -92,8 +93,6 @@ pub struct SignMessageMetadata<'a> {
 pub trait Signer {
     /// Get the ledger status.
     async fn get_ledger_status(&self, is_simulator: bool) -> crate::LedgerStatus;
-    /// Get the opened app from the ledger.
-    async fn get_ledger_opened_app(&self, is_simulator: bool) -> crate::Result<crate::LedgerAppInfo>;
     /// Initialises a mnemonic.
     async fn store_mnemonic(&mut self, storage_path: &Path, mnemonic: String) -> crate::Result<()>;
     /// Generates an address.
