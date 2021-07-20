@@ -345,27 +345,13 @@ impl Serialize for MessageType {
             MessageType::CreateAccount(_) => serializer.serialize_unit_variant("MessageType", 1, "CreateAccount"),
             MessageType::GetAccount(_) => serializer.serialize_unit_variant("MessageType", 2, "GetAccount"),
             MessageType::GetAccounts => serializer.serialize_unit_variant("MessageType", 3, "GetAccounts"),
-            MessageType::CallAccountMethod {
-                account_id: _,
-                method: _,
-            } => serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod"),
-            MessageType::SyncAccounts {
-                address_index: _,
-                gap_limit: _,
-                account_discovery_threshold: _,
-            } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
-            MessageType::Reattach {
-                account_id: _,
-                message_id: _,
-            } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
-            MessageType::Backup {
-                destination: _,
-                password: _,
-            } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup {
-                backup_path: _,
-                password: _,
-            } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
+            MessageType::CallAccountMethod { .. } => {
+                serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
+            }
+            MessageType::SyncAccounts { .. } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
+            MessageType::Reattach { .. } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
+            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStoragePassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
             }
@@ -383,21 +369,13 @@ impl Serialize for MessageType {
             }
             #[cfg(feature = "stronghold")]
             MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
-            MessageType::SendTransfer {
-                account_id: _,
-                transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
-            MessageType::InternalTransfer {
-                from_account_id: _,
-                to_account_id: _,
-                amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer"),
+            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
+            MessageType::InternalTransfer { .. } => {
+                serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer")
+            }
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 16, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 17, "VerifyMnemonic"),
-            MessageType::StoreMnemonic {
-                signer_type: _,
-                mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
+            MessageType::StoreMnemonic { .. } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
             MessageType::IsLatestAddressUnused => {
                 serializer.serialize_unit_variant("MessageType", 19, "IsLatestAddressUnused")
             }
@@ -405,55 +383,32 @@ impl Serialize for MessageType {
             MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
             #[cfg(feature = "stronghold")]
-            MessageType::ChangeStrongholdPassword {
-                current_password: _,
-                new_password: _,
-            } => serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword"),
+            MessageType::ChangeStrongholdPassword { .. } => {
+                serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword")
+            }
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
-            MessageType::GetMigrationData {
-                nodes: _,
-                permanode: _,
-                seed: _,
-                initial_address_index: _,
-                security_level: _,
-            } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
-            MessageType::CreateMigrationBundle {
-                seed: _,
-                input_address_indexes: _,
-                mine: _,
-                timeout_secs: _,
-                offset: _,
-                log_file_name: _,
-            } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
-            MessageType::SendMigrationBundle {
-                nodes: _,
-                bundle_hash: _,
-                mwm: _,
-            } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
+            MessageType::GetMigrationData { .. } => {
+                serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData")
+            }
+            MessageType::CreateMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
+            }
+            MessageType::SendMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle")
+            }
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
             MessageType::GetMigrationAddress(_) => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
-            MessageType::MineBundle {
-                prepared_bundle: _,
-                spent_bundle_hashes: _,
-                security_level: _,
-                timeout: _,
-                offset: _,
-            } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
-            MessageType::GetLedgerMigrationData {
-                nodes: _,
-                permanode: _,
-                addresses: _,
-                security_level: _,
-            } => serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData"),
-            MessageType::SendLedgerMigrationBundle {
-                nodes: _,
-                bundle: _,
-                mwm: _,
-            } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
+            MessageType::MineBundle { .. } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
+            MessageType::GetLedgerMigrationData { .. } => {
+                serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData")
+            }
+            MessageType::SendLedgerMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle")
+            }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             MessageType::GetLedgerOpenedApp(_) => {
                 serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
@@ -461,10 +416,9 @@ impl Serialize for MessageType {
             MessageType::GetLegacyAddressChecksum(_) => {
                 serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
             }
-            MessageType::StartBackgroundSync {
-                polling_interval: _,
-                automatic_output_consolidation: _,
-            } => serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync"),
+            MessageType::StartBackgroundSync { .. } => {
+                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+            }
             MessageType::StopBackgroundSync => {
                 serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
             }
