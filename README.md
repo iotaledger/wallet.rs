@@ -7,6 +7,9 @@
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
 It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. It uses RocksDB as a database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/dev/specs/wallet-ENGINEERING-SPEC-0000.md).
 
+## Documentation
+
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/docs/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
 
 ## Prerequisites
 
