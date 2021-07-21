@@ -432,7 +432,7 @@ The `Transfer` object used in [SyncedAccount](#syncedaccount)
 | Param                    | Type                                   | Default                | Description                                 |
 | ------------------------ | -------------------------------------- | ---------------------- | ------------------------------------------- |
 | amount                   | <code>int</code>                       | <code>undefined</code> | The amount to transfer                      |
-| address                  | <code>str</code>                       | <code>undefined</code> | The addree to send                          |
+| address                  | <code>str</code>                       | <code>undefined</code> | The address to send                         |
 | indexation               | <code>[Indexation](#indexation)</code> | <code>undefined</code> | The indexation payload                      |
 | remainder_value_strategy | <code>str</code>                       | <code>undefined</code> | Should be `ReuseAddress` or `ChangeAddress` |
 
@@ -558,9 +558,9 @@ Consolidates the account addresses outputs.
 
 #### generate_addresses(amount): list[[Address](#address)]
 
-| Param  | Type             | Default                | Description                        |
-| ------ | ---------------- | ---------------------- | ---------------------------------- |
-| amount | <code>int</code> | <code>undefined</code> | The amount of addresses to generate|
+| Param  | Type             | Default                | Description                         |
+| ------ | ---------------- | ---------------------- | ----------------------------------- |
+| amount | <code>int</code> | <code>undefined</code> | The amount of addresses to generate |
 
 **Returns** list with amount of new unused addresses and links them to this account.
 
