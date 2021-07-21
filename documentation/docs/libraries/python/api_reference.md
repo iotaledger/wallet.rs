@@ -352,18 +352,18 @@ Syncs the accounts with the tangle.
 
 ## Transfer
 
-### constructor(amount, address, indexation (optional), remainder_value_strategy: str, skip_sync (optional), output_kind (optional)): [Transfer](#transfer)
+### constructor(amount, address, indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional), output_kind (optional)): [Transfer](#transfer)
 
 The _Transfer_ object used in [SyncedAccount](#syncedaccount)
 
-| Param                    | Type                        | Default     | Description                                                         |
-| ------------------------ | --------------------------- | ----------- | ------------------------------------------------------------------- |
-| amount                   | `int`                       | `undefined` | The amount to transfer                                              |
-| address                  | `str`                       | `undefined` | The address to send                                                 |
-| indexation               | `[Indexation](#indexation)` | `undefined` | The indexation payload                                              |
-| remainder_value_strategy | `str`                       | `undefined` | Should be _ReuseAddress_ or _ChangeAddress_                         |
-| skip_sync                | `boll`                      | `False`     | Whether to skip the sync process                                    |
-| output_kind              | `str`                       | `undefined` | Should be _SignatureLockedSingle_ or _SignatureLockedDustAllowance_ |
+| Param                    | Type                        | Default           | Description                                                         |
+| ------------------------ | --------------------------- | ----------------- | ------------------------------------------------------------------- |
+| amount                   | `int`                       | `undefined`       | The amount to transfer                                              |
+| address                  | `str`                       | `undefined`       | The address to send                                                 |
+| indexation               | `[Indexation](#indexation)` | `null`            | The indexation payload                                              |
+| remainder_value_strategy | `str`                       | `_ChangeAddress_` | Should be _ReuseAddress_ or _ChangeAddress_                         |
+| skip_sync                | `bool`                      | `False`           | Whether to skip the sync process                                    |
+| output_kind              | `str`                       | `null`            | Should be _SignatureLockedSingle_ or _SignatureLockedDustAllowance_ |
 
 ## SyncedAccount
 
