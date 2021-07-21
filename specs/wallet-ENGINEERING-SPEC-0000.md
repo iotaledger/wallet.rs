@@ -545,6 +545,8 @@ Note: Currently, it is not possible to send multiple payloads as part of the mes
     <td>&#10004;</td>
     <td>number</td>
     <td>Transfer amount.</td>
+    <td>OutputKind</td>
+    <td>Type of output.</td>
   </tr>
   <tr>
     <td>address</td>

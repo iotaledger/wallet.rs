@@ -318,6 +318,17 @@ pub enum MessageType {
     },
     /// Get the checksum for a legacy address.
     GetLegacyAddressChecksum(String),
+    /// Start background syncing.
+    StartBackgroundSync {
+        /// Polling interval, time between each syncing operation
+        #[serde(rename = "pollingInterval")]
+        polling_interval: Duration,
+        /// If outputs should get automatically consolidated
+        #[serde(rename = "automaticOutputConsolidation")]
+        automatic_output_consolidation: bool,
+    },
+    /// Stop background syncing.
+    StopBackgroundSync,
 }
 
 impl Serialize for MessageType {
@@ -441,6 +452,13 @@ impl Serialize for MessageType {
             } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
             MessageType::GetLegacyAddressChecksum(_) => {
                 serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
+            }
+            MessageType::StartBackgroundSync {
+                polling_interval: _,
+                automatic_output_consolidation: _,
+            } => serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync"),
+            MessageType::StopBackgroundSync => {
+                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
             }
         }
     }
@@ -633,6 +651,8 @@ pub enum ResponseType {
     MineBundle(MinedBundle),
     /// GetLegacyAddressChecksum response.
     GetLegacyAddressChecksum(String),
+    /// All went fine.
+    Ok(()),
 }
 
 /// The message type.
