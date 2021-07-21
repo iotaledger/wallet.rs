@@ -882,6 +882,7 @@ client_options = {
     'primary_pow_node': [Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
+    'mqtt_enabled': bool (optional),
     'mqtt_broker_options': [BrokerOptions](#brokeroptions) (optional),
     'local_pow': bool (optional),
     'node_sync_interval': int (optional), # in milliseconds
