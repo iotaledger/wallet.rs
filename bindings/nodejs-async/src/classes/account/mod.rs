@@ -87,13 +87,13 @@ impl Finalize for AccountWrapper {}
 // }
 impl AccountWrapper {
     pub fn new(queue: EventQueue, account_id: String) -> Arc<Self> {
-        Arc::new(Self { queue, account_id })
+        Arc::new(Self { account_id, queue })
     }
 }
 
 pub fn account_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountWrapper>>> {
     let account_id = cx.argument::<JsString>(0)?;
-    let account_id = account_id.value(&mut cx).to_string();
+    let account_id = account_id.value(&mut cx);
     let queue = cx.queue();
     let account_wrapper = AccountWrapper::new(queue, account_id);
 
@@ -154,14 +154,14 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
 
     let url: Option<String> = match cx.argument_opt(0) {
         Some(arg) => match arg.downcast::<JsString, FunctionContext>(&mut cx) {
-            Ok(type_) => Some(type_.value(&mut cx).to_string()),
+            Ok(url) => Some(url.value(&mut cx)),
             _ => None,
         },
         None => None,
     };
 
     let (jwt, auth) = match cx.argument_opt(1) {
-        Some(arg) => match cx.argument::<JsString>(1) {
+        Some(arg) => match arg.downcast::<JsString, FunctionContext>(&mut cx) {
             Ok(options) => match serde_json::from_str::<NodeInfoOptions>(options.value(&mut cx).as_str()) {
                 Ok(options) => {
                     let name_password = if options.name.is_some() && options.password.is_some() {

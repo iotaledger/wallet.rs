@@ -9,8 +9,10 @@ async function run() {
   });
   try {
     manager.setStrongholdPassword("A12345678*");
-
-    let account = manager.getAccount("Alice")
+    let account;
+    try {
+      account = manager.getAccount("Alice")
+    } catch (e) { }
     // Create account only if it does not already exist
     if (!account) {
       manager.storeMnemonic(1);
@@ -24,6 +26,8 @@ async function run() {
     console.log("synced", a);
 
     console.log("nodeinfo", await account.getNodeInfo("https://chrysalis-nodes.iota.org", { name: "name", password: "password" }));
+    console.log("nodeinfo", await account.getNodeInfo("https://chrysalis-nodes.iota.org"));
+    console.log("nodeinfo", await account.getNodeInfo());
   } catch (error) {
     console.log("Error: " + error)
   }

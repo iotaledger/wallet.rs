@@ -94,11 +94,7 @@ impl MessageHandler {
                 self.message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
                 if let Some(res) = response {
-                    let mut is_err = match &res.response() {
-                        ResponseType::Error(_) => true,
-                        ResponseType::Panic(_) => true,
-                        _ => false,
-                    };
+                    let mut is_err = matches!(res.response(), ResponseType::Error(_) | ResponseType::Panic(_));
 
                     let msg = match serde_json::to_string(&res) {
                         Ok(msg) => msg,
@@ -128,7 +124,7 @@ impl MessageHandler {
 
 pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<MessageHandler>>> {
     let options = cx.argument::<JsString>(0)?;
-    let options = options.value(&mut cx).to_string();
+    let options = options.value(&mut cx);
     let queue = cx.queue();
     let message_handler = MessageHandler::new(queue, options);
 
@@ -154,7 +150,7 @@ pub fn send_message(mut cx: FunctionContext) -> JsResult<JsUndefined> {
                 } else {
                     cx.undefined().upcast::<JsValue>()
                 },
-                cx.string(response.clone()).upcast::<JsValue>(),
+                cx.string(response).upcast::<JsValue>(),
             ];
 
             cb.call(&mut cx, this, args)?;

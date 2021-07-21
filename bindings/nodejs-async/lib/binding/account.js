@@ -54,13 +54,7 @@ class Account {
     }
 
     async getNodeInfo(url, auth) {
-        if (url == undefined && auth === undefined) {
-            return await getNodeInfo(this.account);
-        } else if (auth == undefined) {
-            return await getNodeInfo(url, this.account);
-        } else {
-            return await getNodeInfo(url, JSON.stringify(auth), this.account);
-        }
+        return await getNodeInfo.apply(this, [url, JSON.stringify(auth), this.account].filter(e => e != undefined))
     }
 
     id() {
