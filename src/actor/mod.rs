@@ -4,6 +4,7 @@
 pub use crate::{
     account::AccountIdentifier,
     account_manager::{AccountManager, MigrationDataFinder},
+    iota_migration::{client::migration::add_tryte_checksum, transaction::bundled::Address as LegacyAddress},
     message::{Message as WalletMessage, Transfer},
     Result,
 };
@@ -388,6 +389,16 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetLegacyAddressChecksum(address) => convert_panics(|| {
+                let address = LegacyAddress::from_inner_unchecked(
+                    TryteBuf::try_from_str(address)
+                        .map_err(|_| crate::Error::InvalidAddress)?
+                        .as_trits()
+                        .encode(),
+                );
+                let address_with_checksum = add_tryte_checksum(address)?;
+                Ok(ResponseType::GetLegacyAddressChecksum(address_with_checksum))
+            }),
         };
 
         let response = match response {
@@ -739,6 +750,31 @@ mod tests {
                 }
             },
         )
+        .await;
+    }
+
+    #[tokio::test]
+    async fn legacy_address_checksum() {
+        crate::test_utils::with_account_manager(crate::test_utils::TestType::Signing, |manager, _| async move {
+            let tx = spawn_actor(manager);
+            let response = send_message(
+                &tx,
+                MessageType::GetLegacyAddressChecksum(
+                    "I9HZLJSWABQNFGUZQUETRIUAERKZZXSPGRWXZWPMQDWLIMHSNCMDKIOEVQBKTDBCDNYDOHAYOVBYJYEEY".to_string(),
+                ),
+            )
+            .await;
+            match response.response() {
+                ResponseType::GetLegacyAddressChecksum(address) => {
+                    assert_eq!(
+                        address,
+                        &"I9HZLJSWABQNFGUZQUETRIUAERKZZXSPGRWXZWPMQDWLIMHSNCMDKIOEVQBKTDBCDNYDOHAYOVBYJYEEYPDKGK9VPZ"
+                            .to_string()
+                    );
+                }
+                _ => panic!("unexpected response {:?}", response),
+            }
+        })
         .await;
     }
 }

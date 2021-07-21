@@ -96,12 +96,12 @@ impl From<AccountHandleRust> for Account {
 }
 
 impl Account {
-    pub fn consolidate_outputs(&self) -> Result<Vec<Message>> {
+    pub fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>> {
         let msgs_res = tokio::runtime::Builder::new_current_thread()
             .enable_all()
             .build()
             .unwrap()
-            .block_on(async move { self.handle.consolidate_outputs().await });
+            .block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
