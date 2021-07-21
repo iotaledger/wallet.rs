@@ -149,30 +149,30 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
-    //todo fix optional url and auth
     let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 1)?);
     let id = account_wrapper.account_id.clone();
 
     let url: Option<String> = match cx.argument_opt(0) {
         Some(arg) => match arg.downcast::<JsString, FunctionContext>(&mut cx) {
-            // Ok(type_) => Some(type_.value(&mut cx).to_string()),
-            Ok(type_) => Some(serde_json::from_str(type_.value(&mut cx).as_str()).unwrap()),
+            Ok(type_) => Some(type_.value(&mut cx).to_string()),
             _ => None,
         },
         None => None,
     };
 
     let (jwt, auth) = match cx.argument_opt(1) {
-        Some(arg) => match cx.argument::<JsString>(0) {
-            Ok(options) => {
-                let options = serde_json::from_str::<NodeInfoOptions>(options.value(&mut cx).as_str()).unwrap();
-                let name_password = if options.name.is_some() && options.password.is_some() {
-                    Some((options.name.unwrap(), options.password.unwrap()))
-                } else {
-                    None
-                };
-                (options.jwt, name_password)
-            }
+        Some(arg) => match cx.argument::<JsString>(1) {
+            Ok(options) => match serde_json::from_str::<NodeInfoOptions>(options.value(&mut cx).as_str()) {
+                Ok(options) => {
+                    let name_password = if options.name.is_some() && options.password.is_some() {
+                        Some((options.name.unwrap(), options.password.unwrap()))
+                    } else {
+                        None
+                    };
+                    (options.jwt, name_password)
+                }
+                Err(_) => (None, None),
+            },
             _ => (None, None),
         },
         None => (None, None),
