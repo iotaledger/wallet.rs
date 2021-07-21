@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["AccountInitialiseRequiredField","Each of the account initialisation required fields."],["AddressBuildRequiredField","Each of the address builder required fields."],["Error","The wallet error type."]]});
