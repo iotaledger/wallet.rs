@@ -55,7 +55,7 @@ class Account {
     }
 
     async getNodeInfo(url, auth) {
-        return await getNodeInfoAsync.apply(this, [url, JSON.stringify(auth), this.account].filter(e => e != undefined))
+        return await getNodeInfoAsync.apply(this.account, [url, JSON.stringify(auth)].filter(e => e != undefined))
     }
 
     id() {
@@ -79,8 +79,5 @@ class Account {
     }
 
 };
-
-module.exports.Account = Account;
-
 
 module.exports.Account = Account;

@@ -149,10 +149,10 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 2)?);
+    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    // let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 2)?);
     let callback = cx.argument::<JsFunction>(cx.len() - 1)?.root(&mut cx);
     let id = account_wrapper.account_id.clone();
-
     let url: Option<String> = match cx.argument_opt(0) {
         Some(arg) => match arg.downcast::<JsString, FunctionContext>(&mut cx) {
             Ok(url) => Some(url.value(&mut cx)),
