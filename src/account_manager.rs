@@ -790,10 +790,7 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        // safe to unwrap because the storage is always defined at this point
-        crate::storage::set_encryption_key(&self.storage_path, key)
-            .await
-            .unwrap();
+        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
             Self::load_accounts(
