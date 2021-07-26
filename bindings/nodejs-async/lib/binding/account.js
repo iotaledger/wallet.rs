@@ -38,6 +38,7 @@ let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id } = a
 
 const syncAsync = utils.promisify(sync);
 const sendAsync = utils.promisify(send);
+const getNodeInfoAsync = utils.promisify(getNodeInfo);
 
 class Account {
     constructor(account) {
@@ -54,7 +55,7 @@ class Account {
     }
 
     async getNodeInfo(url, auth) {
-        return await getNodeInfo.apply(this, [url, JSON.stringify(auth), this.account].filter(e => e != undefined))
+        return await getNodeInfoAsync.apply(this, [url, JSON.stringify(auth), this.account].filter(e => e != undefined))
     }
 
     id() {

@@ -148,8 +148,9 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string(balance))
 }
 
-pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 1)?);
+pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 2)?);
+    let callback = cx.argument::<JsFunction>(cx.len() - 1)?.root(&mut cx);
     let id = account_wrapper.account_id.clone();
 
     let url: Option<String> = match cx.argument_opt(0) {
@@ -178,7 +179,6 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
         None => (None, None),
     };
 
-    let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(&id).await;
         let account = account_handle.read().await;
@@ -192,10 +192,23 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsString> {
                 .await
                 .expect("failed to get nodeinfo"),
         };
-        let _ = sender.send(node_info);
+
+        account_wrapper.queue.send(move |mut cx| {
+            let cb = callback.into_inner(&mut cx);
+            let this = cx.undefined();
+
+            let args = vec![
+                cx.undefined().upcast::<JsValue>(),
+                cx.string(serde_json::to_string(&node_info).unwrap()).upcast::<JsValue>()
+            ];
+
+            cb.call(&mut cx, this, args)?;
+
+            Ok(())
+        });
     });
-    let info = serde_json::to_string(&receiver.recv().unwrap()).unwrap();
-    Ok(cx.string(info))
+
+    Ok(cx.undefined())
 }
 
 pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
