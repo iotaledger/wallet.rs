@@ -51,6 +51,8 @@ pub struct MigrationData {
     pub last_checked_address_index: u64,
     /// Migration inputs.
     pub inputs: Vec<InputData>,
+    /// If any of the inputs are spent
+    pub spent_addresses: bool,
 }
 
 #[derive(Debug, Clone)]
