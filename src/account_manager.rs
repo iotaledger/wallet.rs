@@ -667,6 +667,11 @@ impl AccountManager {
             .clone();
         let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
 
+        let bech32_hrp = match self.get_account(0).await {
+            Ok(account_handle) => account_handle.read().await.bech32_hrp(),
+            Err(_) => "iota".to_string(),
+        };
+
         Ok(MigratedBundle {
             tail_transaction_hash: tail_transaction_hash
                 .to_inner()
@@ -677,7 +682,7 @@ impl AccountManager {
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
                 Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
-                "iota".to_string(),
+                bech32_hrp,
             ),
         })
     }
