@@ -29,54 +29,48 @@ class AccountManager {
         console.log(this.accountManager);
     }
     getAccount(accountId) {
-        let inner_account = getAccount(accountId, this.accountManager);
+        let inner_account = getAccount.apply(this.accountManager, [accountId]);
         return new Account(inner_account);
     }
 
     getAccounts() {
-        let inner_accounts = getAccounts(this.accountManager);
-        let result = [];
-        for (acc in inner_accounts) {
-            result.push(new Account(acc));
-        }
-        return result;
+        let inner_accounts = getAccounts.apply(this.accountManager);
+        return inner_accounts.map(a => new Account(a));
     }
 
     createAccount(account) {
-        let acc = createAccount(JSON.stringify(account), this.accountManager);
+        let acc = createAccount.apply(this.accountManager, [JSON.stringify(account)]);
         // console.log(acc);
         return new Account(acc);
     }
 
     setStrongholdPassword(password) {
-        return setStrongholdPassword(password, this.accountManager);
+        return setStrongholdPassword.apply(this.accountManager, [password]);
     }
 
     storeMnemonic(signerType, mnemonic) {
         console.log(signerType, mnemonic);
-        if (mnemonic == undefined) {
-            return storeMnemonic(signerType, this.accountManager);
-        }
-        return storeMnemonic(signerType, mnemonic, this.accountManager);
+
+        return storeMnemonic.apply(this.accountManager, [signerType, mnemonic].filter(e => e != undefined));
     }
 
     backup(destination, password) {
-        return backup(destination, password, this.accountManager);
+        return backup.apply(this.accountManager, [destination, password]);
     }
 
     importAccounts(backupPath, password) {
-        return importAccounts(backupPath, password, this.accountManager);
+        return importAccounts.apply(this.accountManager, [backupPath, password]);
     }
     setStoragePassword(password) {
-        return setStoragePassword(password, this.accountManager);
+        return setStoragePassword.apply(this.accountManager, [password]);
     }
 
     changeStrongholdPassword(currentPassword, oldPassword) {
-        return changeStrongholdPassword(currentPassword, oldPassword, this.accountManager);
+        return changeStrongholdPassword.apply(this.accountManager, [currentPassword, oldPassword]);
     }
 
     generateMnemonic() {
-        return generateMnemonic(this.accountManager);
+        return generateMnemonic.apply(this.accountManager);
     }
 };
 

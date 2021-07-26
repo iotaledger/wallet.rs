@@ -47,11 +47,7 @@ class Account {
         this.account = account;
     }
     async sync(options) {
-        if (options == undefined) {
-            return await syncAsync(this.account);
-        }
-
-        return await syncAsync(JSON.stringify(options), this.account).then(id => new SyncedAccount(id));
+        return await syncAsync.apply(this.account, [JSON.stringify(options)].filter(e => e != undefined)).then(id => new SyncedAccount(id));
     }
 
     async getNodeInfo(url, auth) {
@@ -59,23 +55,23 @@ class Account {
     }
 
     id() {
-        return id(this.account);
+        return id.apply(this.account);
     }
 
     generateAddress() {
-        return generateAddress(this.account);
+        return generateAddress.apply(this.account);
     }
 
     latestAddress() {
-        return latestAddress();
+        return latestAddress.apply(this.account);
     }
 
     balance() {
-        return balance();
+        return balance.apply(this.account);
     }
 
     async send(transfer) {
-        return await sendAsync(JSON.stringify(transfer), this.account);
+        return await sendAsync.apply(this.account, [JSON.stringify(transfer)].filter(e => e != undefined));
     }
 
 };

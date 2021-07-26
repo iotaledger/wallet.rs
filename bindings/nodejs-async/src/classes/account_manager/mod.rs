@@ -227,9 +227,9 @@ pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<Accoun
 }
 
 pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let polling_interval = cx.argument::<JsNumber>(0)?.value(&mut cx) as u64;
     let automatic_output_consolidation = cx.argument::<JsBoolean>(1)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
@@ -245,7 +245,7 @@ pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(0)?);
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
 
     wrapper.account_manager.stop_background_sync();
 
@@ -253,8 +253,8 @@ pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     crate::RUNTIME.spawn(async move { wrapper.account_manager.set_storage_password(password).await });
 
@@ -262,8 +262,8 @@ pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
@@ -275,9 +275,9 @@ pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined>
 }
 
 pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let current_password = cx.argument::<JsString>(0)?.value(&mut cx);
     let new_password = cx.argument::<JsString>(1)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     crate::RUNTIME.spawn(async move {
         wrapper
@@ -290,7 +290,7 @@ pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefin
 }
 
 pub fn generate_mnemonic(mut cx: FunctionContext) -> JsResult<JsString> {
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let mnemonic = wrapper
         .account_manager
         .generate_mnemonic()
@@ -300,18 +300,16 @@ pub fn generate_mnemonic(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let signer_type = cx.argument::<JsNumber>(0)?.value(&mut cx) as usize;
     let signer_type: AccountSignerType = serde_json::from_str(&signer_type.to_string()).expect("invalid signer type");
     let signer_type = match signer_type {
         AccountSignerType::Stronghold => SignerType::Stronghold,
     };
 
-    let (mnemonic, wrapper) = match cx.argument_opt(2) {
-        Some(_) => (
-            Some(cx.argument::<JsString>(1)?.value(&mut cx)),
-            Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?),
-        ),
-        None => (None, Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?)),
+    let mnemonic = match cx.argument_opt(1) {
+        Some(_) => Some(cx.argument::<JsString>(1)?.value(&mut cx)),
+        None => None,
     };
 
     crate::RUNTIME.spawn(async move {
@@ -322,10 +320,10 @@ pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account::AccountWrapper>>> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let account_to_create = cx.argument::<JsString>(0)?;
     let account_to_create = account_to_create.value(&mut cx);
     let account_to_create = serde_json::from_str::<AccountToCreate>(&account_to_create).unwrap();
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     // log::debug!(&account_to_create);
 
@@ -372,9 +370,9 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
 }
 
 pub fn get_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account::AccountWrapper>>> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let id = cx.argument::<JsValue>(0)?;
     let id = js_value_to_account_id(&mut cx, id)?;
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
@@ -403,7 +401,7 @@ pub fn get_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account
 }
 
 pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(1)?);
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let accounts = wrapper.account_manager.get_accounts().await.unwrap();
@@ -491,9 +489,9 @@ pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
 // }
 
 pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let backup_path = cx.argument::<JsString>(0)?.value(&mut cx);
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
@@ -513,9 +511,9 @@ pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let source = cx.argument::<JsString>(0)?.value(&mut cx);
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
-    let wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountManagerWrapper>>>(2)?);
 
     crate::RUNTIME.spawn(async move {
         let _ = wrapper.account_manager.import_accounts(source, password).await;
