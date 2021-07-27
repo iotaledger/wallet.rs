@@ -478,8 +478,12 @@ impl AccountManager {
     }
 
     /// Convert the first address from the first account to a migration tryte address
-    pub async fn get_migration_address(&self, ledger_prompt: bool) -> crate::Result<MigrationAddress> {
-        let account_handle = self.get_account(0).await?;
+    pub async fn get_migration_address<I: Into<AccountIdentifier>>(
+        &self,
+        ledger_prompt: bool,
+        account_id: I,
+    ) -> crate::Result<MigrationAddress> {
+        let account_handle = self.get_account(account_id).await?;
         let account = account_handle.read().await;
         let deposit_address = if ledger_prompt {
             crate::address::get_address_with_index(
