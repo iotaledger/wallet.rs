@@ -1,6 +1,6 @@
 # Examples
 
-This section will guide you through several examples using the node.js binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples).
+This section will guide you through several examples using the node.js binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/nodejs/examples).
 
 All the examples in this section expect you to set your custom password  in the _.env_ file:
 
@@ -38,11 +38,11 @@ One of the key principles behind `Stronghold` based storage is that no one can e
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. You can use this method to generate a random seed.  You can also use it before the actual account initialization.
 
-You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
+You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#seed).
 
 ### Accounts
 
-The `wallet.rs` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically.  You can find more information about account management in the  [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/exchange_guide.html#how-do-i-implement-it-to-my-exchange).
+The `wallet.rs` library uses a model of individual accounts to separate individual users/clients from each other. It is possible to generate multiple addresses for each account deterministically.  You can find more information about account management in the  [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/exchange_guide#how-do-i-implement-it-to-my-exchange).
 
 Once the backend storage has been created, individual accounts for individual users can be created by running the `manager.createAccount()` method:
 
@@ -112,7 +112,7 @@ You can use the following example to generate a new database and account:
 {@include: ../../../../bindings/nodejs/examples/3-check_balance.js}
 ```
 
-IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
+IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
 
 ## Sending tokens
 You can use the following example to send tokens using an  Account  instance to any desired  address:
@@ -130,7 +130,7 @@ The `Account.send()` function returns a _wallet message_ that fully describes th
 
 ### Dust Protection
 
-The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
+The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
 Micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
