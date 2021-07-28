@@ -149,6 +149,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
     cx.export_function("getAccount", classes::account_manager::get_account)?;
     cx.export_function("getAccounts", classes::account_manager::get_accounts)?;
+    cx.export_function("removeAccount", classes::account_manager::remove_account)?;
+    cx.export_function("syncAccounts", classes::account_manager::sync_accounts)?;
     cx.export_function("createAccount", classes::account_manager::create_account)?;
     cx.export_function(
         "setStrongholdPassword",

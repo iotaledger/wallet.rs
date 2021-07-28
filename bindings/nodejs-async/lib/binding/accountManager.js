@@ -4,6 +4,7 @@
 const addon = require('../../index.node');
 const utils = require('../utils.js');
 const acc = require('./account.js');
+const { SyncedAccount } = require('./synced_account.js')
 
 let {
     accountManagerNew,
@@ -17,9 +18,13 @@ let {
     setStoragePassword,
     changeStrongholdPassword,
     generateMnemonic,
-    id
+    removeAccount,
+    syncAccounts
 } = addon;
+
 let { Account } = acc;
+
+const syncAccountsAsync = utils.promisify(syncAccounts);
 class AccountManager {
     constructor(options) {
         console.log("AccountManager constructor called.");
@@ -36,6 +41,13 @@ class AccountManager {
     getAccounts() {
         let inner_accounts = getAccounts.apply(this.accountManager);
         return inner_accounts.map(a => new Account(a));
+    }
+
+    removeAccount(id) {
+        return removeAccount.apply(this.accountManager, [id]);
+    }
+    syncAccounts() {
+        return await syncAccountsAsync.apply(this.accountManager).then(id => new SyncedAccount(id));
     }
 
     createAccount(account) {

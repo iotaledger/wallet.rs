@@ -278,14 +278,16 @@ pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefin
     let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
     let current_password = cx.argument::<JsString>(0)?.value(&mut cx);
     let new_password = cx.argument::<JsString>(1)?.value(&mut cx);
+    let (sender, receiver) = channel();
 
     crate::RUNTIME.spawn(async move {
-        wrapper
+        let result = wrapper
             .account_manager
             .change_stronghold_password(current_password, new_password)
-            .await
+            .await;
+        let _ = sender.send(result);
     });
-
+    let _ = receiver.recv().unwrap();
     Ok(cx.undefined())
 }
 
@@ -424,40 +426,88 @@ pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(js_array)
 }
 
-// fn removeAccount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let id = cx.argument::<JsValue>(0)?;
-//     let id = js_value_to_account_id(&mut cx, id)?;
-//     {
-//         let this = cx.this();
-//         let guard = cx.lock();
-//         let ref_ = &this.borrow(&guard).0;
-//         crate::block_on(async move {
-//             let manager = ref_.read().await;
-//             manager.remove_account(id).await
-//         }).expect("error removing account")
-//     };
-//     Ok(cx.undefined().upcast())
-// }
+pub fn remove_account(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let id = cx.argument::<JsValue>(0)?;
+    let id = js_value_to_account_id(&mut cx, id)?;
+    let (sender, receiver) = channel();
+        crate::RUNTIME.spawn(async move {
+            let result = wrapper.account_manager.remove_account(id).await;
+            let _ = sender.send(result);
+        });
 
-// fn syncAccounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let (options, cb) = match cx.argument_opt(1) {
-//         Some(arg) => {
-//             let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
-//             let options = cx.argument::<JsValue>(0)?;
-//             let options = neon_serde::from_value(&mut cx, options)?;
-//             (options, cb)
-//         }
-//         None => (Default::default(), cx.argument::<JsFunction>(0)?),
-//     };
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = sync::SyncTask {
-//         manager,
-//         options,
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
+    let _ = receiver.recv().unwrap();
+    Ok(cx.undefined())
+}
+
+pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let (options, cb) = match cx.argument_opt(1) {
+        Some(arg) => {
+            let cb = arg.downcast::<JsFunction, FunctionContext>(&mut cx).or_throw(&mut cx)?;
+            let options = cx.argument::<JsString>(0)?.value(&mut cx);
+            let options = serde_json::from_str::<crate::account::SyncOptions>(&options).unwrap();
+            (options, cb.root(&mut cx))
+        }
+        None => (Default::default(), cx.argument::<JsFunction>(0)?.root(&mut cx)),
+    };
+
+    crate::RUNTIME.spawn(async move {
+        let mut synchronizer = wrapper.account_manager.sync_accounts().unwrap();
+        if let Some(address_index) = options.address_index {
+            synchronizer = synchronizer.address_index(address_index);
+        }
+        if let Some(gap_limit) = options.gap_limit {
+            synchronizer = synchronizer.gap_limit(gap_limit);
+        }
+
+        let result = match synchronizer.execute().await {
+            Ok(synced_accounts) => {
+                let mut ids = vec![];
+                for synced_account in synced_accounts {
+                    let id = crate::store_synced_account(synced_account).await;
+                    ids.push(id);
+                }
+
+                Ok(ids)
+            },
+            Err(e) => Err(e.to_string()),
+        };
+
+        wrapper.queue.send(move |mut cx| {
+
+            let cb = cb.into_inner(&mut cx);
+            let this = cx.undefined();
+            let args = match result {
+                Ok(ids) => {
+
+                    let js_array = JsArray::new(&mut cx, ids.len() as u32);
+                    for (index, id) in ids.iter().enumerate() {
+                        let id = cx.string(id);
+                        js_array.set(&mut cx, index as u32, id).unwrap();
+                    }
+
+                    vec![
+                        cx.undefined().upcast::<JsValue>(),
+                        js_array.as_value(&mut cx)
+                    ]
+                },
+                Err(e) => {
+                    vec![
+                        cx.string(e).as_value(&mut cx),
+                        cx.undefined().upcast::<JsValue>(),
+                    ]
+                }
+            };
+
+            cb.call(&mut cx, this, args)?;
+
+            Ok(())
+        });
+    });
+
+    Ok(cx.undefined())
+}
 
 // fn internalTransfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     let from_account = cx.argument::<JsAccount>(0)?;
@@ -682,13 +732,17 @@ pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     Ok(cx.undefined().upcast())
 // }
 
-// fn generateMigrationAddress(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
-//     crate::block_on(async move {
-//         let address = Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
-//         let Address::Ed25519(ed25519_address) = address;
-//         let migration_address = encode_migration_address(ed25519_address).unwrap();
-//         let migration_address = add_tryte_checksum(migration_address).unwrap();
-//         Ok(neon_serde::to_value(&mut cx, &migration_address)?)
-//     })
-// }
+pub fn generate_migration_address(mut cx: FunctionContext) -> JsResult<JsString> {
+    let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value(&mut cx)).expect("invalid address");
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let address = Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
+        let Address::Ed25519(ed25519_address) = address;
+        let migration_address = encode_migration_address(ed25519_address).unwrap();
+        let migration_address = add_tryte_checksum(migration_address).unwrap();
+        let _ = sender.send(migration_address);
+    });
+
+    let result = receiver.recv().unwrap();
+    Ok(cx.string(result))
+}

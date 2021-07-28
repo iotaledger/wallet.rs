@@ -38,9 +38,9 @@ struct TransferOptions {
 #[derive(Deserialize, Default)]
 pub struct SyncOptions {
     #[serde(rename = "addressIndex")]
-    address_index: Option<usize>,
+    pub address_index: Option<usize>,
     #[serde(rename = "gapLimit")]
-    gap_limit: Option<usize>,
+    pub gap_limit: Option<usize>,
 }
 
 #[derive(Deserialize, Default)]
