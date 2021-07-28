@@ -251,23 +251,31 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(js_array)
 }
 
-// pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let addresses = account.addresses();
+pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
+    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
 
-//         let js_array = JsArray::new(&mut cx, addresses.len() as u32);
-//         for (index, address) in addresses.iter().enumerate() {
-//             let value =  serde_json::to_string(&address)?;
-//             js_array.set(&mut cx, index as u32, value)?;
-//         }
+    let id = account_wrapper.account_id.clone();
+    let (sender, receiver) = channel();
 
-//         Ok(js_array.upcast())
-//     })
-// }
+    crate::RUNTIME.spawn(async move {
+        let account = crate::get_account(id.as_str()).await;
+        let addresses = account.addresses().await;
+        let mut result = vec![];
+        for address in addresses.iter() {
+            result.push(serde_json::to_string(address).unwrap());
+        }
+        let _ = sender.send(result);
+    });
+
+    let addresses = receiver.recv().unwrap();
+    let js_array = JsArray::new(&mut cx, addresses.len() as u32);
+    for (index, address) in addresses.iter().enumerate() {
+        let addr = cx.string(address);
+        js_array.set(&mut cx, index as u32, addr)?;
+    }
+
+    Ok(js_array)
+}
 
 // pub fn listSpentAddresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     let this = cx.this();

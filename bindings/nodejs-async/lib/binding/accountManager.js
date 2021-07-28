@@ -46,7 +46,7 @@ class AccountManager {
     removeAccount(id) {
         return removeAccount.apply(this.accountManager, [id]);
     }
-    syncAccounts() {
+    async syncAccounts() {
         return await syncAccountsAsync.apply(this.accountManager).then(id => new SyncedAccount(id));
     }
 
