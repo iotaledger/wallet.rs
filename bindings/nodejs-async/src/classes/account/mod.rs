@@ -207,39 +207,49 @@ pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
     Ok(cx.number(receiver.recv().unwrap() as f64))
 }
 
-// pub fn listMessages(mut cx: FunctionContext) -> JsResult<JsArray> {
-//     let count = match cx.argument_opt(0) {
-//         Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut cx)?.value() as usize,
-//         None => 0,
-//     };
-//     let from = match cx.argument_opt(1) {
-//         Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut cx)?.value() as usize,
-//         None => 0,
-//     };
-//     let filter = match cx.argument_opt(2) {
-//         Some(arg) => {
-//             let type_ = arg.downcast::<JsString>().or_throw(&mut cx)?;
-//             serde_json::from_str::<>(type_)?
-//         },
-//         None => None,
-//     };
+pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
+    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
 
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let messages = account.list_messages(count, from, filter).await.expect("failed to list messages");
+    let count = match cx.argument_opt(0) {
+        Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx) as usize,
+        None => 0,
+    };
+    let from = match cx.argument_opt(1) {
+        Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx) as usize,
+        None => 0,
+    };
+    let filter = match cx.argument_opt(2) {
+        Some(arg) => {
+            let type_ = arg.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?;
+            serde_json::from_str::<>(&type_.value(&mut cx)).unwrap()
+        },
+        None => None,
+    };
 
-//         let js_array = JsArray::new(&mut cx, messages.len() as u32);
-//         for (index, message) in messages.iter().enumerate() {
-//             let value =  serde_json::to_string(&message)?;
-//             js_array.set(&mut cx, index as u32, value)?;
-//         }
+    let id = account_wrapper.account_id.clone();
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(&id).await;
+        let account = account_handle.read().await;
+        let messages = account.list_messages(count, from, filter).await.expect("failed to list messages");
 
-//         Ok(js_array.upcast())
-//     })
-// }
+        let mut result = vec![];
+        for message in messages.iter() {
+            result.push(serde_json::to_string(&message).unwrap());
+        }
+
+        let _ = sender.send(result);
+    });
+
+    let messages = receiver.recv().unwrap();
+    let js_array = JsArray::new(&mut cx, messages.len() as u32);
+    for (index, message) in messages.iter().enumerate() {
+        let msg = cx.string(message);
+        js_array.set(&mut cx, index as u32, msg)?;
+    }
+
+    Ok(js_array)
+}
 
 // pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     let this = cx.this();

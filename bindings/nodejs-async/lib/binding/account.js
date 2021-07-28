@@ -5,7 +5,7 @@ const addon = require('../../index.node');
 const utils = require('../utils.js');
 const { SyncedAccount } = require('./synced_account.js');
 
-let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id } = addon;
+let { sync, getNodeInfo, generateAddress, latestAddress, balance, send, id, listMessages } = addon;
 
 
 
@@ -64,6 +64,10 @@ class Account {
 
     latestAddress() {
         return latestAddress.apply(this.account);
+    }
+
+    listMessages(count, from, messageType) {
+        return listMessages.apply(this.account, [count, from, messageType].filter(e => e != undefined));
     }
 
     balance() {
