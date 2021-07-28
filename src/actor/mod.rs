@@ -553,6 +553,9 @@ impl WalletMessageHandler {
         if let Some(signer_type) = &account.signer_type {
             builder = builder.signer_type(signer_type.clone());
         }
+        if account.allow_create_multiple_empty_accounts {
+            builder = builder.allow_create_multiple_empty_accounts();
+        }
 
         match builder.initialise().await {
             Ok(account_handle) => {
@@ -713,6 +716,7 @@ mod tests {
                     created_at: None,
                     skip_persistence: false,
                     signer_type: Some(signer_type.clone()),
+                    allow_create_multiple_empty_accounts: false,
                 };
                 #[cfg(feature = "stronghold")]
                 send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;

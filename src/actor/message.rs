@@ -35,6 +35,9 @@ pub struct AccountToCreate {
     /// The account's signer type.
     #[serde(rename = "signerType")]
     pub signer_type: Option<SignerType>,
+    /// Allow to create an account with multiple empty accounts
+    #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
+    pub allow_create_multiple_empty_accounts: bool,
 }
 
 /// Each public account method.
