@@ -20,6 +20,8 @@ use serde_repr::Deserialize_repr;
 use std::sync::mpsc::channel;
 use tokio::sync::RwLock;
 
+use super::AccountWrapper;
+
 mod create_migration_bundle;
 mod get_migration_data;
 mod internal_transfer;
@@ -509,34 +511,48 @@ pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-// fn internalTransfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let from_account = cx.argument::<JsAccount>(0)?;
-//     let to_account = cx.argument::<JsAccount>(1)?;
-//     let amount = cx.argument::<JsNumber>(2)?.value() as u64;
-//     let cb = cx.argument::<JsFunction>(3)?;
+pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let from_account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(0)?);
+    let to_account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(1)?);
+    let amount = cx.argument::<JsNumber>(2)?.value(&mut cx) as u64;
+    let cb = cx.argument::<JsFunction>(3)?.root(&mut cx);
 
-//     let from_account_id = {
-//         let guard = cx.lock();
-//         let id = from_account.borrow(&guard).0.clone();
-//         id
-//     };
-//     let to_account_id = {
-//         let guard = cx.lock();
-//         let id = to_account.borrow(&guard).0.clone();
-//         id
-//     };
+    let from_account_id = from_account_wrapper.account_id.clone();
+    let to_account_id = to_account_wrapper.account_id.clone();
 
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = internal_transfer::InternalTransferTask {
-//         manager,
-//         from_account_id,
-//         to_account_id,
-//         amount: NonZeroU64::new(amount).expect("amount can't be zero"),
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
+    crate::RUNTIME.spawn(async move {
+        let result = wrapper.account_manager
+                .internal_transfer(&from_account_id, &to_account_id, NonZeroU64::new(amount).unwrap())
+                .await;
+
+        wrapper.queue.send(move |mut cx| {
+            let cb = cb.into_inner(&mut cx);
+            let this = cx.undefined();
+            let args = match result {
+                Ok(message) => {
+                    let msg = serde_json::to_string(&message).unwrap();
+                    vec![
+                        cx.undefined().upcast::<JsValue>(),
+                        cx.string(msg).as_value(&mut cx),
+                    ]
+                },
+                Err(e) => {
+                    vec![
+                        cx.string(e.to_string()).as_value(&mut cx),
+                        cx.undefined().upcast::<JsValue>(),
+                    ]
+                }
+            };
+
+            cb.call(&mut cx, this, args)?;
+
+            Ok(())
+        });
+    });
+
+    Ok(cx.undefined())
+}
 
 pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
     let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
@@ -572,34 +588,57 @@ pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-// fn isLatestAddressUnused(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let cb = cx.argument::<JsFunction>(0)?;
+pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let cb = cx.argument::<JsFunction>(0)?.root(&mut cx);
 
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = is_latest_address_unused::IsLatestAddressUnusedTask {
-//         manager,
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
+    crate::RUNTIME.spawn(async move {
+        let result = wrapper.account_manager.is_latest_address_unused().await;
 
-// fn setClientOptions(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let client_options = cx.argument::<JsValue>(0)?;
-//     let client_options: ClientOptionsDto = neon_serde::from_value(&mut cx, client_options)?;
+        wrapper.queue.send(move |mut cx| {
+            let cb = cb.into_inner(&mut cx);
+            let this = cx.undefined();
+            let args = match result {
+                Ok(is_unused) => {
+                    vec![
+                        cx.undefined().upcast::<JsValue>(),
+                        cx.boolean(is_unused).as_value(&mut cx),
+                    ]
+                },
+                Err(e) => {
+                    vec![
+                        cx.string(e.to_string()).as_value(&mut cx),
+                        cx.undefined().upcast::<JsValue>(),
+                    ]
+                }
+            };
 
-//     {
-//         let this = cx.this();
-//         let guard = cx.lock();
-//         let ref_ = &this.borrow(&guard).0;
-//         crate::block_on(async move {
-//             let manager = ref_.read().await;
-//             manager.set_client_options(client_options.into()).await
-//         }).expect("failed to update client options");
-//     }
+            cb.call(&mut cx, this, args)?;
 
-//     Ok(cx.undefined().upcast())
-// }
+            Ok(())
+        });
+    });
+
+    Ok(cx.undefined())
+}
+
+
+
+pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let client_options = cx.argument::<JsString>(0)?.value(&mut cx);
+    let client_options = serde_json::from_str::<ClientOptionsDto>(&client_options).unwrap();
+
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let result = wrapper
+            .account_manager
+            .set_client_options(client_options.into()).await;
+        let _ = sender.send(result);
+    });
+    let _ = receiver.recv().unwrap();
+    Ok(cx.undefined())
+}
 
 // fn getBalanceChangeEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     event_getter!(cx, get_balance_change_events)
@@ -640,109 +679,3 @@ pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 // fn getBroadcastEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     event_count_getter!(cx, get_broadcast_event_count)
 // }
-
-// // migration
-// fn getMigrationData(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let js_nodes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(0)?.to_vec(&mut cx)?;
-//     let mut nodes = vec![];
-//     for js_node in js_nodes {
-//         let node: Handle<JsString> = js_node.downcast_or_throw(&mut cx)?;
-//         nodes.push(node.value());
-//     }
-//     let seed = cx.argument::<JsString>(1)?.value();
-//     let (options, cb) = match cx.argument_opt(3) {
-//         Some(arg) => {
-//             let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
-//             let options = cx.argument::<JsValue>(2)?;
-//             let options = neon_serde::from_value(&mut cx, options)?;
-//             (options, cb)
-//         }
-//         None => (get_migration_data::GetMigrationDataOptions::default(), cx.argument::<JsFunction>(2)?),
-//     };
-
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = get_migration_data::GetMigrationDataTask {
-//         manager,
-//         nodes,
-//         seed,
-//         options,
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
-
-// fn createMigrationBundle(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let seed = cx.argument::<JsString>(0)?.value();
-//     let js_input_address_indexes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(1)?.to_vec(&mut cx)?;
-//     let mut input_address_indexes = vec![];
-//     for input_address_index in js_input_address_indexes {
-//         let input_address_index: Handle<JsNumber> = input_address_index.downcast_or_throw(&mut cx)?;
-//         input_address_indexes.push(input_address_index.value() as u64);
-//     }
-//     let (options, cb) = match cx.argument_opt(3) {
-//         Some(arg) => {
-//             let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
-//             let options = cx.argument::<JsValue>(2)?;
-//             let options = neon_serde::from_value(&mut cx, options)?;
-//             (options, cb)
-//         }
-//         None => (create_migration_bundle::CreateMigrationBundleOptions::default(), cx.argument::<JsFunction>(2)?),
-//     };
-
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = create_migration_bundle::CreateMigrationBundleTask {
-//         manager,
-//         seed,
-//         input_address_indexes,
-//         options,
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
-
-// fn sendMigrationBundle(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let js_nodes: Vec<Handle<JsValue>> = cx.argument::<JsArray>(0)?.to_vec(&mut cx)?;
-//     let mut nodes = vec![];
-//     for js_node in js_nodes {
-//         let node: Handle<JsString> = js_node.downcast_or_throw(&mut cx)?;
-//         nodes.push(node.value());
-//     }
-//     let bundle_hash = cx.argument::<JsString>(1)?.value();
-//     let (options, cb) = match cx.argument_opt(3) {
-//         Some(arg) => {
-//             let cb = arg.downcast::<JsFunction>().or_throw(&mut cx)?;
-//             let options = cx.argument::<JsValue>(2)?;
-//             let options = neon_serde::from_value(&mut cx, options)?;
-//             (options, cb)
-//         }
-//         None => (send_migration_bundle::SendMigrationBundleOptions::default(), cx.argument::<JsFunction>(2)?),
-//     };
-
-//     let this = cx.this();
-//     let manager = cx.borrow(&this, |r| r.0.clone());
-//     let task = send_migration_bundle::SendMigrationBundleTask {
-//         manager,
-//         nodes,
-//         bundle_hash,
-//         options,
-//     };
-//     task.schedule(cb);
-//     Ok(cx.undefined().upcast())
-// }
-
-pub fn generate_migration_address(mut cx: FunctionContext) -> JsResult<JsString> {
-    let address_wrapper = parse_address(cx.argument::<JsString>(0)?.value(&mut cx)).expect("invalid address");
-    let (sender, receiver) = channel();
-    crate::RUNTIME.spawn(async move {
-        let address = Address::try_from_bech32(&address_wrapper.to_bech32()).unwrap();
-        let Address::Ed25519(ed25519_address) = address;
-        let migration_address = encode_migration_address(ed25519_address).unwrap();
-        let migration_address = add_tryte_checksum(migration_address).unwrap();
-        let _ = sender.send(migration_address);
-    });
-
-    let result = receiver.recv().unwrap();
-    Ok(cx.string(result))
-}

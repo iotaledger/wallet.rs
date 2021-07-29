@@ -19,12 +19,17 @@ let {
     changeStrongholdPassword,
     generateMnemonic,
     removeAccount,
-    syncAccounts
+    syncAccounts,
+    setClientOptions,
+    internalTransfer,
+    isLatestAddressUnused,
 } = addon;
 
 let { Account } = acc;
 
 const syncAccountsAsync = utils.promisify(syncAccounts);
+const syncInternalTransfer = utils.promisify(internalTransfer);
+const syncIsLatestAddressUnused = utils.promisify(isLatestAddressUnused);
 class AccountManager {
     constructor(options) {
         console.log("AccountManager constructor called.");
@@ -46,8 +51,21 @@ class AccountManager {
     removeAccount(id) {
         return removeAccount.apply(this.accountManager, [id]);
     }
+
+    setClientOptions(options) {
+        return setClientOptions.apply(this.accountManager, [options]);
+    }
+
     async syncAccounts() {
         return await syncAccountsAsync.apply(this.accountManager).then(id => new SyncedAccount(id));
+    }
+
+    async internalTransfer(fromAccount, toAccount, amount) {
+        return await syncInternalTransfer.apply(this.accountManager, [fromAccount, toAccount, amount]);
+    }
+
+    async isLatestAddressUnused() {
+        return await syncIsLatestAddressUnused.apply(this.accountManager);
     }
 
     createAccount(account) {

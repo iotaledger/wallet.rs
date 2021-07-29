@@ -146,6 +146,8 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getNodeInfo", classes::account::get_node_info)?;
     cx.export_function("listMessages", classes::account::list_messages)?;
     cx.export_function("listaAdresses", classes::account::list_addresses)?;
+    cx.export_function("setAlias", classes::account::set_alias)?;
+
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
@@ -154,6 +156,9 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("removeAccount", classes::account_manager::remove_account)?;
     cx.export_function("syncAccounts", classes::account_manager::sync_accounts)?;
     cx.export_function("createAccount", classes::account_manager::create_account)?;
+    cx.export_function("internalTransfer", classes::account_manager::internal_transfer)?;
+    cx.export_function("setClientOptions", classes::account_manager::set_client_options)?;
+    cx.export_function("isLatestAddressUnused", classes::account_manager::is_latest_address_unused)?;
     cx.export_function(
         "setStrongholdPassword",
         classes::account_manager::set_stronghold_password,

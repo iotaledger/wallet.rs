@@ -51,8 +51,8 @@ pub struct NodeInfoOptions {
 }
 
 pub struct AccountWrapper {
-    account_id: String,
-    queue: EventQueue,
+    pub account_id: String,
+    pub queue: EventQueue,
 }
 impl Finalize for AccountWrapper {}
 
@@ -253,13 +253,27 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
 
 pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
     let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let unspent = match cx.argument_opt(0) {
+        Some(arg) => Some(arg.downcast::<JsBoolean, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx)),
+        None => None,
+    };
 
     let id = account_wrapper.account_id.clone();
     let (sender, receiver) = channel();
 
     crate::RUNTIME.spawn(async move {
         let account = crate::get_account(id.as_str()).await;
-        let addresses = account.addresses().await;
+        let addresses = match unspent {
+            Some(unspent) => {
+                if unspent {
+                    account.list_unspent_addresses().await.unwrap()
+                } else {
+                    account.list_spent_addresses().await.unwrap()
+                }
+            },
+            None => account.addresses().await
+        };
+
         let mut result = vec![];
         for address in addresses.iter() {
             result.push(serde_json::to_string(address).unwrap());
@@ -277,55 +291,18 @@ pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
     Ok(js_array)
 }
 
-// pub fn listSpentAddresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let addresses = account.list_spent_addresses().await.expect("failed to list addresses");
+pub fn set_alias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let id = account_wrapper.account_id.clone();
+    let alias = cx.argument::<JsString>(0)?.value(&mut cx);
 
-//         let js_array = JsArray::new(&mut cx, addresses.len() as u32);
-//         for (index, address) in addresses.iter().enumerate() {
-//             let value =  serde_json::to_string(&address)?;
-//             js_array.set(&mut cx, index as u32, value)?;
-//         }
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(id.as_str()).await;
+        account_handle.set_alias(alias).await.expect("failed to update account alias");
+    });
 
-//         Ok(js_array.upcast())
-//     })
-// }
-
-// pub fn listUnspentAddresses(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let addresses = account.list_unspent_addresses().await.expect("failed to list addresses");
-
-//         let js_array = JsArray::new(&mut cx, addresses.len() as u32);
-//         for (index, address) in addresses.iter().enumerate() {
-//             let value =  serde_json::to_string(&address)?;
-//             js_array.set(&mut cx, index as u32, value)?;
-//         }
-
-//         Ok(js_array.upcast())
-//     })
-// }
-
-// pub fn setAlias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let alias = cx.argument::<JsString>(0)?.value();
-//     {
-//         let this = cx.this();
-//         let guard = cx.lock();
-//         let id = &this.borrow(&guard).0;
-//         crate::RUNTIME.spawn(async move {
-//             let account_handle = crate::get_account(id).await;
-//             account_handle.set_alias(alias).await.expect("failed to update account alias");
-//         });
-//     }
-//     Ok(cx.undefined().upcast())
-// }
+    Ok(cx.undefined())
+}
 
 // pub fn setClientOptions(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 //     let client_options = cx.argument::<JsString>(0)?;
