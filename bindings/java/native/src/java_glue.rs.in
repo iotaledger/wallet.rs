@@ -39,7 +39,7 @@ use iota_wallet::{
         Api,
     },
     event::{
-        EventId, TransferProgressType, BalanceChange,
+        EventId, BalanceChange,
         TransactionEvent as WalletTransactionEvent,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
@@ -431,6 +431,7 @@ foreign_enum!(
         SYNCING_ACCOUNT = TransferProgressType::SyncingAccount,
         SELECTING_INPUTS = TransferProgressType::SelectingInputs,
         GENERATING_REMAINDER_DEPOST_ADDRESS = TransferProgressType::GeneratingRemainderDepositAddress,
+        PREPARED_TRANSACTION = TransferProgressType::PreparedTransaction,
         SIGNING_TRANSACTION = TransferProgressType::SigningTransaction,
         PERFORMING_POW = TransferProgressType::PerformingPoW,
         BROADCASTING = TransferProgressType::Broadcasting,
@@ -551,20 +552,32 @@ foreign_class!(
 );
 
 foreign_class!(
-    class TransferProgressEvent {
+    class WalletTransferProgress {
         self_type WalletTransferProgress;
         private constructor = empty;
         fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
-        fn WalletTransferProgress::event(&self) -> TransferProgressType {
-            this.event().clone()
+        fn WalletTransferProgress::event(&self) -> TransferProgress {
+            this.event().clone().into()
         }
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class TransferProgress {
+        self_type TransferProgress;
+        private constructor = empty;
+        private fn TransferProgress::to_string(&self) -> String; alias to_string;
+        fn TransferProgress::get_type(&self) -> TransferProgressType;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class MigrationProgressEvent {
         self_type MigrationProgressEvent;
         private constructor = empty;
+        private fn MigrationProgressEvent::to_string(&self) -> String; alias to_string;
         fn MigrationProgressEvent::get_type(&self) -> MigrationProgressType; alias getType;
         fn MigrationProgressEvent::as_fetching_migration_data(&self) -> Result<FetchingMigrationData>; alias asFetchingMigrationData;
         fn MigrationProgressEvent::as_mining_bundle(&self) -> Result<MiningBundle>; alias asMiningBundle;
@@ -738,42 +751,74 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// A payload which defines the inclusion set of other messages in the Tangle.
+    #[derive(camelCaseAliases, Display)]
     class MilestonePayload {
         self_type MilestonePayload;
         private constructor = empty;
+        private fn MilestonePayload::to_string(&self) -> String; alias to_string;
+        /// Returns the essence of a `MilestonePayload`.
         fn MilestonePayload::essence(&self) -> MilestonePayloadEssence;
+        /// Returns the signatures of a `MilestonePayload`.
         fn MilestonePayload::signatures(&self) -> Vec<MilestoneSignature>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class MilestoneSignature {
         self_type MilestoneSignature;
         private constructor = empty;
-        fn MilestoneSignature::get_signature(&self) -> Vec<u8>; alias getSignature;
+        private fn MilestoneSignature::to_string(&self) -> String; alias to_string;
+        fn MilestoneSignature::get_signature(&self) -> Vec<u8>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class MilestonePayloadEssence {
         self_type MilestonePayloadEssence;
         private constructor = empty;
+        private fn MilestonePayloadEssence::to_string(&self) -> String; alias to_string;
+        /// Returns the index of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::index(&self) -> u32;
+        /// Returns the timestamp of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::timestamp(&self) -> u64;
+        /// Returns the parents of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
-        fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>; alias merkleProof;
-        fn MilestonePayloadEssence::next_pow_score(&self) -> u32; alias nextPowScore;
-        fn MilestonePayloadEssence::next_pow_score_milestone(&self) -> u32; alias nextPowScoreMilestone;
-        fn MilestonePayloadEssence::public_keys(&self) -> Vec<PublicKey>; alias publicKeys;
+        /// Returns the merkle proof of a `MilestonePayloadEssence`.
+        fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>;
+        /// Returns the next proof of work score of a `MilestonePayloadEssence`.
+        fn MilestonePayloadEssence::next_pow_score(&self) -> u32;
+        /// Returns the next proof of work index of a `MilestonePayloadEssence`.
+        fn MilestonePayloadEssence::next_pow_score_milestone(&self) -> u32;
+        /// Returns the public keys of a `MilestonePayloadEssence`.
+        fn MilestonePayloadEssence::public_keys(&self) -> Vec<PublicKey>;
+        /// Returns the optional receipt of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::receipt(&self) -> Option<ReceiptPayload>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class Signature {
+        self_type Signature;
+        private constructor = empty;
+        private fn Signature::to_string(&self) -> String; alias to_string;
+        fn Signature::to_bytes(&self) -> Vec<u8>;
+        fn Signature::from_bytes(bs: Vec<u8>) -> Signature;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class PublicKey {
         self_type PublicKey;
         private constructor = empty;
-        fn PublicKey::get_public_key(&self) -> Vec<u8>; alias getPublicKey;
+        private fn PublicKey::to_string(&self) -> String; alias to_string;
+        fn PublicKey::verify(&self, sig: Signature, msg: Vec<u8>) -> bool;
+        fn PublicKey::to_compressed_bytes(&self) -> Vec<u8>;
+        fn PublicKey::from_compressed_bytes(bs: Vec<u8>) -> Result<PublicKey>;
     }
 );
 

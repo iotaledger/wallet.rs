@@ -11,6 +11,7 @@ use iota_wallet::{
     event::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
         MigrationProgressType as WalletMigrationProgressType,
+        TransferProgressType as WalletTransferProgressType,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
@@ -36,6 +37,29 @@ pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProg
         WalletMigrationProgressType::SigningBundle { .. } => MigrationProgressType::SigningBundle,
         WalletMigrationProgressType::BroadcastingBundle { .. } => MigrationProgressType::BroadcastingBundle,
         WalletMigrationProgressType::TransactionConfirmed { .. } => MigrationProgressType::TransactionConfirmed,
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum TransferProgressType {
+    SyncingAccount = 0,
+    SelectingInputs = 1,
+    GeneratingRemainderDepositAddress = 2,
+    PreparedTransaction = 3,
+    SigningTransaction = 4,
+    PerformingPoW = 5,
+    Broadcasting = 6,
+}
+
+pub fn transfer_progress_type_enum_to_type(transfer_type: &WalletTransferProgressType) -> TransferProgressType {
+    match transfer_type {
+        WalletTransferProgressType::SyncingAccount { .. } => TransferProgressType::SyncingAccount,
+        WalletTransferProgressType::SelectingInputs { .. } => TransferProgressType::SelectingInputs,
+        WalletTransferProgressType::GeneratingRemainderDepositAddress { .. } => TransferProgressType::GeneratingRemainderDepositAddress,
+        WalletTransferProgressType::PreparedTransaction { .. } => TransferProgressType::PreparedTransaction,
+        WalletTransferProgressType::SigningTransaction { .. } => TransferProgressType::SigningTransaction,
+        WalletTransferProgressType::PerformingPoW { .. } => TransferProgressType::PerformingPoW,
+        WalletTransferProgressType::Broadcasting { .. } => TransferProgressType::Broadcasting,
     }
 }
 
@@ -101,6 +125,42 @@ impl StrongholdStatusEvent {
     }
 }
 
+pub struct TransferProgress {
+    transfer_type: TransferProgressType,
+    event: WalletTransferProgressType,
+}
+
+impl TransferProgress {
+    pub fn get_type(&self) -> TransferProgressType {
+        self.transfer_type
+    }
+
+    /*pub fn as_mining_bundle(&self) -> Result<MiningBundle> {
+        if let WalletMigrationProgressType::MiningBundle { address } = &self.event {
+            Ok(MiningBundle {
+                address: address.clone(),
+            })
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }*/
+}
+
+impl From<WalletTransferProgressType> for TransferProgress {
+    fn from(progress_type: WalletTransferProgressType) -> Self {
+        Self { 
+            transfer_type: transfer_progress_type_enum_to_type(&progress_type),
+            event: progress_type 
+        }
+    }
+}
+
+impl core::fmt::Display for TransferProgress {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "type={:?}", self.event)
+    }
+}
+
 pub struct MigrationProgressEvent {
     migration_type: MigrationProgressType,
     event: WalletMigrationProgressType,
@@ -160,6 +220,12 @@ impl MigrationProgressEvent {
         } else {
             Err(anyhow!("wrong migration type"))
         }
+    }
+}
+
+impl core::fmt::Display for MigrationProgressEvent {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "type={:?}", self.event)
     }
 }
 
