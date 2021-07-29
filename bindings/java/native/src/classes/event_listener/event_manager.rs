@@ -15,6 +15,9 @@ use iota_wallet::{
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
+        AddressData as WalletAddressData,
+        PreparedTransactionData as WalletPreparedTransactionData,
+        TransactionIO as WalletTransactionIO
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
@@ -135,15 +138,104 @@ impl TransferProgress {
         self.transfer_type
     }
 
-    /*pub fn as_mining_bundle(&self) -> Result<MiningBundle> {
-        if let WalletMigrationProgressType::MiningBundle { address } = &self.event {
-            Ok(MiningBundle {
-                address: address.clone(),
-            })
+    pub fn as_prepared_transaction(&self) -> Result<PreparedTransactionData> {
+        if let WalletTransferProgressType::PreparedTransaction(data) = &self.event {
+            Ok(data.into())
         } else {
             Err(anyhow!("wrong migration type"))
         }
-    }*/
+    }
+
+    pub fn as_generating_remainder_deposit_address(&self) -> Result<AddressData> {
+        if let WalletTransferProgressType::GeneratingRemainderDepositAddress(data) = &self.event {
+            Ok(data.into())
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+}
+
+/// Address event data.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct AddressData {
+    /// The address.
+    #[getset(get = "pub")]
+    pub address: String,
+}
+
+impl From<&WalletAddressData> for AddressData {
+    fn from(data: &WalletAddressData) -> Self {
+        Self {
+            address: data.address().clone(),
+        }
+    }
+}
+impl core::fmt::Display for AddressData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "address={:?}", self.address)
+    }
+}
+
+/// Prepared transaction event data.
+#[derive(Clone, Debug)]
+pub struct PreparedTransactionData {
+    pub inputs: Vec<TransactionIO>,
+    pub outputs: Vec<TransactionIO>,
+    pub data: Option<String>,
+}
+
+impl From<&WalletPreparedTransactionData> for PreparedTransactionData {
+    fn from(data: &WalletPreparedTransactionData) -> Self {
+        Self {
+            inputs: data.inputs().clone().iter().map(|d| d.into()).collect(),
+            outputs: data.inputs().clone().iter().map(|d| d.into()).collect(),
+            data: data.data().clone(),
+        }
+    }
+}
+impl core::fmt::Display for PreparedTransactionData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "data={:?}, inputs=({:?}), outputs=({:?})", self.data, self.inputs, self.outputs)
+    }
+}
+
+impl PreparedTransactionData {
+    pub fn inputs(&self) -> Vec<TransactionIO> {
+        self.inputs.clone()
+    } 
+    pub fn outputs(&self) -> Vec<TransactionIO> {
+        self.outputs.clone()
+    }
+    pub fn data(&self) -> Option<String> {
+        self.data.clone()
+    }
+}
+
+/// Input or output data for PreparedTransactionData
+#[derive(Clone, Debug, Getters, CopyGetters)]
+pub struct TransactionIO {
+    #[getset(get = "pub")]
+    pub address: String,
+    #[getset(get_copy = "pub")]
+    pub amount: u64,
+    #[getset(get_copy = "pub")]
+    pub remainder: Option<bool>,
+}
+
+impl From<&WalletTransactionIO> for TransactionIO {
+    fn from(data: &WalletTransactionIO) -> Self {
+        Self {
+            address: data.address().clone(),
+            amount: data.amount().clone(),
+            remainder: data.remainder().clone(),
+        }
+    }
+}
+impl core::fmt::Display for TransactionIO {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "address={:?}, amount={:?}, remainder={:?}", self.address, self.amount, self.remainder)
+    }
 }
 
 impl From<WalletTransferProgressType> for TransferProgress {

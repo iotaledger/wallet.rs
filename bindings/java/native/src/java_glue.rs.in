@@ -573,6 +573,50 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Address event data.
+    #[derive(camelCaseAliases, Display)]
+    class AddressData {
+        self_type AddressData;
+        private constructor = empty;
+        private fn AddressData::to_string(&self) -> String; alias to_string;
+        /// The address.
+        fn AddressData::address(&self) -> &str;
+    }
+);
+
+foreign_class!(
+    /// Prepared transaction event data.
+    #[derive(camelCaseAliases, Display)]
+    class PreparedTransactionData {
+        self_type PreparedTransactionData;
+        private constructor = empty;
+        private fn PreparedTransactionData::to_string(&self) -> String; alias to_string;
+        /// Transaction inputs.
+        fn PreparedTransactionData::inputs(&self) -> Vec<TransactionIO>;
+        /// Transaction outputs.
+        fn PreparedTransactionData::outputs(&self) -> Vec<TransactionIO>;
+        /// The indexation data.
+        fn PreparedTransactionData::data(&self) -> Option<String>;
+    }
+);
+
+foreign_class!(
+    /// Input or output data for PreparedTransactionData
+    #[derive(camelCaseAliases, Display)]
+    class TransactionIO {
+        self_type TransactionIO;
+        private constructor = empty;
+        private fn TransactionIO::to_string(&self) -> String; alias to_string;
+        /// Address
+        fn TransactionIO::address(&self) -> &str;
+        /// Amount
+        fn TransactionIO::amount(&self) -> u64;
+        /// Remainder
+        fn TransactionIO::remainder(&self) -> Option<bool>;
+    }
+);
+
+foreign_class!(
     #[derive(camelCaseAliases, Display)]
     class MigrationProgressEvent {
         self_type MigrationProgressEvent;
