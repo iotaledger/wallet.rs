@@ -569,6 +569,8 @@ foreign_class!(
         private constructor = empty;
         private fn TransferProgress::to_string(&self) -> String; alias to_string;
         fn TransferProgress::get_type(&self) -> TransferProgressType;
+        fn TransferProgress::as_prepared_transaction(&self) -> Result<PreparedTransactionData>;
+        fn TransferProgress::as_generating_remainder_deposit_address(&self) -> Result<AddressData>;
     }
 );
 
