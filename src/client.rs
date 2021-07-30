@@ -27,7 +27,7 @@ fn instances() -> &'static ClientInstanceMap {
 pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
-    if !map.contains_key(&options) {
+    if !map.contains_key(options) {
         let mut client_builder = ClientBuilder::new()
             .with_mqtt_broker_options(
                 options
@@ -123,7 +123,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
     }
 
     // safe to unwrap since we make sure the client exists on the block above
-    let client = map.get(&options).unwrap();
+    let client = map.get(options).unwrap();
 
     Ok(client.clone())
 }
