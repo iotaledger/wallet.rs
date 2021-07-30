@@ -763,14 +763,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await.unwrap();
+            super::get_client(case).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await.unwrap();
+            super::get_client(case).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }
