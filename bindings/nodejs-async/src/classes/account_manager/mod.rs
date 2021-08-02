@@ -229,7 +229,10 @@ pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<Accoun
 }
 
 pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let polling_interval = cx.argument::<JsNumber>(0)?.value(&mut cx) as u64;
     let automatic_output_consolidation = cx.argument::<JsBoolean>(1)?.value(&mut cx);
 
@@ -247,7 +250,10 @@ pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
 
     wrapper.account_manager.stop_background_sync();
 
@@ -255,7 +261,10 @@ pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
 
     crate::RUNTIME.spawn(async move { wrapper.account_manager.set_storage_password(password).await });
@@ -264,7 +273,10 @@ pub fn set_storage_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let password = cx.argument::<JsString>(0)?.value(&mut cx);
 
     let (sender, receiver) = channel();
@@ -277,7 +289,10 @@ pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined>
 }
 
 pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let current_password = cx.argument::<JsString>(0)?.value(&mut cx);
     let new_password = cx.argument::<JsString>(1)?.value(&mut cx);
     let (sender, receiver) = channel();
@@ -294,7 +309,10 @@ pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefin
 }
 
 pub fn generate_mnemonic(mut cx: FunctionContext) -> JsResult<JsString> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let mnemonic = wrapper
         .account_manager
         .generate_mnemonic()
@@ -304,7 +322,10 @@ pub fn generate_mnemonic(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let signer_type = cx.argument::<JsNumber>(0)?.value(&mut cx) as usize;
     let signer_type: AccountSignerType = serde_json::from_str(&signer_type.to_string()).expect("invalid signer type");
     let signer_type = match signer_type {
@@ -324,7 +345,10 @@ pub fn store_mnemonic(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account::AccountWrapper>>> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let account_to_create = cx.argument::<JsString>(0)?;
     let account_to_create = account_to_create.value(&mut cx);
     let account_to_create = serde_json::from_str::<AccountToCreate>(&account_to_create).unwrap();
@@ -374,7 +398,10 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
 }
 
 pub fn get_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account::AccountWrapper>>> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let id = cx.argument::<JsValue>(0)?;
     let id = js_value_to_account_id(&mut cx, id)?;
 
@@ -405,7 +432,10 @@ pub fn get_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account
 }
 
 pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let accounts = wrapper.account_manager.get_accounts().await.unwrap();
@@ -429,21 +459,27 @@ pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
 }
 
 pub fn remove_account(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let id = cx.argument::<JsValue>(0)?;
     let id = js_value_to_account_id(&mut cx, id)?;
     let (sender, receiver) = channel();
-        crate::RUNTIME.spawn(async move {
-            let result = wrapper.account_manager.remove_account(id).await;
-            let _ = sender.send(result);
-        });
+    crate::RUNTIME.spawn(async move {
+        let result = wrapper.account_manager.remove_account(id).await;
+        let _ = sender.send(result);
+    });
 
     let _ = receiver.recv().unwrap();
     Ok(cx.undefined())
 }
 
 pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let (options, cb) = match cx.argument_opt(1) {
         Some(arg) => {
             let cb = arg.downcast::<JsFunction, FunctionContext>(&mut cx).or_throw(&mut cx)?;
@@ -472,33 +508,25 @@ pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
                 }
 
                 Ok(ids)
-            },
+            }
             Err(e) => Err(e.to_string()),
         };
 
         wrapper.queue.send(move |mut cx| {
-
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
             let args = match result {
                 Ok(ids) => {
-
                     let js_array = JsArray::new(&mut cx, ids.len() as u32);
                     for (index, id) in ids.iter().enumerate() {
                         let id = cx.string(id);
                         js_array.set(&mut cx, index as u32, id).unwrap();
                     }
 
-                    vec![
-                        cx.undefined().upcast::<JsValue>(),
-                        js_array.as_value(&mut cx)
-                    ]
-                },
+                    vec![cx.undefined().upcast::<JsValue>(), js_array.as_value(&mut cx)]
+                }
                 Err(e) => {
-                    vec![
-                        cx.string(e).as_value(&mut cx),
-                        cx.undefined().upcast::<JsValue>(),
-                    ]
+                    vec![cx.string(e).as_value(&mut cx), cx.undefined().upcast::<JsValue>()]
                 }
             };
 
@@ -512,7 +540,10 @@ pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let from_account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(0)?);
     let to_account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(1)?);
     let amount = cx.argument::<JsNumber>(2)?.value(&mut cx) as u64;
@@ -522,9 +553,10 @@ pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let to_account_id = to_account_wrapper.account_id.clone();
 
     crate::RUNTIME.spawn(async move {
-        let result = wrapper.account_manager
-                .internal_transfer(&from_account_id, &to_account_id, NonZeroU64::new(amount).unwrap())
-                .await;
+        let result = wrapper
+            .account_manager
+            .internal_transfer(&from_account_id, &to_account_id, NonZeroU64::new(amount).unwrap())
+            .await;
 
         wrapper.queue.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
@@ -532,11 +564,8 @@ pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             let args = match result {
                 Ok(message) => {
                     let msg = serde_json::to_string(&message).unwrap();
-                    vec![
-                        cx.undefined().upcast::<JsValue>(),
-                        cx.string(msg).as_value(&mut cx),
-                    ]
-                },
+                    vec![cx.undefined().upcast::<JsValue>(), cx.string(msg).as_value(&mut cx)]
+                }
                 Err(e) => {
                     vec![
                         cx.string(e.to_string()).as_value(&mut cx),
@@ -555,7 +584,10 @@ pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let backup_path = cx.argument::<JsString>(0)?.value(&mut cx);
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
 
@@ -577,7 +609,10 @@ pub fn backup(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let source = cx.argument::<JsString>(0)?.value(&mut cx);
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
 
@@ -589,7 +624,10 @@ pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let cb = cx.argument::<JsFunction>(0)?.root(&mut cx);
 
     crate::RUNTIME.spawn(async move {
@@ -604,7 +642,7 @@ pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined
                         cx.undefined().upcast::<JsValue>(),
                         cx.boolean(is_unused).as_value(&mut cx),
                     ]
-                },
+                }
                 Err(e) => {
                     vec![
                         cx.string(e.to_string()).as_value(&mut cx),
@@ -622,18 +660,17 @@ pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined
     Ok(cx.undefined())
 }
 
-
-
 pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?);
+    let wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let client_options = cx.argument::<JsString>(0)?.value(&mut cx);
     let client_options = serde_json::from_str::<ClientOptionsDto>(&client_options).unwrap();
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
-        let result = wrapper
-            .account_manager
-            .set_client_options(client_options.into()).await;
+        let result = wrapper.account_manager.set_client_options(client_options.into()).await;
         let _ = sender.send(result);
     });
     let _ = receiver.recv().unwrap();

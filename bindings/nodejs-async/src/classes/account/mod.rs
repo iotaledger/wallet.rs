@@ -72,13 +72,19 @@ pub fn account_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountWrapper
 }
 
 pub fn id(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
 
     Ok(cx.string(account_wrapper.account_id.clone()))
 }
 
 pub fn index(mut cx: FunctionContext) -> JsResult<JsNumber> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();
@@ -92,7 +98,10 @@ pub fn index(mut cx: FunctionContext) -> JsResult<JsNumber> {
 }
 
 pub fn alias(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();
@@ -106,7 +115,10 @@ pub fn alias(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();
@@ -120,7 +132,10 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
 }
 
 pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     // let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 2)?);
     let callback = cx.argument::<JsFunction>(cx.len() - 1)?.root(&mut cx);
     let id = account_wrapper.account_id.clone();
@@ -170,7 +185,8 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
             let args = vec![
                 cx.undefined().upcast::<JsValue>(),
-                cx.string(serde_json::to_string(&node_info).unwrap()).upcast::<JsValue>()
+                cx.string(serde_json::to_string(&node_info).unwrap())
+                    .upcast::<JsValue>(),
             ];
 
             cb.call(&mut cx, this, args)?;
@@ -190,7 +206,11 @@ pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
         }
         None => None,
     };
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let id = account_wrapper.account_id.clone();
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(&id).await;
@@ -208,21 +228,31 @@ pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
 }
 
 pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let id = account_wrapper.account_id.clone();
 
     let count = match cx.argument_opt(0) {
-        Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx) as usize,
+        Some(arg) => arg
+            .downcast::<JsNumber, FunctionContext>(&mut cx)
+            .or_throw(&mut cx)?
+            .value(&mut cx) as usize,
         None => 0,
     };
     let from = match cx.argument_opt(1) {
-        Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx) as usize,
+        Some(arg) => arg
+            .downcast::<JsNumber, FunctionContext>(&mut cx)
+            .or_throw(&mut cx)?
+            .value(&mut cx) as usize,
         None => 0,
     };
     let filter = match cx.argument_opt(2) {
         Some(arg) => {
             let type_ = arg.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?;
-            serde_json::from_str::<>(&type_.value(&mut cx)).unwrap()
-        },
+            serde_json::from_str(&type_.value(&mut cx)).unwrap()
+        }
         None => None,
     };
 
@@ -231,7 +261,10 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(&id).await;
         let account = account_handle.read().await;
-        let messages = account.list_messages(count, from, filter).await.expect("failed to list messages");
+        let messages = account
+            .list_messages(count, from, filter)
+            .await
+            .expect("failed to list messages");
 
         let mut result = vec![];
         for message in messages.iter() {
@@ -252,9 +285,17 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
 }
 
 pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let id = account_wrapper.account_id.clone();
     let unspent = match cx.argument_opt(0) {
-        Some(arg) => Some(arg.downcast::<JsBoolean, FunctionContext>(&mut cx).or_throw(&mut cx)?.value(&mut cx)),
+        Some(arg) => Some(
+            arg.downcast::<JsBoolean, FunctionContext>(&mut cx)
+                .or_throw(&mut cx)?
+                .value(&mut cx),
+        ),
         None => None,
     };
 
@@ -270,8 +311,8 @@ pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
                 } else {
                     account.list_spent_addresses().await.unwrap()
                 }
-            },
-            None => account.addresses().await
+            }
+            None => account.addresses().await,
         };
 
         let mut result = vec![];
@@ -292,13 +333,20 @@ pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
 }
 
 pub fn set_alias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);    let id = account_wrapper.account_id.clone();
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let id = account_wrapper.account_id.clone();
     let id = account_wrapper.account_id.clone();
     let alias = cx.argument::<JsString>(0)?.value(&mut cx);
 
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(id.as_str()).await;
-        account_handle.set_alias(alias).await.expect("failed to update account alias");
+        account_handle
+            .set_alias(alias)
+            .await
+            .expect("failed to update account alias");
     });
 
     Ok(cx.undefined())
@@ -350,7 +398,10 @@ pub fn set_alias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 // }
 
 pub fn generate_address(mut cx: FunctionContext) -> JsResult<JsString> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(account_wrapper.account_id.as_str()).await;
@@ -379,19 +430,22 @@ pub fn generate_address(mut cx: FunctionContext) -> JsResult<JsString> {
 //     Ok( serde_json::to_string(&address)?)
 // }
 
-// pub fn latestAddress(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     let (sender, receiver) = channel();
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let address = account.latest_address();
-//         sender.send()
-//     });
+pub fn latest_address(mut cx: FunctionContext) -> JsResult<JsString> {
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(account_wrapper.account_id.as_str()).await;
+        let account = account_handle.read().await;
+        let address = account.latest_address();
+        let _ = sender.send(address.clone());
+    });
+    let address = receiver.recv().unwrap();
 
-//     Ok(serde_json::to_string(&address)?)
-// }
+    Ok(cx.string(serde_json::to_string(&address).unwrap()))
+}
 
 // pub fn getUnusedAddress(mut cx: FunctionContext) -> JsResult<JsString> {
 //     let this = cx.this();
@@ -407,7 +461,10 @@ pub fn generate_address(mut cx: FunctionContext) -> JsResult<JsString> {
 // }
 
 pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let account_wrapper = Arc::clone(&&cx.this().downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?);
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
     let (options, callback) = match cx.argument_opt(1) {
         Some(arg) => {
             let cb = arg
@@ -418,10 +475,7 @@ pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             let options = serde_json::from_str::<SyncOptions>(options.value(&mut cx).as_str()).unwrap();
             (options, cb)
         }
-        None => (
-            Default::default(),
-            cx.argument::<JsFunction>(0)?.root(&mut cx),
-        ),
+        None => (Default::default(), cx.argument::<JsFunction>(0)?.root(&mut cx)),
     };
 
     let id = account_wrapper.account_id.clone();

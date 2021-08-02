@@ -2,7 +2,7 @@
  * This example generates a new address.
  */
 
- async function run() {
+async function run() {
     const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
@@ -17,15 +17,18 @@
     const synced = await account.sync()
     console.log('Syncing...')
 
-    const { address } = account.generateAddress()
+    const address = account.generateAddress()
     console.log('New address:', address)
 
     // You can also get the latest unused address:
-    // const addressObject = account.latestAddress()
-    // console.log("Address:", addressObject.address)
+    const addressObject = account.latestAddress()
+    console.log("Address:", addressObject.address)
 
     // Use the Chrysalis Faucet to send testnet tokens to your address:
     console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")
+
+    const addresses = account.listAddresses()
+    console.log("Addresses:", addresses)
 }
 
 run()

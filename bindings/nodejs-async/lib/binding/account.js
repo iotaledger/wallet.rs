@@ -70,19 +70,19 @@ class Account {
     }
 
     generateAddress() {
-        return generateAddress.apply(this.account);
+        return JSON.parse(generateAddress.apply(this.account));
     }
 
     latestAddress() {
-        return latestAddress.apply(this.account);
+        return JSON.parse(latestAddress.apply(this.account));
     }
 
     listMessages(count, from, messageType) {
-        return listMessages.apply(this.account, [count, from, messageType].filter(e => e != undefined));
+        return listMessages.apply(this.account, [count, from, messageType].filter(e => e != undefined)).map(msg => JSON.parse(msg));
     }
 
     listAddresses(unspent) {
-        return listAddresses.apply(this.account, [unspent].filter(e => e != undefined));
+        return listAddresses.apply(this.account, [unspent].filter(e => e != undefined)).map(address => JSON.parse(address));
     }
 
     setAlias(alias) {
