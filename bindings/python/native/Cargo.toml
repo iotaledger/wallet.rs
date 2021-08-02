@@ -2,7 +2,7 @@
 
 [package]
 name = "iota-wallet-python-binding"
-version = "0.2.0"
+version = "0.1.0"
 authors = ["Bing-Yang Lin <bingyang.lin@iota.org>"]
 license = "MIT"
 edition = "2018"
@@ -12,7 +12,7 @@ name = "iota_wallet"
 crate-type = ["cdylib"]
 
 [dependencies]
-iota-wallet = { path = "../../../", version = "0.2.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
+iota-wallet = { path = "../../../", version = "0.1.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
 iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "57c5a33d83be4b8286a54156e9f0d2ac4345e9b9", features = ["mqtt"] }
 chrono = "0.4"
 serde_json = "1.0"

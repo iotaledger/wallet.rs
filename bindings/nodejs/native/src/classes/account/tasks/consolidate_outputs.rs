@@ -6,7 +6,6 @@ use neon::prelude::*;
 
 pub struct ConsolidateOutputsTask {
     pub account_id: String,
-    pub include_dust_allowance_outputs: bool,
 }
 
 impl Task for ConsolidateOutputsTask {
@@ -16,10 +15,7 @@ impl Task for ConsolidateOutputsTask {
 
     fn perform(&self) -> Result<Self::Output, Self::Error> {
         crate::block_on(crate::convert_async_panics(|| async {
-            crate::get_account(&self.account_id)
-                .await
-                .consolidate_outputs(self.include_dust_allowance_outputs)
-                .await
+            crate::get_account(&self.account_id).await.consolidate_outputs().await
         }))
     }
 

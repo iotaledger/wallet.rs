@@ -139,7 +139,7 @@ def test_account_handle_bech32_hrp():
 
 
 def test_account_handle_consolidate_outputs():
-    consolidated_outputs = account.consolidate_outputs(False)
+    consolidated_outputs = account.consolidate_outputs()
     assert isinstance(consolidated_outputs, list)
 
 

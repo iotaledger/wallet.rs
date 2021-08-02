@@ -22,8 +22,7 @@ use iota_client::{
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
             Essence, Input, Message as IotaMessage, MessageId, Output, OutputId, Payload, RegularEssence,
-            SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TransactionPayload, UnlockBlocks,
-            UtxoInput,
+            SignatureLockedSingleOutput, TransactionPayload, UnlockBlocks, UtxoInput,
         },
     },
     AddressOutputsOptions, Client,
@@ -149,21 +148,11 @@ pub(crate) async fn sync_address(
 
         let client_guard = client_guard.clone();
         let bech32_hrp = bech32_hrp.clone();
-        let spent = *is_spent;
         let account_messages = account_messages.clone();
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let output = match client.get_output(&utxo_input).await {
-                    Ok(output) => output,
-                    Err(err) => {
-                        if spent {
-                            return Err(crate::Error::SpentOutputNotFound);
-                        } else {
-                            return Err(err.into());
-                        }
-                    }
-                };
+                let output = client.get_output(&utxo_input).await?;
                 let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
                 let message_id = *found_output.message_id();
 
@@ -194,20 +183,10 @@ pub(crate) async fn sync_address(
     }
 
     for res in futures::future::try_join_all(tasks).await? {
-        // Don't return an error if we didn't got a spent output
-        match res {
-            Ok((found_output, found_message)) => {
-                outputs.insert(found_output.id()?, found_output);
-                if let Some(m) = found_message {
-                    found_messages.push(m);
-                }
-            }
-            Err(e) => match e {
-                crate::Error::SpentOutputNotFound => {
-                    log::debug!("[SYNC] output not found in syncing address")
-                }
-                _ => return Err(e),
-            },
+        let (found_output, found_message) = res?;
+        outputs.insert(found_output.id()?, found_output);
+        if let Some(m) = found_message {
+            found_messages.push(m);
         }
     }
 
@@ -540,24 +519,8 @@ async fn sync_messages(
                                 output
                             }
                             None => {
-                                // if the output got spent and we didn't get it from the node we ignore it and don't return an error
-                                if *is_spent {
-                                    match client.get_output(utxo_input).await{
-                                        Ok(output) => {
-                                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
-                                        }
-                                        Err(_) =>{
-                                            log::debug!(
-                                                "[SYNC] couldn't get spent output: {}",
-                                                utxo_input.output_id().transaction_id().to_string(),
-                                            );  
-                                            continue;
-                                        }
-                                    }
-                                } else {
-                                    let output = client.get_output(utxo_input).await?;
-                                    AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
-                                }
+                                let output = client.get_output(utxo_input).await?;
+                                AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
                             }
                         };
 
@@ -1335,10 +1298,7 @@ impl SyncedAccount {
         ))
     }
 
-    async fn get_output_consolidation_transfers(
-        &self,
-        include_dust_allowance_outputs: bool,
-    ) -> crate::Result<Vec<Transfer>> {
+    async fn get_output_consolidation_transfers(&self) -> crate::Result<Vec<Transfer>> {
         let mut transfers: Vec<Transfer> = Vec::new();
         // collect the transactions we need to make
         {
@@ -1346,32 +1306,14 @@ impl SyncedAccount {
             let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
             for address in account.addresses() {
                 if address.outputs().len() >= self.account_handle.account_options.output_consolidation_threshold {
-                    let mut address_outputs = address.available_outputs(&sent_messages);
-                    if !include_dust_allowance_outputs {
-                        address_outputs = address_outputs
-                            .into_iter()
-                            .filter(|addr| addr.kind != OutputKind::SignatureLockedDustAllowance)
-                            .collect();
-                    }
-
+                    let address_outputs = address.available_outputs(&sent_messages);
                     // the address outputs exceed the threshold, so we push a transfer to our vector
                     if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
                         for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
-                            // Only create dust_allowance_output if an input is also a dust_allowance_outputs
-                            let output_kind = if include_dust_allowance_outputs
-                                && outputs
-                                    .iter()
-                                    .any(|addr| addr.kind == OutputKind::SignatureLockedDustAllowance)
-                            {
-                                Some(OutputKind::SignatureLockedDustAllowance)
-                            } else {
-                                None
-                            };
                             transfers.push(
                                 Transfer::builder(
                                     address.address().clone(),
                                     NonZeroU64::new(outputs.iter().fold(0, |v, o| v + o.amount)).unwrap(),
-                                    output_kind,
                                 )
                                 .with_input(
                                     address.address().clone(),
@@ -1389,16 +1331,10 @@ impl SyncedAccount {
     }
 
     /// Consolidate account outputs.
-    pub(crate) async fn consolidate_outputs(
-        &self,
-        include_dust_allowance_outputs: bool,
-    ) -> crate::Result<Vec<Message>> {
+    pub(crate) async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
         let mut tasks = Vec::new();
         // run the transfers in parallel
-        for transfer in self
-            .get_output_consolidation_transfers(include_dust_allowance_outputs)
-            .await?
-        {
+        for transfer in self.get_output_consolidation_transfers().await? {
             let task = self.transfer(transfer);
             tasks.push(task);
         }
@@ -1603,7 +1539,6 @@ async fn perform_transfer(
             remainder: Some(false),
         });
     }
-    // do we need to add dust_allowance to dust_and_allowance_recorders here?
 
     let account_ = account_handle.read().await;
 
@@ -1628,18 +1563,8 @@ async fn perform_transfer(
 
     let mut outputs_for_essence: Vec<Output> = Vec::new();
     for output in transfer_obj.outputs.iter() {
-        match output.output_kind {
-            crate::address::OutputKind::SignatureLockedSingle => {
-                outputs_for_essence
-                    .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
-            }
-            crate::address::OutputKind::SignatureLockedDustAllowance => {
-                outputs_for_essence.push(
-                    SignatureLockedDustAllowanceOutput::new(*output.address.as_ref(), output.amount.get())?.into(),
-                );
-            }
-            _ => return Err(crate::error::Error::InvalidOutputKind("Treasury".to_string())),
-        }
+        outputs_for_essence
+            .push(SignatureLockedSingleOutput::new(*output.address.as_ref(), output.amount.get())?.into());
     }
     let mut inputs_for_essence: Vec<Input> = Vec::new();
     let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
@@ -2222,8 +2147,8 @@ mod tests {
         address3.set_key_index(0);
         address3.set_internal(true);
         let output = crate::address::AddressOutput {
-            transaction_id: iota_client::bee_message::prelude::TransactionId::from([1; 32]),
-            message_id: iota_client::bee_message::MessageId::from([1; 32]),
+            transaction_id: iota_client::bee_message::prelude::TransactionId::from([0; 32]),
+            message_id: iota_client::bee_message::MessageId::from([0; 32]),
             index: 0,
             amount: 10000000,
             is_spent: false,
@@ -2256,12 +2181,8 @@ mod tests {
         };
         let res = synced
             .transfer(
-                super::Transfer::builder(
-                    address2.address().clone(),
-                    std::num::NonZeroU64::new(999500).unwrap(),
-                    None,
-                )
-                .finish(),
+                super::Transfer::builder(address2.address().clone(), std::num::NonZeroU64::new(9999500).unwrap())
+                    .finish(),
             )
             .await;
         assert!(res.is_err());

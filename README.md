@@ -14,6 +14,7 @@ It offers abstractions to handle IOTA payments and can optionally interact with 
 
 We recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
 
+`no_std` is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.
 
 ### Dependencies
 

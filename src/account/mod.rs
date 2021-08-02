@@ -524,13 +524,8 @@ impl AccountHandle {
     }
 
     /// Consolidate account outputs.
-    pub async fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> crate::Result<Vec<Message>> {
-        self.sync_internal()
-            .await
-            .execute()
-            .await?
-            .consolidate_outputs(include_dust_allowance_outputs)
-            .await
+    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
+        self.sync_internal().await.execute().await?.consolidate_outputs().await
     }
 
     /// Send messages.

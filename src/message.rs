@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
+    address::{Address, AddressOutput, AddressWrapper, IotaAddress},
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
 };
@@ -76,23 +76,12 @@ pub struct TransferOutput {
     /// The output address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
-    /// The output type
-    #[serde(default = "default_output_kind", rename = "outputKind")]
-    pub output_kind: OutputKind,
-}
-
-fn default_output_kind() -> OutputKind {
-    OutputKind::SignatureLockedSingle
 }
 
 impl TransferOutput {
     /// Creates a new transfer output.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> Self {
-        Self {
-            amount,
-            address,
-            output_kind: output_kind.unwrap_or(OutputKind::SignatureLockedSingle),
-        }
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
+        Self { amount, address }
     }
 }
 
@@ -193,13 +182,9 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
         Self {
-            outputs: vec![TransferOutput {
-                amount,
-                address,
-                output_kind: output_kind.unwrap_or(OutputKind::SignatureLockedSingle),
-            }],
+            outputs: vec![TransferOutput { amount, address }],
             ..Default::default()
         }
     }
@@ -278,8 +263,8 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> TransferBuilder {
-        TransferBuilder::new(address, amount, output_kind)
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
+        TransferBuilder::new(address, amount)
     }
 
     /// Initialises the transfer builder with multiple outputs.

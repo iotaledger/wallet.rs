@@ -15,7 +15,7 @@ use iota_wallet::{
     account_manager::{
         AccountManager as RustAccountManager, AccountStore, AccountsSynchronizer as RustAccountsSynchronizer,
     },
-    address::{parse as parse_address, Address as RustWalletAddress, OutputKind as RustOutputKind},
+    address::{parse as parse_address, Address as RustWalletAddress},
     message::{Transfer as RustTransfer, TransferOutput as RustTransferOutput},
 };
 use pyo3::prelude::*;
@@ -99,21 +99,14 @@ impl From<RustAccountBalance> for AccountBalance {
 pub struct TransferOutput {
     pub address: String,
     pub amount: u64,
-    pub output_kind: Option<String>,
 }
 
 impl TryFrom<TransferOutput> for RustTransferOutput {
     type Error = Error;
     fn try_from(info: TransferOutput) -> Result<Self> {
-        let output_kind = match info.output_kind.as_deref() {
-            Some("SignatureLockedSingle") => RustOutputKind::SignatureLockedSingle,
-            Some("SignatureLockedDustAllowance") => RustOutputKind::SignatureLockedDustAllowance,
-            _ => RustOutputKind::SignatureLockedSingle,
-        };
         Ok(RustTransferOutput {
             address: parse_address(info.address)?,
             amount: NonZeroU64::new(info.amount).unwrap(),
-            output_kind,
         })
     }
 }

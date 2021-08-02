@@ -10,19 +10,19 @@ Ensure you have first installed the required dependencies for the library [here]
 
 Clone project
 ```
-git clone https://github.com/iotaledger/wallet.rs
+$ git clone https://github.com/iotaledger/wallet.rs
 ```
 
 Build the rust library
 ```
-cd wallet.rs/bindings/java/native
-cargo build
+$ cd wallet.rs/bindings/java/native
+$ cargo build
 ```
 
 - Running an example usign gradle
 ```
-cd wallet.rs/bindings/java
-./gradlew examples:basic-app:test --info
+$ cd wallet.rs/bindings/java
+$ ./gradlew examples:basic-app:test --info
 ```
 
 Make sure to make gradlew executable (`chmod +x gradlew`)

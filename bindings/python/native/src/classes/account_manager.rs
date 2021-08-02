@@ -168,18 +168,16 @@ impl AccountManager {
     }
 
     /// Starts the background polling and MQTT monitoring.
-    fn start_background_sync(&mut self, polling_interval: u64, automatic_output_consolidation: bool) -> Result<()> {
+    fn start_background_sync(&mut self, polling_interval: u64, automatic_output_consolidation: bool) {
         crate::block_on(
             self.account_manager
                 .start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation),
-        )?;
-        Ok(())
+        );
     }
 
     /// Stops the background polling and MQTT monitoring.
-    fn stop_background_sync(&mut self) -> Result<()> {
-        self.account_manager.stop_background_sync()?;
-        Ok(())
+    fn stop_background_sync(&mut self) {
+        self.account_manager.stop_background_sync();
     }
 
     /// Sets the password for the stored accounts.

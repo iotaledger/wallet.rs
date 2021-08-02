@@ -4,7 +4,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use iota_wallet::{
-    address::{AddressWrapper, OutputKind},
+    address::AddressWrapper,
     message::{
         Message as MessageRust, MessageId, RemainderValueStrategy as RemainderValueStrategyRust,
         Transfer as TransferRust, TransferBuilder as TransferBuilderRust,
@@ -37,8 +37,8 @@ impl Transfer {
         self.transfer
     }
 
-    pub fn builder(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder {
-        TransferBuilder::new(address, amount, output_kind)
+    pub fn builder(address: AddressWrapper, amount: u64) -> TransferBuilder {
+        TransferBuilder::new(address, amount)
     }
 }
 
@@ -47,12 +47,11 @@ pub struct TransferBuilder {
 }
 
 impl TransferBuilder {
-    pub fn new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> Self {
+    pub fn new(address: AddressWrapper, amount: u64) -> Self {
         Self {
             builder: Rc::new(RefCell::new(Option::from(TransferBuilderRust::new(
                 address,
                 NonZeroU64::new(amount).unwrap(),
-                output_kind,
             )))),
         }
     }

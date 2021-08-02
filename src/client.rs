@@ -388,8 +388,6 @@ pub enum Api {
     PostMessage,
     /// `get_output` API
     GetOutput,
-    /// `get_balance` API
-    GetBalance,
 }
 
 impl FromStr for Api {
@@ -400,7 +398,6 @@ impl FromStr for Api {
             "GetTips" => Self::GetTips,
             "PostMessage" => Self::PostMessage,
             "GetOutput" => Self::GetOutput,
-            "GetBalance" => Self::GetBalance,
             _ => return Err(format!("unknown api kind `{}`", s)),
         };
         Ok(t)
@@ -413,7 +410,6 @@ impl Serialize for Api {
             Self::GetTips => "GetTips",
             Self::PostMessage => "PostMessage",
             Self::GetOutput => "GetOutput",
-            Self::GetBalance => "GetBalance",
         })
     }
 }
@@ -448,7 +444,6 @@ impl From<Api> for iota_client::Api {
             Api::GetTips => iota_client::Api::GetTips,
             Api::PostMessage => iota_client::Api::PostMessage,
             Api::GetOutput => iota_client::Api::GetOutput,
-            Api::GetBalance => iota_client::Api::GetBalance,
         }
     }
 }

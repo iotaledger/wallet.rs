@@ -1,12 +1,12 @@
 [package]
 name = "iota-wallet-java"
-version = "0.2.0"
+version = "0.1.0"
 authors = ["Brord van Wierst <brord@iota.org>"]
 edition = "2018"
 build = "build.rs"
 
 [dependencies]
-iota-wallet = { path = "../../../", version = "0.2.0" }
+iota-wallet = { path = "../../../", version = "0.1.0" }
 iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "57c5a33d83be4b8286a54156e9f0d2ac4345e9b9", features = ["mqtt"] }
 bee-message = "0.1"
 log = "0.4.6"

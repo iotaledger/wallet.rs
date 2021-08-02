@@ -160,19 +160,15 @@ impl AccountManager {
         polling_interval: Duration,
         automatic_output_consolidation: bool,
     ) -> Result<()> {
-        match crate::block_on(
+        crate::block_on(
             self.manager
                 .start_background_sync(polling_interval, automatic_output_consolidation),
-        ) {
-            Err(e) => Err(anyhow!(e.to_string())),
-            Ok(_) => Ok(()),
-        }
+        );
+        Ok(())
     }
 
     pub fn stop_background_sync(&mut self) -> Result<()> {
-        self.manager
-            .stop_background_sync()
-            .map_err(|e| anyhow!(e.to_string()))?;
+        self.manager.stop_background_sync();
         Ok(())
     }
 

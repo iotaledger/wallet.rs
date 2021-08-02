@@ -1443,7 +1443,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=b878c94b466f6ff036cd62a07b97dc46e4e0e2a2#b878c94b466f6ff036cd62a07b97dc46e4e0e2a2"
 dependencies = [
  "bee-ternary",
  "bee-transaction",
@@ -1486,7 +1486,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=b878c94b466f6ff036cd62a07b97dc46e4e0e2a2#b878c94b466f6ff036cd62a07b97dc46e4e0e2a2"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1546,12 +1546,12 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=b878c94b466f6ff036cd62a07b97dc46e4e0e2a2#b878c94b466f6ff036cd62a07b97dc46e4e0e2a2"
 dependencies = [
  "bee-ternary",
  "bee-transaction",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=b878c94b466f6ff036cd62a07b97dc46e4e0e2a2)",
  "iota-crypto 0.5.1",
 ]
 

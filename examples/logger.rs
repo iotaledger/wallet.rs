@@ -4,7 +4,7 @@
 //! cargo run --example logger --release
 
 use iota_client::common::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
-use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType};
+use iota_wallet::account_manager::AccountManager;
 use log::LevelFilter;
 use std::time::Instant;
 
@@ -24,24 +24,7 @@ async fn main() -> iota_wallet::Result<()> {
         .await?;
     manager.set_stronghold_password("password").await?;
 
-    // Get account or create a new one
-    let account_alias = "logger";
-    let account = match manager.get_account(account_alias).await {
-        Ok(account) => account,
-        _ => {
-            // first we'll create an example account and store it
-            manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
-            let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")?
-                .build()
-                .unwrap();
-            manager
-                .create_account(client_options)?
-                .alias(account_alias)
-                .initialise()
-                .await?
-        }
-    };
+    let account = manager.get_account("Alice").await?;
 
     let now = Instant::now();
     account.sync().await.execute().await?;

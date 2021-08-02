@@ -4,7 +4,7 @@
 const addon = require('../build/Release')
 let { AccountManager, Account, EventListener, initLogger } = addon
 
-function promisify(fn) {
+function promisify (fn) {
   return function () {
     return new Promise((resolve, reject) => fn.apply(this, [...Array.from(arguments), (err, data) => {
       if (err) {
@@ -30,7 +30,7 @@ class EventListenerWrapper {
   }
 }
 
-function addEventListener(event, cb) {
+function addEventListener (event, cb) {
   new EventListenerWrapper(event, cb)
 }
 
@@ -53,17 +53,6 @@ class RemainderValueStrategy {
   }
 }
 
-class OutputKind {
-  constructor() { }
-  static signatureLockedSingle() {
-    return 'SignatureLockedSingle'
-  }
-
-  static signatureLockedDustAllowance() {
-    return 'SignatureLockedDustAllowance'
-  }
-}
-
 Account.prototype.sync = promisify(Account.prototype.sync)
 Account.prototype.isLatestAddressUnused = promisify(Account.prototype.isLatestAddressUnused)
 
@@ -72,8 +61,8 @@ Account.prototype.send = function (address, amount, options) {
   if (options && (typeof options === 'object')) {
     const formattedOptions = options
     if (options.indexation) {
-      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) : options.indexation.index
-      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) : options.indexation.data
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
       formattedOptions.indexation = {
         index: Array.from(index),
         data: data ? Array.from(data) : null,
@@ -93,8 +82,8 @@ Account.prototype.sendToMany = function (outputs, options) {
   if (options && (typeof options === 'object')) {
     const formattedOptions = options
     if (options.indexation) {
-      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) : options.indexation.index
-      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) : options.indexation.data
+      let index = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.index) :  options.indexation.index
+      let data = typeof options.indexation.index === 'string' ? new TextEncoder().encode(options.indexation.data) :  options.indexation.data
       formattedOptions.indexation = {
         index: Array.from(index),
         data: data ? Array.from(data) : null,
@@ -128,7 +117,6 @@ module.exports = {
   addEventListener,
   initLogger: config => initLogger(JSON.stringify(config)),
   RemainderValueStrategy,
-  OutputKind,
   SignerType: {
     Stronghold: 1
   },

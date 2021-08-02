@@ -152,7 +152,7 @@ export declare class Account {
   retry(messageId: string): Promise<Message>
   reattach(messageId: string): Promise<Message>
   promote(messageId: string): Promise<Message>
-  consolidateOutputs(includeDustAllowanceOutputs?: boolean): Promise<Message[]>
+  consolidateOutputs(): Promise<Message[]>
   setAlias(alias: string): void
   setClientOptions(options: ClientOptions): void
   getMessage(id: string): Message | undefined
@@ -174,18 +174,11 @@ export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
   skipSync?: boolean
-  outputKind?: OutputKind
 }
 
 export declare interface TransferOutput {
   address: string,
   amount: number
-  outputKind?: OutputKind
-}
-
-export declare class OutputKind {
-  static signatureLockedSingle(): OutputKind
-  static signatureLockedDustAllowance(): OutputKind
 }
 
 export declare class SyncedAccount { }

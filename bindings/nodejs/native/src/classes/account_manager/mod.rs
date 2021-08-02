@@ -212,8 +212,8 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = crate::block_on(ref_.write());
-                crate::block_on( manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation)).expect("failed to start background sync");
+                let mut manager = crate::block_on(ref_.write());
+                crate::block_on( manager.start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation))
             }
             Ok(cx.undefined().upcast())
         }
@@ -223,9 +223,8 @@ declare_types! {
                 let this = cx.this();
                 let guard = cx.lock();
                 let ref_ = &this.borrow(&guard).0;
-                let manager = crate::block_on(ref_.write());
-                manager.stop_background_sync().expect("failed to stop background sync");
-
+                let mut manager = crate::block_on(ref_.write());
+                manager.stop_background_sync()
             }
             Ok(cx.undefined().upcast())
         }
