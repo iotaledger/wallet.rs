@@ -1,6 +1,6 @@
 # Examples
 
-This section will guide you through several examples using the python binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/python/examples).
+This section will guide you through several examples using the python binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
 
 All the examples in this section expect you to set your custom password  in the _.env_ file:
 
@@ -39,7 +39,7 @@ One of the key principles behind `Stronghold` based storage is that no one can e
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
-You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#seed).
+You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#seed).
 
 ### Accounts
 
@@ -131,7 +131,7 @@ Example output:
 ```
 There are two human-readable prefixes in IOTA 1.5 network: _iota_ (mainnet) and _atoi_ (testnet). If you take a close look at the addresses in the output, you will be able to notice that both of them start with _atoi_ , and are therefore testnet addresses. 
 
-You can find detailed information about generating addresses at the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space).
+You can find detailed information about generating addresses at the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#addresskey-space).
 
 ## Checking the Balance
 
@@ -199,7 +199,7 @@ In the detailed view per individual addresses, there is also _outputs_ section. 
 You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
 :::info
-IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
+IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
 :::
 
 ## Sending Tokens
@@ -282,13 +282,13 @@ The previous snippet should have a similar output to the following JSON object:
 ```
 This is a _wallet message_ that fully describes the given transaction.
 
-To understand all aspects of messages, you will need to get familiar with concept of _UTXO_ . You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#unspent-transaction-output-utxo).
+To understand all aspects of messages, you will need to get familiar with concept of _UTXO_ . You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
 
 You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using its _node_response['id']_.  Please make sure you select the right network.
 
 If you have used the _ChangeAddress remainder_value_strategy_, the message will transfer tokens to the target address as well as new _internal_ address within the given account (`internal=True`). 
 
-You can find detailed information about messages and payloads in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide.html#messages-payloads-and-transactions).
+You can find detailed information about messages and payloads in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#messages-payloads-and-transactions).
 
 ### Reattachments
 
@@ -307,7 +307,7 @@ You can use the following example to _sync_ an _account_ , and list all the mess
 
 ### Dust Protection
 
-The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide.html#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
+The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
 “... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 

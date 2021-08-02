@@ -4,7 +4,7 @@ This documentation website is built using [Docusaurus 2](https://docusaurus.io/)
 
 ## Online Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/docs/). Alternatively, you can follow these instructions to run a local documentation site. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/). Alternatively, you can follow these instructions to run a local documentation site. 
 
 ## Installation
 

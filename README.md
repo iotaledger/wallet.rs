@@ -9,7 +9,7 @@ It offers abstractions to handle IOTA payments and can optionally interact with 
 
 ## Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/docs/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
 
 ## Prerequisites
 
