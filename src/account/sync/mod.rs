@@ -225,7 +225,7 @@ async fn get_address_for_sync(
             }
         }
         let generated_address = crate::address::get_iota_address(
-            &account,
+            account,
             index,
             internal,
             bech32_hrp,

@@ -170,7 +170,7 @@ impl AccountHandle {
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .retry(&RustMessageId::from_str(&message_id)?)
+                .retry(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -180,7 +180,7 @@ impl AccountHandle {
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .promote(&RustMessageId::from_str(&message_id)?)
+                .promote(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -190,7 +190,7 @@ impl AccountHandle {
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .reattach(&RustMessageId::from_str(&message_id)?)
+                .reattach(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -400,7 +400,7 @@ impl AccountHandle {
         let res: Result<Option<RustWalletMessage>> = crate::block_on(async {
             Ok(self
                 .account_handle
-                .get_message(&RustMessageId::from_str(&message_id)?)
+                .get_message(&RustMessageId::from_str(message_id)?)
                 .await)
         });
         if let Some(message) = res? {

@@ -701,7 +701,7 @@ impl TransactionRegularEssence {
         )
         .await;
         essence.internal = is_internal;
-        essence.incoming = essence.is_incoming(&metadata.account_addresses);
+        essence.incoming = essence.is_incoming(metadata.account_addresses);
 
         Ok(essence)
     }
@@ -807,7 +807,7 @@ impl MessageMilestonePayloadEssence {
                 Some(p) => {
                     if let Payload::Receipt(receipt) = p {
                         Some(MessagePayload::Receipt(Box::new(MessageReceiptPayload::new(
-                            &receipt, metadata,
+                            receipt, metadata,
                         ))))
                     } else {
                         None
@@ -1090,7 +1090,7 @@ impl PartialEq for Message {
 
 impl Ord for Message {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.id.as_ref().cmp(&other.id.as_ref())
+        self.id.as_ref().cmp(other.id.as_ref())
     }
 }
 
@@ -1151,13 +1151,12 @@ async fn is_internal(
     let mut outputs_belonging_to_account = Vec::new();
     for (id, account_handle) in accounts.read().await.iter() {
         if id == account_id {
-            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, &account_addresses));
-            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(&essence, &account_addresses));
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(essence, account_addresses));
+            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(essence, account_addresses));
         } else {
             let account = account_handle.read().await;
-            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, account.addresses()));
-            outputs_belonging_to_account
-                .extend(transaction_outputs_belonging_to_account(&essence, account.addresses()));
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(essence, account.addresses()));
+            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(essence, account.addresses()));
         }
 
         if essence.inputs().iter().all(|i| inputs_belonging_to_account.contains(i))
@@ -1232,8 +1231,8 @@ impl<'a> MessageBuilder<'a> {
                         bech32_hrp: self.bech32_hrp.clone(),
                         accounts: self.accounts.clone(),
                         account_id: self.account_id,
-                        account_addresses: &self.account_addresses,
-                        client_options: &self.client_options,
+                        account_addresses: self.account_addresses,
+                        client_options: self.client_options,
                     },
                 )
                 .await?,
