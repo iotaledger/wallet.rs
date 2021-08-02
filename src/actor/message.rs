@@ -499,6 +499,8 @@ pub struct MigrationDataDto {
     #[serde(rename = "lastCheckedAddressIndex")]
     last_checked_address_index: u64,
     inputs: Vec<MigrationInputDto>,
+    #[serde(rename = "spentAddresses")]
+    spent_addresses: bool,
 }
 
 impl From<MigrationData> for MigrationDataDto {
@@ -525,6 +527,7 @@ impl From<MigrationData> for MigrationDataDto {
             balance: data.balance,
             last_checked_address_index: data.last_checked_address_index,
             inputs,
+            spent_addresses: data.spent_addresses,
         }
     }
 }

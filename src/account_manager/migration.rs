@@ -51,6 +51,8 @@ pub struct MigrationData {
     pub last_checked_address_index: u64,
     /// Migration inputs.
     pub inputs: Vec<InputData>,
+    /// If any of the inputs are spent
+    pub spent_addresses: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -75,6 +77,7 @@ pub(crate) struct MigrationMetadata {
     pub(crate) balance: u64,
     pub(crate) last_checked_address_index: u64,
     pub(crate) inputs: HashMap<Range<u64>, Vec<InputData>>,
+    pub(crate) spent_addresses: bool,
 }
 
 #[derive(Serialize)]
@@ -140,7 +143,7 @@ impl<'a> MigrationDataFinder<'a> {
         }
         let mut legacy_client = legacy_client_builder.build()?;
         let mut balance = 0;
-
+        let mut spent_addresses = false;
         loop {
             emit_migration_progress(MigrationProgressType::FetchingMigrationData {
                 initial_address_index: address_index,
@@ -155,6 +158,9 @@ impl<'a> MigrationDataFinder<'a> {
                 .with_gap_limit(self.gap_limit)
                 .finish()
                 .await?;
+            if migration_inputs.2 {
+                spent_addresses = true;
+            }
             let mut current_inputs = migration_inputs.1;
             // Filter duplicates because when it's called another time it could return duplicated entries
             let mut unique_inputs = HashMap::new();
@@ -199,6 +205,7 @@ impl<'a> MigrationDataFinder<'a> {
             balance,
             last_checked_address_index: address_index,
             inputs,
+            spent_addresses,
         })
     }
 }
