@@ -374,7 +374,12 @@ impl Clone for AccountManager {
             loaded_accounts: AtomicBool::new(self.loaded_accounts.load(Ordering::SeqCst)),
             storage_path: self.storage_path.clone(),
             accounts: self.accounts.clone(),
-            stop_polling_sender: StdMutex::new(self.stop_polling_sender.lock().expect("Mutex failed on AccountManager clone.").clone()),
+            stop_polling_sender: StdMutex::new(
+                self.stop_polling_sender
+                    .lock()
+                    .expect("Mutex failed on AccountManager clone.")
+                    .clone(),
+            ),
             polling_handle: StdMutex::new(None),
             generated_mnemonic: StdMutex::new(None),
             account_options: self.account_options,
