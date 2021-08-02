@@ -302,7 +302,12 @@ pub enum MessageType {
     /// Get seed checksum.
     GetSeedChecksum(String),
     /// Get migration address
-    GetMigrationAddress(bool),
+    GetMigrationAddress {
+        /// Display prompt on the ledger
+        ledger_prompt: bool,
+        /// Account identifier
+        account_id: AccountIdentifier,
+    },
     /// Mine bundle
     MineBundle {
         /// Prepared bundle.
@@ -421,7 +426,7 @@ impl Serialize for MessageType {
                 mwm: _,
             } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
-            MessageType::GetMigrationAddress(_) => {
+            MessageType::GetMigrationAddress { .. } => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
             MessageType::MineBundle {
