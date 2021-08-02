@@ -439,7 +439,7 @@ impl AccountManager {
         Ok(MigrationData {
             balance: metadata.balance,
             last_checked_address_index: metadata.last_checked_address_index,
-            spent_addresses: metadata.inputs.iter().any(|(_, v)| v.iter().any(|v| v.spent)),
+            spent_addresses: metadata.spent_addresses,
             inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
     }
