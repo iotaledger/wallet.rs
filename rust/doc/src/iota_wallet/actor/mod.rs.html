@@ -1033,7 +1033,7 @@
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="kw">let</span> <span class="ident">nodes</span> <span class="op">=</span> <span class="ident">nodes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="ident">String::as_ref</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">finder</span> <span class="op">=</span> <span class="ident">MigrationDataFinder::new</span>(<span class="kw-2">&amp;</span><span class="ident">nodes</span>, <span class="kw-2">&amp;</span><span class="ident">seed</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">finder</span> <span class="op">=</span> <span class="ident">MigrationDataFinder::new</span>(<span class="kw-2">&amp;</span><span class="ident">nodes</span>, <span class="ident">seed</span>)<span class="question-mark">?</span>;
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">level</span>) <span class="op">=</span> <span class="ident">security_level</span> {
                         <span class="ident">finder</span> <span class="op">=</span> <span class="ident">finder</span>.<span class="ident">with_security_level</span>(<span class="kw-2">*</span><span class="ident">level</span>);
                     }
@@ -1101,12 +1101,12 @@
                     <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="self">self</span>
                         .<span class="ident">account_manager</span>
                         .<span class="ident">create_migration_bundle</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">seed</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">input_address_indexes</span>,
+                            <span class="ident">seed</span>,
+                            <span class="ident">input_address_indexes</span>,
                             <span class="kw-2">*</span><span class="ident">mine</span>,
                             <span class="ident">Duration::from_secs</span>(<span class="kw-2">*</span><span class="ident">timeout_secs</span>),
                             <span class="kw-2">*</span><span class="ident">offset</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">log_file_name</span>,
+                            <span class="ident">log_file_name</span>,
                         )
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="ident">seed</span>.<span class="ident">zeroize</span>();

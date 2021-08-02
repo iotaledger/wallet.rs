@@ -1354,7 +1354,6 @@
 <span id="1351">1351</span>
 <span id="1352">1352</span>
 <span id="1353">1353</span>
-<span id="1354">1354</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2059,7 +2058,7 @@
         )
         .<span class="kw">await</span>;
         <span class="ident">essence</span>.<span class="ident">internal</span> <span class="op">=</span> <span class="ident">is_internal</span>;
-        <span class="ident">essence</span>.<span class="ident">incoming</span> <span class="op">=</span> <span class="ident">essence</span>.<span class="ident">is_incoming</span>(<span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">account_addresses</span>);
+        <span class="ident">essence</span>.<span class="ident">incoming</span> <span class="op">=</span> <span class="ident">essence</span>.<span class="ident">is_incoming</span>(<span class="ident">metadata</span>.<span class="ident">account_addresses</span>);
 
         <span class="prelude-val">Ok</span>(<span class="ident">essence</span>)
     }
@@ -2165,7 +2164,7 @@
                 <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Payload::Receipt</span>(<span class="ident">receipt</span>) <span class="op">=</span> <span class="ident">p</span> {
                         <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Receipt</span>(<span class="ident">Box::new</span>(<span class="ident">MessageReceiptPayload::new</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">receipt</span>, <span class="ident">metadata</span>,
+                            <span class="ident">receipt</span>, <span class="ident">metadata</span>,
                         ))))
                     } <span class="kw">else</span> {
                         <span class="prelude-val">None</span>
@@ -2448,7 +2447,7 @@
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Message</span> {
     <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
-        <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>())
+        <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">cmp</span>(<span class="ident">other</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>())
     }
 }
 
@@ -2509,13 +2508,12 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_belonging_to_account</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">account_handle</span>) <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">iter</span>() {
         <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span> {
-            <span class="ident">inputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_inputs_belonging_to_account</span>(<span class="kw-2">&amp;</span><span class="ident">essence</span>, <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>));
-            <span class="ident">outputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_outputs_belonging_to_account</span>(<span class="kw-2">&amp;</span><span class="ident">essence</span>, <span class="kw-2">&amp;</span><span class="ident">account_addresses</span>));
+            <span class="ident">inputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_inputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account_addresses</span>));
+            <span class="ident">outputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_outputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account_addresses</span>));
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-            <span class="ident">inputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_inputs_belonging_to_account</span>(<span class="kw-2">&amp;</span><span class="ident">essence</span>, <span class="ident">account</span>.<span class="ident">addresses</span>()));
-            <span class="ident">outputs_belonging_to_account</span>
-                .<span class="ident">extend</span>(<span class="ident">transaction_outputs_belonging_to_account</span>(<span class="kw-2">&amp;</span><span class="ident">essence</span>, <span class="ident">account</span>.<span class="ident">addresses</span>()));
+            <span class="ident">inputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_inputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account</span>.<span class="ident">addresses</span>()));
+            <span class="ident">outputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_outputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account</span>.<span class="ident">addresses</span>()));
         }
 
         <span class="kw">if</span> <span class="ident">essence</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">inputs_belonging_to_account</span>.<span class="ident">contains</span>(<span class="ident">i</span>))
@@ -2590,8 +2588,8 @@
                         <span class="ident">bech32_hrp</span>: <span class="self">self</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(),
                         <span class="ident">accounts</span>: <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
                         <span class="ident">account_id</span>: <span class="self">self</span>.<span class="ident">account_id</span>,
-                        <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">account_addresses</span>,
-                        <span class="ident">client_options</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">client_options</span>,
+                        <span class="ident">account_addresses</span>: <span class="self">self</span>.<span class="ident">account_addresses</span>,
+                        <span class="ident">client_options</span>: <span class="self">self</span>.<span class="ident">client_options</span>,
                     },
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>,
