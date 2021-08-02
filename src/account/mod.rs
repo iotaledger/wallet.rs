@@ -491,7 +491,7 @@ impl AccountHandle {
 impl Deref for AccountHandle {
     type Target = RwLock<Account>;
     fn deref(&self) -> &Self::Target {
-        &self.inner.deref()
+        self.inner.deref()
     }
 }
 
@@ -533,8 +533,13 @@ impl AccountHandle {
     }
 
     /// Consolidate account outputs.
-    pub async fn consolidate_outputs(&self) -> crate::Result<Vec<Message>> {
-        self.sync_internal().await.execute().await?.consolidate_outputs().await
+    pub async fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> crate::Result<Vec<Message>> {
+        self.sync_internal()
+            .await
+            .execute()
+            .await?
+            .consolidate_outputs(include_dust_allowance_outputs)
+            .await
     }
 
     /// Send messages.
@@ -578,7 +583,7 @@ impl AccountHandle {
         account: &mut RwLockWriteGuard<'_, Account>,
     ) -> crate::Result<Address> {
         let address = crate::address::get_new_address(
-            &account,
+            account,
             GenerateAddressMetadata {
                 syncing: false,
                 network: account.network(),
@@ -629,7 +634,7 @@ impl AccountHandle {
         for key_index in key_index..amount + key_index {
             addresses.push(
                 crate::address::get_address_with_index(
-                    &account,
+                    account,
                     key_index,
                     bech32_hrp.clone(),
                     GenerateAddressMetadata {
@@ -863,7 +868,7 @@ impl Account {
                 .expect("storage adapter not set")
                 .lock()
                 .await
-                .message_indexation(&self)
+                .message_indexation(self)
                 .expect("message indexation not set"))
         }
     }
@@ -932,7 +937,7 @@ impl Account {
             available: self
                 .addresses()
                 .iter()
-                .fold(0, |acc, addr| acc + addr.available_balance(&sent_messages)),
+                .fold(0, |acc, addr| acc + addr.available_balance(sent_messages)),
             incoming,
             outgoing,
         }
@@ -1040,7 +1045,7 @@ impl Account {
             .lock()
             .await
             .get_messages(
-                &self,
+                self,
                 count,
                 from,
                 MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&cached_messages),
@@ -1168,7 +1173,7 @@ impl Account {
             .await?
             .lock()
             .await
-            .save_messages(&self, &messages)
+            .save_messages(self, &messages)
             .await
     }
 
@@ -1179,7 +1184,7 @@ impl Account {
             .expect("storage adapter not set")
             .lock()
             .await
-            .get_message(&self, message_id)
+            .get_message(self, message_id)
             .await
             .ok()
     }
@@ -1299,7 +1304,7 @@ mod tests {
             .unwrap();
 
         let addresses = vec![second_address.clone(), first_address];
-        let account_handle = crate::test_utils::AccountCreator::new(&manager)
+        let account_handle = crate::test_utils::AccountCreator::new(manager)
             .addresses(addresses)
             .messages(messages)
             .create()

@@ -281,7 +281,7 @@ async fn get_password(snapshot_path: &Path) -> Result<Arc<Password>> {
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     #[error("`{0}`")]
-    StrongholdError(#[from] iota_stronghold::Error),
+    Stronghold(#[from] iota_stronghold::Error),
     #[error("record not found")]
     RecordNotFound,
     #[error("failed to perform action: `{0}`")]
@@ -289,7 +289,7 @@ pub enum Error {
     #[error("snapshot password not set")]
     PasswordNotSet,
     #[error("invalid address or account index {0}")]
-    TryFromIntError(#[from] TryFromIntError),
+    TryFromInt(#[from] TryFromIntError),
     #[error("the mnemonic was already stored")]
     MnemonicAlreadyStored,
 }
@@ -396,7 +396,7 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -
         .as_ref()
     {
         if persist && !runtime.spawned_client_paths.is_empty() {
-            save_snapshot(&mut runtime, &curr_snapshot_path).await?;
+            save_snapshot(&mut runtime, curr_snapshot_path).await?;
         }
         for path in &runtime.spawned_client_paths {
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
@@ -475,7 +475,7 @@ async fn load_snapshot_internal(mut runtime: &mut ActorRuntime, snapshot_path: &
         .lock()
         .await
         .as_deref()
-        == Some(&snapshot_path)
+        == Some(snapshot_path)
     {
         let (is_password_empty, is_password_updated) = {
             let passwords = PASSWORD_STORE.get_or_init(default_password_store).lock().await;
@@ -483,10 +483,10 @@ async fn load_snapshot_internal(mut runtime: &mut ActorRuntime, snapshot_path: &
             (stored_password.is_none(), stored_password != Some(&password))
         };
         if !runtime.spawned_client_paths.is_empty() && !is_password_empty && is_password_updated {
-            save_snapshot(runtime, &snapshot_path).await?;
+            save_snapshot(runtime, snapshot_path).await?;
         }
     }
-    check_snapshot(&mut runtime, &snapshot_path, Some(Arc::new(Password(password.clone())))).await?;
+    check_snapshot(&mut runtime, snapshot_path, Some(Arc::new(Password(password.clone())))).await?;
     set_password(&snapshot_path, password).await;
     crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await).await;
     Ok(())
@@ -577,7 +577,7 @@ pub async fn generate_address(
     internal: bool,
 ) -> Result<Address> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path, None).await?;
+    check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
     let chain = Chain::from_u32_hardened(vec![
@@ -607,7 +607,7 @@ pub async fn sign_transaction(
     internal: bool,
 ) -> Result<Ed25519Signature> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path, None).await?;
+    check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_private_data_actor(&mut runtime, snapshot_path, None).await?;
 
     let chain = Chain::from_u32_hardened(vec![
@@ -638,7 +638,7 @@ pub async fn sign_transaction(
 
 pub async fn get_record(snapshot_path: &Path, key: &str) -> Result<String> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path, None).await?;
+    check_snapshot(&mut runtime, snapshot_path, None).await?;
     load_records_actor(&mut runtime, snapshot_path, None).await?;
     let (data, status) = runtime.stronghold.read_from_store(Location::generic(key, key)).await;
     stronghold_response_to_result(status).map_err(|_| Error::RecordNotFound)?;
@@ -647,7 +647,7 @@ pub async fn get_record(snapshot_path: &Path, key: &str) -> Result<String> {
 
 pub async fn store_record(snapshot_path: &Path, key: &str, record: String) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path, None).await?;
+    check_snapshot(&mut runtime, snapshot_path, None).await?;
 
     // since we're creating a new account, we don't need to load it from the snapshot
     runtime.loaded_client_paths.insert(records_client_path());
@@ -667,7 +667,7 @@ pub async fn store_record(snapshot_path: &Path, key: &str, record: String) -> Re
 
 pub async fn remove_record(snapshot_path: &Path, key: &str) -> Result<()> {
     let mut runtime = actor_runtime().lock().await;
-    check_snapshot(&mut runtime, &snapshot_path, None).await?;
+    check_snapshot(&mut runtime, snapshot_path, None).await?;
 
     load_records_actor(&mut runtime, snapshot_path, None).await?;
     stronghold_response_to_result(runtime.stronghold.delete_from_store(Location::generic(key, key)).await)?;

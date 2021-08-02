@@ -5,7 +5,7 @@ use crate::types::*;
 use chrono::prelude::{Local, TimeZone};
 use iota_client::bee_message::MessageId as RustMessageId;
 use iota_wallet::{
-    address::parse as parse_address,
+    address::{parse as parse_address, OutputKind as RustOutputKind},
     message::{
         Message as RustWalletMessage, MessageType as RustMessageType,
         RemainderValueStrategy as RustRemainderValueStrategy, Transfer as RustTransfer,
@@ -87,9 +87,15 @@ impl Transfer {
         indexation: Option<Indexation>,
         remainder_value_strategy: Option<&str>,
         skip_sync: Option<bool>,
+        output_kind: Option<&str>,
     ) -> Result<Self> {
         let address_wrapper = parse_address(address)?;
-        let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap());
+        let output_kind = match output_kind {
+            Some("SignatureLockedSingle") => Some(RustOutputKind::SignatureLockedSingle),
+            Some("SignatureLockedDustAllowance") => Some(RustOutputKind::SignatureLockedDustAllowance),
+            _ => None,
+        };
+        let mut builder = RustTransfer::builder(address_wrapper, NonZeroU64::new(amount).unwrap(), output_kind);
         let strategy = match remainder_value_strategy {
             Some("ReuseAddress") => RustRemainderValueStrategy::ReuseAddress,
             Some("ChangeAddress") => RustRemainderValueStrategy::ChangeAddress,
@@ -164,7 +170,7 @@ impl AccountHandle {
     fn retry(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .retry(&RustMessageId::from_str(&message_id)?)
+                .retry(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -174,7 +180,7 @@ impl AccountHandle {
     fn promote(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .promote(&RustMessageId::from_str(&message_id)?)
+                .promote(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -184,7 +190,7 @@ impl AccountHandle {
     fn reattach(&self, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_handle
-                .reattach(&RustMessageId::from_str(&message_id)?)
+                .reattach(&RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -246,8 +252,12 @@ impl AccountHandle {
     }
 
     /// Consolidate outputs.
-    fn consolidate_outputs(&self) -> Result<Vec<WalletMessage>> {
-        let rust_messages = crate::block_on(async { self.account_handle.consolidate_outputs().await })?;
+    fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<WalletMessage>> {
+        let rust_messages = crate::block_on(async {
+            self.account_handle
+                .consolidate_outputs(include_dust_allowance_outputs)
+                .await
+        })?;
         let mut messages = Vec::new();
         for message in rust_messages {
             messages.push(message.try_into()?);
@@ -390,7 +400,7 @@ impl AccountHandle {
         let res: Result<Option<RustWalletMessage>> = crate::block_on(async {
             Ok(self
                 .account_handle
-                .get_message(&RustMessageId::from_str(&message_id)?)
+                .get_message(&RustMessageId::from_str(message_id)?)
                 .await)
         });
         if let Some(message) = res? {

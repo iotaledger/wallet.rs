@@ -1,5 +1,17 @@
 # Changelog
 
+## \[0.6.0]
+
+- Fixes edge case in account discovery.
+  - [2320748d](https://github.com/iotaledger/wallet.rs/commit/2320748d968ca634e2e321ff6bcfe10500887a67) fix account discovery when there is only an internal address with balance ([#672](https://github.com/iotaledger/wallet.rs/pull/672)) on 2021-06-28
+- Added GetBalance to apiTimeouts.
+  - [3db454e2](https://github.com/iotaledger/wallet.rs/commit/3db454e26131d5f8706e0b4ee0f4390a77416229) add GetBalance to API timeouts ([#667](https://github.com/iotaledger/wallet.rs/pull/667)) on 2021-07-19
+- Added `mqttDisabled` option to disable mqtt.
+  - [349f8307](https://github.com/iotaledger/wallet.rs/commit/349f83074a378ca228dd86c3c975411de9b184fe) Add option to disable mqtt ([#665](https://github.com/iotaledger/wallet.rs/pull/665)) on 2021-06-22
+- Add optional OutputKind for transfers to enable the creation of dust allowance outputs.
+  consolidateOutputs() has also an optional boolean to define if dust outputs should also get consolidated.
+  - [6eea2a71](https://github.com/iotaledger/wallet.rs/commit/6eea2a71da14fb2e0ad2e0991d6bf07c07ce37e0) Add dust allowance outputs support ([#678](https://github.com/iotaledger/wallet.rs/pull/678)) on 2021-07-19
+
 ## \[0.5.0]
 
 - Added generateAddresses function.

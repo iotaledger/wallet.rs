@@ -3,7 +3,7 @@
 
 use crate::{
     account_manager::AccountStore,
-    address::{Address, AddressOutput, AddressWrapper, IotaAddress},
+    address::{Address, AddressOutput, AddressWrapper, IotaAddress, OutputKind},
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
 };
@@ -76,12 +76,23 @@ pub struct TransferOutput {
     /// The output address.
     #[serde(with = "crate::serde::iota_address_serde")]
     pub address: AddressWrapper,
+    /// The output type
+    #[serde(default = "default_output_kind", rename = "outputKind")]
+    pub output_kind: OutputKind,
+}
+
+fn default_output_kind() -> OutputKind {
+    OutputKind::SignatureLockedSingle
 }
 
 impl TransferOutput {
     /// Creates a new transfer output.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
-        Self { amount, address }
+    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> Self {
+        Self {
+            amount,
+            address,
+            output_kind: output_kind.unwrap_or(OutputKind::SignatureLockedSingle),
+        }
     }
 }
 
@@ -182,9 +193,13 @@ impl<'de> Deserialize<'de> for TransferBuilder {
 
 impl TransferBuilder {
     /// Initialises a new transfer to the given address.
-    pub fn new(address: AddressWrapper, amount: NonZeroU64) -> Self {
+    pub fn new(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> Self {
         Self {
-            outputs: vec![TransferOutput { amount, address }],
+            outputs: vec![TransferOutput {
+                amount,
+                address,
+                output_kind: output_kind.unwrap_or(OutputKind::SignatureLockedSingle),
+            }],
             ..Default::default()
         }
     }
@@ -263,8 +278,8 @@ pub struct Transfer {
 
 impl Transfer {
     /// Initialises the transfer builder.
-    pub fn builder(address: AddressWrapper, amount: NonZeroU64) -> TransferBuilder {
-        TransferBuilder::new(address, amount)
+    pub fn builder(address: AddressWrapper, amount: NonZeroU64, output_kind: Option<OutputKind>) -> TransferBuilder {
+        TransferBuilder::new(address, amount, output_kind)
     }
 
     /// Initialises the transfer builder with multiple outputs.
@@ -686,7 +701,7 @@ impl TransactionRegularEssence {
         )
         .await;
         essence.internal = is_internal;
-        essence.incoming = essence.is_incoming(&metadata.account_addresses);
+        essence.incoming = essence.is_incoming(metadata.account_addresses);
 
         Ok(essence)
     }
@@ -792,7 +807,7 @@ impl MessageMilestonePayloadEssence {
                 Some(p) => {
                     if let Payload::Receipt(receipt) = p {
                         Some(MessagePayload::Receipt(Box::new(MessageReceiptPayload::new(
-                            &receipt, metadata,
+                            receipt, metadata,
                         ))))
                     } else {
                         None
@@ -1075,7 +1090,7 @@ impl PartialEq for Message {
 
 impl Ord for Message {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.id.as_ref().cmp(&other.id.as_ref())
+        self.id.as_ref().cmp(other.id.as_ref())
     }
 }
 
@@ -1136,13 +1151,12 @@ async fn is_internal(
     let mut outputs_belonging_to_account = Vec::new();
     for (id, account_handle) in accounts.read().await.iter() {
         if id == account_id {
-            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, &account_addresses));
-            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(&essence, &account_addresses));
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(essence, account_addresses));
+            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(essence, account_addresses));
         } else {
             let account = account_handle.read().await;
-            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(&essence, account.addresses()));
-            outputs_belonging_to_account
-                .extend(transaction_outputs_belonging_to_account(&essence, account.addresses()));
+            inputs_belonging_to_account.extend(transaction_inputs_belonging_to_account(essence, account.addresses()));
+            outputs_belonging_to_account.extend(transaction_outputs_belonging_to_account(essence, account.addresses()));
         }
 
         if essence.inputs().iter().all(|i| inputs_belonging_to_account.contains(i))
@@ -1217,8 +1231,8 @@ impl<'a> MessageBuilder<'a> {
                         bech32_hrp: self.bech32_hrp.clone(),
                         accounts: self.accounts.clone(),
                         account_id: self.account_id,
-                        account_addresses: &self.account_addresses,
-                        client_options: &self.client_options,
+                        account_addresses: self.account_addresses,
+                        client_options: self.client_options,
                     },
                 )
                 .await?,

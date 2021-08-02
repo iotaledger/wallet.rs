@@ -10,3 +10,4 @@ book
 *.ipynb
 *.stronghold
 wallet.log
+/.idea
