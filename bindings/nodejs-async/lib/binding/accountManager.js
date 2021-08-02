@@ -23,6 +23,16 @@ let {
     setClientOptions,
     internalTransfer,
     isLatestAddressUnused,
+    getBalanceChangeEvents,
+    getBalanceChangeEventCount,
+    getTransactionConfirmationEvents,
+    getTransactionConfirmationEventCount,
+    getNewTransactionEvents,
+    getNewTransactionEventCount,
+    getReattachmentEvents,
+    getReattachmentEventCount,
+    getBroadcastEvents,
+    getBroadcastEventCount,
 } = addon;
 
 let { Account } = acc;
@@ -101,6 +111,46 @@ class AccountManager {
 
     generateMnemonic() {
         return generateMnemonic.apply(this.accountManager);
+    }
+
+    getBalanceChangeEvents(count, skip, fromTimestamp) {
+        return getBalanceChangeEvents.apply(this.accountManager, [count, skip, fromTimestamp].filter(e => e != undefined));
+    }
+
+    getBalanceChangeEventCount(fromTimestamp) {
+        return getBalanceChangeEventCount.apply(this.accountManager, [fromTimestamp].filter(e => e != undefined));
+    }
+
+    getTransactionConfirmationEvents(count, skip, fromTimestamp) {
+        return getTransactionConfirmationEvents.apply(this.accountManager, [count, skip, fromTimestamp].filter(e => e != undefined));
+    }
+
+    getTransactionConfirmationEventCount(fromTimestamp) {
+        return getTransactionConfirmationEventCount.apply(this.accountManager, [fromTimestamp].filter(e => e != undefined));
+    }
+
+    getNewTransactionEvents(count, skip, fromTimestamp) {
+        return getNewTransactionEvents.apply(this.accountManager, [count, skip, fromTimestamp].filter(e => e != undefined));
+    }
+
+    getNewTransactionEventCount(fromTimestamp) {
+        return getNewTransactionEventCount.apply(this.accountManager, [fromTimestamp].filter(e => e != undefined));
+    }
+
+    getReattachmentEvents(count, skip, fromTimestamp) {
+        return getReattachmentEvents.apply(this.accountManager, [count, skip, fromTimestamp].filter(e => e != undefined));
+    }
+
+    getReattachmentEventCount(fromTimestamp) {
+        return getReattachmentEventCount.apply(this.accountManager, [fromTimestamp].filter(e => e != undefined));
+    }
+
+    getBroadcastEvents(count, skip, fromTimestamp) {
+        return getBroadcastEvents.apply(this.accountManager, [count, skip, fromTimestamp].filter(e => e != undefined));
+    }
+
+    getBroadcastEventCount(fromTimestamp) {
+        return getBroadcastEventCount.apply(this.accountManager, [fromTimestamp].filter(e => e != undefined));
     }
 };
 

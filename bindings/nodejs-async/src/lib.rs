@@ -178,6 +178,17 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("startBackgroundSync", classes::account_manager::start_background_sync)?;
     cx.export_function("stopBackgroundSync", classes::account_manager::stop_background_sync)?;
 
+    cx.export_function("getBalanceChangeEvents", classes::account_manager::get_balance_change_events)?;
+    cx.export_function("getBalanceChangeEventCount", classes::account_manager::get_balance_change_event_count)?;
+    cx.export_function("getTransactionConfirmationEvents", classes::account_manager::get_transaction_confirmation_events)?;
+    cx.export_function("getTransactionConfirmationEventCount", classes::account_manager::get_transaction_confirmation_event_count)?;
+    cx.export_function("getNewTransactionEvents", classes::account_manager::get_new_transaction_events)?;
+    cx.export_function("getNewTransactionEventCount", classes::account_manager::get_new_transaction_event_count)?;
+    cx.export_function("getReattachmentEvents", classes::account_manager::get_reattachment_events)?;
+    cx.export_function("getReattachmentEventCount", classes::account_manager::get_reattachment_event_count)?;
+    cx.export_function("getBroadcastEvents", classes::account_manager::get_broadcast_events)?;
+    cx.export_function("getBroadcastEventCount", classes::account_manager::get_broadcast_event_count)?;
+
     // Message handler methods.
     cx.export_function("sendMessage", classes::message_handler::send_message)?;
     cx.export_function("messageHandlerNew", classes::message_handler::message_handler_new)?;

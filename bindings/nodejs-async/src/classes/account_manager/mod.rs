@@ -108,56 +108,61 @@ fn default_skip_polling() -> bool {
 macro_rules! event_getter {
     ($cx: ident, $get_fn_name: ident) => {{
         let count = match $cx.argument_opt(0) {
-            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as usize,
             None => 0,
         };
         let skip = match $cx.argument_opt(1) {
-            Some(arg) => arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as usize,
+            Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as usize,
             None => 0,
         };
         let from_timestamp = match $cx.argument_opt(2) {
-            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            Some(arg) => Some(arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as i64),
             None => None,
         };
+        let wrapper = Arc::clone(
+            &&$cx.this()
+                .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut $cx)?,
+        );
 
-        let events = {
-            let this = $cx.this();
-            let guard = $cx.lock();
-            let ref_ = &this.borrow(&guard).0;
-            crate::block_on(async move {
-                let manager = ref_.read().await;
-                manager.$get_fn_name(count, skip, from_timestamp).await.unwrap()
-            })
-        };
+        let (sender, receiver) = channel();
+        crate::RUNTIME.spawn(async move {
+            let result = wrapper.account_manager.$get_fn_name(count, skip, from_timestamp).await.unwrap();
+            let _ = sender.send(result);
+        });
+        let events = receiver.recv().unwrap();
 
         let js_array = JsArray::new(&mut $cx, events.len() as u32);
         for (index, event) in events.into_iter().enumerate() {
-            let js_event = neon_serde::to_value(&mut $cx, &event)?;
+            let js_event = serde_json::to_string(&event).unwrap();
+            let js_event = $cx.string(&js_event);
             js_array.set(&mut $cx, index as u32, js_event)?;
         }
 
-        Ok(js_array.upcast())
+        Ok(js_array)
     }};
 }
 
 macro_rules! event_count_getter {
     ($cx: ident, $get_fn_name: ident) => {{
         let from_timestamp = match $cx.argument_opt(0) {
-            Some(arg) => Some(arg.downcast::<JsNumber>().or_throw(&mut $cx)?.value() as i64),
+            Some(arg) => Some(arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as i64),
             None => None,
         };
 
-        let count = {
-            let this = $cx.this();
-            let guard = $cx.lock();
-            let ref_ = &this.borrow(&guard).0;
-            crate::block_on(async move {
-                let manager = ref_.read().await;
-                manager.$get_fn_name(from_timestamp).await.unwrap()
-            })
-        };
+        let wrapper = Arc::clone(
+            &&$cx.this()
+                .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut $cx)?,
+        );
 
-        Ok($cx.number(count as f64).upcast())
+        let (sender, receiver) = channel();
+        crate::RUNTIME.spawn(async move {
+            let result = wrapper.account_manager.$get_fn_name(from_timestamp).await.unwrap();
+            let _ = sender.send(result);
+        });
+
+        let count = receiver.recv().unwrap();
+
+        Ok($cx.number(count as f64))
     }};
 }
 
@@ -677,42 +682,42 @@ pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-// fn getBalanceChangeEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_getter!(cx, get_balance_change_events)
-// }
+pub fn get_balance_change_events(mut cx: FunctionContext) -> JsResult<JsArray> {
+    event_getter!(cx, get_balance_change_events)
+}
 
-// fn getBalanceChangeEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_count_getter!(cx, get_balance_change_event_count)
-// }
+pub fn get_balance_change_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    event_count_getter!(cx, get_balance_change_event_count)
+}
 
-// fn getTransactionConfirmationEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_getter!(cx, get_transaction_confirmation_events)
-// }
+pub fn get_transaction_confirmation_events(mut cx: FunctionContext) -> JsResult<JsArray> {
+    event_getter!(cx, get_transaction_confirmation_events)
+}
 
-// fn getTransactionConfirmationEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_count_getter!(cx, get_transaction_confirmation_event_count)
-// }
+pub fn get_transaction_confirmation_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    event_count_getter!(cx, get_transaction_confirmation_event_count)
+}
 
-// fn getNewTransactionEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_getter!(cx, get_new_transaction_events)
-// }
+pub fn get_new_transaction_events(mut cx: FunctionContext) -> JsResult<JsArray> {
+    event_getter!(cx, get_new_transaction_events)
+}
 
-// fn getNewTransactionEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_count_getter!(cx, get_new_transaction_event_count)
-// }
+pub fn get_new_transaction_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    event_count_getter!(cx, get_new_transaction_event_count)
+}
 
-// fn getReattachmentEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_getter!(cx, get_reattachment_events)
-// }
+pub fn get_reattachment_events(mut cx: FunctionContext) -> JsResult<JsArray> {
+    event_getter!(cx, get_reattachment_events)
+}
 
-// fn getReattachmentEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_count_getter!(cx, get_reattachment_event_count)
-// }
+pub fn get_reattachment_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    event_count_getter!(cx, get_reattachment_event_count)
+}
 
-// fn getBroadcastEvents(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_getter!(cx, get_broadcast_events)
-// }
+pub fn get_broadcast_events(mut cx: FunctionContext) -> JsResult<JsArray> {
+    event_getter!(cx, get_broadcast_events)
+}
 
-// fn getBroadcastEventCount(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     event_count_getter!(cx, get_broadcast_event_count)
-// }
+pub fn get_broadcast_event_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
+    event_count_getter!(cx, get_broadcast_event_count)
+}
