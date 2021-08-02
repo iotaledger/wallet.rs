@@ -253,15 +253,15 @@ impl EventListener {
 
     async fn remove_event_listeners(event_type: EventType, event_id: &[u8; 32]) {
         match event_type {
-            EventType::ErrorThrown => remove_error_listener(&event_id),
-            EventType::BalanceChange => remove_balance_change_listener(&event_id).await,
-            EventType::NewTransaction => remove_new_transaction_listener(&event_id).await,
-            EventType::ConfirmationStateChange => remove_confirmation_state_change_listener(&event_id).await,
-            EventType::Reattachment => remove_reattachment_listener(&event_id).await,
-            EventType::Broadcast => remove_broadcast_listener(&event_id).await,
-            EventType::StrongholdStatusChange => remove_stronghold_status_change_listener(&event_id).await,
-            EventType::TransferProgress => remove_transfer_progress_listener(&event_id).await,
-            EventType::MigrationProgress => remove_migration_progress_listener(&event_id).await,
+            EventType::ErrorThrown => remove_error_listener(event_id),
+            EventType::BalanceChange => remove_balance_change_listener(event_id).await,
+            EventType::NewTransaction => remove_new_transaction_listener(event_id).await,
+            EventType::ConfirmationStateChange => remove_confirmation_state_change_listener(event_id).await,
+            EventType::Reattachment => remove_reattachment_listener(event_id).await,
+            EventType::Broadcast => remove_broadcast_listener(event_id).await,
+            EventType::StrongholdStatusChange => remove_stronghold_status_change_listener(event_id).await,
+            EventType::TransferProgress => remove_transfer_progress_listener(event_id).await,
+            EventType::MigrationProgress => remove_migration_progress_listener(event_id).await,
         };
     }
 
