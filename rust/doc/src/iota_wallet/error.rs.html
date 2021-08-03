@@ -382,6 +382,10 @@
 <span id="379">379</span>
 <span id="380">380</span>
 <span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -617,6 +621,9 @@
     <span class="doccomment">/// Tokio task join error</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
     <span class="ident">TaskJoinError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">tokio::task::JoinError</span>),
+    <span class="doccomment">/// Couldn&#39;t get a spent output from a node.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;couldn&#39;t get a spent output from node&quot;</span>)]</span>
+    <span class="ident">SpentOutputNotFound</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Error</span> {
@@ -761,6 +768,7 @@
             <span class="self">Self</span><span class="ident">::SpentAddressOnBundle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;SpentAddressOnBundle&quot;</span>),
             <span class="self">Self</span><span class="ident">::PoisonError</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;PoisonError&quot;</span>),
             <span class="self">Self</span><span class="ident">::TaskJoinError</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;TaskJoinError&quot;</span>),
+            <span class="self">Self</span><span class="ident">::SpentOutputNotFound</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;SpentOutputNotFound&quot;</span>),
         }
     }
 }

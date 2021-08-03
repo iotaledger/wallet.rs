@@ -2200,6 +2200,26 @@
 <span id="2197">2197</span>
 <span id="2198">2198</span>
 <span id="2199">2199</span>
+<span id="2200">2200</span>
+<span id="2201">2201</span>
+<span id="2202">2202</span>
+<span id="2203">2203</span>
+<span id="2204">2204</span>
+<span id="2205">2205</span>
+<span id="2206">2206</span>
+<span id="2207">2207</span>
+<span id="2208">2208</span>
+<span id="2209">2209</span>
+<span id="2210">2210</span>
+<span id="2211">2211</span>
+<span id="2212">2212</span>
+<span id="2213">2213</span>
+<span id="2214">2214</span>
+<span id="2215">2215</span>
+<span id="2216">2216</span>
+<span id="2217">2217</span>
+<span id="2218">2218</span>
+<span id="2219">2219</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2352,11 +2372,21 @@
 
         <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">bech32_hrp</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">spent</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">is_spent</span>;
         <span class="kw">let</span> <span class="ident">account_messages</span> <span class="op">=</span> <span class="ident">account_messages</span>.<span class="ident">clone</span>();
         <span class="ident">tasks</span>.<span class="ident">push</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="ident">tokio::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
                 <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">utxo_input</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">utxo_input</span>).<span class="kw">await</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">output</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">spent</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::SpentOutputNotFound</span>);
+                        } <span class="kw">else</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>());
+                        }
+                    }
+                };
                 <span class="kw">let</span> <span class="ident">found_output</span> <span class="op">=</span> <span class="ident">AddressOutput::from_output_response</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>.<span class="ident">to_string</span>())<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">message_id</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">found_output</span>.<span class="ident">message_id</span>();
 
@@ -2387,10 +2417,20 @@
     }
 
     <span class="kw">for</span> <span class="ident">res</span> <span class="kw">in</span> <span class="ident">futures::future::try_join_all</span>(<span class="ident">tasks</span>).<span class="kw">await</span><span class="question-mark">?</span> {
-        <span class="kw">let</span> (<span class="ident">found_output</span>, <span class="ident">found_message</span>) <span class="op">=</span> <span class="ident">res</span><span class="question-mark">?</span>;
-        <span class="ident">outputs</span>.<span class="ident">insert</span>(<span class="ident">found_output</span>.<span class="ident">id</span>()<span class="question-mark">?</span>, <span class="ident">found_output</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">m</span>) <span class="op">=</span> <span class="ident">found_message</span> {
-            <span class="ident">found_messages</span>.<span class="ident">push</span>(<span class="ident">m</span>);
+        <span class="comment">// Don&#39;t return an error if we didn&#39;t got a spent output</span>
+        <span class="kw">match</span> <span class="ident">res</span> {
+            <span class="prelude-val">Ok</span>((<span class="ident">found_output</span>, <span class="ident">found_message</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">outputs</span>.<span class="ident">insert</span>(<span class="ident">found_output</span>.<span class="ident">id</span>()<span class="question-mark">?</span>, <span class="ident">found_output</span>);
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">m</span>) <span class="op">=</span> <span class="ident">found_message</span> {
+                    <span class="ident">found_messages</span>.<span class="ident">push</span>(<span class="ident">m</span>);
+                }
+            }
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">e</span> {
+                <span class="kw">crate</span><span class="ident">::Error::SpentOutputNotFound</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;[SYNC] output not found in syncing address&quot;</span>)
+                }
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>),
+            },
         }
     }
 
