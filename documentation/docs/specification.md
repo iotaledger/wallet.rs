@@ -276,7 +276,7 @@ What follows is an Entity Relationship Diagram (ERD)  that shows the logical rep
 
 A _storage adapter_ is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
-![Storage - Entity Relationship Diagram](../static/img/specs/erdIOTA.svg)
+![Storage - Entity Relationship Diagram](/img/specs/erdIOTA.svg)
 
 ## Storage Adapter
 
@@ -529,7 +529,7 @@ If you want to sync an account, you can use the following process:
 | ---------------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | index            | ✘          | number  | Address index. By default the number of addresses stored for this account should be used as an index.                                                                                                                                                                                                       |
 | gap_limit        | ✘          | number  | Number of address indexes that are generated.                                                                                                                                                                                                                                                               |
-| skip_persistence | ✘          | boolean | Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition") provided by Trinity. |
+| skip_persistence | ✘          | boolean | Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://legacy.docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition) provided by Trinity. |
 
 
 ##### Returns

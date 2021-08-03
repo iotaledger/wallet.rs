@@ -137,7 +137,7 @@ You can find detailed information about generating addresses at the [Developer G
 
 Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send some tokens to your testnet addresses.
 
-![IOTA Faucet Service](../../../static/img/libraries/screenshot_faucet.png)
+![IOTA Faucet Service](/img/libraries/screenshot_faucet.png)
 
 You can use the following example to sync your accounts and retrieve their balances.
 

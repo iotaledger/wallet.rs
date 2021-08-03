@@ -104,7 +104,7 @@ You can use the following example to generate a new address:
 ## Checking Balance
 Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
 
-![IOTA Faucet Service](../../../static/img/libraries/screenshot_faucet.png)
+![IOTA Faucet Service](/img/libraries/screenshot_faucet.png)
 
 You can use the following example to generate a new database and account:
 
