@@ -15,7 +15,10 @@ let {
     id,
     listMessages,
     listAddresses,
-    setAlias
+    setAlias,
+    setClientOptions,
+    getMessage,
+    getAddress
 } = addon;
 
 
@@ -87,6 +90,18 @@ class Account {
 
     setAlias(alias) {
         return setAlias.apply(this.account, [alias]);
+    }
+
+    setClientOptions(options) {
+        return setClientOptions.apply(this.account, [options]);
+    }
+
+    getMessage(id) {
+        return getMessage.apply(this.account, [id]);
+    }
+
+    getAddress(addressBech32) {
+        return getAddress.apply(this.account, [addressBech32]);
     }
 
     balance() {

@@ -338,7 +338,6 @@ pub fn set_alias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
     let id = account_wrapper.account_id.clone();
-    let id = account_wrapper.account_id.clone();
     let alias = cx.argument::<JsString>(0)?.value(&mut cx);
 
     crate::RUNTIME.spawn(async move {
@@ -352,50 +351,79 @@ pub fn set_alias(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     Ok(cx.undefined())
 }
 
-// pub fn setClientOptions(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let client_options = cx.argument::<JsString>(0)?;
-//     let client_options: ClientOptionsDto = serde_json::from_str::<ClientOptionsDto>(client_options)?;
-//     {
-//         let this = cx.this();
-//         let guard = cx.lock();
-//         let id = &this.borrow(&guard).0;
-//         crate::RUNTIME.spawn(async move {
-//             let account_handle = crate::get_account(id).await;
-//             account_handle.set_client_options(client_options.into()).await.expect("failed to update client options");
-//         });
-//     }
-//     Ok(cx.undefined().upcast())
-// }
+pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
 
-// pub fn getMessage(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let message_id = MessageId::from_str(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid message id
-// length");     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let message = account.get_message(&message_id).await;
-//         match message {
-//             Some(m) => Ok( serde_json::to_string(&m)?),
-//             None => Ok(cx.undefined().upcast())
-//         }
-//     })
-// }
+    let client_options = cx.argument::<JsString>(0)?.value(&mut cx);
+    let client_options = serde_json::from_str::<ClientOptionsDto>(&client_options).unwrap();
 
-// pub fn getAddress(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-//     let address = parse_address(cx.argument::<JsString>(0)?.value()).expect("invalid address");
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let account = account_handle.read().await;
-//         let address = account.addresses().iter().find(|a| a.address() == &address);
-//         match address {
-//             Some(a) => Ok( serde_json::to_string(&a)?),
-//             None => Ok(cx.undefined().upcast())
-//         }
-//     })
-// }
+    let id = account_wrapper.account_id.clone();
+
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(id.as_str()).await;
+        let result = account_handle.set_client_options(client_options.into()).await.expect("failed to update client options");
+        let _ = sender.send(result);
+    });
+    let _ = receiver.recv().unwrap();
+
+    Ok(cx.undefined())
+}
+
+pub fn get_message(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let message_id = MessageId::from_str(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).expect("invalid message id length");
+    let id = account_wrapper.account_id.clone();
+
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(&id).await;
+        let account = account_handle.read().await;
+        let message = account.get_message(&message_id).await;
+        let _ = sender.send(message);
+    });
+    let message = receiver.recv().unwrap();
+
+    match message {
+        Some(m) => Ok(cx.string(serde_json::to_string(&m).unwrap()).as_value(&mut cx)),
+        None => Ok(cx.undefined().as_value(&mut cx))
+    }
+}
+
+pub fn get_address(mut cx: FunctionContext) -> JsResult<JsValue> {
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let address = parse_address(cx.argument::<JsString>(0)?.value(&mut cx)).expect("invalid address").clone();
+    let id = account_wrapper.account_id.clone();
+
+    let (sender, receiver) = channel();
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(&id).await;
+        let account = account_handle.read().await;
+        let address = account.addresses().iter().find(|a| a.address() == &address);
+
+        let address = match address {
+            Some(a) => Some(serde_json::to_string(&a).unwrap()),
+            None => None
+        };
+        let _ = sender.send(address);
+
+    });
+    let address = receiver.recv().unwrap();
+
+    match address {
+        Some(a) => Ok(cx.string(a).as_value(&mut cx)),
+        None => Ok(cx.undefined().as_value(&mut cx))
+    }
+}
 
 pub fn generate_address(mut cx: FunctionContext) -> JsResult<JsString> {
     let account_wrapper = Arc::clone(
