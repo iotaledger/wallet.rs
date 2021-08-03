@@ -18,7 +18,8 @@ let {
     setAlias,
     setClientOptions,
     getMessage,
-    getAddress
+    getAddress,
+    getUnusedAddress
 } = addon;
 
 
@@ -102,6 +103,10 @@ class Account {
 
     getAddress(addressBech32) {
         return getAddress.apply(this.account, [addressBech32]);
+    }
+
+    getUnusedAddress() {
+        return getUnusedAddress.apply(this.account);
     }
 
     balance() {

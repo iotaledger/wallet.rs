@@ -475,18 +475,22 @@ pub fn latest_address(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string(serde_json::to_string(&address).unwrap()))
 }
 
-// pub fn getUnusedAddress(mut cx: FunctionContext) -> JsResult<JsString> {
-//     let this = cx.this();
-//     let id = cx.borrow(&this, |r| r.0.clone());
-//     let (sender, receiver) = channel();
-//     crate::RUNTIME.spawn(async move {
-//         let account_handle = crate::get_account(&id).await;
-//         let address = account_handle.get_unused_address().await;
-//         sender.send(address);
-//     });
+pub fn get_unused_address(mut cx: FunctionContext) -> JsResult<JsString> {
+    let account_wrapper = Arc::clone(
+        &&cx.this()
+            .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
+    );
+    let id = account_wrapper.account_id.clone();
+    let (sender, receiver) = channel();
 
-//     Ok(serde_json::to_string(receiver.recv().unwrap())?)
-// }
+    crate::RUNTIME.spawn(async move {
+        let account_handle = crate::get_account(&id).await;
+        let address = account_handle.get_unused_address().await.unwrap();
+        let _ = sender.send(serde_json::to_string(&address).unwrap());
+    });
+
+    Ok(cx.string(receiver.recv().unwrap()))
+}
 
 pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let account_wrapper = Arc::clone(
