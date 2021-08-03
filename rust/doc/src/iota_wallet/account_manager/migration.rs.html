@@ -511,7 +511,6 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
-<span id="511">511</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -945,8 +944,7 @@
             }
             <span class="ident">tokio::time::sleep</span>(<span class="ident">std::time::Duration::from_secs</span>(<span class="number">10</span>)).<span class="kw">await</span>;
         }
-    })
-    .<span class="kw">await</span><span class="question-mark">?</span>;
+    });
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trits</span> <span class="op">=</span> <span class="ident">TritBuf</span>::<span class="op">&lt;</span><span class="ident">T1B1Buf</span><span class="op">&gt;</span><span class="ident">::zeros</span>(<span class="ident">BundledTransaction::trit_len</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">curl</span> <span class="op">=</span> <span class="ident">CurlP::new</span>();
     <span class="ident">send_trytes</span>[<span class="number">0</span>].<span class="ident">as_trits_allocated</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">trits</span>);
