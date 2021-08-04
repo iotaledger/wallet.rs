@@ -60,7 +60,7 @@ Each account is related to a specific IOTA network (mainnet or testnet), which i
 
 For more information about _client_options_ , please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {b_create_account}
 </CodeBlock>
 
@@ -117,7 +117,7 @@ The IOTA 1.5 (Chrysalis) network supports reusing addresses multiple times.
 
 You can use the following example to generate a new address via an instance of _account_ which was retrieved using an _account_manager_ instance:
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {generate_address}
 </CodeBlock>
 
@@ -155,7 +155,7 @@ Before we continue further, please visit the [IOTA testnet faucet service](https
 
 You can use the following example to sync your accounts and retrieve their balances.
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {check_balance}
 </CodeBlock>
 
@@ -229,7 +229,7 @@ The _remainder_value_strategy_ argument can be either:
 We highly recommend that you sync the account information with the Tangle by running the `account.sync().execute()` method before doing anything with the account. This way you can ensure that you rely on the latest available information.
 :::
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {send}
 </CodeBlock>
 
@@ -316,7 +316,7 @@ You can use those methods to check whether a message is confirmed, broadcast, et
 
 You can use the following example to _sync_ an _account_ , and list all the messages related to the _account_ .
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {b_list_messages}
 </CodeBlock>
 
@@ -337,7 +337,7 @@ Due to security practices that are incorporated in the `Stronghold's` DNA, there
 
 The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {backup}
 </CodeBlock>
 
@@ -355,7 +355,7 @@ To restore a database via `wallet.rs`, you will need to:
 
 The following example restores a secured backup file:
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {restore}
 </CodeBlock>
 
@@ -394,7 +394,7 @@ You can later use this _id_ to remove a listener by using the corresponding meth
 
 The following example set's up a listener for the _on_balance_change_ event using an event-based pattern:
 
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {b_event_simple_event}
 </CodeBlock>
 
@@ -412,7 +412,7 @@ Done.
 Alternatively, events can be consumed via queue-base pattern as shown in the following example:
 
 import event_queue from  '!!raw-loader!./../../../../bindings/python/examples/7_event_queue.py';
-<CodeBlock className="language-rust">
+<CodeBlock className="language-python">
   {event_queue}
 </CodeBlock>
 
