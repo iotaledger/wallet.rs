@@ -401,8 +401,7 @@ pub fn get_address(mut cx: FunctionContext) -> JsResult<JsValue> {
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
     let address = parse_address(cx.argument::<JsString>(0)?.value(&mut cx))
-        .expect("invalid address")
-        .clone();
+        .expect("invalid address");
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();
@@ -411,10 +410,7 @@ pub fn get_address(mut cx: FunctionContext) -> JsResult<JsValue> {
         let account = account_handle.read().await;
         let address = account.addresses().iter().find(|a| a.address() == &address);
 
-        let address = match address {
-            Some(a) => Some(serde_json::to_string(&a).unwrap()),
-            None => None,
-        };
+        let address = address.map(|a| serde_json::to_string(&a).unwrap());
         let _ = sender.send(address);
     });
     let address = receiver.recv().unwrap();
