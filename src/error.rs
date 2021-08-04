@@ -232,6 +232,9 @@ pub enum Error {
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
+    /// std thread join error
+    #[error("Thread join error")]
+    StdThreadJoinError,
     /// Couldn't get a spent output from a node.
     #[error("couldn't get a spent output from node")]
     SpentOutputNotFound,
@@ -379,6 +382,7 @@ impl serde::Serialize for Error {
             Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
             Self::PoisonError => serialize_variant(self, serializer, "PoisonError"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
+            Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::SpentOutputNotFound => serialize_variant(self, serializer, "SpentOutputNotFound"),
         }
     }
