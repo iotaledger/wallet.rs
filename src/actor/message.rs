@@ -416,18 +416,11 @@ impl Serialize for MessageType {
             MessageType::GetLegacyAddressChecksum(_) => {
                 serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
             }
-            MessageType::StartBackgroundSync {
-                polling_interval: _,
-                automatic_output_consolidation: _,
-            } => serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync"),
-            MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
-            }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 33, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
             }
         }
     }
