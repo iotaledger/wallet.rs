@@ -639,7 +639,7 @@ fn encrypt_record<O: Write>(record: &[u8], encryption_key: &[u8; 32], output: &m
 }
 
 pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::Result<String> {
-    let record: Vec<u8> = serde_json::from_str(&record)?;
+    let record: Vec<u8> = serde_json::from_str(record)?;
     let mut record: &[u8] = &record;
 
     let mut nonce = [0; XChaCha20Poly1305::NONCE_LENGTH];

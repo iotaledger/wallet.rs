@@ -240,7 +240,7 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     let nodes = nodes.iter().map(String::as_ref).collect::<Vec<&str>>();
-                    let mut finder = MigrationDataFinder::new(&nodes, &seed)?;
+                    let mut finder = MigrationDataFinder::new(&nodes, seed)?;
                     if let Some(level) = security_level {
                         finder = finder.with_security_level(*level);
                     }
@@ -308,12 +308,12 @@ impl WalletMessageHandler {
                     let bundle = self
                         .account_manager
                         .create_migration_bundle(
-                            &seed,
-                            &input_address_indexes,
+                            seed,
+                            input_address_indexes,
                             *mine,
                             Duration::from_secs(*timeout_secs),
                             *offset,
-                            &log_file_name,
+                            log_file_name,
                         )
                         .await?;
                     seed.zeroize();

@@ -27,7 +27,7 @@ fn instances() -> &'static ClientInstanceMap {
 pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwLock<Client>>> {
     let mut map = instances().lock().await;
 
-    if !map.contains_key(&options) {
+    if !map.contains_key(options) {
         let mut client_builder = ClientBuilder::new()
             .with_mqtt_broker_options(
                 options
@@ -123,7 +123,7 @@ pub(crate) async fn get_client(options: &ClientOptions) -> crate::Result<Arc<RwL
     }
 
     // safe to unwrap since we make sure the client exists on the block above
-    let client = map.get(&options).unwrap();
+    let client = map.get(options).unwrap();
 
     Ok(client.clone())
 }
@@ -763,14 +763,14 @@ mod tests {
         // assert that each different client_options create a new client instance
         for case in &test_cases {
             let len = super::instances().lock().await.len();
-            super::get_client(&case).await.unwrap();
+            super::get_client(case).await.unwrap();
             assert_eq!(super::instances().lock().await.len() - len, 1);
         }
 
         // assert that subsequent calls with options already initialized doesn't create new clients
         let len = super::instances().lock().await.len();
         for case in &test_cases {
-            super::get_client(&case).await.unwrap();
+            super::get_client(case).await.unwrap();
             assert_eq!(super::instances().lock().await.len(), len);
         }
     }

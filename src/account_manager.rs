@@ -87,7 +87,7 @@ impl AccountStore {
 impl Deref for AccountStore {
     type Target = RwLock<AccountsMap>;
     fn deref(&self) -> &Self::Target {
-        &self.0.deref()
+        self.0.deref()
     }
 }
 
@@ -540,7 +540,7 @@ impl AccountManager {
         let mut prepared_bundle: Vec<BundledTransaction> = prepared_bundle
             .into_iter()
             .map(|tx| {
-                BundledTransaction::from_trits(&TryteBuf::try_from_str(&tx).unwrap().as_trits())
+                BundledTransaction::from_trits(TryteBuf::try_from_str(&tx).unwrap().as_trits())
                     .expect("Can't build transaction from String")
             })
             .collect();
@@ -571,7 +571,7 @@ impl AccountManager {
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
 
-        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(&seed).unwrap().as_trits().encode::<T1B1Buf>())
+        let seed = TernarySeed::from_trits(TryteBuf::try_from_str(seed).unwrap().as_trits().encode::<T1B1Buf>())
             .map_err(|_| crate::Error::InvalidSeed)?;
         let data = self
             .cached_migration_data
@@ -663,7 +663,7 @@ impl AccountManager {
             .into_iter()
             .map(|tx| {
                 BundledTransaction::from_trits(
-                    &TryteBuf::try_from_str(&tx)
+                    TryteBuf::try_from_str(&tx)
                         .map_err(|_| crate::error::Error::TernaryError)?
                         .as_trits(),
                 )
@@ -707,7 +707,7 @@ impl AccountManager {
         account_options: AccountOptions,
         sync_accounts_lock: Arc<Mutex<()>>,
     ) -> crate::Result<()> {
-        let loaded_accounts = crate::storage::get(&storage_file_path)
+        let loaded_accounts = crate::storage::get(storage_file_path)
             .await?
             .lock()
             .await
@@ -825,10 +825,7 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        // safe to unwrap because the storage is always defined at this point
-        crate::storage::set_encryption_key(&self.storage_path, key)
-            .await
-            .unwrap();
+        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
             Self::load_accounts(
@@ -1192,7 +1189,7 @@ impl AccountManager {
             // stronghold adapter `new` never fails
             .unwrap();
             for account_handle in self.accounts.read().await.values() {
-                stronghold_storage.remove(&account_handle.read().await.id()).await?;
+                stronghold_storage.remove(account_handle.read().await.id()).await?;
             }
 
             res?;
@@ -1726,7 +1723,7 @@ async fn poll(
             emit_reattachment_event(
                 &account,
                 *reattached_message_id,
-                &message,
+                message,
                 retried_data.account_handle.account_options.persist_events,
             )
             .await?;

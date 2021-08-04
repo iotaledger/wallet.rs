@@ -4,9 +4,9 @@
 
 The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
 
-The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://docs.iota.org/docs/getting-started/0.1/clients/seeds). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://chrysalis.docs.iota.org/guides/dev_guide#seed). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
 
-A similar [account package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
+A similar account package was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
 
 To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
 
@@ -276,7 +276,7 @@ What follows is an Entity Relationship Diagram (ERD)  that shows the logical rep
 
 A _storage adapter_ is required by the Rust layer to handle all the storage operations (read/write) from that layer. A generic storage adapter is defined in the [storage adapter section](#storage-adapter).  
 
-![Storage - Entity Relationship Diagram](../static/img/specs/erdIOTA.svg)
+![Storage - Entity Relationship Diagram](/img/specs/erdIOTA.svg)
 
 ## Storage Adapter
 
@@ -529,7 +529,7 @@ If you want to sync an account, you can use the following process:
 | ---------------- | ---------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | index            | ✘          | number  | Address index. By default the number of addresses stored for this account should be used as an index.                                                                                                                                                                                                       |
 | gap_limit        | ✘          | number  | Number of address indexes that are generated.                                                                                                                                                                                                                                                               |
-| skip_persistence | ✘          | boolean | Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition") provided by Trinity. |
+| skip_persistence | ✘          | boolean | Skips write to the database. This will be useful if a user wants to scan the Tangle for further addresses to find balance. You can find more details in the [snapshot transition feature](https://legacy.docs.iota.org/docs/wallets/0.1/trinity/how-to-guides/perform-a-snapshot-transition) provided by Trinity. |
 
 
 ##### Returns

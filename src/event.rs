@@ -484,7 +484,7 @@ pub(crate) async fn emit_balance_change(
             Some(id) => account
                 .get_message(&id)
                 .await
-                .and_then(|message| message.is_remainder(&address)),
+                .and_then(|message| message.is_remainder(address)),
             None => None,
         }
     };
@@ -683,7 +683,7 @@ pub async fn remove_broadcast_listener(id: &EventId) {
 pub(crate) fn emit_error(error: &crate::Error) {
     let listeners = error_listeners().lock().unwrap();
     for listener in listeners.deref() {
-        (listener.on_error)(&error)
+        (listener.on_error)(error)
     }
 }
 
@@ -710,7 +710,7 @@ pub fn remove_error_listener(id: &EventId) {
 pub(crate) async fn emit_stronghold_status_change(status: &crate::StrongholdStatus) {
     let listeners = stronghold_status_change_listeners().lock().await;
     for listener in listeners.deref() {
-        (listener.on_event)(&status)
+        (listener.on_event)(status)
     }
 }
 

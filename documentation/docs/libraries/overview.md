@@ -21,8 +21,8 @@ In order to properly test value-based transactions on testnet network, you are g
 
 The library allows users to assign a meaningful alias to each account. Users may also segregate their funds across multiple accounts or multiple addresses. It is up to a developer whether he chooses a single-account approach or multi-account approach.
 
-The library is based on a [derivation for multiple accounts from a single seed](https://chrysalis.docs.iota.org/guides/dev_guide.html#addresskey-space). An account is simply a deterministic identifier from which multiple addresses can be further derived. 
+The library is based on a [derivation for multiple accounts from a single seed](https://chrysalis.docs.iota.org/guides/dev_guide#addresskey-space). An account is simply a deterministic identifier from which multiple addresses can be further derived. 
 
 The following image illustrates the relationships between seed, accounts and addresses.  A single seed can contain multiple accounts.  Each account can also have multiple addresses which can be linked to users in your database. 
 
-![Seed, accounts and Addresses](../../static/img/libraries/accounts_addresses.svg)
+![Seed, accounts and Addresses](/img/libraries/accounts_addresses.svg)

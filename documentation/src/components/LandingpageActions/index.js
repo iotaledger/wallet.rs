@@ -6,7 +6,7 @@ import styles from './styles.module.css';
 const ActionList = [
   {
     title: 'Learn',
-    link: 'docs',
+    link: 'docs/welcome',
     description: (
       <>
         Learn the Basics about the IOTA Wallet.rs Library and how it works behind the scenes.

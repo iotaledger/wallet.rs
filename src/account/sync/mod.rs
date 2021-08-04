@@ -245,7 +245,7 @@ async fn get_address_for_sync(
             }
         }
         let generated_address = crate::address::get_iota_address(
-            &account,
+            account,
             index,
             internal,
             bech32_hrp,
@@ -550,7 +550,7 @@ async fn sync_messages(
                                             log::debug!(
                                                 "[SYNC] couldn't get spent output: {}",
                                                 utxo_input.output_id().transaction_id().to_string(),
-                                            );  
+                                            );
                                             continue;
                                         }
                                     }
