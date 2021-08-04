@@ -47,7 +47,7 @@ module.exports = {
           items: [
             {
               label: 'Welcome',
-              to: '/docs/',
+              to: '/docs/welcome',
             },
             {
               label: 'Overview',
@@ -90,6 +90,7 @@ module.exports = {
       '@docusaurus/preset-classic',
       {
         docs: {
+          remarkPlugins: [require('remark-code-import'), require('remark-import-partial')],
           sidebarPath: require.resolve('./sidebars.js'),
           // Please change this to your repo.
           editUrl:
@@ -102,16 +103,5 @@ module.exports = {
     ],
   ],
   plugins: [
-    [
-      'docusaurus-plugin-includes',
-      {
-        sharedFolders: [
-          { source: '../../bindings/nodejs/examples', target: 'docs/nodejs/examples/'},
-          { source: '../../bindings/python/examples', target: 'docs/python/examples/'},
-          { source: '../../bindings/java/examples', target: 'docs/java/examples/'},
-          { source: '../../examples/', target: 'docs/rust/examples/'},
-        ],
-      },
-    ],
   ],
 };
