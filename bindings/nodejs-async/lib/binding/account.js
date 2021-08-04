@@ -24,7 +24,7 @@ let {
     isLatestAddressUnused,
     consolidateOutputs,
     repost,
-    sendToMany
+    sendToMany,
 } = addon;
 
 const syncAsync = utils.promisify(sync);

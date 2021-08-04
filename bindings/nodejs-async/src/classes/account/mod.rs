@@ -229,7 +229,6 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
         &&cx.this()
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
-    let id = account_wrapper.account_id.clone();
 
     let count = match cx.argument_opt(0) {
         Some(arg) => arg
@@ -286,7 +285,6 @@ pub fn list_addresses(mut cx: FunctionContext) -> JsResult<JsArray> {
         &&cx.this()
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
-    let id = account_wrapper.account_id.clone();
     let unspent = match cx.argument_opt(0) {
         Some(arg) => Some(
             arg.downcast::<JsBoolean, FunctionContext>(&mut cx)
@@ -638,31 +636,44 @@ pub fn send_to_many(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
     for js_value in vec {
         let js_object = js_value.downcast::<JsObject, FunctionContext>(&mut cx).unwrap();
-        let address = js_object.get(&mut cx, "address")?.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?;
-        let amount = js_object.get(&mut cx, "amount")?.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?;
+        let address = js_object
+            .get(&mut cx, "address")?
+            .downcast::<JsString, FunctionContext>(&mut cx)
+            .or_throw(&mut cx)?;
+        let amount = js_object
+            .get(&mut cx, "amount")?
+            .downcast::<JsNumber, FunctionContext>(&mut cx)
+            .or_throw(&mut cx)?;
         outputs.push(TransferOutput::new(
             parse_address(address.value(&mut cx)).expect("invalid address format"),
             NonZeroU64::new(amount.value(&mut cx) as u64).expect("amount can't be zero"),
-            None
+            None,
         ));
     }
 
     let (options, cb) = match cx.argument_opt(2) {
         Some(arg) => {
-            let cb = arg.downcast::<JsFunction, FunctionContext>(&mut cx).or_throw(&mut cx)?.root(&mut cx);
+            let cb = arg
+                .downcast::<JsFunction, FunctionContext>(&mut cx)
+                .or_throw(&mut cx)?
+                .root(&mut cx);
             let options = cx.argument::<JsString>(1)?.value(&mut cx);
-            let options = serde_json::from_str::<>(&options).unwrap();
+            let options = serde_json::from_str(&options).unwrap();
             (options, cb)
         }
         None => (TransferOptions::default(), cx.argument::<JsFunction>(1)?.root(&mut cx)),
     };
 
-    let mut transfer_builder = Transfer::builder_with_outputs(outputs).expect("Outputs must be less then 125")
+    let mut transfer_builder = Transfer::builder_with_outputs(outputs)
+        .expect("Outputs must be less then 125")
         .with_remainder_value_strategy(options.remainder_value_strategy);
     if let Some(indexation) = options.indexation {
         transfer_builder = transfer_builder.with_indexation(
-            IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect("index can't be
-empty")         );
+            IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect(
+                "index can't be
+empty",
+            ),
+        );
     }
     if options.skip_sync {
         transfer_builder = transfer_builder.with_skip_sync();

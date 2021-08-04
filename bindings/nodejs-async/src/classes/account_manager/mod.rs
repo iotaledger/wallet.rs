@@ -2,16 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::types::ClientOptionsDto;
-use std::{num::NonZeroU64, path::PathBuf, sync::Arc, time::Duration};
+use std::{num::NonZeroU64, sync::Arc, time::Duration};
 
 // use iota_client::Address;
-use iota_wallet::{
-    account::AccountIdentifier,
-    account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    signing::SignerType,
-    DateTime, Local,
-};
-use neon::{prelude::*, result::Throw};
+use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, signing::SignerType, DateTime, Local};
+use neon::prelude::*;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use std::sync::mpsc::channel;
@@ -54,44 +49,6 @@ fn js_value_to_account_id(cx: &mut FunctionContext, value: Handle<JsValue>) -> N
             Ok((index.value(cx) as usize).into())
         }
     }
-}
-
-fn default_storage_path() -> PathBuf {
-    DEFAULT_STORAGE_FOLDER.into()
-}
-
-#[derive(Default, Deserialize)]
-struct ManagerOptions {
-    #[serde(rename = "storagePath", default = "default_storage_path")]
-    storage_path: PathBuf,
-    #[serde(rename = "storagePassword")]
-    storage_password: Option<String>,
-    #[serde(rename = "outputConsolidationThreshold")]
-    output_consolidation_threshold: Option<usize>,
-    #[serde(
-        rename = "automaticOutputConsolidation",
-        default = "default_automatic_output_consolidation"
-    )]
-    automatic_output_consolidation: bool,
-    #[serde(rename = "syncSpentOutputs", default)]
-    sync_spent_outputs: bool,
-    #[serde(rename = "persistEvents", default)]
-    persist_events: bool,
-    #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
-    allow_create_multiple_empty_accounts: bool,
-
-    #[serde(rename = "skipPolling", default = "default_skip_polling")]
-    skip_polling: bool,
-    #[serde(rename = "pollingInterval")]
-    polling_interval: Option<u64>,
-}
-
-fn default_automatic_output_consolidation() -> bool {
-    true
-}
-
-fn default_skip_polling() -> bool {
-    false
 }
 
 macro_rules! event_getter {
@@ -184,7 +141,6 @@ impl Finalize for AccountManagerWrapper {}
 
 impl AccountManagerWrapper {
     fn new(queue: EventQueue, options: String) -> Arc<Self> {
-        log::debug!("------------------------------------- AccountManagerWrapper");
         let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
             Ok(options) => options,
             Err(e) => {
@@ -224,7 +180,6 @@ impl AccountManagerWrapper {
             .block_on(manager.finish())
             .expect("error initializing account manager");
 
-        log::debug!("------------------------------------- AccountManagerWrapper end");
         Arc::new(Self {
             queue,
             account_manager: manager,
@@ -233,7 +188,6 @@ impl AccountManagerWrapper {
 }
 
 pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountManagerWrapper>>> {
-    log::debug!("------------------------------------- account_manager_new");
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
     let queue = cx.queue();

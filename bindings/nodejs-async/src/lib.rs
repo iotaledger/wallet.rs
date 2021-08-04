@@ -6,16 +6,8 @@ pub mod types;
 
 use neon::prelude::*;
 use once_cell::sync::Lazy;
-use serde::Deserialize;
-use std::{
-    any::Any,
-    collections::HashMap,
-    panic::AssertUnwindSafe,
-    sync::{Arc, Mutex},
-};
+use std::{collections::HashMap, sync::Arc};
 use tokio::{runtime::Runtime, sync::RwLock};
-
-use std::{path::PathBuf, time::Duration};
 
 pub use iota_wallet::{
     account::{AccountHandle, SyncedAccount},
@@ -34,15 +26,7 @@ pub use iota_wallet::{
     Error,
 };
 
-// use futures::{Future, FutureExt};
-// use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
-// use neon::prelude::*;
-// use once_cell::sync::{Lazy, OnceCell};
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
-
-// mod classes;
-// use classes::*;
-// pub(crate) mod types;
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
 type SyncedAccountHandle = Arc<RwLock<SyncedAccount>>;
@@ -99,29 +83,6 @@ pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> Strin
     id
 }
 
-pub(crate) async fn remove_synced_account(id: &str) {
-    synced_account_instances().write().await.remove(id);
-}
-
-fn panic_to_response_message(panic: Box<dyn Any>) -> String {
-    let msg = if let Some(message) = panic.downcast_ref::<String>() {
-        format!("Internal error: {}", message)
-    } else if let Some(message) = panic.downcast_ref::<&str>() {
-        format!("Internal error: {}", message)
-    } else {
-        "Internal error".to_string()
-    };
-    let current_backtrace = backtrace::Backtrace::new();
-    format!("{}\n\n{:?}", msg, current_backtrace)
-}
-
-// pub async fn convert_async_panics<T, F: Future<Output = Result<T, Error>>>(f: impl FnOnce() -> F) -> Result<T, Error>
-// {     match AssertUnwindSafe(f()).catch_unwind().await {
-//         Ok(result) => result,
-//         Err(panic) => Err(Error::Panic(panic_to_response_message(panic))),
-//     }
-// }
-
 pub static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
 use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
@@ -158,6 +119,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("isLatestAddressUnused", classes::account::is_latest_address_unused)?;
     cx.export_function("consolidateOutputs", classes::account::consolidate_outputs)?;
     cx.export_function("repost", classes::account::repost)?;
+    cx.export_function("balance", classes::account::balance)?;
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;

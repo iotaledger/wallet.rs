@@ -1,12 +1,11 @@
 use neon::prelude::*;
 use std::sync::Arc;
 
-use tokio::{runtime::Runtime, sync::mpsc::unbounded_channel};
+use tokio::sync::mpsc::unbounded_channel;
 
 use serde::Deserialize;
 
-use once_cell::sync::Lazy;
-use std::{path::PathBuf, time::Duration};
+use std::time::Duration;
 
 pub use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
@@ -23,8 +22,6 @@ pub use iota_wallet::{
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
     Error,
 };
-
-use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
 
 #[derive(Deserialize, Clone)]
 pub(crate) struct DispatchMessage {
@@ -86,11 +83,8 @@ impl MessageHandler {
         match serde_json::from_str::<DispatchMessage>(&serialized_message) {
             Ok(message) => {
                 let (response_tx, mut response_rx) = unbounded_channel();
-                log::debug!("--------------------------{:?}", &message.message);
-                // https://damad.be/joost/blog/rust-serde-deserialization-of-an-enum-variant.html
                 let wallet_message = WalletMessage::new(message.id.clone(), message.message.clone(), response_tx);
 
-                log::debug!("--------------------------{:?}", &wallet_message);
                 self.message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
                 if let Some(res) = response {
