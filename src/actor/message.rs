@@ -418,7 +418,7 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
             }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
             }
             MessageType::StartBackgroundSync { .. } => {
                 serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
