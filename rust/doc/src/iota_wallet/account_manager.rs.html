@@ -2513,6 +2513,26 @@
 <span id="2511">2511</span>
 <span id="2512">2512</span>
 <span id="2513">2513</span>
+<span id="2514">2514</span>
+<span id="2515">2515</span>
+<span id="2516">2516</span>
+<span id="2517">2517</span>
+<span id="2518">2518</span>
+<span id="2519">2519</span>
+<span id="2520">2520</span>
+<span id="2521">2521</span>
+<span id="2522">2522</span>
+<span id="2523">2523</span>
+<span id="2524">2524</span>
+<span id="2525">2525</span>
+<span id="2526">2526</span>
+<span id="2527">2527</span>
+<span id="2528">2528</span>
+<span id="2529">2529</span>
+<span id="2530">2530</span>
+<span id="2531">2531</span>
+<span id="2532">2532</span>
+<span id="2533">2533</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -2776,13 +2796,13 @@
             .<span class="kw">await</span>;
             (<span class="ident">accounts</span>, <span class="ident">res</span>.<span class="ident">is_ok</span>())
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">AccountManager</span> {
+        <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="ident">AccountManager</span> {
             <span class="ident">storage_folder</span>: <span class="self">self</span>.<span class="ident">storage_folder</span>,
             <span class="ident">loaded_accounts</span>: <span class="ident">AtomicBool::new</span>(<span class="ident">loaded_accounts</span>),
             <span class="ident">storage_path</span>: <span class="ident">storage_file_path</span>,
             <span class="ident">accounts</span>,
-            <span class="ident">stop_polling_sender</span>: <span class="prelude-val">None</span>,
-            <span class="ident">polling_handle</span>: <span class="prelude-val">None</span>,
+            <span class="ident">stop_polling_sender</span>: <span class="ident">StdMutex::new</span>(<span class="prelude-val">None</span>),
+            <span class="ident">polling_handle</span>: <span class="ident">StdMutex::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">generated_mnemonic</span>: <span class="ident">StdMutex::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">account_options</span>: <span class="self">self</span>.<span class="ident">account_options</span>,
             <span class="ident">sync_accounts_lock</span>,
@@ -2796,7 +2816,7 @@
                     <span class="self">self</span>.<span class="ident">polling_interval</span>,
                     <span class="self">self</span>.<span class="ident">account_options</span>.<span class="ident">automatic_output_consolidation</span>,
                 )
-                .<span class="kw">await</span>;
+                .<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">instance</span>)
@@ -2870,8 +2890,8 @@
     <span class="doccomment">/// Returns a handle to the accounts store.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
-    <span class="ident">stop_polling_sender</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BroadcastSender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">polling_handle</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">thread::JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">stop_polling_sender</span>: <span class="ident">StdMutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BroadcastSender</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">polling_handle</span>: <span class="ident">StdMutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">thread::JoinHandle</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">generated_mnemonic</span>: <span class="ident">StdMutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
     <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -2890,8 +2910,13 @@
             <span class="ident">loaded_accounts</span>: <span class="ident">AtomicBool::new</span>(<span class="self">self</span>.<span class="ident">loaded_accounts</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)),
             <span class="ident">storage_path</span>: <span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>(),
             <span class="ident">accounts</span>: <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
-            <span class="ident">stop_polling_sender</span>: <span class="self">self</span>.<span class="ident">stop_polling_sender</span>.<span class="ident">clone</span>(),
-            <span class="ident">polling_handle</span>: <span class="prelude-val">None</span>,
+            <span class="ident">stop_polling_sender</span>: <span class="ident">StdMutex::new</span>(
+                <span class="self">self</span>.<span class="ident">stop_polling_sender</span>
+                    .<span class="ident">lock</span>()
+                    .<span class="ident">expect</span>(<span class="string">&quot;Mutex failed on AccountManager clone.&quot;</span>)
+                    .<span class="ident">clone</span>(),
+            ),
+            <span class="ident">polling_handle</span>: <span class="ident">StdMutex::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">generated_mnemonic</span>: <span class="ident">StdMutex::new</span>(<span class="prelude-val">None</span>),
             <span class="ident">account_options</span>: <span class="self">self</span>.<span class="ident">account_options</span>,
             <span class="ident">sync_accounts_lock</span>: <span class="self">self</span>.<span class="ident">sync_accounts_lock</span>.<span class="ident">clone</span>(),
@@ -2903,7 +2928,7 @@
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">AccountManager</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">stop_background_sync</span>();
+        <span class="self">self</span>.<span class="ident">stop_background_sync</span>().<span class="ident">unwrap</span>();
     }
 }
 
@@ -3274,17 +3299,27 @@
     }
 
     <span class="doccomment">/// Initialises the background polling and MQTT monitoring.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">start_background_sync</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">polling_interval</span>: <span class="ident">Duration</span>, <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>) {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">start_background_sync</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">polling_interval</span>: <span class="ident">Duration</span>,
+        <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">Self</span><span class="ident">::start_monitoring</span>(<span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>()).<span class="kw">await</span>;
         <span class="kw">let</span> (<span class="ident">stop_polling_sender</span>, <span class="ident">stop_polling_receiver</span>) <span class="op">=</span> <span class="ident">broadcast_channel</span>(<span class="number">1</span>);
-        <span class="self">self</span>.<span class="ident">start_polling</span>(<span class="ident">polling_interval</span>, <span class="ident">stop_polling_receiver</span>, <span class="ident">automatic_output_consolidation</span>);
-        <span class="self">self</span>.<span class="ident">stop_polling_sender</span>.<span class="ident">replace</span>(<span class="ident">stop_polling_sender</span>);
+        <span class="self">self</span>.<span class="ident">start_polling</span>(<span class="ident">polling_interval</span>, <span class="ident">stop_polling_receiver</span>, <span class="ident">automatic_output_consolidation</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">stop_polling_sender</span>
+            .<span class="ident">lock</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::PoisonError</span>)<span class="question-mark">?</span>
+            .<span class="ident">replace</span>(<span class="ident">stop_polling_sender</span>);
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Stops the background polling and MQTT monitoring.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stop_background_sync</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">polling_handle</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">polling_handle</span>.<span class="ident">take</span>() {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stop_background_sync</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">polling_handle</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">polling_handle</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>().<span class="ident">take</span>() {
             <span class="self">self</span>.<span class="ident">stop_polling_sender</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::PoisonError</span>)<span class="question-mark">?</span>
                 .<span class="ident">take</span>()
                 .<span class="ident">unwrap</span>()
                 .<span class="ident">send</span>(())
@@ -3299,8 +3334,9 @@
                 });
             })
             .<span class="ident">join</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;failed to stop monitoring and polling systems&quot;</span>);
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::StdThreadJoinError</span>)<span class="question-mark">?</span>;
         }
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Sets the password for the stored accounts.</span>
@@ -3395,11 +3431,11 @@
 
     <span class="doccomment">/// Starts the polling mechanism.</span>
     <span class="kw">fn</span> <span class="ident">start_polling</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">polling_interval</span>: <span class="ident">Duration</span>,
         <span class="kw-2">mut</span> <span class="ident">stop</span>: <span class="ident">BroadcastReceiver</span><span class="op">&lt;</span>()<span class="op">&gt;</span>,
         <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>,
-    ) {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">storage_file_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">account_options</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_options</span>;
@@ -3468,7 +3504,11 @@
                 }
             });
         });
-        <span class="self">self</span>.<span class="ident">polling_handle</span>.<span class="ident">replace</span>(<span class="ident">handle</span>);
+        <span class="self">self</span>.<span class="ident">polling_handle</span>
+            .<span class="ident">lock</span>()
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::PoisonError</span>)<span class="question-mark">?</span>
+            .<span class="ident">replace</span>(<span class="ident">handle</span>);
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="doccomment">/// Stores a mnemonic for the given signer type.</span>

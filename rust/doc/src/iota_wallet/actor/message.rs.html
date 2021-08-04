@@ -654,32 +654,6 @@
 <span id="652">652</span>
 <span id="653">653</span>
 <span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
-<span id="668">668</span>
-<span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
-<span id="672">672</span>
-<span id="673">673</span>
-<span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -1005,6 +979,17 @@
     },
     <span class="doccomment">/// Get the checksum for a legacy address.</span>
     <span class="ident">GetLegacyAddressChecksum</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Start background syncing.</span>
+    <span class="ident">StartBackgroundSync</span> {
+        <span class="doccomment">/// Polling interval, time between each syncing operation</span>
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;pollingInterval&quot;</span>)]</span>
+        <span class="ident">polling_interval</span>: <span class="ident">Duration</span>,
+        <span class="doccomment">/// If outputs should get automatically consolidated</span>
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;automaticOutputConsolidation&quot;</span>)]</span>
+        <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>,
+    },
+    <span class="doccomment">/// Stop background syncing.</span>
+    <span class="ident">StopBackgroundSync</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">MessageType</span> {
@@ -1017,27 +1002,13 @@
             <span class="ident">MessageType::CreateAccount</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">1</span>, <span class="string">&quot;CreateAccount&quot;</span>),
             <span class="ident">MessageType::GetAccount</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">2</span>, <span class="string">&quot;GetAccount&quot;</span>),
             <span class="ident">MessageType::GetAccounts</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">3</span>, <span class="string">&quot;GetAccounts&quot;</span>),
-            <span class="ident">MessageType::CallAccountMethod</span> {
-                <span class="ident">account_id</span>: <span class="kw">_</span>,
-                <span class="ident">method</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">4</span>, <span class="string">&quot;CallAccountMethod&quot;</span>),
-            <span class="ident">MessageType::SyncAccounts</span> {
-                <span class="ident">address_index</span>: <span class="kw">_</span>,
-                <span class="ident">gap_limit</span>: <span class="kw">_</span>,
-                <span class="ident">account_discovery_threshold</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">5</span>, <span class="string">&quot;SyncAccounts&quot;</span>),
-            <span class="ident">MessageType::Reattach</span> {
-                <span class="ident">account_id</span>: <span class="kw">_</span>,
-                <span class="ident">message_id</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">6</span>, <span class="string">&quot;Reattach&quot;</span>),
-            <span class="ident">MessageType::Backup</span> {
-                <span class="ident">destination</span>: <span class="kw">_</span>,
-                <span class="ident">password</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">7</span>, <span class="string">&quot;Backup&quot;</span>),
-            <span class="ident">MessageType::RestoreBackup</span> {
-                <span class="ident">backup_path</span>: <span class="kw">_</span>,
-                <span class="ident">password</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">8</span>, <span class="string">&quot;RestoreBackup&quot;</span>),
+            <span class="ident">MessageType::CallAccountMethod</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">4</span>, <span class="string">&quot;CallAccountMethod&quot;</span>)
+            }
+            <span class="ident">MessageType::SyncAccounts</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">5</span>, <span class="string">&quot;SyncAccounts&quot;</span>),
+            <span class="ident">MessageType::Reattach</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">6</span>, <span class="string">&quot;Reattach&quot;</span>),
+            <span class="ident">MessageType::Backup</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">7</span>, <span class="string">&quot;Backup&quot;</span>),
+            <span class="ident">MessageType::RestoreBackup</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">8</span>, <span class="string">&quot;RestoreBackup&quot;</span>),
             <span class="ident">MessageType::SetStoragePassword</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">9</span>, <span class="string">&quot;SetStoragePassword&quot;</span>)
             }
@@ -1055,21 +1026,13 @@
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
             <span class="ident">MessageType::LockStronghold</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">13</span>, <span class="string">&quot;LockStronghold&quot;</span>),
-            <span class="ident">MessageType::SendTransfer</span> {
-                <span class="ident">account_id</span>: <span class="kw">_</span>,
-                <span class="ident">transfer</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">14</span>, <span class="string">&quot;SendTransfer&quot;</span>),
-            <span class="ident">MessageType::InternalTransfer</span> {
-                <span class="ident">from_account_id</span>: <span class="kw">_</span>,
-                <span class="ident">to_account_id</span>: <span class="kw">_</span>,
-                <span class="ident">amount</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">15</span>, <span class="string">&quot;InternalTransfer&quot;</span>),
+            <span class="ident">MessageType::SendTransfer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">14</span>, <span class="string">&quot;SendTransfer&quot;</span>),
+            <span class="ident">MessageType::InternalTransfer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">15</span>, <span class="string">&quot;InternalTransfer&quot;</span>)
+            }
             <span class="ident">MessageType::GenerateMnemonic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">16</span>, <span class="string">&quot;GenerateMnemonic&quot;</span>),
             <span class="ident">MessageType::VerifyMnemonic</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">17</span>, <span class="string">&quot;VerifyMnemonic&quot;</span>),
-            <span class="ident">MessageType::StoreMnemonic</span> {
-                <span class="ident">signer_type</span>: <span class="kw">_</span>,
-                <span class="ident">mnemonic</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">18</span>, <span class="string">&quot;StoreMnemonic&quot;</span>),
+            <span class="ident">MessageType::StoreMnemonic</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">18</span>, <span class="string">&quot;StoreMnemonic&quot;</span>),
             <span class="ident">MessageType::IsLatestAddressUnused</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">19</span>, <span class="string">&quot;IsLatestAddressUnused&quot;</span>)
             }
@@ -1077,61 +1040,44 @@
             <span class="ident">MessageType::GetLedgerStatus</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">20</span>, <span class="string">&quot;GetLedgerStatus&quot;</span>),
             <span class="ident">MessageType::DeleteStorage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">21</span>, <span class="string">&quot;DeleteStorage&quot;</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-            <span class="ident">MessageType::ChangeStrongholdPassword</span> {
-                <span class="ident">current_password</span>: <span class="kw">_</span>,
-                <span class="ident">new_password</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">22</span>, <span class="string">&quot;ChangeStrongholdPassword&quot;</span>),
+            <span class="ident">MessageType::ChangeStrongholdPassword</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">22</span>, <span class="string">&quot;ChangeStrongholdPassword&quot;</span>)
+            }
             <span class="ident">MessageType::SetClientOptions</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">23</span>, <span class="string">&quot;SetClientOptions&quot;</span>)
             }
-            <span class="ident">MessageType::GetMigrationData</span> {
-                <span class="ident">nodes</span>: <span class="kw">_</span>,
-                <span class="ident">permanode</span>: <span class="kw">_</span>,
-                <span class="ident">seed</span>: <span class="kw">_</span>,
-                <span class="ident">initial_address_index</span>: <span class="kw">_</span>,
-                <span class="ident">security_level</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">24</span>, <span class="string">&quot;GetMigrationData&quot;</span>),
-            <span class="ident">MessageType::CreateMigrationBundle</span> {
-                <span class="ident">seed</span>: <span class="kw">_</span>,
-                <span class="ident">input_address_indexes</span>: <span class="kw">_</span>,
-                <span class="ident">mine</span>: <span class="kw">_</span>,
-                <span class="ident">timeout_secs</span>: <span class="kw">_</span>,
-                <span class="ident">offset</span>: <span class="kw">_</span>,
-                <span class="ident">log_file_name</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">25</span>, <span class="string">&quot;CreateMigrationBundle&quot;</span>),
-            <span class="ident">MessageType::SendMigrationBundle</span> {
-                <span class="ident">nodes</span>: <span class="kw">_</span>,
-                <span class="ident">bundle_hash</span>: <span class="kw">_</span>,
-                <span class="ident">mwm</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">26</span>, <span class="string">&quot;SendMigrationBundle&quot;</span>),
+            <span class="ident">MessageType::GetMigrationData</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">24</span>, <span class="string">&quot;GetMigrationData&quot;</span>)
+            }
+            <span class="ident">MessageType::CreateMigrationBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">25</span>, <span class="string">&quot;CreateMigrationBundle&quot;</span>)
+            }
+            <span class="ident">MessageType::SendMigrationBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">26</span>, <span class="string">&quot;SendMigrationBundle&quot;</span>)
+            }
             <span class="ident">MessageType::GetSeedChecksum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">27</span>, <span class="string">&quot;GetSeedChecksum&quot;</span>),
             <span class="ident">MessageType::GetMigrationAddress</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">28</span>, <span class="string">&quot;GetMigrationAddress&quot;</span>)
             }
-            <span class="ident">MessageType::MineBundle</span> {
-                <span class="ident">prepared_bundle</span>: <span class="kw">_</span>,
-                <span class="ident">spent_bundle_hashes</span>: <span class="kw">_</span>,
-                <span class="ident">security_level</span>: <span class="kw">_</span>,
-                <span class="ident">timeout</span>: <span class="kw">_</span>,
-                <span class="ident">offset</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">29</span>, <span class="string">&quot;MineBundle&quot;</span>),
-            <span class="ident">MessageType::GetLedgerMigrationData</span> {
-                <span class="ident">nodes</span>: <span class="kw">_</span>,
-                <span class="ident">permanode</span>: <span class="kw">_</span>,
-                <span class="ident">addresses</span>: <span class="kw">_</span>,
-                <span class="ident">security_level</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">30</span>, <span class="string">&quot;GetLedgerMigrationData&quot;</span>),
-            <span class="ident">MessageType::SendLedgerMigrationBundle</span> {
-                <span class="ident">nodes</span>: <span class="kw">_</span>,
-                <span class="ident">bundle</span>: <span class="kw">_</span>,
-                <span class="ident">mwm</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">31</span>, <span class="string">&quot;SendLedgerMigrationBundle&quot;</span>),
+            <span class="ident">MessageType::MineBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">29</span>, <span class="string">&quot;MineBundle&quot;</span>),
+            <span class="ident">MessageType::GetLedgerMigrationData</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">30</span>, <span class="string">&quot;GetLedgerMigrationData&quot;</span>)
+            }
+            <span class="ident">MessageType::SendLedgerMigrationBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">31</span>, <span class="string">&quot;SendLedgerMigrationBundle&quot;</span>)
+            }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
             <span class="ident">MessageType::GetLedgerOpenedApp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">32</span>, <span class="string">&quot;GetLedgerOpenedApp&quot;</span>)
             }
             <span class="ident">MessageType::GetLegacyAddressChecksum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">33</span>, <span class="string">&quot;GetLegacyAddressChecksum&quot;</span>)
+            }
+            <span class="ident">MessageType::StartBackgroundSync</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">34</span>, <span class="string">&quot;StartBackgroundSync&quot;</span>)
+            }
+            <span class="ident">MessageType::StopBackgroundSync</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">35</span>, <span class="string">&quot;StopBackgroundSync&quot;</span>)
             }
         }
     }
@@ -1321,6 +1267,8 @@
     <span class="ident">MineBundle</span>(<span class="ident">MinedBundle</span>),
     <span class="doccomment">/// GetLegacyAddressChecksum response.</span>
     <span class="ident">GetLegacyAddressChecksum</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// All went fine.</span>
+    <span class="prelude-val">Ok</span>(()),
 }
 
 <span class="doccomment">/// The message type.</span>
