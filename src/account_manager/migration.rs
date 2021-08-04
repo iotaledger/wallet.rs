@@ -90,7 +90,7 @@ impl<'a> MigrationDataFinder<'a> {
         seed.hash(&mut hasher);
         let seed_hash = hasher.finish();
         let seed = TernarySeed::from_trits(
-            TryteBuf::try_from_str(&seed)
+            TryteBuf::try_from_str(seed)
                 .map_err(|_| crate::Error::InvalidSeed)?
                 .as_trits()
                 .encode::<T1B1Buf>(),
@@ -216,7 +216,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
 ) -> crate::Result<MigrationBundle> {
     let mut legacy_client_builder = iota_migration::ClientBuilder::new().quorum(true);
     if let Some(permanode) = &data.permanode {
-        legacy_client_builder = legacy_client_builder.permanode(&permanode)?;
+        legacy_client_builder = legacy_client_builder.permanode(permanode)?;
     }
     for node in &data.nodes {
         legacy_client_builder = legacy_client_builder.node(node)?;
@@ -430,7 +430,8 @@ pub(crate) async fn send_bundle(
             }
             tokio::time::sleep(std::time::Duration::from_secs(10)).await;
         }
-    });
+    })
+    .await?;
     let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
     let mut curl = CurlP::new();
     send_trytes[0].as_trits_allocated(&mut trits);

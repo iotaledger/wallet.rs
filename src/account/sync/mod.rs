@@ -149,11 +149,21 @@ pub(crate) async fn sync_address(
 
         let client_guard = client_guard.clone();
         let bech32_hrp = bech32_hrp.clone();
+        let spent = *is_spent;
         let account_messages = account_messages.clone();
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let output = client.get_output(&utxo_input).await?;
+                let output = match client.get_output(&utxo_input).await {
+                    Ok(output) => output,
+                    Err(err) => {
+                        if spent {
+                            return Err(crate::Error::SpentOutputNotFound);
+                        } else {
+                            return Err(err.into());
+                        }
+                    }
+                };
                 let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
                 let message_id = *found_output.message_id();
 
@@ -184,10 +194,20 @@ pub(crate) async fn sync_address(
     }
 
     for res in futures::future::try_join_all(tasks).await? {
-        let (found_output, found_message) = res?;
-        outputs.insert(found_output.id()?, found_output);
-        if let Some(m) = found_message {
-            found_messages.push(m);
+        // Don't return an error if we didn't got a spent output
+        match res {
+            Ok((found_output, found_message)) => {
+                outputs.insert(found_output.id()?, found_output);
+                if let Some(m) = found_message {
+                    found_messages.push(m);
+                }
+            }
+            Err(e) => match e {
+                crate::Error::SpentOutputNotFound => {
+                    log::debug!("[SYNC] output not found in syncing address")
+                }
+                _ => return Err(e),
+            },
         }
     }
 
@@ -225,7 +245,7 @@ async fn get_address_for_sync(
             }
         }
         let generated_address = crate::address::get_iota_address(
-            &account,
+            account,
             index,
             internal,
             bech32_hrp,
@@ -515,8 +535,24 @@ async fn sync_messages(
                                 output
                             }
                             None => {
-                                let output = client.get_output(utxo_input).await?;
-                                AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                // if the output got spent and we didn't get it from the node we ignore it and don't return an error
+                                if *is_spent {
+                                    match client.get_output(utxo_input).await{
+                                        Ok(output) => {
+                                            AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                        }
+                                        Err(_) =>{
+                                            log::debug!(
+                                                "[SYNC] couldn't get spent output: {}",
+                                                utxo_input.output_id().transaction_id().to_string(),
+                                            );
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    let output = client.get_output(utxo_input).await?;
+                                    AddressOutput::from_output_response(output, address.address().bech32_hrp().to_string())?
+                                }
                             }
                         };
 

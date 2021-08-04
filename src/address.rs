@@ -327,7 +327,7 @@ impl Address {
     pub(crate) fn available_outputs(&self, sent_messages: &[Message]) -> Vec<&AddressOutput> {
         self.outputs
             .values()
-            .filter(|o| !(o.is_spent || o.is_used(&sent_messages)))
+            .filter(|o| !(o.is_spent || o.is_used(sent_messages)))
             .collect()
     }
 
@@ -377,7 +377,7 @@ pub(crate) async fn get_iota_address(
     let signer = crate::signing::get_signer(account.signer_type()).await;
     let mut signer = signer.lock().await;
     let address = signer
-        .generate_address(&account, address_index, internal, metadata)
+        .generate_address(account, address_index, internal, metadata)
         .await?;
     Ok(AddressWrapper::new(address, bech32_hrp))
 }
@@ -397,7 +397,7 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
                 .bech32_hrp
         }
     };
-    let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
+    let iota_address = get_iota_address(account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         key_index,
@@ -414,7 +414,7 @@ pub(crate) async fn get_address_with_index(
     bech32_hrp: String,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
-    let iota_address = get_iota_address(&account, key_index, false, bech32_hrp, metadata).await?;
+    let iota_address = get_iota_address(account, key_index, false, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         key_index,
@@ -431,7 +431,7 @@ pub(crate) async fn get_new_change_address(
     bech32_hrp: String,
     metadata: GenerateAddressMetadata,
 ) -> crate::Result<Address> {
-    let iota_address = get_iota_address(&account, key_index, true, bech32_hrp, metadata).await?;
+    let iota_address = get_iota_address(account, key_index, true, bech32_hrp, metadata).await?;
     let address = Address {
         address: iota_address,
         key_index,

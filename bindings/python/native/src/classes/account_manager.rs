@@ -307,7 +307,7 @@ impl AccountManager {
     fn reattach(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_manager
-                .reattach(account_id, &RustMessageId::from_str(&message_id)?)
+                .reattach(account_id, &RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -317,7 +317,7 @@ impl AccountManager {
     fn promote(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_manager
-                .promote(account_id, &RustMessageId::from_str(&message_id)?)
+                .promote(account_id, &RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
@@ -327,7 +327,7 @@ impl AccountManager {
     fn retry(&self, account_id: &str, message_id: &str) -> Result<WalletMessage> {
         crate::block_on(async {
             self.account_manager
-                .retry(account_id, &RustMessageId::from_str(&message_id)?)
+                .retry(account_id, &RustMessageId::from_str(message_id)?)
                 .await?
                 .try_into()
         })
