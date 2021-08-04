@@ -378,10 +378,12 @@ Send funds to the given address.
 
 #### TransferOptions
 
-| Param                  | Type                                   | Default | Description                                        |
-| ---------------------- | -------------------------------------- | ------- | -------------------------------------------------- |
-| remainderValueStrategy | `RemainderValueStrategy`               | `null`  | The strategy to use for the remainder value if any |
-| indexation             | `{ index: string, data?: Uint8Array }` | `null`  | Message indexation                                 |
+| Param                  | Type                                   | Default | Description                                           |
+| ---------------------- | -------------------------------------- | ------- | ----------------------------------------------------- |
+| remainderValueStrategy | `RemainderValueStrategy`               | `null`  | The strategy to use for the remainder value if any    |
+| indexation             | `{ index: string, data?: Uint8Array }` | `null`  | Message indexation                                    |
+| skipSync               | `boolean`                              | `false` | Send transfer without synchronising the account first |
+| outputKind             | `OutputKind`                           | `null`  | Message indexation                                    |
 
 #### RemainderValueStrategy
 
@@ -457,9 +459,13 @@ Promote the given message.
 | --------- | -------- | ------- | ------------------------ |
 | messageId | `string` | `null`  | The message's identifier |
 
-### consolidateOutputs()
+### consolidateOutputs([includeDustAllowanceOutputs])
 
 Consolidate the outputs on all account addresses.
+
+| Param                       | Type      | Default | Description                                            |
+| --------------------------- | --------- | ------- | ------------------------------------------------------ |
+| includeDustAllowanceOutputs | `boolean` | `false` | If dust allowance outputs should also get consolidated |
 
 ### isLatestAddressUnused()
 
@@ -558,3 +564,12 @@ NodeUrl = string
 | [url]      | `NodeUrl` | `undefined` | Node url                                   |
 | [auth]     | `Auth`    | `undefined` | Optional authentication options            |
 | [disabled] | `boolean` | `false`     | Optional password for basic authentication |
+
+### OutputKind
+
+Possible output kinds.
+
+| Field                          | Type       | Default | Description                                        |
+| ------------------------------ | ---------- | ------- | -------------------------------------------------- |
+| [signatureLockedSingle]        | `string`   | `null`  | Default output type                                |
+| [signatureLockedDustAllowance] | `string`   | `null`  | Output type to enable receiving dust on an address |
