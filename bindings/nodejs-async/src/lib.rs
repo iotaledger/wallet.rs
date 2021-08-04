@@ -152,6 +152,12 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("getMessage", classes::account::get_message)?;
     cx.export_function("getAddress", classes::account::get_address)?;
     cx.export_function("getUnusedAddress", classes::account::get_unused_address)?;
+    cx.export_function("generateAddresses", classes::account::generate_addresses)?;
+    cx.export_function("send", classes::account::send)?;
+    cx.export_function("sendToMany", classes::account::send_to_many)?;
+    cx.export_function("isLatestAddressUnused", classes::account::is_latest_address_unused)?;
+    cx.export_function("consolidateOutputs", classes::account::consolidate_outputs)?;
+    cx.export_function("repost", classes::account::repost)?;
 
     // Account manager methods.
     cx.export_function("accountManagerNew", classes::account_manager::account_manager_new)?;
@@ -182,16 +188,43 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("startBackgroundSync", classes::account_manager::start_background_sync)?;
     cx.export_function("stopBackgroundSync", classes::account_manager::stop_background_sync)?;
 
-    cx.export_function("getBalanceChangeEvents", classes::account_manager::get_balance_change_events)?;
-    cx.export_function("getBalanceChangeEventCount", classes::account_manager::get_balance_change_event_count)?;
-    cx.export_function("getTransactionConfirmationEvents", classes::account_manager::get_transaction_confirmation_events)?;
-    cx.export_function("getTransactionConfirmationEventCount", classes::account_manager::get_transaction_confirmation_event_count)?;
-    cx.export_function("getNewTransactionEvents", classes::account_manager::get_new_transaction_events)?;
-    cx.export_function("getNewTransactionEventCount", classes::account_manager::get_new_transaction_event_count)?;
-    cx.export_function("getReattachmentEvents", classes::account_manager::get_reattachment_events)?;
-    cx.export_function("getReattachmentEventCount", classes::account_manager::get_reattachment_event_count)?;
+    cx.export_function(
+        "getBalanceChangeEvents",
+        classes::account_manager::get_balance_change_events,
+    )?;
+    cx.export_function(
+        "getBalanceChangeEventCount",
+        classes::account_manager::get_balance_change_event_count,
+    )?;
+    cx.export_function(
+        "getTransactionConfirmationEvents",
+        classes::account_manager::get_transaction_confirmation_events,
+    )?;
+    cx.export_function(
+        "getTransactionConfirmationEventCount",
+        classes::account_manager::get_transaction_confirmation_event_count,
+    )?;
+    cx.export_function(
+        "getNewTransactionEvents",
+        classes::account_manager::get_new_transaction_events,
+    )?;
+    cx.export_function(
+        "getNewTransactionEventCount",
+        classes::account_manager::get_new_transaction_event_count,
+    )?;
+    cx.export_function(
+        "getReattachmentEvents",
+        classes::account_manager::get_reattachment_events,
+    )?;
+    cx.export_function(
+        "getReattachmentEventCount",
+        classes::account_manager::get_reattachment_event_count,
+    )?;
     cx.export_function("getBroadcastEvents", classes::account_manager::get_broadcast_events)?;
-    cx.export_function("getBroadcastEventCount", classes::account_manager::get_broadcast_event_count)?;
+    cx.export_function(
+        "getBroadcastEventCount",
+        classes::account_manager::get_broadcast_event_count,
+    )?;
 
     // Message handler methods.
     cx.export_function("sendMessage", classes::message_handler::send_message)?;

@@ -5,12 +5,9 @@ use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, path::PathBuf, sync::Arc, time::Duration};
 
 // use iota_client::Address;
-use bee_message::address::Address;
 use iota_wallet::{
     account::AccountIdentifier,
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    address::parse as parse_address,
-    iota_migration::client::migration::{add_tryte_checksum, encode_migration_address},
     signing::SignerType,
     DateTime, Local,
 };
@@ -18,16 +15,8 @@ use neon::{prelude::*, result::Throw};
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
 use std::sync::mpsc::channel;
-use tokio::sync::RwLock;
 
 use super::AccountWrapper;
-
-mod create_migration_bundle;
-mod get_migration_data;
-mod internal_transfer;
-mod is_latest_address_unused;
-mod send_migration_bundle;
-mod sync;
 
 #[derive(Deserialize_repr)]
 #[repr(u8)]
@@ -108,25 +97,40 @@ fn default_skip_polling() -> bool {
 macro_rules! event_getter {
     ($cx: ident, $get_fn_name: ident) => {{
         let count = match $cx.argument_opt(0) {
-            Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as usize,
+            Some(arg) => arg
+                .downcast::<JsNumber, FunctionContext>(&mut $cx)
+                .or_throw(&mut $cx)?
+                .value(&mut $cx) as usize,
             None => 0,
         };
         let skip = match $cx.argument_opt(1) {
-            Some(arg) => arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as usize,
+            Some(arg) => arg
+                .downcast::<JsNumber, FunctionContext>(&mut $cx)
+                .or_throw(&mut $cx)?
+                .value(&mut $cx) as usize,
             None => 0,
         };
         let from_timestamp = match $cx.argument_opt(2) {
-            Some(arg) => Some(arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as i64),
+            Some(arg) => Some(
+                arg.downcast::<JsNumber, FunctionContext>(&mut $cx)
+                    .or_throw(&mut $cx)?
+                    .value(&mut $cx) as i64,
+            ),
             None => None,
         };
         let wrapper = Arc::clone(
-            &&$cx.this()
+            &&$cx
+                .this()
                 .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut $cx)?,
         );
 
         let (sender, receiver) = channel();
         crate::RUNTIME.spawn(async move {
-            let result = wrapper.account_manager.$get_fn_name(count, skip, from_timestamp).await.unwrap();
+            let result = wrapper
+                .account_manager
+                .$get_fn_name(count, skip, from_timestamp)
+                .await
+                .unwrap();
             let _ = sender.send(result);
         });
         let events = receiver.recv().unwrap();
@@ -145,12 +149,17 @@ macro_rules! event_getter {
 macro_rules! event_count_getter {
     ($cx: ident, $get_fn_name: ident) => {{
         let from_timestamp = match $cx.argument_opt(0) {
-            Some(arg) => Some(arg.downcast::<JsNumber, FunctionContext>(&mut $cx).or_throw(&mut $cx)?.value(&mut $cx) as i64),
+            Some(arg) => Some(
+                arg.downcast::<JsNumber, FunctionContext>(&mut $cx)
+                    .or_throw(&mut $cx)?
+                    .value(&mut $cx) as i64,
+            ),
             None => None,
         };
 
         let wrapper = Arc::clone(
-            &&$cx.this()
+            &&$cx
+                .this()
                 .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut $cx)?,
         );
 
