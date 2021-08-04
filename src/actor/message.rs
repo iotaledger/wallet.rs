@@ -413,18 +413,14 @@ impl Serialize for MessageType {
             MessageType::SendLedgerMigrationBundle { .. } => {
                 serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle")
             }
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
-            }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
             }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 33, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
             }
         }
     }
