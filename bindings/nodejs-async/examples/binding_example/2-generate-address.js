@@ -2,13 +2,15 @@
  * This example generates a new address.
  */
 
+ require('dotenv').config()
+
 async function run() {
     const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
 
-    manager.setStrongholdPassword("A12345678*")
+    manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     const account = manager.getAccount('Alice')
     // console.log('Account:', account.alias())

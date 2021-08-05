@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/iotaledger/wallet.rs/issues"
   },
-  "homepage": "https://github.com/iotaledger/wallet.rs#readme"
+  "homepage": "https://github.com/iotaledger/wallet.rs#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0"
+  }
 }

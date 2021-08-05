@@ -13,10 +13,6 @@ use neon::prelude::*;
 use serde::Deserialize;
 use std::sync::{mpsc::channel, Arc};
 
-mod synced_account;
-
-pub use synced_account::*;
-
 #[derive(Deserialize)]
 struct IndexationDto {
     index: Vec<u8>,
@@ -121,8 +117,8 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(id.as_str()).await;
-        let alias = account_handle.balance().await;
-        let _ = sender.send(alias);
+        let balance = account_handle.balance().await.unwrap();
+        let _ = sender.send(balance);
     });
     let balance = serde_json::to_string(&receiver.recv().unwrap()).unwrap();
     Ok(cx.string(balance))

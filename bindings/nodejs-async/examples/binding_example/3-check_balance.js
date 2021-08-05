@@ -5,17 +5,17 @@
 require('dotenv').config()
 
 async function run() {
-	const { AccountManager } = require('@iota/wallet')
+    const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
-
+    console.log(process.env.SH_PASSWORD)
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     const account = manager.getAccount('Alice')
-    
+
     console.log('Account:', account.alias())
-    
+
     // Always sync before doing anything with the account
     const synced = await account.sync()
     console.log('Syncing...')

@@ -13,6 +13,7 @@ let {
     balance,
     send,
     id,
+    alias,
     listMessages,
     listAddresses,
     setAlias,
@@ -43,6 +44,10 @@ class Account {
 
     id() {
         return id.apply(this.account);
+    }
+
+    alias() {
+        return alias.apply(this.account);
     }
 
     generateAddress() {
@@ -86,7 +91,7 @@ class Account {
     }
 
     balance() {
-        return balance.apply(this.account);
+        return JSON.parse(balance.apply(this.account));
     }
 
     async sync(options) {
