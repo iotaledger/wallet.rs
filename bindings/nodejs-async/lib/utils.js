@@ -14,15 +14,24 @@ function promisify(fn) {
 }
 
 class RemainderValueStrategy {
-    changeAddress() {
-        return "ChangeAddress";
-    }
-    reuseAddress() {
-        return "ReuseAddress";
-    }
-    accountAddress(address) {
-        return address;
-    }
+  changeAddress() {
+    return {
+      strategy: "ChangeAddress",
+      value: null
+    };
+  }
+  reuseAddress() {
+    return {
+      strategy: "ReuseAddress",
+      value: null
+    };
+  }
+  accountAddress(address) {
+    return {
+      strategy: "AccountAddress",
+      value: address
+    };
+  }
 }
 
 module.exports.promisify = promisify;
