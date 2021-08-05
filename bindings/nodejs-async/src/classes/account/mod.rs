@@ -117,7 +117,7 @@ pub fn balance(mut cx: FunctionContext) -> JsResult<JsString> {
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(id.as_str()).await;
-        let balance = account_handle.balance().await.unwrap();
+        let balance = account_handle.balance().await.expect("failed to get balance");
         let _ = sender.send(balance);
     });
     let balance = serde_json::to_string(&receiver.recv().unwrap()).unwrap();
@@ -396,8 +396,7 @@ pub fn get_address(mut cx: FunctionContext) -> JsResult<JsValue> {
         &&cx.this()
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
-    let address = parse_address(cx.argument::<JsString>(0)?.value(&mut cx))
-        .expect("invalid address");
+    let address = parse_address(cx.argument::<JsString>(0)?.value(&mut cx)).expect("invalid address");
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();

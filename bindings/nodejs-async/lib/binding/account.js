@@ -103,11 +103,11 @@ class Account {
     }
 
     async send(address, amount, options) {
-        return await sendAsync.apply(this.account, [address, amount, JSON.stringify(options)].filter(e => e != undefined)).then( message => JSON.parse(message));
+        return await sendAsync.apply(this.account, [address, amount, JSON.stringify(options)].filter(e => e != undefined)).then(message => JSON.parse(message));
     }
 
     async sendToMany(outputs, options) {
-        return await sendToManyAsync.apply(this.account, [outputs, JSON.stringify(options)].filter(e => e != undefined)).then( message => JSON.parse(message));
+        return await sendToManyAsync.apply(this.account, [outputs, JSON.stringify(options)].filter(e => e != undefined)).then(message => JSON.parse(message));
     }
 
     async isLatestAddressUnused() {
