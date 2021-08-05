@@ -584,11 +584,16 @@ pub fn import_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let source = cx.argument::<JsString>(0)?.value(&mut cx);
     let password = cx.argument::<JsString>(1)?.value(&mut cx);
 
+    let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
-        let _ = wrapper.account_manager.import_accounts(source, password).await;
+        let result = wrapper.account_manager.import_accounts(source, password).await;
+        let _ = sender.send(result);
     });
 
-    Ok(cx.undefined())
+    match receiver.recv().unwrap() {
+        Ok(_) => Ok(cx.undefined()),
+        Err(e) => cx.throw_error(e.to_string()),
+    }
 }
 
 pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined> {

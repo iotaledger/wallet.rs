@@ -1,12 +1,12 @@
 /**
- * This example restores a secured backup file. 
+ * This example restores a secured backup file.
  */
 
 require('dotenv').config();
 
 async function run() {
 
-    const { AccountManager } = require('@iota/wallet')
+    const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
@@ -15,7 +15,7 @@ async function run() {
     // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
     let backup_path = "input your backup file"
 
-    await manager.importAccounts(backup_path, process.env.SH_PASSWORD)
+    manager.importAccounts(backup_path, process.env.SH_PASSWORD);
     const account = manager.getAccount('Alice')
     console.log('Account:', account.alias())
 }
