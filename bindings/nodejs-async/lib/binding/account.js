@@ -13,6 +13,7 @@ let {
     balance,
     send,
     id,
+    alias,
     listMessages,
     listAddresses,
     setAlias,
@@ -43,6 +44,10 @@ class Account {
 
     id() {
         return id.apply(this.account);
+    }
+
+    alias() {
+        return alias.apply(this.account);
     }
 
     generateAddress() {
@@ -86,7 +91,7 @@ class Account {
     }
 
     balance() {
-        return balance.apply(this.account);
+        return JSON.parse(balance.apply(this.account));
     }
 
     async sync(options) {
@@ -98,11 +103,11 @@ class Account {
     }
 
     async send(address, amount, options) {
-        return await sendAsync.apply(this.account, [address, amount, JSON.stringify(options)].filter(e => e != undefined)).then( message => JSON.parse(message));
+        return await sendAsync.apply(this.account, [address, amount, JSON.stringify(options)].filter(e => e != undefined)).then(message => JSON.parse(message));
     }
 
     async sendToMany(outputs, options) {
-        return await sendToManyAsync.apply(this.account, [outputs, JSON.stringify(options)].filter(e => e != undefined)).then( message => JSON.parse(message));
+        return await sendToManyAsync.apply(this.account, [outputs, JSON.stringify(options)].filter(e => e != undefined)).then(message => JSON.parse(message));
     }
 
     async isLatestAddressUnused() {

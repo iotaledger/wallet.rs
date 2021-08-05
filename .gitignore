@@ -11,3 +11,4 @@ book
 *.stronghold
 wallet.log
 /.idea
+alice-database
