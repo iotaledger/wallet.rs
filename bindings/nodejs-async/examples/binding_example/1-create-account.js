@@ -2,10 +2,10 @@
  * This example creates a new database and account
  */
 
- require('dotenv').config()
+require('dotenv').config()
 
 async function run() {
-  const { AccountManager } = require('../../lib/index.js');
+  const { AccountManager, SignerType } = require('../../lib/index.js');
   const manager = new AccountManager({
     storagePath: './alice-database',
   });
@@ -15,11 +15,11 @@ async function run() {
     try {
       account = manager.getAccount("Alice")
     } catch (e) {
-        console.log("Error: " + error)
+      console.log("Couldn't get account, creating a new one")
     }
     // Create account only if it does not already exist
     if (!account) {
-      manager.storeMnemonic(1);
+      manager.storeMnemonic(SignerType.Stronghold);
       account = manager.createAccount({
         clientOptions: { node: { url: "https://api.lb-0.testnet.chrysalis2.com" }, localPow: true },
         alias: 'Alice',

@@ -89,8 +89,6 @@ class AccountManager {
     }
 
     storeMnemonic(signerType, mnemonic) {
-        console.log(signerType, mnemonic);
-
         return storeMnemonic.apply(this.accountManager, [signerType, mnemonic].filter(e => e != undefined));
     }
 
