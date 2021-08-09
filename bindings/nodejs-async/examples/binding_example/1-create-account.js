@@ -2,7 +2,7 @@
  * This example creates a new database and account
  */
 
- require('dotenv').config()
+require('dotenv').config()
 
 async function run() {
   const { AccountManager } = require('../../lib/index.js');
@@ -15,7 +15,7 @@ async function run() {
     try {
       account = manager.getAccount("Alice")
     } catch (e) {
-        console.log("Error: " + error)
+      console.log("Couldn't get account, creating a new one")
     }
     // Create account only if it does not already exist
     if (!account) {
