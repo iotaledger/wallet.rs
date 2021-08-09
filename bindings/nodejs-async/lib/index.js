@@ -22,8 +22,11 @@ initLogger(JSON.stringify({
 }));
 
 module.exports = {
-//   MessageHandler,
-//   EventListener,
+  //   MessageHandler,
+  //   EventListener,
   AccountManager,
-  initLogger
+  initLogger,
+  SignerType: {
+    Stronghold: 1
+  },
 };
