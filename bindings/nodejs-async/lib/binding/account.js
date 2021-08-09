@@ -5,7 +5,7 @@ const addon = require('../../index.node');
 const utils = require('../utils.js');
 const { SyncedAccount } = require('./synced_account.js');
 
-let {
+const {
     sync,
     getNodeInfo,
     generateAddress,

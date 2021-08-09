@@ -6,7 +6,7 @@ const utils = require('../utils.js');
 const acc = require('./account.js');
 const { SyncedAccount } = require('./synced_account.js')
 
-let {
+const {
     accountManagerNew,
     getAccount,
     getAccounts,
