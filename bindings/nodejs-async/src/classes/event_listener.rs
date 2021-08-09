@@ -371,11 +371,14 @@ pub(crate) fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
     crate::RUNTIME.spawn(async move {
         let cloned_eh = event_handler.clone();
+        log::debug!(
+            "Outside event--------------------------------------------{:?}------------------------------------------------",
+            event_type
+        );
         let event_id = EventListener::add_event_listener(event_type, move |message: String, event_type: EventType| {
-            log::debug!("--------------------------------------------------------------------------------------------");
             log::debug!(
-                "--------------------------------------------{:?}------------------------------------------------",
-                event_type
+                "Inside event --------------------------------------------{:?}------------------------------------------------",
+                message
             );
             cloned_eh.call(message, event_type);
         })
