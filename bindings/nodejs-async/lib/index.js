@@ -13,6 +13,7 @@ let { initLogger } = addon;
 let { EventListener } = el;
 let { AccountManager } = am;
 
+// todo remove this
 initLogger(JSON.stringify({
   color_enabled: true,
   outputs: [{
@@ -23,16 +24,16 @@ initLogger(JSON.stringify({
 
 const eventListener = new EventListener();
 function addEventListener(name, callback) {
-    eventListener.listen(name, callback);
+  eventListener.listen(name, callback);
 }
 
 module.exports = {
   //   MessageHandler,
-    EventListener,
-    AccountManager,
-    addEventListener,
-    initLogger,
-    SignerType: {
-        Stronghold: 1
-    },
+  EventListener,
+  AccountManager,
+  addEventListener,
+  initLogger: config => initLogger(JSON.stringify(config)),
+  SignerType: {
+    Stronghold: 1
+  },
 };
