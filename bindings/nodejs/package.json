@@ -1,29 +1,26 @@
 {
-  "name": "@iota/wallet",
-  "version": "0.6.0",
+  "name": "nodejs-async",
+  "version": "0.1.0",
   "description": "Node.js binding to the wallet library",
-  "main": "lib/index.js",
+  "main": "index.node",
+  "scripts": {
+    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --message-format=json-render-diagnostics && tsc",
+    "install": "npm run build",
+    "test": "cargo test"
+  },
+  "author": "Antoni Dikov <antoni.dikov@iota.org>",
+  "license": "MIT",
+  "devDependencies": {
+    "cargo-cp-artifact": "^0.1",
+    "dotenv": "^10.0.0",
+    "typescript": "^4.3.4"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/iotaledger/wallet.rs"
+    "url": "git+https://github.com/iotaledger/wallet.rs.git"
   },
-  "author": "Lucas Nogueira <lucas.nogueira@iota.org>",
-  "license": "MIT",
-  "dependencies": {
-    "neon-cli": "^0.4.0",
-    "prebuild-install": "^5.3.3"
+  "bugs": {
+    "url": "https://github.com/iotaledger/wallet.rs/issues"
   },
-  "scripts": {
-    "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run rebuild",
-    "build:neon": "neon build --release && node scripts/move-lib.js",
-    "rebuild": "npm run build:neon && node scripts/strip.js",
-    "prebuild:node": "prebuild --prepack scripts/node-neon-build.js --strip",
-    "prebuild:electron": "node scripts/electron-prebuild.js",
-    "build:docs": "./node_modules/.bin/jsdoc lib/index.js"
-  },
-  "devDependencies": {
-    "electron-build-env": "^0.2.0",
-    "jsdoc": "^3.6.6",
-    "prebuild": "^10.0.1"
-  }
+  "homepage": "https://github.com/iotaledger/wallet.rs#readme"
 }
