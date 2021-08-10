@@ -1,155 +1,4 @@
-// // Copyright 2020 IOTA Stiftung
-// // SPDX-License-Identifier: Apache-2.0
-
-// use std::{
-//     convert::TryFrom,
-//     sync::{
-//         mpsc::{channel, Receiver, Sender},
-//         Arc, Mutex,
-//     },
-// };
-
-// use iota_wallet::event::{
-//     on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
-// on_new_transaction,     on_reattachment, on_transfer_progress, EventId,
-// };
-// use neon::prelude::*;
-
-// pub enum EventType {
-//     ErrorThrown,
-//     BalanceChange,
-//     NewTransaction,
-//     ConfirmationStateChange,
-//     Reattachment,
-//     Broadcast,
-//     TransferProgress,
-//     MigrationProgress,
-// }
-
-// impl TryFrom<&str> for EventType {
-//     type Error = String;
-
-//     fn try_from(value: &str) -> Result<Self, Self::Error> {
-//         let event_type = match value {
-//             "ErrorThrown" => EventType::ErrorThrown,
-//             "BalanceChange" => EventType::BalanceChange,
-//             "NewTransaction" => EventType::NewTransaction,
-//             "ConfirmationStateChange" => EventType::ConfirmationStateChange,
-//             "Reattachment" => EventType::Reattachment,
-//             "Broadcast" => EventType::Broadcast,
-//             "TransferProgress" => EventType::TransferProgress,
-//             "MigrationProgress" => EventType::MigrationProgress,
-//             _ => return Err(format!("invalid event name {}", value)),
-//         };
-//         Ok(event_type)
-//     }
-// }
-
-// async fn listen(event_type: EventType, sender: Sender<String>) -> EventId {
-//     match event_type {
-//         EventType::ErrorThrown => on_error(move |error| {
-//             let _ = sender.send(serde_json::to_string(&error).unwrap());
-//         }),
-//         EventType::BalanceChange => {
-//             on_balance_change(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::NewTransaction => {
-//             on_new_transaction(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::ConfirmationStateChange => {
-//             on_confirmation_state_change(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::Reattachment => {
-//             on_reattachment(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::Broadcast => {
-//             on_broadcast(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::TransferProgress => {
-//             on_transfer_progress(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//         EventType::MigrationProgress => {
-//             on_migration_progress(move |event| {
-//                 let _ = sender.send(serde_json::to_string(&event).unwrap());
-//             })
-//             .await
-//         }
-//     }
-// }
-
-// struct WaitForEventTask(Arc<Mutex<Receiver<String>>>);
-
-// impl Task for WaitForEventTask {
-//     type Output = String;
-//     type Error = String;
-//     type JsEvent = JsString;
-
-//     fn perform(&self) -> Result<Self::Output, Self::Error> {
-//         let rx = self
-//             .0
-//             .lock()
-//             .map_err(|_| "Could not obtain lock on receiver".to_string())?;
-//         rx.recv().map_err(|e| e.to_string())
-//     }
-
-//     fn complete(self, mut cx: TaskContext, result: Result<Self::Output, Self::Error>) -> JsResult<Self::JsEvent> {
-//         match result {
-//             Ok(s) => Ok(cx.string(s)),
-//             Err(e) => cx.throw_error(format!("ReceiveTask error: {}", e)),
-//         }
-//     }
-// }
-
-// pub struct EventListener {
-//     rx: Arc<Mutex<Receiver<String>>>,
-// }
-
-// declare_types! {
-//     pub class JsEventListener for EventListener {
-//         init(mut cx) {
-//             let event = EventType::try_from(cx.argument::<JsString>(0)?.value().as_str()).expect("invalid event
-// type");             let (tx, rx) = channel();
-
-//             crate::block_on(listen(event, tx));
-
-//             Ok(EventListener {
-//                 rx: Arc::new(Mutex::new(rx)),
-//             })
-//         }
-
-//         method poll(mut cx) {
-//             let cb = cx.argument::<JsFunction>(0)?;
-//             let this = cx.this();
-
-//             let rx = cx.borrow(&this, |listener| Arc::clone(&listener.rx));
-//             let receive_task = WaitForEventTask(rx);
-
-//             receive_task.schedule(cb);
-
-//             Ok(JsUndefined::new().upcast())
-//         }
-//     }
-// }
-
-// Copyright 2020 IOTA Stiftung
+// Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use neon::prelude::*;
@@ -170,10 +19,10 @@ pub use iota_wallet::{
     actor::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
     address::parse as parse_address,
     event::{
-        on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
+        on_balance_change, on_broadcast, on_confirmation_state_change, on_error,
         on_new_transaction, on_reattachment, on_stronghold_status_change, on_transfer_progress,
         remove_balance_change_listener, remove_broadcast_listener, remove_confirmation_state_change_listener,
-        remove_error_listener, remove_migration_progress_listener, remove_new_transaction_listener,
+        remove_error_listener, remove_new_transaction_listener,
         remove_reattachment_listener, remove_stronghold_status_change_listener, remove_transfer_progress_listener,
         EventId,
     },
@@ -192,7 +41,6 @@ pub enum EventType {
     Broadcast,
     StrongholdStatusChange,
     TransferProgress,
-    MigrationProgress,
 }
 
 impl TryFrom<&str> for EventType {
@@ -208,7 +56,6 @@ impl TryFrom<&str> for EventType {
             "Broadcast" => EventType::Broadcast,
             "StrongholdStatusChange" => EventType::StrongholdStatusChange,
             "TransferProgress" => EventType::TransferProgress,
-            "MigrationProgress" => EventType::MigrationProgress,
             _ => return Err(format!("invalid event name {}", value)),
         };
         Ok(event_type)
@@ -261,7 +108,6 @@ impl EventListener {
             EventType::Broadcast => remove_broadcast_listener(event_id).await,
             EventType::StrongholdStatusChange => remove_stronghold_status_change_listener(event_id).await,
             EventType::TransferProgress => remove_transfer_progress_listener(event_id).await,
-            EventType::MigrationProgress => remove_migration_progress_listener(event_id).await,
         };
     }
 
@@ -311,12 +157,6 @@ impl EventListener {
             }
             EventType::TransferProgress => {
                 on_transfer_progress(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
-                })
-                .await
-            }
-            EventType::MigrationProgress => {
-                on_migration_progress(move |event| {
                     let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
@@ -371,15 +211,7 @@ pub(crate) fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
     crate::RUNTIME.spawn(async move {
         let cloned_eh = event_handler.clone();
-        log::debug!(
-            "Outside event--------------------------------------------{:?}------------------------------------------------",
-            event_type
-        );
         let event_id = EventListener::add_event_listener(event_type, move |message: String, event_type: EventType| {
-            log::debug!(
-                "Inside event --------------------------------------------{:?}------------------------------------------------",
-                message
-            );
             cloned_eh.call(message, event_type);
         })
         .await;

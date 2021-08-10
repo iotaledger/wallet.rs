@@ -21,9 +21,10 @@ initLogger(JSON.stringify({
   }]
 }));
 
-const eventListener = new EventListener();
 function addEventListener(name, callback) {
-  eventListener.listen(name, callback);
+    eventListener = new EventListener();
+    eventListener.listen(name, callback);
+    return eventListener;
 }
 
 module.exports = {

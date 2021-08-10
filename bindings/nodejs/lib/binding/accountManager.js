@@ -4,7 +4,7 @@
 const addon = require('../../index.node');
 const utils = require('../utils.js');
 const acc = require('./account.js');
-const { SyncedAccount } = require('./synced_account.js')
+const { SyncedAccount } = require('./syncedAccount.js')
 
 const {
     accountManagerNew,
