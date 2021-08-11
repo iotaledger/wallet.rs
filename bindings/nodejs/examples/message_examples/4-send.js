@@ -2,7 +2,7 @@
  * This example sends IOTA Toens to an address.
  */
 
- async function run() {
+async function run() {
     const { AccountManager } = require('../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database',
@@ -20,8 +20,8 @@
         console.log('Available balance', await account.balance())
 
         //TODO: Replace with the address of your choice!
-        const address = 'atoi1qq4yjuenvm63sklmztfseqxa90xeumxnx4rt79j5vstwqqy0jn9lujjnmh0'
-        const amount = 10000000
+        const address = 'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r'
+        const amount = 1000000
 
         const node_response = await account.send({
             address,
