@@ -8,7 +8,6 @@ class Account {
   }
   async sync(options) {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -23,7 +22,6 @@ class Account {
 
   async getNodeInfo(url) {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -37,7 +35,6 @@ class Account {
 
   async generateAddress() {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -50,7 +47,6 @@ class Account {
 
   async latestAddress() {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -63,7 +59,6 @@ class Account {
 
   async latestAddress() {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -76,7 +71,6 @@ class Account {
 
   async balance() {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "CallAccountMethod",
       payload: {
         accountId: this.accountData.id,
@@ -89,7 +83,6 @@ class Account {
 
   async send(transfer) {
     return JSON.parse(await this.messageHandler.sendMessage({
-      id: "1",
       cmd: "SendTransfer",
       payload: {
         accountId: this.accountData.id,

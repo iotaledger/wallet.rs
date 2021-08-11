@@ -137,7 +137,12 @@ pub struct AccountManagerWrapper {
     account_manager: AccountManager,
 }
 
-impl Finalize for AccountManagerWrapper {}
+impl Finalize for AccountManagerWrapper {
+    fn finalize<'a, C: Context<'a>>(self, _cx: &mut C) {
+        self.account_manager.stop_background_sync();
+        log::debug!("AccountManagerWrapper Finalize called.");
+    }
+}
 
 impl AccountManagerWrapper {
     fn new(queue: EventQueue, options: String) -> Arc<Self> {

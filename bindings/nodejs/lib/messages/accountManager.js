@@ -14,7 +14,6 @@ class AccountManager {
   }
   async getAccount(accountId) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "GetAccount",
       payload: accountId,
     }).then((acc) => new Account(JSON.parse(acc).payload, this.messageHandler));
@@ -22,14 +21,12 @@ class AccountManager {
 
   async getAccounts() {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "GetAccounts",
     });
   }
 
   async createAccount(account) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "CreateAccount",
       payload: account
     }).then((acc) => new Account(JSON.parse(acc).payload, this.messageHandler));
@@ -37,7 +34,6 @@ class AccountManager {
 
   async setStrongholdPassword(password) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "SetStrongholdPassword",
       payload: password,
     });
@@ -45,7 +41,6 @@ class AccountManager {
 
   async storeMnemonic(mnemonic) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "StoreMnemonic",
       payload: {
         signerType: {
@@ -58,7 +53,6 @@ class AccountManager {
 
   async backup(destination, password) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "Backup",
       payload: {
           destination,
@@ -69,7 +63,6 @@ class AccountManager {
 
   async importAccounts(backupPath, password) {
     return this.messageHandler.sendMessage({
-      id: _id,
       cmd: "RestoreBackup",
       payload: {
           destination,

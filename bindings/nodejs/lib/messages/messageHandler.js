@@ -1,8 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const addon = require('../index.node');
-const utils = require('./utils.js');
+const addon = require('../../index.node');
+const utils = require('../utils.js');
 
 console.log(utils);
 let { sendMessage, messageHandlerNew } = addon;

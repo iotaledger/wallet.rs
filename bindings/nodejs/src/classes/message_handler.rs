@@ -23,9 +23,10 @@ pub use iota_wallet::{
     Error,
 };
 
+const DUMMY_ID: &str = "1";
+
 #[derive(Deserialize, Clone)]
 pub(crate) struct DispatchMessage {
-    pub(crate) id: String,
     #[serde(flatten)]
     pub(crate) message: MessageType,
 }
@@ -83,7 +84,7 @@ impl MessageHandler {
         match serde_json::from_str::<DispatchMessage>(&serialized_message) {
             Ok(message) => {
                 let (response_tx, mut response_rx) = unbounded_channel();
-                let wallet_message = WalletMessage::new(message.id.clone(), message.message.clone(), response_tx);
+                let wallet_message = WalletMessage::new(DUMMY_ID, message.message.clone(), response_tx);
 
                 self.message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
@@ -95,7 +96,7 @@ impl MessageHandler {
                         Err(e) => {
                             is_err = true;
                             serde_json::to_string(&Response::new(
-                                message.id,
+                                DUMMY_ID,
                                 message.message,
                                 ResponseType::Error(e.into()),
                             ))
