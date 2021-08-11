@@ -7,7 +7,6 @@ let {  } = addon;
 
 class SyncedAccount {
     constructor(id) {
-      console.log("Synced account constructor called.");
       this.id = id;
     }
 

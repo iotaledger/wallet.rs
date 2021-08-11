@@ -3,7 +3,6 @@
 
 class Account {
   constructor(accountData, messageHandler) {
-    console.log("Account constructor called.");
     this.accountData = accountData;
     this.messageHandler = messageHandler;
   }

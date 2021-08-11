@@ -37,8 +37,6 @@ const consolidateOutputsAsync = utils.promisify(consolidateOutputs);
 const repostAsync = utils.promisify(repost);
 class Account {
     constructor(account) {
-        console.log("Account constructor called.");
-        //   this.accountId = accountId;
         this.account = account;
     }
 

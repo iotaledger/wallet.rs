@@ -12,13 +12,10 @@ const sendMessageAsync = utils.promisify(sendMessage);
 
 class MessageHandler {
   constructor(options) {
-    console.log("MessageHandler constructor called.");
     this.messageHandler = messageHandlerNew(JSON.stringify(options));
   }
 
   async sendMessage(message) {
-    console.log("sendMessage called.");
-    console.log(message);
     return sendMessageAsync(JSON.stringify(message), this.messageHandler);
   }
 };

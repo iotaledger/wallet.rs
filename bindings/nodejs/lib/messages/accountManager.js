@@ -10,7 +10,6 @@ const _id = "1";
 
 class AccountManager {
   constructor(options) {
-    console.log("AccountManager constructor called.");
     this.messageHandler = new MessageHandler(options);
   }
   async getAccount(accountId) {

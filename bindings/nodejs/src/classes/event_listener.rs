@@ -68,7 +68,20 @@ pub(crate) struct EventListener {
     queue: EventQueue,
     callbacks: Arc<Mutex<HashMap<EventType, Vec<(JsCallback, EventId)>>>>,
 }
-impl Finalize for EventListener {}
+
+ impl Finalize for EventListener {
+     fn finalize<'a, C: Context<'a>>(self, cx: &mut C) {
+        for (event_type, mut callbacks) in self.callbacks.lock().unwrap().drain() {
+            for (cb, event_id) in callbacks.drain(..) {
+                crate::RUNTIME.spawn(async move {
+                    let cloned_event_id = event_id.clone();
+                    EventListener::remove_event_listeners(event_type, &cloned_event_id).await;
+                });
+                cb.drop(cx);
+            }
+        }
+     }
+ }
 
 impl EventListener {
     fn new(queue: EventQueue) -> Arc<Self> {
@@ -169,36 +182,17 @@ pub(crate) fn remove_event_listeners(mut cx: FunctionContext) -> JsResult<JsUnde
     let event_name = cx.argument::<JsString>(0)?.value(&mut cx);
     let event_type: EventType = event_name.as_str().try_into().expect("unknown event name");
     let event_handler = Arc::clone(&&cx.argument::<JsBox<Arc<EventListener>>>(1)?);
-    let callback = cx.argument::<JsFunction>(2)?.root(&mut cx);
+    let cbs = event_handler.callbacks.lock().unwrap().remove(&event_type);
 
-    crate::RUNTIME.spawn(async move {
-        let cbs;
-        {
-            cbs = event_handler.callbacks.lock().unwrap().remove(&event_type);
+    if let Some(cbs) = cbs {
+        for (cb, event_id) in cbs {
+            crate::RUNTIME.spawn(async move {
+                let cloned_event_id = event_id.clone();
+                EventListener::remove_event_listeners(event_type, &cloned_event_id).await;
+            });
+            cb.drop(&mut cx);
         }
-
-        if let Some(ref cbs) = cbs {
-            for (_, event_id) in cbs {
-                EventListener::remove_event_listeners(event_type, event_id).await;
-            }
-        }
-
-        event_handler.queue.send(move |mut cx| {
-            if let Some(cbs) = cbs {
-                for (cb, _) in cbs {
-                    cb.drop(&mut cx);
-                }
-            }
-
-            let cb = callback.into_inner(&mut cx);
-            let this = cx.undefined();
-            let args = vec![cx.undefined().upcast::<JsValue>()];
-
-            cb.call(&mut cx, this, args)?;
-
-            Ok(())
-        });
-    });
+    }
 
     Ok(cx.undefined())
 }

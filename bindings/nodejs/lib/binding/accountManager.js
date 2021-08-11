@@ -42,11 +42,7 @@ const syncInternalTransfer = utils.promisify(internalTransfer);
 const syncIsLatestAddressUnused = utils.promisify(isLatestAddressUnused);
 class AccountManager {
     constructor(options) {
-        console.log("AccountManager constructor called.");
-        console.log(options)
-        console.log(JSON.stringify(options));
         this.accountManager = accountManagerNew(JSON.stringify(options));
-        console.log(this.accountManager);
     }
     getAccount(accountId) {
         let inner_account = getAccount.apply(this.accountManager, [accountId]);
@@ -80,7 +76,6 @@ class AccountManager {
 
     createAccount(account) {
         let acc = createAccount.apply(this.accountManager, [JSON.stringify(account)]);
-        // console.log(acc);
         return new Account(acc);
     }
 
