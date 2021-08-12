@@ -5,7 +5,7 @@
 require('dotenv').config()
 
 async function run() {
-    const { AccountManager, addEventListener, removeEventListeners } = require('../../lib/index.js');
+    const { AccountManager, addEventListener } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })
@@ -35,7 +35,6 @@ async function run() {
     }
 
     addEventListener("BalanceChange", callback, manager)
-    removeEventListeners("BalanceChange")
 
     // Possible Event Types:
     //
