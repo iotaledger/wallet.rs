@@ -4,7 +4,7 @@
   "description": "Node.js binding to the wallet library",
   "main": "index.node",
   "scripts": {
-    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --message-format=json-render-diagnostics && tsc",
+    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics && tsc",
     "install": "npm run build",
     "test": "cargo test"
   },

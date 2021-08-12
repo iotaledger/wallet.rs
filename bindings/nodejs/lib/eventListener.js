@@ -13,7 +13,7 @@ class EventListener {
   }
 
   removeEventListeners(eventName) {
-    return removeEventListenersAsync(eventName, this.eventListener);
+    return removeEventListeners(eventName, this.eventListener);
   }
 };
 

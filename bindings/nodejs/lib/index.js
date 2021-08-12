@@ -21,17 +21,30 @@ initLogger(JSON.stringify({
   }]
 }));
 
-function addEventListener(name, callback) {
-    eventListener = new EventListener();
-    eventListener.listen(name, callback);
-    return eventListener;
+let globalEventListener, globalAccountManager;
+function addEventListener(name, callback, manager) {
+  if (globalEventListener == undefined) {
+    globalEventListener = new EventListener();
+  }
+  globalAccountManager = manager;
+  globalEventListener.listen(name, callback);
+  return globalEventListener;
+}
+
+function removeEventListeners(name) {
+  if (globalEventListener == undefined) {
+    globalEventListener = new EventListener();
+  }
+  globalEventListener.removeEventListeners(name);
+  return globalEventListener;
 }
 
 module.exports = {
-//   MessageHandler,
+  //   MessageHandler,
   EventListener,
   AccountManager,
   addEventListener,
+  removeEventListeners,
   initLogger: config => initLogger(JSON.stringify(config)),
   SignerType: {
     Stronghold: 1
