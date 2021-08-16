@@ -5,6 +5,7 @@ const addon = require('../../index.node');
 const utils = require('../utils.js');
 const acc = require('./account.js');
 const { SyncedAccount } = require('./syncedAccount.js')
+const { EventListener } = require('../eventListener.js')
 
 const {
     accountManagerNew,
@@ -33,6 +34,9 @@ const {
     getReattachmentEventCount,
     getBroadcastEvents,
     getBroadcastEventCount,
+    eventListenerNew,
+    listen,
+    removeEventListeners
 } = addon;
 
 let { Account } = acc;
@@ -43,6 +47,7 @@ const syncIsLatestAddressUnused = utils.promisify(isLatestAddressUnused);
 class AccountManager {
     constructor(options) {
         this.accountManager = accountManagerNew(JSON.stringify(options));
+        this.eventListener = null;
     }
     getAccount(accountId) {
         let inner_account = getAccount.apply(this.accountManager, [accountId]);
@@ -77,6 +82,24 @@ class AccountManager {
     createAccount(account) {
         let acc = createAccount.apply(this.accountManager, [JSON.stringify(account)]);
         return new Account(acc);
+    }
+
+    listen(eventName, callback) {
+        if (this.eventListener == null) {
+            this.eventListener = eventListenerNew();
+        }
+        return listen(eventName, this.eventListener, callback);
+    }
+
+    removeEventListeners(eventName) {
+        if (this.eventListener == null) {
+            return;
+        }
+
+        if (removeEventListeners(eventName, this.eventListener) <= 0) {
+            this.eventListener = null;
+            return;
+        }
     }
 
     setStrongholdPassword(password) {

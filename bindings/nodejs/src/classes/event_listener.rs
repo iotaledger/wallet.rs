@@ -178,11 +178,13 @@ impl EventListener {
     }
 }
 
-pub(crate) fn remove_event_listeners(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+pub(crate) fn remove_event_listeners(mut cx: FunctionContext) -> JsResult<JsNumber> {
     let event_name = cx.argument::<JsString>(0)?.value(&mut cx);
     let event_type: EventType = event_name.as_str().try_into().expect("unknown event name");
     let event_handler = Arc::clone(&&cx.argument::<JsBox<Arc<EventListener>>>(1)?);
-    let cbs = event_handler.callbacks.lock().unwrap().remove(&event_type);
+    let mut cb_storage = event_handler.callbacks.lock().unwrap();
+    let cbs = cb_storage.remove(&event_type);
+    let cbs_amount = cb_storage.len();
 
     if let Some(cbs) = cbs {
         for (cb, event_id) in cbs {
@@ -194,7 +196,7 @@ pub(crate) fn remove_event_listeners(mut cx: FunctionContext) -> JsResult<JsUnde
         }
     }
 
-    Ok(cx.undefined())
+    Ok(cx.number(cbs_amount as f64))
 }
 
 pub(crate) fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {

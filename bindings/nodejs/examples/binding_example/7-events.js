@@ -34,7 +34,13 @@ async function run() {
         console.log("data:", data)
     }
 
-    addEventListener("BalanceChange", callback, manager)
+    manager.listen("BalanceChange", callback);
+
+    // Event listeners would be removed after 30 seconds.
+    setTimeout(() => {
+        manager.removeEventListeners("BalanceChange");
+        console.log("event listeners removed");
+    }, 30000);
 
     // Possible Event Types:
     //

@@ -267,6 +267,8 @@ export declare class AccountManager {
   generateMnemonic(): string
   storeMnemonic(signerType: SignerType, mnemonic?: string): void
   createAccount(account: AccountToCreate): Account
+  listen(event: Event, cb: (err?: any, data?: { [k: string]: any }) => void): void
+  removeEventListeners(event: Event): void
   getAccount(accountId: string | number): Account | undefined
   getAccounts(): Account[]
   removeAccount(accountId: string | number): void
