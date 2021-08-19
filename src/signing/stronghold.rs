@@ -28,7 +28,7 @@ pub(crate) async fn stronghold_path(storage_path: &Path) -> crate::Result<PathBu
 #[async_trait::async_trait]
 impl super::Signer for StrongholdSigner {
     async fn get_ledger_status(&self, _is_simulator: bool) -> crate::LedgerStatus {
-        // dummy status
+        // dummy status, function is only required in the trait because we need it for the LedgerSigner
         crate::LedgerStatus {
             connected: false,
             locked: false,
