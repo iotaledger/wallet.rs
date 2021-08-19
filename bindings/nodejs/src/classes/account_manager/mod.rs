@@ -133,19 +133,19 @@ macro_rules! event_count_getter {
 }
 
 pub struct AccountManagerWrapper {
-    queue: EventQueue,
+    channel: Channel,
     account_manager: AccountManager,
 }
 
 impl Finalize for AccountManagerWrapper {
     fn finalize<'a, C: Context<'a>>(self, _cx: &mut C) {
-        self.account_manager.stop_background_sync();
+        let _ = self.account_manager.stop_background_sync();
         log::debug!("AccountManagerWrapper Finalize called.");
     }
 }
 
 impl AccountManagerWrapper {
-    fn new(queue: EventQueue, options: String) -> Arc<Self> {
+    fn new(channel: Channel, options: String) -> Arc<Self> {
         let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
             Ok(options) => options,
             Err(e) => {
@@ -186,7 +186,7 @@ impl AccountManagerWrapper {
             .expect("error initializing account manager");
 
         Arc::new(Self {
-            queue,
+            channel,
             account_manager: manager,
         })
     }
@@ -195,8 +195,8 @@ impl AccountManagerWrapper {
 pub fn account_manager_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountManagerWrapper>>> {
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
-    let queue = cx.queue();
-    let account_wrapper = AccountManagerWrapper::new(queue, options);
+    let channel = cx.channel();
+    let account_wrapper = AccountManagerWrapper::new(channel, options);
 
     Ok(cx.boxed(account_wrapper))
 }
@@ -228,7 +228,7 @@ pub fn stop_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
     );
 
-    wrapper.account_manager.stop_background_sync();
+    let _ = wrapper.account_manager.stop_background_sync();
 
     Ok(cx.undefined())
 }
@@ -362,8 +362,8 @@ pub fn create_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::acco
 
     match result {
         Ok(id) => {
-            let queue = cx.queue();
-            let account_wrapper = crate::account::AccountWrapper::new(queue, id);
+            let channel = cx.channel();
+            let account_wrapper = crate::account::AccountWrapper::new(channel, id);
             Ok(cx.boxed(account_wrapper))
         }
         Err(e) => cx.throw_error(e),
@@ -396,8 +396,8 @@ pub fn get_account(mut cx: FunctionContext) -> JsResult<JsBox<Arc<crate::account
 
     match result {
         Ok(id) => {
-            let queue = cx.queue();
-            let account_wrapper = crate::account::AccountWrapper::new(queue, id);
+            let channel = cx.channel();
+            let account_wrapper = crate::account::AccountWrapper::new(channel, id);
             Ok(cx.boxed(account_wrapper))
         }
         Err(e) => cx.throw_error(e),
@@ -422,8 +422,8 @@ pub fn get_accounts(mut cx: FunctionContext) -> JsResult<JsArray> {
 
     let js_array = JsArray::new(&mut cx, ids.len() as u32);
     for (index, id) in ids.into_iter().enumerate() {
-        let queue = cx.queue();
-        let account_wrapper = crate::account::AccountWrapper::new(queue, id);
+        let channel = cx.channel();
+        let account_wrapper = crate::account::AccountWrapper::new(channel, id);
         let boxed = cx.boxed(account_wrapper);
         js_array.set(&mut cx, index as u32, boxed)?;
     }
@@ -485,7 +485,7 @@ pub fn sync_accounts(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             Err(e) => Err(e.to_string()),
         };
 
-        wrapper.queue.send(move |mut cx| {
+        wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
             let args = match result {
@@ -531,7 +531,7 @@ pub fn internal_transfer(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .internal_transfer(&from_account_id, &to_account_id, NonZeroU64::new(amount).unwrap())
             .await;
 
-        wrapper.queue.send(move |mut cx| {
+        wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
             let args = match result {
@@ -611,7 +611,7 @@ pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined
     crate::RUNTIME.spawn(async move {
         let result = wrapper.account_manager.is_latest_address_unused().await;
 
-        wrapper.queue.send(move |mut cx| {
+        wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
             let args = match result {

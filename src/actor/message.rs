@@ -35,6 +35,9 @@ pub struct AccountToCreate {
     /// The account's signer type.
     #[serde(rename = "signerType")]
     pub signer_type: Option<SignerType>,
+    /// Allow to create an account with multiple empty accounts
+    #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
+    pub allow_create_multiple_empty_accounts: bool,
 }
 
 /// Each public account method.
@@ -217,10 +220,6 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     GetLedgerStatus(bool),
-    /// Get the app that's open on the Ledger Nano or Speculos simulator.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    GetLedgerOpenedApp(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -303,7 +302,12 @@ pub enum MessageType {
     /// Get seed checksum.
     GetSeedChecksum(String),
     /// Get migration address
-    GetMigrationAddress(bool),
+    GetMigrationAddress {
+        /// Display prompt on the ledger
+        ledger_prompt: bool,
+        /// Account identifier
+        account_id: AccountIdentifier,
+    },
     /// Mine bundle
     MineBundle {
         /// Prepared bundle.
@@ -322,6 +326,17 @@ pub enum MessageType {
     },
     /// Get the checksum for a legacy address.
     GetLegacyAddressChecksum(String),
+    /// Start background syncing.
+    StartBackgroundSync {
+        /// Polling interval, time between each syncing operation
+        #[serde(rename = "pollingInterval")]
+        polling_interval: Duration,
+        /// If outputs should get automatically consolidated
+        #[serde(rename = "automaticOutputConsolidation")]
+        automatic_output_consolidation: bool,
+    },
+    /// Stop background syncing.
+    StopBackgroundSync,
 }
 
 impl Serialize for MessageType {
@@ -334,27 +349,13 @@ impl Serialize for MessageType {
             MessageType::CreateAccount(_) => serializer.serialize_unit_variant("MessageType", 1, "CreateAccount"),
             MessageType::GetAccount(_) => serializer.serialize_unit_variant("MessageType", 2, "GetAccount"),
             MessageType::GetAccounts => serializer.serialize_unit_variant("MessageType", 3, "GetAccounts"),
-            MessageType::CallAccountMethod {
-                account_id: _,
-                method: _,
-            } => serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod"),
-            MessageType::SyncAccounts {
-                address_index: _,
-                gap_limit: _,
-                account_discovery_threshold: _,
-            } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
-            MessageType::Reattach {
-                account_id: _,
-                message_id: _,
-            } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
-            MessageType::Backup {
-                destination: _,
-                password: _,
-            } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup {
-                backup_path: _,
-                password: _,
-            } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
+            MessageType::CallAccountMethod { .. } => {
+                serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
+            }
+            MessageType::SyncAccounts { .. } => serializer.serialize_unit_variant("MessageType", 5, "SyncAccounts"),
+            MessageType::Reattach { .. } => serializer.serialize_unit_variant("MessageType", 6, "Reattach"),
+            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
             MessageType::SetStoragePassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
             }
@@ -372,21 +373,13 @@ impl Serialize for MessageType {
             }
             #[cfg(feature = "stronghold")]
             MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
-            MessageType::SendTransfer {
-                account_id: _,
-                transfer: _,
-            } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
-            MessageType::InternalTransfer {
-                from_account_id: _,
-                to_account_id: _,
-                amount: _,
-            } => serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer"),
+            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
+            MessageType::InternalTransfer { .. } => {
+                serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer")
+            }
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 16, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 17, "VerifyMnemonic"),
-            MessageType::StoreMnemonic {
-                signer_type: _,
-                mnemonic: _,
-            } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
+            MessageType::StoreMnemonic { .. } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
             MessageType::IsLatestAddressUnused => {
                 serializer.serialize_unit_variant("MessageType", 19, "IsLatestAddressUnused")
             }
@@ -394,61 +387,40 @@ impl Serialize for MessageType {
             MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
             #[cfg(feature = "stronghold")]
-            MessageType::ChangeStrongholdPassword {
-                current_password: _,
-                new_password: _,
-            } => serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword"),
+            MessageType::ChangeStrongholdPassword { .. } => {
+                serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword")
+            }
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
             }
-            MessageType::GetMigrationData {
-                nodes: _,
-                permanode: _,
-                seed: _,
-                initial_address_index: _,
-                security_level: _,
-            } => serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData"),
-            MessageType::CreateMigrationBundle {
-                seed: _,
-                input_address_indexes: _,
-                mine: _,
-                timeout_secs: _,
-                offset: _,
-                log_file_name: _,
-            } => serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle"),
-            MessageType::SendMigrationBundle {
-                nodes: _,
-                bundle_hash: _,
-                mwm: _,
-            } => serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle"),
+            MessageType::GetMigrationData { .. } => {
+                serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData")
+            }
+            MessageType::CreateMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
+            }
+            MessageType::SendMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle")
+            }
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
-            MessageType::GetMigrationAddress(_) => {
+            MessageType::GetMigrationAddress { .. } => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
-            MessageType::MineBundle {
-                prepared_bundle: _,
-                spent_bundle_hashes: _,
-                security_level: _,
-                timeout: _,
-                offset: _,
-            } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
-            MessageType::GetLedgerMigrationData {
-                nodes: _,
-                permanode: _,
-                addresses: _,
-                security_level: _,
-            } => serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData"),
-            MessageType::SendLedgerMigrationBundle {
-                nodes: _,
-                bundle: _,
-                mwm: _,
-            } => serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
+            MessageType::MineBundle { .. } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
+            MessageType::GetLedgerMigrationData { .. } => {
+                serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData")
+            }
+            MessageType::SendLedgerMigrationBundle { .. } => {
+                serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle")
             }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
+            }
+            MessageType::StartBackgroundSync { .. } => {
+                serializer.serialize_unit_variant("MessageType", 33, "StartBackgroundSync")
+            }
+            MessageType::StopBackgroundSync => {
+                serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
             }
         }
     }
@@ -504,6 +476,8 @@ pub struct MigrationDataDto {
     #[serde(rename = "lastCheckedAddressIndex")]
     last_checked_address_index: u64,
     inputs: Vec<MigrationInputDto>,
+    #[serde(rename = "spentAddresses")]
+    spent_addresses: bool,
 }
 
 impl From<MigrationData> for MigrationDataDto {
@@ -530,6 +504,7 @@ impl From<MigrationData> for MigrationDataDto {
             balance: data.balance,
             last_checked_address_index: data.last_checked_address_index,
             inputs,
+            spent_addresses: data.spent_addresses,
         }
     }
 }
@@ -610,10 +585,6 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     LedgerStatus(crate::LedgerStatus),
-    /// GetLedgerOpenedApp response.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    LedgerOpenedApp(crate::LedgerAppInfo),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.
@@ -638,6 +609,8 @@ pub enum ResponseType {
     MineBundle(MinedBundle),
     /// GetLegacyAddressChecksum response.
     GetLegacyAddressChecksum(String),
+    /// All went fine.
+    Ok(()),
 }
 
 /// The message type.

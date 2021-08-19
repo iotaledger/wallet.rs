@@ -65,7 +65,7 @@ impl TryFrom<&str> for EventType {
 type JsCallback = Root<JsFunction<JsObject>>;
 
 pub(crate) struct EventListener {
-    queue: EventQueue,
+    channel: Channel,
     callbacks: Arc<Mutex<HashMap<EventType, Vec<(JsCallback, EventId)>>>>,
 }
 
@@ -84,16 +84,16 @@ pub(crate) struct EventListener {
  }
 
 impl EventListener {
-    fn new(queue: EventQueue) -> Arc<Self> {
+    fn new(channel: Channel) -> Arc<Self> {
         Arc::new(Self {
-            queue,
+            channel,
             callbacks: Arc::new(Mutex::new(HashMap::new())),
         })
     }
 
     fn call(&self, message: String, event_type: EventType) {
         let callbacks = self.callbacks.clone();
-        self.queue.send(move |mut cx| {
+        self.channel.send(move |mut cx| {
             if let Some(cbs) = callbacks.lock().unwrap().get(&event_type) {
                 for (cb, _) in cbs {
                     let cb = cb.to_inner(&mut cx);
@@ -226,8 +226,8 @@ pub(crate) fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 }
 
 pub(crate) fn event_listener_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<EventListener>>> {
-    let queue = cx.queue();
-    let event_handler = EventListener::new(queue);
+    let channel = cx.channel();
+    let event_handler = EventListener::new(channel);
 
     Ok(cx.boxed(event_handler))
 }

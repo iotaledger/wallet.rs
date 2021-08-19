@@ -32,13 +32,13 @@ pub(crate) struct DispatchMessage {
 }
 
 pub struct MessageHandler {
-    queue: EventQueue,
+    channel: Channel,
     message_handler: WalletMessageHandler,
 }
 
 impl Finalize for MessageHandler {}
 impl MessageHandler {
-    fn new(queue: EventQueue, options: String) -> Arc<Self> {
+    fn new(channel: Channel, options: String) -> Arc<Self> {
         let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
             Ok(options) => options,
             Err(e) => {
@@ -76,7 +76,7 @@ impl MessageHandler {
             .expect("error initializing account manager");
         let message_handler = WalletMessageHandler::with_manager(manager);
 
-        Arc::new(Self { queue, message_handler })
+        Arc::new(Self { channel, message_handler })
     }
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
@@ -120,8 +120,8 @@ impl MessageHandler {
 pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<MessageHandler>>> {
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
-    let queue = cx.queue();
-    let message_handler = MessageHandler::new(queue, options);
+    let channel = cx.channel();
+    let message_handler = MessageHandler::new(channel, options);
 
     Ok(cx.boxed(message_handler))
 }
@@ -135,7 +135,7 @@ pub fn send_message(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     crate::RUNTIME.spawn(async move {
         let (response, is_error) = message_handler.send_message(message).await;
         log::debug!("{:?}", response);
-        message_handler.queue.send(move |mut cx| {
+        message_handler.channel.send(move |mut cx| {
             let cb = callback.into_inner(&mut cx);
             let this = cx.undefined();
 

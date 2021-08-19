@@ -1433,7 +1433,7 @@ dependencies = [
 [[package]]
 name = "iota-bundle-miner"
 version = "0.1.0-alpha.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e57e297417ca6846117535b985b2bd6990db1f00#e57e297417ca6846117535b985b2bd6990db1f00"
 dependencies = [
  "bee-ternary",
  "bee-transaction",
@@ -1476,7 +1476,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "0.5.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e57e297417ca6846117535b985b2bd6990db1f00#e57e297417ca6846117535b985b2bd6990db1f00"
 dependencies = [
  "bee-common",
  "bee-common-derive",
@@ -1536,12 +1536,12 @@ dependencies = [
 [[package]]
 name = "iota-core"
 version = "0.2.0-alpha.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81#c9509f8c911ef0dcca70dda83247e2dcbd85aa81"
+source = "git+https://github.com/iotaledger/iota.rs?rev=e57e297417ca6846117535b985b2bd6990db1f00#e57e297417ca6846117535b985b2bd6990db1f00"
 dependencies = [
  "bee-ternary",
  "bee-transaction",
  "iota-bundle-miner",
- "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=c9509f8c911ef0dcca70dda83247e2dcbd85aa81)",
+ "iota-client 0.5.0-alpha.3 (git+https://github.com/iotaledger/iota.rs?rev=e57e297417ca6846117535b985b2bd6990db1f00)",
  "iota-crypto 0.5.1",
 ]
 
@@ -1612,7 +1612,7 @@ dependencies = [
 
 [[package]]
 name = "iota-wallet"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -2050,9 +2050,9 @@ dependencies = [
 
 [[package]]
 name = "neon"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05c562b89fa7f9707f02056abe25a37ec290ca4a4f1596edbd7aa1aa7b87af1d"
+checksum = "158d44fdd9cc93d5051c15e970727e94e4440c3c585c77b2f482df397a661fcf"
 dependencies = [
  "cslice",
  "neon-build",
@@ -2064,15 +2064,15 @@ dependencies = [
 
 [[package]]
 name = "neon-build"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f9c55f6d310757b9fe6cd96a376609548a252da31828f935a7f59106533a89e9"
+checksum = "067f30e1bb8bec9a0f2be115fd54430dd66472872c7c1491473618a405c1daac"
 
 [[package]]
 name = "neon-macros"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "47065bc93b16f41fcfe29cad7d4d2a3e299b4389a3c9b429ba7a55f69a057fff"
+checksum = "72adff7fd8a79dc3a18e565086179fa7608c555dd0e553e4eafebf9033b6a01c"
 dependencies = [
  "quote 1.0.9",
  "syn 1.0.73",
@@ -2080,9 +2080,9 @@ dependencies = [
 
 [[package]]
 name = "neon-runtime"
-version = "0.8.3"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "be313e6cf11f469653ee1b137b9203f5d604f2b496d423e96c5e251b51eead03"
+checksum = "be066c504047007b93709dc164c42f9f19c2ff365e7bf71240c8f88c92f2e687"
 dependencies = [
  "cfg-if 1.0.0",
  "libloading 0.6.7",
@@ -2090,8 +2090,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "nodejs-async"
-version = "0.1.0"
+name = "nodejs"
+version = "0.2.0"
 dependencies = [
  "backtrace",
  "bee-message",

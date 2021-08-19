@@ -1,5 +1,5 @@
 {
-  "name": "nodejs-async",
+  "name": "nodejs",
   "version": "0.1.0",
   "description": "Node.js binding to the wallet library",
   "main": "index.node",

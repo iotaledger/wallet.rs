@@ -191,15 +191,6 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(is_simulator) => {
-                convert_async_panics(|| async {
-                    Ok(ResponseType::LedgerOpenedApp(
-                        crate::get_ledger_opened_app(*is_simulator).await?,
-                    ))
-                })
-                .await
-            }
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async move {
                     self.account_manager.delete_internal().await?;
@@ -360,9 +351,15 @@ impl WalletMessageHandler {
                 let checksum = AccountManager::get_seed_checksum(seed.clone())?;
                 Ok(ResponseType::SeedChecksum(checksum))
             }),
-            MessageType::GetMigrationAddress(ledger_prompt) => {
+            MessageType::GetMigrationAddress {
+                ledger_prompt,
+                account_id,
+            } => {
                 convert_async_panics(|| async {
-                    let address = self.account_manager.get_migration_address(*ledger_prompt).await?;
+                    let address = self
+                        .account_manager
+                        .get_migration_address(*ledger_prompt, account_id.clone())
+                        .await?;
                     Ok(ResponseType::MigrationAddress(address))
                 })
                 .await
@@ -399,6 +396,25 @@ impl WalletMessageHandler {
                 let address_with_checksum = add_tryte_checksum(address)?;
                 Ok(ResponseType::GetLegacyAddressChecksum(address_with_checksum))
             }),
+            MessageType::StartBackgroundSync {
+                polling_interval,
+                automatic_output_consolidation,
+            } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .start_background_sync(*polling_interval, *automatic_output_consolidation)
+                        .await?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
+            MessageType::StopBackgroundSync => {
+                convert_async_panics(|| async {
+                    self.account_manager.stop_background_sync()?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
         };
 
         let response = match response {
@@ -562,6 +578,9 @@ impl WalletMessageHandler {
         if let Some(signer_type) = &account.signer_type {
             builder = builder.signer_type(signer_type.clone());
         }
+        if account.allow_create_multiple_empty_accounts {
+            builder = builder.allow_create_multiple_empty_accounts();
+        }
 
         match builder.initialise().await {
             Ok(account_handle) => {
@@ -722,6 +741,7 @@ mod tests {
                     created_at: None,
                     skip_persistence: false,
                     signer_type: Some(signer_type.clone()),
+                    allow_create_multiple_empty_accounts: false,
                 };
                 #[cfg(feature = "stronghold")]
                 send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;

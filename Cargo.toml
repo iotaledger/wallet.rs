@@ -1,6 +1,6 @@
 [package]
 name = "iota-wallet"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
 edition = "2018"
 
@@ -35,10 +35,10 @@ riker = "0.4"
 slog = "2.7"
 
 # ledger hardware wallets
-iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "dbf4b8ea3ba4c72ee4c88fe13e4ff72d53cd228f", optional = true  }
+iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13b80e169aaa19cde9cd825e8444be0973", optional = true  }
 
 # migration
-iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "c9509f8c911ef0dcca70dda83247e2dcbd85aa81", package = "iota-core" }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "e57e297417ca6846117535b985b2bd6990db1f00", package = "iota-core" }
 bytemuck = "1.5"
 
 [dependencies.iota-crypto]

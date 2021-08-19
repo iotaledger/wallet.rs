@@ -45,21 +45,21 @@ pub struct NodeInfoOptions {
 
 pub struct AccountWrapper {
     pub account_id: String,
-    pub queue: EventQueue,
+    pub channel: Channel,
 }
 impl Finalize for AccountWrapper {}
 
 impl AccountWrapper {
-    pub fn new(queue: EventQueue, account_id: String) -> Arc<Self> {
-        Arc::new(Self { account_id, queue })
+    pub fn new(channel: Channel, account_id: String) -> Arc<Self> {
+        Arc::new(Self { account_id, channel })
     }
 }
 
 pub fn account_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<AccountWrapper>>> {
     let account_id = cx.argument::<JsString>(0)?;
     let account_id = account_id.value(&mut cx);
-    let queue = cx.queue();
-    let account_wrapper = AccountWrapper::new(queue, account_id);
+    let channel = cx.channel();
+    let account_wrapper = AccountWrapper::new(channel, account_id);
 
     Ok(cx.boxed(account_wrapper))
 }
@@ -172,7 +172,7 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
                 .expect("failed to get nodeinfo"),
         };
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = callback.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -527,7 +527,7 @@ pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         }
         let _synced_account = synchronizer.execute().await;
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = callback.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -588,7 +588,7 @@ pub fn send(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
         let result = account.transfer(transfer.clone()).await;
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -677,7 +677,7 @@ pub fn send_to_many(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
         let result = account.transfer(transfer.clone()).await;
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -735,7 +735,7 @@ length",
             RepostAction::Promote => account.promote(&message_id).await.unwrap(),
         };
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -767,7 +767,7 @@ pub fn consolidate_outputs(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
         let result = account.consolidate_outputs(include_dust_allowance_output).await;
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
 
@@ -811,7 +811,7 @@ pub fn is_latest_address_unused(mut cx: FunctionContext) -> JsResult<JsUndefined
 
         let result = account.is_latest_address_unused().await;
 
-        account_wrapper.queue.send(move |mut cx| {
+        account_wrapper.channel.send(move |mut cx| {
             let cb = cb.into_inner(&mut cx);
             let this = cx.undefined();
 

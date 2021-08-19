@@ -280,7 +280,7 @@ impl AccountManagerBuilder {
                     self.polling_interval,
                     self.account_options.automatic_output_consolidation,
                 )
-                .await;
+                .await?;
         }
 
         Ok(instance)
@@ -392,7 +392,7 @@ impl Clone for AccountManager {
 
 impl Drop for AccountManager {
     fn drop(&mut self) {
-        self.stop_background_sync();
+        self.stop_background_sync().unwrap();
     }
 }
 
@@ -444,6 +444,7 @@ impl AccountManager {
         Ok(MigrationData {
             balance: metadata.balance,
             last_checked_address_index: metadata.last_checked_address_index,
+            spent_addresses: metadata.spent_addresses,
             inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
     }
@@ -479,15 +480,27 @@ impl AccountManager {
             balance: migration_inputs.0,
             last_checked_address_index,
             inputs: migration_inputs.1,
+            spent_addresses: migration_inputs.2,
         })
     }
 
     /// Convert the first address from the first account to a migration tryte address
-    pub async fn get_migration_address(&self, ledger_prompt: bool) -> crate::Result<MigrationAddress> {
-        let account_handle = self.get_account(0).await?;
+    pub async fn get_migration_address<I: Into<AccountIdentifier>>(
+        &self,
+        ledger_prompt: bool,
+        account_id: I,
+    ) -> crate::Result<MigrationAddress> {
+        let account_handle = self.get_account(account_id).await?;
         let account = account_handle.read().await;
-        let deposit_address = if ledger_prompt {
-            crate::address::get_address_with_index(
+        // Safe to unwrap since an account always needs to have an address
+        let first_address = account
+            .addresses()
+            .iter()
+            .find(|e| *e.key_index() == 0 && !e.internal())
+            .expect("Account has no address")
+            .clone();
+        if ledger_prompt {
+            let ledger_first_address = crate::address::get_address_with_index(
                 &account,
                 0,
                 account.bech32_hrp(),
@@ -496,12 +509,13 @@ impl AccountManager {
                     network: account.network(),
                 },
             )
-            .await?
-        } else {
-            // Safe to unwrap since an account always needs to have an address
-            account.addresses().first().expect("Account has no address").clone()
-        };
-        let bech32_address = deposit_address.address().to_bech32();
+            .await?;
+            if first_address != ledger_first_address {
+                #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                return Err(crate::Error::WrongLedgerSeedError);
+            }
+        }
+        let bech32_address = first_address.address().to_bech32();
         let deposit_address = match BeeAddress::try_from_bech32(&bech32_address) {
             Ok(BeeAddress::Ed25519(a)) => a,
             _ => return Err(crate::Error::InvalidAddress),
@@ -667,6 +681,11 @@ impl AccountManager {
             .clone();
         let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
 
+        let bech32_hrp = match self.get_account(0).await {
+            Ok(account_handle) => account_handle.read().await.bech32_hrp(),
+            Err(_) => "iota".to_string(),
+        };
+
         Ok(MigratedBundle {
             tail_transaction_hash: tail_transaction_hash
                 .to_inner()
@@ -677,7 +696,7 @@ impl AccountManager {
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
                 Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
-                "iota".to_string(),
+                bech32_hrp,
             ),
         })
     }
@@ -763,19 +782,27 @@ impl AccountManager {
     }
 
     /// Initialises the background polling and MQTT monitoring.
-    pub async fn start_background_sync(&self, polling_interval: Duration, automatic_output_consolidation: bool) {
+    pub async fn start_background_sync(
+        &self,
+        polling_interval: Duration,
+        automatic_output_consolidation: bool,
+    ) -> crate::Result<()> {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation);
-        self.stop_polling_sender.lock().unwrap().replace(stop_polling_sender);
+        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation)?;
+        self.stop_polling_sender
+            .lock()
+            .map_err(|_| crate::Error::PoisonError)?
+            .replace(stop_polling_sender);
+        Ok(())
     }
 
     /// Stops the background polling and MQTT monitoring.
-    pub fn stop_background_sync(&self) {
+    pub fn stop_background_sync(&self) -> crate::Result<()> {
         if let Some(polling_handle) = self.polling_handle.lock().unwrap().take() {
             self.stop_polling_sender
                 .lock()
-                .unwrap()
+                .map_err(|_| crate::Error::PoisonError)?
                 .take()
                 .unwrap()
                 .send(())
@@ -790,17 +817,15 @@ impl AccountManager {
                 });
             })
             .join()
-            .expect("failed to stop monitoring and polling systems");
+            .map_err(|_| crate::Error::StdThreadJoinError)?;
         }
+        Ok(())
     }
 
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        // safe to unwrap because the storage is always defined at this point
-        crate::storage::set_encryption_key(&self.storage_path, key)
-            .await
-            .unwrap();
+        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
             Self::load_accounts(
@@ -893,7 +918,7 @@ impl AccountManager {
         polling_interval: Duration,
         mut stop: BroadcastReceiver<()>,
         automatic_output_consolidation: bool,
-    ) {
+    ) -> crate::Result<()> {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
         let account_options = self.account_options;
@@ -962,7 +987,11 @@ impl AccountManager {
                 }
             });
         });
-        self.polling_handle.lock().unwrap().replace(handle);
+        self.polling_handle
+            .lock()
+            .map_err(|_| crate::Error::PoisonError)?
+            .replace(handle);
+        Ok(())
     }
 
     /// Stores a mnemonic for the given signer type.

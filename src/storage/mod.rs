@@ -229,6 +229,23 @@ impl StorageManager {
         Ok(())
     }
 
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    // used for ledger accounts to verify that the same menmonic is used for all accounts
+    pub async fn save_first_ledger_address(
+        &mut self,
+        address: &iota_client::bee_message::address::Address,
+    ) -> crate::Result<()> {
+        self.storage.set("FIRST_LEDGER_ADDRESS", address).await?;
+        Ok(())
+    }
+
+    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
+        let address: iota_client::bee_message::address::Address =
+            serde_json::from_str(&self.storage.get("FIRST_LEDGER_ADDRESS").await?)?;
+        Ok(address)
+    }
+
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
         let index = AccountIndexation { key: key.to_string() };
         if let Some(index) = self.account_indexation.iter().position(|i| i == &index) {

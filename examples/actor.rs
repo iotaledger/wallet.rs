@@ -61,6 +61,7 @@ async fn main() {
         created_at: None,
         skip_persistence: false,
         signer_type: None,
+        allow_create_multiple_empty_accounts: false,
     };
 
     send_message(&tx, MessageType::SetStrongholdPassword("password".to_string())).await;

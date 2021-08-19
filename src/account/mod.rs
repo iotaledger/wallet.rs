@@ -10,6 +10,8 @@ use crate::{
     signing::{GenerateAddressMetadata, SignerType},
     storage::{MessageIndexation, MessageQueryFilter},
 };
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+use crate::{client::ClientOptionsBuilder, event::emit_ledger_address_generation};
 
 use iota_client::NodeInfoWrapper;
 
@@ -131,6 +133,7 @@ pub struct AccountInitialiser {
     signer_type: Option<SignerType>,
     skip_persistence: bool,
     index: Option<usize>,
+    allow_create_multiple_empty_accounts: bool,
 }
 
 impl AccountInitialiser {
@@ -158,6 +161,7 @@ impl AccountInitialiser {
             signer_type: None,
             skip_persistence: false,
             index: None,
+            allow_create_multiple_empty_accounts: false,
         }
     }
 
@@ -205,6 +209,13 @@ impl AccountInitialiser {
         self
     }
 
+    /// Enables creating multiple accounts without history.
+    /// The wallet disables it by default to simplify account discovery.
+    pub fn allow_create_multiple_empty_accounts(mut self) -> Self {
+        self.allow_create_multiple_empty_accounts = true;
+        self
+    }
+
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
@@ -238,7 +249,7 @@ impl AccountInitialiser {
                 latest_account_handle.replace(account_handle.clone());
             }
         }
-        if !self.account_options.allow_create_multiple_empty_accounts {
+        if !self.account_options.allow_create_multiple_empty_accounts && !self.allow_create_multiple_empty_accounts {
             if let Some(ref latest_account_handle) = latest_account_handle {
                 let latest_account = latest_account_handle.read().await;
                 if latest_account.with_messages(|messages| messages.is_empty()).await
@@ -260,7 +271,7 @@ impl AccountInitialiser {
             last_synced_at: None,
             addresses: self.addresses,
             client_options: self.client_options,
-            storage_path: self.storage_path,
+            storage_path: self.storage_path.clone(),
             skip_persistence: self.skip_persistence,
             cached_messages: Default::default(),
         };
@@ -342,7 +353,125 @@ impl AccountInitialiser {
                 address
             }
         };
-
+        // store first address for the first ledger account so we can verify that the correct mnemonic is used when a
+        // new account is created
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        if account.index == 0 {
+            match signer_type {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => {
+                    crate::storage::get(&self.storage_path)
+                        .await?
+                        .lock()
+                        .await
+                        .save_first_ledger_address(&address.inner)
+                        .await?;
+                    log::debug!("[LEDGERADDRESS] saved first address {:?}", &address.inner);
+                }
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => {
+                    crate::storage::get(&self.storage_path)
+                        .await?
+                        .lock()
+                        .await
+                        .save_first_ledger_address(&address.inner)
+                        .await?;
+                    log::debug!("[LEDGERADDRESS] saved first address {:?}", &address.inner);
+                }
+                _ => {}
+            }
+        } else {
+            match signer_type {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => {
+                    let signer = crate::signing::get_signer(&SignerType::LedgerNano).await;
+                    let mut signer = signer.lock().await;
+                    let first_address = signer
+                        // dummy account with index 0 so we can generate the correct address
+                        .generate_address(
+                            &Account {
+                                id: "account_for_first_ledger_address".to_string(),
+                                signer_type: signer_type.clone(),
+                                index: 0,
+                                alias: "account_for_first_ledger_address".to_string(),
+                                created_at: Local::now(),
+                                last_synced_at: None,
+                                addresses: vec![],
+                                client_options: ClientOptionsBuilder::new().build()?,
+                                storage_path: PathBuf::new(),
+                                skip_persistence: true,
+                                cached_messages: Arc::new(Mutex::new(HashMap::new())),
+                            },
+                            0,
+                            false,
+                            GenerateAddressMetadata {
+                                syncing: true,
+                                network: account.network(),
+                            },
+                        )
+                        .await?;
+                    log::debug!("[LEDGERADDRESS] generated first address {:?}", first_address);
+                    // generate address from first account to validate mnemonic
+                    if let Ok(first_account_first_address) = crate::storage::get(&self.storage_path)
+                        .await?
+                        .lock()
+                        .await
+                        .get_first_ledger_address()
+                        .await
+                    {
+                        log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
+                        if first_account_first_address != first_address {
+                            return Err(crate::Error::WrongLedgerSeedError);
+                        }
+                    }
+                }
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator =>
+                // generate address from first account to validate mnemonic
+                {
+                    let signer = crate::signing::get_signer(&SignerType::LedgerNanoSimulator).await;
+                    let mut signer = signer.lock().await;
+                    let first_address = signer
+                        // dummy account with index 0 so we can generate the correct address
+                        .generate_address(
+                            &Account {
+                                id: "account_for_first_ledger_address".to_string(),
+                                signer_type: signer_type.clone(),
+                                index: 0,
+                                alias: "account_for_first_ledger_address".to_string(),
+                                created_at: Local::now(),
+                                last_synced_at: None,
+                                addresses: vec![],
+                                client_options: ClientOptionsBuilder::new().build()?,
+                                storage_path: PathBuf::new(),
+                                skip_persistence: true,
+                                cached_messages: Arc::new(Mutex::new(HashMap::new())),
+                            },
+                            0,
+                            false,
+                            GenerateAddressMetadata {
+                                syncing: true,
+                                network: account.network(),
+                            },
+                        )
+                        .await?;
+                    log::debug!("[LEDGERADDRESS] generated first address {:?}", first_address);
+                    if let Ok(first_account_first_address) = crate::storage::get(&self.storage_path)
+                        .await?
+                        .lock()
+                        .await
+                        .get_first_ledger_address()
+                        .await
+                    {
+                        log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
+                        if first_account_first_address != first_address {
+                            return Err(crate::Error::WrongLedgerSeedError);
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
         let mut digest = [0; 32];
         let raw = match address.as_ref() {
             iota_client::bee_message::address::Address::Ed25519(a) => a.as_ref().to_vec(),
@@ -680,7 +809,39 @@ impl AccountHandle {
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
-        Ok(self.latest_address().await)
+        let address = self.latest_address().await;
+        // regenerate address for ledger accounts
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let account = self.read().await;
+            let ledger = match account.signer_type() {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => true,
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => true,
+                _ => false,
+            };
+            if ledger {
+                // Send address event so it can be displayed before and then compared with the prompt on the ledger
+                emit_ledger_address_generation(&account, address.address().to_bech32()).await;
+
+                log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
+                let regenerated_address = crate::address::get_address_with_index(
+                    &account,
+                    *address.key_index(),
+                    account.bech32_hrp(),
+                    GenerateAddressMetadata {
+                        syncing: false,
+                        network: account.network(),
+                    },
+                )
+                .await?;
+                if address.address().inner != regenerated_address.address().inner {
+                    return Err(crate::Error::WrongLedgerSeedError);
+                }
+            }
+        }
+        Ok(address)
     }
 
     /// Syncs the latest address with the Tangle and determines whether it's unused or not.
