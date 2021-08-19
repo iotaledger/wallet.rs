@@ -378,12 +378,12 @@ Send funds to the given address.
 
 #### TransferOptions
 
-| Param                  | Type                                   | Default | Description                                           |
-| ---------------------- | -------------------------------------- | ------- | ----------------------------------------------------- |
-| remainderValueStrategy | `RemainderValueStrategy`               | `null`  | The strategy to use for the remainder value if any    |
-| indexation             | `{ index: string, data?: Uint8Array }` | `null`  | Message indexation                                    |
-| skipSync               | `boolean`                              | `false` | Send transfer without synchronising the account first |
-| outputKind             | `OutputKind`                           | `null`  | Message indexation                                    |
+| Param                  | Type                                   | Default                 | Description                                           |
+| ---------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------- |
+| remainderValueStrategy | `RemainderValueStrategy`               | `null`                  | The strategy to use for the remainder value if any    |
+| indexation             | `{ index: string, data?: Uint8Array }` | `null`                  | Message indexation                                    |
+| skipSync               | `boolean`                              | `false`                 | Send transfer without synchronising the account first |
+| outputKind             | `OutputKind`                           | `signatureLockedSingle` | Output kind                                           |
 
 #### RemainderValueStrategy
 
