@@ -463,9 +463,9 @@ Promote the given message.
 
 Consolidate the outputs on all account addresses.
 
-| Param                       | Type      | Default | Description                                            |
-| --------------------------- | --------- | ------- | ------------------------------------------------------ |
-| includeDustAllowanceOutputs | `boolean` | `false` | If dust allowance outputs should also get consolidated |
+| Param                       | Type      | Default | Description                                       |
+| --------------------------- | --------- | ------- | ------------------------------------------------- |
+| includeDustAllowanceOutputs | `boolean` | `false` | If true, also consolidates dust allowance outputs |
 
 ### isLatestAddressUnused()
 
