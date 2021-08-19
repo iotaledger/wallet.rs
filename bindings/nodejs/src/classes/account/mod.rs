@@ -660,9 +660,8 @@ pub fn send_to_many(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         .with_remainder_value_strategy(options.remainder_value_strategy);
     if let Some(indexation) = options.indexation {
         transfer_builder = transfer_builder.with_indexation(
-            IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default()).expect(
-                "index can't be empty",
-            ),
+            IndexationPayload::new(&indexation.index, &indexation.data.unwrap_or_default())
+                .expect("index can't be empty"),
         );
     }
     if options.skip_sync {

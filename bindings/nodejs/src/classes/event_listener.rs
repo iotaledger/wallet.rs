@@ -19,10 +19,9 @@ pub use iota_wallet::{
     actor::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
     address::parse as parse_address,
     event::{
-        on_balance_change, on_broadcast, on_confirmation_state_change, on_error,
-        on_new_transaction, on_reattachment, on_stronghold_status_change, on_transfer_progress,
-        remove_balance_change_listener, remove_broadcast_listener, remove_confirmation_state_change_listener,
-        remove_error_listener, remove_new_transaction_listener,
+        on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_new_transaction, on_reattachment,
+        on_stronghold_status_change, on_transfer_progress, remove_balance_change_listener, remove_broadcast_listener,
+        remove_confirmation_state_change_listener, remove_error_listener, remove_new_transaction_listener,
         remove_reattachment_listener, remove_stronghold_status_change_listener, remove_transfer_progress_listener,
         EventId,
     },
@@ -69,8 +68,8 @@ pub(crate) struct EventListener {
     callbacks: Arc<Mutex<HashMap<EventType, Vec<(JsCallback, EventId)>>>>,
 }
 
- impl Finalize for EventListener {
-     fn finalize<'a, C: Context<'a>>(self, cx: &mut C) {
+impl Finalize for EventListener {
+    fn finalize<'a, C: Context<'a>>(self, cx: &mut C) {
         for (event_type, mut callbacks) in self.callbacks.lock().unwrap().drain() {
             for (cb, event_id) in callbacks.drain(..) {
                 crate::RUNTIME.spawn(async move {
@@ -80,8 +79,8 @@ pub(crate) struct EventListener {
                 cb.drop(cx);
             }
         }
-     }
- }
+    }
+}
 
 impl EventListener {
     fn new(channel: Channel) -> Arc<Self> {

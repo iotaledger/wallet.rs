@@ -76,7 +76,10 @@ impl MessageHandler {
             .expect("error initializing account manager");
         let message_handler = WalletMessageHandler::with_manager(manager);
 
-        Arc::new(Self { channel, message_handler })
+        Arc::new(Self {
+            channel,
+            message_handler,
+        })
     }
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
