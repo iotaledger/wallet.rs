@@ -7,8 +7,8 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper, OutputKind},
     client::ClientOptions,
     event::{
-        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, BalanceChange,
-        TransactionEventType, TransferProgressType,
+        emit_balance_change, emit_confirmation_state_change, emit_transaction_event, AddressData, BalanceChange,
+        PreparedTransactionData, TransactionEventType, TransactionIO, TransferProgressType,
     },
     message::{Message, MessageType, RemainderValueStrategy, Transfer},
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
@@ -301,10 +301,15 @@ async fn sync_address_list(
             });
         }
         let results = futures::future::try_join_all(tasks).await?;
+        let mut inserted_remainder_address = false;
         for res in results {
             let (messages, address) = res?;
             if !address.outputs().is_empty() || return_all_addresses {
                 found_addresses.push(address);
+            } else if !inserted_remainder_address {
+                // We want to insert one unused address to have an unused remainder address
+                found_addresses.push(address);
+                inserted_remainder_address = true;
             }
             found_messages.extend(messages);
         }
@@ -1587,10 +1592,16 @@ async fn perform_transfer(
     let mut dust_and_allowance_recorders = Vec::new();
     let transfer_amount = transfer_obj.amount();
 
-    if transfer_amount < DUST_ALLOWANCE_VALUE {
-        for output in transfer_obj.outputs.iter() {
+    let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
+    for output in transfer_obj.outputs.iter() {
+        if transfer_amount < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((output.amount.get(), output.address.to_bech32(), true));
         }
+        outputs_for_event.push(TransactionIO {
+            address: output.address.to_bech32(),
+            amount: u64::from(output.amount),
+            remainder: Some(false),
+        });
     }
     // do we need to add dust_allowance to dust_and_allowance_recorders here?
 
@@ -1631,21 +1642,29 @@ async fn perform_transfer(
         }
     }
     let mut inputs_for_essence: Vec<Input> = Vec::new();
+    let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
     for (utxo, address_index, address_internal) in utxos {
-        match utxo.kind {
+        let (amount, address) = match utxo.kind {
             OutputKind::SignatureLockedSingle => {
                 if utxo.amount < DUST_ALLOWANCE_VALUE {
                     dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
                 }
+                (utxo.amount, utxo.address.to_bech32())
             }
             OutputKind::SignatureLockedDustAllowance => {
                 dust_and_allowance_recorders.push((utxo.amount, utxo.address.to_bech32(), false));
+                (utxo.amount, utxo.address.to_bech32())
             }
-            OutputKind::Treasury => {}
-        }
+            OutputKind::Treasury => return Err(crate::Error::InvalidOutputKind("Treasury".to_string())),
+        };
+        inputs_for_event.push(TransactionIO {
+            address,
+            amount,
+            remainder: None,
+        });
 
         let input: Input = UtxoInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         inputs_for_essence.push(input.clone());
@@ -1729,16 +1748,70 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 let change_address = if let Some(address) = account_.latest_change_address() {
+                    log::debug!(
+                        "[TRANSFER] using latest latest_change_address as remainder target: {}",
+                        address.address().to_bech32()
+                    );
+                    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                    {
+                        let ledger = match account_.signer_type() {
+                            #[cfg(feature = "ledger-nano")]
+                            SignerType::LedgerNano => true,
+                            #[cfg(feature = "ledger-nano-simulator")]
+                            SignerType::LedgerNanoSimulator => true,
+                            _ => false,
+                        };
+                        if ledger {
+                            transfer_obj
+                                .emit_event_if_needed(
+                                    account_.id().to_string(),
+                                    TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                        address: address.address().to_bech32(),
+                                    }),
+                                )
+                                .await;
+                            log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
+                            let regenerated_address = crate::address::get_new_change_address(
+                                &account_,
+                                *address.key_index(),
+                                account_.bech32_hrp(),
+                                GenerateAddressMetadata {
+                                    syncing: false,
+                                    network: account_.network(),
+                                },
+                            )
+                            .await?;
+                            if address.address().inner != regenerated_address.address().inner {
+                                return Err(crate::Error::WrongLedgerSeedError);
+                            }
+                        }
+                    }
                     address.address().clone()
                 } else {
+                    // Generate an address with syncing: true so it doesn't get displayed, then generate it with
+                    // syncing:false so the user can verify it on the ledger
+                    let change_address_for_event = crate::address::get_new_change_address(
+                        &account_,
+                        // Index 0 because it's the first address
+                        0,
+                        account_.bech32_hrp(),
+                        GenerateAddressMetadata {
+                            syncing: false,
+                            network: account_.network(),
+                        },
+                    )
+                    .await?;
                     transfer_obj
                         .emit_event_if_needed(
                             account_.id().to_string(),
-                            TransferProgressType::GeneratingRemainderDepositAddress,
+                            TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                address: change_address_for_event.address().to_bech32(),
+                            }),
                         )
                         .await;
                     let change_address = crate::address::get_new_change_address(
                         &account_,
+                        // Index 0 because it's the first address
                         0,
                         account_.bech32_hrp(),
                         GenerateAddressMetadata {
@@ -1782,6 +1855,11 @@ async fn perform_transfer(
         if remainder_value < DUST_ALLOWANCE_VALUE {
             dust_and_allowance_recorders.push((remainder_value, remainder_deposit_address.to_bech32(), true));
         }
+        outputs_for_event.push(TransactionIO {
+            address: remainder_deposit_address.to_bech32(),
+            amount: remainder_value,
+            remainder: Some(true),
+        });
     }
 
     let client = crate::client::get_client(account_.client_options()).await?;
@@ -1812,13 +1890,27 @@ async fn perform_transfer(
     outputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
     essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
+    let mut indexation_data = None;
     if let Some(indexation) = &transfer_obj.indexation {
+        if !indexation.data().is_empty() {
+            indexation_data = Some(hex::encode(&*indexation.data()));
+        }
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
     }
 
     let essence = essence_builder.finish()?;
     let essence = Essence::Regular(essence);
 
+    transfer_obj
+        .emit_event_if_needed(
+            account_.id().to_string(),
+            TransferProgressType::PreparedTransaction(PreparedTransactionData {
+                inputs: inputs_for_event,
+                outputs: outputs_for_event,
+                data: indexation_data,
+            }),
+        )
+        .await;
     transfer_obj
         .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SigningTransaction)
         .await;

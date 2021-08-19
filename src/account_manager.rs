@@ -444,6 +444,7 @@ impl AccountManager {
         Ok(MigrationData {
             balance: metadata.balance,
             last_checked_address_index: metadata.last_checked_address_index,
+            spent_addresses: metadata.spent_addresses,
             inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
         })
     }
@@ -479,15 +480,27 @@ impl AccountManager {
             balance: migration_inputs.0,
             last_checked_address_index,
             inputs: migration_inputs.1,
+            spent_addresses: migration_inputs.2,
         })
     }
 
     /// Convert the first address from the first account to a migration tryte address
-    pub async fn get_migration_address(&self, ledger_prompt: bool) -> crate::Result<MigrationAddress> {
-        let account_handle = self.get_account(0).await?;
+    pub async fn get_migration_address<I: Into<AccountIdentifier>>(
+        &self,
+        ledger_prompt: bool,
+        account_id: I,
+    ) -> crate::Result<MigrationAddress> {
+        let account_handle = self.get_account(account_id).await?;
         let account = account_handle.read().await;
-        let deposit_address = if ledger_prompt {
-            crate::address::get_address_with_index(
+        // Safe to unwrap since an account always needs to have an address
+        let first_address = account
+            .addresses()
+            .iter()
+            .find(|e| *e.key_index() == 0 && !e.internal())
+            .expect("Account has no address")
+            .clone();
+        if ledger_prompt {
+            let ledger_first_address = crate::address::get_address_with_index(
                 &account,
                 0,
                 account.bech32_hrp(),
@@ -496,12 +509,13 @@ impl AccountManager {
                     network: account.network(),
                 },
             )
-            .await?
-        } else {
-            // Safe to unwrap since an account always needs to have an address
-            account.addresses().first().expect("Account has no address").clone()
-        };
-        let bech32_address = deposit_address.address().to_bech32();
+            .await?;
+            if first_address != ledger_first_address {
+                #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                return Err(crate::Error::WrongLedgerSeedError);
+            }
+        }
+        let bech32_address = first_address.address().to_bech32();
         let deposit_address = match BeeAddress::try_from_bech32(&bech32_address) {
             Ok(BeeAddress::Ed25519(a)) => a,
             _ => return Err(crate::Error::InvalidAddress),
@@ -667,6 +681,11 @@ impl AccountManager {
             .clone();
         let tail_transaction_hash = migration::send_bundle(nodes, trytes, mwm).await?;
 
+        let bech32_hrp = match self.get_account(0).await {
+            Ok(account_handle) => account_handle.read().await.bech32_hrp(),
+            Err(_) => "iota".to_string(),
+        };
+
         Ok(MigratedBundle {
             tail_transaction_hash: tail_transaction_hash
                 .to_inner()
@@ -677,7 +696,7 @@ impl AccountManager {
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
                 Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
-                "iota".to_string(),
+                bech32_hrp,
             ),
         })
     }

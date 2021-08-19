@@ -35,6 +35,9 @@ pub struct AccountToCreate {
     /// The account's signer type.
     #[serde(rename = "signerType")]
     pub signer_type: Option<SignerType>,
+    /// Allow to create an account with multiple empty accounts
+    #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
+    pub allow_create_multiple_empty_accounts: bool,
 }
 
 /// Each public account method.
@@ -217,10 +220,6 @@ pub enum MessageType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     GetLedgerStatus(bool),
-    /// Get the app that's open on the Ledger Nano or Speculos simulator.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    GetLedgerOpenedApp(bool),
     /// Deletes the storage.
     DeleteStorage,
     /// Changes stronghold snapshot password.
@@ -303,7 +302,12 @@ pub enum MessageType {
     /// Get seed checksum.
     GetSeedChecksum(String),
     /// Get migration address
-    GetMigrationAddress(bool),
+    GetMigrationAddress {
+        /// Display prompt on the ledger
+        ledger_prompt: bool,
+        /// Account identifier
+        account_id: AccountIdentifier,
+    },
     /// Mine bundle
     MineBundle {
         /// Prepared bundle.
@@ -399,7 +403,7 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle")
             }
             MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
-            MessageType::GetMigrationAddress(_) => {
+            MessageType::GetMigrationAddress { .. } => {
                 serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
             }
             MessageType::MineBundle { .. } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
@@ -409,18 +413,14 @@ impl Serialize for MessageType {
             MessageType::SendLedgerMigrationBundle { .. } => {
                 serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle")
             }
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerOpenedApp(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLedgerOpenedApp")
-            }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
             }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 33, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
             }
         }
     }
@@ -476,6 +476,8 @@ pub struct MigrationDataDto {
     #[serde(rename = "lastCheckedAddressIndex")]
     last_checked_address_index: u64,
     inputs: Vec<MigrationInputDto>,
+    #[serde(rename = "spentAddresses")]
+    spent_addresses: bool,
 }
 
 impl From<MigrationData> for MigrationDataDto {
@@ -502,6 +504,7 @@ impl From<MigrationData> for MigrationDataDto {
             balance: data.balance,
             last_checked_address_index: data.last_checked_address_index,
             inputs,
+            spent_addresses: data.spent_addresses,
         }
     }
 }
@@ -582,10 +585,6 @@ pub enum ResponseType {
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
     #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
     LedgerStatus(crate::LedgerStatus),
-    /// GetLedgerOpenedApp response.
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
-    LedgerOpenedApp(crate::LedgerAppInfo),
     /// DeleteStorage response.
     DeletedStorage,
     /// ChangeStrongholdPassword response.

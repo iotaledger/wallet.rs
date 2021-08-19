@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+use crate::event::emit_ledger_address_generation;
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
@@ -121,6 +123,7 @@ pub struct AccountInitialiser {
     signer_type: Option<SignerType>,
     skip_persistence: bool,
     index: Option<usize>,
+    allow_create_multiple_empty_accounts: bool,
 }
 
 impl AccountInitialiser {
@@ -148,6 +151,7 @@ impl AccountInitialiser {
             signer_type: None,
             skip_persistence: false,
             index: None,
+            allow_create_multiple_empty_accounts: false,
         }
     }
 
@@ -195,6 +199,13 @@ impl AccountInitialiser {
         self
     }
 
+    /// Enables creating multiple accounts without history.
+    /// The wallet disables it by default to simplify account discovery.
+    pub fn allow_create_multiple_empty_accounts(mut self) -> Self {
+        self.allow_create_multiple_empty_accounts = true;
+        self
+    }
+
     /// Initialises the account.
     pub async fn initialise(mut self) -> crate::Result<AccountHandle> {
         let signer_type = self.signer_type.ok_or(crate::Error::AccountInitialiseRequiredField(
@@ -228,7 +239,7 @@ impl AccountInitialiser {
                 latest_account_handle.replace(account_handle.clone());
             }
         }
-        if !self.account_options.allow_create_multiple_empty_accounts {
+        if !self.account_options.allow_create_multiple_empty_accounts && !self.allow_create_multiple_empty_accounts {
             if let Some(ref latest_account_handle) = latest_account_handle {
                 let latest_account = latest_account_handle.read().await;
                 if latest_account.with_messages(|messages| messages.is_empty()).await
@@ -670,7 +681,39 @@ impl AccountHandle {
             .execute()
             .await?;
         // safe to clone since the `sync` guarantees a latest unused address
-        Ok(self.latest_address().await)
+        let address = self.latest_address().await;
+        // regenerate address for ledger accounts
+        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        {
+            let account = self.read().await;
+            let ledger = match account.signer_type() {
+                #[cfg(feature = "ledger-nano")]
+                SignerType::LedgerNano => true,
+                #[cfg(feature = "ledger-nano-simulator")]
+                SignerType::LedgerNanoSimulator => true,
+                _ => false,
+            };
+            if ledger {
+                // Send address event so it can be displayed before and then compared with the prompt on the ledger
+                emit_ledger_address_generation(&account, address.address().to_bech32()).await;
+
+                log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
+                let regenerated_address = crate::address::get_address_with_index(
+                    &account,
+                    *address.key_index(),
+                    account.bech32_hrp(),
+                    GenerateAddressMetadata {
+                        syncing: false,
+                        network: account.network(),
+                    },
+                )
+                .await?;
+                if address.address().inner != regenerated_address.address().inner {
+                    return Err(crate::Error::WrongLedgerSeedError);
+                }
+            }
+        }
+        Ok(address)
     }
 
     /// Syncs the latest address with the Tangle and determines whether it's unused or not.

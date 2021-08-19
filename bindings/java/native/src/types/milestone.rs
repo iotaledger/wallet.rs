@@ -5,8 +5,21 @@ use iota_wallet::message::{
     MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
 };
 
-use crate::ReceiptPayload;
+use iota_client::crypto::signatures::ed25519::{
+    PublicKey as RustPublicKey, Signature as RustSignature
+};
 
+use std::convert::TryInto;
+
+use crate::{
+    ReceiptPayload,
+    Result
+};
+
+const SECRET_KEY_LENGTH: usize = 32;
+const SIGNATURE_LENGTH: usize = 64;
+
+#[derive(PartialEq, Debug)]
 pub struct MilestonePayload {
     essence: MilestonePayloadEssenceRust,
     signatures: Vec<Box<[u8]>>,
@@ -35,6 +48,13 @@ impl MilestonePayload {
     }
 }
 
+impl core::fmt::Display for MilestonePayload {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "essence={:?} signatures=({:?})", self.essence, self.signatures)
+    }
+}
+
+#[derive(PartialEq, Debug)]
 pub struct MilestoneSignature {
     signature: Vec<u8>,
 }
@@ -45,6 +65,13 @@ impl MilestoneSignature {
     }
 }
 
+impl core::fmt::Display for MilestoneSignature {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.signature)
+    }
+}
+
+#[derive(PartialEq, Debug)]
 pub struct MilestonePayloadEssence {
     essence: MilestonePayloadEssenceRust,
 }
@@ -75,13 +102,10 @@ impl MilestonePayloadEssence {
     }
 
     pub fn public_keys(&self) -> Vec<PublicKey> {
-        // Vec of vec isnt implemented as a generatable type
         self.essence
             .public_keys()
             .iter()
-            .map(|key| PublicKey {
-                public_key: key.to_vec(),
-            })
+            .map(|key| key.try_into().unwrap())
             .collect()
     }
 
@@ -97,12 +121,78 @@ impl MilestonePayloadEssence {
     }
 }
 
-pub struct PublicKey {
-    public_key: Vec<u8>,
+impl core::fmt::Display for MilestonePayloadEssence {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.essence)
+    }
 }
 
+pub struct PublicKey(RustPublicKey);
+
 impl PublicKey {
-    pub fn get_public_key(&self) -> Vec<u8> {
-        self.public_key.clone()
+    pub fn verify(&self, sig: Signature, msg: Vec<u8>) -> bool {
+        self.0.verify(&sig.0, &msg)
+    }
+
+    pub fn to_compressed_bytes(&self) -> Vec<u8> {
+        self.0.to_compressed_bytes().to_vec()
+    }
+
+    pub fn from_compressed_bytes(bs: Vec<u8>) -> Result<Self> {
+        let mut bs_arr: [u8; SECRET_KEY_LENGTH] = [0; SECRET_KEY_LENGTH];
+        bs_arr.copy_from_slice(&bs[0..SECRET_KEY_LENGTH]);
+        match RustPublicKey::from_compressed_bytes(bs_arr) {
+            Ok(bytes) => Ok(Self(bytes)),
+            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        }
+    }
+}
+impl core::convert::TryFrom<&[u8; 32]> for PublicKey {
+    type Error = anyhow::Error;
+    fn try_from(bytes: &[u8; 32]) -> Result<Self, Self::Error> {
+        match RustPublicKey::from_compressed_bytes(*bytes) {
+            Ok(k) => Ok(Self(k)),
+            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        }
+    }
+}
+
+impl core::fmt::Display for PublicKey {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            hex::encode(self.to_compressed_bytes())
+        )
+    }
+}
+
+pub struct Signature(RustSignature);
+
+impl Signature {
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_bytes().to_vec()
+    }
+
+    pub fn from_bytes(bs: Vec<u8>) -> Self {
+        let mut bs_arr: [u8; SIGNATURE_LENGTH] = [0; SIGNATURE_LENGTH];
+        bs_arr.copy_from_slice(&bs[0..SIGNATURE_LENGTH]);
+        Self(RustSignature::from_bytes(bs_arr))
+    }
+}
+
+impl core::fmt::Display for Signature {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            hex::encode(self.to_bytes())
+        )
+    }
+}
+
+impl From<RustSignature> for Signature {
+    fn from(output: RustSignature) -> Self {
+        Self(output)
     }
 }
