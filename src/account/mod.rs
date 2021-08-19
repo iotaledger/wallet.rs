@@ -351,8 +351,7 @@ impl AccountInitialiser {
                 #[cfg(feature = "ledger-nano")]
                 SignerType::LedgerNano => {
                     crate::storage::get(&self.storage_path)
-                        .await
-                        .unwrap()
+                        .await?
                         .lock()
                         .await
                         .save_first_ledger_address(&address.inner)
@@ -362,8 +361,7 @@ impl AccountInitialiser {
                 #[cfg(feature = "ledger-nano-simulator")]
                 SignerType::LedgerNanoSimulator => {
                     crate::storage::get(&self.storage_path)
-                        .await
-                        .unwrap()
+                        .await?
                         .lock()
                         .await
                         .save_first_ledger_address(&address.inner)
@@ -389,7 +387,7 @@ impl AccountInitialiser {
                                 created_at: Local::now(),
                                 last_synced_at: None,
                                 addresses: vec![],
-                                client_options: ClientOptionsBuilder::new().build().unwrap(),
+                                client_options: ClientOptionsBuilder::new().build()?,
                                 storage_path: PathBuf::new(),
                                 skip_persistence: true,
                                 cached_messages: Arc::new(Mutex::new(HashMap::new())),
@@ -405,8 +403,7 @@ impl AccountInitialiser {
                     log::debug!("[LEDGERADDRESS] generated first address {:?}", first_address);
                     // generate address from first account to validate mnemonic
                     if let Ok(first_account_first_address) = crate::storage::get(&self.storage_path)
-                        .await
-                        .unwrap()
+                        .await?
                         .lock()
                         .await
                         .get_first_ledger_address()
@@ -435,7 +432,7 @@ impl AccountInitialiser {
                                 created_at: Local::now(),
                                 last_synced_at: None,
                                 addresses: vec![],
-                                client_options: ClientOptionsBuilder::new().build().unwrap(),
+                                client_options: ClientOptionsBuilder::new().build()?,
                                 storage_path: PathBuf::new(),
                                 skip_persistence: true,
                                 cached_messages: Arc::new(Mutex::new(HashMap::new())),
@@ -450,8 +447,7 @@ impl AccountInitialiser {
                         .await?;
                     log::debug!("[LEDGERADDRESS] generated first address {:?}", first_address);
                     if let Ok(first_account_first_address) = crate::storage::get(&self.storage_path)
-                        .await
-                        .unwrap()
+                        .await?
                         .lock()
                         .await
                         .get_first_ledger_address()
@@ -820,7 +816,7 @@ impl AccountHandle {
                 emit_ledger_address_generation(&account, address.address().to_bech32()).await;
 
                 log::debug!("get_unused_address regenerate address so it's displayed on the ledger");
-                let regenrated_address = crate::address::get_address_with_index(
+                let regenerated_address = crate::address::get_address_with_index(
                     &account,
                     *address.key_index(),
                     account.bech32_hrp(),
@@ -830,7 +826,7 @@ impl AccountHandle {
                     },
                 )
                 .await?;
-                if address.address().inner != regenrated_address.address().inner {
+                if address.address().inner != regenerated_address.address().inner {
                     return Err(crate::Error::WrongLedgerSeedError);
                 }
             }

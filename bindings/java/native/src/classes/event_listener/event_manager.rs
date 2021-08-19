@@ -11,9 +11,13 @@ use iota_wallet::{
     event::{
         AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
         MigrationProgressType as WalletMigrationProgressType,
+        TransferProgressType as WalletTransferProgressType,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
         TransferProgress as WalletTransferProgress,
+        AddressData as WalletAddressData,
+        PreparedTransactionData as WalletPreparedTransactionData,
+        TransactionIO as WalletTransactionIO
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
@@ -36,6 +40,29 @@ pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProg
         WalletMigrationProgressType::SigningBundle { .. } => MigrationProgressType::SigningBundle,
         WalletMigrationProgressType::BroadcastingBundle { .. } => MigrationProgressType::BroadcastingBundle,
         WalletMigrationProgressType::TransactionConfirmed { .. } => MigrationProgressType::TransactionConfirmed,
+    }
+}
+
+#[derive(Copy, Clone)]
+pub enum TransferProgressType {
+    SyncingAccount = 0,
+    SelectingInputs = 1,
+    GeneratingRemainderDepositAddress = 2,
+    PreparedTransaction = 3,
+    SigningTransaction = 4,
+    PerformingPoW = 5,
+    Broadcasting = 6,
+}
+
+pub fn transfer_progress_type_enum_to_type(transfer_type: &WalletTransferProgressType) -> TransferProgressType {
+    match transfer_type {
+        WalletTransferProgressType::SyncingAccount { .. } => TransferProgressType::SyncingAccount,
+        WalletTransferProgressType::SelectingInputs { .. } => TransferProgressType::SelectingInputs,
+        WalletTransferProgressType::GeneratingRemainderDepositAddress { .. } => TransferProgressType::GeneratingRemainderDepositAddress,
+        WalletTransferProgressType::PreparedTransaction { .. } => TransferProgressType::PreparedTransaction,
+        WalletTransferProgressType::SigningTransaction { .. } => TransferProgressType::SigningTransaction,
+        WalletTransferProgressType::PerformingPoW { .. } => TransferProgressType::PerformingPoW,
+        WalletTransferProgressType::Broadcasting { .. } => TransferProgressType::Broadcasting,
     }
 }
 
@@ -101,6 +128,131 @@ impl StrongholdStatusEvent {
     }
 }
 
+pub struct TransferProgress {
+    transfer_type: TransferProgressType,
+    event: WalletTransferProgressType,
+}
+
+impl TransferProgress {
+    pub fn get_type(&self) -> TransferProgressType {
+        self.transfer_type
+    }
+
+    pub fn as_prepared_transaction(&self) -> Result<PreparedTransactionData> {
+        if let WalletTransferProgressType::PreparedTransaction(data) = &self.event {
+            Ok(data.into())
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+
+    pub fn as_generating_remainder_deposit_address(&self) -> Result<AddressData> {
+        if let WalletTransferProgressType::GeneratingRemainderDepositAddress(data) = &self.event {
+            Ok(data.into())
+        } else {
+            Err(anyhow!("wrong migration type"))
+        }
+    }
+}
+
+/// Address event data.
+#[derive(Clone, Debug, Getters)]
+#[getset(get = "pub")]
+pub struct AddressData {
+    /// The address.
+    #[getset(get = "pub")]
+    pub address: String,
+}
+
+impl From<&WalletAddressData> for AddressData {
+    fn from(data: &WalletAddressData) -> Self {
+        Self {
+            address: data.address().clone(),
+        }
+    }
+}
+impl core::fmt::Display for AddressData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "address={:?}", self.address)
+    }
+}
+
+/// Prepared transaction event data.
+#[derive(Clone, Debug)]
+pub struct PreparedTransactionData {
+    pub inputs: Vec<TransactionIO>,
+    pub outputs: Vec<TransactionIO>,
+    pub data: Option<String>,
+}
+
+impl From<&WalletPreparedTransactionData> for PreparedTransactionData {
+    fn from(data: &WalletPreparedTransactionData) -> Self {
+        Self {
+            inputs: data.inputs().clone().iter().map(|d| d.into()).collect(),
+            outputs: data.inputs().clone().iter().map(|d| d.into()).collect(),
+            data: data.data().clone(),
+        }
+    }
+}
+impl core::fmt::Display for PreparedTransactionData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "data={:?}, inputs=({:?}), outputs=({:?})", self.data, self.inputs, self.outputs)
+    }
+}
+
+impl PreparedTransactionData {
+    pub fn inputs(&self) -> Vec<TransactionIO> {
+        self.inputs.clone()
+    } 
+    pub fn outputs(&self) -> Vec<TransactionIO> {
+        self.outputs.clone()
+    }
+    pub fn data(&self) -> Option<String> {
+        self.data.clone()
+    }
+}
+
+/// Input or output data for PreparedTransactionData
+#[derive(Clone, Debug, Getters, CopyGetters)]
+pub struct TransactionIO {
+    #[getset(get = "pub")]
+    pub address: String,
+    #[getset(get_copy = "pub")]
+    pub amount: u64,
+    #[getset(get_copy = "pub")]
+    pub remainder: Option<bool>,
+}
+
+impl From<&WalletTransactionIO> for TransactionIO {
+    fn from(data: &WalletTransactionIO) -> Self {
+        Self {
+            address: data.address().clone(),
+            amount: data.amount().clone(),
+            remainder: data.remainder().clone(),
+        }
+    }
+}
+impl core::fmt::Display for TransactionIO {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "address={:?}, amount={:?}, remainder={:?}", self.address, self.amount, self.remainder)
+    }
+}
+
+impl From<WalletTransferProgressType> for TransferProgress {
+    fn from(progress_type: WalletTransferProgressType) -> Self {
+        Self { 
+            transfer_type: transfer_progress_type_enum_to_type(&progress_type),
+            event: progress_type 
+        }
+    }
+}
+
+impl core::fmt::Display for TransferProgress {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "type={:?}", self.event)
+    }
+}
+
 pub struct MigrationProgressEvent {
     migration_type: MigrationProgressType,
     event: WalletMigrationProgressType,
@@ -160,6 +312,12 @@ impl MigrationProgressEvent {
         } else {
             Err(anyhow!("wrong migration type"))
         }
+    }
+}
+
+impl core::fmt::Display for MigrationProgressEvent {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "type={:?}", self.event)
     }
 }
 
