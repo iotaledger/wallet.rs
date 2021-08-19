@@ -149,7 +149,7 @@ pub struct TransactionReattachmentEvent {
     pub reattached_message_id: MessageId,
 }
 
-/// Address event data.
+/// Address data for TransferProgressType::GeneratingRemainderDepositAddress and LedgerAddressGeneration.
 #[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressData {
@@ -772,9 +772,9 @@ pub(crate) async fn emit_address_consolidation_needed(account: &Account, address
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 #[cfg_attr(docsrs, doc(cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))))]
 pub async fn on_ledger_address_generation<F: Fn(&LedgerAddressGeneration) + Send + 'static>(cb: F) -> EventId {
-    let mut l = ledger_address_generation_listeners().lock().await;
+    let mut listeners = ledger_address_generation_listeners().lock().await;
     let id = generate_event_id();
-    l.push(LedgerAddressGenerationHandler {
+    listeners.push(LedgerAddressGenerationHandler {
         id,
         on_event: Box::new(cb),
     });

@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+use crate::event::emit_ledger_address_generation;
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},

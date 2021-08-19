@@ -437,7 +437,8 @@ pub(crate) async fn send_bundle(
             }
             tokio::time::sleep(std::time::Duration::from_secs(10)).await;
         }
-    });
+    })
+    .await?;
     let mut trits = TritBuf::<T1B1Buf>::zeros(BundledTransaction::trit_len());
     let mut curl = CurlP::new();
     send_trytes[0].as_trits_allocated(&mut trits);

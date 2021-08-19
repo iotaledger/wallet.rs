@@ -149,11 +149,21 @@ pub(crate) async fn sync_address(
 
         let client_guard = client_guard.clone();
         let bech32_hrp = bech32_hrp.clone();
+        let spent = *is_spent;
         let account_messages = account_messages.clone();
         tasks.push(async move {
             tokio::spawn(async move {
                 let client = client_guard.read().await;
-                let output = client.get_output(&utxo_input).await?;
+                let output = match client.get_output(&utxo_input).await {
+                    Ok(output) => output,
+                    Err(err) => {
+                        if spent {
+                            return Err(crate::Error::SpentOutputNotFound);
+                        } else {
+                            return Err(err.into());
+                        }
+                    }
+                };
                 let found_output = AddressOutput::from_output_response(output, bech32_hrp.to_string())?;
                 let message_id = *found_output.message_id();
 
@@ -184,10 +194,20 @@ pub(crate) async fn sync_address(
     }
 
     for res in futures::future::try_join_all(tasks).await? {
-        let (found_output, found_message) = res?;
-        outputs.insert(found_output.id()?, found_output);
-        if let Some(m) = found_message {
-            found_messages.push(m);
+        // Don't return an error if we didn't got a spent output
+        match res {
+            Ok((found_output, found_message)) => {
+                outputs.insert(found_output.id()?, found_output);
+                if let Some(m) = found_message {
+                    found_messages.push(m);
+                }
+            }
+            Err(e) => match e {
+                crate::Error::SpentOutputNotFound => {
+                    log::debug!("[SYNC] output not found in syncing address")
+                }
+                _ => return Err(e),
+            },
         }
     }
 

@@ -1,3 +1,8 @@
+import CodeBlock from '@theme/CodeBlock';
+import transfer from  '!!raw-loader!./../../../../examples/transfer.rs';
+import logger from  '!!raw-loader!./../../../../examples/logger.rs';
+import event from  '!!raw-loader!./../../../../examples/event.rs';
+
 # Examples
 
 You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples).
@@ -69,9 +74,9 @@ You can see the full code for the example in the [`wallet.rs` repository](https:
 
 You use the following example to generate an account, and transfer funds. 
 
-```rust
-{@include: ../../../../examples/transfer.rs}
-```
+<CodeBlock className="language-rust">
+  {transfer}
+</CodeBlock>
 
 ## Events example:
 
@@ -79,12 +84,12 @@ You use the following example to generate an account, and transfer funds.
 
 You can use the following example to fetch an existing _Account_ and listen to transaction events related to that _Account_ :
 
-```rust
-{@include: ../../../../examples/event.rs}
-```
+<CodeBlock className="language-rust">
+  {event}
+</CodeBlock>
 
 ## Logger example:
 
-```rust
-{@include: ../../../../examples/logger.rs}
-```
+<CodeBlock className="language-rust">
+  {logger}
+</CodeBlock>
