@@ -71,7 +71,7 @@ pub enum Error {
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
-    #[error("insufficient funds {0}/{1}")]
+    #[error("insufficient funds {0}/{1} available or input address used as output")]
     InsufficientFunds(u64, u64),
     /// Account isn't empty (has history or balance) - can't delete account.
     #[error("can't delete account: account has history or balance")]
