@@ -25,7 +25,7 @@ manager.store_mnemonic("Stronghold")
 client_options = {
     "nodes": [
         {
-            "url": "https://api.hornet-1.testnet.chrysalis2.com",
+            "url": "https://api.hornet-2.testnet.chrysalis2.com",
             "auth": None,
             "disabled": False
         }

@@ -260,7 +260,7 @@ impl ClientOptionsBuilder {
     /// let client_options = ClientOptionsBuilder::new()
     ///     .with_nodes(&[
     ///         "https://api.lb-0.testnet.chrysalis2.com",
-    ///         "https://api.hornet-1.testnet.chrysalis2.com/",
+    ///         "https://api.hornet-2.testnet.chrysalis2.com/",
     ///     ])
     ///     .expect("invalid nodes URLs")
     ///     .build();
