@@ -1,8 +1,6 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#![allow(clippy::unnecessary_wraps)]
-
 mod classes;
 use classes::*;
 pub mod types;

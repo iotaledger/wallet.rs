@@ -26,6 +26,7 @@ pub use iota_wallet::{
     Error,
 };
 
+// The dummy idis used for the actor system, which we don't currently use.
 const DUMMY_ID: &str = "1";
 
 #[derive(Deserialize, Clone)]

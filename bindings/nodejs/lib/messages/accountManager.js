@@ -4,11 +4,9 @@
 const mh = require("./messageHandler.js")
 const acc = require('./account.js');
 let { MessageHandler } = mh
-let { Account } = acc;
+let { AccountForMessages } = acc;
 
-const _id = "1";
-
-class AccountManager {
+class AccountManagerForMessages {
   constructor(options) {
     this.messageHandler = new MessageHandler(options);
   }
@@ -72,4 +70,4 @@ class AccountManager {
   }
 };
 
-module.exports.AccountManager = AccountManager;
+module.exports.AccountManagerForMessages = AccountManagerForMessages;

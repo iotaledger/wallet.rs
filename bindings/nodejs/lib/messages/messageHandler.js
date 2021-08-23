@@ -4,7 +4,6 @@
 const addon = require('../../index.node');
 const utils = require('../utils.js');
 
-console.log(utils);
 let { sendMessage, messageHandlerNew } = addon;
 
 

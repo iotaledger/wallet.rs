@@ -5,7 +5,7 @@
 require('dotenv').config()
 
 async function run() {
-    const { AccountManager, addEventListener } = require('../../lib/index.js');
+    const { AccountManager } = require('../../lib/index.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
     })

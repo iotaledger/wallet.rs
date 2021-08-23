@@ -3,8 +3,6 @@
 
 const addon = require('../../index.node');
 
-let {  } = addon;
-
 class SyncedAccount {
     constructor(id) {
       this.id = id;

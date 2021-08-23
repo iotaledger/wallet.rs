@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-class Account {
+class AccountForMessages {
   constructor(accountData, messageHandler) {
     this.accountData = accountData;
     this.messageHandler = messageHandler;
@@ -93,4 +93,4 @@ class Account {
 
 };
 
-module.exports.Account = Account;
+module.exports.AccountForMessages = AccountForMessages;
