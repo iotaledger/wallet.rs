@@ -26,17 +26,6 @@ $ npm run build
 
 This command uses the [cargo-cp-artifact](https://github.com/neon-bindings/cargo-cp-artifact) utility to run the Rust build and copy the built library into `./index.node`.
 
-## Exploring nodejs-async
-
-After building nodejs-async, you can explore its exports at the Node REPL:
-
-```sh
-$ npm install
-$ node
-> require('.').hello()
-"hello node"
-```
-
 ## Available Scripts
 
 In the project directory, you can run:
@@ -61,6 +50,8 @@ The directory structure of this project is:
 nodejs-async/
 ├── Cargo.toml
 ├── README.md
+├── lib/
+|   └── index.js
 ├── index.node
 ├── package.json
 ├── src/
