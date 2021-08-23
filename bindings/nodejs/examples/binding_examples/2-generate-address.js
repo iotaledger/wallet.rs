@@ -13,7 +13,7 @@ async function run() {
     manager.setStrongholdPassword(process.env.SH_PASSWORD)
 
     const account = manager.getAccount('Alice')
-    // console.log('Account:', account.alias())
+    console.log('Account:', account.alias())
 
     // Always sync before doing anything with the account
     const synced = await account.sync()

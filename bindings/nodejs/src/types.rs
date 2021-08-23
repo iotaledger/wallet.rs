@@ -172,7 +172,6 @@ pub struct ManagerOptions {
     pub persist_events: bool,
     #[serde(rename = "allowCreateMultipleEmptyAccounts", default)]
     pub allow_create_multiple_empty_accounts: bool,
-
     #[serde(rename = "skipPolling", default = "default_skip_polling")]
     pub skip_polling: bool,
     #[serde(rename = "pollingInterval")]

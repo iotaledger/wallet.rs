@@ -4,7 +4,6 @@
 use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, sync::Arc, time::Duration};
 
-// use iota_client::Address;
 use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, signing::SignerType, DateTime, Local};
 use neon::prelude::*;
 use serde::Deserialize;
