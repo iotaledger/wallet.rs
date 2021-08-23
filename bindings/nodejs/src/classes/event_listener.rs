@@ -62,10 +62,10 @@ impl TryFrom<&str> for EventType {
 }
 
 type JsCallback = Root<JsFunction<JsObject>>;
-
+type JsCallbackMap = HashMap<EventType, Vec<(JsCallback, EventId)>>;
 pub(crate) struct EventListener {
     channel: Channel,
-    callbacks: Arc<Mutex<HashMap<EventType, Vec<(JsCallback, EventId)>>>>,
+    callbacks: Arc<Mutex<JsCallbackMap>>,
 }
 
 impl Finalize for EventListener {
@@ -73,8 +73,7 @@ impl Finalize for EventListener {
         for (event_type, mut callbacks) in self.callbacks.lock().unwrap().drain() {
             for (cb, event_id) in callbacks.drain(..) {
                 crate::RUNTIME.spawn(async move {
-                    let cloned_event_id = event_id.clone();
-                    EventListener::remove_event_listeners(event_type, &cloned_event_id).await;
+                    EventListener::remove_event_listeners(event_type, &event_id).await;
                 });
                 cb.drop(cx);
             }
@@ -188,8 +187,7 @@ pub(crate) fn remove_event_listeners(mut cx: FunctionContext) -> JsResult<JsNumb
     if let Some(cbs) = cbs {
         for (cb, event_id) in cbs {
             crate::RUNTIME.spawn(async move {
-                let cloned_event_id = event_id.clone();
-                EventListener::remove_event_listeners(event_type, &cloned_event_id).await;
+                EventListener::remove_event_listeners(event_type, &event_id).await;
             });
             cb.drop(&mut cx);
         }
