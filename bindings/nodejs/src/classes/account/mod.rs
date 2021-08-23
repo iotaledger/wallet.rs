@@ -129,7 +129,6 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         &&cx.this()
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
-    // let account_wrapper = Arc::clone(&&cx.argument::<JsBox<Arc<AccountWrapper>>>(cx.len() - 2)?);
     let callback = cx.argument::<JsFunction>(cx.len() - 1)?.root(&mut cx);
     let id = account_wrapper.account_id.clone();
     let url: Option<String> = match cx.argument_opt(0) {
@@ -373,7 +372,7 @@ pub fn get_message(mut cx: FunctionContext) -> JsResult<JsValue> {
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
     let message_id =
-        MessageId::from_str(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).expect("invalid message id length");
+        MessageId::from_str(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).expect("invalid message id");
     let id = account_wrapper.account_id.clone();
 
     let (sender, receiver) = channel();
@@ -717,10 +716,8 @@ pub fn repost(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .downcast_or_throw::<JsBox<Arc<AccountWrapper>>, FunctionContext>(&mut cx)?,
     );
 
-    let message_id = MessageId::from_str(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).expect(
-        "invalid message id
-length",
-    );
+    let message_id =
+        MessageId::from_str(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).expect("invalid message id");
     let action_type =
         serde_json::from_str::<RepostAction>(cx.argument::<JsString>(0)?.value(&mut cx).as_str()).unwrap();
     let cb = cx.argument::<JsFunction>(1)?.root(&mut cx);
