@@ -86,7 +86,7 @@ pub(crate) async fn store_synced_account(synced_account: SyncedAccount) -> Strin
 
 pub static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
-use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
+use bee_common::logger::{logger_init, LoggerConfigBuilder};
 
 pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let config = cx.argument::<JsString>(0)?.value(&mut cx);
