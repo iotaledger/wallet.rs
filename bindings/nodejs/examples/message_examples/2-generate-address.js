@@ -4,8 +4,8 @@
 
 
 async function run() {
-    const { AccountManager } = require('../lib/index.js');
-    const manager = new AccountManager({
+    const { AccountManagerForMessages } = require('../lib/index.js');
+    const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
     });
     try {
