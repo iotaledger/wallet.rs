@@ -2,7 +2,7 @@
   "name": "nodejs",
   "version": "0.1.0",
   "description": "Node.js binding to the wallet library",
-  "main": "index.node",
+  "main": "lib/index.js",
   "scripts": {
     "build": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics && tsc",
     "install": "npm run build",
