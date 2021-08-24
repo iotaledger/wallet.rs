@@ -512,7 +512,7 @@ impl AccountManager {
             .await?;
             if first_address != ledger_first_address {
                 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-                return Err(crate::Error::WrongLedgerSeedError);
+                return Err(crate::Error::LedgerMnemonicMismatch);
             }
         }
         let bech32_address = first_address.address().to_bech32();

@@ -162,7 +162,7 @@ impl super::Signer for LedgerNanoSigner {
 
                     if let Some(first_address) = &first_public_address {
                         if first_address.address().inner != iota_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                     let mut address_pool = HashMap::new();

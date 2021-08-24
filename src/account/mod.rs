@@ -411,7 +411,7 @@ impl AccountInitialiser {
                     {
                         log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
                         if first_account_first_address != first_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                 }
@@ -455,7 +455,7 @@ impl AccountInitialiser {
                     {
                         log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
                         if first_account_first_address != first_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                 }
@@ -827,7 +827,7 @@ impl AccountHandle {
                 )
                 .await?;
                 if address.address().inner != regenerated_address.address().inner {
-                    return Err(crate::Error::WrongLedgerSeedError);
+                    return Err(crate::Error::LedgerMnemonicMismatch);
                 }
             }
         }
