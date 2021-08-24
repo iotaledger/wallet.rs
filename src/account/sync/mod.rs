@@ -1782,7 +1782,7 @@ async fn perform_transfer(
                             )
                             .await?;
                             if address.address().inner != regenerated_address.address().inner {
-                                return Err(crate::Error::WrongLedgerSeedError);
+                                return Err(crate::Error::LedgerMnemonicMismatch);
                             }
                         }
                     }
