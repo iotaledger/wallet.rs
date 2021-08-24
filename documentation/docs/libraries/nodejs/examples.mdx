@@ -6,7 +6,6 @@ import send from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_e
 import backup from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/5-backup.js';
 import restore from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/6-restore.js';
 import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/7-events.js';
-import migration from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/8-migration.js';
 
 # Examples
 
@@ -204,18 +203,3 @@ data: {
 You can then use the _accountId_ to identify the account via `AccountManager.getAccount(accountId)`.
 
 Read more about Events in the [API reference](api_reference.md#addeventlistenerevent-cb).
-
-## Migration 
-
-You can use the following example to create a new database and account, and migrate funds from the legacy network to the `Chrysalis` network.
-
-Run:
-```
-node 8-migration.js
-```
-
-Code:
-
-<CodeBlock className="language-javascript">
-  {migration}
-</CodeBlock>
