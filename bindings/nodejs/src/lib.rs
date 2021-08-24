@@ -1,6 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![allow(clippy::needless_borrow)]
+
 mod classes;
 use classes::*;
 pub mod types;
@@ -26,6 +28,8 @@ pub use iota_wallet::{
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
     Error,
 };
+
+
 
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
