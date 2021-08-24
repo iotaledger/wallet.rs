@@ -29,8 +29,6 @@ pub use iota_wallet::{
     Error,
 };
 
-
-
 use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 type AccountInstanceMap = Arc<RwLock<HashMap<String, AccountHandle>>>;
