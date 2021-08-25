@@ -7,7 +7,7 @@ use crate::{
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
 };
-use bee_common::packable::Packable;
+use iota_client::common::packable::Packable;
 use getset::{CopyGetters, Getters, Setters};
 
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};

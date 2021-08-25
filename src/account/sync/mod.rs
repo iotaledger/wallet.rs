@@ -14,7 +14,6 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
 };
 
-use bee_common::packable::Packable;
 use getset::Getters;
 use iota_client::{
     api::finish_pow,
@@ -26,6 +25,7 @@ use iota_client::{
             UtxoInput,
         },
     },
+    common::packable::Packable,
     AddressOutputsOptions, Client,
 };
 use serde::Serialize;
