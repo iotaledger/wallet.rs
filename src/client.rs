@@ -259,8 +259,8 @@ impl ClientOptionsBuilder {
     /// use iota_wallet::client::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::new()
     ///     .with_nodes(&[
-    ///         "https://api.lb-0.testnet.chrysalis2.com",
-    ///         "https://api.hornet-1.testnet.chrysalis2.com/",
+    ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
+    ///         "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe/",
     ///     ])
     ///     .expect("invalid nodes URLs")
     ///     .build();
@@ -619,7 +619,8 @@ mod tests {
 
     #[test]
     fn primary_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::new().with_primary_node("https://api.lb-0.testnet.chrysalis2.com");
+        let builder_res =
+            ClientOptionsBuilder::new().with_primary_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe");
         assert!(builder_res.is_ok());
     }
 
@@ -630,7 +631,8 @@ mod tests {
     }
     #[test]
     fn primary_pow_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::new().with_primary_pow_node("https://api.lb-0.testnet.chrysalis2.com");
+        let builder_res =
+            ClientOptionsBuilder::new().with_primary_pow_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe");
         assert!(builder_res.is_ok());
     }
 
@@ -642,7 +644,7 @@ mod tests {
 
     #[test]
     fn single_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::new().with_node("https://api.lb-0.testnet.chrysalis2.com");
+        let builder_res = ClientOptionsBuilder::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe");
         assert!(builder_res.is_ok());
     }
 
@@ -654,7 +656,7 @@ mod tests {
 
     #[test]
     fn multi_node_valid_url() {
-        let builder_res = ClientOptionsBuilder::new().with_nodes(&["https://api.lb-0.testnet.chrysalis2.com"]);
+        let builder_res = ClientOptionsBuilder::new().with_nodes(&["https://api.lb-0.h.chrysalis-devnet.iota.cafe"]);
         assert!(builder_res.is_ok());
     }
 
@@ -678,7 +680,7 @@ mod tests {
 
     #[test]
     fn single_node() {
-        let node = "https://api.lb-0.testnet.chrysalis2.com";
+        let node = "https://api.lb-0.h.chrysalis-devnet.iota.cafe";
         let client = ClientOptionsBuilder::new().with_node(node).unwrap().build().unwrap();
         assert_eq!(
             client.nodes(),
@@ -693,7 +695,7 @@ mod tests {
 
     #[test]
     fn multi_node() {
-        let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
+        let nodes = ["https://api.lb-0.h.chrysalis-devnet.iota.cafe"];
         let client = ClientOptionsBuilder::new().with_nodes(&nodes).unwrap().build().unwrap();
         assert_eq!(
             client.nodes(),
@@ -708,7 +710,7 @@ mod tests {
 
     #[test]
     fn network() {
-        let nodes = ["https://api.lb-0.testnet.chrysalis2.com"];
+        let nodes = ["https://api.lb-0.h.chrysalis-devnet.iota.cafe"];
         let network = "testnet";
         let client = ClientOptionsBuilder::new()
             .with_network(network)
@@ -731,30 +733,30 @@ mod tests {
     async fn get_client() {
         let test_cases = vec![
             ClientOptionsBuilder::new()
-                .with_node("https://api.lb-1.testnet.chrysalis2.com")
+                .with_node("https://api.lb-1.h.chrysalis-devnet.iota.cafe")
                 .unwrap()
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
-                .with_node("https://api.hornet-2.testnet.chrysalis2.com/")
+                .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe/")
                 .unwrap()
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
-                .with_nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
+                .with_nodes(&["https://api.lb-1.h.chrysalis-devnet.iota.cafe"])
                 .unwrap()
                 .with_network("mainnet")
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
-                .with_nodes(&["https://api.lb-1.testnet.chrysalis2.com"])
+                .with_nodes(&["https://api.lb-1.h.chrysalis-devnet.iota.cafe"])
                 .unwrap()
                 .with_network("testnet2")
                 .build()
                 .unwrap(),
             ClientOptionsBuilder::new()
                 .with_network("testnet2")
-                .with_nodes(&["https://api.hornet-3.testnet.chrysalis2.com/"])
+                .with_nodes(&["https://api.fat-hornet-0.h.chrysalis-devnet.iota.cafe/"])
                 .unwrap()
                 .build()
                 .unwrap(),

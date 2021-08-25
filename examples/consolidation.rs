@@ -23,7 +23,7 @@ const OUTPUT_CONSOLIDATION_THRESHOLD: usize = 2;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let node_url = "https://api.hornet-1.testnet.chrysalis2.com";
+    let node_url = "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe";
     let storage_path = "./storage/consolidation";
 
     // clear old storage so we can always start fresh

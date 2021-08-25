@@ -13,7 +13,7 @@ async function run() {
     manager.storeMnemonic(SignerType.Stronghold)
 
     const account = await manager.createAccount({
-        clientOptions: { node: "https://api.lb-0.testnet.chrysalis2.com", localPow: true },
+        clientOptions: { node: "https://api.lb-0.h.chrysalis-devnet.iota.cafe", localPow: true },
         alias: 'Alice',
     })
 
