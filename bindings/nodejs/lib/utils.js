@@ -34,5 +34,17 @@ class RemainderValueStrategy {
   }
 }
 
+class OutputKind {
+  constructor() { }
+  static signatureLockedSingle() {
+    return 'SignatureLockedSingle'
+  }
+
+  static signatureLockedDustAllowance() {
+    return 'SignatureLockedDustAllowance'
+  }
+}
+
 module.exports.promisify = promisify;
 module.exports.RemainderValueStrategy = new RemainderValueStrategy();
+module.exports.OutputKind = OutputKind;

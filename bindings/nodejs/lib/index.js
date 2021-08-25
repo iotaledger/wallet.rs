@@ -6,7 +6,7 @@ const mh = require("./messages/messageHandler.js");
 const el = require("./eventListener.js");
 const amm = require("./messages/accountManager.js");
 const am = require("./binding/accountManager.js");
-const { RemainderValueStrategy } = require("./utils.js");
+const { RemainderValueStrategy, OutputKind } = require("./utils.js");
 
 let { initLogger } = addon;
 let { MessageHandler } = mh;
@@ -28,6 +28,7 @@ module.exports = {
   EventListener,
   AccountManager,
   RemainderValueStrategy,
+  OutputKind,
   initLogger: config => initLogger(JSON.stringify(config)),
   SignerType: {
     Stronghold: 1

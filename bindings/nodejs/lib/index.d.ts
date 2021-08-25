@@ -174,11 +174,18 @@ export declare class TransferOptions {
   remainderValueStrategy?: RemainderValueStrategy
   indexation?: { index: string | number[] | Uint8Array, data?: string | number[] | Uint8Array }
   skipSync?: boolean
+  outputKind?: OutputKind
 }
 
 export declare interface TransferOutput {
   address: string,
   amount: number
+  outputKind?: OutputKind
+}
+
+export declare class OutputKind {
+  static signatureLockedSingle(): OutputKind
+  static signatureLockedDustAllowance(): OutputKind
 }
 
 export declare class SyncedAccount { }

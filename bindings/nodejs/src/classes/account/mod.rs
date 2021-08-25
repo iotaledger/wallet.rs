@@ -6,7 +6,7 @@ use crate::types::ClientOptionsDto;
 use std::{num::NonZeroU64, str::FromStr};
 
 use iota_wallet::{
-    address::parse as parse_address,
+    address::{parse as parse_address, OutputKind},
     message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
 };
 use neon::prelude::*;
@@ -26,6 +26,8 @@ struct TransferOptions {
     indexation: Option<IndexationDto>,
     #[serde(rename = "skipSync", default)]
     skip_sync: bool,
+    #[serde(rename = "outputKind", default)]
+    output_kind: Option<OutputKind>,
 }
 
 #[derive(Deserialize, Default)]
@@ -564,7 +566,7 @@ pub fn send(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let mut transfer_builder = Transfer::builder(
         parse_address(address).expect("invalid address format"),
         NonZeroU64::new(amount).expect("amount can't be zero"),
-        None,
+        options.output_kind,
     )
     .with_remainder_value_strategy(options.remainder_value_strategy);
 
@@ -634,10 +636,17 @@ pub fn send_to_many(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .get(&mut cx, "amount")?
             .downcast::<JsNumber, FunctionContext>(&mut cx)
             .or_throw(&mut cx)?;
+        let output_kind = match js_object
+            .get(&mut cx, "outputKind")?
+            .downcast::<JsString, FunctionContext>(&mut cx)
+        {
+            Ok(value) => OutputKind::from_str(&value.value(&mut cx)).ok(),
+            _ => None,
+        };
         outputs.push(TransferOutput::new(
             parse_address(address.value(&mut cx)).expect("invalid address format"),
             NonZeroU64::new(amount.value(&mut cx) as u64).expect("amount can't be zero"),
-            None,
+            output_kind,
         ));
     }
 
