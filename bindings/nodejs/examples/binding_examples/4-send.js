@@ -5,7 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-    const { AccountManager } = require('../../lib/index.js');
+    const { AccountManager, RemainderValueStrategy } = require('../../lib/index.js');
     const utils = require('../../lib/utils.js');
     const manager = new AccountManager({
         storagePath: './alice-database'
@@ -27,7 +27,7 @@ async function run() {
     const node_response = await account.send(
         addr,
         amount,
-        { remainderValueStrategy: utils.RemainderValueStrategy.reuseAddress() }
+        { remainderValueStrategy: RemainderValueStrategy.reuseAddress() }
     )
 
     console.log(`Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`)
