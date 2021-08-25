@@ -14,6 +14,7 @@ const {
     send,
     id,
     alias,
+    index,
     listMessages,
     listAddresses,
     setAlias,
@@ -48,6 +49,10 @@ class Account {
         return alias.apply(this.account);
     }
 
+    index() {
+        return index.apply(this.account);
+    }
+
     generateAddress() {
         return JSON.parse(generateAddress.apply(this.account));
     }
@@ -77,7 +82,7 @@ class Account {
     }
 
     getMessage(id) {
-        return getMessage.apply(this.account, [id]);
+        return JSON.parse(getMessage.apply(this.account, [id]));
     }
 
     getAddress(addressBech32) {
