@@ -193,8 +193,8 @@ pub fn get_node_info(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 pub fn message_count(mut cx: FunctionContext) -> JsResult<JsNumber> {
     let message_type = match cx.argument_opt(0) {
         Some(arg) => {
-            let type_ = arg.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?;
-            serde_json::from_str(type_.value(&mut cx).as_str()).unwrap()
+            let type_ = arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?;
+            serde_json::from_str(&type_.value(&mut cx).to_string()).unwrap()
         }
         None => None,
     };

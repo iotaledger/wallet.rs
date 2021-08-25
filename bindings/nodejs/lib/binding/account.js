@@ -27,6 +27,7 @@ const {
     consolidateOutputs,
     repost,
     sendToMany,
+    messageCount
 } = addon;
 
 const syncAsync = utils.promisify(sync);
@@ -67,6 +68,10 @@ class Account {
 
     listMessages(count, from, messageType) {
         return listMessages.apply(this.account, [count, from, messageType].filter(e => e != undefined)).map(msg => JSON.parse(msg));
+    }
+
+    messageCount(messageType) {
+        return messageCount.apply(this.account, [messageType]);
     }
 
     listAddresses(unspent) {
