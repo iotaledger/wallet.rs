@@ -32,4 +32,12 @@ module.exports = {
   SignerType: {
     Stronghold: 1
   },
+  MessageType: {
+    Received: 1,
+    Sent: 2,
+    Failed: 3,
+    Unconfirmed: 4,
+    Value: 5,
+    Confirmed: 6
+  }
 };

@@ -241,8 +241,8 @@ pub fn list_messages(mut cx: FunctionContext) -> JsResult<JsArray> {
     };
     let filter = match cx.argument_opt(2) {
         Some(arg) => {
-            let type_ = arg.downcast::<JsString, FunctionContext>(&mut cx).or_throw(&mut cx)?;
-            serde_json::from_str(&type_.value(&mut cx)).unwrap()
+            let type_ = arg.downcast::<JsNumber, FunctionContext>(&mut cx).or_throw(&mut cx)?;
+            serde_json::from_str(&type_.value(&mut cx).to_string()).unwrap()
         }
         None => None,
     };
