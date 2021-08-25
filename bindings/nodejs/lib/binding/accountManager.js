@@ -36,7 +36,9 @@ const {
     getBroadcastEventCount,
     eventListenerNew,
     listen,
-    removeEventListeners
+    removeEventListeners,
+    startBackgroundSync,
+    stopBackgroundSync
 } = addon;
 
 let { Account } = acc;
@@ -44,6 +46,8 @@ let { Account } = acc;
 const syncAccountsAsync = utils.promisify(syncAccounts);
 const syncInternalTransfer = utils.promisify(internalTransfer);
 const syncIsLatestAddressUnused = utils.promisify(isLatestAddressUnused);
+const syncStartBackgroundSync = utils.promisify(startBackgroundSync);
+
 class AccountManager {
     constructor(options) {
         this.accountManager = accountManagerNew(JSON.stringify(options));
@@ -77,6 +81,12 @@ class AccountManager {
 
     async isLatestAddressUnused() {
         return await syncIsLatestAddressUnused.apply(this.accountManager);
+    }
+    async startBackgroundSync(pollingInterval, automaticOutputConsolidation) {
+        return await syncStartBackgroundSync.apply(this.accountManager, [pollingInterval, automaticOutputConsolidation]);
+    }
+    stopBackgroundSync() {
+        return stopBackgroundSync.apply(this.accountManager);
     }
 
     createAccount(account) {
