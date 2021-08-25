@@ -132,7 +132,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("syncAccounts", classes::account_manager::sync_accounts)?;
     cx.export_function("createAccount", classes::account_manager::create_account)?;
     cx.export_function("internalTransfer", classes::account_manager::internal_transfer)?;
-    cx.export_function("setClientOptions", classes::account_manager::set_client_options)?;
+    cx.export_function("setClientOptionsManager", classes::account_manager::set_client_options)?;
     cx.export_function(
         "isLatestAddressUnused",
         classes::account_manager::is_latest_address_unused,

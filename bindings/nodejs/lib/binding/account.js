@@ -73,7 +73,7 @@ class Account {
     }
 
     setClientOptions(options) {
-        return setClientOptions.apply(this.account, [options]);
+        return setClientOptions.apply(this.account, [JSON.stringify(options)]);
     }
 
     getMessage(id) {
