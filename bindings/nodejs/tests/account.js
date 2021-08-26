@@ -18,7 +18,7 @@ async function run() {
 
   const account = manager.createAccount({
     clientOptions: {
-      node: 'http://api.hornet-1.testnet.chrysalis2.com',
+      node: 'https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe/',
       requestTimeout: {
         secs: 5000,
         nanos: 0
