@@ -51,7 +51,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         BrokerOptions mqtt = new BrokerOptions();
         
         ClientOptions clientOptions = new ClientOptionsBuilder()
-            .withNode("https://api.lb-0.testnet.chrysalis2.com")
+            .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .withMqttBrokerOptions(mqtt)
             .build();
         

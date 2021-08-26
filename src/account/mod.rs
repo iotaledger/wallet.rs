@@ -421,7 +421,7 @@ impl AccountInitialiser {
                     {
                         log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
                         if first_account_first_address != first_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                 }
@@ -465,7 +465,7 @@ impl AccountInitialiser {
                     {
                         log::debug!("[LEDGERADDRESS] read first address {:?}", first_account_first_address);
                         if first_account_first_address != first_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                 }
@@ -837,7 +837,7 @@ impl AccountHandle {
                 )
                 .await?;
                 if address.address().inner != regenerated_address.address().inner {
-                    return Err(crate::Error::WrongLedgerSeedError);
+                    return Err(crate::Error::LedgerMnemonicMismatch);
                 }
             }
         }
@@ -1136,7 +1136,7 @@ impl Account {
     /// async fn main() {
     ///     // gets 10 received messages, skipping the first 5 most recent messages.
     ///     let client_options = ClientOptionsBuilder::new()
-    ///         .with_node("https://api.lb-0.testnet.chrysalis2.com")
+    ///         .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
     ///         .expect("invalid node URL")
     ///         .build()
     ///         .unwrap();
@@ -1362,8 +1362,8 @@ mod tests {
 
             let updated_client_options = ClientOptionsBuilder::new()
                 .with_nodes(&[
-                    "http://api.hornet-1.testnet.chrysalis2.com",
-                    "http://api.hornet-2.testnet.chrysalis2.com",
+                    "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe",
+                    "https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe",
                 ])
                 .unwrap()
                 .build()

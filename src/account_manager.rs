@@ -512,7 +512,7 @@ impl AccountManager {
             .await?;
             if first_address != ledger_first_address {
                 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-                return Err(crate::Error::WrongLedgerSeedError);
+                return Err(crate::Error::LedgerMnemonicMismatch);
             }
         }
         let bech32_address = first_address.address().to_bech32();
@@ -1977,7 +1977,7 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = ClientOptionsBuilder::new()
-            .with_node("https://api.lb-0.testnet.chrysalis2.com")
+            .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .expect("invalid node URL")
             .build()
             .unwrap();
@@ -2010,7 +2010,7 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = ClientOptionsBuilder::new()
-            .with_node("https://api.lb-0.testnet.chrysalis2.com")
+            .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .expect("invalid node URL")
             .build()
             .unwrap();
@@ -2103,7 +2103,7 @@ mod tests {
     async fn remove_account_with_message_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .expect("invalid node URL")
                 .build()
                 .unwrap();
@@ -2145,7 +2145,7 @@ mod tests {
     async fn remove_account_with_balance() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .expect("invalid node URL")
                 .build()
                 .unwrap();
@@ -2185,7 +2185,7 @@ mod tests {
     async fn create_account_with_latest_without_history() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .expect("invalid node URL")
                 .build()
                 .unwrap();
@@ -2208,7 +2208,7 @@ mod tests {
     async fn create_account_skip_persistence() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .expect("invalid node URL")
                 .with_network("testnet")
                 .build()

@@ -5,8 +5,7 @@ use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
-use bee_common::packable::Packable;
-use iota_client::bee_message::unlock::UnlockBlock;
+use iota_client::{bee_message::unlock::UnlockBlock, common::packable::Packable};
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
@@ -162,7 +161,7 @@ impl super::Signer for LedgerNanoSigner {
 
                     if let Some(first_address) = &first_public_address {
                         if first_address.address().inner != iota_address {
-                            return Err(crate::Error::WrongLedgerSeedError);
+                            return Err(crate::Error::LedgerMnemonicMismatch);
                         }
                     }
                     let mut address_pool = HashMap::new();

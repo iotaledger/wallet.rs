@@ -71,7 +71,7 @@ pub enum Error {
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
-    #[error("insufficient funds {0}/{1}")]
+    #[error("insufficient funds {0}/{1} available or input address used as output")]
     InsufficientFunds(u64, u64),
     /// Account isn't empty (has history or balance) - can't delete account.
     #[error("can't delete account: account has history or balance")]
@@ -171,8 +171,8 @@ pub enum Error {
     LedgerNetMismatch,
     /// Wrong ledger seed error
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("wrong ledger seed")]
-    WrongLedgerSeedError,
+    #[error("ledger mnemonic is mismatched")]
+    LedgerMnemonicMismatch,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
@@ -361,7 +361,7 @@ impl serde::Serialize for Error {
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
             Self::LedgerNetMismatch => serialize_variant(self, serializer, "LedgerNetMismatch"),
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::WrongLedgerSeedError => serialize_variant(self, serializer, "WrongLedgerSeedError"),
+            Self::LedgerMnemonicMismatch => serialize_variant(self, serializer, "LedgerMnemonicMismatch"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),

@@ -14,7 +14,6 @@ use crate::{
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
 };
 
-use bee_common::packable::Packable;
 use getset::Getters;
 use iota_client::{
     api::finish_pow,
@@ -26,6 +25,7 @@ use iota_client::{
             UtxoInput,
         },
     },
+    common::packable::Packable,
     AddressOutputsOptions, Client,
 };
 use serde::Serialize;
@@ -1782,7 +1782,7 @@ async fn perform_transfer(
                             )
                             .await?;
                             if address.address().inner != regenerated_address.address().inner {
-                                return Err(crate::Error::WrongLedgerSeedError);
+                                return Err(crate::Error::LedgerMnemonicMismatch);
                             }
                         }
                     }
@@ -2179,7 +2179,7 @@ mod tests {
     async fn account_sync() {
         crate::test_utils::with_account_manager(crate::test_utils::TestType::Storage, |manager, _| async move {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .unwrap()
                 .build()
                 .unwrap();

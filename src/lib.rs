@@ -414,7 +414,7 @@ mod test_utils {
 
         pub async fn create(self) -> AccountHandle {
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.testnet.chrysalis2.com")
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 .expect("invalid node URL")
                 .build()
                 .unwrap();

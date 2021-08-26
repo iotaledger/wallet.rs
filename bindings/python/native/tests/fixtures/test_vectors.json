@@ -5,7 +5,7 @@
             "primary_pow_node": null,
             "nodes": [
                 {
-                    "url": "https://api.hornet-3.testnet.chrysalis2.com",
+                    "url": "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe",
                     "auth": null,
                     "disabled": false
                 }
@@ -42,7 +42,7 @@
             "primary_pow_node": null,
             "nodes": [
                 {
-                    "url": "https://api.hornet-3.testnet.chrysalis2.com",
+                    "url": "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe",
                     "auth": null,
                     "disabled": false
                 }
@@ -71,7 +71,7 @@
             "primary_pow_node": null,
             "nodes": [
                 {
-                    "url": "https://api.hornet-3.testnet.chrysalis2.com/",
+                    "url": "https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe/",
                     "auth": null,
                     "disabled": false
                 }
@@ -93,7 +93,7 @@
             "primary_pow_node": null,
             "nodes": [
                 {
-                    "url": "https://api.hornet-3.testnet.chrysalis2.com/",
+                    "url": "https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe/",
                     "auth": null,
                     "disabled": false
                 }
