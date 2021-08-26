@@ -172,7 +172,6 @@
 <span id="170">170</span>
 <span id="171">171</span>
 <span id="172">172</span>
-<span id="173">173</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -242,6 +241,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenerateAddressMetadata</span> {
     <span class="doccomment">/// Indicates that the address is being generated as part of the account syncing process.</span>
     <span class="doccomment">/// This means that the account might not be saved.</span>
+    <span class="doccomment">/// If it is false, the prompt will be displayed on ledger devices.</span>
     <span class="kw">pub</span> <span class="ident">syncing</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The network which is used so the correct BIP32 path is used for the ledger. Debug mode starts with 44&#39;/1&#39; and</span>
     <span class="doccomment">/// in mainnet-mode it&#39;s 44&#39;/4218&#39;</span>
@@ -268,8 +268,6 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Signer</span> {
     <span class="doccomment">/// Get the ledger status.</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_ledger_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">is_simulator</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::LedgerStatus</span>;
-    <span class="doccomment">/// Get the opened app from the ledger.</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_ledger_opened_app</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">is_simulator</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::LedgerAppInfo</span><span class="op">&gt;</span>;
     <span class="doccomment">/// Initialises a mnemonic.</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span>;
     <span class="doccomment">/// Generates an address.</span>

@@ -653,7 +653,6 @@
 <span id="651">651</span>
 <span id="652">652</span>
 <span id="653">653</span>
-<span id="654">654</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -692,6 +691,9 @@
     <span class="doccomment">/// The account&#39;s signer type.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;signerType&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="ident">signer_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignerType</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Allow to create an account with multiple empty accounts</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;allowCreateMultipleEmptyAccounts&quot;</span>, <span class="ident">default</span>)]</span>
+    <span class="kw">pub</span> <span class="ident">allow_create_multiple_empty_accounts</span>: <span class="ident">bool</span>,
 }
 
 <span class="doccomment">/// Each public account method.</span>
@@ -874,10 +876,6 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
     <span class="ident">GetLedgerStatus</span>(<span class="ident">bool</span>),
-    <span class="doccomment">/// Get the app that&#39;s open on the Ledger Nano or Speculos simulator.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-    <span class="ident">GetLedgerOpenedApp</span>(<span class="ident">bool</span>),
     <span class="doccomment">/// Deletes the storage.</span>
     <span class="ident">DeleteStorage</span>,
     <span class="doccomment">/// Changes stronghold snapshot password.</span>
@@ -960,7 +958,12 @@
     <span class="doccomment">/// Get seed checksum.</span>
     <span class="ident">GetSeedChecksum</span>(<span class="ident">String</span>),
     <span class="doccomment">/// Get migration address</span>
-    <span class="ident">GetMigrationAddress</span>(<span class="ident">bool</span>),
+    <span class="ident">GetMigrationAddress</span> {
+        <span class="doccomment">/// Display prompt on the ledger</span>
+        <span class="ident">ledger_prompt</span>: <span class="ident">bool</span>,
+        <span class="doccomment">/// Account identifier</span>
+        <span class="ident">account_id</span>: <span class="ident">AccountIdentifier</span>,
+    },
     <span class="doccomment">/// Mine bundle</span>
     <span class="ident">MineBundle</span> {
         <span class="doccomment">/// Prepared bundle.</span>
@@ -1056,7 +1059,7 @@
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">26</span>, <span class="string">&quot;SendMigrationBundle&quot;</span>)
             }
             <span class="ident">MessageType::GetSeedChecksum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">27</span>, <span class="string">&quot;GetSeedChecksum&quot;</span>),
-            <span class="ident">MessageType::GetMigrationAddress</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MessageType::GetMigrationAddress</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">28</span>, <span class="string">&quot;GetMigrationAddress&quot;</span>)
             }
             <span class="ident">MessageType::MineBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">29</span>, <span class="string">&quot;MineBundle&quot;</span>),
@@ -1066,18 +1069,14 @@
             <span class="ident">MessageType::SendLedgerMigrationBundle</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">31</span>, <span class="string">&quot;SendLedgerMigrationBundle&quot;</span>)
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-            <span class="ident">MessageType::GetLedgerOpenedApp</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">32</span>, <span class="string">&quot;GetLedgerOpenedApp&quot;</span>)
-            }
             <span class="ident">MessageType::GetLegacyAddressChecksum</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">33</span>, <span class="string">&quot;GetLegacyAddressChecksum&quot;</span>)
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">32</span>, <span class="string">&quot;GetLegacyAddressChecksum&quot;</span>)
             }
             <span class="ident">MessageType::StartBackgroundSync</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">34</span>, <span class="string">&quot;StartBackgroundSync&quot;</span>)
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">33</span>, <span class="string">&quot;StartBackgroundSync&quot;</span>)
             }
             <span class="ident">MessageType::StopBackgroundSync</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">35</span>, <span class="string">&quot;StopBackgroundSync&quot;</span>)
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">34</span>, <span class="string">&quot;StopBackgroundSync&quot;</span>)
             }
         }
     }
@@ -1133,6 +1132,8 @@
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;lastCheckedAddressIndex&quot;</span>)]</span>
     <span class="ident">last_checked_address_index</span>: <span class="ident">u64</span>,
     <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MigrationInputDto</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;spentAddresses&quot;</span>)]</span>
+    <span class="ident">spent_addresses</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MigrationData</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MigrationDataDto</span> {
@@ -1159,6 +1160,7 @@
             <span class="ident">balance</span>: <span class="ident">data</span>.<span class="ident">balance</span>,
             <span class="ident">last_checked_address_index</span>: <span class="ident">data</span>.<span class="ident">last_checked_address_index</span>,
             <span class="ident">inputs</span>,
+            <span class="ident">spent_addresses</span>: <span class="ident">data</span>.<span class="ident">spent_addresses</span>,
         }
     }
 }
@@ -1239,10 +1241,6 @@
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
     <span class="ident">LedgerStatus</span>(<span class="kw">crate</span><span class="ident">::LedgerStatus</span>),
-    <span class="doccomment">/// GetLedgerOpenedApp response.</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-    <span class="ident">LedgerOpenedApp</span>(<span class="kw">crate</span><span class="ident">::LedgerAppInfo</span>),
     <span class="doccomment">/// DeleteStorage response.</span>
     <span class="ident">DeletedStorage</span>,
     <span class="doccomment">/// ChangeStrongholdPassword response.</span>

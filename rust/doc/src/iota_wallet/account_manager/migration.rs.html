@@ -511,6 +511,13 @@
 <span id="509">509</span>
 <span id="510">510</span>
 <span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -565,6 +572,8 @@
     <span class="kw">pub</span> <span class="ident">last_checked_address_index</span>: <span class="ident">u64</span>,
     <span class="doccomment">/// Migration inputs.</span>
     <span class="kw">pub</span> <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputData</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// If any of the inputs are spent</span>
+    <span class="kw">pub</span> <span class="ident">spent_addresses</span>: <span class="ident">bool</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
@@ -589,6 +598,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">balance</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">last_checked_address_index</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">inputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputData</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">spent_addresses</span>: <span class="ident">bool</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Serialize</span>)]</span>
@@ -654,7 +664,7 @@
         }
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">legacy_client</span> <span class="op">=</span> <span class="ident">legacy_client_builder</span>.<span class="ident">build</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">balance</span> <span class="op">=</span> <span class="number">0</span>;
-
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spent_addresses</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="kw">loop</span> {
             <span class="ident">emit_migration_progress</span>(<span class="ident">MigrationProgressType::FetchingMigrationData</span> {
                 <span class="ident">initial_address_index</span>: <span class="ident">address_index</span>,
@@ -669,6 +679,9 @@
                 .<span class="ident">with_gap_limit</span>(<span class="self">self</span>.<span class="ident">gap_limit</span>)
                 .<span class="ident">finish</span>()
                 .<span class="kw">await</span><span class="question-mark">?</span>;
+            <span class="kw">if</span> <span class="ident">migration_inputs</span>.<span class="number">2</span> {
+                <span class="ident">spent_addresses</span> <span class="op">=</span> <span class="bool-val">true</span>;
+            }
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_inputs</span> <span class="op">=</span> <span class="ident">migration_inputs</span>.<span class="number">1</span>;
             <span class="comment">// Filter duplicates because when it&#39;s called another time it could return duplicated entries</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unique_inputs</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
@@ -713,6 +726,7 @@
             <span class="ident">balance</span>,
             <span class="ident">last_checked_address_index</span>: <span class="ident">address_index</span>,
             <span class="ident">inputs</span>,
+            <span class="ident">spent_addresses</span>,
         })
     }
 }

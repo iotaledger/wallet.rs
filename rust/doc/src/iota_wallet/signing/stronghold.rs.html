@@ -125,12 +125,12 @@
 <span class="attribute">#[<span class="ident">async_trait::async_trait</span>]</span>
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Signer</span> <span class="kw">for</span> <span class="ident">StrongholdSigner</span> {
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_ledger_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_is_simulator</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::LedgerStatus</span> {
-        <span class="comment">// dummy ledger status</span>
-        <span class="kw">crate</span><span class="ident">::LedgerStatus::Connected</span>
-    }
-
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_ledger_opened_app</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_is_simulator</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::LedgerAppInfo</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::NoLedgerSignerError</span>)
+        <span class="comment">// dummy status, function is only required in the trait because we need it for the LedgerSigner</span>
+        <span class="kw">crate</span><span class="ident">::LedgerStatus</span> {
+            <span class="ident">connected</span>: <span class="bool-val">false</span>,
+            <span class="ident">locked</span>: <span class="bool-val">false</span>,
+            <span class="ident">app</span>: <span class="prelude-val">None</span>,
+        }
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
