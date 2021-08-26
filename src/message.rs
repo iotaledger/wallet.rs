@@ -7,8 +7,8 @@ use crate::{
     client::ClientOptions,
     event::{emit_transfer_progress, TransferProgressType},
 };
-use iota_client::common::packable::Packable;
 use getset::{CopyGetters, Getters, Setters};
+use iota_client::common::packable::Packable;
 
 use chrono::prelude::{DateTime, NaiveDateTime, Utc};
 pub use iota_client::{
