@@ -756,7 +756,7 @@ mod tests {
         let manager = crate::test_utils::get_account_manager().await;
 
         let client_options = crate::client::ClientOptionsBuilder::new()
-            .with_node("https://api.lb-0.testnet.chrysalis2.com")
+            .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .unwrap()
             .build()
             .unwrap();
