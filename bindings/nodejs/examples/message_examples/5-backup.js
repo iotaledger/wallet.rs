@@ -3,8 +3,8 @@
  * You can move this file to another app or device and restore it.
  */
 
- async function run() {
-    const { AccountManagerForMessages } = require('../lib/index.js');
+async function run() {
+    const { AccountManagerForMessages } = require('../../lib/index.js');
     const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
     });

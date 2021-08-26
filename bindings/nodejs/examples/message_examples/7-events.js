@@ -3,7 +3,7 @@
  */
 
 async function run() {
-    const { AccountManagerForMessages, EventListener } = require('../lib/index.js');
+    const { AccountManagerForMessages, EventListener } = require('../../lib/index.js');
     const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
     });
@@ -32,8 +32,6 @@ async function run() {
         console.log(el);
         el.listen("BalanceChange", callback);
 
-        // Use the Chrysalis Faucet to send testnet tokens to your address:
-        // console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")
     } catch (error) {
         console.log("Error: " + error)
     }
