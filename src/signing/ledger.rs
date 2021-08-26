@@ -5,8 +5,7 @@ use crate::{account::Account, LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
-use bee_common::packable::Packable;
-use iota_client::bee_message::unlock::UnlockBlock;
+use iota_client::{bee_message::unlock::UnlockBlock, common::packable::Packable};
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
