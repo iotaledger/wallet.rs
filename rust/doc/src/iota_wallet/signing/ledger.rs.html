@@ -354,7 +354,6 @@
 <span id="352">352</span>
 <span id="353">353</span>
 <span id="354">354</span>
-<span id="355">355</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -363,8 +362,7 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">fmt</span>, <span class="ident">path::Path</span>};
 
-<span class="kw">use</span> <span class="ident">bee_common::packable::Packable</span>;
-<span class="kw">use</span> <span class="ident">iota_client::bee_message::unlock::UnlockBlock</span>;
+<span class="kw">use</span> <span class="ident">iota_client</span>::{<span class="ident">bee_message::unlock::UnlockBlock</span>, <span class="ident">common::packable::Packable</span>};
 <span class="kw">use</span> <span class="ident">iota_ledger::LedgerBIP32Index</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::Mutex</span>;
 

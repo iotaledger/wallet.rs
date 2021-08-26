@@ -2328,7 +2328,6 @@
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignMessageMetadata</span>, <span class="ident">SignerType</span>},
 };
 
-<span class="kw">use</span> <span class="ident">bee_common::packable::Packable</span>;
 <span class="kw">use</span> <span class="ident">getset::Getters</span>;
 <span class="kw">use</span> <span class="ident">iota_client</span>::{
     <span class="ident">api::finish_pow</span>,
@@ -2340,6 +2339,7 @@
             <span class="ident">UtxoInput</span>,
         },
     },
+    <span class="ident">common::packable::Packable</span>,
     <span class="ident">AddressOutputsOptions</span>, <span class="ident">Client</span>,
 };
 <span class="kw">use</span> <span class="ident">serde::Serialize</span>;
