@@ -50,23 +50,6 @@ Builds the Node addon (`index.node`) from source.
 
 Runs the unit tests by calling `cargo test`. You can learn more about [adding tests to your Rust code](https://doc.rust-lang.org/book/ch11-01-writing-tests.html) from the [Rust book](https://doc.rust-lang.org/book/).
 
-## Project Layout
-
-The directory structure of this project is:
-
-```
-nodejs/
-├── Cargo.toml
-├── README.md
-├── lib/
-|   └── index.js
-├── index.node
-├── package.json
-├── src/
-|   └── lib.rs
-└── target/
-```
-
 ### Cargo.toml
 
 The Cargo [manifest file](https://doc.rust-lang.org/cargo/reference/manifest.html), which informs the `cargo` command.
