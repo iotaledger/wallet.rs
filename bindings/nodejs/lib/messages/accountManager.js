@@ -63,7 +63,7 @@ class AccountManagerForMessages {
     return this.messageHandler.sendMessage({
       cmd: "RestoreBackup",
       payload: {
-          destination,
+          backupPath,
           password,
       },
     });

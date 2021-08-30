@@ -15,7 +15,7 @@ async function run() {
         let backup_path = "./backup";//"input your backup file"
 
         await manager.importAccounts(backup_path, "A12345678*")
-        const account = manager.getAccount('Alice')
+        const account = await manager.getAccount('Alice')
         console.log('Account:', account.alias())
     } catch (error) {
         console.log("Error: " + error)

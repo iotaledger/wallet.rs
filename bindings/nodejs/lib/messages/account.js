@@ -6,6 +6,9 @@ class AccountForMessages {
     this.accountData = accountData;
     this.messageHandler = messageHandler;
   }
+  alias() {
+      return this.accountData.alias
+  }
   async sync(options) {
     return JSON.parse(await this.messageHandler.sendMessage({
       cmd: "CallAccountMethod",
