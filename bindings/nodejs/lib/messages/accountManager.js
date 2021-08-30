@@ -94,7 +94,10 @@ class AccountManagerForMessages {
       return;
     }
 
-    if (this.eventListener.removeEventListeners(eventName, this.eventListener) <= 0) {
+    if (
+      this.eventListener.removeEventListeners(eventName, this.eventListener) <=
+      0
+    ) {
       this.eventListener = null;
       return;
     }
