@@ -4,14 +4,14 @@
 async function run() {
   try {
     const fs = require('fs');
-    fs.rmdirSync('./test-database', { recursive: true });
+    fs.rmdirSync('./alice-database', { recursive: true });
   } catch (e) {
     // ignore it
   }
 
   const { AccountManager, SignerType, MessageType } = require('../lib');
   const manager = new AccountManager({
-    storagePath: './test-database',
+    storagePath: './alice-database',
   });
   manager.setStrongholdPassword('password');
   manager.storeMnemonic(SignerType.Stronghold);
