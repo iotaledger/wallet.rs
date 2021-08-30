@@ -19,6 +19,7 @@ async function run() {
     } catch (e) {
       console.log("Couldn't get account, creating a new one");
     }
+
     // Create account only if it does not already exist
     if (!account) {
       manager.storeMnemonic(SignerType.Stronghold);
@@ -32,8 +33,9 @@ async function run() {
       });
       console.log('Account created:', account.id());
     }
-    let a = await account.sync();
-    console.log('synced', a);
+
+    const synced = await account.sync();
+    console.log('Synced account', synced);
   } catch (error) {
     console.log('Error: ' + error);
   }
