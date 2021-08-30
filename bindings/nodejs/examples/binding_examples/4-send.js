@@ -9,6 +9,7 @@ async function run() {
     AccountManager,
     RemainderValueStrategy,
   } = require('../../lib/index.js');
+
   const manager = new AccountManager({
     storagePath: './alice-database',
   });

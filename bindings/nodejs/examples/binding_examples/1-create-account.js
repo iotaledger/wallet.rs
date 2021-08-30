@@ -6,9 +6,11 @@ require('dotenv').config();
 
 async function run() {
   const { AccountManager, SignerType } = require('../../lib/index.js');
+
   const manager = new AccountManager({
     storagePath: './alice-database',
   });
+
   try {
     manager.setStrongholdPassword(process.env.SH_PASSWORD);
     let account;
