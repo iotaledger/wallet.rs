@@ -10,6 +10,7 @@ class AccountManagerForMessages {
   constructor(options) {
     this.messageHandler = new MessageHandler(options);
   }
+
   async getAccount(accountId) {
     return this.messageHandler
       .sendMessage({

@@ -25,12 +25,14 @@ class RemainderValueStrategy {
       value: null,
     };
   }
+
   reuseAddress() {
     return {
       strategy: 'ReuseAddress',
       value: null,
     };
   }
+
   accountAddress(address) {
     return {
       strategy: 'AccountAddress',
@@ -41,6 +43,7 @@ class RemainderValueStrategy {
 
 class OutputKind {
   constructor() {}
+
   static signatureLockedSingle() {
     return 'SignatureLockedSingle';
   }

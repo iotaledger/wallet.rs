@@ -52,6 +52,7 @@ class AccountManager {
     this.accountManager = accountManagerNew(JSON.stringify(options));
     this.eventListener = null;
   }
+
   getAccount(accountId) {
     let inner_account = getAccount.apply(this.accountManager, [accountId]);
     return new Account(inner_account);
@@ -89,12 +90,14 @@ class AccountManager {
   async isLatestAddressUnused() {
     return await syncIsLatestAddressUnused.apply(this.accountManager);
   }
+
   async startBackgroundSync(pollingInterval, automaticOutputConsolidation) {
     return await syncStartBackgroundSync.apply(this.accountManager, [
       pollingInterval,
       automaticOutputConsolidation,
     ]);
   }
+
   stopBackgroundSync() {
     return stopBackgroundSync.apply(this.accountManager);
   }

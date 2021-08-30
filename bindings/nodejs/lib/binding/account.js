@@ -37,6 +37,7 @@ const getNodeInfoAsync = utils.promisify(getNodeInfo);
 const isLatestAddressUnusedAsync = utils.promisify(isLatestAddressUnused);
 const consolidateOutputsAsync = utils.promisify(consolidateOutputs);
 const repostAsync = utils.promisify(repost);
+
 class Account {
   constructor(account) {
     this.account = account;
@@ -163,9 +164,11 @@ class Account {
   async retry(messageId) {
     return await repostAsync.apply(this.account, [messageId, 'Retry']);
   }
+
   async reattach(messageId) {
     return await repostAsync.apply(this.account, [messageId, 'Reattach']);
   }
+
   async promote(messageId) {
     return await repostAsync.apply(this.account, [messageId, 'Promote']);
   }
