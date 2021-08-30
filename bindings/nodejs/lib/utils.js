@@ -3,45 +3,50 @@
 
 function promisify(fn) {
   return function () {
-    return new Promise((resolve, reject) => fn.apply(this, [...Array.from(arguments), (err, data) => {
-      if (err) {
-        reject(err)
-      } else {
-        resolve(data)
-      }
-    }]))
-  }
+    return new Promise((resolve, reject) =>
+      fn.apply(this, [
+        ...Array.from(arguments),
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(data);
+          }
+        },
+      ]),
+    );
+  };
 }
 
 class RemainderValueStrategy {
   changeAddress() {
     return {
-      strategy: "ChangeAddress",
-      value: null
+      strategy: 'ChangeAddress',
+      value: null,
     };
   }
   reuseAddress() {
     return {
-      strategy: "ReuseAddress",
-      value: null
+      strategy: 'ReuseAddress',
+      value: null,
     };
   }
   accountAddress(address) {
     return {
-      strategy: "AccountAddress",
-      value: address
+      strategy: 'AccountAddress',
+      value: address,
     };
   }
 }
 
 class OutputKind {
-  constructor() { }
+  constructor() {}
   static signatureLockedSingle() {
-    return 'SignatureLockedSingle'
+    return 'SignatureLockedSingle';
   }
 
   static signatureLockedDustAllowance() {
-    return 'SignatureLockedDustAllowance'
+    return 'SignatureLockedDustAllowance';
   }
 }
 

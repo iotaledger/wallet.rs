@@ -15,6 +15,6 @@ class EventListener {
   removeEventListeners(eventName) {
     return removeEventListeners(eventName, this.eventListener);
   }
-};
+}
 
 module.exports.EventListener = EventListener;
