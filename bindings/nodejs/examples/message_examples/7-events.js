@@ -5,10 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-  const {
-    AccountManagerForMessages,
-    EventListener,
-  } = require('../../lib/index.js');
+  const { AccountManagerForMessages } = require('../../lib/index.js');
 
   const manager = new AccountManagerForMessages({
     storagePath: './alice-database',
@@ -34,16 +31,14 @@ async function run() {
     );
 
     const callback = function (err, data) {
-      if (err) {
-        console.error(err);
-      } else {
-        console.log('Data:', data);
-      }
+      console.log('data:', data);
     };
+    manager.listen('BalanceChange', callback);
 
-    let el = new EventListener();
-
-    el.listen('BalanceChange', callback);
+    setTimeout(() => {
+      manager.removeEventListeners('BalanceChange');
+      console.log('event listeners removed');
+    }, 300000);
   } catch (error) {
     console.log('Error: ' + error);
   }

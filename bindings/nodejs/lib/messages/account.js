@@ -94,6 +94,15 @@ class AccountForMessages {
       }),
     );
   }
+
+  async setClientOptions(options) {
+    return JSON.parse(
+      await this.messageHandler.sendMessage({
+        cmd: 'SetClientOptions',
+        payload: options,
+      }),
+    );
+  }
 }
 
 module.exports.AccountForMessages = AccountForMessages;

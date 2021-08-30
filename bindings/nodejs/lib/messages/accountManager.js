@@ -3,12 +3,14 @@
 
 const mh = require('./messageHandler.js');
 const acc = require('./account.js');
+const { EventListener } = require('../eventListener.js');
 let { MessageHandler } = mh;
 let { AccountForMessages } = acc;
 
 class AccountManagerForMessages {
   constructor(options) {
     this.messageHandler = new MessageHandler(options);
+    this.eventListener = null;
   }
 
   async getAccount(accountId) {
@@ -78,6 +80,27 @@ class AccountManagerForMessages {
         password,
       },
     });
+  }
+
+  listen(eventName, callback) {
+    if (this.eventListener == null) {
+      this.eventListener = new EventListener();
+    }
+    return this.eventListener.listen(eventName, callback);
+  }
+
+  removeEventListeners(eventName) {
+    if (this.eventListener == null) {
+      return;
+    }
+
+    if (
+      this.eventListener.removeEventListeners(eventName, this.eventListener) <=
+      0
+    ) {
+      this.eventListener = null;
+      return;
+    }
   }
 }
 
