@@ -17,7 +17,7 @@ async function run() {
 
     // Always sync before doing anything with the account
     const synced = await account.sync();
-    console.log('Syncing... - ' + synced);
+    console.log('Syncing... - ', synced);
 
     const address = await account.generateAddress();
     console.log('New address:', address);

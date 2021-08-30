@@ -17,7 +17,7 @@ async function run() {
 
     // Always sync before doing anything with the account
     const synced = await account.sync();
-    console.log('Syncing... - ' + synced);
+    console.log('Syncing... - ', synced);
 
     console.log('Available balance', await account.balance());
 
