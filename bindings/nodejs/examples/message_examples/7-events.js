@@ -16,12 +16,6 @@ async function run() {
 
     const account = await manager.getAccount('Alice');
     console.log('Account:', account);
-    console.log(await account.alias());
-    await account.setClientOptions({
-      node: {
-        url: 'https://api.hornet-3.testnet.chrysalis2.com/',
-      },
-    });
 
     // Always sync before doing anything with the account
     const synced = await account.sync();
