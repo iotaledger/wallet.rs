@@ -5,7 +5,7 @@
     "removeComments": true,
     "preserveConstEnums": true,
     "sourceMap": true,
-    "outFile": "lib/index.js",
+    "outFile": "lib/index.js"
   },
   "include": ["lib/**/*"]
-  }
+}

@@ -1,9 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const mh = require("./messageHandler.js")
+const mh = require('./messageHandler.js');
 const acc = require('./account.js');
-let { MessageHandler } = mh
+let { MessageHandler } = mh;
 let { AccountForMessages } = acc;
 
 class AccountManagerForMessages {
@@ -11,63 +11,73 @@ class AccountManagerForMessages {
     this.messageHandler = new MessageHandler(options);
   }
   async getAccount(accountId) {
-    return this.messageHandler.sendMessage({
-      cmd: "GetAccount",
-      payload: accountId,
-    }).then((acc) => new AccountForMessages(JSON.parse(acc).payload, this.messageHandler));
+    return this.messageHandler
+      .sendMessage({
+        cmd: 'GetAccount',
+        payload: accountId,
+      })
+      .then(
+        (acc) =>
+          new AccountForMessages(JSON.parse(acc).payload, this.messageHandler),
+      );
   }
 
   async getAccounts() {
     return this.messageHandler.sendMessage({
-      cmd: "GetAccounts",
+      cmd: 'GetAccounts',
     });
   }
 
   async createAccount(account) {
-    return this.messageHandler.sendMessage({
-      cmd: "CreateAccount",
-      payload: account
-    }).then((acc) => new AccountForMessages(JSON.parse(acc).payload, this.messageHandler));
+    return this.messageHandler
+      .sendMessage({
+        cmd: 'CreateAccount',
+        payload: account,
+      })
+      .then(
+        (acc) =>
+          new AccountForMessages(JSON.parse(acc).payload, this.messageHandler),
+      );
   }
 
   async setStrongholdPassword(password) {
     return this.messageHandler.sendMessage({
-      cmd: "SetStrongholdPassword",
+      cmd: 'SetStrongholdPassword',
       payload: password,
     });
   }
 
   async storeMnemonic(mnemonic) {
     return this.messageHandler.sendMessage({
-      cmd: "StoreMnemonic",
+      cmd: 'StoreMnemonic',
       payload: {
         signerType: {
-          type: 'Stronghold'
+          type: 'Stronghold',
         },
-        mnemonic
+        mnemonic,
       },
     });
   }
 
   async backup(destination, password) {
     return this.messageHandler.sendMessage({
-      cmd: "Backup",
+      cmd: 'Backup',
       payload: {
-          destination,
-          password,
+        destination,
+        password,
       },
     });
   }
 
   async importAccounts(backupPath, password) {
     return this.messageHandler.sendMessage({
-      cmd: "RestoreBackup",
+      cmd: 'RestoreBackup',
       payload: {
-          backupPath,
-          password,
+        backupPath,
+        password,
       },
     });
   }
-};
+}
 
 module.exports.AccountManagerForMessages = AccountManagerForMessages;

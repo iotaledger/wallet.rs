@@ -6,7 +6,6 @@ const utils = require('../utils.js');
 
 let { sendMessage, messageHandlerNew } = addon;
 
-
 const sendMessageAsync = utils.promisify(sendMessage);
 
 class MessageHandler {
@@ -17,6 +16,6 @@ class MessageHandler {
   async sendMessage(message) {
     return sendMessageAsync(JSON.stringify(message), this.messageHandler);
   }
-};
+}
 
 module.exports.MessageHandler = MessageHandler;
