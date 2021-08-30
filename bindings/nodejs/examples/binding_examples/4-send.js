@@ -1,5 +1,5 @@
 /**
- * This example sends IOTA Toens to an address.
+ * This example sends IOTA tokens to an address.
  */
 
 require('dotenv').config();
