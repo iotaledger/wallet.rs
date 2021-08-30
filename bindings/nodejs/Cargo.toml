@@ -1,5 +1,5 @@
 [package]
-name = "nodejs"
+name = "wallet"
 version = "0.2.0"
 description = "Node.js binding to the wallet library"
 authors = ["Antoni Dikov <antoni.dikov@iota.org>"]

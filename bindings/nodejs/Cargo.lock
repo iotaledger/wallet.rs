@@ -2482,27 +2482,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "nodejs"
-version = "0.2.0"
-dependencies = [
- "backtrace",
- "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "bee-message 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures",
- "hex",
- "iota-wallet",
- "log",
- "neon",
- "once_cell",
- "rand 0.8.4",
- "serde 1.0.129",
- "serde_json",
- "serde_repr",
- "tokio",
- "url",
-]
-
-[[package]]
 name = "nohash-hasher"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4095,6 +4074,27 @@ dependencies = [
  "same-file",
  "winapi",
  "winapi-util",
+]
+
+[[package]]
+name = "wallet"
+version = "0.2.0"
+dependencies = [
+ "backtrace",
+ "bee-common 0.4.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bee-message 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures",
+ "hex",
+ "iota-wallet",
+ "log",
+ "neon",
+ "once_cell",
+ "rand 0.8.4",
+ "serde 1.0.129",
+ "serde_json",
+ "serde_repr",
+ "tokio",
+ "url",
 ]
 
 [[package]]
