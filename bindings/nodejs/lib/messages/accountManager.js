@@ -14,7 +14,7 @@ class AccountManagerForMessages {
     return this.messageHandler.sendMessage({
       cmd: "GetAccount",
       payload: accountId,
-    }).then((acc) => new Account(JSON.parse(acc).payload, this.messageHandler));
+    }).then((acc) => new AccountForMessages(JSON.parse(acc).payload, this.messageHandler));
   }
 
   async getAccounts() {
@@ -27,7 +27,7 @@ class AccountManagerForMessages {
     return this.messageHandler.sendMessage({
       cmd: "CreateAccount",
       payload: account
-    }).then((acc) => new Account(JSON.parse(acc).payload, this.messageHandler));
+    }).then((acc) => new AccountForMessages(JSON.parse(acc).payload, this.messageHandler));
   }
 
   async setStrongholdPassword(password) {
