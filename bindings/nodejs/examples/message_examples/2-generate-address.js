@@ -2,6 +2,8 @@
  * This example genrates a new address.
  */
 
+require('dotenv').config();
+
 async function run() {
   const { AccountManagerForMessages } = require('../../lib/index.js');
 

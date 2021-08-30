@@ -1,5 +1,5 @@
 /**
- * This example shows some events.
+ * This example shows how to use events.
  */
 
 require('dotenv').config();
@@ -32,7 +32,11 @@ async function run() {
   );
 
   const callback = function (err, data) {
-    console.log('data:', data);
+    if (err) {
+      console.error(err);
+    } else {
+      console.log('Data:', data);
+    }
   };
 
   manager.listen('BalanceChange', callback);
@@ -40,7 +44,10 @@ async function run() {
   // Event listeners would be removed after 30 seconds.
   setTimeout(() => {
     manager.removeEventListeners('BalanceChange');
-    console.log('event listeners removed');
+    console.log('Event listeners removed');
+
+    // Exit the process
+    process.exit(0);
   }, 30000);
 
   // Possible Event Types:

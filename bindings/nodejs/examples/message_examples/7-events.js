@@ -2,6 +2,8 @@
  * This example shows some events.
  */
 
+require('dotenv').config();
+
 async function run() {
   const {
     AccountManagerForMessages,
@@ -32,10 +34,15 @@ async function run() {
     );
 
     const callback = function (err, data) {
-      console.log('data:', data);
+      if (err) {
+        console.error(err);
+      } else {
+        console.log('Data:', data);
+      }
     };
+
     let el = new EventListener();
-    console.log(el);
+
     el.listen('BalanceChange', callback);
   } catch (error) {
     console.log('Error: ' + error);

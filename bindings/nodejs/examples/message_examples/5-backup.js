@@ -3,6 +3,8 @@
  * You can move this file to another app or device and restore it.
  */
 
+require('dotenv').config();
+
 async function run() {
   const { AccountManagerForMessages } = require('../../lib/index.js');
 
@@ -13,9 +15,9 @@ async function run() {
   try {
     await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-    let backup_path = await manager.backup('./backup', process.env.SH_PASSWORD);
+    const path = await manager.backup('./backup', process.env.SH_PASSWORD);
 
-    console.log('Backup path:', backup_path);
+    console.log('Backup path:', path);
   } catch (error) {
     console.log('Error: ' + error);
   }

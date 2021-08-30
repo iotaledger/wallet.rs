@@ -2,6 +2,8 @@
  * This example creates a new database and account
  */
 
+require('dotenv').config();
+
 async function run() {
   const { AccountManagerForMessages } = require('../../lib/index.js');
 

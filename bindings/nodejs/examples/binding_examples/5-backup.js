@@ -14,9 +14,9 @@ async function run() {
 
   manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-  let backup_path = await manager.backup('./backup', process.env.SH_PASSWORD);
+  const path = await manager.backup('./backup', process.env.SH_PASSWORD);
 
-  console.log('Backup path:', backup_path);
+  console.log('Backup path:', path);
 }
 
 run();

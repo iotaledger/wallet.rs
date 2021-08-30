@@ -2,6 +2,8 @@
  * This example restores a secured backup file.
  */
 
+require('dotenv').config();
+
 async function run() {
   const { AccountManagerForMessages } = require('../../lib/index.js');
 
@@ -14,9 +16,9 @@ async function run() {
 
     // Add the path to the file from example 5-backup.js
     // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
-    let backup_path = './backup'; //"input your backup file"
+    const path = './backup'; //"input your backup file"
 
-    await manager.importAccounts(backup_path, process.env.SH_PASSWORD);
+    await manager.importAccounts(path, process.env.SH_PASSWORD);
     const account = await manager.getAccount('Alice');
     console.log('Account:', account.alias());
   } catch (error) {

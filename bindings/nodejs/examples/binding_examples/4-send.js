@@ -18,10 +18,10 @@ async function run() {
 
   const account = manager.getAccount('Alice');
 
-  console.log('alias', account.alias());
-  console.log('syncing...');
+  console.log('Alias', account.alias());
+  console.log('Syncing...');
   await account.sync();
-  console.log('available balance', account.balance().available);
+  console.log('Available balance', account.balance().available);
 
   //TODO: Replace with the address of your choice!
   const address =

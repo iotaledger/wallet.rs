@@ -2,6 +2,8 @@
  * This example sends IOTA Toens to an address.
  */
 
+require('dotenv').config();
+
 async function run() {
   const { AccountManagerForMessages } = require('../../lib/index.js');
 
@@ -26,14 +28,15 @@ async function run() {
       'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r';
     const amount = 1000000;
 
-    const node_response = await account.send({
+    const response = await account.send({
       address,
       amount,
       remainder_value_strategy: {
         strategy: 'ReuseAddress',
       },
     });
-    console.log(node_response);
+
+    console.log(response);
 
     console.log(
       `Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`,
