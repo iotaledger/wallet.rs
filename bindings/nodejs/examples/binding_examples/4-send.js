@@ -24,16 +24,16 @@ async function run() {
   console.log('available balance', account.balance().available);
 
   //TODO: Replace with the address of your choice!
-  const addr =
+  const address =
     'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r';
   const amount = 1000000;
 
-  const node_response = await account.send(addr, amount, {
+  const response = await account.send(address, amount, {
     remainderValueStrategy: RemainderValueStrategy.reuseAddress(),
   });
 
   console.log(
-    `Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`,
+    `Check your message on https://explorer.iota.org/chrysalis/message/${response.id}`,
   );
 }
 
