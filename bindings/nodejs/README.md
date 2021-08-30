@@ -1,8 +1,6 @@
-# nodejs-async
+# IOTA Wallet Library - Node.js binding
 
-**nodejs-async:** Node.js binding to the wallet library
-
-This project was bootstrapped by [create-neon](https://www.npmjs.com/package/create-neon).
+## Requirements (only for building the binary yourself)
 
 Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/dev/README.md) and on Windows also LLVM, our workflow uses `https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.1/LLVM-11.0.1-win64.exe`. On Windows, you may also need to set an environment variable `RUSTFLAGS` to `-C target-feature=+crt-static`.
 
@@ -22,11 +20,11 @@ yarn add @iota/wallet
 
 ## Installation in repository
 
-Installing nodejs-async requires a [supported version of Node and Rust](https://github.com/neon-bindings/neon#platform-support).
+Installing nodejs bindings require a [supported version of Node and Rust](https://github.com/neon-bindings/neon#platform-support).
 
 This fully installs the project, including installing any dependencies and running the build.
 
-## Building nodejs-async
+## Building nodejs bindings
 
 If you have already installed the project and only want to run the build, run:
 
@@ -57,7 +55,7 @@ Runs the unit tests by calling `cargo test`. You can learn more about [adding te
 The directory structure of this project is:
 
 ```
-nodejs-async/
+nodejs/
 ├── Cargo.toml
 ├── README.md
 ├── lib/
