@@ -11,9 +11,9 @@ async function run() {
   });
 
   try {
-    await manager.setStrongholdPassword('A12345678*');
+    await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-    let backup_path = await manager.backup('./backup', 'A12345678*');
+    let backup_path = await manager.backup('./backup', process.env.SH_PASSWORD);
 
     console.log('Backup path:', backup_path);
   } catch (error) {

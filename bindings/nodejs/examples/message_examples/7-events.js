@@ -13,7 +13,7 @@ async function run() {
   });
 
   try {
-    await manager.setStrongholdPassword('A12345678*');
+    await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
     const account = await manager.getAccount('Alice');
     console.log('Account:', account);
