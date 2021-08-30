@@ -9,13 +9,13 @@ let { sendMessage, messageHandlerNew } = addon;
 const sendMessageAsync = utils.promisify(sendMessage);
 
 class MessageHandler {
-  constructor(options) {
-    this.messageHandler = messageHandlerNew(JSON.stringify(options));
-  }
+    constructor(options) {
+        this.messageHandler = messageHandlerNew(JSON.stringify(options));
+    }
 
-  async sendMessage(message) {
-    return sendMessageAsync(JSON.stringify(message), this.messageHandler);
-  }
+    async sendMessage(message) {
+        return sendMessageAsync(JSON.stringify(message), this.messageHandler);
+    }
 }
 
 module.exports.MessageHandler = MessageHandler;

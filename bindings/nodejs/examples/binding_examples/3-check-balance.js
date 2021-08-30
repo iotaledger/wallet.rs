@@ -5,23 +5,23 @@
 require('dotenv').config();
 
 async function run() {
-  const { AccountManager } = require('../../lib/index.js');
+    const { AccountManager } = require('../../lib/index.js');
 
-  const manager = new AccountManager({
-    storagePath: './alice-database',
-  });
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+    });
 
-  manager.setStrongholdPassword(process.env.SH_PASSWORD);
+    manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-  const account = manager.getAccount('Alice');
+    const account = manager.getAccount('Alice');
 
-  console.log('Account:', account.alias());
+    console.log('Account:', account.alias());
 
-  // Always sync before doing anything with the account
-  await account.sync();
-  console.log('Syncing...');
+    // Always sync before doing anything with the account
+    await account.sync();
+    console.log('Syncing...');
 
-  console.log('Available balance', account.balance().available);
+    console.log('Available balance', account.balance().available);
 }
 
 run();

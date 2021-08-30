@@ -6,21 +6,21 @@
 require('dotenv').config();
 
 async function run() {
-  const { AccountManagerForMessages } = require('../../lib/index.js');
+    const { AccountManagerForMessages } = require('../../lib/index.js');
 
-  const manager = new AccountManagerForMessages({
-    storagePath: './alice-database',
-  });
+    const manager = new AccountManagerForMessages({
+        storagePath: './alice-database',
+    });
 
-  try {
-    await manager.setStrongholdPassword(process.env.SH_PASSWORD);
+    try {
+        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-    const path = await manager.backup('./backup', process.env.SH_PASSWORD);
+        const path = await manager.backup('./backup', process.env.SH_PASSWORD);
 
-    console.log('Backup path:', path);
-  } catch (error) {
-    console.log('Error: ' + error);
-  }
+        console.log('Backup path:', path);
+    } catch (error) {
+        console.log('Error: ' + error);
+    }
 }
 
 run();

@@ -6,17 +6,17 @@
 require('dotenv').config();
 
 async function run() {
-  const { AccountManager } = require('../../lib/index.js');
+    const { AccountManager } = require('../../lib/index.js');
 
-  const manager = new AccountManager({
-    storagePath: './alice-database',
-  });
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+    });
 
-  manager.setStrongholdPassword(process.env.SH_PASSWORD);
+    manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-  const path = await manager.backup('./backup', process.env.SH_PASSWORD);
+    const path = await manager.backup('./backup', process.env.SH_PASSWORD);
 
-  console.log('Backup path:', path);
+    console.log('Backup path:', path);
 }
 
 run();

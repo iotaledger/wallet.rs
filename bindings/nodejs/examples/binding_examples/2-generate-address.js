@@ -5,34 +5,34 @@
 require('dotenv').config();
 
 async function run() {
-  const { AccountManager } = require('../../lib/index.js');
-  const manager = new AccountManager({
-    storagePath: './alice-database',
-  });
+    const { AccountManager } = require('../../lib/index.js');
+    const manager = new AccountManager({
+        storagePath: './alice-database',
+    });
 
-  manager.setStrongholdPassword(process.env.SH_PASSWORD);
+    manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
-  const account = manager.getAccount('Alice');
-  console.log('Account:', account.alias());
+    const account = manager.getAccount('Alice');
+    console.log('Account:', account.alias());
 
-  // Always sync before doing anything with the account
-  await account.sync();
-  console.log('Syncing...');
+    // Always sync before doing anything with the account
+    await account.sync();
+    console.log('Syncing...');
 
-  const address = account.generateAddress();
-  console.log('New address:', address);
+    const address = account.generateAddress();
+    console.log('New address:', address);
 
-  // You can also get the latest unused address:
-  const addressObject = account.latestAddress();
-  console.log('Address:', addressObject.address);
+    // You can also get the latest unused address:
+    const addressObject = account.latestAddress();
+    console.log('Address:', addressObject.address);
 
-  // Use the Chrysalis Faucet to send testnet tokens to your address:
-  console.log(
-    'Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/',
-  );
+    // Use the Chrysalis Faucet to send testnet tokens to your address:
+    console.log(
+        'Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/',
+    );
 
-  const addresses = account.listAddresses();
-  console.log('Addresses:', addresses);
+    const addresses = account.listAddresses();
+    console.log('Addresses:', addresses);
 }
 
 run();
