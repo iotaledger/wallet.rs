@@ -2552,6 +2552,9 @@
 <span id="2550">2550</span>
 <span id="2551">2551</span>
 <span id="2552">2552</span>
+<span id="2553">2553</span>
+<span id="2554">2554</span>
+<span id="2555">2555</span>
 </pre><pre class="rust">
 <span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
@@ -4044,6 +4047,7 @@
 
     <span class="doccomment">/// Syncs the accounts with the Tangle.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">log::debug!</span>(<span class="string">&quot;[AccountsSynchronizer] execute&quot;</span>);
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>();
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="ident">account_handle</span>.<span class="ident">disable_mqtt</span>();
@@ -4056,6 +4060,7 @@
     }
 
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">execute_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SyncedAccount</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="macro">log::debug!</span>(<span class="string">&quot;[AccountsSynchronizer] execute_internal&quot;</span>);
         <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mutex</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tasks</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -4103,7 +4108,7 @@
             <span class="ident">account</span>.<span class="ident">append_addresses</span>(<span class="ident">data</span>.<span class="ident">addresses</span>.<span class="ident">to_vec</span>());
             <span class="ident">synced_data</span>.<span class="ident">push</span>((<span class="ident">account_handle</span>, <span class="ident">addresses_before_sync</span>, <span class="ident">data</span>));
         }
-
+        <span class="macro">log::debug!</span>(<span class="string">&quot;[AccountsSynchronizer] synced existing accounts&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced_accounts</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_account</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_account_index</span> <span class="op">=</span> <span class="number">0</span>;
@@ -4242,7 +4247,7 @@
             <span class="ident">synced_account</span>.<span class="ident">addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">clone</span>();
             <span class="ident">synced_accounts</span>.<span class="ident">push</span>(<span class="ident">synced_account</span>);
         }
-
+        <span class="macro">log::debug!</span>(<span class="string">&quot;[AccountsSynchronizer] finished syncing&quot;</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">synced_accounts</span>)
     }
 }
@@ -4259,6 +4264,7 @@
     <span class="ident">account_options</span>: <span class="ident">AccountOptions</span>,
     <span class="ident">automatic_output_consolidation</span>: <span class="ident">bool</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">PollResponse</span><span class="op">&gt;</span> {
+    <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] poll&quot;</span>);
     <span class="kw">let</span> <span class="ident">polling_start_time</span> <span class="op">=</span> <span class="ident">std::time::Instant::now</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synchronizer</span> <span class="op">=</span>
         <span class="ident">AccountsSynchronizer::new</span>(<span class="ident">sync_accounts_lock</span>, <span class="ident">accounts</span>.<span class="ident">clone</span>(), <span class="ident">storage_file_path</span>, <span class="ident">account_options</span>);
