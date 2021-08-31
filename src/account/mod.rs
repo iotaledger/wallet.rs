@@ -18,7 +18,7 @@ use iota_client::NodeInfoWrapper;
 use chrono::prelude::{DateTime, Local};
 use getset::{Getters, Setters};
 use iota_client::bee_message::prelude::MessageId;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use tokio::sync::{Mutex, RwLock, RwLockWriteGuard};
 
 use std::{
@@ -39,7 +39,7 @@ pub use sync::{AccountSynchronizer, SyncedAccount};
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
 
 /// The account identifier.
-#[derive(Debug, Clone, Serialize, Deserialize, Eq)]
+#[derive(Debug, Clone, Serialize, Eq)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
     /// An address identifier.
@@ -51,6 +51,16 @@ pub enum AccountIdentifier {
     Alias(String),
     /// An index identifier.
     Index(usize),
+}
+
+impl<'de> Deserialize<'de> for AccountIdentifier {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        Ok(AccountIdentifier::from(s))
+    }
 }
 
 impl Hash for AccountIdentifier {
@@ -1252,9 +1262,9 @@ impl Account {
             });
     }
 
-    // Gets the node info from /api/v1/info endpoint
+    /// Gets the node info from /api/v1/info endpoint
     // TODO: Add auth and url in one NodeInfoOptions struct.
-    pub(crate) async fn get_node_info(
+    pub async fn get_node_info(
         &self,
         url: Option<&str>,
         jwt: Option<&str>,

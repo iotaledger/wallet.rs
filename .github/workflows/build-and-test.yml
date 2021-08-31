@@ -167,8 +167,8 @@ jobs:
         # https://github.com/iotaledger/wallet.rs/pull/467/checks?check_run_id=2214108362#step:11:41
         with:
           path: |
-            bindings/nodejs/native/target
-            bindings/nodejs/native/artifacts.json
+            bindings/nodejs/target
+            bindings/nodejs/artifacts.json
           # Add date to the cache to keep it up to date
           key: ${{ matrix.os }}-stable-cargo-build-node-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed

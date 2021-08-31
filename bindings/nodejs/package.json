@@ -1,29 +1,36 @@
 {
-  "name": "@iota/wallet",
-  "version": "0.6.0",
-  "description": "Node.js binding to the wallet library",
-  "main": "lib/index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/iotaledger/wallet.rs"
-  },
-  "author": "Lucas Nogueira <lucas.nogueira@iota.org>",
-  "license": "MIT",
-  "dependencies": {
-    "neon-cli": "^0.4.0",
-    "prebuild-install": "^5.3.3"
-  },
-  "scripts": {
-    "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run rebuild",
-    "build:neon": "neon build --release && node scripts/move-lib.js",
-    "rebuild": "npm run build:neon && node scripts/strip.js",
-    "prebuild:node": "prebuild --prepack scripts/node-neon-build.js --strip",
-    "prebuild:electron": "node scripts/electron-prebuild.js",
-    "build:docs": "./node_modules/.bin/jsdoc lib/index.js"
-  },
-  "devDependencies": {
-    "electron-build-env": "^0.2.0",
-    "jsdoc": "^3.6.6",
-    "prebuild": "^10.0.1"
-  }
+    "name": "@iota/wallet",
+    "version": "0.6.0",
+    "description": "Node.js binding to the wallet library",
+    "main": "lib/index.js",
+    "scripts": {
+        "lint": "eslint .",
+        "format": "prettier -w {,*/**/}*.{js,json}",
+        "format-check": "prettier -c {,*/**/}*.{js,json}",
+        "build": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics && tsc",
+        "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run build",
+        "test": "cargo test"
+    },
+    "author": "Antoni Dikov <antoni.dikov@iota.org>",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "prebuild-install": "^5.3.3"
+    },
+    "devDependencies": {
+        "cargo-cp-artifact": "^0.1",
+        "dotenv": "^10.0.0",
+        "eslint": "^7.32.0",
+        "eslint-config-prettier": "^8.3.0",
+        "eslint-plugin-prettier": "^3.4.1",
+        "prettier": "^2.3.2",
+        "typescript": "^4.3.4"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/iotaledger/wallet.rs.git"
+    },
+    "bugs": {
+        "url": "https://github.com/iotaledger/wallet.rs/issues"
+    },
+    "homepage": "https://github.com/iotaledger/wallet.rs#readme"
 }

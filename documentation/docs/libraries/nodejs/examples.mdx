@@ -1,12 +1,11 @@
 import CodeBlock from '@theme/CodeBlock';
-import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/1-create-account.js';
-import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/2-generate-address.js';
-import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/3-check_balance.js';
-import send from  '!!raw-loader!./../../../../bindings/nodejs/examples/4-send.js';
-import backup from  '!!raw-loader!./../../../../bindings/nodejs/examples/5-backup.js';
-import restore from  '!!raw-loader!./../../../../bindings/nodejs/examples/6-restore.js';
-import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/7-events.js';
-import migration from  '!!raw-loader!./../../../../bindings/nodejs/examples/8-migration.js';
+import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/1-create-account.js';
+import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/2-generate-address.js';
+import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/3-check-balance.js';
+import send from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/4-send.js';
+import backup from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/5-backup.js';
+import restore from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/6-restore.js';
+import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/7-events.js';
 
 # Examples
 
@@ -204,18 +203,3 @@ data: {
 You can then use the _accountId_ to identify the account via `AccountManager.getAccount(accountId)`.
 
 Read more about Events in the [API reference](api_reference.md#addeventlistenerevent-cb).
-
-## Migration 
-
-You can use the following example to create a new database and account, and migrate funds from the legacy network to the `Chrysalis` network.
-
-Run:
-```
-node 8-migration.js
-```
-
-Code:
-
-<CodeBlock className="language-javascript">
-  {migration}
-</CodeBlock>

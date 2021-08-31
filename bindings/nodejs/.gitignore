@@ -1,11 +1,6 @@
-native/target
-native/index.node
-native/artifacts.json
-**/*~
+target
+index.node
 **/node_modules
 **/.DS_Store
-test-database/
-build/
-prebuilds/
-.env
-out
+npm-debug.log*
+wallet.log

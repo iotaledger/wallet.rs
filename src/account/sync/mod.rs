@@ -342,6 +342,7 @@ async fn sync_addresses(
     options: AccountOptions,
     return_all_addresses: bool,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
+    log::debug!("[SYNC] sync_addresses");
     let mut address_index = address_index;
 
     let mut generated_addresses = vec![];
@@ -443,6 +444,7 @@ async fn sync_messages(
     skip_change_addresses: bool,
     change_addresses_to_sync: HashSet<AddressWrapper>,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
+    log::debug!("[SYNC] sync_messages");
     let mut messages = vec![];
 
     let account = account_handle.read().await.clone();
@@ -610,7 +612,7 @@ async fn perform_sync(
     return_all_addresses: bool,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
-        "[SYNC] syncing with address_index = {}, gap_limit = {}",
+        "[SYNC] perform_sync: syncing with address_index = {}, gap_limit = {}",
         address_index,
         gap_limit
     );
@@ -712,7 +714,7 @@ async fn perform_sync(
         found_addresses.extend(synced_addresses);
         new_messages.extend(synced_messages.into_iter());
     }
-    log::debug!("FOUND {:?}", found_addresses);
+    log::debug!("[SYNC] FOUND {:?}", found_addresses);
 
     // we have two address spaces so we find change & public addresses to save separately
     let mut addresses_to_save = find_addresses_to_save(
@@ -729,6 +731,7 @@ async fn perform_sync(
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
 
+    log::debug!("[SYNC] perform_sync finished");
     Ok(SyncedAccountData {
         messages: new_messages,
         addresses: addresses_to_save,
@@ -978,6 +981,7 @@ impl AccountSynchronizer {
     }
 
     pub(crate) async fn get_new_history(&self, return_all_addresses: bool) -> crate::Result<SyncedAccountData> {
+        log::debug!("get_new_history");
         let change_addresses_to_sync = self.account_handle.change_addresses_to_sync.lock().await.clone();
         perform_sync(
             self.account_handle.clone(),
@@ -999,6 +1003,7 @@ impl AccountSynchronizer {
         new_messages: &[Message],
         confirmation_changed_messages: &[Message],
     ) -> crate::Result<SyncedAccountEvents> {
+        log::debug!("get_events");
         // balance event
         let mut balance_change_events = Vec::new();
         for address_after_sync in addresses.iter() {
@@ -1054,6 +1059,7 @@ impl AccountSynchronizer {
     /// The account syncing process ensures that the latest metadata (balance, transactions)
     /// associated with an account is fetched from the tangle and is stored locally.
     pub async fn execute(self) -> crate::Result<SyncedAccount> {
+        log::debug!("[SYNC] execute");
         self.account_handle.disable_mqtt();
         let syc_start_time = std::time::Instant::now();
         let return_value = match self.get_new_history(false).await {
@@ -1148,7 +1154,10 @@ impl AccountSynchronizer {
                 log::debug!("[SYNC] syncing took: {:.2?}", syc_start_time.elapsed());
                 Ok(synced_account)
             }
-            Err(e) => Err(e),
+            Err(e) => {
+                log::debug!("[SYNC] get_new_history error {}", e);
+                Err(e)
+            }
         };
 
         self.account_handle.enable_mqtt();
@@ -1393,6 +1402,7 @@ impl SyncedAccount {
         &self,
         include_dust_allowance_outputs: bool,
     ) -> crate::Result<Vec<Message>> {
+        log::debug!("consolidate_outputs");
         let mut tasks = Vec::new();
         // run the transfers in parallel
         for transfer in self
@@ -1413,6 +1423,7 @@ impl SyncedAccount {
 
     /// Send messages.
     pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
+        log::debug!("[TRANSFER] transfer");
         let account_ = self.account_handle.read().await;
 
         // validate ledger seed for ledger accounts
@@ -1586,6 +1597,7 @@ async fn perform_transfer(
     account_handle: AccountHandle,
     remainder_address: Option<input_selection::Remainder>,
 ) -> crate::Result<Message> {
+    log::debug!("[TRANSFER] perform_transfer");
     let mut utxos = vec![];
     let mut transaction_inputs = vec![];
     // store (amount, address, new_created) to check later if dust is allowed

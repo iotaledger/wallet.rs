@@ -57,11 +57,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-18.04, macos-latest, windows-latest]
-        node-version: ['10.x', '12.x', '14.x', '15.x']
-        exclude:
-            # Remove once neon is updated
-          - os: windows-latest
-            node-version: '15.x'
+        node-version: ['10.x', '12.x', '14.x', '15.x', '16.x']
 
     steps:
       - uses: actions/checkout@v2
