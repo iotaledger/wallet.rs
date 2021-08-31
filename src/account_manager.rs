@@ -1489,6 +1489,7 @@ impl AccountsSynchronizer {
 
     /// Syncs the accounts with the Tangle.
     pub async fn execute(&mut self) -> crate::Result<Vec<SyncedAccount>> {
+        log::debug!("[AccountsSynchronizer] execute");
         let accounts = self.accounts.clone();
         for account_handle in accounts.read().await.values() {
             account_handle.disable_mqtt();
@@ -1501,6 +1502,7 @@ impl AccountsSynchronizer {
     }
 
     async fn execute_internal(&mut self) -> crate::Result<Vec<SyncedAccount>> {
+        log::debug!("[AccountsSynchronizer] execute_internal");
         let _lock = self.mutex.lock().await;
 
         let mut tasks = Vec::new();
@@ -1548,7 +1550,7 @@ impl AccountsSynchronizer {
             account.append_addresses(data.addresses.to_vec());
             synced_data.push((account_handle, addresses_before_sync, data));
         }
-
+        log::debug!("[AccountsSynchronizer] synced existing accounts");
         let mut synced_accounts = Vec::new();
         let mut last_account = None;
         let mut last_account_index = 0;
@@ -1687,7 +1689,7 @@ impl AccountsSynchronizer {
             synced_account.addresses = account.addresses().clone();
             synced_accounts.push(synced_account);
         }
-
+        log::debug!("[AccountsSynchronizer] finished syncing");
         Ok(synced_accounts)
     }
 }
@@ -1704,6 +1706,7 @@ async fn poll(
     account_options: AccountOptions,
     automatic_output_consolidation: bool,
 ) -> crate::Result<PollResponse> {
+    log::debug!("[POLLING] poll");
     let polling_start_time = std::time::Instant::now();
     let mut synchronizer =
         AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
