@@ -1,5 +1,13 @@
 # Changelog
 
+## \[1.0.0]
+
+- Update to newer neon version with napi-6 to allow concurrent function calls
+  Move event listener functions to the AccountManager
+  - [b41a2afc](https://github.com/iotaledger/wallet.rs/commit/b41a2afcc8a55440601811f518e98d58f1c51aad) New nodejs binding using the wallet message system and latest neon version. ([#674](https://github.com/iotaledger/wallet.rs/pull/674)) on 2021-08-31
+  - [3b2c8431](https://github.com/iotaledger/wallet.rs/commit/3b2c843197556e6725442b74cbd44ffce88357bd) apply version updates ([#746](https://github.com/iotaledger/wallet.rs/pull/746)) on 2021-08-31
+  - [c77bf7c5](https://github.com/iotaledger/wallet.rs/commit/c77bf7c57d1833d86edf34e48a158d6b638bac88) Fix workflow path ([#747](https://github.com/iotaledger/wallet.rs/pull/747)) on 2021-08-31
+
 ## \[0.6.0]
 
 - Fixes edge case in account discovery.
