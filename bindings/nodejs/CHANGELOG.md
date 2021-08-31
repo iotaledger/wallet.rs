@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.1]
+
+- Fix workflow to prebuild binaries
+  - [46442719](https://github.com/iotaledger/wallet.rs/commit/46442719bd9aed7e7d70133fb37fc9fe7fd855e4) Nodejs binding release workflow ([#749](https://github.com/iotaledger/wallet.rs/pull/749)) on 2021-08-31
+
 ## \[1.0.0]
 
 - Update to newer neon version with napi-6 to allow concurrent function calls
