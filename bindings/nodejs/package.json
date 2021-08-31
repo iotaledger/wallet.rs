@@ -8,11 +8,14 @@
         "format": "prettier -w {,*/**/}*.{js,json}",
         "format-check": "prettier -c {,*/**/}*.{js,json}",
         "build": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics && tsc",
-        "install": "npm run build",
+        "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run build",
         "test": "cargo test"
     },
     "author": "Antoni Dikov <antoni.dikov@iota.org>",
     "license": "Apache-2.0",
+    "dependencies": {
+        "prebuild-install": "^5.3.3"
+    },
     "devDependencies": {
         "cargo-cp-artifact": "^0.1",
         "dotenv": "^10.0.0",
