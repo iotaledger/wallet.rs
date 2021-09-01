@@ -120,15 +120,15 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
 
       - name: Install dependencies
-        run: yarn
+        run: npm ci
         working-directory: bindings/nodejs
       
       - name: Build Node.js prebuild
-        run: yarn install
+        run: npm run prebuild:node
         working-directory: bindings/nodejs
       
       - name: Upload prebuild to GitHub release
-        run: yarn prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
+        run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: bindings/nodejs
   
   electron-binding-prebuild:
@@ -201,13 +201,13 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
 
       - name: Install dependencies
-        run: yarn
+        run: npm ci
         working-directory: bindings/nodejs
       
       - name: Build Electron prebuilds
-        run: yarn prebuild:electron
+        run: npm run prebuild:electron
         working-directory: bindings/nodejs
       
       - name: Upload prebuild to GitHub release
-        run: yarn prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
+        run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: bindings/nodejs

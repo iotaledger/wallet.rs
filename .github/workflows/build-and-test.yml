@@ -177,7 +177,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-build-node-target-
 
       - name: Build nodejs binding
-        run: yarn
+        run: npm ci
         working-directory: bindings/nodejs
 
   python-bindings:
