@@ -7,21 +7,29 @@
     "lint": "eslint .",
     "format": "prettier -w {,*/**/}*.{js,json}",
     "format-check": "prettier -c {,*/**/}*.{js,json}",
-    "build": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics && tsc",
-    "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run build",
+    "build": "npm run build:neon && tsc",
+    "build:neon": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics",
+    "build:docs": "./node_modules/.bin/jsdoc lib/index.js",
+    "prebuild:node": "prebuild --prepack scripts/node-neon-build.js --strip",
+    "prebuild:electron": "node scripts/electron-prebuild.js",
+    "rebuild": "npm run build:neon && node scripts/strip.js",
+    "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run rebuild",
     "test": "cargo test"
   },
   "author": "Antoni Dikov <antoni.dikov@iota.org>",
   "license": "Apache-2.0",
   "dependencies": {
+    "cargo-cp-artifact": "^0.1.5",
     "prebuild-install": "^5.3.3"
   },
   "devDependencies": {
-    "cargo-cp-artifact": "^0.1",
     "dotenv": "^10.0.0",
+    "electron-build-env": "^0.2.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^3.4.1",
+    "jsdoc": "^3.6.7",
+    "prebuild": "^10.0.1",
     "prettier": "^2.3.2",
     "typescript": "^4.3.4"
   },
