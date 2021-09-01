@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.2]
+
+- Fix build scripts and workflows
+  - [f0a39030](https://github.com/iotaledger/wallet.rs/commit/f0a39030974ecda65f1f6f9622e1e4991cba1c60) ci: Fix Node.js bindings scripts and workflows ([#752](https://github.com/iotaledger/wallet.rs/pull/752)) on 2021-09-01
+
 ## \[1.0.1]
 
 - Fix workflow to prebuild binaries
