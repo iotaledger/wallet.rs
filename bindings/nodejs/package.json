@@ -20,7 +20,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "cargo-cp-artifact": "^0.1.5",
-    "prebuild-install": "^5.3.3"
+    "prebuild-install": "^6.1.4"
   },
   "devDependencies": {
     "dotenv": "^10.0.0",
