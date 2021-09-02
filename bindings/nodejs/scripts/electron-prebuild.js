@@ -2,12 +2,14 @@ const { spawnSync } = require('child_process');
 const { resolve } = require('path');
 const ELECTRON_VERSIONS = ['12.0.18', '13.2.3', '14.0.0'];
 
+const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
+
 for (const version of ELECTRON_VERSIONS) {
     // HACK: make electron-build-env aware of the electron version we're targeting
     process.env['CURRENT_ELECTRON_VERSION'] = version;
     // HACK: there are bugs in prebuild that are preventing us from using its API, so we're using the CLI instead
     spawnSync(
-        'npx',
+        npx,
         [
             'prebuild',
             '-t',
