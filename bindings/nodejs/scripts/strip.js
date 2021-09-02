@@ -10,4 +10,12 @@ if (process.platform === 'win32') {
 
 const binaryPath = resolve(__dirname, '../build/Release/index.node');
 const stripArgs = process.platform === 'darwin' ? '-Sx' : '--strip-all';
-spawnSync('strip', [stripArgs, binaryPath], { stdio: 'inherit' });
+const { status } = spawnSync('strip', [stripArgs, binaryPath], {
+    stdio: 'inherit',
+});
+
+if (status === null) {
+    process.exit(1);
+} else if (status > 0) {
+    process.exit(status);
+}
