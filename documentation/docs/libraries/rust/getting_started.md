@@ -63,25 +63,29 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" 
 In order to use the library, you first need to create an _AccountManager_ :
 
 ```rust
-use iota_wallet::{
-    account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-};
+use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType};
 use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
-    let manager =
-        AccountManager::builder()
-            .with_storage(&storage_folder, None)
-            .finish()
-            .await?;
-    let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();
+    let manager = AccountManager::builder()
+        .with_storage(&storage_folder, None)?
+        .finish()
+        .await?;
+    manager.set_stronghold_password("password").await?;
+    // If no mnemonic is provided, then the Stronghold file is the only way for a backup
+    manager.store_mnemonic(SignerType::Stronghold, None).await?;
+    let client_options = ClientOptionsBuilder::new()
+        .with_node("http://api.lb-0.testnet.chrysalis2.com")?
+        .build()?;
     let account = manager
-        .create_account(client_options)
-        .signer_type(SignerType::EnvMnemonic)
+        .create_account(client_options)?
+        .signer_type(SignerType::Stronghold)
         .initialise()
         .await?;
+    let address = account.generate_address().await?;
+    println!("Address: {}", address.address().to_bech32());
     Ok(())
 }
 ```
