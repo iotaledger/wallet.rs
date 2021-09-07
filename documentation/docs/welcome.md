@@ -1,3 +1,15 @@
+---
+description: Official IOTA Wallet Library Software which can be used to easily integrate an IOTA Wallet into your application 
+image: replaceWithWalletLogo
+keywords:
+- requirements
+- wallet
+- software
+- library
+- rust
+- python
+- nodejs
+---
 # Welcome
 
 This is the documentation for the official IOTA Wallet Library Software. The documentation can be used to easily integrate an IOTA Wallet into your applications. You can read more about core principles behind IOTA client libraries in the following [blog post](https://blog.iota.org/the-new-iota-client-libraries-harder-better-faster-stronger/).

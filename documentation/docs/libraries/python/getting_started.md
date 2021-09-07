@@ -1,3 +1,12 @@
+---
+description: Getting started with the official IOTA Wallet Library Software Python binding.
+image: replaceWithWalletLogo
+keywords:
+- Python
+- install
+- pip
+- unpack
+---
 # Getting Started with IOTA Wallet Python Binding
 
 ## Security

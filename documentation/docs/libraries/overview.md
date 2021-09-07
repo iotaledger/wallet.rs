@@ -1,6 +1,18 @@
+---
+description: The `wallet.rs` library is written in Rust.  You can also find two bindings written in Node.js and Python.
+image: replaceWithWalletLogo
+keywords:
+- bindings
+- library
+- rust
+- python
+- node.js
+- account
+- multiple
+---
 # IOTA Wallet Libraries
 
-The `wallet.rs` library is writen in Rust.  You can also find two bindings writen in Node.js and Python:
+The `wallet.rs` library is written in Rust.  You can also find two bindings written in Node.js and Python:
 
 - [Rust](rust/getting_started.md)
 - [Node.js](nodejs/getting_started.md) 

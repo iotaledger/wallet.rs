@@ -1,3 +1,14 @@
+---
+description: Troubleshooting the IOTA Wallet Library.  
+image: replaceWithWalletLogo
+keywords:
+- discussion
+- channel
+- problem
+- solution
+- discord
+- stackexchange
+---
 # Troubleshooting
 
 ## StackExchange

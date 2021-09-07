@@ -1,3 +1,12 @@
+---
+description: Official IOTA Wallet Library Software Node.js API reference.
+image: replaceWithWalletLogo
+keywords:
+- api
+- nodejs
+- param
+- type
+---
 # API Reference
 ## initLogger(config: LogOptions)
 
