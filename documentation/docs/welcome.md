@@ -1,6 +1,6 @@
 ---
 description: Official IOTA Wallet Library Software which can be used to easily integrate an IOTA Wallet into your application 
-image: replaceWithWalletLogo
+image: /img/logo/wallet_light.png
 keywords:
 - requirements
 - wallet

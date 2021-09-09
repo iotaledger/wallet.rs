@@ -1,6 +1,6 @@
 ---
 description: Getting started with the official IOTA Wallet Library Software Rust library.
-image: replaceWithWalletLogo
+image: /img/logo/wallet_light.png
 keywords:
 - Rust
 - install

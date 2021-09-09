@@ -1,6 +1,6 @@
 ---
 description: Official IOTA Wallet Library Software Node.js API reference.
-image: replaceWithWalletLogo
+image: /img/logo/wallet_light.png
 keywords:
 - api
 - nodejs
