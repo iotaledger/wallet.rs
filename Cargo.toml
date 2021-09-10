@@ -16,7 +16,8 @@ chrono = { version = "0.4", features = ["serde"] }
 futures = "0.3"
 getset = "0.1"
 hex = "0.4"
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5f8fd262526aa09e2f548b3711964ea8fc18bc0b", features = ["mqtt"] }
+iota-client = { path = "../iota.rs/iota-client", features = ["mqtt"] }
+#iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5f8fd262526aa09e2f548b3711964ea8fc18bc0b", features = ["mqtt"] }
 log = "0.4"
 once_cell = "1.5"
 serde = { version = "1.0", features = ["derive"] }
@@ -26,7 +27,7 @@ thiserror = "1.0"
 tokio = { version = "1.5", features = ["macros", "sync", "time", "rt", "rt-multi-thread"] }
 url = { version = "2.2", features = ["serde"] }
 rand = "0.8"
-rocksdb = { git="https://github.com/iotaledger/rust-rocksdb", rev = "70f2a53529ecc1853a2c025cec7f9d00bd50352c", default-features = false, features = ["lz4"] }
+rocksdb = { git="https://github.com/rust-rocksdb/rust-rocksdb", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2", features = ["zeroize_derive"] }
 
 # stronghold

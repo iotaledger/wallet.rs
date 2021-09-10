@@ -135,13 +135,13 @@ impl PublicKey {
     }
 
     pub fn to_compressed_bytes(&self) -> Vec<u8> {
-        self.0.to_compressed_bytes().to_vec()
+        self.0.to_bytes().to_vec()
     }
 
     pub fn from_compressed_bytes(bs: Vec<u8>) -> Result<Self> {
         let mut bs_arr: [u8; SECRET_KEY_LENGTH] = [0; SECRET_KEY_LENGTH];
         bs_arr.copy_from_slice(&bs[0..SECRET_KEY_LENGTH]);
-        match RustPublicKey::from_compressed_bytes(bs_arr) {
+        match RustPublicKey::try_from_bytes(bs_arr) {
             Ok(bytes) => Ok(Self(bytes)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
@@ -150,7 +150,7 @@ impl PublicKey {
 impl core::convert::TryFrom<&[u8; 32]> for PublicKey {
     type Error = anyhow::Error;
     fn try_from(bytes: &[u8; 32]) -> Result<Self, Self::Error> {
-        match RustPublicKey::from_compressed_bytes(*bytes) {
+        match RustPublicKey::try_from_bytes(*bytes) {
             Ok(k) => Ok(Self(k)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }

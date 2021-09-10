@@ -19,17 +19,17 @@ tasks.withType(Test) {
 }
 
 test {
-    systemProperty "java.library.path", file("./target/debug")
+    systemProperty "java.library.path", file("./target/release")
 }
 
 task cargoBuild(type: Exec) {
     doFirst {
         workingDir "./"
-        commandLine 'cargo', 'build'
+        commandLine 'cargo', 'build', "--release"
     }
 }
 compileJava {
-    dependsOn cargoBuild
+    //dependsOn cargoBuild
 }
 
 task cargoClean(type: Exec) {

@@ -52,6 +52,7 @@ use tokio::{
     time::sleep,
 };
 use zeroize::Zeroize;
+use std::str::FromStr;
 
 pub(crate) mod migration;
 use iota_migration::client::migration::{
@@ -695,7 +696,7 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
+                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
                 bech32_hrp,
             ),
         })

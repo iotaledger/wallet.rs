@@ -1,8 +1,9 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-// Used in verifying correct binding
 mod jni_c_header;
+
+// Used in verifying correct binding
 pub mod verifylink;
 
 mod classes;

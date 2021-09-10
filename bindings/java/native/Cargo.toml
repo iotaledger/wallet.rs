@@ -1,14 +1,13 @@
 [package]
 name = "iota-wallet-java"
-version = "0.2.0"
+version = "0.1.0"
 authors = ["Brord van Wierst <brord@iota.org>"]
 edition = "2018"
 build = "build.rs"
 
 [dependencies]
-iota-wallet = { path = "../../../", version = "0.2.0" }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5f8fd262526aa09e2f548b3711964ea8fc18bc0b", features = ["mqtt"] }
-bee-message = "0.1"
+iota-wallet = { path = "../../../"}
+iota-client = { path = "../../../../iota.rs/iota-client", features = ["mqtt"] }
 log = "0.4.6"
 chrono = "0.4.6"
 env_logger = "0.7"
@@ -20,12 +19,15 @@ flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 tokio = { version = "1.5" }
 getset = "0.1"
 
+
 [lib]
-crate_type = ["cdylib"]
+crate_type = ["dylib"]
 
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 env_logger = "0.7"
+walkdir = "2.2.7"
+cc = "1.0.67"
 bindgen = "0.58"
 
 [features]
