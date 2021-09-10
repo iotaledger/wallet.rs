@@ -25,6 +25,9 @@ static ANDROID_TARGETS: &'static [&'static str] = &[
 ];
 
 fn main() {
+    // don't simplify this to if the target contains the substring "android" --
+    // these lines also serve as a guard so only true android triples receive
+    // JNI generation.
     let target = env::var("TARGET").unwrap();
 
     env_logger::init();
@@ -133,7 +136,6 @@ fn get_cc_system_include_dirs() -> Result<Vec<PathBuf>, String> {
         .find(END_PAT)
         .ok_or_else(|| format!("No '{}' in output from C compiler", END_PAT))?
         + start_includes;
-    dbg!("HMMMM");
     Ok((&cc_output[start_includes..end_includes])
         .split('\n')
         .map(|s| PathBuf::from(s.trim().to_string()))

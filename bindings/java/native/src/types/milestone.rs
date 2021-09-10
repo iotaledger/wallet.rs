@@ -144,7 +144,7 @@ impl PublicKey {
 impl core::convert::TryFrom<&[u8; 32]> for PublicKey {
     type Error = anyhow::Error;
     fn try_from(bytes: &[u8; 32]) -> Result<Self, Self::Error> {
-        match RustPublicKey::from_compressed_bytes(*bytes) {
+        match RustPublicKey::try_from_bytes(*bytes) {
             Ok(k) => Ok(Self(k)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }

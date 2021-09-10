@@ -29,8 +29,9 @@ serde = { version = "1.0.130", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 
 
+
 [lib]
-crate_type = ["cdylib"]
+crate_type = ["dylib"]
 
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
