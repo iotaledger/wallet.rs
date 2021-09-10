@@ -20,6 +20,8 @@ install cargo-ndk: `cargo install cargo-ndk`
 Then run gradle:
 ./gradlew aR
 
+Have a signing keystore ready; I call it `signed_apk.jks`
+
 Sign the apk:
 $ANDROID_HOME/build-tools/28.0.3/apksigner sign --ks examples/android-app/signed_apk.jks --out examples/android-app/android-app-release-signed.apk -v examples/android-app/build/outputs/apk/release/android-app-release-unsigned.apk
 
