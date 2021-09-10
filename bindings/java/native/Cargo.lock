@@ -296,21 +296,25 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.57.0"
+version = "0.58.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd4865004a46a0aafb2a0a5eb19d3c9fc46ee5f063a6cfc605c69ac9ecf5263d"
+checksum = "0f8523b410d7187a43085e7e064416ea32ded16bd0a4e6fc025e21616d01258f"
 dependencies = [
  "bitflags",
  "cexpr 0.4.0",
  "clang-sys",
+ "clap",
+ "env_logger 0.8.4",
  "lazy_static",
  "lazycell",
+ "log",
  "peeking_take_while",
  "proc-macro2 1.0.32",
  "quote 1.0.10",
  "regex",
  "rustc-hash",
- "shlex 0.1.1",
+ "shlex",
+ "which 3.1.1",
 ]
 
 [[package]]
@@ -322,11 +326,8 @@ dependencies = [
  "bitflags",
  "cexpr 0.5.0",
  "clang-sys",
- "clap",
- "env_logger 0.8.4",
  "lazy_static",
  "lazycell",
- "log",
  "peeking_take_while",
  "proc-macro2 1.0.32",
  "quote 1.0.10",
@@ -627,9 +628,9 @@ dependencies = [
 
 [[package]]
 name = "cpufeatures"
-version = "0.1.5"
+version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66c99696f6c9dd7f35d486b9d04d7e6e202aa3e8c40d553f2fdf5e7e0c6a71ef"
+checksum = "95059428f66df56b63431fdb4e1947ed2190586af5c5a8a8b71122bdf5a7f469"
 dependencies = [
  "libc",
 ]
@@ -1705,6 +1706,7 @@ dependencies = [
  "serde 1.0.130",
  "serde_json",
  "tokio",
+ "walkdir",
 ]
 
 [[package]]
