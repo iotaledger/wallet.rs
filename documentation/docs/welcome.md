@@ -9,6 +9,7 @@ keywords:
 - rust
 - python
 - nodejs
+- java
 ---
 # Welcome
 
