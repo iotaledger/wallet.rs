@@ -1,3 +1,14 @@
+---
+description: Getting started with the official IOTA Wallet Library Software Node.js binding.
+image: /img/logo/wallet_light.png
+keywords:
+- Node.js
+- dotenv
+- install
+- npm
+- yarn
+- security
+---
 # Getting Started with Node.js
 
 The [IOTA Wallet Node.js binding](https://www.npmjs.com/package/@iota/wallet) is published on [npmjs.com](https://www.npmjs.com/).

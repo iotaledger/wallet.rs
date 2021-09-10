@@ -1,3 +1,12 @@
+---
+description: Getting started with the official IOTA Wallet Library Software Rust library.
+image: /img/logo/wallet_light.png
+keywords:
+- Rust
+- install
+- cargo
+- system environment variables
+---
 # Getting Started with Rust
 
 ## Prerequisites
