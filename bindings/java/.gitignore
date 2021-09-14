@@ -28,3 +28,4 @@ android-ndk
 *.apk
 # Android keychains for signing
 *.jks
+.cxx/

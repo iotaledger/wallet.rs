@@ -25,18 +25,12 @@ static ANDROID_TARGETS: &'static [&'static str] = &[
 ];
 
 fn main() {
-    // don't simplify this to if the target contains the substring "android" --
-    // these lines also serve as a guard so only true android triples receive
-    // JNI generation.
     let target = env::var("TARGET").unwrap();
 
     env_logger::init();
-
     let out_dir = env::var("OUT_DIR").unwrap();
-    let jni_c_headers_rs = &Path::new(&out_dir).join("jni_c_header.rs");
-
-    gen_jni_bindings(&jni_c_headers_rs);
-    let have_java_9 = fs::read_to_string(&jni_c_headers_rs).unwrap().contains("JNI_VERSION_9");
+    let in_src = Path::new("src").join("java_glue.rs.in");
+    let out_src = Path::new(&out_dir).join("java_glue.rs");
 
     let mut java_cfg = JavaConfig::new(
         Path::new("src")
@@ -46,20 +40,12 @@ fn main() {
             .join("iota")
             .join("wallet"),
         "org.iota.wallet".into(),
-    )
-    .use_reachability_fence(if have_java_9 {
-        JavaReachabilityFence::Std
-    } else {
-        JavaReachabilityFence::GenerateFence(8)
-    });
+    );
 
     if ANDROID_TARGETS.contains(&target.as_str()){
         //java_cfg = java_cfg.use_null_annotation_from_package("androidx.annotation.Nullable".into());
     }
 
-    let in_src = Path::new("src").join("java_glue.rs.in");
-    let test_opt_rsc = Path::new("src").join("test_optional.rs.in");
-    let out_src = Path::new(&out_dir).join("java_glue.rs");
     let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(java_cfg))
         .rustfmt_bindings(true)
         .remove_not_generated_files_from_output_directory(false)
@@ -70,7 +56,6 @@ fn main() {
     swig_gen.expand_many("flapigen_test_jni", &[&in_src], &out_src);
 
     println!("cargo:rerun-if-changed={}", in_src.display());
-    println!("cargo:rerun-if-changed={}", test_opt_rsc.display());
     println!("cargo:rerun-if-changed=src/foreign_types/chrono_include.rs");
 }
 
@@ -148,7 +133,7 @@ fn get_cc_system_include_dirs() -> Result<Vec<PathBuf>, String> {
         .find(END_PAT)
         .ok_or_else(|| format!("No '{}' in output from C compiler", END_PAT))?
         + start_includes;
-
+    dbg!("HMMMM");
     Ok((&cc_output[start_includes..end_includes])
         .split('\n')
         .map(|s| PathBuf::from(s.trim().to_string()))

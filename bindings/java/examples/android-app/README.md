@@ -1,5 +1,5 @@
 Requirements:
-- Android NDK
+- Android NDK (If you extract make sure to make it executable "chmod -R +x android-ndk-XYZ" )
 - Clang toolchain
 
 Android Toolchains:
@@ -11,8 +11,9 @@ rustup target add \
     i686-linux-android
 ```
 
+Tested on NDK 20 and 23, 21 did not work
 set `ANDROID_NDK_HOME` environment variable
-Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle`
+Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/android-ndk-r20b`
 If you dont have `ANDROID_HOME`; Usually found at `/home/user/Android`
 
 install cargo-ndk: `cargo install cargo-ndk`
