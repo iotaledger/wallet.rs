@@ -92,7 +92,7 @@ public class Migration implements MigrationProgressListener {
 
             // Set stronghold password
             AccountManager manager = builder.finish();
-            manager.setStrongholdPassword("YepThisISSecure");
+            manager.setStrongholdPassword(System.getenv("SH_PASSWORD"));
         
             // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.
             String mnemonic = manager.generateMnemonic();
@@ -118,8 +118,7 @@ public class Migration implements MigrationProgressListener {
 
             // Nodes for the legacy network
             String[] nodes = LEGACY_NETWORK_NODES;
-            // CHEHEGJQPF9PLQAEXHEEDRLQIJZQSB9AIHIZKPUZCNRMMSCKO9DXREANYIRPXHUGBVGRUQIJNNIOMASPW MADLGSKSYEMYWZEIHX9JFCSSEUDFKMQDMVIUUVAVUZWFANUBKJSJUUUTQWAEYZGJIMYAMEOZFGLYGTORY
-            String seed = "CHEHEGJQPF9PLQAEXHEEDRLQIJZQSB9AIHIZKPUZCNRMMSCKO9DXREANYIRPXHUGBVGRUQIJNNIOMASPW";//System.getenv("MIGRATION_SEED");
+            String seed = System.getenv("MIGRATION_SEED");
 
             MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE, ADDRESS_SECURITY_LEVEL, 0);
         
