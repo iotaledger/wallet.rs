@@ -52,7 +52,6 @@ use tokio::{
     time::sleep,
 };
 use zeroize::Zeroize;
-use std::str::FromStr;
 
 pub(crate) mod migration;
 pub use crate::account_manager::migration::MigrationAddress;
