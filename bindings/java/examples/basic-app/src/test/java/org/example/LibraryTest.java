@@ -1,5 +1,9 @@
 package org.example;
 
+import java.util.concurrent.TimeUnit;
+import java.lang.Runnable;
+import java.lang.Thread;
+
 import org.junit.Test;
 
 import org.iota.wallet.local.*;
@@ -9,9 +13,22 @@ public class LibraryTest {
     public void testSomeLibraryMethod() {
         try {
             NativeAPI.verifyLink();
+            Migration exampleMigration = new Migration();;
+            Runnable myRunnable =
+                new Runnable(){
+                    public void run(){
+                        exampleMigration.run();
+                    }
+                };
+            Thread thread = new Thread(myRunnable);
+            thread.start();
             
-            Migration exampleMigration = new Migration();
-            exampleMigration.run();
+            TimeUnit.SECONDS.sleep(10);
+
+            System.out.println(exampleMigration.finished());
+            while(!exampleMigration.finished()){
+                TimeUnit.SECONDS.sleep(1);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

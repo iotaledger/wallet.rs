@@ -43,11 +43,11 @@ public class Migration implements MigrationProgressListener {
     // Wallet.rs database storage path. Stronghold and database file would be stored in this path.
     public static final String DB_STORAGE_PATH = "./migration-database";
     // Legacy network nodes
-    public static final String[] LEGACY_NETWORK_NODES = new String[]{"https://nodes.iota.org"};
+    public static final String[] LEGACY_NETWORK_NODES = new String[]{"https://nodes-legacy.ledgermigration1.net"};
     // Legacy permanode
-    public static final String LEGACY_PERMANODE = "https://chronicle.iota.org/api";
+    public static final String LEGACY_PERMANODE = "http://permanode.ledgermigration1.net:4000/api";
     // Chrysalis node
-    public static final String CHRYSALIS_NODE = "https://chrysalis-nodes.iota.cafe";
+    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.ledgermigration1.ledgermigration1.net";
 
     // ------------------------------------------
     
@@ -72,11 +72,15 @@ public class Migration implements MigrationProgressListener {
 
             if (migrationBundleHashes.size() == 0) {
                 System.out.println("Migration done! ");
-                System.exit(0);
+                return;
             }
 
             System.out.println("Still unconfirmed bundles: " + Arrays.toString(migrationBundleHashes.toArray(new String[0])));
         }
+    }
+
+    public boolean finished(){
+        return migrationBundleHashes.size() == 0;
     }
 
     public void run(){
@@ -88,7 +92,7 @@ public class Migration implements MigrationProgressListener {
 
             // Set stronghold password
             AccountManager manager = builder.finish();
-            manager.setStrongholdPassword(System.getenv("SH_PASSWORD"));
+            manager.setStrongholdPassword("YepThisISSecure");
         
             // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.
             String mnemonic = manager.generateMnemonic();
@@ -114,20 +118,13 @@ public class Migration implements MigrationProgressListener {
 
             // Nodes for the legacy network
             String[] nodes = LEGACY_NETWORK_NODES;
-            String seed = System.getenv("MIGRATION_SEED");
-        
-            /*
-            MigrationDataFinder finder = new MigrationDataFinder(nodes, seed)
-                // permanode for the legacy network
-                .with_permanode(LEGACY_PERMANODE)
-                .with_security_level(ADDRESS_SECURITY_LEVEL)
-                // this is the default and from there it will check addresses for balance until 30 in a row have 0 balance
-                // if not all balance got detected because a higher address index was used it needs to be increased here
-                .with_initial_address_index(0);*/
+            // CHEHEGJQPF9PLQAEXHEEDRLQIJZQSB9AIHIZKPUZCNRMMSCKO9DXREANYIRPXHUGBVGRUQIJNNIOMASPW MADLGSKSYEMYWZEIHX9JFCSSEUDFKMQDMVIUUVAVUZWFANUBKJSJUUUTQWAEYZGJIMYAMEOZFGLYGTORY
+            String seed = "CHEHEGJQPF9PLQAEXHEEDRLQIJZQSB9AIHIZKPUZCNRMMSCKO9DXREANYIRPXHUGBVGRUQIJNNIOMASPW";//System.getenv("MIGRATION_SEED");
 
             MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE, ADDRESS_SECURITY_LEVEL, 0);
         
             System.out.println(migrationData);
+
         
             if (migrationData.balance() > 0) {
                 List<List<InputData>>input_batches = getMigrationBundles(migrationData.inputs());
@@ -141,6 +138,8 @@ public class Migration implements MigrationProgressListener {
                         long[] indexes = batch.stream().map(i -> i.index()).mapToLong(x -> x).toArray();
                         MigrationBundle bundle = manager.createMigrationBundle(seed, indexes, options);
 
+                        
+                        System.out.println(bundle);
                         this.migrationBundleHashes.add(bundle.getBundleHash());
                     } catch (Exception e) {
                         e.printStackTrace();
