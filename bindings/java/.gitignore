@@ -10,6 +10,7 @@ target
 .settings
 .classpath
 bin/
+.cxx/
 
 # Ignore generated java code
 native/src/main/java/org/iota/wallet/*

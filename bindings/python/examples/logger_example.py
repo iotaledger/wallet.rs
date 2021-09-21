@@ -20,7 +20,7 @@ iw.init_logger(log_config_str)
 load_dotenv()
 
 # Get the stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+STRONGHOLD_PASSWORD = os.getenv('SH_PASSWORD')
 
 account_manager = iw.AccountManager(
     storage_path='./alice-database'
