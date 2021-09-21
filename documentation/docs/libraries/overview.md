@@ -25,7 +25,7 @@ We recommended that you start your interactions with IOTA on a _testnet_ network
 
 A network explorer is available at [IOTA Tangle Explorer](https://explorer.iota.org/testnet).  You can use the network explorer to view transactions and data stored in the IOTA Tangle.    
 
-In order to properly test value-based transactions on testnet network, you are going to need some tokens! You can get some testnet tokens through our [faucet](https://faucet.testnet.chrysalis2.com/).
+In order to properly test value-based transactions on testnet network, you are going to need some tokens! You can get some testnet tokens through our [faucet](https://faucet.chrysalis-devnet.iota.cafe/).
 
 ## The Library in a Nutshell
 

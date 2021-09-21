@@ -29,7 +29,7 @@ async function run() {
         console.log('Address:', addressObject);
 
         // Use the Chrysalis Faucet to send testnet tokens to your address:
-        // console.log("Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/")
+        // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")
     } catch (error) {
         console.log('Error: ' + error);
     }

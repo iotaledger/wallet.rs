@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
 async fn get_funds(address: &Address) -> Result<MessageId> {
     // use the faucet to get funds on the address
     let response = reqwest::get(&format!(
-        "https://faucet.testnet.chrysalis2.com/api?address={}",
+        "https://faucet.chrysalis-devnet.iota.cafe/api?address={}",
         address.address().to_bech32()
     ))
     .await
