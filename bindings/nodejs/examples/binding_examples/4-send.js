@@ -33,7 +33,7 @@ async function run() {
     });
 
     console.log(
-        `Check your message on https://explorer.iota.org/chrysalis/message/${response.id}`,
+        `Check your message on https://explorer.iota.org/devnet/message/${response.id}`,
     );
 }
 

@@ -39,7 +39,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your message on https://explorer.iota.org/chrysalis/message/${node_response.id}`,
+            `Check your message on https://explorer.iota.org/devnet/message/${node_response.id}`,
         );
     } catch (error) {
         console.log('Error: ' + error);

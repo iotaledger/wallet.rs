@@ -24,9 +24,8 @@ async function run() {
         if (!account) {
             manager.storeMnemonic(SignerType.Stronghold);
             account = manager.createAccount({
-                // todo replace with https://api.lb-0.h.chrysalis-devnet.iota.cafe when the new faucet is working
                 clientOptions: {
-                    node: { url: 'https://api.lb-0.testnet.chrysalis2.com' },
+                    node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
                     localPow: true,
                 },
                 alias: 'Alice',
