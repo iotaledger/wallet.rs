@@ -43,6 +43,7 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
+use std::str::FromStr;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -51,7 +52,6 @@ use tokio::{
     time::sleep,
 };
 use zeroize::Zeroize;
-use std::str::FromStr;
 
 pub(crate) mod migration;
 pub use crate::account_manager::migration::MigrationAddress;
