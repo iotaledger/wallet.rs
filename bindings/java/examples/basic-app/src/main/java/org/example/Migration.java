@@ -120,7 +120,7 @@ public class Migration implements MigrationProgressListener {
 
             // Set stronghold password
             AccountManager manager = builder.finish();
-            manager.setStrongholdPassword(System.getenv("SH_PASSWORD"));
+            manager.setStrongholdPassword("YepThisISSecure");
         
             // IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING.
             String mnemonic = manager.generateMnemonic();
