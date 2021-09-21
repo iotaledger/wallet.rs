@@ -2,11 +2,16 @@ package org.example;
 
 import org.junit.Test;
 
+import org.iota.wallet.local.*;
+
 public class LibraryTest {
     @Test
     public void testSomeLibraryMethod() {
         try {
-            new ExampleApp();
+            NativeAPI.verifyLink();
+            
+            Migration exampleMigration = new Migration();
+            exampleMigration.run();
         } catch (Exception e) {
             e.printStackTrace();
         }

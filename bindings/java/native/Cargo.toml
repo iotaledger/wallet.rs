@@ -8,6 +8,7 @@ build = "build.rs"
 [dependencies]
 iota-wallet = { path = "../../../"}
 iota-client = { path = "../../../../iota.rs/iota-client", features = ["mqtt"] }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "67193796e20841eaccc4cafb6fb442b064f8599f", package = "iota-core" }
 log = "0.4.6"
 chrono = "0.4.6"
 env_logger = "0.7"
@@ -21,7 +22,7 @@ getset = "0.1"
 
 
 [lib]
-crate_type = ["dylib"]
+crate_type = ["cdylib"]
 
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }

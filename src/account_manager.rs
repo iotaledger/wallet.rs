@@ -6,7 +6,6 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
-    account_manager::migration::MigrationAddress,
     address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
@@ -55,6 +54,7 @@ use zeroize::Zeroize;
 use std::str::FromStr;
 
 pub(crate) mod migration;
+pub use crate::account_manager::migration::MigrationAddress;
 use iota_migration::client::migration::{
     add_tryte_checksum, decode_migration_address, encode_migration_address, get_trytes_from_bundle, mine_bundle,
 };

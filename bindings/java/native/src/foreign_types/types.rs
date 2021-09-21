@@ -77,6 +77,18 @@ foreign_typemap!(
 );
 
 foreign_typemap!(
+    ($p:r_type) Vec<u64> => jlongArray {
+        let it: Vec<u64> = $p.iter().cloned().map(|x| x as i64).collect();
+        $out = JavaLongArray::from_slice_to_raw(&it, env);
+    };
+);
+foreign_typemap!(
+    ($p:r_type) Vec<u64> <= JavaLongArray {
+        $out = $p.to_slice().iter().cloned().map(|x| x as u64).collect();
+    };
+);
+
+foreign_typemap!(
     ($p:r_type) u128 => jobject {
         let data = $p.to_ne_bytes();
         let size = data.len();

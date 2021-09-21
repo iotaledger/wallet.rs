@@ -135,13 +135,11 @@ impl PublicKey {
     }
 
     pub fn to_compressed_bytes(&self) -> Vec<u8> {
-        self.0.to_bytes().to_vec()
+        self.0.to_compressed_bytes().to_vec()
     }
 
     pub fn from_compressed_bytes(bs: Vec<u8>) -> Result<Self> {
-        let mut bs_arr: [u8; SECRET_KEY_LENGTH] = [0; SECRET_KEY_LENGTH];
-        bs_arr.copy_from_slice(&bs[0..SECRET_KEY_LENGTH]);
-        match RustPublicKey::try_from_bytes(bs_arr) {
+        match RustPublicKey::from_compressed_bytes(clone_into_array(&bs[0..SECRET_KEY_LENGTH])) {
             Ok(bytes) => Ok(Self(bytes)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
@@ -150,13 +148,12 @@ impl PublicKey {
 impl core::convert::TryFrom<&[u8; 32]> for PublicKey {
     type Error = anyhow::Error;
     fn try_from(bytes: &[u8; 32]) -> Result<Self, Self::Error> {
-        match RustPublicKey::try_from_bytes(*bytes) {
+        match RustPublicKey::from_compressed_bytes(*bytes) {
             Ok(k) => Ok(Self(k)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
     }
 }
-
 impl core::fmt::Display for PublicKey {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
@@ -164,6 +161,12 @@ impl core::fmt::Display for PublicKey {
             "{}",
             hex::encode(self.to_compressed_bytes())
         )
+    }
+}
+
+impl From<RustPublicKey> for PublicKey {
+    fn from(output: RustPublicKey) -> Self {
+        Self(output)
     }
 }
 
@@ -195,4 +198,15 @@ impl From<RustSignature> for Signature {
     fn from(output: RustSignature) -> Self {
         Self(output)
     }
+}
+
+// https://stackoverflow.com/a/37679442
+fn clone_into_array<A, T>(slice: &[T]) -> A
+where
+    A: Sized + Default + AsMut<[T]>,
+    T: Clone,
+{
+    let mut a = Default::default();
+    <A as AsMut<[T]>>::as_mut(&mut a).clone_from_slice(slice);
+    a
 }

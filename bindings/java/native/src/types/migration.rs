@@ -1,16 +1,25 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use getset::{CopyGetters, Getters};
+use getset::{CopyGetters, Getters, Setters};
 use iota_wallet::{
-    account_manager::{MigrationBundle as RustMigrationBundle, MigrationData as RustMigrationData},
+    account_manager::{
+        MigrationBundle as RustMigrationBundle, 
+        MigrationData as RustMigrationData, 
+        MigrationAddress as RustMigrationAddress
+    },
     iota_migration::{
-        client::response::InputData as RustInputData, ternary::T3B1Buf, transaction::bundled::BundledTransactionField,
+        client::{
+            response::InputData as RustInputData, 
+        },
+        ternary::T3B1Buf, 
+        transaction::bundled::BundledTransactionField,
     },
 };
+
 use std::convert::{From, Into};
 
-#[derive(Debug, Getters, CopyGetters)]
+#[derive(Debug, Getters, CopyGetters, Clone)]
 pub struct InputData {
     #[getset(get = "pub")]
     address: String,
@@ -22,8 +31,13 @@ pub struct InputData {
     index: u64,
     #[getset(get_copy = "pub")]
     spent: bool,
-    #[getset(get = "pub")]
-    spent_bundlehashes: Option<Vec<String>>,
+    spent_bundlehashes: Vec<String>,
+}
+
+impl InputData {
+    pub fn spent_bundlehashes(&self) -> Vec<String> {
+        self.spent_bundlehashes.clone()
+    }
 }
 
 impl From<RustInputData> for InputData {
@@ -40,8 +54,21 @@ impl From<RustInputData> for InputData {
             balance: input.balance,
             index: input.index,
             spent: input.spent,
-            spent_bundlehashes: input.spent_bundlehashes,
+            spent_bundlehashes: match input.spent_bundlehashes {
+                Some(v) => v.clone(),
+                None => vec![],
+            },
         }
+    }
+}
+
+impl core::fmt::Display for InputData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "address={}, security_lvl={}, balance={}, index={}, spent={}, spent_bundlehashes=({:?})", 
+            self.address, self.security_lvl, self.balance, self.index, self.spent, self.spent_bundlehashes
+        )
     }
 }
 
@@ -51,8 +78,15 @@ pub struct MigrationData {
     balance: u64,
     #[getset(get_copy = "pub")]
     last_checked_address_index: u64,
-    #[getset(get = "pub")]
+    #[getset(get_copy = "pub")]
+    spent_addresses: bool,
     inputs: Vec<InputData>,
+}
+
+impl MigrationData {
+    pub fn inputs(&self) -> Vec<InputData> {
+        self.inputs.clone()
+    }
 }
 
 impl From<RustMigrationData> for MigrationData {
@@ -60,8 +94,19 @@ impl From<RustMigrationData> for MigrationData {
         Self {
             balance: migration_data.balance,
             last_checked_address_index: migration_data.last_checked_address_index,
+            spent_addresses: migration_data.spent_addresses,
             inputs: migration_data.inputs.into_iter().map(Into::into).collect(),
         }
+    }
+}
+
+impl core::fmt::Display for MigrationData {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "balance={}, last_checked_address_index={}, spent_addresses={}, inputs=({:?})", 
+            self.balance, self.last_checked_address_index, self.spent_addresses, self.inputs
+        )
     }
 }
 
@@ -79,5 +124,91 @@ impl From<RustMigrationBundle> for MigrationBundle {
             crackability: *migration_bundle.crackability(),
             bundle_hash: migration_bundle.bundle_hash().clone(),
         }
+    }
+}
+
+impl core::fmt::Display for MigrationBundle {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "crackability={}, bundle_hash={}", 
+            self.crackability, self.bundle_hash
+        )
+    }
+}
+
+#[derive(Debug, Getters)]
+pub struct MigrationAddress {
+    #[getset(get = "pub")]
+    pub trytes: String,
+    #[getset(get = "pub")]
+    pub bech32: String,
+}
+
+impl From<RustMigrationAddress> for MigrationAddress {
+    fn from(migration_address: RustMigrationAddress) -> Self {
+        Self {
+            trytes: migration_address.trytes.to_string(),
+            bech32: migration_address.bech32.to_string(),
+        }
+    }
+}
+
+impl core::fmt::Display for MigrationAddress {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "trytes={}, bech32={}", 
+            self.trytes, self.bech32
+        )
+    }
+}
+
+#[derive(Default, Debug, Getters, Setters, CopyGetters)]
+pub struct MigrationBundleOptions<'a> {
+    #[getset(get_copy = "pub")]
+    mine: bool,
+    timeout_secs: Option<u64>,
+    #[getset(get_copy = "pub")]
+    offset: Option<i64>,
+    #[getset(get_copy = "pub")]
+    log_file_name: Option<&'a str>,
+}
+
+// Cant use the setters since they return &mut, which is not supported
+impl<'a> MigrationBundleOptions<'a> {
+    pub fn set_timeouts(&mut self, secs: i64) {
+        self.timeout_secs = if secs >= 0 { Some(secs as u64) } else { None }
+    }
+    pub fn timeouts(&self) -> u64 {
+        match self.timeout_secs {
+            Some(t) => t,
+            None => 10 * 60,
+        }
+    }
+    pub fn set_mine(&mut self, mine: bool) {
+        self.mine = mine
+    }
+    pub fn set_offset(&mut self, offset: Option<i64>) {
+        self.offset = offset
+    }
+    pub fn set_log_file_name(&mut self, log_file_name: Option<&'a str>) {
+        self.log_file_name = log_file_name
+    }
+    pub fn log_file_name_string(&self) -> Option<String> {
+        match self.log_file_name {
+            Some(s) => Some(s.to_owned()),
+            None => None,
+        }
+    }
+}
+
+impl<'a> core::fmt::Display for MigrationBundleOptions<'a> {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "mine={}, timeout_secs={:?}, offset={:?}, log_file_name={:?}", 
+            self.mine, self.timeout_secs, self.offset, self.log_file_name
+        )
     }
 }

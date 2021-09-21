@@ -17,7 +17,7 @@ tasks.withType(Test) {
     systemProperties System.properties
 }
 startScripts {
-    classpath += files('../../native/target/debug')
+    classpath += files('../../native/target/release')
 }
 
 task customCleanTask(type: Delete) {
@@ -37,7 +37,7 @@ test {
     dependsOn customCleanTask
     
     // Set rust output .so/.lib files to path
-    systemProperty "java.library.path", file("../../native/target/debug")
+    systemProperty "java.library.path", file("../../native/target/release")
 }
 
 mainClassName = 'org.example.ExampleApp'
