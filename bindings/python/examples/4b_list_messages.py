@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get the stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+STRONGHOLD_PASSWORD = os.getenv('SH_PASSWORD')
 
 # This example sends IOTA toens to an address.
 account_manager = iw.AccountManager(

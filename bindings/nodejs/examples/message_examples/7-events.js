@@ -5,7 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-    const { AccountManagerForMessages } = require('../../lib/index.js');
+    const { AccountManagerForMessages } = require('@iota/wallet');
 
     const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
@@ -27,7 +27,7 @@ async function run() {
 
         // Use the Chrysalis Faucet to send testnet tokens to your address:
         console.log(
-            'Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/',
+            'Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/',
         );
 
         const callback = function (err, data) {

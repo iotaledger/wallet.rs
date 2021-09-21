@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get the stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+STRONGHOLD_PASSWORD = os.getenv('SH_PASSWORD')
 
 # This example shows how to listen to on_balance_change event.
 
