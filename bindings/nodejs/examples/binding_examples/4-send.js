@@ -8,7 +8,7 @@ async function run() {
     const {
         AccountManager,
         RemainderValueStrategy,
-    } = require('../../lib/index.js');
+    } = require('@iota/wallet');
 
     const manager = new AccountManager({
         storagePath: './alice-database',
