@@ -1,3 +1,12 @@
+---
+description: Official IOTA Wallet Library Software Rust API reference.
+image: /img/logo/wallet_light.png
+keywords:
+- api
+- rust
+- cargo
+- crate
+---
 # API Reference
 
 You can visit the [Rust documentation](https://wallet-lib.docs.iota.org/docs/specification) to learn more about the API Reference.
