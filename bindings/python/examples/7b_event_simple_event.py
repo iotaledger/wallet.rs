@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get the stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+STRONGHOLD_PASSWORD = os.getenv('SH_PASSWORD')
 
 result_available = threading.Event()
 

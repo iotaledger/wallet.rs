@@ -1,3 +1,12 @@
+---
+description: Getting started with the official IOTA Wallet Library Software Rust library.
+image: /img/logo/wallet_light.png
+keywords:
+- Rust
+- install
+- cargo
+- system environment variables
+---
 # Getting Started with Rust
 
 ## Prerequisites
@@ -76,7 +85,7 @@ async fn main() -> iota_wallet::Result<()> {
             .with_storage(&storage_folder, None)
             .finish()
             .await?;
-    let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();
+    let client_options = ClientOptionsBuilder::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
     let account = manager
         .create_account(client_options)
         .signer_type(SignerType::EnvMnemonic)
