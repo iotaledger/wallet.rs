@@ -46,6 +46,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 pub use chrono::prelude::{DateTime, Local, Utc};
 pub use iota_client;
 pub use iota_migration;
+pub use iota_client;
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
