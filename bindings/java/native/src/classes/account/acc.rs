@@ -72,11 +72,7 @@ impl AccountInitialiser {
     }
 
     pub fn initialise(&self) -> Result<Account> {
-        let acc_handle_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
+        let acc_handle_res = crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
 
         match acc_handle_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -97,11 +93,7 @@ impl From<AccountHandleRust> for Account {
 
 impl Account {
     pub fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>> {
-        let msgs_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
+        let msgs_res = crate::block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -115,11 +107,7 @@ impl Account {
         jwt: Option<&str>,
         auth: Option<(&str, &str)>,
     ) -> Result<NodeInfoWrapper> {
-        let msgs_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
+        let msgs_res = crate::block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -128,11 +116,7 @@ impl Account {
     }
 
     pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
-        let msg_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.transfer(transfer.to_inner()).await });
+        let msg_res = crate::block_on(async move { self.handle.transfer(transfer.to_inner()).await });
 
         match msg_res {
             Err(e) => Err(anyhow!(e.to_string())),

@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::{CopyGetters, Getters};
-use iota_client::{
-    bee_rest_api::types::responses::InfoResponse as RustInfoResponse, NodeInfoWrapper as RustNodeInfoWrapper,
+use iota_wallet::iota_client::{
+    bee_rest_api::types::responses::InfoResponse as RustInfoResponse, 
+    NodeInfoWrapper as RustNodeInfoWrapper,
 };
 
 #[derive(PartialEq, Getters, CopyGetters)]
