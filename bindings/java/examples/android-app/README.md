@@ -13,10 +13,13 @@ rustup target add \
 
 Tested on NDK 20 and 23, 21 did not work
 set `ANDROID_NDK_HOME` environment variable
-Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/android-ndk-r20b`
+Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/android-ndk-x`
 If you dont have `ANDROID_HOME`; Usually found at `/home/user/Android`
 
 install cargo-ndk: `cargo install cargo-ndk`
+
+Copy $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/ARCH/libc++_shared.so
+to src/main/libs/ARCH/
 
 Then run gradle:
 ./gradlew aR
