@@ -13,7 +13,8 @@ public class LibraryTest {
     public void testSomeLibraryMethod() {
         try {
             NativeAPI.verifyLink();
-            Migration exampleMigration = new Migration();;
+            Migration exampleMigration = new Migration();
+
             Runnable myRunnable =
                 new Runnable(){
                     public void run(){
@@ -25,10 +26,10 @@ public class LibraryTest {
             
             TimeUnit.SECONDS.sleep(10);
 
-            System.out.println(exampleMigration.finished());
             while(!exampleMigration.finished()){
                 TimeUnit.SECONDS.sleep(1);
             }
+
         } catch (Exception e) {
             e.printStackTrace();
         }

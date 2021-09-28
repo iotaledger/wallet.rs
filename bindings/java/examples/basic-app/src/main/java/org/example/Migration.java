@@ -54,8 +54,11 @@ public class Migration implements MigrationProgressListener {
     // We store all bundle hashes here and check later if the bundles got confirmed
     private List<String> migrationBundleHashes;
 
+    private Account account;
+
     public Migration(){
         this.migrationBundleHashes = new LinkedList<>();
+        this.account = null;
     }
 
     // Log migration events
@@ -83,7 +86,7 @@ public class Migration implements MigrationProgressListener {
         return migrationBundleHashes.size() == 0;
     }
 
-    public void run(){
+    public String run(){
         try {
             // Attach an event listener to keep track of the migration process
             EventManager.subscribeMigrationProgress(this);
@@ -109,7 +112,7 @@ public class Migration implements MigrationProgressListener {
                 .withNetwork("chrysalis-mainnet")
                 .build();
         
-            Account account = manager
+            this.account = manager
                 .createAccount(clientOptions)
                 .alias("Migration")
                 .initialise();
@@ -152,12 +155,16 @@ public class Migration implements MigrationProgressListener {
                         e.printStackTrace(); 
                     }
                 }
+
+                return mnemonic;
             } else {
                 System.out.println("Detected 0 balance. Exiting.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+        this.account = null;
+        return null;
     }
 
     private List<List<InputData>> getMigrationBundles(InputData[] inputs){

@@ -81,6 +81,7 @@ impl AccountInitialiser {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Account {
     handle: AccountHandleRust,
 }
@@ -174,6 +175,10 @@ impl Account {
         }
     }
 
+    pub fn client_options(&self) -> ClientOptions {
+        crate::block_on(async move { self.handle.client_options().await }).into()
+    }
+
     pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
         let opts = crate::block_on(async move { self.handle.set_client_options(options.to_inner()).await });
 
@@ -229,6 +234,18 @@ impl Account {
 
     pub fn last_synced_at(&self) -> Option<DateTime<Local>> {
         crate::block_on(async move { self.handle.last_synced_at().await })
+    }
+
+    pub fn to_string(&self) -> String {
+        format!("{:?}", self.handle)
+    }
+}
+
+impl core::fmt::Display for Account {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f, "{:?}", self.handle
+        )
     }
 }
 

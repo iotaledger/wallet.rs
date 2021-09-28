@@ -339,10 +339,14 @@ foreign_class!(class ClientOptionsBuilder {
     fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
 });
 
-foreign_class!(class ClientOptions{
-    self_type ClientOptions;
-    private constructor = empty;
-});
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class ClientOptions {
+        self_type ClientOptions;
+        private constructor = empty;
+        private fn ClientOptions::to_string(&self) -> String; alias to_string;
+    }
+);
 
 foreign_class!(
     #[derive(Display)]
@@ -492,27 +496,31 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class Account {
         self_type Account;
         private constructor = empty;
+        private fn Account::to_string(&self) -> String; alias to_string;
+
         fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
-        fn Account::generate_address(&self) -> Result<Address>; alias generateAddress;
-        fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>; alias generateAddresses;
-        fn Account::get_unused_address(&self) -> Result<Address>; alias getUnusedAddress;
-        fn Account::is_latest_address_unused(&self) -> Result<bool>; alias isLatestAddressUnused;
-        fn Account::latest_address(&self) -> Address; alias latestAddress;
-        fn Account::set_alias(&self, alias: String) -> Result<()>; alias setAlias;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>; alias setClientOptions;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>; alias listMessages;
-        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>; alias listSpentAddresses;
-        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>; alias listUnspentAddresses;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
+        fn Account::generate_address(&self) -> Result<Address>;
+        fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>;
+        fn Account::get_unused_address(&self) -> Result<Address>;
+        fn Account::is_latest_address_unused(&self) -> Result<bool>;
+        fn Account::latest_address(&self) -> Address;
+        fn Account::set_alias(&self, alias: String) -> Result<()>;
+        fn Account::client_options(&self) -> ClientOptions;
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> Result<AccountBalance>;
 
         fn Account::id(&self) -> String;
-        fn Account::created_at(&self) -> DateTime<Local>; alias createdAt;
-        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>; alias lastSyncedAt;
+        fn Account::created_at(&self) -> DateTime<Local>;
+        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
     }
 );
 
