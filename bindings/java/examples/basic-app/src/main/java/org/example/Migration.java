@@ -124,7 +124,6 @@ public class Migration implements MigrationProgressListener {
         
             System.out.println(migrationData);
 
-        
             if (migrationData.balance() > 0) {
                 List<List<InputData>>input_batches = getMigrationBundles(migrationData.inputs());
                 // create bundles with the inputs
@@ -136,9 +135,7 @@ public class Migration implements MigrationProgressListener {
 
                         long[] indexes = batch.stream().map(i -> i.index()).mapToLong(x -> x).toArray();
                         MigrationBundle bundle = manager.createMigrationBundle(seed, indexes, options);
-
-                        
-                        System.out.println(bundle);
+                        System.out.println("bundle: " + bundle);
                         this.migrationBundleHashes.add(bundle.getBundleHash());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -148,8 +145,9 @@ public class Migration implements MigrationProgressListener {
                 // Send all bundles to the Tangle and reattach them until they are confirmed
                 for (String bundleHash : migrationBundleHashes) {
                     try {
-                        // -1 for default mwm
-                        manager.sendMigrationBundle(nodes, bundleHash, (short) -1);
+                        System.out.println("sending: " + bundleHash);
+                        // 0 for default mwm
+                        manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
                     } catch (Exception e) { 
                         e.printStackTrace(); 
                     }
@@ -182,6 +180,7 @@ public class Migration implements MigrationProgressListener {
         List<List<InputData>> totalList = new LinkedList<>(); 
         spentInputs.stream().forEach(i -> totalList.add( Arrays.asList(i) ) );
         unspentInputChunks.stream().forEach(iList -> totalList.add( iList ) );
+
         return totalList;
     }
 

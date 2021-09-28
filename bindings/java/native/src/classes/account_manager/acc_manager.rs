@@ -350,7 +350,7 @@ impl AccountManager {
                 options.mine(),
                 Duration::from_secs(options.timeouts()),
                 options.offset().unwrap_or(0),
-                options.log_file_name().unwrap_or("migration.log")
+                &options.log_file_name().unwrap_or("migration.log".to_string())
         ).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(a) => Ok(a.into()),

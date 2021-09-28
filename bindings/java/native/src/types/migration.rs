@@ -165,18 +165,17 @@ impl core::fmt::Display for MigrationAddress {
 }
 
 #[derive(Default, Debug, Getters, Setters, CopyGetters)]
-pub struct MigrationBundleOptions<'a> {
+pub struct MigrationBundleOptions {
     #[getset(get_copy = "pub")]
     mine: bool,
     timeout_secs: Option<u64>,
     #[getset(get_copy = "pub")]
     offset: Option<i64>,
-    #[getset(get_copy = "pub")]
-    log_file_name: Option<&'a str>,
+    log_file_name: Option<String>,
 }
 
 // Cant use the setters since they return &mut, which is not supported
-impl<'a> MigrationBundleOptions<'a> {
+impl MigrationBundleOptions {
     pub fn set_timeouts(&mut self, secs: i64) {
         self.timeout_secs = if secs >= 0 { Some(secs as u64) } else { None }
     }
@@ -192,18 +191,18 @@ impl<'a> MigrationBundleOptions<'a> {
     pub fn set_offset(&mut self, offset: Option<i64>) {
         self.offset = offset
     }
-    pub fn set_log_file_name(&mut self, log_file_name: Option<&'a str>) {
-        self.log_file_name = log_file_name
+    pub fn set_log_file_name(&mut self, log_file_name: &str) {
+        self.log_file_name = Some(log_file_name.to_string())
     }
-    pub fn log_file_name_string(&self) -> Option<String> {
-        match self.log_file_name {
-            Some(s) => Some(s.to_owned()),
+    pub fn log_file_name(&self) -> Option<String> {
+        match &self.log_file_name {
+            Some(s) => Some(s.clone()),
             None => None,
         }
     }
 }
 
-impl<'a> core::fmt::Display for MigrationBundleOptions<'a> {
+impl core::fmt::Display for MigrationBundleOptions {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
