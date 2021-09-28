@@ -12,7 +12,7 @@ use crate::{
     Result,
 };
 use iota_wallet::{
-    account::{AccountBalance, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
+    account::{AccountBalance as AccountBalanceRust, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
     message::{MessageId, MessageType},
     DateTime, Local,
 };
@@ -212,7 +212,11 @@ impl Account {
     }
 
     pub fn balance(&self) -> Result<AccountBalance> {
-        crate::block_on(async move { self.handle.balance().await.map_err(|e| anyhow!(e.to_string())) })
+        let balance = crate::block_on(async move { self.handle.balance().await });
+        match balance {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(b) => Ok(b.into()),
+        }
     }
 
     pub fn id(&self) -> String {
@@ -225,5 +229,38 @@ impl Account {
 
     pub fn last_synced_at(&self) -> Option<DateTime<Local>> {
         crate::block_on(async move { self.handle.last_synced_at().await })
+    }
+}
+
+pub struct AccountBalance(AccountBalanceRust);
+
+impl AccountBalance {
+    pub fn get_total(&self) -> u64 {
+        self.0.total
+    }
+    pub fn get_available(&self) -> u64 {
+        self.0.available
+    }
+    pub fn get_incoming(&self) -> u64 {
+        self.0.incoming
+    }
+    pub fn get_outgoing(&self) -> u64 {
+        self.0.outgoing
+    }
+}
+
+impl From<AccountBalanceRust> for AccountBalance {
+    fn from(balance: AccountBalanceRust) -> Self {
+        Self(balance)
+    }
+}
+
+impl core::fmt::Display for AccountBalance {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "total={}, available={}, incoming={}, outgoing={}", 
+            self.get_total(), self.get_available(), self.get_incoming(), self.get_outgoing()
+        )
     }
 }

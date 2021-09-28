@@ -26,9 +26,6 @@ use anyhow::{
 };
 
 use iota_wallet::{
-    account::{
-        AccountBalance,
-    },
     message::{
         MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
@@ -277,7 +274,7 @@ foreign_class!(
         /// And signs the bundle. Returns the bundle hash.
         /// It logs the operations to `$storage_path.join(log_file_name)`.
         fn AccountManager::create_migration_bundle(&self, seed: String, input_address_indexes: Vec<u64>, options: MigrationBundleOptions) -> Result<MigrationBundle>;
-        /// Sends the migration bundle to the given node.
+        /// Sends the migration bundle to the given node. mwm 0 for default(14)
         fn AccountManager::send_migration_bundle(&self, nodes: Vec<String>, bundle_hash: String, mwm: u8) -> Result<()>;
     }
 );
@@ -482,21 +479,15 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class AccountBalance {
         self_type AccountBalance;
         private constructor = empty;
-        fn AccountBalance::getTotal(&self) -> u64 {
-            this.total
-        }
-        fn AccountBalance::getAvailable(&self) -> u64 {
-            this.available
-        }
-        fn AccountBalance::getIncoming(&self) -> u64 {
-            this.incoming
-        }
-        fn AccountBalance::getOutgoing(&self) -> u64 {
-            this.outgoing
-        }
+        private fn AccountBalance::to_string(&self) -> String; alias to_string;
+        fn AccountBalance::get_total(&self) -> u64;
+        fn AccountBalance::get_available(&self) -> u64;
+        fn AccountBalance::get_incoming(&self) -> u64;
+        fn AccountBalance::get_outgoing(&self) -> u64;
     }
 );
 
