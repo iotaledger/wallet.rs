@@ -75,6 +75,7 @@ public class Migration implements MigrationProgressListener {
 
             if (migrationBundleHashes.size() == 0) {
                 System.out.println("Migration done! ");
+                System.out.println("funds migrated to: " + this.account.latestAddress());
                 return;
             }
 
