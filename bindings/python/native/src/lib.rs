@@ -58,6 +58,12 @@ fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
         .unwrap();
     m.add_function(wrap_pyfunction!(remove_stronghold_status_change_listener, m)?)
         .unwrap();
+    m.add_function(wrap_pyfunction!(on_transfer_progress, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(remove_transfer_progress_listener, m)?)
+        .unwrap();
+    m.add_function(wrap_pyfunction!(on_migration_progress, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(remove_migration_progress_listener, m)?)
+        .unwrap();
     m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
     Ok(())
 }
