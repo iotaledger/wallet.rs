@@ -1,6 +1,7 @@
 # IOTA Wallet Library
 
 [![status](https://img.shields.io/badge/Status-Alpha-yellow.svg)](https://github.com/iotaledger/wallet.rs)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs?ref=badge_shield)
 
 ## Introduction
 
@@ -112,3 +113,7 @@ cargo run --example transfer # execute the `transfer` example
 ## Joining the discussion
 
 If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs?ref=badge_large)
