@@ -3,7 +3,7 @@
 [package]
 name = "iota-wallet-swift-binding"
 version = "0.1.0"
-authors = ["Thoralf Müller <thoralf.mueller@iota.org"]
+authors = ["Thoralf Müller <thoralf.mueller@iota.org", "Pasquale Ambrosini <pasquale.ambrosini@gmail.com"]
 edition = "2018"
 
 [lib]
