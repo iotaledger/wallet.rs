@@ -1,8 +1,7 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 29
-    ndkVersion '20.0.5594570'
+    compileSdkVersion 30
     
     lintOptions {
         abortOnError false
@@ -11,15 +10,10 @@ android {
     defaultConfig {
         applicationId "org.iota.example"
         minSdkVersion 26
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 1
         versionName "1.0.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        externalNativeBuild {
-            ndkBuild {
-                arguments  "-APP_STL := c++_static"
-            } 
-        }
     }
     sourceSets {
         main {
