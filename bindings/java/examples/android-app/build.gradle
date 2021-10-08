@@ -17,7 +17,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             ndkBuild {
-                arguments  "-DAPP_STL=c++_shared", "-DANDROID_TOOLCHAIN=clang"
+                arguments  "-APP_STL := c++_static"
             } 
         }
     }
