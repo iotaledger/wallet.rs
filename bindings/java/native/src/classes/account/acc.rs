@@ -5,6 +5,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     acc_manager::AccountSignerType,
+    sync::AccountSynchronizer,
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
@@ -123,6 +124,10 @@ impl Account {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(msg) => Ok(msg.into()),
         }
+    }
+
+    pub fn sync(&self) -> AccountSynchronizer {
+        crate::block_on(async move { self.handle.sync().await }).into()
     }
 
     pub fn generate_address(&self) -> Result<Address> {

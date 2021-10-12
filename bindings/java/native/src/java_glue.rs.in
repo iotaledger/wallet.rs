@@ -280,24 +280,44 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Account sync helper.
+    #[derive(camelCaseAliases)]
     class AccountSynchronizer {
         self_type AccountSynchronizer;
         private constructor = empty;
-
-        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer; alias gapLimit;
-        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer; alias skipPersistence;
-        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer; alias addressIndex;
+        /// Number of address indexes that are generated.
+        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer;
+        /// Skip saving new messages and addresses on the account object.
+        /// The found data is returned on the `execute` call but won't be persisted on the database.
+        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer;
+        /// Skip syncing existing change addresses.
+        fn AccountSynchronizer::skip_change_addresses(&mut self) -> AccountSynchronizer;
+        /// Initial address index to start syncing.
+        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer;
+        /// Syncs account with the tangle.
+        /// The account syncing process ensures that the latest metadata (balance, transactions)
+        /// associated with an account is fetched from the tangle and is stored locally.
         fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
     }
 );
 
 foreign_class!(
+    /// The accounts synchronizer.
+    #[derive(camelCaseAliases)]
     class AccountsSynchronizer {
         self_type AccountsSynchronizer;
         private constructor = empty;
-
-        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer; alias gapLimit;
-        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer; alias addressIndex;
+        /// Number of address indexes that are generated.
+        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer;
+        /// Initial address index to start syncing.
+        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer;
+        /// Skips the account discovery process.
+        fn AccountsSynchronizer::skip_account_discovery(&mut self) -> AccountsSynchronizer;
+        /// Skip syncing existing change addresses.
+        fn AccountsSynchronizer::skip_change_addresses(&mut self) -> AccountsSynchronizer;
+        /// Sets the minimum number of accounts to check on the discovery process.
+        fn AccountsSynchronizer::account_discovery_threshold(&mut self, account_discovery_threshold: usize) -> AccountsSynchronizer;
+        /// Syncs the accounts with the Tangle.
         fn AccountsSynchronizer::execute(&mut self) -> Result<Vec<SyncedAccount>>;
     }
 );
@@ -520,6 +540,7 @@ foreign_class!(
 
         fn Account::id(&self) -> String;
         fn Account::created_at(&self) -> DateTime<Local>;
+        fn Account::sync(&self) -> AccountSynchronizer;
         fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
     }
 );

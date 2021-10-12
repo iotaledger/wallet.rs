@@ -30,6 +30,7 @@ public class LibraryTest {
                 TimeUnit.SECONDS.sleep(1);
             }
 
+            exampleMigration.displayMigration();
         } catch (Exception e) {
             e.printStackTrace();
         }

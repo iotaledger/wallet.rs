@@ -61,6 +61,18 @@ public class Migration implements MigrationProgressListener {
         this.account = null;
     }
 
+    public void displayMigration(){
+        if (this.account == null) return;
+
+        this.account.sync().execute();
+
+        System.out.println("= Migration Account =");
+        System.out.println("last synced: " + this.account.lastSyncedAt());
+        System.out.println("balance: " + this.account.balance());
+        System.out.println("latest address: " + this.account.latestAddress());
+        System.out.println("unused address: " + this.account.getUnusedAddress());
+    }
+
     // Log migration events
     @Override
     public void onMigrationProgress(MigrationProgressEvent event) {
