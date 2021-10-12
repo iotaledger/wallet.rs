@@ -13,7 +13,7 @@ rustup target add \
 
 Tested on NDK 20 and 23, 21 did not work
 set `ANDROID_NDK_HOME` environment variable
-Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/android-ndk-x`
+Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/ndk-bundle`
 If you dont have `ANDROID_HOME`; Usually found at `/home/user/Android`
 
 install cargo-ndk: `cargo install cargo-ndk`
