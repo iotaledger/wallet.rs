@@ -1,4 +1,4 @@
-package org.example;
+package org.iota.example;
 
 import java.util.concurrent.TimeUnit;
 import java.lang.Runnable;

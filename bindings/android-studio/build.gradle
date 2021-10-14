@@ -21,4 +21,9 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+    delete "${rootDir}/examples/android-app/target"
+    delete "${rootDir}/examples/java-app/bin"
+    delete "${rootDir}/examples/java-app/build"
+    delete "${rootDir}/native/build"
+    delete "${rootDir}/native/target"
 }
