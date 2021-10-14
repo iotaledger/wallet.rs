@@ -1,3 +1,4 @@
 include ':native'
-include ':app'
+include ':examples:android-app'
+include ':examples:java-app'
 rootProject.name = "Wallet"
