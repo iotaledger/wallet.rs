@@ -10,6 +10,8 @@ repositories {
 }
 
 dependencies {
+    implementation 'androidx.annotation:annotation:1.1.0'
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.13'
 }
@@ -29,7 +31,7 @@ task cargoBuild(type: Exec) {
     }
 }
 compileJava {
-    dependsOn cargoBuild
+    //dependsOn cargoBuild
 }
 
 task cargoClean(type: Exec) {

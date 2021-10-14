@@ -11,4 +11,4 @@
     clippy::const_static_lifetime
 )]
 
-include!(concat!(env!("OUT_DIR"), "/jni_c_header.rs"));
+include!(concat!(env!("OUT_DIR"), "/jni_c_headers.rs"));

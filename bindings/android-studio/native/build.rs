@@ -7,6 +7,9 @@ static RUST_SRC_DIR: &str = "src";
 static ANDROID_BASE_DIR: &str = "app";
 static ANDROID_PACKAGE_ID: &str = "org.iota.wallet";
 
+#[path = "src/foreign_types/attributes.rs"]
+mod attributes;
+
 // =========================================================
 // This script is portable; copy and paste it into your own
 // build files at will.
@@ -58,7 +61,7 @@ fn gen_for_android() {
         &target,
         &include_dirs,
         &include_headers,
-        &Path::new(&out_dir).join("android_c_headers.rs"),
+        &Path::new(&out_dir).join("jni_c_headers.rs"),
     )
     .unwrap();
 
@@ -206,9 +209,14 @@ fn flapigen_expand(source_dir: &Path, file: &Path, out_dir: &Path) {
                 .join(ANDROID_PACKAGE_ID.replace(".", "/")),
             ANDROID_PACKAGE_ID.to_string(),
         )
-        .use_null_annotation_from_package("android.support.annotation".into()),
+        .use_null_annotation_from_package("androidx.annotation".into()),
     ))
-    .rustfmt_bindings(true);
+    .rustfmt_bindings(true)
+    .remove_not_generated_files_from_output_directory(false)
+    .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
+    .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
+    .register_class_attribute_callback("PartialEq", attributes::class_partial_eq)
+    .register_class_attribute_callback("Display", attributes::class_to_string);
 
     let out_file = out_dir.join(
         Path::new(file.parent().unwrap_or(Path::new(".")))
