@@ -25,7 +25,7 @@ test {
 task cargoBuild(type: Exec) {
     doFirst {
         workingDir "./"
-        commandLine 'cargo', 'build', "--release"
+        commandLine 'cargo', 'build', "--release", "--target", "armv7-linux-androideabi"
     }
 }
 compileJava {
@@ -40,5 +40,5 @@ task cargoClean(type: Exec) {
 }
 
 clean {
-    dependsOn cargoClean
+    //dependsOn cargoClean
 }

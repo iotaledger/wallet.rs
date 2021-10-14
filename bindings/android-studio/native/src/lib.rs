@@ -1,16 +1,22 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-mod jni_c_header;
-
 // Used in verifying correct binding
 pub mod verifylink;
 
 mod classes;
-mod java_glue;
 mod types;
 
-pub use crate::{classes::*, java_glue::*, types::*};
+#[cfg(target_os = "android")]
+mod android_c_headers;
+#[cfg(target_os = "android")]
+mod java_glue;
+
+
+#[cfg(target_os = "android")]
+pub use crate::java_glue::*;
+
+pub use crate::{classes::*, types::*};
 
 pub use anyhow::{Error, Result};
 

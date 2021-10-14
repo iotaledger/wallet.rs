@@ -1,85 +1,48 @@
-// Copyright 2020 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
 
-use std::{
-    env, fs, fmt,
-    path::{Path, PathBuf},
-    process::Stdio,
-    io::prelude::*,
-};
-
-use bindgen::RustTarget;
-use flapigen::{JavaConfig, JavaReachabilityFence, LanguageConfig};
-
-#[path = "src/foreign_types/attributes.rs"]
-mod attributes;
-
+/* CONFIGURATION */
+// add other android system headers to this list as necessary
 static INCLUDE_SYS_H: [&str; 1] = ["jni.h"];
 
-static ANDROID_TARGETS: &'static [&'static str] = &[
-    "aarch64-linux-android",
-    "arm-linux-androideabi",
-    "armv7-linux-androideabi",
-    "i686-linux-android",
-    "x86_64-linux-android",
-];
+static RUST_SRC_DIR: &str = "src";
+static ANDROID_BASE_DIR: &str = "app";
+static ANDROID_PACKAGE_ID: &str = "org.iota.wallet";
+
+// =========================================================
+// This script is portable; copy and paste it into your own
+// build files at will.
+
+use std::fs::File;
+use std::io::prelude::*;
+use std::path::{Path, PathBuf};
+use std::process::Stdio;
+use std::{env, fmt};
+
+use bindgen::RustTarget;
+use flapigen::{JavaConfig, LanguageConfig};
+use walkdir::WalkDir;
 
 fn main() {
     // don't simplify this to if the target contains the substring "android" --
     // these lines also serve as a guard so only true android triples receive
     // JNI generation.
     let target = env::var("TARGET").unwrap();
-
-    env_logger::init();
-    let out_dir = env::var("OUT_DIR").unwrap();
-    let in_src = Path::new("src").join("java_glue.rs.in");
-    let out_src = Path::new(&out_dir).join("java_glue.rs");
-
-    let mut java_cfg = JavaConfig::new(
-        Path::new("src")
-            .join("main")
-            .join("java")
-            .join("org")
-            .join("iota")
-            .join("wallet"),
-        "org.iota.wallet".into(),
-    );
-
-    if ANDROID_TARGETS.contains(&target.as_str()){
-        //java_cfg = java_cfg.use_null_annotation_from_package("androidx.annotation.Nullable".into());
+    if [
+        "aarch64-linux-android",
+        "arm-linux-androideabi",
+        "i686-linux-android",
+        "x86_64-linux-android",
+        "armv7-linux-androideabi",
+    ]
+    .contains(&target.as_str())
+    {
+        gen_for_android();
     }
-
-    let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(java_cfg))
-        .rustfmt_bindings(true)
-        .remove_not_generated_files_from_output_directory(false)
-        .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
-        .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
-        .register_class_attribute_callback("PartialEq", attributes::class_partial_eq)
-        .register_class_attribute_callback("Display", attributes::class_to_string);
-    swig_gen.expand_many("flapigen_test_jni", &[&in_src], &out_src);
-
-    println!("cargo:rerun-if-changed={}", in_src.display());
-    println!("cargo:rerun-if-changed=src/foreign_types/chrono_include.rs");
 }
 
-fn gen_jni_bindings(jni_c_headers_rs: &Path) {
-    let java_home = env::var("JAVA_HOME").expect("JAVA_HOME env variable not settted");
+fn gen_for_android() {
+    let target = env::var("TARGET").unwrap();
 
-    let java_include_dir = Path::new(&java_home).join("include");
-
-    let target = env::var("TARGET").expect("target env var not setted");
-
-    let java_sys_include_dir = java_include_dir.join(if target.contains("windows") {
-        "win32"
-    } else if target.contains("darwin") {
-        "darwin"
-    } else {
-        "linux"
-    });
-    
-    //let include_dirs = [java_include_dir, java_sys_include_dir];
     let include_dirs = get_cc_system_include_dirs().expect("Can't get NDK's system include dirs");
-    println!("jni include dirs {:?}", include_dirs);
 
     let include_headers: Vec<_> = INCLUDE_SYS_H
         .iter()
@@ -89,12 +52,39 @@ fn gen_jni_bindings(jni_c_headers_rs: &Path) {
         })
         .collect();
 
-    gen_binding(&target, &include_dirs, &include_headers, &jni_c_headers_rs).expect("gen_binding failed");
+    let src_dir = Path::new(RUST_SRC_DIR);
+    let out_dir = env::var("OUT_DIR").unwrap();
 
+    gen_binding(
+        &target,
+        &include_dirs,
+        &include_headers,
+        &Path::new(&out_dir).join("android_c_headers.rs"),
+    )
+    .unwrap();
+
+    // Find files ending in .rs.in and expand them with SWIG
+    for _entry in WalkDir::new(RUST_SRC_DIR) {
+        let entry = _entry.expect("Error walking sources.");
+        if entry.path().is_dir() || !entry.path().to_string_lossy().ends_with(".rs.in") {
+            continue;
+        }
+
+        println!("Found SWIG specification: {}", entry.path().display());
+        let swigf = entry.path().strip_prefix("src").unwrap();
+
+        flapigen_expand(&src_dir, &swigf, Path::new(&out_dir));
+
+        write_include_file(&src_dir, swigf).expect("Failed to write include file.");
+    }
+
+    // Hook up cargo reruns
+    println!("cargo:rerun-if-changed={}", RUST_SRC_DIR);
     for dir in &include_dirs {
         println!("cargo:rerun-if-changed={}", dir.display());
     }
-    println!("cargo:rerun-if-changed={}", &jni_c_headers_rs.display());
+    //if the generated files were deleted (e.g by gradle -q clean), regenerate them
+    println!("cargo:rerun-if-changed={}", out_dir);
 }
 
 fn get_cc_system_include_dirs() -> Result<Vec<PathBuf>, String> {
@@ -142,10 +132,12 @@ fn get_cc_system_include_dirs() -> Result<Vec<PathBuf>, String> {
         .collect())
 }
 
-fn search_file_in_directory<P: AsRef<Path>>(dirs: &[P], file: &str) -> Result<PathBuf, ()> {
+fn search_file_in_directory<P>(dirs: &[P], file: &str) -> Result<PathBuf, ()>
+where
+    P: AsRef<Path>,
+{
     for dir in dirs {
-        let dir = dir.as_ref().to_path_buf();
-        let file_path = dir.join(file);
+        let file_path = dir.as_ref().join(file);
         if file_path.exists() && file_path.is_file() {
             return Ok(file_path);
         }
@@ -175,7 +167,7 @@ where
     bindings = bindings
         .rust_target(RustTarget::Stable_1_19)
         //long double not supported yet, see https://github.com/servo/rust-bindgen/issues/550
-        .blocklist_type("max_align_t");
+        .blacklist_type("max_align_t");
     bindings = if target.contains("windows") {
         //see https://github.com/servo/rust-bindgen/issues/578
         bindings.trust_clang_mangling(false)
@@ -205,3 +197,49 @@ where
     Ok(())
 }
 
+fn flapigen_expand(source_dir: &Path, file: &Path, out_dir: &Path) {
+    let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(
+        JavaConfig::new(
+            Path::new("src")
+                .join("main")
+                .join("java")
+                .join(ANDROID_PACKAGE_ID.replace(".", "/")),
+            ANDROID_PACKAGE_ID.to_string(),
+        )
+        .use_null_annotation_from_package("android.support.annotation".into()),
+    ))
+    .rustfmt_bindings(true);
+
+    let out_file = out_dir.join(
+        Path::new(file.parent().unwrap_or(Path::new(".")))
+            .join(file.file_stem().expect("Got invalid file (no filename)")),
+    );
+
+    swig_gen.expand(ANDROID_PACKAGE_ID.as_ref(), source_dir.join(file), out_file);
+}
+
+fn write_include_file(source_dir: &Path, swig_file: &Path) -> std::io::Result<()> {
+    let rs_rel_file = Path::new(swig_file.parent().unwrap_or(Path::new("."))).join(
+        swig_file
+            .file_stem()
+            .expect("Got invalid file (no filename)"),
+    );
+    let rs_path = source_dir.join(&rs_rel_file);
+
+    if rs_path.exists() {
+        println!("Not writing {} because it exists", rs_path.display());
+        return Ok(());
+    }
+
+    let mut rs_file = File::create(rs_path)?;
+    rs_file.write_all(
+        format!(
+            r#"// Automatically generated by Rust-SWIG
+include!(concat!(env!("OUT_DIR"), "/{}"));"#,
+            rs_rel_file.to_string_lossy()
+        )
+        .as_bytes(),
+    )?;
+
+    return Ok(());
+}

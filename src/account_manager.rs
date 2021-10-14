@@ -19,6 +19,7 @@ use crate::{
 };
 
 use std::{
+    str::FromStr,
     collections::{hash_map::DefaultHasher, HashMap},
     convert::TryInto,
     fs,
@@ -51,7 +52,6 @@ use tokio::{
     time::sleep,
 };
 use zeroize::Zeroize;
-
 pub(crate) mod migration;
 pub use crate::account_manager::migration::MigrationAddress;
 use iota_migration::client::migration::{

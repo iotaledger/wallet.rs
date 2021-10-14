@@ -9,7 +9,7 @@ use chrono::prelude::{
 };
 
 use crate::{
-    jni_c_header::*,
+    java_glue::*,
     types::*,
     acc::*,
     client_options::*,
@@ -131,13 +131,6 @@ foreign_enum!(
 
 foreign_class!(class RustHex {
     fn hex::encode(_ : String) -> String;
-    fn decode(s : String) -> Result<Vec<u8>> {
-        let res = hex::decode(s);
-        match res {
-            Ok(s) => Ok(s),
-            Err(e) => Err(anyhow!("Hex error {:?}", e.to_string()))
-        }
-    }
 });
 
 foreign_class!( 
