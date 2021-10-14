@@ -1,0 +1,3 @@
+include ':native'
+include ':app'
+rootProject.name = "Wallet"
