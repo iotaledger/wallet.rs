@@ -10,10 +10,10 @@ repositories {
 }
 
 dependencies {
-    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.annotation:annotation:1.2.0'
 
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 tasks.withType(Test) {
@@ -22,16 +22,6 @@ tasks.withType(Test) {
 
 test {
     systemProperty "java.library.path", file("./target/release")
-}
-
-task cargoBuild(type: Exec) {
-    doFirst {
-        workingDir "./"
-        commandLine 'cargo', 'build', "--release", "--target", "armv7-linux-androideabi"
-    }
-}
-compileJava {
-    //dependsOn cargoBuild
 }
 
 task cargoClean(type: Exec) {
