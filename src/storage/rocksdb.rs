@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use super::StorageAdapter;
-use super::rocksdb::{DBCompressionType, Options, WriteBatch, DB};
+use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use std::{collections::HashMap, path::Path, sync::Arc};
 use tokio::sync::Mutex;
 

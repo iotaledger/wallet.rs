@@ -1,10 +1,11 @@
 #!/bin/sh
 set -e
 
-FRAMEWORK_NAME=IOTAWallet
+FRAMEWORK_NAME=IOTAWalletInternal
 
 ./make_framework.sh --target aarch64-apple-darwin
 ./make_framework.sh --target aarch64-apple-ios
+./make_framework.sh --target x86_64-apple-ios
 
 mkdir -p target/universal/
 rm -rf target/universal/$FRAMEWORK_NAME.xcframework
@@ -15,6 +16,9 @@ cp -r target/aarch64-apple-darwin/$FRAMEWORK_NAME.framework target/universal/$FR
 
 mkdir -p target/aarch64-apple-ios/$FRAMEWORK_NAME.framework target/universal/$FRAMEWORK_NAME.xcframework/ios-arm64
 cp -r target/aarch64-apple-ios/$FRAMEWORK_NAME.framework target/universal/$FRAMEWORK_NAME.xcframework/ios-arm64/
+
+mkdir -p target/x86_64-apple-ios/$FRAMEWORK_NAME.framework target/universal/$FRAMEWORK_NAME.xcframework/ios-x86
+cp -r target/x86_64-apple-ios/$FRAMEWORK_NAME.framework target/universal/$FRAMEWORK_NAME.xcframework/ios-x86/
 
 touch target/universal/$FRAMEWORK_NAME.xcframework/Info.plist
 tee -a target/universal/$FRAMEWORK_NAME.xcframework/Info.plist > /dev/null <<EOT
@@ -47,6 +51,20 @@ tee -a target/universal/$FRAMEWORK_NAME.xcframework/Info.plist > /dev/null <<EOT
 			</array>
 			<key>SupportedPlatform</key>
 			<string>ios</string>
+		</dict>
+		<dict>
+			<key>LibraryIdentifier</key>
+			<string>ios-x86</string>
+			<key>LibraryPath</key>
+			<string>${FRAMEWORK_NAME}.framework</string>
+			<key>SupportedArchitectures</key>
+			<array>
+				<string>x86_64</string>
+			</array>
+			<key>SupportedPlatform</key>
+			<string>ios</string>
+			<key>SupportedPlatformVariant</key>
+			<string>simulator</string>
 		</dict>
 	</array>
 	<key>CFBundlePackageType</key>

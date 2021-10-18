@@ -14,7 +14,7 @@ if [ -z "$target" ]; then
 	exit 1
 fi
 
-FRAMEWORK_NAME=IOTAWallet
+FRAMEWORK_NAME=IOTAWalletInternal
 FRAMEWORK_VERSION=1.0.0
 
 makeFramework() {
@@ -64,7 +64,8 @@ EOT
 	cp release/libwallet.a $FRAMEWORK_NAME.framework/$FRAMEWORK_NAME
 	cd ../../
 }
-
-cargo lipo --release --targets ${target}
+rustup target add ${target}
+cargo build --target ${target} --release --lib
+#cargo lipo --release --targets ${target}
 makeFramework target/${target}
 echo "Exported in target/${target}/${FRAMEWORK_NAME}.framework"
