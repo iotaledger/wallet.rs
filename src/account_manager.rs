@@ -747,7 +747,7 @@ impl AccountManager {
             let stronghold_snapshot_path = self.stronghold_snapshot_path_internal(&storage_id).await?;
 
             // We must check before removing in the case that a dev / user has initiated an
-            // AccountManager without eventually acquiring a mnemonic.
+            // AccountManager without eventually acquiring a Stronghold.
             if stronghold_snapshot_path.exists() && stronghold_snapshot_path.is_file() {
                 std::fs::remove_file(stronghold_snapshot_path)?;
             }
