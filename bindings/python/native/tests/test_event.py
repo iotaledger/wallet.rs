@@ -48,3 +48,17 @@ def test_event_stronghold_status_change():
         assert isinstance(event, str)
     event_id = iw.on_stronghold_status_change(on_stronghold_status_change)
     iw.remove_stronghold_status_change_listener(bytes(event_id))
+
+
+def test_on_transfer_progress():
+    def on_transfer_progress(event):
+        assert isinstance(event, str)
+    event_id = iw.on_transfer_progress(on_transfer_progress)
+    iw.remove_transfer_progress_listener(bytes(event_id))
+
+
+def test_on_migration_progress():
+    def on_migration_progress(event):
+        assert isinstance(event, str)
+    event_id = iw.on_migration_progress(on_migration_progress)
+    iw.remove_migration_progress_listener(bytes(event_id))

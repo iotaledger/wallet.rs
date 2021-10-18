@@ -1,3 +1,16 @@
+---
+description: Official IOTA Wallet Library Software which can be used to easily integrate an IOTA Wallet into your application 
+image: /img/logo/wallet_light.png
+keywords:
+- requirements
+- wallet
+- software
+- library
+- rust
+- python
+- nodejs
+- java
+---
 # Welcome
 
 This is the documentation for the official IOTA Wallet Library Software. The documentation can be used to easily integrate an IOTA Wallet into your applications. You can read more about core principles behind IOTA client libraries in the following [blog post](https://blog.iota.org/the-new-iota-client-libraries-harder-better-faster-stronger/).
@@ -11,9 +24,9 @@ Use Stronghold to store account data of the `wallet.rs`. It integrates the best 
 With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, `Stronghold` will create and store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## IOTA 1.5 (Chrysalis) in a Nutshell
-The [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide) explains all the main concepts behind the IOTA Chrysalis in detail .
+The [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/introduction/what_is_chrysalis) explains all the main concepts behind the IOTA Chrysalis in detail.
 
-Please, see a summary of changes in comparison to IOTA 1.0 at [Chrysalis documentation](https://chrysalis.docs.iota.org/guides).
+Please, see a summary of changes in comparison to IOTA 1.0 at [Chrysalis documentation](https://wiki.iota.org/chrysalis-docs/guides/overview).
 
 ## Testnet
 To join the Chrysalis public testnet checkout this [blog post](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). More information about Chrysalis components is available at the [Chrysalis documentation portal](https://chrysalis.docs.iota.org/).

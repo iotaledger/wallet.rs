@@ -5,7 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-    const { AccountManagerForMessages } = require('../../lib/index.js');
+    const { AccountManagerForMessages } = require('@iota/wallet');
 
     const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
@@ -18,7 +18,7 @@ async function run() {
         const account = await manager.createAccount({
             // todo replace with https://api.lb-0.h.chrysalis-devnet.iota.cafe when the new faucet is working
             clientOptions: {
-                node: { url: 'https://api.lb-0.testnet.chrysalis2.com' },
+                node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
                 localPow: true,
             },
             alias: 'Alice',

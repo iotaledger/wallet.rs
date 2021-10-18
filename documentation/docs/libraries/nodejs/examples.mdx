@@ -1,3 +1,16 @@
+---
+title: Examples
+description: Official IOTA Wallet Library Software Node.js examples.
+image: /img/logo/wallet_light.png
+keywords:
+- account
+- address
+- nodejs
+- dust protection
+- password
+- stronghold
+- Chrysalis
+---
 import CodeBlock from '@theme/CodeBlock';
 import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/1-create-account.js';
 import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/2-generate-address.js';
@@ -6,8 +19,6 @@ import send from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_e
 import backup from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/5-backup.js';
 import restore from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/6-restore.js';
 import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/7-events.js';
-
-# Examples
 
 This section will guide you through several examples using the node.js binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/nodejs/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/nodejs/examples).
 
@@ -58,7 +69,7 @@ Once the backend storage has been created, individual accounts for individual us
 ```javascript
     let account = await manager.createAccount({
         alias: 'Alice',  // an unique id from your existing user
-        clientOptions: { node: 'http://api.lb-0.testnet.chrysalis2.com', localPow: false }
+        clientOptions: { node: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe', localPow: false }
     })
 ```
 
@@ -113,7 +124,7 @@ You can use the following example to generate a new address:
 </CodeBlock>
 
 ## Checking Balance
-Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send to your testnet addresses some tokens.
+Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.chrysalis-devnet.iota.cafe/) and send to your testnet addresses some tokens.
 
 ![IOTA Faucet Service](/img/libraries/screenshot_faucet.png)
 

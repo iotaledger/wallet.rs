@@ -1,3 +1,14 @@
+---
+title: Examples
+description: Official IOTA Wallet Library Software Python examples.
+image: /img/logo/wallet_light.png
+keywords:
+- account
+- address
+- python
+- balance
+- Chrysalis
+---
 import CodeBlock from '@theme/CodeBlock';
 import create_account_manager from  '!!raw-loader!./../../../../bindings/python/examples/1a_create_account_manager.py';
 import b_create_account from  '!!raw-loader!./../../../../bindings/python/examples/1b_create_account.py';
@@ -9,8 +20,6 @@ import backup from  '!!raw-loader!./../../../../bindings/python/examples/5_backu
 import restore from  '!!raw-loader!./../../../../bindings/python/examples/6_restore.py';
 import b_event_simple_event from  '!!raw-loader!./../../../../bindings/python/examples/7b_event_simple_event.py';
 import event_queue from  '!!raw-loader!./../../../../bindings/python/examples/7_event_queue.py';
-
-# Examples
 
 This section will guide you through several examples using the python binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
 
@@ -150,7 +159,7 @@ You can find detailed information about generating addresses at the [Developer G
 
 ## Checking the Balance
 
-Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.testnet.chrysalis2.com/) and send some tokens to your testnet addresses.
+Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.chrysalis-devnet.iota.cafe/) and send some tokens to your testnet addresses.
 
 ![IOTA Faucet Service](/img/libraries/screenshot_faucet.png)
 
@@ -211,7 +220,7 @@ Balance per individual addresses:
 ```
 In the detailed view per individual addresses, there is also _outputs_ section.  The _outputs_ shows all the transactions (also known as _wallet message(s)_ ), which are related to that _address_, and therefore account for the balance.
 
-You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/testnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
+You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/devnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
 :::info
 IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
@@ -404,7 +413,7 @@ Expected output:
 Account: Alice
 Syncing...
 Address: {'inner': 'atoi1qquszp0hzfsrgx4vx58dfg4v6eh20d2k3ddfgg9dt5778c2egc9uyw7g457'}
-Fill your address with the Faucet: https://faucet.testnet.chrysalis2.com/
+Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/
 Waiting for external event (on_balance_changed)...
 On balanced changed: {"indexationId":"c3a7a1ab8ba78460954223a704693d088ddd0388681ac6cc1dd964a388d1a619","accountId":"wallet-account://e51a6285ea2d8cbdf5b6da2b85a8344f619d798d869ef4fb88c5fac0e653d6cc","address":"atoi1qquszp0hzfsrgx4vx58dfg4v6eh20d2k3ddfgg9dt5778c2egc9uyw7g457","balanceChange":{"spent":0,"received":10000000}}
 Done.

@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Get the stronghold password
-STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+STRONGHOLD_PASSWORD = os.getenv('SH_PASSWORD')
 
 # This example backups your data in a secure file.
 # You can move this file to another app or device and restore it.

@@ -1,6 +1,7 @@
 # IOTA Wallet Library
 
 [![status](https://img.shields.io/badge/Status-Alpha-yellow.svg)](https://github.com/iotaledger/wallet.rs)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs?ref=badge_shield)
 
 ## Introduction
 
@@ -9,7 +10,7 @@ It offers abstractions to handle IOTA payments and can optionally interact with 
 
 ## Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wallet-lib.docs.iota.org/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
 
 ## Prerequisites
 
@@ -83,7 +84,7 @@ async fn main() -> iota_wallet::Result<()> {
             .with_storage(&storage_folder, None)
             .finish()
             .await?;
-    let client_options = ClientOptionsBuilder::new().with_node("http://api.lb-0.testnet.chrysalis2.com")?.build();
+    let client_options = ClientOptionsBuilder::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
     let account = manager
         .create_account(client_options)?
         .initialise()
@@ -112,3 +113,7 @@ cargo run --example transfer # execute the `transfer` example
 ## Joining the discussion
 
 If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fiotaledger%2Fwallet.rs?ref=badge_large)
