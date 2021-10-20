@@ -2245,7 +2245,7 @@ dependencies = [
 [[package]]
 name = "librocksdb-sys"
 version = "6.17.3"
-source = "git+https://github.com/iotaledger/rust-rocksdb?rev=70f2a53529ecc1853a2c025cec7f9d00bd50352c#70f2a53529ecc1853a2c025cec7f9d00bd50352c"
+source = "git+https://github.com/iotaledger/rust-rocksdb?rev=e9af8f96ef66a54c67234143d93334a38032d61f#e9af8f96ef66a54c67234143d93334a38032d61f"
 dependencies = [
  "bindgen",
  "cc",
@@ -3314,7 +3314,7 @@ dependencies = [
 [[package]]
 name = "rocksdb"
 version = "0.16.0"
-source = "git+https://github.com/iotaledger/rust-rocksdb?rev=70f2a53529ecc1853a2c025cec7f9d00bd50352c#70f2a53529ecc1853a2c025cec7f9d00bd50352c"
+source = "git+https://github.com/iotaledger/rust-rocksdb?rev=e9af8f96ef66a54c67234143d93334a38032d61f#e9af8f96ef66a54c67234143d93334a38032d61f"
 dependencies = [
  "libc",
  "librocksdb-sys",
