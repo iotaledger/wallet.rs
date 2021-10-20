@@ -1,9 +1,12 @@
-# Requirements:
+# Dependencies:
 For this setup we use `$ANDROID_NDK_HOME` for the location of your NDK, wether you use Android studio or manual compilation
 
-- Android NDK or Android Studio with NDK installed (If you extract make sure to make it executable "chmod -R +x android-ndk-XYZ" )
-- Clang toolchain
+- Dependencies of the Wallet.rs README.md for compiling wallet.rs normally
+- Java & JDK (Make sure JAVA_HOME env variable) is set
+- Android NDK or Android Studio with NDK installed (If you extract make sure to make it executable `chmod -R +x android-ndk-VERSION` )
+- [Rustup](https://rustup.rs/)
 - Cargo ndk (`cargo install cargo-ndk`)
+- Cargo fmt (`rustup component add rustfmt`)
 
 Android Toolchains: 
 ```
@@ -18,19 +21,31 @@ rustup target add \
 
 ### Adding shared library
 For each target you enable in `build.gradle` `archTriplets` do the following:
-> Copy `$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/ARCH/libc++_shared.so`
+> Copy `$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/$TARGET/libc++_shared.so`
 > to `src/main/libs/ARCH/`
 
-### Cross compile note
-Currently cross compiling has only worked on WSL/Linux.
-If you wish to use android studio in wondows, first make the binaries in WSL/Linux, then copy them over to `src/main/jniLibs/ARCH/`. Afterwards you need to comment out all `archTriplets` in `build.gradle`. You will still need to copy the `libc++_shared.so` from the step above for each ARCH
+`$TARGET` Should be replaced with each enabled `archTriplets` key. (options are armeabi-v7a, arm64-v8a, x86, x86_64)
 
+[TODO] Automated copy using cmake
+
+### Generating the java files
+In order to generate the Java files; we need to run manually cargo once. 
+This step will require `cargo build --release --target=$TARGET` in `wallet.rs/bindings/java/native`.
+Replace `$TARGET` with one of the enabled targets inside `archTriplets`
+
+### Cross compile note
+
+In order to build on windows, we need to add android triplets to our VCPKG. 
+[TODO]
+
+Currently cross compiling has only worked on WSL/Linux.
+If you wish to use android studio in wondows, first make the android target binaries in WSL/Linux, then copy them over to `src/main/jniLibs/$TARGET/`. Afterwards you need to comment out all `archTriplets` in `build.gradle`. You will still need to copy the `libc++_shared.so` from the step above for each ARCH
 
 ## Android studio
 
 Load the project under the `wallet.rs/bindings/java` folder in Android studio.
 
-Make sure you have an NDK and SDK: `file->Project Structure->SDK Location`. If the NDK location is marked grey, edit the local.properties like so: (This must be the location of `$ANDROID_NDK_HOME`)
+Make sure you have an NDK and SDK: `file->Project Structure->SDK Location`. If the NDK location is marked grey, edit the local.properties like so: (This must be the location of `$ANDROID_NDK_HOME`, which still needs to be on path)
 ```
 ndk.dir=I\:\\Path\\To\\AndroidSDK\\ndk\\VERSION
 ```

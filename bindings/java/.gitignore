@@ -12,8 +12,11 @@ target
 bin/
 .cxx/
 
-# Ignore generated java code
+# Ignore generated java source code
 native/src/main/java/org/iota/wallet/*
+
+# Ignore generated java compiled code
+native/bin/*
 
 # the local/native java code we made custom, unignore
 !native/src/main/java/org/iota/wallet/local/
