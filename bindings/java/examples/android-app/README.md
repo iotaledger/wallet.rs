@@ -4,7 +4,7 @@ For this setup we use `$ANDROID_NDK_HOME` for the location of your NDK, wether y
 - Dependencies of the Wallet.rs README.md for compiling wallet.rs normally
 - Java & JDK (Make sure JAVA_HOME env variable) is set
 - Android NDK or Android Studio with NDK installed (If you extract make sure to make it executable `chmod -R +x android-ndk-VERSION` )
-- [Rustup](https://rustup.rs/)
+- [Rustup]
 - Cargo ndk (`cargo install cargo-ndk`)
 - Cargo fmt (`rustup component add rustfmt`)
 
@@ -19,18 +19,22 @@ rustup target add \
 
 # Setup
 
-### Generating the java files
+## Generating the java files
 In order to generate the Java files; we need to run manually cargo once. 
-This step will require `cargo build --release --target=$TARGET` in `wallet.rs/bindings/java/native`.
+
+This step will require you to run `cargo build --release --target=$TARGET` in `wallet.rs/bindings/java/native`.
+
 Replace `$TARGET` with one of the enabled targets inside you `build.gradle` `archTriplets` (options are armeabi-v7a, arm64-v8a, x86, x86_64)
 
 ### Cross compile note
 
-In order to build on windows, we need to add android triplets to our VCPKG. 
+In order to build on windows, we need to add android triplets to our VCPKG and use that during compilation. 
 [TODO]
 
 Currently cross compiling has only worked on WSL/Linux.
-If you wish to use android studio in windows, first make the android target binaries in WSL/Linux, then copy them over to `src/main/jniLibs/$TARGET/`. Afterwards you need to comment out all `archTriplets` in `build.gradle`. You will still need to copy the `libc++_shared.so` from the step above for each ARCH
+If you wish to use android studio in windows, first make the android target binaries in WSL/Linux, then copy them over to `src/main/jniLibs/$TARGET/`. (See step "Generating the java files", but do that for each enabled target in WSL/Linux)
+
+Afterwards you need to comment out all `archTriplets` in `build.gradle`.
 
 ## Android studio
 
