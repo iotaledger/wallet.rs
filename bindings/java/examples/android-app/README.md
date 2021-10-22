@@ -19,19 +19,10 @@ rustup target add \
 
 # Setup
 
-### Adding shared library
-For each target you enable in `build.gradle` `archTriplets` do the following:
-> Copy `$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/$TARGET/libc++_shared.so`
-> to `src/main/libs/ARCH/`
-
-`$TARGET` Should be replaced with each enabled `archTriplets` key. (options are armeabi-v7a, arm64-v8a, x86, x86_64)
-
-[TODO] Automated copy using cmake
-
 ### Generating the java files
 In order to generate the Java files; we need to run manually cargo once. 
 This step will require `cargo build --release --target=$TARGET` in `wallet.rs/bindings/java/native`.
-Replace `$TARGET` with one of the enabled targets inside `archTriplets`
+Replace `$TARGET` with one of the enabled targets inside you `build.gradle` `archTriplets` (options are armeabi-v7a, arm64-v8a, x86, x86_64)
 
 ### Cross compile note
 
@@ -39,7 +30,7 @@ In order to build on windows, we need to add android triplets to our VCPKG.
 [TODO]
 
 Currently cross compiling has only worked on WSL/Linux.
-If you wish to use android studio in wondows, first make the android target binaries in WSL/Linux, then copy them over to `src/main/jniLibs/$TARGET/`. Afterwards you need to comment out all `archTriplets` in `build.gradle`. You will still need to copy the `libc++_shared.so` from the step above for each ARCH
+If you wish to use android studio in windows, first make the android target binaries in WSL/Linux, then copy them over to `src/main/jniLibs/$TARGET/`. Afterwards you need to comment out all `archTriplets` in `build.gradle`. You will still need to copy the `libc++_shared.so` from the step above for each ARCH
 
 ## Android studio
 
@@ -58,11 +49,15 @@ set `ANDROID_NDK_HOME` environment variable
 Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/VERSION`
 If you dont have `ANDROID_HOME`; Usually found at `/home/user/Android`
 
-Make sure you copied the shared libraries from the `Setup/Adding shared library` step.
+### Adding shared library
+For each target you enable in `build.gradle` `archTriplets` do the following:
+> Copy `$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/$TARGET/libc++_shared.so`
+> to `src/main/libs/ARCH/`
+
+`$TARGET` Should be replaced with each enabled `archTriplets` key. (options are armeabi-v7a, arm64-v8a, x86, x86_64)
 
 Then run gradle:
 ./gradlew aR
-
 
 Have a signing keystore ready; I call it `signed_apk.jks`
 How to make: https://developer.android.com/studio/publish/app-signing#generate-key
