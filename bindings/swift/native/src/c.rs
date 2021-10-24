@@ -19,7 +19,7 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
 }
 
 #[no_mangle]
-pub extern "C" fn initialize(callback: Callback, actor_id: *const c_char, storage_path: *const c_char) {
+pub extern "C" fn iota_initialize(callback: Callback, actor_id: *const c_char, storage_path: *const c_char) {
     let c_actor_id = unsafe {
         assert!(!actor_id.is_null());
         CStr::from_ptr(actor_id)
@@ -43,7 +43,7 @@ pub extern "C" fn initialize(callback: Callback, actor_id: *const c_char, storag
 }
 
 #[no_mangle]
-pub extern "C" fn destroy(actor_id: *const c_char) {
+pub extern "C" fn iota_destroy(actor_id: *const c_char) {
     let c_actor_id = unsafe {
         assert!(!actor_id.is_null());
         CStr::from_ptr(actor_id)
@@ -54,7 +54,7 @@ pub extern "C" fn destroy(actor_id: *const c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn send_message(message: *const c_char) {
+pub extern "C" fn iota_send_message(message: *const c_char) {
     let c_message = unsafe {
         assert!(!message.is_null());
         CStr::from_ptr(message)
@@ -64,7 +64,7 @@ pub extern "C" fn send_message(message: *const c_char) {
 }
 
 #[no_mangle]
-pub extern "C" fn listen(actor_id: *const c_char, id: *const c_char, event_name: *const c_char) {
+pub extern "C" fn iota_listen(actor_id: *const c_char, id: *const c_char, event_name: *const c_char) {
     let c_actor_id = unsafe {
         assert!(!actor_id.is_null());
         CStr::from_ptr(actor_id)
