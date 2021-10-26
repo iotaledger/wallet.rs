@@ -1,12 +1,16 @@
-use std::convert::TryInto;
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
-use std::sync::Mutex;
+use std::{
+    convert::TryInto,
+    ffi::{CStr, CString},
+    os::raw::c_char,
+    sync::Mutex,
+};
 
 use crate::{
-    destroy as destroy_actor, init as init_actor, listen as add_event_listener, send_message as send_actor_message,
-    EventType,
+    destroy as destroy_actor, init as init_actor, init_logger, listen as add_event_listener,
+    send_message as send_actor_message, EventType,
 };
+use bee_common::logger::{LoggerConfig, LoggerOutputConfigBuilder};
+use log::LevelFilter;
 use once_cell::sync::OnceCell;
 use tokio::runtime::Runtime;
 
@@ -85,4 +89,18 @@ pub extern "C" fn iota_listen(actor_id: *const c_char, id: *const c_char, event_
 
     let event_type: EventType = event_name.try_into().expect("unknown event name");
     block_on(add_event_listener(actor_id, id, event_type));
+}
+
+#[no_mangle]
+pub extern "C" fn iota_init_logger(file_name: *const c_char) {
+    let c_file_name = unsafe {
+        assert!(!file_name.is_null());
+        CStr::from_ptr(file_name)
+    };
+    let file_name = c_file_name.to_str().unwrap();
+
+    let output_config = LoggerOutputConfigBuilder::new()
+        .name(file_name)
+        .level_filter(LevelFilter::Debug);
+    init_logger(LoggerConfig::build().with_output(output_config));
 }

@@ -1,9 +1,6 @@
 pub use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    actor::{
-        Message as WalletMessage, MessageType as WalletMessageType, Response, ResponseType,
-        WalletMessageHandler,
-    },
+    actor::{Message as WalletMessage, MessageType as WalletMessageType, Response, ResponseType, WalletMessageHandler},
     Error,
 };
 use riker::actors::*;
@@ -29,9 +26,7 @@ impl ActorFactoryArgs<AccountManager> for WalletActor {
         let runtime = Runtime::new().expect("failed to create tokio runtime");
 
         Self {
-            wallet_message_handler: Arc::new(Mutex::new(WalletMessageHandler::with_manager(
-                manager,
-            ))),
+            wallet_message_handler: Arc::new(Mutex::new(WalletMessageHandler::with_manager(manager))),
             runtime,
         }
     }
@@ -44,7 +39,7 @@ impl Default for WalletActor {
             WalletMessageHandler::with_manager(
                 AccountManager::builder()
                     .with_storage(DEFAULT_STORAGE_FOLDER, None)
-                    .unwrap() //safe to unwrap, the storage password is None ^
+                    .unwrap() // safe to unwrap, the storage password is None ^
                     .with_polling_interval(Duration::from_millis(crate::POLLING_INTERVAL_MS))
                     .finish()
                     .await
