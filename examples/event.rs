@@ -1,31 +1,39 @@
-// Copyright 2020 IOTA Stiftung
+// Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 //! cargo run --example event --release
-
 use iota_wallet::{
-    account_manager::AccountManager, address::Address, client::ClientOptionsBuilder, event::on_balance_change,
-    message::MessageId, signing::SignerType, Result,
+    account::AccountHandle, account_manager::AccountManager, address::Address, client::ClientOptionsBuilder,
+    event::on_balance_change, signing::SignerType, Error, Result,
 };
-use serde::Deserialize;
-use std::str::FromStr;
+use reqwest::Client;
+use std::collections::HashMap;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let manager = AccountManager::builder().finish().await?;
-    manager.set_stronghold_password("password").await?;
-    manager.store_mnemonic(SignerType::Stronghold, None).await?;
+    let stronghold_password = "password".to_string();
+    let account_alias = "alice".to_string();
+    let node_url = "https://api.lb-1.h.chrysalis-devnet.iota.cafe/".to_string();
+    let faucet_url = "https://faucet.chrysalis-devnet.iota.cafe".to_string();
 
-    // first we'll create an example account and store it
-    let client_options = ClientOptionsBuilder::new()
-        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-        .build()?;
+    let account_manager: AccountManager = AccountManager::builder().finish().await?;
+    account_manager.set_stronghold_password(stronghold_password).await?;
 
-    let account = manager
-        .create_account(client_options)?
-        .alias("alias")
-        .initialise()
-        .await?;
+    // If no account was previously created, we create one. Otherwise, recover from local storage
+    // This ensures that the script can be run multiple times
+    let account: AccountHandle = match account_manager.get_account(&account_alias).await {
+        Ok(account) => account,
+        _ => {
+            account_manager.store_mnemonic(SignerType::Stronghold, None).await?;
+
+            let client_options = ClientOptionsBuilder::new().with_node(&node_url)?.build()?;
+            account_manager
+                .create_account(client_options)?
+                .alias(account_alias)
+                .initialise()
+                .await?
+        }
+    };
 
     // Possible events are: on_balance_change, on_broadcast, on_confirmation_state_change, on_error,
     // on_migration_progress, on_new_transaction, on_reattachment, on_stronghold_status_change,
@@ -38,7 +46,7 @@ async fn main() -> Result<()> {
 
     let address = account.generate_address().await?;
     println!("Requesting funds from the faucet to {}", address.address().to_bech32());
-    get_funds(&address).await?;
+    get_funds(&address, &faucet_url).await?;
 
     // Wait for event before exit
     let mut exit = String::new();
@@ -46,30 +54,28 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-#[derive(Deserialize)]
-struct FaucetMessageResponse {
-    id: String,
-}
+// Requests a testnet funds transaction to our generated address
+// This API is rate limited: only a request every minute is allowed
+async fn get_funds(address: &Address, faucet_url: &str) -> Result<()> {
+    let mut body = HashMap::new();
+    body.insert("address", address.address().to_bech32());
 
-#[derive(Deserialize)]
-struct FaucetResponse {
-    data: FaucetMessageResponse,
-}
+    let faucet_response = Client::new()
+        .post(format!("{}/api/plugins/faucet/enqueue", faucet_url))
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| Error::ClientError(Box::new(e.into())))?;
 
-async fn get_funds(address: &Address) -> Result<MessageId> {
-    // use the faucet to get funds on the address
-    let response = reqwest::get(&format!(
-        "https://faucet.chrysalis-devnet.iota.cafe/api?address={}",
-        address.address().to_bech32()
-    ))
-    .await
-    .unwrap()
-    .json::<FaucetResponse>()
-    .await
-    .unwrap();
-    let faucet_message_id = MessageId::from_str(&response.data.id)?;
+    println!(
+        "{}",
+        faucet_response
+            .text()
+            .await
+            .map_err(|e| Error::ClientError(Box::new(e.into())))?
+    );
 
-    println!("Got funds from faucet, message id: {:?}", faucet_message_id);
+    println!("Requested funds");
 
-    Ok(faucet_message_id)
+    Ok(())
 }

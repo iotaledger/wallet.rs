@@ -744,7 +744,14 @@ impl AccountManager {
         #[cfg(feature = "stronghold")]
         {
             crate::stronghold::unload_snapshot(&self.storage_path, false).await?;
-            std::fs::remove_file(self.stronghold_snapshot_path_internal(&storage_id).await?)?;
+
+            let stronghold_snapshot_path = self.stronghold_snapshot_path_internal(&storage_id).await?;
+
+            // We must check before removing in the case that a dev / user has initiated an
+            // AccountManager without eventually acquiring a Stronghold.
+            if stronghold_snapshot_path.exists() && stronghold_snapshot_path.is_file() {
+                std::fs::remove_file(stronghold_snapshot_path)?;
+            }
         }
 
         Ok(())

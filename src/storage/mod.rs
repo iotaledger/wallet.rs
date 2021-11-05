@@ -671,47 +671,24 @@ fn parse_accounts(
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
 ) -> crate::Result<Vec<Account>> {
-    let mut err = None;
-    let accounts: Vec<Option<Account>> = accounts
-        .iter()
-        .map(|account| {
-            let account_json = if account.starts_with('{') {
-                Some(account.to_string())
-            } else if let Some(key) = encryption_key {
-                match decrypt_record(account, key) {
-                    Ok(json) => Some(json),
-                    Err(e) => {
-                        err.replace(e);
-                        None
-                    }
-                }
-            } else {
-                None
-            };
-            if let Some(json) = account_json {
-                match serde_json::from_str::<Account>(&json) {
-                    Ok(mut acc) => {
-                        acc.set_storage_path(storage_path.to_path_buf());
-                        Some(acc)
-                    }
-                    Err(e) => {
-                        err.replace(e.into());
-                        None
-                    }
-                }
-            } else {
-                err.replace(crate::Error::StorageIsEncrypted);
-                None
-            }
-        })
-        .collect();
-
-    if let Some(err) = err {
-        Err(err)
-    } else {
-        let accounts = accounts.into_iter().map(|account| account.unwrap()).collect();
-        Ok(accounts)
+    let mut parsed_accounts: Vec<Account> = Vec::new();
+    for account in accounts {
+        let account_json = if account.starts_with('{') {
+            Some(account.to_string())
+        } else if let Some(key) = encryption_key {
+            Some(decrypt_record(account, key)?)
+        } else {
+            None
+        };
+        if let Some(json) = account_json {
+            let mut acc = serde_json::from_str::<Account>(&json)?;
+            acc.set_storage_path(storage_path.to_path_buf());
+            parsed_accounts.push(acc);
+        } else {
+            return Err(crate::Error::StorageIsEncrypted);
+        }
     }
+    Ok(parsed_accounts)
 }
 
 #[cfg(test)]

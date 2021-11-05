@@ -61,11 +61,12 @@ def test_account_handle_transfer():
     except ValueError as e:
         assert 'insufficient funds' in str(e)
 
+
 def test_account_handle_transfer_with_outputs():
     pat = tv['transfer']
-    transfer_outputs = [{ "address": pat['address'], "amount": pat['amount'] }]
+    transfer_outputs = [{"address": pat['address'], "amount": pat['amount']}]
     transfer = iw.TransferWithOutputs(outputs=transfer_outputs,
-                           remainder_value_strategy=pat['remainder_value_strategy'])
+                                      remainder_value_strategy=pat['remainder_value_strategy'])
 
     try:
         node_response = account.transfer_with_outputs(transfer)
@@ -73,6 +74,7 @@ def test_account_handle_transfer_with_outputs():
         assert False
     except ValueError as e:
         assert 'insufficient funds' in str(e)
+
 
 def test_account_handle_retry():
     message_id = tv['account_handle']['message_id']
@@ -147,6 +149,12 @@ def test_account_handle_generate_address():
     generated_address = account.generate_address()
     assert isinstance(generated_address,
                       dict) and 'address' in generated_address
+
+
+def test_account_handle_generate_addresses():
+    generated_addresses = account.generate_addresses(100)
+    assert isinstance(generated_addresses[0],
+                      dict) and 'address' in generated_addresses[0]
 
 
 def test_account_handle_get_unused_address():
