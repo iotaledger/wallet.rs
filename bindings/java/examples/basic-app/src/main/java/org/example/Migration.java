@@ -195,9 +195,6 @@ public class Migration implements MigrationProgressListener {
               }
         }
 
-        System.out.println(Arrays.toString(spent.toArray()));
-        System.out.println(Arrays.toString(unspent.toArray()));
-
         List<List<InputData>> unspentInputChunks = selectInputsForUnspentAddresses(unspent);
         List<InputData> spentInputs = spent.stream()
             .filter(input -> input.balance() >= MINIMUM_MIGRATION_BALANCE)
