@@ -43,16 +43,18 @@ public class Migration implements MigrationProgressListener {
     // Wallet.rs database storage path. Stronghold and database file would be stored in this path.
     public static final String DB_STORAGE_PATH = "./migration-database";
     // Legacy network nodes
-    public static final String[] LEGACY_NETWORK_NODES = new String[]{"https://nodes-legacy.ledgermigration1.net"};
+    public static final String[] LEGACY_NETWORK_NODES = new String[] { "https://nodes-legacy.iotatestmigration6.net/" };
     // Legacy permanode
-    public static final String LEGACY_PERMANODE = "http://permanode.ledgermigration1.net:4000/api";
+    public static final String LEGACY_PERMANODE = "https://nodes-legacy.iotatestmigration6.net";
     // Chrysalis node
-    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.ledgermigration1.ledgermigration1.net";
+    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.ledgermigration1.iotatestmigration6.net";
 
     // ------------------------------------------
     
     // We store all bundle hashes here and check later if the bundles got confirmed
     private List<String> migrationBundleHashes;
+    // Did we start the sending/checking process
+    private boolean started = false;
 
     private Account account;
 
@@ -96,7 +98,7 @@ public class Migration implements MigrationProgressListener {
     }
 
     public boolean finished(){
-        return migrationBundleHashes.size() == 0;
+        return started && migrationBundleHashes.size() == 0;
     }
 
     public String run(){
@@ -136,14 +138,14 @@ public class Migration implements MigrationProgressListener {
             String[] nodes = LEGACY_NETWORK_NODES;
             String seed = System.getenv("MIGRATION_SEED");
 
-            MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE, ADDRESS_SECURITY_LEVEL, 0);
-        
-            System.out.println(migrationData);
+            MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE,
+                    ADDRESS_SECURITY_LEVEL, 1);
 
             if (migrationData.balance() > 0) {
-                List<List<InputData>>input_batches = getMigrationBundles(migrationData.inputs());
+                List<List<InputData>> input_batches = getMigrationBundles(migrationData.inputs());
                 // create bundles with the inputs
                 for (List<InputData> batch : input_batches) {
+
                     try {
                         MigrationBundleOptions options = new MigrationBundleOptions();
                         options.setLogFileName("iota-migration.log");
@@ -157,18 +159,19 @@ public class Migration implements MigrationProgressListener {
                         e.printStackTrace();
                     }
                 }
-            
+
+                System.out.println("bundle hashes: " + Arrays.toString(migrationBundleHashes.toArray()));
+
                 // Send all bundles to the Tangle and reattach them until they are confirmed
-                for (String bundleHash : migrationBundleHashes) {
+                for (String bundleHash : new LinkedList<>(migrationBundleHashes)) {
                     try {
-                        System.out.println("sending: " + bundleHash);
                         // 0 for default mwm
                         manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
                     } catch (Exception e) { 
                         e.printStackTrace(); 
                     }
                 }
-
+                started = true;
                 return mnemonic;
             } else {
                 System.out.println("Detected 0 balance. Exiting.");
@@ -191,6 +194,9 @@ public class Migration implements MigrationProgressListener {
                 unspent.add(input);
               }
         }
+
+        System.out.println(Arrays.toString(spent.toArray()));
+        System.out.println(Arrays.toString(unspent.toArray()));
 
         List<List<InputData>> unspentInputChunks = selectInputsForUnspentAddresses(unspent);
         List<InputData> spentInputs = spent.stream()
@@ -253,7 +259,7 @@ public class Migration implements MigrationProgressListener {
         for (int index=0; index < inputsWithEnoughBalance.size(); index++){
             int chunkIndex = (int) Math.floor(index / MAX_INPUTS_PER_BUNDLE);
 
-            if (chunkIndex > chunks.size()){
+            if (chunkIndex >= chunks.size()) {
                 chunks.add(new LinkedList<>());
             }
             chunks.get(chunkIndex).add(inputsWithEnoughBalance.get(index));
