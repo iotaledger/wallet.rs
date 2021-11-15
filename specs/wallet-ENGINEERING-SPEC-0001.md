@@ -78,8 +78,26 @@
       - [AccountSynchronizer](#AccountSynchronizer)
       - [SyncedAccount](#SyncedAccount)
 
+## Introduction
 
-## account
+The wallet library is a stateful package with a standardised interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
+
+The package introduces the concept of an _account_. An account is a reference or a label to a [seed](https://chrysalis.docs.iota.org/guides/dev_guide#seed). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+
+A similar [package](https://docs.iota.org/docs/client-libraries/0.1/account-module/introduction/overview) was previously developed but this becomes obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the (new) package will be able to manage multiple accounts. 
+
+To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
+
+## Considerations
+
+*   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based Stronghold library or hardware enclaves such as a Ledger Nano;
+*   The secure enclave should have the ability to generate addresses and sign messages upon receipt of a message, and return the output in a message. If the secure enclave is initialised with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
+
+## Naming Conventions
+
+The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, standard Rust naming [conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) are followed. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
+
+## Account
 
 #### AccountInitialiser
 
@@ -181,6 +199,12 @@
         <td>Updates the account's client options.</td>
       </tr>
   <tr>
+          <td><a href="#list_messages()">list_messages()</a></td>
+          <td>&#10004;</td>
+          <td>function</td>
+          <td>Gets a list of transactions on this account.</td>
+        </tr>
+  <tr>
         <td><a href="#list_spent_addresses()">list_spent_addresses()</a></td>
         <td>&#10004;</td>
         <td>function</td>
@@ -197,6 +221,12 @@
         <td>&#10004;</td>
         <td>function</td>
         <td>Gets a message with the given id associated with this account.</td>
+      </tr>
+  <tr>
+        <td><a href="#get_node_info()">get_node_info()</a></td>
+        <td>&#10004;</td>
+        <td>function</td>
+        <td>Gets the node info from /api/v1/info endpoint.</td>
       </tr>
   <tr>
         <td><a href="#address_available_balance()">address_available_balance()</a></td>
@@ -301,6 +331,12 @@
         <td>Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).</td>
       </tr>
   <tr>
+          <td><a href="#list_messages()">list_messages()</a></td>
+          <td>&#10004;</td>
+          <td>function</td>
+          <td>Bridge to [Account#list_messages](struct.Account.html#method.list_messages).</td>
+        </tr>
+  <tr>
         <td><a href="#list_spent_addresses()">list_spent_addresses()</a></td>
         <td>&#10004;</td>
         <td>function</td>
@@ -318,6 +354,12 @@
         <td>function</td>
         <td>Bridge to [Account#get_message](struct.Account.html#method.get_message).</td>
       </tr>
+  <tr>
+          <td><a href="#get_node_info()">get_node_info()</a></td>
+          <td>&#10004;</td>
+          <td>function</td>
+          <td>Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).</td>
+        </tr>
 </table>
 
 
@@ -358,7 +400,7 @@
 
 ### AccountInitialiser
 
-####signer_type()
+#### signer_type()
 
 Sets the account type.
 <table>
@@ -382,7 +424,7 @@ Sets the account type.
       </tr>
 </table>
 
-####alias()
+#### alias()
 
 Defines the account alias. If not defined, we'll generate one.
 <table>
@@ -406,7 +448,7 @@ Defines the account alias. If not defined, we'll generate one.
       </tr>
 </table>
 
-####created_at()
+#### created_at()
 
 Time of account creation.
 <table>
@@ -430,7 +472,7 @@ Time of account creation.
       </tr>
 </table>
 
-####messages()
+#### messages()
 
 Messages associated with the seed.
 <table>
@@ -454,7 +496,7 @@ Messages associated with the seed.
       </tr>
 </table>
 
-####addresses()
+#### addresses()
 
 The account can be initialised with locally stored address history.
 <table>
@@ -478,7 +520,7 @@ The account can be initialised with locally stored address history.
       </tr>
 </table>
 
-####skip_persistence()
+#### skip_persistence()
 
 Skips storing the account to the database.
 <table>
@@ -496,7 +538,7 @@ Skips storing the account to the database.
       </tr>
 </table>
 
-####allow_create_multiple_empty_accounts()
+#### allow_create_multiple_empty_accounts()
 
 Enables creating multiple accounts without history.
 <table>
@@ -514,7 +556,7 @@ Enables creating multiple accounts without history.
       </tr>
 </table>
 
-####initialise()
+#### initialise()
 
 Initialises the account.
 <table>
@@ -534,7 +576,7 @@ Initialises the account.
 
 ### Account
 
-####bech32_hrp()
+#### bech32_hrp()
 
 Returns the address bech32 human readable part.
 <table>
@@ -552,7 +594,7 @@ Returns the address bech32 human readable part.
       </tr>
 </table>
 
-####latest_address()
+#### latest_address()
 
 Returns the most recent address of the account.
 <table>
@@ -570,7 +612,7 @@ Returns the most recent address of the account.
       </tr>
 </table>
 
-####balance()
+#### balance()
 
 Gets the account balance information.
 <table>
@@ -588,7 +630,7 @@ Gets the account balance information.
       </tr>
 </table>
 
-####set_alias()
+#### set_alias()
 
 Updates the account alias.
 <table>
@@ -606,7 +648,7 @@ Updates the account alias.
       </tr>
 </table>
 
-####set_client_options()
+#### set_client_options()
 
 Updates the account's client options.
 <table>
@@ -624,7 +666,43 @@ Updates the account's client options.
       </tr>
 </table>
 
-####list_spent_addresses()
+#### list_messages()
+
+Gets a list of transactions on this account.
+<table>
+      <tr>
+        <td></td>
+        <td><strong>Name</strong></td>
+        <td><strong>Type</strong></td>
+        <td><strong>Description</strong></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>count</td>
+        <td>usize</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>from</td>
+        <td>usize</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>message_type</td>
+        <td><a href="#messagetype">MessageType</a></td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>returns</td>
+        <td></td>
+        <td><a href="#message">Message</a></td>
+        <td></td>
+      </tr>
+</table>
+
+#### list_spent_addresses()
 
 Gets the spent addresses.
 <table>
@@ -642,7 +720,7 @@ Gets the spent addresses.
       </tr>
 </table>
 
-####list_unspent_addresses()
+#### list_unspent_addresses()
 
 Gets the spent addresses.
 <table>
@@ -660,7 +738,7 @@ Gets the spent addresses.
       </tr>
 </table>
 
-####get_message()
+#### get_message()
 
 Gets a message with the given id associated with this account.
 <table>
@@ -684,7 +762,43 @@ Gets a message with the given id associated with this account.
       </tr>
 </table>
 
-####address_available_balance()
+#### get_node_info()
+
+Gets the node info from /api/v1/info endpoint.
+<table>
+      <tr>
+        <td></td>
+        <td><strong>Name</strong></td>
+        <td><strong>Type</strong></td>
+        <td><strong>Description</strong></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>url</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>jwt</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>auth</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>returns</td>
+        <td></td>
+        <td><a href="#nodeinfowrapper">NodeInfoWrapper</a></td>
+        <td></td>
+      </tr>
+</table>
+
+#### address_available_balance()
 
 Gets the available balance on the given address.
 <table>
@@ -710,7 +824,7 @@ Gets the available balance on the given address.
 
 ### AccountHandle
 
-####sync()
+#### sync()
 
 Returns the builder to setup the process to synchronize this account with the Tangle.
 <table>
@@ -728,7 +842,7 @@ Returns the builder to setup the process to synchronize this account with the Ta
       </tr>
 </table>
 
-####consolidate_outputs()
+#### consolidate_outputs()
 
 Consolidate account outputs.
 <table>
@@ -752,7 +866,7 @@ Consolidate account outputs.
       </tr>
 </table>
 
-####transfer()
+#### transfer()
 
 Send messages.
 <table>
@@ -776,7 +890,7 @@ Send messages.
       </tr>
 </table>
 
-####retry()
+#### retry()
 
 Retry message.
 <table>
@@ -800,7 +914,7 @@ Retry message.
       </tr>
 </table>
 
-####promote()
+#### promote()
 
 Promote message.
 <table>
@@ -824,7 +938,7 @@ Promote message.
       </tr>
 </table>
 
-####reattach()
+#### reattach()
 
 Reattach message.
 <table>
@@ -848,7 +962,7 @@ Reattach message.
       </tr>
 </table>
 
-####generate_address()
+#### generate_address()
 
 Gets a new unused address and links it to this account.
 <table>
@@ -866,7 +980,7 @@ Gets a new unused address and links it to this account.
       </tr>
 </table>
 
-####generate_addresses()
+#### generate_addresses()
 
 Gets amount new unused addresses and links them to this account.
 <table>
@@ -890,7 +1004,7 @@ Gets amount new unused addresses and links them to this account.
       </tr>
 </table>
 
-####get_unused_address()
+#### get_unused_address()
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account,
 <table>
@@ -908,7 +1022,7 @@ Synchronizes the account addresses with the Tangle and returns the latest addres
       </tr>
 </table>
 
-####is_latest_address_unused()
+#### is_latest_address_unused()
 
 Syncs the latest address with the Tangle and determines whether it's unused or not.
 <table>
@@ -926,7 +1040,7 @@ Syncs the latest address with the Tangle and determines whether it's unused or n
       </tr>
 </table>
 
-####latest_address()
+#### latest_address()
 
 Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
 <table>
@@ -944,7 +1058,7 @@ Bridge to [Account#latest_address](struct.Account.html#method.latest_address).
       </tr>
 </table>
 
-####balance()
+#### balance()
 
 Bridge to [Account#balance](struct.Account.html#method.balance).
 <table>
@@ -962,7 +1076,7 @@ Bridge to [Account#balance](struct.Account.html#method.balance).
       </tr>
 </table>
 
-####set_alias()
+#### set_alias()
 
 Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
 <table>
@@ -980,7 +1094,7 @@ Bridge to [Account#set_alias](struct.Account.html#method.set_alias).
       </tr>
 </table>
 
-####set_client_options()
+#### set_client_options()
 
 Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
 <table>
@@ -998,7 +1112,43 @@ Bridge to [Account#set_client_options](struct.Account.html#method.set_client_opt
       </tr>
 </table>
 
-####list_spent_addresses()
+#### list_messages()
+
+Bridge to [Account#list_messages](struct.Account.html#method.list_messages).
+<table>
+      <tr>
+        <td></td>
+        <td><strong>Name</strong></td>
+        <td><strong>Type</strong></td>
+        <td><strong>Description</strong></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>count</td>
+        <td>usize</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>from</td>
+        <td>usize</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>message_type</td>
+        <td><a href="#messagetype">MessageType</a></td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>returns</td>
+        <td></td>
+        <td><a href="#message">Message</a></td>
+        <td></td>
+      </tr>
+</table>
+
+#### list_spent_addresses()
 
 Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).
 <table>
@@ -1016,7 +1166,7 @@ Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_a
       </tr>
 </table>
 
-####list_unspent_addresses()
+#### list_unspent_addresses()
 
 Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).
 <table>
@@ -1034,7 +1184,7 @@ Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspe
       </tr>
 </table>
 
-####get_message()
+#### get_message()
 
 Bridge to [Account#get_message](struct.Account.html#method.get_message).
 <table>
@@ -1058,8 +1208,44 @@ Bridge to [Account#get_message](struct.Account.html#method.get_message).
       </tr>
 </table>
 
+#### get_node_info()
 
-## account_manager
+Bridge to [Account#get_node_info](struct.Account.html#method.get_node_info).
+<table>
+      <tr>
+        <td></td>
+        <td><strong>Name</strong></td>
+        <td><strong>Type</strong></td>
+        <td><strong>Description</strong></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>url</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>jwt</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>parameter</td>
+        <td>auth</td>
+        <td>str</td>
+        <td></td>
+      </tr>
+  <tr>
+        <td>returns</td>
+        <td></td>
+        <td><a href="#nodeinfowrapper">NodeInfoWrapper</a></td>
+        <td></td>
+      </tr>
+</table>
+
+
+## Account Manager
 
 An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted using this account manager wrapper.
 
@@ -1274,7 +1460,7 @@ An account manager class should be publicly available for users. With the accoun
 
 ### AccountManagerBuilder
 
-####new()
+#### new()
 
 Initialises a new instance of the account manager builder with the default storage adapter.
 <table>
@@ -1292,7 +1478,7 @@ Initialises a new instance of the account manager builder with the default stora
       </tr>
 </table>
 
-####with_storage()
+#### with_storage()
 
 Sets the storage config to be used.
 <table>
@@ -1322,7 +1508,7 @@ Sets the storage config to be used.
       </tr>
 </table>
 
-####with_polling_interval()
+#### with_polling_interval()
 
 Sets the polling interval.
 <table>
@@ -1346,7 +1532,7 @@ Sets the polling interval.
       </tr>
 </table>
 
-####with_skip_polling()
+#### with_skip_polling()
 
 Skip polling
 <table>
@@ -1364,7 +1550,7 @@ Skip polling
       </tr>
 </table>
 
-####with_output_consolidation_threshold()
+#### with_output_consolidation_threshold()
 
 Sets the number of outputs an address must have to trigger the automatic consolidation process.
 <table>
@@ -1388,7 +1574,7 @@ Sets the number of outputs an address must have to trigger the automatic consoli
       </tr>
 </table>
 
-####with_automatic_output_consolidation_disabled()
+#### with_automatic_output_consolidation_disabled()
 
 Disables the automatic output consolidation process.
 <table>
@@ -1406,7 +1592,7 @@ Disables the automatic output consolidation process.
       </tr>
 </table>
 
-####with_sync_spent_outputs()
+#### with_sync_spent_outputs()
 
 Enables fetching spent output history on sync.
 <table>
@@ -1424,7 +1610,7 @@ Enables fetching spent output history on sync.
       </tr>
 </table>
 
-####with_event_persistence()
+#### with_event_persistence()
 
 Enables event persistence.
 <table>
@@ -1442,7 +1628,7 @@ Enables event persistence.
       </tr>
 </table>
 
-####with_multiple_empty_accounts()
+#### with_multiple_empty_accounts()
 
 Enables creating multiple accounts without history.
 <table>
@@ -1460,7 +1646,7 @@ Enables creating multiple accounts without history.
       </tr>
 </table>
 
-####finish()
+#### finish()
 
 Builds the manager.
 <table>
@@ -1480,7 +1666,7 @@ Builds the manager.
 
 ### AccountManager
 
-####builder()
+#### builder()
 
 Initialises the account manager builder.
 <table>
@@ -1498,7 +1684,7 @@ Initialises the account manager builder.
       </tr>
 </table>
 
-####get_migration_data()
+#### get_migration_data()
 
 Gets the legacy migration data for the seed.
 <table>
@@ -1522,7 +1708,7 @@ Gets the legacy migration data for the seed.
       </tr>
 </table>
 
-####send_migration_bundle()
+#### send_migration_bundle()
 
 Sends the migration bundle to the given node.
 <table>
@@ -1558,7 +1744,7 @@ Sends the migration bundle to the given node.
       </tr>
 </table>
 
-####delete()
+#### delete()
 
 Deletes the storage.
 <table>
@@ -1570,7 +1756,7 @@ Deletes the storage.
       </tr>
 </table>
 
-####stop_background_sync()
+#### stop_background_sync()
 
 Stops the background polling and MQTT monitoring.
 <table>
@@ -1582,7 +1768,7 @@ Stops the background polling and MQTT monitoring.
       </tr>
 </table>
 
-####is_latest_address_unused()
+#### is_latest_address_unused()
 
 Determines whether all accounts has the latest address unused.
 <table>
@@ -1600,7 +1786,7 @@ Determines whether all accounts has the latest address unused.
       </tr>
 </table>
 
-####set_client_options()
+#### set_client_options()
 
 Sets the client options for all accounts.
 <table>
@@ -1618,7 +1804,7 @@ Sets the client options for all accounts.
       </tr>
 </table>
 
-####store_mnemonic()
+#### store_mnemonic()
 
 Stores a mnemonic for the given signer type.
 <table>
@@ -1642,7 +1828,7 @@ Stores a mnemonic for the given signer type.
       </tr>
 </table>
 
-####generate_mnemonic()
+#### generate_mnemonic()
 
 Generates a new mnemonic.
 <table>
@@ -1660,7 +1846,7 @@ Generates a new mnemonic.
       </tr>
 </table>
 
-####create_account()
+#### create_account()
 
 Adds a new account.
 <table>
@@ -1684,7 +1870,7 @@ Adds a new account.
       </tr>
 </table>
 
-####sync_accounts()
+#### sync_accounts()
 
 Syncs all accounts.
 <table>
@@ -1702,7 +1888,7 @@ Syncs all accounts.
       </tr>
 </table>
 
-####get_accounts()
+#### get_accounts()
 
 Gets all accounts from storage.
 <table>
@@ -1720,7 +1906,7 @@ Gets all accounts from storage.
       </tr>
 </table>
 
-####get_seed_checksum()
+#### get_seed_checksum()
 
 Get seed checksum
 <table>
@@ -1746,7 +1932,7 @@ Get seed checksum
 
 ### AccountsSynchronizer
 
-####gap_limit()
+#### gap_limit()
 
 Number of address indexes that are generated.
 <table>
@@ -1770,7 +1956,7 @@ Number of address indexes that are generated.
       </tr>
 </table>
 
-####address_index()
+#### address_index()
 
 Initial address index to start syncing.
 <table>
@@ -1794,7 +1980,7 @@ Initial address index to start syncing.
       </tr>
 </table>
 
-####skip_account_discovery()
+#### skip_account_discovery()
 
 Skips the account discovery process.
 <table>
@@ -1812,7 +1998,7 @@ Skips the account discovery process.
       </tr>
 </table>
 
-####skip_change_addresses()
+#### skip_change_addresses()
 
 Skip syncing existing change addresses.
 <table>
@@ -1830,7 +2016,7 @@ Skip syncing existing change addresses.
       </tr>
 </table>
 
-####account_discovery_threshold()
+#### account_discovery_threshold()
 
 Sets the minimum number of accounts to check on the discovery process.
 <table>
@@ -1854,7 +2040,7 @@ Sets the minimum number of accounts to check on the discovery process.
       </tr>
 </table>
 
-####execute()
+#### execute()
 
 Syncs the accounts with the Tangle.
 <table>
@@ -1873,7 +2059,7 @@ Syncs the accounts with the Tangle.
 </table>
 
 
-## client
+## Client
 
 #### AddressOutput
 
@@ -2638,7 +2824,7 @@ Syncs the accounts with the Tangle.
 
 ### AddressOutput
 
-####id()
+#### id()
 
 The output identifier.
 <table>
@@ -2658,7 +2844,7 @@ The output identifier.
 
 ### AddressBuilder
 
-####new()
+#### new()
 
 Initialises a new instance of the address builder.
 <table>
@@ -2676,7 +2862,7 @@ Initialises a new instance of the address builder.
       </tr>
 </table>
 
-####address()
+#### address()
 
 Defines the address.
 <table>
@@ -2700,7 +2886,7 @@ Defines the address.
       </tr>
 </table>
 
-####key_index()
+#### key_index()
 
 Sets the address key index.
 <table>
@@ -2724,7 +2910,7 @@ Sets the address key index.
       </tr>
 </table>
 
-####outputs()
+#### outputs()
 
 Sets the address outputs.
 <table>
@@ -2748,7 +2934,7 @@ Sets the address outputs.
       </tr>
 </table>
 
-####internal()
+#### internal()
 
 Sets the `internal` flag.
 <table>
@@ -2772,7 +2958,7 @@ Sets the `internal` flag.
       </tr>
 </table>
 
-####build()
+#### build()
 
 Builds the address.
 <table>
@@ -2792,7 +2978,7 @@ Builds the address.
 
 ### AddressWrapper
 
-####new()
+#### new()
 
 Create a new address wrapper.
 <table>
@@ -2822,7 +3008,7 @@ Create a new address wrapper.
       </tr>
 </table>
 
-####to_bech32()
+#### to_bech32()
 
 Encodes the address as bech32.
 <table>
@@ -2842,7 +3028,7 @@ Encodes the address as bech32.
 
 ### Address
 
-####balance()
+#### balance()
 
 Address total balance
 <table>
@@ -2862,7 +3048,7 @@ Address total balance
 
 ### client-client.rs
 
-####drop_all()
+#### drop_all()
 
 Drops all clients.
 <table>
@@ -2876,7 +3062,7 @@ Drops all clients.
 
 ### ClientOptionsBuilder
 
-####new()
+#### new()
 
 Initialises a new instance of the builder.
 <table>
@@ -2894,7 +3080,7 @@ Initialises a new instance of the builder.
       </tr>
 </table>
 
-####with_primary_node()
+#### with_primary_node()
 
 Sets the primary node.
 <table>
@@ -2918,7 +3104,7 @@ Sets the primary node.
       </tr>
 </table>
 
-####with_primary_pow_node()
+#### with_primary_pow_node()
 
 Sets the primary PoW node.
 <table>
@@ -2942,7 +3128,7 @@ Sets the primary PoW node.
       </tr>
 </table>
 
-####with_nodes()
+#### with_nodes()
 
 ClientOptions connected to a list of nodes.
 <table>
@@ -2966,7 +3152,7 @@ ClientOptions connected to a list of nodes.
       </tr>
 </table>
 
-####with_node()
+#### with_node()
 
 Adds a node to the node list.
 <table>
@@ -2990,7 +3176,7 @@ Adds a node to the node list.
       </tr>
 </table>
 
-####with_node_pool_urls()
+#### with_node_pool_urls()
 
 Get node list from the node_pool_urls
 <table>
@@ -3014,7 +3200,7 @@ Get node list from the node_pool_urls
       </tr>
 </table>
 
-####with_node_sync_interval()
+#### with_node_sync_interval()
 
 Set the node sync interval
 <table>
@@ -3038,7 +3224,7 @@ Set the node sync interval
       </tr>
 </table>
 
-####with_node_sync_disabled()
+#### with_node_sync_disabled()
 
 Disables the node syncing process.
 <table>
@@ -3056,7 +3242,7 @@ Disables the node syncing process.
       </tr>
 </table>
 
-####with_mqtt_mqtt_broker_options()
+#### with_mqtt_mqtt_broker_options()
 
 Sets the MQTT broker options.
 <table>
@@ -3080,7 +3266,7 @@ Sets the MQTT broker options.
       </tr>
 </table>
 
-####with_mqtt_disabled()
+#### with_mqtt_disabled()
 
 Sets the MQTT broker options.
 <table>
@@ -3098,7 +3284,7 @@ Sets the MQTT broker options.
       </tr>
 </table>
 
-####with_local_pow()
+#### with_local_pow()
 
 Sets whether the PoW should be done locally or remotely.
 <table>
@@ -3122,7 +3308,7 @@ Sets whether the PoW should be done locally or remotely.
       </tr>
 </table>
 
-####with_request_timeout()
+#### with_request_timeout()
 
 Sets the request timeout.
 <table>
@@ -3146,7 +3332,7 @@ Sets the request timeout.
       </tr>
 </table>
 
-####with_api_timeout()
+#### with_api_timeout()
 
 Sets the request timeout for a specific API usage.
 <table>
@@ -3176,7 +3362,7 @@ Sets the request timeout for a specific API usage.
       </tr>
 </table>
 
-####build()
+#### build()
 
 Builds the options.
 <table>
@@ -3196,7 +3382,7 @@ Builds the options.
 
 ### ClientOptions
 
-####builder()
+#### builder()
 
 Gets a new client options builder instance.
 <table>
@@ -3216,7 +3402,7 @@ Gets a new client options builder instance.
 
 ### TransferOutput
 
-####new()
+#### new()
 
 Creates a new transfer output.
 <table>
@@ -3254,7 +3440,7 @@ Creates a new transfer output.
 
 ### TransferBuilder
 
-####new()
+#### new()
 
 Initialises a new transfer to the given address.
 <table>
@@ -3290,7 +3476,7 @@ Initialises a new transfer to the given address.
       </tr>
 </table>
 
-####with_outputs()
+#### with_outputs()
 
 Creates a transfer with multiple outputs.
 <table>
@@ -3314,7 +3500,7 @@ Creates a transfer with multiple outputs.
       </tr>
 </table>
 
-####with_remainder_value_strategy()
+#### with_remainder_value_strategy()
 
 Sets the remainder value strategy for the transfer.
 <table>
@@ -3338,7 +3524,7 @@ Sets the remainder value strategy for the transfer.
       </tr>
 </table>
 
-####with_indexation()
+#### with_indexation()
 
 (Optional) message indexation.
 <table>
@@ -3362,7 +3548,7 @@ Sets the remainder value strategy for the transfer.
       </tr>
 </table>
 
-####with_skip_sync()
+#### with_skip_sync()
 
 Skip account syncing before transferring.
 <table>
@@ -3380,7 +3566,7 @@ Skip account syncing before transferring.
       </tr>
 </table>
 
-####finish()
+#### finish()
 
 Builds the transfer.
 <table>
@@ -3400,7 +3586,7 @@ Builds the transfer.
 
 ### Transfer
 
-####builder()
+#### builder()
 
 Initialises the transfer builder.
 <table>
@@ -3436,7 +3622,7 @@ Initialises the transfer builder.
       </tr>
 </table>
 
-####builder_with_outputs()
+#### builder_with_outputs()
 
 Initialises the transfer builder with multiple outputs.
 <table>
@@ -3462,7 +3648,7 @@ Initialises the transfer builder with multiple outputs.
 
 ### Value
 
-####new()
+#### new()
 
 Ititialises a new Value.
 <table>
@@ -3492,7 +3678,7 @@ Ititialises a new Value.
       </tr>
 </table>
 
-####with_denomination()
+#### with_denomination()
 
 Formats the value with its unit.
 <table>
@@ -3510,7 +3696,7 @@ Formats the value with its unit.
       </tr>
 </table>
 
-####without_denomination()
+#### without_denomination()
 
 The transaction value without its unit.
 <table>
@@ -3530,7 +3716,7 @@ The transaction value without its unit.
 
 ### TransactionRegularEssence
 
-####inputs()
+#### inputs()
 
 Gets the transaction inputs.
 <table>
@@ -3542,7 +3728,7 @@ Gets the transaction inputs.
       </tr>
 </table>
 
-####outputs()
+#### outputs()
 
 Gets the transaction outputs.
 <table>
@@ -3554,7 +3740,7 @@ Gets the transaction outputs.
       </tr>
 </table>
 
-####payload()
+#### payload()
 
 Gets the transaction chained payload.
 <table>
@@ -3572,7 +3758,7 @@ Gets the transaction chained payload.
       </tr>
 </table>
 
-####internal()
+#### internal()
 
 Whether the transaction is between the mnemonic accounts or not.
 <table>
@@ -3590,7 +3776,7 @@ Whether the transaction is between the mnemonic accounts or not.
       </tr>
 </table>
 
-####incoming()
+#### incoming()
 
 Whether the transaction is incoming or outgoing.
 <table>
@@ -3608,7 +3794,7 @@ Whether the transaction is incoming or outgoing.
       </tr>
 </table>
 
-####value()
+#### value()
 
 The transactions's value.
 <table>
@@ -3626,7 +3812,7 @@ The transactions's value.
       </tr>
 </table>
 
-####remainder_value()
+#### remainder_value()
 
 The transactions's remainder value sum.
 <table>
@@ -3646,7 +3832,7 @@ The transactions's remainder value sum.
 
 ### MessageTransactionPayload
 
-####essence()
+#### essence()
 
 The transaction essence.
 <table>
@@ -3664,7 +3850,7 @@ The transaction essence.
       </tr>
 </table>
 
-####unlock_blocks()
+#### unlock_blocks()
 
 The unlock blocks.
 <table>
@@ -3678,7 +3864,7 @@ The unlock blocks.
 
 ### MessageMilestonePayload
 
-####essence()
+#### essence()
 
 The milestone essence.
 <table>
@@ -3696,7 +3882,7 @@ The milestone essence.
       </tr>
 </table>
 
-####signatures()
+#### signatures()
 
 The milestone signatures.
 <table>
@@ -3716,7 +3902,7 @@ The milestone signatures.
 
 ### Message
 
-####message_type()
+#### message_type()
 
 The message type.
 <table>
@@ -3734,7 +3920,7 @@ The message type.
       </tr>
 </table>
 
-####response_tx()
+#### response_tx()
 
 The response sender.
 <table>
@@ -3752,7 +3938,7 @@ The response sender.
       </tr>
 </table>
 
-####id()
+#### id()
 
 The message identifier.
 <table>
@@ -3772,7 +3958,7 @@ The message identifier.
 
 ### AccountDto
 
-####new()
+#### new()
 
 Creates a new instance of the account DTO.
 <table>
@@ -3804,7 +3990,7 @@ Creates a new instance of the account DTO.
 
 ### Response
 
-####response()
+#### response()
 
 The response's type.
 <table>
@@ -4254,7 +4440,7 @@ The library is able to listen to several supported event. As soon as the event o
 
 ### event-event.rs
 
-####remove_balance_change_listener()
+#### remove_balance_change_listener()
 
 Removes the balance change listener associated with the given identifier.
 <table>
@@ -4272,7 +4458,7 @@ Removes the balance change listener associated with the given identifier.
       </tr>
 </table>
 
-####remove_new_transaction_listener()
+#### remove_new_transaction_listener()
 
 Removes the new transaction listener associated with the given identifier.
 <table>
@@ -4290,7 +4476,7 @@ Removes the new transaction listener associated with the given identifier.
       </tr>
 </table>
 
-####remove_confirmation_state_change_listener()
+#### remove_confirmation_state_change_listener()
 
 Removes the new confirmation state change listener associated with the given identifier.
 <table>
@@ -4308,7 +4494,7 @@ Removes the new confirmation state change listener associated with the given ide
       </tr>
 </table>
 
-####remove_reattachment_listener()
+#### remove_reattachment_listener()
 
 Removes the reattachment listener associated with the given identifier.
 <table>
@@ -4326,7 +4512,7 @@ Removes the reattachment listener associated with the given identifier.
       </tr>
 </table>
 
-####remove_broadcast_listener()
+#### remove_broadcast_listener()
 
 Removes the broadcast listener associated with the given identifier.
 <table>
@@ -4344,7 +4530,7 @@ Removes the broadcast listener associated with the given identifier.
       </tr>
 </table>
 
-####remove_error_listener()
+#### remove_error_listener()
 
 Removes the error listener associated with the given identifier.
 <table>
@@ -4362,7 +4548,7 @@ Removes the error listener associated with the given identifier.
       </tr>
 </table>
 
-####remove_transfer_progress_listener()
+#### remove_transfer_progress_listener()
 
 Remove a transfer event listener.
 <table>
@@ -4380,7 +4566,7 @@ Remove a transfer event listener.
       </tr>
 </table>
 
-####remove_migration_progress_listener()
+#### remove_migration_progress_listener()
 
 Remove a migration event listener.
 <table>
@@ -4400,7 +4586,7 @@ Remove a migration event listener.
 
 ### event-monitor.rs
 
-####unsubscribe()
+#### unsubscribe()
 
 Unsubscribe from all topics associated with the account.
 <table>
@@ -4418,7 +4604,7 @@ Unsubscribe from all topics associated with the account.
       </tr>
 </table>
 
-####monitor_account_addresses_balance()
+#### monitor_account_addresses_balance()
 
 Monitor account addresses for balance changes.
 <table>
@@ -4436,7 +4622,7 @@ Monitor account addresses for balance changes.
       </tr>
 </table>
 
-####monitor_address_balance()
+#### monitor_address_balance()
 
 Monitor address for balance changes.
 <table>
@@ -4678,7 +4864,7 @@ _Scenario 2_: User has no backup file
 
 ### AccountSynchronizer
 
-####gap_limit()
+#### gap_limit()
 
 Number of address indexes that are generated.
 <table>
@@ -4702,7 +4888,7 @@ Number of address indexes that are generated.
       </tr>
 </table>
 
-####skip_persistence()
+#### skip_persistence()
 
 Skip saving new messages and addresses on the account object.
 <table>
@@ -4720,7 +4906,7 @@ Skip saving new messages and addresses on the account object.
       </tr>
 </table>
 
-####skip_change_addresses()
+#### skip_change_addresses()
 
 Skip syncing existing change addresses.
 <table>
@@ -4738,7 +4924,7 @@ Skip syncing existing change addresses.
       </tr>
 </table>
 
-####address_index()
+#### address_index()
 
 Initial address index to start syncing.
 <table>
@@ -4762,7 +4948,7 @@ Initial address index to start syncing.
       </tr>
 </table>
 
-####execute()
+#### execute()
 
 Syncs account with the tangle.
 <table>
