@@ -9,15 +9,13 @@ use anyhow::anyhow;
 
 use iota_wallet::{
     event::{
-        AddressConsolidationNeeded as WalletAddressConsolidationNeeded, BalanceEvent as WalletBalanceEvent, EventId,
-        MigrationProgressType as WalletMigrationProgressType,
-        TransferProgressType as WalletTransferProgressType,
-        TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
-        TransactionEvent as WalletTransactionEvent, TransactionReattachmentEvent as WalletTransactionReattachmentEvent,
-        TransferProgress as WalletTransferProgress,
-        AddressData as WalletAddressData,
+        AddressConsolidationNeeded as WalletAddressConsolidationNeeded, AddressData as WalletAddressData,
+        BalanceEvent as WalletBalanceEvent, EventId, MigrationProgressType as WalletMigrationProgressType,
         PreparedTransactionData as WalletPreparedTransactionData,
-        TransactionIO as WalletTransactionIO
+        TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
+        TransactionEvent as WalletTransactionEvent, TransactionIO as WalletTransactionIO,
+        TransactionReattachmentEvent as WalletTransactionReattachmentEvent, TransferProgress as WalletTransferProgress,
+        TransferProgressType as WalletTransferProgressType,
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
@@ -58,7 +56,9 @@ pub fn transfer_progress_type_enum_to_type(transfer_type: &WalletTransferProgres
     match transfer_type {
         WalletTransferProgressType::SyncingAccount { .. } => TransferProgressType::SyncingAccount,
         WalletTransferProgressType::SelectingInputs { .. } => TransferProgressType::SelectingInputs,
-        WalletTransferProgressType::GeneratingRemainderDepositAddress { .. } => TransferProgressType::GeneratingRemainderDepositAddress,
+        WalletTransferProgressType::GeneratingRemainderDepositAddress { .. } => {
+            TransferProgressType::GeneratingRemainderDepositAddress
+        }
         WalletTransferProgressType::PreparedTransaction { .. } => TransferProgressType::PreparedTransaction,
         WalletTransferProgressType::SigningTransaction { .. } => TransferProgressType::SigningTransaction,
         WalletTransferProgressType::PerformingPoW { .. } => TransferProgressType::PerformingPoW,
@@ -196,14 +196,18 @@ impl From<&WalletPreparedTransactionData> for PreparedTransactionData {
 }
 impl core::fmt::Display for PreparedTransactionData {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "data={:?}, inputs=({:?}), outputs=({:?})", self.data, self.inputs, self.outputs)
+        write!(
+            f,
+            "data={:?}, inputs=({:?}), outputs=({:?})",
+            self.data, self.inputs, self.outputs
+        )
     }
 }
 
 impl PreparedTransactionData {
     pub fn inputs(&self) -> Vec<TransactionIO> {
         self.inputs.clone()
-    } 
+    }
     pub fn outputs(&self) -> Vec<TransactionIO> {
         self.outputs.clone()
     }
@@ -234,15 +238,19 @@ impl From<&WalletTransactionIO> for TransactionIO {
 }
 impl core::fmt::Display for TransactionIO {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "address={:?}, amount={:?}, remainder={:?}", self.address, self.amount, self.remainder)
+        write!(
+            f,
+            "address={:?}, amount={:?}, remainder={:?}",
+            self.address, self.amount, self.remainder
+        )
     }
 }
 
 impl From<WalletTransferProgressType> for TransferProgress {
     fn from(progress_type: WalletTransferProgressType) -> Self {
-        Self { 
+        Self {
             transfer_type: transfer_progress_type_enum_to_type(&progress_type),
-            event: progress_type 
+            event: progress_type,
         }
     }
 }

@@ -168,7 +168,7 @@ impl UnlockBlock {
     pub fn kind(&self) -> UnlockBlockKind {
         match self.unlock_block {
             RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
-            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference
+            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
         }
     }
 
