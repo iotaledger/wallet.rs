@@ -68,7 +68,7 @@ pub struct MigrationDataFinder<'a> {
     seed: TernarySeed,
     pub(crate) seed_hash: u64,
     pub(crate) security_level: u8,
-    gap_limit: u64,
+    pub(crate) gap_limit: u64,
     pub(crate) initial_address_index: u64,
 }
 
@@ -119,6 +119,12 @@ impl<'a> MigrationDataFinder<'a> {
     /// Sets the security level.
     pub fn with_security_level(mut self, level: u8) -> Self {
         self.security_level = level;
+        self
+    }
+
+    /// Sets the gap limit.
+    pub fn with_gap_limit(mut self, gap_limit: u64) -> Self {
+        self.gap_limit = gap_limit;
         self
     }
 
