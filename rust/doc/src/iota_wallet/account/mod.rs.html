@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;account&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../iota_wallet/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input"name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src&#x2F;account&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../iota_wallet/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1747,8 +1747,7 @@
 <span id="1747">1747</span>
 <span id="1748">1748</span>
 <span id="1749">1749</span>
-</pre><pre class="rust">
-<span class="comment">// Copyright 2020 IOTA Stiftung</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1816,10 +1815,10 @@
 <span class="kw">impl</span> <span class="ident">Hash</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Hasher</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">H</span>) {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span><span class="ident">::Address</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">to_bech32</span>().<span class="ident">hash</span>(<span class="ident">state</span>),
-            <span class="self">Self</span><span class="ident">::Id</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
-            <span class="self">Self</span><span class="ident">::Alias</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
-            <span class="self">Self</span><span class="ident">::Index</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
+            <span class="ident"><span class="self">Self</span>::Address</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">to_bech32</span>().<span class="ident">hash</span>(<span class="ident">state</span>),
+            <span class="ident"><span class="self">Self</span>::Id</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
+            <span class="ident"><span class="self">Self</span>::Alias</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
+            <span class="ident"><span class="self">Self</span>::Index</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">hash</span>(<span class="ident">state</span>),
         }
     }
 }
@@ -1827,10 +1826,10 @@
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> (<span class="self">self</span>, <span class="ident">other</span>) {
-            (<span class="self">Self</span><span class="ident">::Address</span>(<span class="ident">address1</span>), <span class="self">Self</span><span class="ident">::Address</span>(<span class="ident">address2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address2</span>,
-            (<span class="self">Self</span><span class="ident">::Id</span>(<span class="ident">id1</span>), <span class="self">Self</span><span class="ident">::Id</span>(<span class="ident">id2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">id2</span>,
-            (<span class="self">Self</span><span class="ident">::Alias</span>(<span class="ident">alias1</span>), <span class="self">Self</span><span class="ident">::Alias</span>(<span class="ident">alias2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">alias1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">alias2</span>,
-            (<span class="self">Self</span><span class="ident">::Index</span>(<span class="ident">index1</span>), <span class="self">Self</span><span class="ident">::Index</span>(<span class="ident">index2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">index1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">index2</span>,
+            (<span class="ident"><span class="self">Self</span>::Address</span>(<span class="ident">address1</span>), <span class="ident"><span class="self">Self</span>::Address</span>(<span class="ident">address2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address2</span>,
+            (<span class="ident"><span class="self">Self</span>::Id</span>(<span class="ident">id1</span>), <span class="ident"><span class="self">Self</span>::Id</span>(<span class="ident">id2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">id1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">id2</span>,
+            (<span class="ident"><span class="self">Self</span>::Alias</span>(<span class="ident">alias1</span>), <span class="ident"><span class="self">Self</span>::Alias</span>(<span class="ident">alias2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">alias1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">alias2</span>,
+            (<span class="ident"><span class="self">Self</span>::Index</span>(<span class="ident">index1</span>), <span class="ident"><span class="self">Self</span>::Index</span>(<span class="ident">index2</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">index1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">index2</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
@@ -1839,32 +1838,32 @@
 <span class="comment">// When the identifier is a string id.</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="kw">crate</span><span class="ident">::address::parse</span>(<span class="ident">value</span>) {
-            <span class="self">Self</span><span class="ident">::Address</span>(<span class="ident">address</span>)
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">address</span>) <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::address::parse</span>(<span class="ident">value</span>) {
+            <span class="ident"><span class="self">Self</span>::Address</span>(<span class="ident">address</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">starts_with</span>(<span class="ident">ACCOUNT_ID_PREFIX</span>) {
-            <span class="self">Self</span><span class="ident">::Id</span>(<span class="ident">value</span>.<span class="ident">to_string</span>())
+            <span class="ident"><span class="self">Self</span>::Id</span>(<span class="ident">value</span>.<span class="ident">to_string</span>())
         } <span class="kw">else</span> {
-            <span class="self">Self</span><span class="ident">::Alias</span>(<span class="ident">value</span>.<span class="ident">to_string</span>())
+            <span class="ident"><span class="self">Self</span>::Alias</span>(<span class="ident">value</span>.<span class="ident">to_string</span>())
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">value</span>.<span class="ident">as_str</span>())
+        <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">value</span>.<span class="ident">as_str</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="kw-2">&amp;</span><span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::from</span>(<span class="ident">value</span>.<span class="ident">as_str</span>())
+        <span class="ident"><span class="self">Self</span>::from</span>(<span class="ident">value</span>.<span class="ident">as_str</span>())
     }
 }
 
 <span class="comment">// When the identifier is an index.</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">AccountIdentifier</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span><span class="ident">::Index</span>(<span class="ident">value</span>)
+        <span class="ident"><span class="self">Self</span>::Index</span>(<span class="ident">value</span>)
     }
 }
 
@@ -1967,9 +1966,9 @@
     }
 
     <span class="doccomment">/// Initialises the account.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialise</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">AccountHandle</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">signer_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">signer_type</span>.<span class="ident">ok_or</span>(<span class="kw">crate</span><span class="ident">::Error::AccountInitialiseRequiredField</span>(
-            <span class="kw">crate</span><span class="ident">::error::AccountInitialiseRequiredField::SignerType</span>,
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialise</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">AccountHandle</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">signer_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">signer_type</span>.<span class="ident">ok_or</span>(<span class="ident"><span class="kw">crate</span>::Error::AccountInitialiseRequiredField</span>(
+            <span class="ident"><span class="kw">crate</span>::error::AccountInitialiseRequiredField::SignerType</span>,
         ))<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span> {
@@ -1992,7 +1991,7 @@
         <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
             <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
             <span class="kw">if</span> <span class="ident">account</span>.<span class="ident">alias</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">alias</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::AccountAliasAlreadyExists</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::AccountAliasAlreadyExists</span>);
             }
             <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">latest_account_index</span> {
                 <span class="ident">latest_account_index</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>();
@@ -2005,7 +2004,7 @@
                 <span class="kw">if</span> <span class="ident">latest_account</span>.<span class="ident">with_messages</span>(<span class="op">|</span><span class="ident">messages</span><span class="op">|</span> <span class="ident">messages</span>.<span class="ident">is_empty</span>()).<span class="kw">await</span>
                     <span class="op">&amp;&amp;</span> <span class="ident">latest_account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">all</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">outputs</span>.<span class="ident">is_empty</span>())
                 {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LatestAccountIsEmpty</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::LatestAccountIsEmpty</span>);
                 }
             }
         }
@@ -2033,14 +2032,14 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>.<span class="ident">clone</span>();
                 <span class="kw">let</span> <span class="ident">get_from_client_task</span> <span class="op">=</span> <span class="kw">async</span> {
-                    <span class="kw">let</span> <span class="ident">hrp</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::client::get_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_options</span>)
+                    <span class="kw">let</span> <span class="ident">hrp</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="kw-2">&amp;</span><span class="ident">client_options</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>
                         .<span class="ident">read</span>()
                         .<span class="kw">await</span>
                         .<span class="ident">get_network_info</span>()
                         .<span class="kw">await</span>
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">e</span> {
-                            <span class="ident">iota_client::Error::SyncedNodePoolEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Error::NodesNotSynced</span>(
+                            <span class="ident">iota_client::Error::SyncedNodePoolEmpty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Error::NodesNotSynced</span>(
                                 <span class="ident">client_options</span>
                                     .<span class="ident">nodes</span>()
                                     .<span class="ident">iter</span>()
@@ -2051,7 +2050,7 @@
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">into</span>(),
                         })<span class="question-mark">?</span>
                         .<span class="ident">bech32_hrp</span>;
-                    <span class="kw">crate</span><span class="ident">::Result::Ok</span>(<span class="ident">hrp</span>)
+                    <span class="ident"><span class="kw">crate</span>::Result::Ok</span>(<span class="ident">hrp</span>)
                 };
                 <span class="kw">match</span> <span class="ident">latest_account_handle</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -2078,10 +2077,10 @@
             <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">network</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">bech32_hrp</span>.<span class="ident">as_ref</span>() {
-                    <span class="string">&quot;iota&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::signing::Network::Mainnet</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::signing::Network::Testnet</span>,
+                    <span class="string">&quot;iota&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::signing::Network::Mainnet</span>,
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::signing::Network::Testnet</span>,
                 };
-                <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::address::get_iota_address</span>(
+                <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::address::get_iota_address</span>(
                     <span class="kw-2">&amp;</span><span class="ident">account</span>,
                     <span class="number">0</span>,
                     <span class="bool-val">false</span>,
@@ -2110,7 +2109,7 @@
             <span class="kw">match</span> <span class="ident">signer_type</span> {
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>)]</span>
                 <span class="ident">SignerType::LedgerNano</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+                    <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>
                         .<span class="ident">lock</span>()
                         .<span class="kw">await</span>
@@ -2120,7 +2119,7 @@
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>)]</span>
                 <span class="ident">SignerType::LedgerNanoSimulator</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+                    <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>
                         .<span class="ident">lock</span>()
                         .<span class="kw">await</span>
@@ -2134,7 +2133,7 @@
             <span class="kw">match</span> <span class="ident">signer_type</span> {
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>)]</span>
                 <span class="ident">SignerType::LedgerNano</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::signing::get_signer</span>(<span class="kw-2">&amp;</span><span class="ident">SignerType::LedgerNano</span>).<span class="kw">await</span>;
+                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::signing::get_signer</span>(<span class="kw-2">&amp;</span><span class="ident">SignerType::LedgerNano</span>).<span class="kw">await</span>;
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
                     <span class="kw">let</span> <span class="ident">first_address</span> <span class="op">=</span> <span class="ident">signer</span>
                         <span class="comment">// dummy account with index 0 so we can generate the correct address</span>
@@ -2162,7 +2161,7 @@
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="macro">log::debug!</span>(<span class="string">&quot;[LEDGERADDRESS] generated first address {:?}&quot;</span>, <span class="ident">first_address</span>);
                     <span class="comment">// generate address from first account to validate mnemonic</span>
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">first_account_first_address</span>) <span class="op">=</span> <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">first_account_first_address</span>) <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>
                         .<span class="ident">lock</span>()
                         .<span class="kw">await</span>
@@ -2171,7 +2170,7 @@
                     {
                         <span class="macro">log::debug!</span>(<span class="string">&quot;[LEDGERADDRESS] read first address {:?}&quot;</span>, <span class="ident">first_account_first_address</span>);
                         <span class="kw">if</span> <span class="ident">first_account_first_address</span> <span class="op">!</span><span class="op">=</span> <span class="ident">first_address</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMnemonicMismatch</span>);
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::LedgerMnemonicMismatch</span>);
                         }
                     }
                 }
@@ -2179,7 +2178,7 @@
                 <span class="ident">SignerType::LedgerNanoSimulator</span> <span class="op">=</span><span class="op">&gt;</span>
                 <span class="comment">// generate address from first account to validate mnemonic</span>
                 {
-                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::signing::get_signer</span>(<span class="kw-2">&amp;</span><span class="ident">SignerType::LedgerNanoSimulator</span>).<span class="kw">await</span>;
+                    <span class="kw">let</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::signing::get_signer</span>(<span class="kw-2">&amp;</span><span class="ident">SignerType::LedgerNanoSimulator</span>).<span class="kw">await</span>;
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signer</span> <span class="op">=</span> <span class="ident">signer</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
                     <span class="kw">let</span> <span class="ident">first_address</span> <span class="op">=</span> <span class="ident">signer</span>
                         <span class="comment">// dummy account with index 0 so we can generate the correct address</span>
@@ -2206,7 +2205,7 @@
                         )
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="macro">log::debug!</span>(<span class="string">&quot;[LEDGERADDRESS] generated first address {:?}&quot;</span>, <span class="ident">first_address</span>);
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">first_account_first_address</span>) <span class="op">=</span> <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">first_account_first_address</span>) <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
                         .<span class="kw">await</span><span class="question-mark">?</span>
                         .<span class="ident">lock</span>()
                         .<span class="kw">await</span>
@@ -2215,7 +2214,7 @@
                     {
                         <span class="macro">log::debug!</span>(<span class="string">&quot;[LEDGERADDRESS] read first address {:?}&quot;</span>, <span class="ident">first_account_first_address</span>);
                         <span class="kw">if</span> <span class="ident">first_account_first_address</span> <span class="op">!</span><span class="op">=</span> <span class="ident">first_address</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMnemonicMismatch</span>);
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::LedgerMnemonicMismatch</span>);
                         }
                     }
                 }
@@ -2259,9 +2258,9 @@
 }
 
 <span class="kw">fn</span> <span class="ident">monitor_address</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) {
-    <span class="kw">crate</span><span class="ident">::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+    <span class="ident"><span class="kw">crate</span>::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
         <span class="comment">// ignore errors because we fallback to the polling system</span>
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::monitor::monitor_account_addresses_balance</span>(<span class="ident">account_handle</span>).<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::monitor::monitor_account_addresses_balance</span>(<span class="ident">account_handle</span>).<span class="kw">await</span>;
     });
 }
 
@@ -2341,7 +2340,7 @@
 
     <span class="doccomment">/// Returns the addresses that need output consolidation.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">output_consolidation_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">output_consolidation_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">read</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -2368,7 +2367,7 @@
 
 <span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">AccountHandle</span> {
     <span class="kw">type</span> <span class="ident">Target</span> <span class="op">=</span> <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Account</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Target</span> {
+    <span class="kw">fn</span> <span class="ident">deref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Target</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">deref</span>()
     }
 }
@@ -2411,7 +2410,7 @@
     }
 
     <span class="doccomment">/// Consolidate account outputs.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">consolidate_outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">include_dust_allowance_outputs</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">consolidate_outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">include_dust_allowance_outputs</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync_internal</span>()
             .<span class="kw">await</span>
             .<span class="ident">execute</span>()
@@ -2421,7 +2420,7 @@
     }
 
     <span class="doccomment">/// Send messages.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">transfer_obj</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">transfer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">transfer_obj</span>: <span class="ident">Transfer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">synced</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">transfer_obj</span>.<span class="ident">skip_sync</span> {
             <span class="ident">SyncedAccount::from</span>(<span class="self">self</span>.<span class="ident">clone</span>()).<span class="kw">await</span>
@@ -2435,22 +2434,22 @@
     }
 
     <span class="doccomment">/// Retry message.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">retry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">retry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync_internal</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>.<span class="ident">retry</span>(<span class="ident">message_id</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Promote message.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">promote</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">promote</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync_internal</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>.<span class="ident">promote</span>(<span class="ident">message_id</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Reattach message.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">reattach</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">reattach</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync_internal</span>().<span class="kw">await</span>.<span class="ident">execute</span>().<span class="kw">await</span><span class="question-mark">?</span>.<span class="ident">reattach</span>(<span class="ident">message_id</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Gets a new unused address and links it to this account.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>;
         <span class="self">self</span>.<span class="ident">generate_address_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account</span>).<span class="kw">await</span>
     }
@@ -2459,8 +2458,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_address_internal</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RwLockWriteGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Account</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::address::get_new_address</span>(
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::address::get_new_address</span>(
             <span class="ident">account</span>,
             <span class="ident">GenerateAddressMetadata</span> {
                 <span class="ident">syncing</span>: <span class="bool-val">false</span>,
@@ -2483,7 +2482,7 @@
     }
 
     <span class="doccomment">/// Gets amount new unused addresses and links them to this account.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">amount</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>;
         <span class="self">self</span>.<span class="ident">generate_addresses_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">account</span>, <span class="ident">amount</span>).<span class="kw">await</span>
     }
@@ -2493,12 +2492,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RwLockWriteGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">Account</span><span class="op">&gt;</span>,
         <span class="ident">amount</span>: <span class="ident">usize</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key_index</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>()).<span class="ident">count</span>();
         <span class="kw">let</span> <span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">addresses</span>().<span class="ident">first</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>(),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">crate</span><span class="ident">::client::get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>())
+                <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>())
                     .<span class="kw">await</span><span class="question-mark">?</span>
                     .<span class="ident">read</span>()
                     .<span class="kw">await</span>
@@ -2511,7 +2510,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">key_index</span> <span class="kw">in</span> <span class="ident">key_index</span>..<span class="ident">amount</span> <span class="op">+</span> <span class="ident">key_index</span> {
             <span class="ident">addresses</span>.<span class="ident">push</span>(
-                <span class="kw">crate</span><span class="ident">::address::get_address_with_index</span>(
+                <span class="ident"><span class="kw">crate</span>::address::get_address_with_index</span>(
                     <span class="ident">account</span>,
                     <span class="ident">key_index</span>,
                     <span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(),
@@ -2544,15 +2543,15 @@
 
     <span class="kw">fn</span> <span class="ident">monitor_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>) {
         <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
-        <span class="kw">crate</span><span class="ident">::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
+        <span class="ident"><span class="kw">crate</span>::spawn</span>(<span class="kw">async</span> <span class="kw">move</span> {
             <span class="comment">// ignore errors because we fallback to the polling system</span>
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::monitor::monitor_address_balance</span>(<span class="ident">handle</span>, <span class="macro">vec!</span>[<span class="ident">address</span>]).<span class="kw">await</span>;
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::monitor::monitor_address_balance</span>(<span class="ident">handle</span>, <span class="macro">vec!</span>[<span class="ident">address</span>]).<span class="kw">await</span>;
         });
     }
 
     <span class="doccomment">/// Synchronizes the account addresses with the Tangle and returns the latest address in the account,</span>
     <span class="doccomment">/// which is an address without balance.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_unused_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_unused_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">sync_internal</span>()
             .<span class="kw">await</span>
             .<span class="ident">steps</span>(<span class="macro">vec!</span>[<span class="ident">AccountSynchronizeStep::SyncAddresses</span>(<span class="prelude-val">None</span>)])
@@ -2576,7 +2575,7 @@
                 <span class="ident">emit_ledger_address_generation</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>, <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>()).<span class="kw">await</span>;
 
                 <span class="macro">log::debug!</span>(<span class="string">&quot;get_unused_address regenerate address so it&#39;s displayed on the ledger&quot;</span>);
-                <span class="kw">let</span> <span class="ident">regenerated_address</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::address::get_address_with_index</span>(
+                <span class="kw">let</span> <span class="ident">regenerated_address</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::address::get_address_with_index</span>(
                     <span class="kw-2">&amp;</span><span class="ident">account</span>,
                     <span class="kw-2">*</span><span class="ident">address</span>.<span class="ident">key_index</span>(),
                     <span class="ident">account</span>.<span class="ident">bech32_hrp</span>(),
@@ -2587,7 +2586,7 @@
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">inner</span> <span class="op">!</span><span class="op">=</span> <span class="ident">regenerated_address</span>.<span class="ident">address</span>().<span class="ident">inner</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::LedgerMnemonicMismatch</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::LedgerMnemonicMismatch</span>);
                 }
             }
         }
@@ -2598,7 +2597,7 @@
     <span class="doccomment">/// An unused address is an address without balance and associated message history.</span>
     <span class="doccomment">/// Note that such address might have been used in the past, because the message history might have been pruned by</span>
     <span class="doccomment">/// the node.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">is_latest_address_unused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">is_latest_address_unused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">client_options</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">client_options</span>().<span class="ident">clone</span>();
         <span class="kw">let</span> <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">account</span>
@@ -2627,17 +2626,17 @@
     }
 
     <span class="doccomment">/// Bridge to [Account#balance](struct.Account.html#method.balance).</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">AccountBalance</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">AccountBalance</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Bridge to [Account#set_alias](struct.Account.html#method.set_alias).</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_alias</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_alias</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">set_alias</span>(<span class="ident">alias</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">set_client_options</span>(<span class="ident">options</span>).<span class="kw">await</span>
     }
 
@@ -2649,14 +2648,14 @@
         <span class="ident">count</span>: <span class="ident">usize</span>,
         <span class="ident">from</span>: <span class="ident">usize</span>,
         <span class="ident">message_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageType</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">list_messages</span>(<span class="ident">count</span>, <span class="ident">from</span>, <span class="ident">message_type</span>).<span class="kw">await</span>
     }
 
     <span class="doccomment">/// Bridge to [Account#list_spent_addresses](struct.Account.html#method.list_spent_addresses).</span>
     <span class="doccomment">/// This method clones the account&#39;s addresses so when querying a large list of addresses</span>
     <span class="doccomment">/// prefer using the `read` method to access the account instance.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_spent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_spent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>
             .<span class="ident">inner</span>
             .<span class="ident">read</span>()
@@ -2671,7 +2670,7 @@
     <span class="doccomment">/// Bridge to [Account#list_unspent_addresses](struct.Account.html#method.list_unspent_addresses).</span>
     <span class="doccomment">/// This method clones the account&#39;s addresses so when querying a large list of addresses</span>
     <span class="doccomment">/// prefer using the `read` method to access the account instance.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_unspent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_unspent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">self</span>
             .<span class="ident">inner</span>
             .<span class="ident">read</span>()
@@ -2694,7 +2693,7 @@
         <span class="ident">url</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">jwt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">auth</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">NodeInfoWrapper</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">NodeInfoWrapper</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">get_node_info</span>(<span class="ident">url</span>, <span class="ident">jwt</span>, <span class="ident">auth</span>).<span class="kw">await</span>
     }
 }
@@ -2717,10 +2716,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Account</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">skip_persistence</span> {
             <span class="kw">let</span> <span class="ident">storage_path</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">storage_path</span>.<span class="ident">clone</span>();
-            <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="ident">storage_path</span>)
+            <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="ident">storage_path</span>)
                 .<span class="kw">await</span><span class="question-mark">?</span>
                 .<span class="ident">lock</span>()
                 .<span class="kw">await</span>
@@ -2730,7 +2729,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">do_mut</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">do_mut</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">f</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">f</span>(<span class="self">self</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
@@ -2741,7 +2740,7 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">skip_persistence</span> {
             <span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">Vec::new</span>())
         } <span class="kw">else</span> {
-            <span class="ident">f</span>(<span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+            <span class="ident">f</span>(<span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
                 .<span class="kw">await</span>
                 .<span class="ident">expect</span>(<span class="string">&quot;storage adapter not set&quot;</span>)
                 .<span class="ident">lock</span>()
@@ -2757,10 +2756,10 @@
     }
 
     <span class="doccomment">/// Returns the address bech32 human readable part.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">network</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::signing::Network</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">network</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::signing::Network</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">addresses</span>().<span class="ident">first</span>().<span class="ident">unwrap</span>().<span class="ident">address</span>().<span class="ident">bech32_hrp</span>() {
-            <span class="string">&quot;iota&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::signing::Network::Mainnet</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::signing::Network::Testnet</span>,
+            <span class="string">&quot;iota&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::signing::Network::Mainnet</span>,
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::signing::Network::Testnet</span>,
         }
     }
 
@@ -2822,13 +2821,13 @@
     }
 
     <span class="doccomment">/// Gets the account balance information.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">AccountBalance</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">AccountBalance</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">balance_internal</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>).<span class="kw">await</span>)
     }
 
     <span class="doccomment">/// Updates the account alias.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_alias</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_alias</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">alias</span>: <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>.<span class="ident">as_ref</span>().<span class="ident">to_string</span>();
 
         <span class="self">self</span>.<span class="ident">alias</span> <span class="op">=</span> <span class="ident">alias</span>;
@@ -2836,8 +2835,8 @@
     }
 
     <span class="doccomment">/// Updates the account&#39;s client options.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::client::get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
         <span class="kw">let</span> <span class="ident">unsynced_nodes</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">unsynced_nodes</span>().<span class="kw">await</span>;
@@ -2853,7 +2852,7 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">url</span><span class="op">|</span> <span class="ident">url</span>.<span class="ident">url</span>.<span class="ident">as_str</span>())
                 .<span class="ident">collect</span>();
             <span class="kw">if</span> <span class="op">!</span><span class="ident">unsynced_diff_nodes</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::Error::NodesNotSynced</span>(<span class="ident">unsynced_diff_nodes</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>)));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::NodesNotSynced</span>(<span class="ident">unsynced_diff_nodes</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>)));
             }
         }
 
@@ -2914,10 +2913,10 @@
         <span class="ident">count</span>: <span class="ident">usize</span>,
         <span class="ident">from</span>: <span class="ident">usize</span>,
         <span class="ident">message_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageType</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cached_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached_messages</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+        <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
             .<span class="kw">await</span>
             .<span class="ident">expect</span>(<span class="string">&quot;storage adapter not set&quot;</span>)
             .<span class="ident">lock</span>()
@@ -2978,23 +2977,23 @@
     }
 
     <span class="doccomment">/// Gets the spent addresses.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_spent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_spent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">spent_addresses</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">addresses</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="op">!</span><span class="kw">crate</span><span class="ident">::address::is_unspent</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>, <span class="ident">address</span>.<span class="ident">address</span>()))
+            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="op">!</span><span class="ident"><span class="kw">crate</span>::address::is_unspent</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>, <span class="ident">address</span>.<span class="ident">address</span>()))
             .<span class="ident">collect</span>();
         <span class="prelude-val">Ok</span>(<span class="ident">spent_addresses</span>)
     }
 
     <span class="doccomment">/// Gets the spent addresses.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_unspent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_unspent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">unspent_addresses</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">addresses</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::address::is_unspent</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>, <span class="ident">address</span>.<span class="ident">address</span>()))
+            .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::address::is_unspent</span>(<span class="kw-2">&amp;</span><span class="ident">sent_messages</span>, <span class="ident">address</span>.<span class="ident">address</span>()))
             .<span class="ident">collect</span>();
         <span class="prelude-val">Ok</span>(<span class="ident">unspent_addresses</span>)
     }
@@ -3019,22 +3018,22 @@
         <span class="ident">url</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">jwt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">auth</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">NodeInfoWrapper</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">NodeInfoWrapper</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">url</span> {
             <span class="prelude-val">Some</span>(<span class="ident">url</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NodeInfoWrapper</span> {
                 <span class="ident">nodeinfo</span>: <span class="ident">iota_client::Client::get_node_info</span>(<span class="ident">url</span>, <span class="ident">jwt</span>.<span class="ident">map</span>(<span class="ident">Into::into</span>), <span class="ident">auth</span>)
                     .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::ClientError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>,
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>,
                 <span class="ident">url</span>: <span class="ident">url</span>.<span class="ident">to_string</span>(),
             },
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::client::get_client</span>(<span class="self">self</span>.<span class="ident">client_options</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">client_guard</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="self">self</span>.<span class="ident">client_options</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
                 <span class="ident">client</span>
                     .<span class="ident">get_info</span>()
                     .<span class="kw">await</span>
-                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::Error::ClientError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))<span class="question-mark">?</span>
             }
         };
 
@@ -3046,8 +3045,8 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">addresses</span>
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_messages</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
             .<span class="kw">await</span><span class="question-mark">?</span>
             .<span class="ident">lock</span>()
             .<span class="kw">await</span>
@@ -3057,7 +3056,7 @@
 
     <span class="doccomment">/// Gets a message with the given id associated with this account.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">message_id</span>: <span class="kw-2">&amp;</span><span class="ident">MessageId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
-        <span class="kw">crate</span><span class="ident">::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+        <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
             .<span class="kw">await</span>
             .<span class="ident">expect</span>(<span class="string">&quot;storage adapter not set&quot;</span>)
             .<span class="ident">lock</span>()
@@ -3068,14 +3067,14 @@
     }
 
     <span class="doccomment">/// Gets the available balance on the given address.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">address_available_balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">address_available_balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">Address</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">address</span>.<span class="ident">available_balance</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>))
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span><span class="ident">::AccountHandle</span>;
+    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::AccountHandle</span>;
     <span class="kw">use</span> <span class="kw">crate</span>::{
         <span class="ident">account_manager::AccountManager</span>,
         <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">OutputKind</span>},
@@ -3088,8 +3087,8 @@
     <span class="comment">// asserts that the `set_alias` function updates the account alias in storage</span>
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_alias</span>() {
-        <span class="kw">crate</span><span class="ident">::test_utils::with_account_manager</span>(<span class="kw">crate</span><span class="ident">::test_utils::TestType::Storage</span>, <span class="op">|</span><span class="ident">manager</span>, <span class="kw">_</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
+        <span class="ident"><span class="kw">crate</span>::test_utils::with_account_manager</span>(<span class="ident"><span class="kw">crate</span>::test_utils::TestType::Storage</span>, <span class="op">|</span><span class="ident">manager</span>, <span class="kw">_</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+            <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
 
             <span class="kw">let</span> <span class="ident">updated_alias</span> <span class="op">=</span> <span class="string">&quot;updated alias&quot;</span>;
 
@@ -3107,8 +3106,8 @@
     <span class="comment">// asserts that the `set_client_options` function updates the account client options in storage</span>
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_client_options</span>() {
-        <span class="kw">crate</span><span class="ident">::test_utils::with_account_manager</span>(<span class="kw">crate</span><span class="ident">::test_utils::TestType::Storage</span>, <span class="op">|</span><span class="ident">manager</span>, <span class="kw">_</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-            <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
+        <span class="ident"><span class="kw">crate</span>::test_utils::with_account_manager</span>(<span class="ident"><span class="kw">crate</span>::test_utils::TestType::Storage</span>, <span class="op">|</span><span class="ident">manager</span>, <span class="kw">_</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
+            <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
 
             <span class="kw">let</span> <span class="ident">updated_client_options</span> <span class="op">=</span> <span class="ident">ClientOptionsBuilder::new</span>()
                 .<span class="ident">with_nodes</span>(<span class="kw-2">&amp;</span>[
@@ -3135,9 +3134,9 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">account_handle_bridge_getters</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
 
         <span class="macro">macro_rules!</span> <span class="ident">assert_bridge_method</span> {
             ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">x</span>:<span class="ident">ident</span>),<span class="op">+</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3161,7 +3160,7 @@
             <span class="ident">index</span>: <span class="number">0</span>,
             <span class="ident">amount</span>: <span class="ident">value</span>,
             <span class="ident">is_spent</span>: <span class="bool-val">false</span>,
-            <span class="ident">address</span>: <span class="kw">crate</span><span class="ident">::test_utils::generate_random_iota_address</span>(),
+            <span class="ident">address</span>: <span class="ident"><span class="kw">crate</span>::test_utils::generate_random_iota_address</span>(),
             <span class="ident">kind</span>: <span class="ident">OutputKind::SignatureLockedSingle</span>,
         }
     }
@@ -3169,20 +3168,20 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">_generate_account</span>(<span class="ident">manager</span>: <span class="kw-2">&amp;</span><span class="ident">AccountManager</span>, <span class="ident">messages</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">AccountHandle</span>, <span class="ident">Address</span>, <span class="ident">u64</span>) {
         <span class="kw">let</span> <span class="ident">balance</span> <span class="op">=</span> <span class="number">30</span>;
         <span class="kw">let</span> <span class="ident">first_address</span> <span class="op">=</span> <span class="ident">AddressBuilder::new</span>()
-            .<span class="ident">address</span>(<span class="kw">crate</span><span class="ident">::test_utils::generate_random_iota_address</span>())
+            .<span class="ident">address</span>(<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_iota_address</span>())
             .<span class="ident">key_index</span>(<span class="number">0</span>)
             .<span class="ident">outputs</span>(<span class="macro">vec!</span>[<span class="ident">_generate_address_output</span>(<span class="ident">balance</span> <span class="op">/</span> <span class="number">2_u64</span>)])
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">second_address</span> <span class="op">=</span> <span class="ident">AddressBuilder::new</span>()
-            .<span class="ident">address</span>(<span class="kw">crate</span><span class="ident">::test_utils::generate_random_iota_address</span>())
+            .<span class="ident">address</span>(<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_iota_address</span>())
             .<span class="ident">key_index</span>(<span class="number">1</span>)
             .<span class="ident">outputs</span>(<span class="macro">vec!</span>[<span class="ident">_generate_address_output</span>(<span class="ident">balance</span> <span class="op">/</span> <span class="number">2_u64</span>)])
             .<span class="ident">build</span>()
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">second_address</span>.<span class="ident">clone</span>(), <span class="ident">first_address</span>];
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="ident">manager</span>)
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="ident">manager</span>)
             .<span class="ident">addresses</span>(<span class="ident">addresses</span>)
             .<span class="ident">messages</span>(<span class="ident">messages</span>)
             .<span class="ident">create</span>()
@@ -3192,18 +3191,18 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">generate_address</span>() {
-        <span class="kw">crate</span><span class="ident">::test_utils::with_account_manager</span>(
-            <span class="kw">crate</span><span class="ident">::test_utils::TestType::Signing</span>,
+        <span class="ident"><span class="kw">crate</span>::test_utils::with_account_manager</span>(
+            <span class="ident"><span class="kw">crate</span>::test_utils::TestType::Signing</span>,
             <span class="op">|</span><span class="ident">manager</span>, <span class="ident">signer_type</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
+                <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
                     .<span class="ident">signer_type</span>(<span class="ident">signer_type</span>)
                     .<span class="ident">create</span>()
                     .<span class="kw">await</span>;
                 <span class="kw">let</span> <span class="ident">account_next_address</span> <span class="op">=</span> {
                     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
-                    <span class="kw">crate</span><span class="ident">::address::get_new_address</span>(
+                    <span class="ident"><span class="kw">crate</span>::address::get_new_address</span>(
                         <span class="kw-2">&amp;</span><span class="ident">account</span>,
-                        <span class="kw">crate</span><span class="ident">::signing::GenerateAddressMetadata</span> {
+                        <span class="ident"><span class="kw">crate</span>::signing::GenerateAddressMetadata</span> {
                             <span class="ident">syncing</span>: <span class="bool-val">false</span>,
                             <span class="ident">network</span>: <span class="ident">account</span>.<span class="ident">network</span>(),
                         },
@@ -3222,21 +3221,21 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">latest_address</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
         <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="ident">latest_address</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">_generate_account</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>(), <span class="kw-2">&amp;</span><span class="ident">latest_address</span>);
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">total_balance</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
         <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="kw">_</span>, <span class="ident">balance</span>) <span class="op">=</span> <span class="ident">_generate_account</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">total</span>, <span class="ident">balance</span>);
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">available_balance</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
         <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="kw">_</span>, <span class="ident">balance</span>) <span class="op">=</span> <span class="ident">_generate_account</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>, <span class="macro">vec!</span>[]).<span class="kw">await</span>;
         <span class="macro">assert_eq!</span>(<span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">balance</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">available</span>, <span class="ident">balance</span>);
 
@@ -3262,7 +3261,7 @@
             <span class="ident">address</span>.<span class="ident">clone</span>()
         };
 
-        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">first_address</span>.<span class="ident">clone</span>())
             .<span class="ident">value</span>(<span class="number">15</span>)
             .<span class="ident">input_transaction_id</span>(<span class="ident">first_address</span>.<span class="ident">outputs</span>.<span class="ident">values</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>().<span class="ident">transaction_id</span>)
@@ -3271,7 +3270,7 @@
             .<span class="ident">confirmed</span>(<span class="prelude-val">None</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">confirmed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">confirmed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">second_address</span>.<span class="ident">clone</span>())
             .<span class="ident">value</span>(<span class="number">10</span>)
             .<span class="ident">input_transaction_id</span>(<span class="ident">second_address</span>.<span class="ident">outputs</span>.<span class="ident">values</span>().<span class="ident">next</span>().<span class="ident">unwrap</span>().<span class="ident">transaction_id</span>)
@@ -3300,28 +3299,28 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_all_messages</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
-            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="kw">crate</span><span class="ident">::test_utils::generate_random_address</span>()])
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
+            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_address</span>()])
             .<span class="ident">create</span>()
             .<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">latest_address</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">received_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">received_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
-            .<span class="ident">input_address</span>(<span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::test_utils::generate_random_iota_address</span>()))
+            .<span class="ident">input_address</span>(<span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_iota_address</span>()))
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">failed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">failed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">broadcasted</span>(<span class="bool-val">false</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">confirmed</span>(<span class="prelude-val">None</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">value_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">value_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
@@ -3343,23 +3342,23 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_messages_by_type</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
-            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="kw">crate</span><span class="ident">::test_utils::generate_random_address</span>()])
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
+            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_address</span>()])
             .<span class="ident">create</span>()
             .<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">external_address</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::generate_random_address</span>();
+        <span class="kw">let</span> <span class="ident">external_address</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::generate_random_address</span>();
         <span class="kw">let</span> <span class="ident">latest_address</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">latest_address</span>().<span class="ident">clone</span>();
 
-        <span class="kw">let</span> <span class="ident">received_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">received_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">input_address</span>(<span class="prelude-val">Some</span>(<span class="ident">external_address</span>.<span class="ident">address</span>().<span class="ident">clone</span>()))
             .<span class="ident">confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>))
             .<span class="ident">broadcasted</span>(<span class="bool-val">true</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">sent_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">sent_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">external_address</span>.<span class="ident">clone</span>())
             .<span class="ident">input_address</span>(<span class="prelude-val">Some</span>(<span class="ident">latest_address</span>.<span class="ident">address</span>().<span class="ident">clone</span>()))
             .<span class="ident">account_addresses</span>(<span class="ident">account_handle</span>.<span class="ident">addresses</span>().<span class="kw">await</span>)
@@ -3367,19 +3366,19 @@
             .<span class="ident">broadcasted</span>(<span class="bool-val">true</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">failed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">failed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>))
             .<span class="ident">broadcasted</span>(<span class="bool-val">false</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">unconfirmed_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">confirmed</span>(<span class="prelude-val">None</span>)
             .<span class="ident">broadcasted</span>(<span class="bool-val">true</span>)
             .<span class="ident">build</span>()
             .<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">value_message</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+        <span class="kw">let</span> <span class="ident">value_message</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
             .<span class="ident">address</span>(<span class="ident">latest_address</span>.<span class="ident">clone</span>())
             .<span class="ident">confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>))
             .<span class="ident">broadcasted</span>(<span class="bool-val">true</span>)
@@ -3424,11 +3423,11 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_message_by_id</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>).<span class="ident">create</span>().<span class="kw">await</span>;
 
-        <span class="kw">let</span> <span class="ident">m1</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>().<span class="ident">build</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">m2</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>().<span class="ident">build</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">m1</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>().<span class="ident">build</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">m2</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>().<span class="ident">build</span>().<span class="kw">await</span>;
         <span class="ident">account_handle</span>
             .<span class="ident">write</span>()
             .<span class="kw">await</span>
@@ -3441,10 +3440,10 @@
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="attribute">#[<span class="ident">ignore</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_addresses</span>() {
-        <span class="kw">crate</span><span class="ident">::test_utils::with_account_manager</span>(
-            <span class="kw">crate</span><span class="ident">::test_utils::TestType::SigningAndStorage</span>,
+        <span class="ident"><span class="kw">crate</span>::test_utils::with_account_manager</span>(
+            <span class="ident"><span class="kw">crate</span>::test_utils::TestType::SigningAndStorage</span>,
             <span class="op">|</span><span class="ident">manager</span>, <span class="ident">signer_type</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> {
-                <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
+                <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
                     .<span class="ident">signer_type</span>(<span class="ident">signer_type</span>)
                     .<span class="ident">create</span>()
                     .<span class="kw">await</span>;
@@ -3453,7 +3452,7 @@
                 <span class="kw">let</span> <span class="ident">unspent_address1</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">generate_address</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">unspent_address2</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">generate_address</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 
-                <span class="kw">let</span> <span class="ident">spent_tx</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::GenerateMessageBuilder::default</span>()
+                <span class="kw">let</span> <span class="ident">spent_tx</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::GenerateMessageBuilder::default</span>()
                     .<span class="ident">address</span>(<span class="ident">spent_address</span>.<span class="ident">clone</span>())
                     .<span class="ident">input_address</span>(<span class="prelude-val">Some</span>(<span class="ident">unspent_address1</span>.<span class="ident">address</span>().<span class="ident">clone</span>()))
                     .<span class="ident">build</span>()
@@ -3487,9 +3486,9 @@
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_get_info</span>() {
-        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::get_account_manager</span>().<span class="kw">await</span>;
-        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
-            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="kw">crate</span><span class="ident">::test_utils::generate_random_address</span>()])
+        <span class="kw">let</span> <span class="ident">manager</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::get_account_manager</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">account_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::test_utils::AccountCreator::new</span>(<span class="kw-2">&amp;</span><span class="ident">manager</span>)
+            .<span class="ident">addresses</span>(<span class="macro">vec!</span>[<span class="ident"><span class="kw">crate</span>::test_utils::generate_random_address</span>()])
             .<span class="ident">create</span>()
             .<span class="kw">await</span>;
 
@@ -3497,7 +3496,7 @@
         <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, <span class="ident">node_info</span>);
     }
 }
-</pre></div>
+</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="iota_wallet" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
     <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>
