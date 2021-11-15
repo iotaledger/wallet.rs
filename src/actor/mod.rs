@@ -236,6 +236,7 @@ impl WalletMessageHandler {
                 permanode,
                 seed,
                 security_level,
+                gap_limit,
                 initial_address_index,
             } => {
                 convert_async_panics(|| async {
@@ -249,6 +250,9 @@ impl WalletMessageHandler {
                     }
                     if let Some(initial_address_index) = initial_address_index {
                         finder = finder.with_initial_address_index(*initial_address_index);
+                    }
+                    if let Some(gap_limit) = gap_limit {
+                        finder = finder.with_gap_limit(*gap_limit);
                     }
                     let data = self.account_manager.get_migration_data(finder).await?;
                     seed.zeroize();
