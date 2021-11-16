@@ -44,10 +44,10 @@ public class Migration implements MigrationProgressListener {
     public static final String DB_STORAGE_PATH = "./migration-database";
     // Legacy network nodes
     public static final String[] LEGACY_NETWORK_NODES = new String[] { "https://nodes-legacy.iotatestmigration6.net/" };
-    // Legacy permanode
+    // Legacy permanode -> http://explorer.hetzner.ledgermigration1.net:3000/migration6
     public static final String LEGACY_PERMANODE = "https://nodes-legacy.iotatestmigration6.net";
     // Chrysalis node
-    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.ledgermigration1.iotatestmigration6.net";
+    public static final String CHRYSALIS_NODE = "https://api.lb-1.h.migration6.iotatestmigration6.net";
 
     // ------------------------------------------
     
@@ -120,11 +120,11 @@ public class Migration implements MigrationProgressListener {
         
             manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
         
-    
+            // netowkr ledgermigration1 x
             ClientOptions clientOptions = new ClientOptionsBuilder()
                 .withNode(CHRYSALIS_NODE) 
                 .withLocalPow(true)
-                .withNetwork("chrysalis-mainnet")
+                .withNetwork("ledgermigration6")
                 .build();
         
             this.account = manager
@@ -136,8 +136,10 @@ public class Migration implements MigrationProgressListener {
 
             // Nodes for the legacy network
             String[] nodes = LEGACY_NETWORK_NODES;
-            String seed = System.getenv("MIGRATION_SEED");
+            String seed = "MJBCNRQTPMOVTBYUYMJCXIJWCCHVZGMWMEWOKDQIPAHBDPEQMBVWILZUDSANZOWOMWVANNPUVYWZS9BIX";//System.getenv("MIGRATION_SEED");
 
+            // 1 is starting index
+            // 30 is gap limit (address range we check)
             MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE,
                     ADDRESS_SECURITY_LEVEL, 1);
 
@@ -148,6 +150,8 @@ public class Migration implements MigrationProgressListener {
 
                     try {
                         MigrationBundleOptions options = new MigrationBundleOptions();
+                        // This will appear in DB_STORAGE_PATH/iota-migration.log
+                        // ANd contain information about old and new addresses
                         options.setLogFileName("iota-migration.log");
                         options.setMine(batch.get(0).spent());
 
