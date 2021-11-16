@@ -246,6 +246,9 @@ pub enum MessageType {
         /// The WOTS address security level.
         #[serde(rename = "securityLevel")]
         security_level: Option<u8>,
+        /// The gap limit for how many addresses are generated in one round
+        #[serde(rename = "gapLimit")]
+        gap_limit: Option<u64>,
         /// The initial address index.
         #[serde(rename = "initialAddressIndex")]
         initial_address_index: Option<u64>,

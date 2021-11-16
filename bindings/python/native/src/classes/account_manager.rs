@@ -120,6 +120,7 @@ impl AccountManager {
         seed: &str,
         permanode: Option<&str>,
         security_level: Option<u8>,
+        gap_limit: Option<u64>,
         initial_address_index: Option<u64>,
     ) -> Result<MigrationData> {
         let mut finder = MigrationDataFinder::new(&nodes, seed)?;
@@ -128,6 +129,9 @@ impl AccountManager {
         }
         if let Some(initial_address_index) = initial_address_index {
             finder = finder.with_initial_address_index(initial_address_index);
+        }
+        if let Some(gap_limit) = gap_limit {
+            finder = finder.with_gap_limit(gap_limit);
         }
         if let Some(security_level) = security_level {
             finder = finder.with_security_level(security_level);

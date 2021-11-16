@@ -32,6 +32,7 @@ async fn main() -> iota_wallet::Result<()> {
 
     // Get account data
     let mut address_index = 0;
+    let gap_limit = 30;
     let yes = vec!['Y', 'y'];
     let mut user_input = String::new();
     let mut migration_data = None;
@@ -40,6 +41,7 @@ async fn main() -> iota_wallet::Result<()> {
             .get_migration_data(
                 MigrationDataFinder::new(&[legacy_node], seed)?
                     .with_initial_address_index(address_index)
+                    .with_gap_limit(gap_limit)
                     .with_permanode("https://chronicle.iota.org/api"),
             )
             .await?;
@@ -49,7 +51,7 @@ async fn main() -> iota_wallet::Result<()> {
         );
         user_input = String::new();
         std::io::stdin().read_line(&mut user_input).unwrap();
-        address_index += 30;
+        address_index += gap_limit;
         migration_data = Some(account_migration_data);
     }
 
