@@ -516,6 +516,12 @@
 <span id="516">516</span>
 <span id="517">517</span>
 <span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -586,7 +592,7 @@
     <span class="ident">seed</span>: <span class="ident">TernarySeed</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">seed_hash</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">security_level</span>: <span class="ident">u8</span>,
-    <span class="ident">gap_limit</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">gap_limit</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">initial_address_index</span>: <span class="ident">u64</span>,
 }
 
@@ -637,6 +643,12 @@
     <span class="doccomment">/// Sets the security level.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_security_level</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">security_level</span> <span class="op">=</span> <span class="ident">level</span>;
+        <span class="self">self</span>
+    }
+
+    <span class="doccomment">/// Sets the gap limit.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_gap_limit</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">gap_limit</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">self</span>.<span class="ident">gap_limit</span> <span class="op">=</span> <span class="ident">gap_limit</span>;
         <span class="self">self</span>
     }
 
