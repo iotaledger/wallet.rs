@@ -266,7 +266,7 @@ foreign_class!(
         fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
 
         /// Gets the legacy migration data for the seed.
-        fn AccountManager::get_migration_data(&self, nodes: Vec<String>, seed: &str, permanode: Option<&str>, security_level: i8, initial_address_index: i64) -> Result<MigrationData>;
+        fn AccountManager::get_migration_data(&self, nodes: Vec<String>, seed: &str, permanode: Option<&str>, security_level: i8, initial_address_index: i64, gap_limit: i64) -> Result<MigrationData>;
         /// Convert the first address from the first account to a migration tryte address
         fn AccountManager::get_migration_address(&self, ledger_prompt: bool, account_id: String) -> Result<MigrationAddress>;
         /// Creates the bundle for migration associated with the given input indexes,

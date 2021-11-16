@@ -44,10 +44,10 @@ public class Migration implements MigrationProgressListener {
     public static final String DB_STORAGE_PATH = "./migration-database";
     // Legacy network nodes
     public static final String[] LEGACY_NETWORK_NODES = new String[] { "https://nodes-legacy.iotatestmigration6.net/" };
-    // Legacy permanode -> http://explorer.hetzner.ledgermigration1.net:3000/migration6
-    public static final String LEGACY_PERMANODE = "https://nodes-legacy.iotatestmigration6.net";
+    // Legacy permanode
+    public static final String LEGACY_PERMANODE = "https://nodes-legacy.iotatestmigration6.net/";
     // Chrysalis node
-    public static final String CHRYSALIS_NODE = "https://api.lb-1.h.migration6.iotatestmigration6.net";
+    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.migration6.iotatestmigration6.net/";
 
     // ------------------------------------------
     
@@ -120,7 +120,7 @@ public class Migration implements MigrationProgressListener {
         
             manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
         
-            // netowkr ledgermigration1 x
+            // netowork ledgermigration6 for the migration testnet, else 
             ClientOptions clientOptions = new ClientOptionsBuilder()
                 .withNode(CHRYSALIS_NODE) 
                 .withLocalPow(true)
@@ -141,7 +141,7 @@ public class Migration implements MigrationProgressListener {
             // 1 is starting index
             // 30 is gap limit (address range we check)
             MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE,
-                    ADDRESS_SECURITY_LEVEL, 1);
+                    ADDRESS_SECURITY_LEVEL, 1, 30);
 
             if (migrationData.balance() > 0) {
                 List<List<InputData>> input_batches = getMigrationBundles(migrationData.inputs());
@@ -170,7 +170,7 @@ public class Migration implements MigrationProgressListener {
                 for (String bundleHash : new LinkedList<>(migrationBundleHashes)) {
                     try {
                         // 0 for default mwm
-                        manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
+                        // manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
                     } catch (Exception e) { 
                         e.printStackTrace(); 
                     }

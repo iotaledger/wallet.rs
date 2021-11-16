@@ -305,7 +305,8 @@ impl AccountManager {
         seed: &str,
         permanode: Option<&str>,
         security_level: i8,
-        initial_address_index: i64
+        initial_address_index: i64,
+        gap_limit: i64
     ) -> Result<MigrationData>{
         let nodes_arr: Vec<&str> = nodes
             .iter()
@@ -322,6 +323,9 @@ impl AccountManager {
                 }
                 if initial_address_index > -1 {
                     finder = finder.with_initial_address_index(initial_address_index as u64);
+                }
+                if gap_limit > -1 {
+                    finder = finder.with_gap_limit(gap_limit as u64);
                 }
                 if security_level > 0 {
                     finder = finder.with_security_level(security_level as u8);
