@@ -3,7 +3,6 @@
 
 use getset::Getters;
 
-pub use iota_client;
 use iota_client::{node_manager::validate_url, Client, ClientBuilder};
 use once_cell::sync::Lazy;
 use serde::{de::Visitor, Deserialize, Deserializer, Serialize, Serializer};

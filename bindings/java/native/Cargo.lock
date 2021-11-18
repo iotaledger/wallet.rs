@@ -1811,7 +1811,6 @@ dependencies = [
  "futures",
  "getset",
  "hex",
- "iota-client 1.1.0",
  "iota-wallet",
  "jni",
  "log",
