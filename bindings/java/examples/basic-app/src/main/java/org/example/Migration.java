@@ -42,12 +42,12 @@ public class Migration implements MigrationProgressListener {
     public static final int MAX_INPUTS_PER_BUNDLE = 10;
     // Wallet.rs database storage path. Stronghold and database file would be stored in this path.
     public static final String DB_STORAGE_PATH = "./migration-database";
-    // Legacy network nodes
+    // Legacy network nodes. Mainnet: https://nodes.iota.org
     public static final String[] LEGACY_NETWORK_NODES = new String[] { "https://nodes-legacy.iotatestmigration6.net/" };
-    // Legacy permanode
+    // Legacy permanode. Mainnet: https://chronicle.iota.org/api
     public static final String LEGACY_PERMANODE = "https://nodes-legacy.iotatestmigration6.net/";
-    // Chrysalis node
-    public static final String CHRYSALIS_NODE = "https://api.lb-0.h.migration6.iotatestmigration6.net/";
+    // Chrysalis node. Mainnet: https://chrysalis-nodes.iota.cafe
+    public static final String CHRYSALIS_NODE = "https://api.thin-hornet-0.h.migration6.iotatestmigration6.net";
 
     // ------------------------------------------
     
@@ -63,16 +63,23 @@ public class Migration implements MigrationProgressListener {
         this.account = null;
     }
 
-    public void displayMigration(){
-        if (this.account == null) return;
+    /**
+     * Displays information about the Migration account to which we send our funds.
+     * Requires Migration.run() to be called first
+     * 
+     * @return The total balance on the new account
+     */
+    public long displayMigration(){
+        if (this.account == null) return -1;
 
         this.account.sync().execute();
 
         System.out.println("= Migration Account =");
-        System.out.println("last synced: " + this.account.lastSyncedAt());
+        System.out.println("last synced: " + this.account.lastSyncedAt().get().getTime());
         System.out.println("balance: " + this.account.balance());
         System.out.println("latest address: " + this.account.latestAddress());
         System.out.println("unused address: " + this.account.getUnusedAddress());
+        return this.account.balance().getTotal();
     }
 
     // Log migration events
@@ -87,9 +94,12 @@ public class Migration implements MigrationProgressListener {
 
             migrationBundleHashes.remove(event.asTransactionConfirmed().getBundleHash());
 
-            if (migrationBundleHashes.size() == 0) {
+            if (migrationBundleHashes.size() == 0 && started) {
                 System.out.println("Migration done! ");
                 System.out.println("funds migrated to: " + this.account.latestAddress());
+
+                this.started = false;
+                this.account = null;
                 return;
             }
 
@@ -120,11 +130,10 @@ public class Migration implements MigrationProgressListener {
         
             manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
         
-            // netowork ledgermigration6 for the migration testnet, else 
+            // network migration6 for the migration testnet, otherwise leave out the network option for mainnet
             ClientOptions clientOptions = new ClientOptionsBuilder()
-                .withNode(CHRYSALIS_NODE) 
-                .withLocalPow(true)
-                .withNetwork("ledgermigration6")
+                .withNode(CHRYSALIS_NODE)
+                .withNetwork("migration6")
                 .build();
         
             this.account = manager
@@ -136,18 +145,17 @@ public class Migration implements MigrationProgressListener {
 
             // Nodes for the legacy network
             String[] nodes = LEGACY_NETWORK_NODES;
-            String seed = "MJBCNRQTPMOVTBYUYMJCXIJWCCHVZGMWMEWOKDQIPAHBDPEQMBVWILZUDSANZOWOMWVANNPUVYWZS9BIX";//System.getenv("MIGRATION_SEED");
+            String seed = System.getenv("MIGRATION_SEED");
 
-            // 1 is starting index
-            // 30 is gap limit (address range we check)
+            // 0 is starting index
+            // 50 is gap limit (address range we check)
             MigrationData migrationData = manager.getMigrationData(nodes, seed, LEGACY_PERMANODE,
-                    ADDRESS_SECURITY_LEVEL, 1, 30);
+                    ADDRESS_SECURITY_LEVEL, 0, 50);
 
             if (migrationData.balance() > 0) {
                 List<List<InputData>> input_batches = getMigrationBundles(migrationData.inputs());
                 // create bundles with the inputs
                 for (List<InputData> batch : input_batches) {
-
                     try {
                         MigrationBundleOptions options = new MigrationBundleOptions();
                         // This will appear in DB_STORAGE_PATH/iota-migration.log
@@ -170,7 +178,7 @@ public class Migration implements MigrationProgressListener {
                 for (String bundleHash : new LinkedList<>(migrationBundleHashes)) {
                     try {
                         // 0 for default mwm
-                        // manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
+                        manager.sendMigrationBundle(nodes, bundleHash, (short) 0);
                     } catch (Exception e) { 
                         e.printStackTrace(); 
                     }

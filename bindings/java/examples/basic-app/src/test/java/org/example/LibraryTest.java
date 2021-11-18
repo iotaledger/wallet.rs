@@ -30,7 +30,9 @@ public class LibraryTest {
                 TimeUnit.SECONDS.sleep(1);
             }
 
-            exampleMigration.displayMigration();
+            while(exampleMigration.displayMigration() < 1){
+                TimeUnit.SECONDS.sleep(10);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
