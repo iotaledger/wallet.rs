@@ -1742,19 +1742,19 @@ async fn poll(
             account.save_messages(vec![reattached_message]).await?;
         }
 
-        let mut messages_to_save: Vec<Message> = retried_data
+        let messages_to_save: Vec<Message> = retried_data
             .reattached
             .into_iter()
             .map(|(_, message)| message)
             .collect();
-        messages_to_save.extend(retried_data.promoted);
         account.save_messages(messages_to_save).await?;
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let mut message = account.get_message(&message_id).await.unwrap();
             if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
-                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included;
+                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included
+                        || ledger_inclusion_state == LedgerInclusionStateDto::NoTransaction;
                     if message.confirmed() != &Some(confirmed) {
                         message.set_confirmed(Some(confirmed));
                         account.save_messages(vec![message.clone()]).await?;
@@ -1767,6 +1767,11 @@ async fn poll(
                         .await?;
                     }
                 }
+            } else if message.payload().is_none() {
+                // we set the status for messages without a payload to confirmed even if we aren't sure if it got
+                // included, because it will otherwise always stay be in the unconfirmed messages
+                message.set_confirmed(Some(true));
+                account.save_messages(vec![message.clone()]).await?;
             }
         }
         account.save().await?;
@@ -1843,7 +1848,6 @@ async fn discover_accounts(
 }
 
 struct RetriedData {
-    promoted: Vec<Message>,
     reattached: Vec<(MessageId, Message)>,
     no_need_promote_or_reattach: Vec<MessageId>,
     account_handle: AccountHandle,
@@ -1897,31 +1901,33 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
             .map(|message| (*message.id(), message.payload().clone()))
             .collect();
         let mut reattachments = Vec::new();
-        let mut promotions = Vec::new();
         let mut no_need_promote_or_reattach = Vec::new();
         for (message_id, message_payload) in unconfirmed_messages {
             log::debug!("[POLLING] retrying {:?}", message_id);
-            match synced.retry(&message_id).await {
-                Ok(new_message) => {
-                    // if the payload is the same, it was reattached; otherwise it was promoted
-                    if new_message.payload() == &message_payload {
-                        log::debug!("[POLLING] rettached and new message is {:?}", new_message);
-                        reattachments.push((message_id, new_message));
-                    } else {
-                        log::debug!("[POLLING] promoted and new message is {:?}", new_message);
-                        promotions.push(new_message);
+            match message_payload {
+                // We only want to retry transaction payloads
+                Some(MessagePayload::Transaction(_)) => match synced.retry(&message_id).await {
+                    Ok(new_message) => {
+                        // if the payload is the same, it was reattached; otherwise it was promoted
+                        if new_message.payload() == &message_payload {
+                            log::debug!("[POLLING] reattached and new message is {:?}", new_message);
+                            reattachments.push((message_id, new_message));
+                        } else {
+                            log::debug!("[POLLING] promoted and new message is {:?}", new_message);
+                        }
                     }
-                }
-                Err(crate::Error::ClientError(ref e)) => {
-                    if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
-                        no_need_promote_or_reattach.push(message_id);
+                    Err(crate::Error::ClientError(ref e)) => {
+                        if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
+                            no_need_promote_or_reattach.push(message_id);
+                        }
                     }
-                }
-                _ => {}
+                    _ => {}
+                },
+                // messages without a transaction payload don't need to be retried
+                _ => no_need_promote_or_reattach.push(message_id),
             }
         }
         retried_messages.push(RetriedData {
-            promoted: promotions,
             reattached: reattachments,
             no_need_promote_or_reattach,
             account_handle: synced.account_handle().clone(),
