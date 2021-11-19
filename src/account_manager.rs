@@ -1910,7 +1910,7 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     Ok(new_message) => {
                         // if the payload is the same, it was reattached; otherwise it was promoted
                         if new_message.payload() == &message_payload {
-                            log::debug!("[POLLING] rettached and new message is {:?}", new_message);
+                            log::debug!("[POLLING] reattached and new message is {:?}", new_message);
                             reattachments.push((message_id, new_message));
                         } else {
                             log::debug!("[POLLING] promoted and new message is {:?}", new_message);
