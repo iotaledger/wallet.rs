@@ -2560,6 +2560,12 @@
 <span id="2560">2560</span>
 <span id="2561">2561</span>
 <span id="2562">2562</span>
+<span id="2563">2563</span>
+<span id="2564">2564</span>
+<span id="2565">2565</span>
+<span id="2566">2566</span>
+<span id="2567">2567</span>
+<span id="2568">2568</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -4304,19 +4310,19 @@
             <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">reattached_message</span>]).<span class="kw">await</span><span class="question-mark">?</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages_to_save</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">retried_data</span>
+        <span class="kw">let</span> <span class="ident">messages_to_save</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">retried_data</span>
             .<span class="ident">reattached</span>
             .<span class="ident">into_iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">message</span>)<span class="op">|</span> <span class="ident">message</span>)
             .<span class="ident">collect</span>();
-        <span class="ident">messages_to_save</span>.<span class="ident">extend</span>(<span class="ident">retried_data</span>.<span class="ident">promoted</span>);
         <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="ident">messages_to_save</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">for</span> <span class="ident">message_id</span> <span class="kw">in</span> <span class="ident">retried_data</span>.<span class="ident">no_need_promote_or_reattach</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ledger_inclusion_state</span>) <span class="op">=</span> <span class="ident">metadata</span>.<span class="ident">ledger_inclusion_state</span> {
-                    <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="ident">ledger_inclusion_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto::Included</span>;
+                    <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="ident">ledger_inclusion_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto::Included</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">ledger_inclusion_state</span> <span class="op">=</span><span class="op">=</span> <span class="ident">LedgerInclusionStateDto::NoTransaction</span>;
                     <span class="kw">if</span> <span class="ident">message</span>.<span class="ident">confirmed</span>() <span class="op">!</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="prelude-val">Some</span>(<span class="ident">confirmed</span>) {
                         <span class="ident">message</span>.<span class="ident">set_confirmed</span>(<span class="prelude-val">Some</span>(<span class="ident">confirmed</span>));
                         <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -4329,6 +4335,11 @@
                         .<span class="kw">await</span><span class="question-mark">?</span>;
                     }
                 }
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">message</span>.<span class="ident">payload</span>().<span class="ident">is_none</span>() {
+                <span class="comment">// we set the status for messages without a payload to confirmed even if we aren&#39;t sure if it got</span>
+                <span class="comment">// included, because it will otherwise always stay be in the unconfirmed messages</span>
+                <span class="ident">message</span>.<span class="ident">set_confirmed</span>(<span class="prelude-val">Some</span>(<span class="bool-val">true</span>));
+                <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="macro">vec!</span>[<span class="ident">message</span>.<span class="ident">clone</span>()]).<span class="kw">await</span><span class="question-mark">?</span>;
             }
         }
         <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
@@ -4405,7 +4416,6 @@
 }
 
 <span class="kw">struct</span> <span class="ident">RetriedData</span> {
-    <span class="ident">promoted</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
     <span class="ident">reattached</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">MessageId</span>, <span class="ident">Message</span>)<span class="op">&gt;</span>,
     <span class="ident">no_need_promote_or_reattach</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
     <span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>,
@@ -4459,31 +4469,33 @@
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">id</span>(), <span class="ident">message</span>.<span class="ident">payload</span>().<span class="ident">clone</span>()))
             .<span class="ident">collect</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">reattachments</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">promotions</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">no_need_promote_or_reattach</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> (<span class="ident">message_id</span>, <span class="ident">message_payload</span>) <span class="kw">in</span> <span class="ident">unconfirmed_messages</span> {
             <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] retrying {:?}&quot;</span>, <span class="ident">message_id</span>);
-            <span class="kw">match</span> <span class="ident">synced</span>.<span class="ident">retry</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">new_message</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="comment">// if the payload is the same, it was reattached; otherwise it was promoted</span>
-                    <span class="kw">if</span> <span class="ident">new_message</span>.<span class="ident">payload</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">message_payload</span> {
-                        <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] rettached and new message is {:?}&quot;</span>, <span class="ident">new_message</span>);
-                        <span class="ident">reattachments</span>.<span class="ident">push</span>((<span class="ident">message_id</span>, <span class="ident">new_message</span>));
-                    } <span class="kw">else</span> {
-                        <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] promoted and new message is {:?}&quot;</span>, <span class="ident">new_message</span>);
-                        <span class="ident">promotions</span>.<span class="ident">push</span>(<span class="ident">new_message</span>);
+            <span class="kw">match</span> <span class="ident">message_payload</span> {
+                <span class="comment">// We only want to retry transaction payloads</span>
+                <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">synced</span>.<span class="ident">retry</span>(<span class="kw-2">&amp;</span><span class="ident">message_id</span>).<span class="kw">await</span> {
+                    <span class="prelude-val">Ok</span>(<span class="ident">new_message</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="comment">// if the payload is the same, it was reattached; otherwise it was promoted</span>
+                        <span class="kw">if</span> <span class="ident">new_message</span>.<span class="ident">payload</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">message_payload</span> {
+                            <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] reattached and new message is {:?}&quot;</span>, <span class="ident">new_message</span>);
+                            <span class="ident">reattachments</span>.<span class="ident">push</span>((<span class="ident">message_id</span>, <span class="ident">new_message</span>));
+                        } <span class="kw">else</span> {
+                            <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] promoted and new message is {:?}&quot;</span>, <span class="ident">new_message</span>);
+                        }
                     }
-                }
-                <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="kw-2">ref</span> <span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">as_ref</span>() {
-                        <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                    <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="kw-2">ref</span> <span class="ident">e</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">as_ref</span>() {
+                            <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                        }
                     }
-                }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                },
+                <span class="comment">// messages without a transaction payload don&#39;t need to be retried</span>
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>),
             }
         }
         <span class="ident">retried_messages</span>.<span class="ident">push</span>(<span class="ident">RetriedData</span> {
-            <span class="ident">promoted</span>: <span class="ident">promotions</span>,
             <span class="ident">reattached</span>: <span class="ident">reattachments</span>,
             <span class="ident">no_need_promote_or_reattach</span>,
             <span class="ident">account_handle</span>: <span class="ident">synced</span>.<span class="ident">account_handle</span>().<span class="ident">clone</span>(),
