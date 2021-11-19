@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.3]
+
+- Don't retry messages without a transaction payload.
+  - [8950cc58](https://github.com/iotaledger/wallet.rs/commit/8950cc5844279d5656cc014ce31b9e6eb3be7068) fix: don't retry message without a transaction payload ([#795](https://github.com/iotaledger/wallet.rs/pull/795)) on 2021-11-19
+
 ## \[1.0.2]
 
 - Fix build scripts and workflows
