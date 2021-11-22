@@ -79,7 +79,7 @@ pub struct BalanceEvent {
 }
 
 /// The `address consolidation needed` data.
-#[derive(Debug, Getters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Getters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct AddressConsolidationNeeded {
     /// The associated account identifier.
