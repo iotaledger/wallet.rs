@@ -1371,7 +1371,7 @@ impl SyncedAccount {
                             SignerType::LedgerNano => LEDGER_MAX_IN_OUTPUTS - 1,
                             #[cfg(feature = "ledger-nano-simulator")]
                             SignerType::LedgerNanoSimulator => LEDGER_MAX_IN_OUTPUTS - 1,
-                            _ => INPUT_OUTPUT_COUNT_MAX - 1
+                            _ => INPUT_OUTPUT_COUNT_MAX - 1,
                         };
                         for outputs in address_outputs.chunks(max_inputs) {
                             // Only create dust_allowance_output if an input is also a dust_allowance_outputs
