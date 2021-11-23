@@ -1365,7 +1365,15 @@ impl SyncedAccount {
 
                     // the address outputs exceed the threshold, so we push a transfer to our vector
                     if address_outputs.len() >= self.account_handle.account_options.output_consolidation_threshold {
-                        for outputs in address_outputs.chunks(INPUT_OUTPUT_COUNT_MAX) {
+                        // take hardware limits of ledger nano into account
+                        let max_inputs = match account.signer_type {
+                            #[cfg(feature = "ledger-nano")]
+                            SignerType::LedgerNano => LEDGER_MAX_IN_OUTPUTS - 1,
+                            #[cfg(feature = "ledger-nano-simulator")]
+                            SignerType::LedgerNanoSimulator => LEDGER_MAX_IN_OUTPUTS - 1,
+                            _ => INPUT_OUTPUT_COUNT_MAX - 1
+                        };
+                        for outputs in address_outputs.chunks(max_inputs) {
                             // Only create dust_allowance_output if an input is also a dust_allowance_outputs
                             let output_kind = if include_dust_allowance_outputs
                                 && outputs
