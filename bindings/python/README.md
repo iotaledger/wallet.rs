@@ -1114,18 +1114,3 @@ ed25519_signature = {
     'public_key': bytes
 }
 ```
-
-## Ed25519Signature
-
-A dict with the following key:value pairs.
-
-```python
-ed25519_signature = {
-    'public_key': bytes,
-    'public_key': bytes
-}
-```
-outputs: Vec<TransferOutput>,
-        indexation: Option<Indexation>,
-        remainder_value_strategy: Option<&str>,
-        skip_sync: Option<bool>,
