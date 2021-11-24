@@ -1,10 +1,13 @@
 [package]
-name = "wallet"
+name = "iota-wallet-nodejs"
 version = "0.2.0"
-description = "Node.js binding to the wallet library"
 authors = ["IOTA Stiftung"]
-license = "MIT"
 edition = "2021"
+description = "Node.js bindings for the IOTA wallet library"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = ["iota", "wallet", "transaction", "nodejs"]
 exclude = ["index.node"]
 
 [lib]
