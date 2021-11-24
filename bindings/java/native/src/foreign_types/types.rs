@@ -204,3 +204,11 @@ foreign_typemap!(
     ($p:f_type, option = "NoNullAnnotations") <= "Address[]";
     ($p:f_type, option = "NullAnnotations") <= "@NonNull Address[]";
 );
+
+foreign_typemap!(
+    ($p:r_type) Vec<AddressOutput> <= internal_aliases::JForeignObjectsArray<AddressOutput> {
+        $out = jobject_array_to_vec_of_objects(env, $p);
+    };
+    ($p:f_type, option = "NoNullAnnotations") <= "AddressOutput[]";
+    ($p:f_type, option = "NullAnnotations") <= "@NonNull AddressOutput[]";
+);

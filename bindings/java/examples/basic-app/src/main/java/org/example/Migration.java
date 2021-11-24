@@ -236,9 +236,9 @@ public class Migration implements MigrationProgressListener {
      * 
      * @method selectInputsForUnspentAddresses
      * 
-     * @params {List<InputData>} inputs
+     * @param {List<InputData>} inputs
      * 
-     * @returns {List<List<InputData>>}
+     * @return {List<List<InputData>>}
      */
     private List<List<InputData>> selectInputsForUnspentAddresses(List<InputData> inputs){
         long totalInputsBalance  = inputs.stream().map(i -> i.balance())

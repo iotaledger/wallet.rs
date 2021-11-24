@@ -1,20 +1,25 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-
+use getset::{Getters, CopyGetters, Setters};
 use std::{
     cell::RefCell,
     rc::Rc,
     fmt::{Display, Formatter},
 };
 
-use iota_wallet::address::{Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressWrapper};
+use iota_wallet::{
+    message::MessageId,
+    address::{OutputKind, Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust, AddressWrapper},
+    iota_client::bee_message::{
+        prelude::OutputId,
+        payload::transaction::TransactionId,
+    },
+};
 
 use crate::Result;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Address {
-    address: AddressRust,
-}
+pub struct Address(AddressRust);
 
 impl Display for Address {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -24,7 +29,13 @@ impl Display for Address {
 
 impl From<AddressRust> for Address {
     fn from(address: AddressRust) -> Self {
-        Self { address }
+        Self(address)
+    }
+}
+
+impl From<&AddressRust> for Address {
+    fn from(address: &AddressRust) -> Self {
+        Self(address.clone())
     }
 }
 
@@ -34,20 +45,20 @@ impl Address {
     }
     
     pub fn readable(&self) -> String {
-        self.address.address().to_bech32()
+        self.0.address().to_bech32()
     }
 
     pub fn balance(&self) -> u64 {
-        self.address.balance()
+        self.0.balance()
     }
 
     pub fn to_inner(self) -> AddressRust {
         // TODO: Find a way to not need clone
-        self.address.clone()
+        self.0.clone()
     }
 
     pub fn address(&self) -> AddressWrapper {
-        self.address.address().clone()
+        self.0.address().clone()
     }
 }
 
@@ -87,15 +98,15 @@ impl AddressBuilder {
         AddressBuilder::new_with_builder(new_builder)
     }
 
-    /*pub fn outputs(&self, outputs: Vec<AddressOutput>) -> Self {
+    pub fn outputs(&self, outputs: Vec<AddressOutput>) -> Self {
         let new_builder = self
             .builder
             .borrow_mut()
             .take()
             .unwrap()
-            .outputs(outputs);
+            .outputs(outputs.iter().map(|o| o.clone().to_inner()).collect());
         AddressBuilder::new_with_builder(new_builder)
-    }*/
+    }
 
     pub fn internal(&self, internal: bool) -> Self {
         let new_builder = self
@@ -110,7 +121,102 @@ impl AddressBuilder {
     pub fn build(&self) -> Result<Address> {
         match self.builder.borrow_mut().take().unwrap().build() {
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
-            Ok(address) => Ok(Address { address }),
+            Ok(address) => Ok(Address(address)),
+        }
+    }
+}
+
+/// An Address output.
+#[derive(Debug, Getters, CopyGetters, Setters, Clone, PartialEq)]
+pub struct AddressOutput {
+    /// Transaction ID of the output
+    #[getset(get_copy = "pub")]
+    pub transaction_id: TransactionId,
+    /// Message ID of the output
+    #[getset(get_copy = "pub")]
+    pub message_id: MessageId,
+    /// Output index.
+    #[getset(get_copy = "pub")]
+    pub index: u16,
+    /// Output amount.
+    #[getset(get_copy = "pub")]
+    pub amount: u64,
+    /// Spend status of the output,
+    #[getset(get_copy = "pub")]
+    pub is_spent: bool,
+    /// Associated address.
+    pub address: AddressWrapper,
+    /// Output kind.
+    pub kind: OutputKind,
+}
+
+impl Display for AddressOutput {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "(transaction_id={}, message_id={}, index={}, amount={}, 
+            is_spent={}, address={:?}, kind={:?})", self.transaction_id, self.message_id, 
+            self.index, self.amount, self.is_spent, self.address, self.kind) 
+    }
+}
+
+impl From<AddressOutputRust> for AddressOutput {
+    fn from(ouput: AddressOutputRust) -> Self {
+        Self {
+            transaction_id: ouput.transaction_id().clone(),
+            message_id: ouput.message_id().clone(),
+            index: ouput.index().clone(),
+            amount: ouput.amount().clone(),
+            is_spent: ouput.is_spent().clone(),
+            address: ouput.address().clone(),
+            kind: ouput.kind().clone(),
+        }
+    }
+}
+
+impl AddressOutput {
+    /// The output identifier.
+    pub fn id(&self) -> crate::Result<OutputId> {
+        OutputId::new(self.transaction_id, self.index).map_err(Into::into)
+    }
+
+    pub fn set_transaction_id(&mut self, transaction_id: TransactionId) {
+        self.transaction_id = transaction_id
+    }
+    pub fn set_message_id(&mut self, message_id: MessageId) {
+        self.message_id = message_id
+    }
+    pub fn set_index(&mut self, index: u16) {
+        self.index = index
+    }
+    pub fn set_amount(&mut self, amount: u64) {
+        self.amount = amount
+    }
+    pub fn set_spent(&mut self, is_spent: bool) {
+        self.is_spent = is_spent
+    }
+
+    pub fn address(&self) -> AddressWrapper {
+        self.address.clone()
+    }
+    pub fn set_address(&mut self, address: AddressWrapper) {
+        self.address = address
+    }
+
+    pub fn kind(&self) -> OutputKind {
+        self.kind.clone()
+    }
+    pub fn set_kind(&mut self, kind: OutputKind) {
+        self.kind = kind
+    }
+
+    pub fn to_inner(self) -> AddressOutputRust {
+        AddressOutputRust {
+            transaction_id: self.transaction_id,
+            message_id: self.message_id,
+            index: self.index,
+            amount: self.amount,
+            is_spent: self.is_spent,
+            address: self.address,
+            kind: self.kind.into(),
         }
     }
 }

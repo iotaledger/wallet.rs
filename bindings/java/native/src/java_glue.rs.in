@@ -32,8 +32,12 @@ use iota_wallet::{
     address::{
         OutputKind, AddressWrapper, IotaAddress,
     },
-    client::{
-        Api,
+    client::Api,
+    iota_client::{
+        bee_message::payload::{
+            milestone::MilestoneId,
+            transaction::TransactionId,
+        },
     },
     event::{
         EventId, BalanceChange,
@@ -392,6 +396,30 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(Display)]
+    class TransactionId {
+        self_type TransactionId;
+        private constructor = empty;
+        private fn TransactionId::to_string(&self) -> String; alias to_string;
+        fn TransactionId::fromString(str_rep: &str) -> TransactionId {
+            TransactionId::from_str(str_rep).unwrap()
+        }
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class MilestoneId {
+        self_type MilestoneId;
+        private constructor = empty;
+        private fn MilestoneId::to_string(&self) -> String; alias to_string;
+        fn MilestoneId::fromString(str_rep: &str) -> MilestoneId {
+            MilestoneId::from_str(str_rep).unwrap()
+        }
+    }
+);
+
+foreign_class!(
     #[derive(PartialEq)]
     class Message {
         self_type Message;
@@ -457,6 +485,38 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// An Address output.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class AddressOutput {
+        self_type AddressOutput;
+        private constructor = empty;
+        private fn AddressOutput::eq(&self, o: &AddressOutput) -> bool; alias rustEq;
+        private fn AddressOutput::to_string(&self) -> String; alias to_string;
+        /// Transaction ID of the output
+        fn AddressOutput::transaction_id(&self) -> TransactionId;
+        fn AddressOutput::set_transaction_id(&mut self, transaction_id: TransactionId);
+        /// Message ID of the output
+        fn AddressOutput::message_id(&self) -> MessageId;
+        fn AddressOutput::set_message_id(&mut self, message_id: MessageId);
+        /// Output index.
+        fn AddressOutput::index(&self) -> u16;
+        fn AddressOutput::set_index(&mut self, index: u16);
+        /// Output amount.
+        fn AddressOutput::amount(&self) -> u64;
+        fn AddressOutput::set_amount(&mut self, amount: u64);
+        /// Spend status of the output,
+        fn AddressOutput::is_spent(&self) -> bool;
+        fn AddressOutput::set_spent(&mut self, is_spent: bool);
+        /// Associated address.
+        fn AddressOutput::address(&self) -> AddressWrapper;
+        fn AddressOutput::set_address(&mut self, address: AddressWrapper);
+        /// Output kind.
+        fn AddressOutput::kind(&self) -> OutputKind;
+        fn AddressOutput::set_kind(&mut self, kind: OutputKind);
+    }
+);
+
+foreign_class!(
     #[derive(camelCaseAliases)]
     class AddressBuilder {
         self_type AddressBuilder;
@@ -466,7 +526,7 @@ foreign_class!(
         /// Sets the address key index.
         fn AddressBuilder::key_index(&self, key_index: usize) -> AddressBuilder;
         /// Sets the address outputs.
-        ///fn AddressBuilder::outputs(&self, outputs: Vec<AddressOutput>) -> AddressBuilder;
+        fn AddressBuilder::outputs(&self, outputs: Vec<AddressOutput>) -> AddressBuilder;
         /// Sets the `internal` flag.
         fn AddressBuilder::internal(&self, internal: bool) -> AddressBuilder;
         /// Builds the address.
