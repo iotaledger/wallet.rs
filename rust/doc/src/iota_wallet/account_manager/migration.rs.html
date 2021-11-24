@@ -522,6 +522,9 @@
 <span id="522">522</span>
 <span id="523">523</span>
 <span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -559,9 +562,9 @@
 <span class="doccomment">/// Migration address</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MigrationAddress</span> {
-    <span class="comment">// address tryte encoded</span>
+    <span class="doccomment">/// address tryte encoded</span>
     <span class="kw">pub</span> <span class="ident">trytes</span>: <span class="ident">String</span>,
-    <span class="comment">// address bech32 encoded</span>
+    <span class="doccomment">/// address bech32 encoded</span>
     <span class="kw">pub</span> <span class="ident">bech32</span>: <span class="ident">String</span>,
 }
 
@@ -579,9 +582,12 @@
     <span class="kw">pub</span> <span class="ident">spent_addresses</span>: <span class="ident">bool</span>,
 }
 
+<span class="doccomment">/// Migration bundle.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MigrationBundle</span> {
+    <span class="doccomment">/// The bundle crackability if it was mined.</span>
     <span class="kw">pub</span> <span class="ident">crackability</span>: <span class="ident">f64</span>,
+    <span class="doccomment">/// Migration bundle.</span>
     <span class="kw">pub</span> <span class="ident">bundle</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BundledTransaction</span><span class="op">&gt;</span>,
 }
 

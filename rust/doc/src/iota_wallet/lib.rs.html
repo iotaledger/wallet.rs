@@ -573,6 +573,7 @@
 <span id="573">573</span>
 <span id="574">574</span>
 <span id="575">575</span>
+<span id="576">576</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -619,6 +620,7 @@
 <span class="doccomment">/// The wallet Result type.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">chrono::prelude</span>::{<span class="ident">DateTime</span>, <span class="ident">Local</span>, <span class="ident">Utc</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota_client</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">iota_migration</span>;
 <span class="kw">use</span> <span class="ident">once_cell::sync::OnceCell</span>;
 <span class="kw">use</span> <span class="ident">tokio::runtime::Runtime</span>;
