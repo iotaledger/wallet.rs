@@ -5,7 +5,7 @@ name = "iota-wallet-python-binding"
 version = "0.2.0"
 authors = ["IOTA Stiftung"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "iota_wallet"

@@ -4,7 +4,7 @@ version = "0.2.0"
 description = "Node.js binding to the wallet library"
 authors = ["IOTA Stiftung"]
 license = "MIT"
-edition = "2018"
+edition = "2021"
 exclude = ["index.node"]
 
 [lib]

@@ -2,7 +2,7 @@
 name = "iota-wallet-java"
 version = "0.3.0"
 authors = ["IOTA Stiftung"]
-edition = "2018"
+edition = "2021"
 build = "build.rs"
 
 [dependencies]
