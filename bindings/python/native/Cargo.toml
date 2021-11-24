@@ -3,7 +3,7 @@
 [package]
 name = "iota-wallet-python-binding"
 version = "0.2.0"
-authors = ["Bing-Yang Lin <bingyang.lin@iota.org>"]
+authors = ["IOTA Stiftung"]
 license = "MIT"
 edition = "2018"
 
