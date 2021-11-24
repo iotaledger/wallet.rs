@@ -35,9 +35,9 @@ use std::{
 /// Migration address
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationAddress {
-    // address tryte encoded
+    /// address tryte encoded
     pub trytes: String,
-    // address bech32 encoded
+    /// address bech32 encoded
     pub bech32: String,
 }
 
@@ -55,9 +55,12 @@ pub struct MigrationData {
     pub spent_addresses: bool,
 }
 
+/// Migration bundle.
 #[derive(Debug, Clone)]
 pub struct MigrationBundle {
+    /// The bundle crackability if it was mined.
     pub crackability: f64,
+    /// Migration bundle.
     pub bundle: Vec<BundledTransaction>,
 }
 

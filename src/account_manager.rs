@@ -6,7 +6,6 @@ use crate::{
         AccountHandle, AccountIdentifier, AccountInitialiser, AccountSynchronizeStep, AccountSynchronizer,
         SyncedAccount, SyncedAccountData,
     },
-    account_manager::migration::MigrationAddress,
     address::{AddressOutput, AddressWrapper},
     client::ClientOptions,
     event::{
@@ -44,6 +43,7 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
+use std::str::FromStr;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -54,6 +54,7 @@ use tokio::{
 use zeroize::Zeroize;
 
 pub(crate) mod migration;
+pub use crate::account_manager::migration::MigrationAddress;
 use iota_migration::client::migration::{
     add_tryte_checksum, decode_migration_address, encode_migration_address, get_trytes_from_bundle, mine_bundle,
 };
@@ -695,7 +696,7 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
+                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
                 bech32_hrp,
             ),
         })

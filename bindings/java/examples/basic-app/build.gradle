@@ -17,13 +17,14 @@ tasks.withType(Test) {
     systemProperties System.properties
 }
 startScripts {
-    classpath += files('../../native/target/debug')
+    classpath += files('../../native/target/release')
 }
 
 task customCleanTask(type: Delete) {
     // Clean up running "test" artifacts
     delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-80"
     delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-443"
+    delete "${rootDir}/examples/basic-app/migration-database"
     delete "${rootDir}/examples/basic-app/my-db"
 }
 
@@ -37,7 +38,7 @@ test {
     dependsOn customCleanTask
     
     // Set rust output .so/.lib files to path
-    systemProperty "java.library.path", file("../../native/target/debug")
+    systemProperty "java.library.path", file("../../native/target/release")
 }
 
 mainClassName = 'org.example.ExampleApp'

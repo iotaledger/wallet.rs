@@ -41,6 +41,12 @@ impl AccountSynchronizer {
         AccountSynchronizer::new_with_instance(new_synchroniser)
     }
 
+    /// Skip syncing existing change addresses.
+    pub fn skip_change_addresses(&mut self) -> Self {
+        let new_synchroniser = self.synchroniser.borrow_mut().take().unwrap().skip_change_addresses();
+        AccountSynchronizer::new_with_instance(new_synchroniser)
+    }
+
     /// Initial address index to start syncing.
     pub fn address_index(&mut self, address_index: usize) -> Self {
         let new_synchroniser = self
@@ -111,6 +117,24 @@ impl AccountsSynchronizer {
             .take()
             .unwrap()
             .address_index(address_index);
+        AccountsSynchronizer::new_with_instance(new_synchroniser)
+    }
+
+    /// Skips the account discovery process.
+    pub fn skip_account_discovery(&mut self) -> Self {
+        let new_synchroniser = self.synchroniser.borrow_mut().take().unwrap().skip_account_discovery();
+        AccountsSynchronizer::new_with_instance(new_synchroniser)
+    }
+
+    /// Skip syncing existing change addresses.
+    pub fn skip_change_addresses(&mut self) -> Self {
+        let new_synchroniser = self.synchroniser.borrow_mut().take().unwrap().skip_change_addresses();
+        AccountsSynchronizer::new_with_instance(new_synchroniser)
+    }
+
+    /// Sets the minimum number of accounts to check on the discovery process.
+    pub fn account_discovery_threshold(&mut self, account_discovery_threshold: usize) -> Self {
+        let new_synchroniser = self.synchroniser.borrow_mut().take().unwrap().account_discovery_threshold(account_discovery_threshold);
         AccountsSynchronizer::new_with_instance(new_synchroniser)
     }
 
