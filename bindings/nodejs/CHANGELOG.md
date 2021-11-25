@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.4]
+
+- Use default target features from `rustc` to determine SSE inclusion for RocksDB
+  - [72327a47](https://github.com/iotaledger/wallet.rs/commit/72327a470cf0c57d930a4769f18d5e2dac857485) fix: Use default target features for RocksDB SSE inclusion ([#797](https://github.com/iotaledger/wallet.rs/pull/797)) on 2021-11-25
+
 ## \[1.0.3]
 
 - Don't retry messages without a transaction payload.
