@@ -5,9 +5,11 @@ authors = ["IOTA Stiftung"]
 edition = "2021"
 description = "Python bindings for the IOTA wallet library"
 documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
 repository = "https://github.com/iotaledger/wallet.rs"
 license = "Apache-2.0"
 keywords = ["iota", "wallet", "transaction", "python"]
+categories = ["cryptography::cryptocurrencies"]
 
 [lib]
 crate-type = ["cdylib"]

@@ -5,9 +5,11 @@ authors = ["IOTA Stiftung"]
 edition = "2021"
 description = "A stateful package for IOTA value transactions"
 documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
 repository = "https://github.com/iotaledger/wallet.rs"
 license = "Apache-2.0"
 keywords = ["iota", "wallet", "transaction"]
+categories = ["cryptography::cryptocurrencies"]
 
 [package.metadata.docs.rs]
 all-features = true
