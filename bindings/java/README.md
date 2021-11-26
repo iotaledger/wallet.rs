@@ -13,19 +13,23 @@ Clone project
 git clone https://github.com/iotaledger/wallet.rs
 ```
 
-Build the rust library
+Build the rust library (This generates the java code)
 ```
 cd wallet.rs/bindings/java/native
-cargo build
+cargo build --release
 ```
 
-- Running an example usign gradle
+Make gradlew executable (`chmod +x gradlew`)
+
+
+Running the java example using gradle
 ```
-cd wallet.rs/bindings/java
-./gradlew examples:basic-app:test --info
+./gradlew examples:java-app:test --info
 ```
 
-Make sure to make gradlew executable (`chmod +x gradlew`)
+Running the android app using gradle:
+
+Specific instructions in `wallet.rs/bindings/java/examples/android-app/README.md`
 
 ## Documentation
 

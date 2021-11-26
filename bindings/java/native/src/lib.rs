@@ -7,14 +7,7 @@ pub mod verifylink;
 mod classes;
 mod types;
 
-#[cfg(target_os = "android")]
-mod android_c_headers;
-#[cfg(target_os = "android")]
-mod java_glue;
-
-
-#[cfg(target_os = "android")]
-pub use crate::java_glue::*;
+mod jni_c_headers;
 
 pub use crate::{classes::*, types::*};
 

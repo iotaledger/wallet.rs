@@ -1,3 +1,4 @@
-rootProject.name = 'wallet'
-
-include "native", "examples:basic-app", "examples:android-app"
+include ':native'
+include ':examples:android-app'
+include ':examples:java-app'
+rootProject.name = "Wallet"

@@ -626,26 +626,6 @@ foreign_class!(
     }
 );
 
-// Actor
-
-foreign_callback!(callback ActorCallback {
-    self_type ActorCallback + Send + 'static;
-    onEvent = ActorCallback::on_event(&self, event: &str);
-});
-
-foreign_class!(
-    #[derive(camelCaseAliases)]
-    class Actor {
-        self_type Actor;
-        private constructor = empty;
-        fn Actor::iota_initialize(cb: Box<dyn ActorCallback + Send + 'static>, actor_id: &str, storage_path: Option<&str>);
-        fn Actor::iota_destroy(actor_id: &str);
-        fn Actor::iota_send_message(message: &str);
-        fn Actor::iota_listen(actor_id: &str, id: &str, event: EventType);
-        fn Actor::iota_init_logger(file_name: &str);
-    }
-});
-
 // Events
 
 foreign_enum!(
@@ -1003,6 +983,26 @@ foreign_class!(
         fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
         fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
         fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;
+    }
+);
+
+// Actor
+
+foreign_callback!(callback ActorCallback {
+    self_type ActorCallback + Send + 'static;
+    onEvent = ActorCallback::on_event(&self, event: &str);
+});
+
+foreign_class!(
+    #[derive(camelCaseAliases)]
+    class Actor {
+        self_type Actor;
+        private constructor = empty;
+        fn Actor::iota_initialize(cb: Box<dyn ActorCallback + Send + 'static>, actor_id: &str, storage_path: Option<&str>);
+        fn Actor::iota_destroy(actor_id: &str);
+        fn Actor::iota_send_message(message: &str);
+        fn Actor::iota_listen(actor_id: &str, id: &str, event: EventType);
+        fn Actor::iota_init_logger(file_name: &str);
     }
 );
 

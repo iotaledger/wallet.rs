@@ -10,8 +10,10 @@ repositories {
 }
 
 dependencies {
+    implementation 'androidx.annotation:annotation:1.2.0'
+
     // Use JUnit test framework
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.2'
 }
 
 tasks.withType(Test) {
