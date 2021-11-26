@@ -36,6 +36,8 @@ fn main() {
     .contains(&target.as_str())
     {
         gen_for_android();
+    } else {
+        gen_for_android();
     }
 }
 
@@ -167,7 +169,7 @@ where
     bindings = bindings
         .rust_target(RustTarget::Stable_1_19)
         //long double not supported yet, see https://github.com/servo/rust-bindgen/issues/550
-        .blacklist_type("max_align_t");
+        .blocklist_type("max_align_t");
     bindings = if target.contains("windows") {
         //see https://github.com/servo/rust-bindgen/issues/578
         bindings.trust_clang_mangling(false)

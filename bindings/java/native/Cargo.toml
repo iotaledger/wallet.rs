@@ -8,6 +8,7 @@ build = "build.rs"
 [dependencies]
 iota-wallet = { path = "../../../", version = "0.2.0" }
 bee-message = { version  = "0.1.5", default-features = false }
+bee-common = { version  = "0.4.1", default-features = false }
 log = { version = "0.4.14", default-features = false }
 chrono = { version = "0.4.19", default-features = false }
 env_logger = { version = "0.9.0", default-features = false }
@@ -23,17 +24,20 @@ getset = { version = "0.1.1", default-features = false }
 tokio = { version = "1.12.0", default-features = false }
 once_cell = { version = "1.8", default-features = false }
 futures = { version = "0.3.17", default-features = false }
+riker = "0.4"
 
 # Needed for serialization
 serde = { version = "1.0.130", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 
 [lib]
-crate_type = ["dylib"]
+crate_type = ["cdylib"]
 
 [build-dependencies]
 flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
 env_logger = "0.9.0"
+walkdir = "2.2.7"
+cc = "1.0.67"
 bindgen = "0.59.1"
 
 [features]

@@ -29,7 +29,7 @@ task cargoBuild(type: Exec) {
     }
 }
 compileJava {
-    //dependsOn cargoBuild
+    dependsOn cargoBuild
 }
 
 task cargoClean(type: Exec) {
@@ -40,5 +40,5 @@ task cargoClean(type: Exec) {
 }
 
 clean {
-    //dependsOn cargoClean
+    dependsOn cargoClean
 }

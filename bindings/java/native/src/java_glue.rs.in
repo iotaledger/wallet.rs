@@ -18,6 +18,7 @@ use crate::{
     event_manager::*,
     message::*,
     address::*,
+    wallet_actor::*,
 };
 
 use anyhow::{
@@ -625,7 +626,41 @@ foreign_class!(
     }
 );
 
+// Actor
+
+foreign_callback!(callback ActorCallback {
+    self_type ActorCallback + Send + 'static;
+    onEvent = ActorCallback::on_event(&self, event: &str);
+});
+
+foreign_class!(
+    #[derive(camelCaseAliases)]
+    class Actor {
+        self_type Actor;
+        private constructor = empty;
+        fn Actor::iota_initialize(cb: Box<dyn ActorCallback + Send + 'static>, actor_id: &str, storage_path: Option<&str>);
+        fn Actor::iota_destroy(actor_id: &str);
+        fn Actor::iota_send_message(message: &str);
+        fn Actor::iota_listen(actor_id: &str, id: &str, event: EventType);
+        fn Actor::iota_init_logger(file_name: &str);
+    }
+});
+
 // Events
+
+foreign_enum!(
+    enum EventType {
+        ERROR_THROWN = EventType::ErrorThrown,
+        BALANCE_CHANGE = EventType::BalanceChange,
+        NEW_TRANSACTION = EventType::NewTransaction,
+        CONFIRMATION_STATE_CHANGE = EventType::ConfirmationStateChange,
+        REATTACHMENT = EventType::Reattachment,
+        BROADCAST = EventType::Broadcast,
+        STRONGHOLD_STATUS_CHANGE = EventType::StrongholdStatusChange,
+        TRANSFER_PROGRESS = EventType::TransferProgress,
+        MIGRATION_PROGRESS = EventType::MigrationProgress,
+    }
+);
 
 foreign_enum!(
     enum TransferProgressType {

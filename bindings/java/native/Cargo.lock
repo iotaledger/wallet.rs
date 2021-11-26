@@ -1654,8 +1654,10 @@ name = "iota-wallet-java"
 version = "0.3.0"
 dependencies = [
  "anyhow",
+ "bee-common",
  "bee-message",
  "bindgen 0.59.2",
+ "cc",
  "chrono",
  "env_logger",
  "flapigen",
@@ -1666,9 +1668,11 @@ dependencies = [
  "jni",
  "log",
  "once_cell",
+ "riker",
  "serde 1.0.130",
  "serde_json",
  "tokio",
+ "walkdir",
 ]
 
 [[package]]

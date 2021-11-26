@@ -162,12 +162,6 @@ impl From<RustPublicKey> for PublicKey {
     }
 }
 
-impl From<RustPublicKey> for PublicKey {
-    fn from(output: RustPublicKey) -> Self {
-        Self(output)
-    }
-}
-
 pub struct Signature(RustSignature);
 
 impl Signature {
