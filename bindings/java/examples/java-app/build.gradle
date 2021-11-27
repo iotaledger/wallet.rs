@@ -22,10 +22,10 @@ startScripts {
 
 task customCleanTask(type: Delete) {
     // Clean up running "test" artifacts
-    delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-80"
-    delete "${rootDir}/examples/basic-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-443"
-    delete "${rootDir}/examples/basic-app/migration-database"
-    delete "${rootDir}/examples/basic-app/my-db"
+    delete "${rootDir}/examples/java-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-80"
+    delete "${rootDir}/examples/java-app/iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-443"
+    delete "${rootDir}/examples/java-app/migration-database"
+    delete "${rootDir}/examples/java-app/my-db"
 }
 
 test {

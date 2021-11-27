@@ -9,7 +9,7 @@ use chrono::prelude::{
 };
 
 use crate::{
-    java_glue::*,
+    jni_c_headers::*,
     types::*,
     acc::*,
     client_options::*,

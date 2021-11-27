@@ -8,6 +8,9 @@ mod classes;
 mod types;
 
 mod jni_c_headers;
+mod java_glue;
+
+pub use crate::java_glue::*;
 
 pub use crate::{classes::*, types::*};
 
