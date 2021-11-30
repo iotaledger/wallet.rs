@@ -12,6 +12,7 @@ keywords = ["iota", "wallet", "transaction", "python"]
 categories = ["cryptography::cryptocurrencies"]
 
 [lib]
+name = "iota_wallet"
 crate-type = ["cdylib"]
 
 [dependencies]
