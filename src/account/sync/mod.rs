@@ -342,7 +342,7 @@ async fn sync_addresses(
     options: AccountOptions,
     return_all_addresses: bool,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
-    log::debug!("[SYNC] sync_addresses");
+    log::debug!("[SYNC] sync_addresses internal: {}", internal);
     let mut address_index = address_index;
 
     let mut generated_addresses = vec![];
@@ -662,18 +662,10 @@ async fn perform_sync(
                     return_all_addresses,
                 )
                 .await?;
-                let account = account_handle.read().await.clone();
                 let (found_change_addresses, synced_messages) = sync_addresses(
                     &account_handle,
                     true,
-                    account
-                        .addresses()
-                        .iter()
-                        .filter(|a| *a.internal())
-                        .map(|a| a.key_index())
-                        .max()
-                        .copied()
-                        .unwrap_or_default(),
+                    address_index,
                     gap_limit,
                     options,
                     return_all_addresses,
@@ -723,13 +715,153 @@ async fn perform_sync(
     );
     // Add first public address if there is none, required for account discovery because we always need a public address
     // in an account
-    if addresses_to_save.is_empty() && return_all_addresses {
+    if account.addresses().is_empty() && addresses_to_save.is_empty() && return_all_addresses {
         addresses_to_save.extend(found_addresses.iter().find(|a| !a.internal()).cloned());
     }
     addresses_to_save.extend(find_addresses_to_save(
         &account,
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
+
+    // generate all missing addresses
+    if !addresses_to_save.is_empty() {
+        log::debug!("[SYNC] generate missing addresses");
+        let new_addresses = addresses_to_save.clone();
+        let max_new_public_index = new_addresses
+            .iter()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.key_index())
+            .unwrap_or(&0);
+        let max_new_internal_index = new_addresses
+            .iter()
+            .filter(|a| *a.internal())
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.key_index())
+            .unwrap_or(&0);
+
+        let bech32_hrp = match account.addresses().first() {
+            Some(address) => address.address().bech32_hrp().to_string(),
+            None => {
+                crate::client::get_client(account.client_options())
+                    .await?
+                    .read()
+                    .await
+                    .get_network_info()
+                    .await?
+                    .bech32_hrp
+            }
+        };
+
+        // generate missing public addresses
+        for key_index in 0..*max_new_public_index {
+            if !account
+                .addresses()
+                .iter()
+                .any(|a| a.key_index() == &key_index && !a.internal())
+            {
+                // generate address
+                let iota_address = crate::address::get_iota_address(
+                    &account,
+                    key_index,
+                    false,
+                    bech32_hrp.clone(),
+                    GenerateAddressMetadata {
+                        syncing: true,
+                        network: account.network(),
+                    },
+                )
+                .await?;
+                let address = Address {
+                    address: iota_address,
+                    key_index,
+                    internal: false,
+                    outputs: Default::default(),
+                };
+                addresses_to_save.push(address);
+            }
+        }
+        // generate missing internal addresses
+        for key_index in 0..*max_new_internal_index {
+            if !account
+                .addresses()
+                .iter()
+                .any(|a| a.key_index() == &key_index && *a.internal())
+            {
+                // generate address
+                let iota_address = crate::address::get_iota_address(
+                    &account,
+                    key_index,
+                    true,
+                    bech32_hrp.clone(),
+                    GenerateAddressMetadata {
+                        syncing: true,
+                        network: account.network(),
+                    },
+                )
+                .await?;
+                let address = Address {
+                    address: iota_address,
+                    key_index,
+                    internal: true,
+                    outputs: Default::default(),
+                };
+                addresses_to_save.push(address);
+            }
+        }
+    }
+
+    // check for latest unused address
+    // save to unwrap since we always have one address
+    if !account.addresses.last().unwrap().outputs.is_empty()
+        && !addresses_to_save
+            .iter()
+            .filter(|a| !a.internal())
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.outputs.len())
+            .unwrap_or(0)
+            == 0
+    {
+        // save to unwrap since we always have one address
+        let latest_index = std::cmp::max(
+            account.addresses.last().unwrap().key_index(),
+            addresses_to_save
+                .iter()
+                .filter(|a| !a.internal())
+                .max_by_key(|a| a.key_index())
+                .map(|a| a.key_index())
+                .unwrap_or(&0),
+        );
+        // generate new unused address
+        let iota_address = crate::address::get_iota_address(
+            &account,
+            latest_index + 1,
+            false,
+            // save to unwrap since we always have one address
+            account
+                .addresses()
+                .first()
+                .unwrap()
+                .address()
+                .bech32_hrp()
+                .to_string()
+                .clone(),
+            GenerateAddressMetadata {
+                syncing: true,
+                network: account.network(),
+            },
+        )
+        .await?;
+        let address = Address {
+            address: iota_address,
+            key_index: latest_index + 1,
+            internal: false,
+            outputs: Default::default(),
+        };
+        addresses_to_save.push(address);
+    }
+
+    addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
 
     log::debug!("[SYNC] perform_sync finished");
     Ok(SyncedAccountData {
@@ -741,7 +873,7 @@ async fn perform_sync(
 fn find_addresses_to_save(account: &Account, found_addresses: Vec<Address>) -> Vec<Address> {
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
-    let mut previous_address_is_unused = false;
+    let mut previous_address_is_unused = true;
     for found_address in found_addresses.into_iter() {
         let address_is_unused = found_address.outputs().is_empty();
 
@@ -1084,6 +1216,7 @@ impl AccountSynchronizer {
                     .await?;
                 log::debug!("[SYNC] new messages: {:#?}", parsed_messages);
                 let new_addresses = data.addresses;
+                log::debug!("[SYNC] new addresses: {:#?}", new_addresses);
 
                 if !self.skip_persistence && (!new_addresses.is_empty() || !parsed_messages.is_empty()) {
                     account.append_addresses(new_addresses.to_vec());
