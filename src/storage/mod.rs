@@ -222,10 +222,10 @@ impl StorageManager {
         if !self.account_indexation.contains(&index) {
             init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
-            self.storage
-                .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
-                .await?;
         }
+        self.storage
+            .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
+            .await?;
         Ok(())
     }
 
