@@ -813,25 +813,30 @@ async fn perform_sync(
 
     // check for latest unused address
     // save to unwrap since we always have one address
-    if !account.addresses.last().unwrap().outputs.is_empty()
-        && !addresses_to_save
+    let latest_account_address_index = account.addresses.last().unwrap().key_index();
+    let latest_addresses_to_save_index = addresses_to_save
+        .iter()
+        .filter(|a| !a.internal())
+        .max_by_key(|a| a.key_index())
+        .map(|a| a.key_index())
+        .unwrap_or(&0);
+    let is_latest_address_empty = if latest_account_address_index > latest_addresses_to_save_index {
+        account.addresses.last().unwrap().outputs.is_empty()
+    } else {
+        addresses_to_save
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
             .map(|a| a.outputs.len())
             .unwrap_or(0)
             == 0
-    {
+    };
+
+    // save to unwrap since we always have one address
+    if !is_latest_address_empty {
         // save to unwrap since we always have one address
-        let latest_index = std::cmp::max(
-            account.addresses.last().unwrap().key_index(),
-            addresses_to_save
-                .iter()
-                .filter(|a| !a.internal())
-                .max_by_key(|a| a.key_index())
-                .map(|a| a.key_index())
-                .unwrap_or(&0),
-        );
+        let latest_index = std::cmp::max(latest_account_address_index, latest_addresses_to_save_index);
+        log::debug!("[SYNC] generating a new unused address");
         // generate new unused address
         let iota_address = crate::address::get_iota_address(
             &account,
@@ -873,7 +878,8 @@ async fn perform_sync(
 fn find_addresses_to_save(account: &Account, found_addresses: Vec<Address>) -> Vec<Address> {
     let mut addresses_to_save = vec![];
     let mut ignored_addresses = vec![];
-    let mut previous_address_is_unused = true;
+    let mut found_addresses = found_addresses;
+    found_addresses.sort_unstable_by_key(|a| *a.key_index());
     for found_address in found_addresses.into_iter() {
         let address_is_unused = found_address.outputs().is_empty();
 
@@ -888,28 +894,19 @@ fn find_addresses_to_save(account: &Account, found_addresses: Vec<Address>) -> V
                 continue;
             }
         }
-
-        // if the previous address is unused, we'll keep checking to see if an used address was found on the gap limit
-        if previous_address_is_unused {
-            // subsequent unused address found; add it to the ignored addresses list
-            if address_is_unused {
-                ignored_addresses.push(found_address);
-            }
-            // used address found after finding unused addresses; we'll save all the previous ignored address and this
-            // one aswell
-            else {
-                addresses_to_save.extend(ignored_addresses.into_iter());
-                ignored_addresses = vec![];
-                addresses_to_save.push(found_address);
-            }
+        // subsequent unused address found; add it to the ignored addresses list
+        if address_is_unused {
+            ignored_addresses.push(found_address);
         }
-        // if the previous address is used or this is the first address,
-        // we'll save it because we want at least one unused address
+        // used address found after finding unused addresses; we'll save all the previous ignored address and this
+        // one aswell
         else {
+            addresses_to_save.extend(ignored_addresses.into_iter());
+            ignored_addresses = vec![];
             addresses_to_save.push(found_address);
         }
-        previous_address_is_unused = address_is_unused;
     }
+
     addresses_to_save
 }
 
