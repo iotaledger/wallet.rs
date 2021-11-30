@@ -223,6 +223,7 @@ impl StorageManager {
             init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
         }
+        // store it every time, because the password might changed
         self.storage
             .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
             .await?;
