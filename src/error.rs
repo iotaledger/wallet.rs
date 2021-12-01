@@ -1,4 +1,4 @@
-// Copyright 2020 IOTA Stiftung
+// Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use serde::ser::{SerializeStruct, Serializer};
@@ -81,6 +81,9 @@ pub enum Error {
     LatestAccountIsEmpty,
     /// Account not found
     #[error("account not found")]
+    AccountNotFound,
+    /// Record not found
+    #[error("Record not found")]
     RecordNotFound,
     /// invalid remainder value target address defined on `RemainderValueStrategy`.
     /// the address must belong to the account.
@@ -194,38 +197,15 @@ pub enum Error {
     /// Too many outputs
     #[error("too many outputs: {0}, max is {1}")]
     TooManyOutputs(usize, usize),
+    /// Too many outputs
+    #[error("too many outputs: {0}, max is {1}")]
+    TooManyInputs(usize, usize),
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, usize),
     /// Provided input address not found
     #[error("provided input address not found")]
     InputAddressNotFound,
-    /// iota 1.0 client error
-    // #[cfg(feature = "migration")]
-    #[error(transparent)]
-    LegacyClientError(Box<iota_migration::client::Error>),
-    /// Ternary error.
-    #[error("Ternary error")]
-    TernaryError,
-    /// Invalid legacy seed.
-    #[error("invalid seed")]
-    InvalidSeed,
-    /// Migration data not found.
-    #[error("migration data not found for the provided seed; call `get_migration_data` first.")]
-    MigrationDataNotFound,
-    /// Migration bundle not found.
-    #[error("migration bundle not found with the provided bundle hash")]
-    MigrationBundleNotFound,
-    /// Input not found with given index.
-    #[error("input not found with the provided index")]
-    InputNotFound,
-    /// Empty input list on migration bundle creation.
-    #[error("can't create migration bundle: input list is empty")]
-    EmptyInputList,
-    /// Cannot create bundle when the number of inputs is larger than 1 and there's a spent input.
-    /// Spent addresses must be the only input in a bundle.
-    #[error("can't create migration bundle: the bundle has more than one input and one of them are spent")]
-    SpentAddressOnBundle,
     /// Mutex lock failed.
     #[error("Mutex lock failed")]
     PoisonError,
@@ -238,13 +218,43 @@ pub enum Error {
     /// Couldn't get a spent output from a node.
     #[error("couldn't get a spent output from node")]
     SpentOutputNotFound,
+    #[cfg(feature = "mnemonic")]
+    /// Blake2b256 Error
+    #[error("{0}")]
+    Blake2b256(&'static str),
+    #[cfg(feature = "mnemonic")]
+    #[error("invalid address or account index {0}")]
+    TryFromInt(#[from] std::num::TryFromIntError),
+    #[cfg(feature = "mnemonic")]
+    /// Crypto.rs error
+    #[error("{0}")]
+    Crypto(#[from] crypto::Error),
+    #[cfg(feature = "mnemonic")]
+    /// Mnemonic not set error
+    #[error("mnemonic not set")]
+    MnemonicNotSet,
+    /// Missing unlock block error
+    #[error("missing unlock block")]
+    MissingUnlockBlock,
+    /// Custom input error
+    #[error("custom input error {0}")]
+    CustomInputError(String),
+    /// Client not set error
+    #[error("client not set")]
+    ClientNotSet,
+    /// Error from the logger in the bee_common crate.
+    #[error("{0}")]
+    BeeCommonLogger(iota_client::common::logger::Error),
+    /// Empty output amount error
+    #[error("output amount can't be 0")]
+    EmptyOutputAmount,
 }
 
-impl Drop for Error {
-    fn drop(&mut self) {
-        crate::event::emit_error(self);
-    }
-}
+// impl Drop for Error {
+//     fn drop(&mut self) {
+//         crate::event::emit_error(self);
+//     }
+// }
 
 impl From<iota_client::Error> for Error {
     fn from(error: iota_client::Error) -> Self {
@@ -252,15 +262,15 @@ impl From<iota_client::Error> for Error {
     }
 }
 
-impl From<iota_migration::client::Error> for Error {
-    fn from(error: iota_migration::client::Error) -> Self {
-        Self::LegacyClientError(Box::new(error))
-    }
-}
-
 impl From<iota_client::bee_message::Error> for Error {
     fn from(error: iota_client::bee_message::Error) -> Self {
         Self::BeeMessage(error)
+    }
+}
+
+impl From<iota_client::common::logger::Error> for Error {
+    fn from(error: iota_client::common::logger::Error) -> Self {
+        Self::BeeCommonLogger(error)
     }
 }
 
@@ -326,6 +336,7 @@ impl serde::Serialize for Error {
             Self::InsufficientFunds(_, _) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
+            Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
@@ -369,21 +380,26 @@ impl serde::Serialize for Error {
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
             Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
+            Self::TooManyInputs(_, _) => serialize_variant(self, serializer, "TooManyInputs"),
             Self::ConsolidationRequired(_, _) => serialize_variant(self, serializer, "ConsolidationRequired"),
             Self::InputAddressNotFound => serialize_variant(self, serializer, "InputAddressNotFound"),
-            // #[cfg(feature = "migration")]
-            Self::LegacyClientError(_) => serialize_variant(self, serializer, "LegacyClientError"),
-            Self::TernaryError => serialize_variant(self, serializer, "TernaryError"),
-            Self::InvalidSeed => serialize_variant(self, serializer, "InvalidSeed"),
-            Self::MigrationDataNotFound => serialize_variant(self, serializer, "MigrationDataNotFound"),
-            Self::MigrationBundleNotFound => serialize_variant(self, serializer, "MigrationBundleNotFound"),
-            Self::InputNotFound => serialize_variant(self, serializer, "InputNotFound"),
-            Self::EmptyInputList => serialize_variant(self, serializer, "EmptyInputList"),
-            Self::SpentAddressOnBundle => serialize_variant(self, serializer, "SpentAddressOnBundle"),
             Self::PoisonError => serialize_variant(self, serializer, "PoisonError"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::SpentOutputNotFound => serialize_variant(self, serializer, "SpentOutputNotFound"),
+            #[cfg(feature = "mnemonic")]
+            Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
+            #[cfg(feature = "mnemonic")]
+            Self::TryFromInt(_) => serialize_variant(self, serializer, "TryFromInt"),
+            #[cfg(feature = "mnemonic")]
+            Self::Crypto(_) => serialize_variant(self, serializer, "Crypto"),
+            #[cfg(feature = "mnemonic")]
+            Self::MnemonicNotSet => serialize_variant(self, serializer, "MnemonicNotSet"),
+            Self::MissingUnlockBlock => serialize_variant(self, serializer, "MissingUnlockBlock"),
+            Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
+            Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
+            Self::BeeCommonLogger(_) => serialize_variant(self, serializer, "BeeCommonLogger"),
+            Self::EmptyOutputAmount => serialize_variant(self, serializer, "EmptyOutputAmount"),
         }
     }
 }

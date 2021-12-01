@@ -1,11 +1,14 @@
-// Copyright 2020 IOTA Stiftung
+// Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::Account, LedgerStatus};
+use crate::{account::Account, signing::LedgerStatus};
 
 use std::{collections::HashMap, fmt, path::Path};
 
-use iota_client::{bee_message::unlock::UnlockBlock, common::packable::Packable};
+use iota_client::{
+    bee_message::{address::Address, unlock::UnlockBlock},
+    common::packable::Packable,
+};
 use iota_ledger::LedgerBIP32Index;
 use tokio::sync::Mutex;
 
@@ -18,7 +21,7 @@ const MAX_POOL_SIZE: usize = 10_000;
 #[derive(Default)]
 pub struct LedgerNanoSigner {
     pub is_simulator: bool,
-    pub address_pool: Mutex<HashMap<iota_client::bee_message::address::Address, HashMap<AddressPoolEntry, [u8; 32]>>>,
+    pub address_pool: Mutex<HashMap<Address, HashMap<AddressPoolEntry, [u8; 32]>>>,
     pub mutex: Mutex<()>,
 }
 
@@ -61,7 +64,7 @@ impl super::Signer for LedgerNanoSigner {
         };
 
         let app = match iota_ledger::get_opened_app(&transport_type) {
-            Ok((name, version)) => Some(crate::LedgerApp { name, version }),
+            Ok((name, version)) => Some(crate::signing::LedgerApp { name, version }),
             _ => None,
         };
 
@@ -80,7 +83,9 @@ impl super::Signer for LedgerNanoSigner {
     }
 
     async fn store_mnemonic(&mut self, _: &Path, _mnemonic: String) -> crate::Result<()> {
-        Err(crate::Error::InvalidMnemonic(String::from("")))
+        Err(crate::Error::InvalidMnemonic(String::from(
+            "Can't store mnemonic to ledger",
+        )))
     }
 
     async fn generate_address(
@@ -135,7 +140,7 @@ impl super::Signer for LedgerNanoSigner {
         let addr_pool = {
             // get first address
             let first_public_address = account
-                .addresses()
+                .public_addresses()
                 .iter()
                 .find(|e| *e.key_index() == 0 && !e.internal());
 
@@ -230,7 +235,7 @@ impl super::Signer for LedgerNanoSigner {
         ))
     }
 
-    async fn sign_message<'a>(
+    async fn sign_transaction<'a>(
         &mut self,
         account: &Account,
         essence: &iota_client::bee_message::prelude::Essence,
@@ -309,7 +314,13 @@ impl super::Signer for LedgerNanoSigner {
                                     break;
                                 }
                             }
+                            iota_client::bee_message::output::Output::SignatureLockedDustAllowance(s) => {
+                                if *remainder_address.unwrap() == *s.address() {
+                                    break;
+                                }
+                            }
                             _ => {
+                                log::debug!("[LEDGER] unsupported output");
                                 return Err(crate::Error::LedgerMiscError);
                             }
                         }
@@ -318,6 +329,7 @@ impl super::Signer for LedgerNanoSigner {
 
                     // was index found?
                     if remainder_index as usize == essence.outputs().len() {
+                        log::debug!("[LEDGER] remainder_index not found");
                         return Err(crate::Error::LedgerMiscError);
                     }
                 }
@@ -328,6 +340,15 @@ impl super::Signer for LedgerNanoSigner {
         let essence_bytes = essence.pack_new();
 
         // prepare signing
+        log::debug!("[LEDGER] prepare signing");
+        log::debug!(
+            "[LEDGER] {:?} {:?} {} {} {:?}",
+            input_bip32_indices,
+            essence_bytes,
+            has_remainder,
+            remainder_index,
+            remainder_bip32
+        );
         ledger.prepare_signing(
             input_bip32_indices,
             essence_bytes,
@@ -338,6 +359,7 @@ impl super::Signer for LedgerNanoSigner {
 
         // show essence to user
         // if denied by user, it returns with `DeniedByUser` Error
+        log::debug!("[LEDGER] await user confirmation");
         ledger.user_confirm()?;
 
         // sign
