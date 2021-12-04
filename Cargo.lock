@@ -1341,8 +1341,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5faf9cc5b45fe78221bac3326bbf932b2c03a6cbc9b5793e4c4826eb399b1d9d"
+source = "git+https://github.com/iotaledger/iota.rs?rev=509c2dda3a0b159ec39912480a93df1dc59a55e1#509c2dda3a0b159ec39912480a93df1dc59a55e1"
 dependencies = [
  "async-trait",
  "bee-common",

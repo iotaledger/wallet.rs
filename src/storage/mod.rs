@@ -238,6 +238,32 @@ impl StorageManager {
         Ok(address)
     }
 
+    #[cfg(feature = "participation")]
+    pub async fn save_participations(
+        &mut self,
+        account_index: usize,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<()> {
+        self.storage
+            .set(&format!("ACCOUNT-{}-PARTICIPATIONS", account_index), participations)
+            .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn get_participations(
+        &self,
+        account_index: usize,
+    ) -> crate::Result<Vec<crate::participation::types::Participation>> {
+        let participations: Vec<crate::participation::types::Participation> = serde_json::from_str(
+            &self
+                .storage
+                .get(&format!("ACCOUNT-{}-PARTICIPATIONS", account_index))
+                .await?,
+        )?;
+        Ok(participations)
+    }
+
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
         let index = AccountIndexation { key: key.to_string() };
         if let Some(index) = self.account_indexation.iter().position(|i| i == &index) {

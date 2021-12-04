@@ -1,6 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "participation")]
+use crate::message::{MessagePayload, TransactionEssence};
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
@@ -946,6 +948,246 @@ impl AccountHandle {
         auth: Option<(&str, &str)>,
     ) -> crate::Result<NodeInfoWrapper> {
         self.inner.read().await.get_node_info(url, jwt, auth).await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Participate in a staking or voting event
+    pub async fn participate(
+        &self,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<Vec<Message>> {
+        self.sync_internal()
+            .await
+            .execute()
+            .await?
+            .send_participation_transfers(participations, None)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Stop participating from provided staking or voting events
+    pub async fn stop_participating(&self, event_ids: Vec<String>) -> crate::Result<Vec<Message>> {
+        let account = self.read().await;
+        let storage = crate::storage::get(&account.storage_path).await?;
+        let mut storage = storage.lock().await;
+        if let Ok(mut participations) = storage.get_participations(*account.index()).await {
+            // remove provided events
+            participations = participations
+                .into_iter()
+                .filter(|p| !event_ids.contains(&p.event_id))
+                .collect();
+            storage.save_participations(*account.index(), participations).await?;
+        };
+        drop(storage);
+        drop(account);
+        // by using the participate function with en empty vec we will just send transactions only with the remaining or
+        // no events
+        self.participate(Vec::new()).await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Participate with funds that aren't already participating in provided events
+    pub async fn participate_with_remaining_funds(
+        &self,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<Vec<Message>> {
+        log::debug!("participate_with_remaining_funds");
+        let participation_overview = self.get_participation_overview().await?;
+        let balance = self.balance().await?;
+        let mut event_ids_to_search_outputs_for = Vec::new();
+
+        if balance.available > participation_overview.shimmer_staked_funds
+            && participations
+                .iter()
+                .any(|p| p.event_id == crate::participation::types::SHIMMER_EVENT_ID)
+        {
+            event_ids_to_search_outputs_for.push(crate::participation::types::SHIMMER_EVENT_ID);
+        }
+
+        if balance.available > participation_overview.assembly_staked_funds
+            && participations
+                .iter()
+                .any(|p| p.event_id == crate::participation::types::ASSEMBLY_EVENT_ID)
+        {
+            event_ids_to_search_outputs_for.push(crate::participation::types::ASSEMBLY_EVENT_ID);
+        }
+        let account = self.read().await;
+        let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
+        let mut available_outputs: Vec<AddressOutput> = Vec::new();
+        for address in account.addresses() {
+            let address_outputs = address.available_outputs(&sent_messages);
+            available_outputs.extend(address_outputs.into_iter().cloned());
+        }
+
+        // filter outputs that are already used for the events
+        let mut outputs_to_send: HashMap<iota_client::bee_message::output::OutputId, AddressOutput> = HashMap::new();
+        for output in available_outputs {
+            let mut output_is_already_participating = false;
+            // get indexation data
+            let indexation_data = match account.get_message(&output.message_id).await {
+                Some(message) => match message.payload {
+                    Some(MessagePayload::Transaction(tx)) => {
+                        let TransactionEssence::Regular(essence) = tx.essence();
+                        match essence.payload() {
+                            Some(iota_client::bee_message::payload::Payload::Indexation(indexation)) => {
+                                Some(indexation.data().to_owned())
+                            }
+                            _ => None,
+                        }
+                    }
+                    _ => None,
+                },
+                None => None,
+            };
+            // check if output is already participating in one of the provided participation events
+            if let Some(indexation_data) = indexation_data {
+                if let Ok(message_participation) =
+                    crate::participation::types::Participations::from_bytes(&mut &indexation_data[..])
+                {
+                    for id in &event_ids_to_search_outputs_for {
+                        if message_participation.participations.iter().any(|e| &e.event_id == id) {
+                            output_is_already_participating = true;
+                            log::debug!("Output {} already participates in event {}", output.id()?, id);
+                        }
+                    }
+                }
+            }
+            if !output_is_already_participating {
+                outputs_to_send.insert(output.id()?, output);
+            }
+        }
+        drop(account);
+        log::debug!("Remaining output to stake {:?}", outputs_to_send);
+        self.sync_internal()
+            .await
+            .execute()
+            .await?
+            .send_participation_transfers(participations, Some(outputs_to_send.into_values().collect()))
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get an overview of the participations with the staked funds and the accumulated rewards.
+    pub async fn get_participation_overview(&self) -> crate::Result<crate::participation::types::ParticipatingAccount> {
+        let account_balance = self.balance().await?;
+        let account = self.read().await;
+        let read_participations = match crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .get_participations(*account.index())
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => Vec::new(),
+        };
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+
+        let mut available_outputs: Vec<AddressOutput> = Vec::new();
+        let sent_messages = account.list_messages(0, 0, Some(MessageType::Confirmed)).await?;
+        for address in account.addresses() {
+            let address_outputs = address.available_outputs(&sent_messages);
+            available_outputs.extend(address_outputs.into_iter().cloned().collect::<Vec<AddressOutput>>());
+        }
+
+        let (shimmer_staked_funds, assembly_staked_funds): (
+            u64,
+            u64,
+            // HashMap<String, crate::participation::response_types::TrackedParticipation>,
+        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone()).await?;
+
+        let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
+            crate::participation::account_helpers::get_addresses_staking_rewards(
+                account.addresses().clone(),
+                node.clone(),
+            )
+            .await?;
+
+        Ok(crate::participation::types::ParticipatingAccount {
+            account_index: *account.index(),
+            participations: read_participations,
+            assembly_staked_funds,
+            assembly_rewards_below_minimum,
+            assembly_rewards,
+            assembly_unstaked_funds: account_balance.total - assembly_staked_funds,
+            shimmer_staked_funds,
+            shimmer_rewards_below_minimum,
+            shimmer_rewards,
+            shimmer_unstaked_funds: account_balance.total - shimmer_staked_funds,
+        })
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get the staking rewards of all addresses for all staking events.
+    pub async fn get_staking_rewards(
+        &self,
+    ) -> crate::Result<HashMap<String, crate::participation::response_types::StakingStatus>> {
+        let account = self.read().await;
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+        let mut total_staking_status: HashMap<String, crate::participation::response_types::StakingStatus> =
+            HashMap::new();
+
+        // We split the addresses into chunks so we don't get timeouts if we have thousands
+        for addresses_chunk in account
+            .addresses()
+            .chunks(100)
+            .map(|x: &[Address]| x.to_vec())
+            .into_iter()
+        {
+            let mut tasks = Vec::new();
+            for address in addresses_chunk {
+                let node = node.clone();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        let staking_status = crate::participation::endpoints::get_address_staking_status(
+                            node,
+                            address.address().to_bech32(),
+                        )
+                        .await?;
+                        crate::Result::Ok(staking_status)
+                    })
+                    .await
+                });
+            }
+            let results = futures::future::try_join_all(tasks).await?;
+            for res in results {
+                let staking_status = res?;
+                for (event_id, status) in staking_status.rewards {
+                    total_staking_status
+                        .entry(event_id)
+                        .and_modify(|e| e.amount += status.amount)
+                        .or_insert_with(|| status);
+                }
+            }
+        }
+
+        Ok(total_staking_status)
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get an overview of the staked funds and the accumulated rewards.
+    pub async fn get_participation_events(&self) -> crate::Result<Vec<crate::participation::types::EventData>> {
+        let account = self.read().await;
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+        let event_ids = crate::participation::endpoints::get_events(node.clone(), None).await?;
+        log::debug!("[get_participation_events] event_ids {:?}", event_ids);
+        let mut events_data = Vec::new();
+        for id in event_ids.event_ids {
+            let event_information = crate::participation::endpoints::get_event_information(node.clone(), &id).await?;
+            let event_status = crate::participation::endpoints::get_event_status(node.clone(), &id).await?;
+            events_data.push(crate::participation::types::EventData {
+                event_id: id,
+                information: event_information,
+                status: event_status,
+            });
+        }
+        Ok(events_data)
     }
 }
 

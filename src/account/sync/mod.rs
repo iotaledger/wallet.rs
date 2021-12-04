@@ -1429,6 +1429,113 @@ impl SyncedAccount {
         Ok(messages)
     }
 
+    #[cfg(feature = "participation")]
+    /// Gets all outputs and creates transactions to send them to an own address again
+    pub(crate) async fn send_participation_transfers(
+        &self,
+        mut participations: Vec<crate::participation::types::Participation>,
+        custom_inputs: Option<Vec<AddressOutput>>,
+    ) -> crate::Result<Vec<Message>> {
+        let mut transfers: Vec<Transfer> = Vec::new();
+        // collect the transactions we need to make
+
+        let account = self.account_handle.read().await;
+        if let Ok(read_participations) = crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .get_participations(*account.index())
+            .await
+        {
+            // add existing participations
+            for participation in read_participations {
+                if !participations.iter().any(|p| p.event_id == participation.event_id) {
+                    participations.push(participation);
+                }
+            }
+        }
+        // -1 because we will generate one output
+        let max_inputs = match account.signer_type {
+            #[cfg(feature = "ledger-nano")]
+            SignerType::LedgerNano => LEDGER_MAX_IN_OUTPUTS - 1,
+            #[cfg(feature = "ledger-nano-simulator")]
+            SignerType::LedgerNanoSimulator => LEDGER_MAX_IN_OUTPUTS - 1,
+            _ => INPUT_OUTPUT_COUNT_MAX - 1,
+        };
+        let available_outputs = match custom_inputs {
+            Some(inputs) => inputs,
+            None => {
+                let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
+                let mut available_outputs: Vec<AddressOutput> = Vec::new();
+                for address in account.addresses() {
+                    let address_outputs = address.available_outputs(&sent_messages);
+                    available_outputs.extend(address_outputs.into_iter().cloned());
+                }
+                available_outputs
+            }
+        };
+
+        log::debug!("Participation: {:?}", participations);
+        let indexation_payload = if participations.is_empty() {
+            crate::message::IndexationPayload::new("firefly".as_bytes(), &[])?
+        } else {
+            crate::message::IndexationPayload::new(
+                crate::participation::types::PARTICIPATE.as_bytes(),
+                &crate::participation::types::Participations {
+                    participations: participations.clone(),
+                }
+                .to_bytes()?,
+            )?
+        };
+        // the address outputs exceed the threshold, so we push a transfer to our vector
+        if !available_outputs.is_empty() {
+            for outputs in available_outputs.chunks(max_inputs) {
+                transfers.push(
+                    Transfer::builder(
+                        // save to unwrap since we checked that it's not empty
+                        outputs.first().unwrap().address.clone(),
+                        NonZeroU64::new(outputs.iter().fold(0, |v, o| v + o.amount)).unwrap(),
+                        None,
+                    )
+                    .with_inputs(outputs.iter().map(|o| (*o).clone()).collect())
+                    .with_events(true)
+                    .with_indexation(indexation_payload.clone())
+                    .finish(),
+                );
+            }
+        } else {
+            return Err(crate::Error::InsufficientFunds(0, 0));
+        }
+        let account_id = account.id().to_string();
+        drop(account);
+
+        log::debug!("send participation transfers");
+        let mut tasks = Vec::new();
+        // run the transfers in parallel
+        for transfer in transfers {
+            transfer
+                .emit_event_if_needed(account_id.clone(), TransferProgressType::SelectingInputs)
+                .await;
+            let task = self.transfer(transfer);
+            tasks.push(task);
+        }
+
+        let mut messages = Vec::new();
+        for message in futures::future::try_join_all(tasks).await? {
+            messages.push(message);
+        }
+
+        let account = self.account_handle.read().await;
+        crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .save_participations(*account.index(), participations)
+            .await?;
+
+        Ok(messages)
+    }
+
     /// Send messages.
     pub(crate) async fn transfer(&self, mut transfer_obj: Transfer) -> crate::Result<Message> {
         log::debug!("[TRANSFER] transfer");
@@ -1505,20 +1612,21 @@ impl SyncedAccount {
             Vec<input_selection::AddressInputs>,
             Option<input_selection::Remainder>,
         ) = match transfer_obj.input.take() {
-            Some((address, address_inputs)) => {
-                if let Some(address) = account_.addresses().iter().find(|a| a.address() == &address) {
-                    locked_outputs.extend(address_inputs.iter().cloned());
-                    (
-                        vec![input_selection::AddressInputs {
+            Some(addresses_inputs) => {
+                let mut address_inputs = Vec::new();
+                for address_input in addresses_inputs {
+                    if let Some(address) = account_.addresses().iter().find(|a| a.address() == &address_input.0) {
+                        locked_outputs.extend(address_input.1.iter().cloned());
+                        address_inputs.push(input_selection::AddressInputs {
                             internal: *address.internal(),
                             address: address.address().clone(),
-                            outputs: address_inputs,
-                        }],
-                        None,
-                    )
-                } else {
-                    return Err(crate::Error::InputAddressNotFound);
+                            outputs: address_input.1,
+                        });
+                    } else {
+                        return Err(crate::Error::InputAddressNotFound);
+                    }
                 }
+                (address_inputs, None)
             }
             None => {
                 transfer_obj

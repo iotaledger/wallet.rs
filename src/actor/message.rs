@@ -340,6 +340,36 @@ pub enum MessageType {
     },
     /// Stop background syncing.
     StopBackgroundSync,
+    #[cfg(feature = "participation")]
+    /// Participate in a voting or staking events
+    Participate {
+        /// account which should participate
+        account_identifier: AccountIdentifier,
+        /// participation information to send
+        participations: Vec<crate::participation::types::Participation>,
+    },
+    #[cfg(feature = "participation")]
+    /// Stop participating in a voting or staking events
+    StopParticipating {
+        /// account which should stop participate
+        account_identifier: AccountIdentifier,
+        /// Event ids to stop participating from
+        event_ids: Vec<String>,
+    },
+    #[cfg(feature = "participation")]
+    /// Participate with new funds that didn't participate already
+    ParticipateWithRemainingFunds {
+        /// account which should participate
+        account_identifier: AccountIdentifier,
+        /// participation information to send
+        participations: Vec<crate::participation::types::Participation>,
+    },
+    #[cfg(feature = "participation")]
+    /// Get participating overview
+    GetParticipationOverview,
+    #[cfg(feature = "participation")]
+    /// Get participation events
+    GetParticipationEvents,
 }
 
 impl Serialize for MessageType {
@@ -424,6 +454,24 @@ impl Serialize for MessageType {
             }
             MessageType::StopBackgroundSync => {
                 serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
+            }
+            #[cfg(feature = "participation")]
+            MessageType::Participate { .. } => serializer.serialize_unit_variant("MessageType", 35, "Participate"),
+            #[cfg(feature = "participation")]
+            MessageType::StopParticipating { .. } => {
+                serializer.serialize_unit_variant("MessageType", 36, "StopParticipating")
+            }
+            #[cfg(feature = "participation")]
+            MessageType::ParticipateWithRemainingFunds { .. } => {
+                serializer.serialize_unit_variant("MessageType", 37, "ParticipateWithRemainingFunds")
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationOverview => {
+                serializer.serialize_unit_variant("MessageType", 38, "GetParticipationOverview")
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationEvents => {
+                serializer.serialize_unit_variant("MessageType", 39, "GetParticipationEvents")
             }
         }
     }
@@ -614,6 +662,15 @@ pub enum ResponseType {
     GetLegacyAddressChecksum(String),
     /// All went fine.
     Ok(()),
+    #[cfg(feature = "participation")]
+    /// Sent participations response.
+    SentParticipation(Vec<WalletMessage>),
+    #[cfg(feature = "participation")]
+    /// Participating accounts with their staking rewards.
+    ParticipationOverview(crate::participation::types::ParticipatingAccounts),
+    #[cfg(feature = "participation")]
+    /// Get data about participation events.
+    EventsData(Vec<crate::participation::types::EventData>),
 }
 
 /// The message type.
