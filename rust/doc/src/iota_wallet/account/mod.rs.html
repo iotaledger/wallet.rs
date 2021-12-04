@@ -1703,50 +1703,6 @@
 <span id="1703">1703</span>
 <span id="1704">1704</span>
 <span id="1705">1705</span>
-<span id="1706">1706</span>
-<span id="1707">1707</span>
-<span id="1708">1708</span>
-<span id="1709">1709</span>
-<span id="1710">1710</span>
-<span id="1711">1711</span>
-<span id="1712">1712</span>
-<span id="1713">1713</span>
-<span id="1714">1714</span>
-<span id="1715">1715</span>
-<span id="1716">1716</span>
-<span id="1717">1717</span>
-<span id="1718">1718</span>
-<span id="1719">1719</span>
-<span id="1720">1720</span>
-<span id="1721">1721</span>
-<span id="1722">1722</span>
-<span id="1723">1723</span>
-<span id="1724">1724</span>
-<span id="1725">1725</span>
-<span id="1726">1726</span>
-<span id="1727">1727</span>
-<span id="1728">1728</span>
-<span id="1729">1729</span>
-<span id="1730">1730</span>
-<span id="1731">1731</span>
-<span id="1732">1732</span>
-<span id="1733">1733</span>
-<span id="1734">1734</span>
-<span id="1735">1735</span>
-<span id="1736">1736</span>
-<span id="1737">1737</span>
-<span id="1738">1738</span>
-<span id="1739">1739</span>
-<span id="1740">1740</span>
-<span id="1741">1741</span>
-<span id="1742">1742</span>
-<span id="1743">1743</span>
-<span id="1744">1744</span>
-<span id="1745">1745</span>
-<span id="1746">1746</span>
-<span id="1747">1747</span>
-<span id="1748">1748</span>
-<span id="1749">1749</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -1755,7 +1711,7 @@
     <span class="ident">address</span>::{<span class="ident">Address</span>, <span class="ident">AddressBuilder</span>, <span class="ident">AddressOutput</span>, <span class="ident">AddressWrapper</span>},
     <span class="ident">client</span>::{<span class="ident">ClientOptions</span>, <span class="ident">Node</span>},
     <span class="ident">event::TransferProgressType</span>,
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">TransactionEssence</span>, <span class="ident">Transfer</span>},
+    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">Transfer</span>},
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignerType</span>},
     <span class="ident">storage</span>::{<span class="ident">MessageIndexation</span>, <span class="ident">MessageQueryFilter</span>},
 };
@@ -2914,9 +2870,7 @@
         <span class="ident">from</span>: <span class="ident">usize</span>,
         <span class="ident">message_type</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageType</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cached_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached_messages</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
-
-        <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>)
             .<span class="kw">await</span>
             .<span class="ident">expect</span>(<span class="string">&quot;storage adapter not set&quot;</span>)
             .<span class="ident">lock</span>()
@@ -2925,55 +2879,13 @@
                 <span class="self">self</span>,
                 <span class="ident">count</span>,
                 <span class="ident">from</span>,
-                <span class="ident">MessageQueryFilter::message_type</span>(<span class="ident">message_type</span>.<span class="ident">clone</span>()).<span class="ident">with_ignore_ids</span>(<span class="kw-2">&amp;</span><span class="ident">cached_messages</span>),
+                <span class="ident">MessageQueryFilter::message_type</span>(<span class="ident">message_type</span>.<span class="ident">clone</span>()),
             )
             .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message_type</span>) <span class="op">=</span> <span class="ident">message_type</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">cached_messages</span>.<span class="ident">values</span>() {
-                <span class="kw">let</span> <span class="ident">matches</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message_type</span> {
-                    <span class="ident">MessageType::Received</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-                            <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
-                            <span class="ident">essence</span>.<span class="ident">incoming</span>()
-                        } <span class="kw">else</span> {
-                            <span class="bool-val">false</span>
-                        }
-                    }
-                    <span class="ident">MessageType::Sent</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-                            <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
-                            <span class="op">!</span><span class="ident">essence</span>.<span class="ident">incoming</span>()
-                        } <span class="kw">else</span> {
-                            <span class="bool-val">false</span>
-                        }
-                    }
-                    <span class="ident">MessageType::Failed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">broadcasted</span>(),
-                    <span class="ident">MessageType::Unconfirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">is_none</span>(),
-                    <span class="ident">MessageType::Value</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">matches!</span>(<span class="ident">message</span>.<span class="ident">payload</span>(), <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="kw">_</span>))),
-                    <span class="ident">MessageType::Confirmed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or_default</span>(),
-                };
-                <span class="kw">if</span> <span class="ident">matches</span> {
-                    <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">message</span>.<span class="ident">clone</span>());
-                }
-            }
-            <span class="ident">list</span>
-        } <span class="kw">else</span> {
-            <span class="ident">cached_messages</span>.<span class="ident">values</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
-        };
+        <span class="ident">messages</span>.<span class="ident">sort_unstable_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">timestamp</span>().<span class="ident">cmp</span>(<span class="ident">b</span>.<span class="ident">timestamp</span>()));
 
-        <span class="comment">// we cache messages with known confirmation since they&#39;ll never be updated</span>
-        <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">messages</span> {
-            <span class="kw">if</span> <span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">is_some</span>() {
-                <span class="ident">cached_messages</span>.<span class="ident">insert</span>(<span class="kw-2">*</span><span class="ident">message</span>.<span class="ident">id</span>(), <span class="ident">message</span>.<span class="ident">clone</span>());
-            }
-        }
-
-        <span class="ident">message_list</span>.<span class="ident">extend</span>(<span class="ident">messages</span>);
-        <span class="ident">message_list</span>.<span class="ident">sort_unstable_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">timestamp</span>().<span class="ident">cmp</span>(<span class="ident">b</span>.<span class="ident">timestamp</span>()));
-
-        <span class="prelude-val">Ok</span>(<span class="ident">message_list</span>)
+        <span class="prelude-val">Ok</span>(<span class="ident">messages</span>)
     }
 
     <span class="doccomment">/// Gets the spent addresses.</span>
