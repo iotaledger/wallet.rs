@@ -2035,7 +2035,7 @@ async fn perform_transfer(
             TransferProgressType::PreparedTransaction(PreparedTransactionData {
                 inputs: inputs_for_event,
                 outputs: outputs_for_event,
-                data: indexation_data,
+                data: indexation_data.clone(),
             }),
         )
         .await;
@@ -2145,6 +2145,22 @@ async fn perform_transfer(
     drop(account_);
     crate::monitor::monitor_address_balance(account_handle.clone(), addresses_to_watch).await;
 
+    #[cfg(feature = "participation")]
+    {
+        // reset all participations if a transfer without participation is sent(indexation_data.is_none()) and the
+        // available balance is empty, because then we will have no outputs participating in any event anymore
+        if indexation_data.is_none() && account_handle.balance().await?.available == 0 {
+            log::debug!("Resetting participations");
+            let account = account_handle.read().await;
+            let account_index = account_handle.index().await;
+            crate::storage::get(&account.storage_path)
+                .await?
+                .lock()
+                .await
+                .save_participations(account_index, vec![])
+                .await?;
+        }
+    }
     Ok(message)
 }
 
