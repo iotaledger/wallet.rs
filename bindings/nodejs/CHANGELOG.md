@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.5]
+
+- Attempt to fix the wrong number of messages returned from `list_messages()`.
+  - [db2399e0](https://github.com/iotaledger/wallet.rs/commit/db2399e03f407956fe20faebd7fba4adef9c4440) account,storage: partially remove caching ([#826](https://github.com/iotaledger/wallet.rs/pull/826)) on 2021-12-04
+
 ## \[1.0.4]
 
 - Use default target features from `rustc` to determine SSE inclusion for RocksDB
