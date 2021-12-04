@@ -683,6 +683,19 @@ impl AccountHandle {
                 .await;
             self.sync_internal().await.execute().await?
         };
+        #[cfg(feature = "participation")]
+        {
+            // reset all participations if a normal transfer is sent
+            log::debug!("Resetting participations");
+            let account = self.read().await;
+            let account_index = self.index().await;
+            crate::storage::get(&account.storage_path)
+                .await?
+                .lock()
+                .await
+                .save_participations(account_index, vec![])
+                .await?;
+        }
         synced.transfer(transfer_obj).await
     }
 

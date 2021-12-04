@@ -88,7 +88,7 @@ pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
 
 /// Monitor address for balance changes.
 pub async fn monitor_address_balance(_account_handle: AccountHandle, _addresses: Vec<AddressWrapper>) {
-    //todo uncomment this part again
+    // todo uncomment this part again
     // let client_options = account_handle.client_options().await;
     // let client_options_ = client_options.clone();
 
