@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{MessageIndexation, MessageQueryFilter},
 };
@@ -1165,9 +1165,7 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
-        let mut cached_messages = self.cached_messages.lock().await;
-
-        let messages = crate::storage::get(&self.storage_path)
+        let mut messages = crate::storage::get(&self.storage_path)
             .await
             .expect("storage adapter not set")
             .lock()
@@ -1176,55 +1174,13 @@ impl Account {
                 self,
                 count,
                 from,
-                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&cached_messages),
+                MessageQueryFilter::message_type(message_type.clone()),
             )
             .await?;
 
-        let mut message_list: Vec<Message> = if let Some(message_type) = message_type {
-            let mut list = Vec::new();
-            for message in cached_messages.values() {
-                let matches = match message_type {
-                    MessageType::Received => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Sent => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            !essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
-                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
-                };
-                if matches {
-                    list.push(message.clone());
-                }
-            }
-            list
-        } else {
-            cached_messages.values().cloned().collect()
-        };
+        messages.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
 
-        // we cache messages with known confirmation since they'll never be updated
-        for message in &messages {
-            if message.confirmed().is_some() {
-                cached_messages.insert(*message.id(), message.clone());
-            }
-        }
-
-        message_list.extend(messages);
-        message_list.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
-
-        Ok(message_list)
+        Ok(messages)
     }
 
     /// Gets the spent addresses.
