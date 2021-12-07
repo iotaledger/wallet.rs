@@ -723,22 +723,36 @@ async fn perform_sync(
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
 
+    let new_addresses = addresses_to_save.clone();
+    let max_new_public_index = new_addresses
+        .iter()
+        .filter(|a| !a.internal())
+        .max_by_key(|a| a.key_index())
+        .map(|a| a.key_index())
+        .unwrap_or(&0);
+    let max_new_internal_index = new_addresses
+        .iter()
+        .filter(|a| *a.internal())
+        .max_by_key(|a| a.key_index())
+        .map(|a| a.key_index())
+        .unwrap_or(&0);
+
+    let public_addresses = account.addresses.iter().filter(|a| !a.internal());
+    let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
+    let latest_public_address_index = public_addresses
+        .clone()
+        .max_by_key(|a| a.key_index())
+        .map(|a| a.key_index())
+        .unwrap_or(&0);
+    let latest_internal_address_index = internal_addresses
+        .clone()
+        .max_by_key(|a| a.key_index())
+        .map(|a| a.key_index())
+        .unwrap_or(&0);
+
     // generate all missing addresses
     if !addresses_to_save.is_empty() {
-        let new_addresses = addresses_to_save.clone();
-        let max_new_public_index = new_addresses
-            .iter()
-            .filter(|a| !a.internal())
-            .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .unwrap_or(&0);
-        let max_new_internal_index = new_addresses
-            .iter()
-            .filter(|a| *a.internal())
-            .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .unwrap_or(&0);
-
+        log::debug!("[SYNC] check for missing addresses");
         let bech32_hrp = match account.addresses().first() {
             Some(address) => address.address().bech32_hrp().to_string(),
             None => {
@@ -753,12 +767,13 @@ async fn perform_sync(
         };
 
         // generate missing public addresses
-        for key_index in 0..*max_new_public_index {
+        for key_index in *latest_public_address_index..*max_new_public_index {
             if !account
                 .addresses()
                 .iter()
                 .any(|a| a.key_index() == &key_index && !a.internal())
-                && addresses_to_save
+                && !addresses_to_save
+                    .clone()
                     .iter()
                     .any(|a| a.key_index() == &key_index && !a.internal())
             {
@@ -792,12 +807,13 @@ async fn perform_sync(
             }
         }
         // generate missing internal addresses
-        for key_index in 0..*max_new_internal_index {
+        for key_index in *latest_internal_address_index..*max_new_internal_index {
             if !account
                 .addresses()
                 .iter()
                 .any(|a| a.key_index() == &key_index && *a.internal())
-                && addresses_to_save
+                && !addresses_to_save
+                    .clone()
                     .iter()
                     .any(|a| a.key_index() == &key_index && *a.internal())
             {
@@ -832,17 +848,11 @@ async fn perform_sync(
         }
     }
 
-    // check for latest unused address
-    // save to unwrap since we always have one address
-    let latest_account_address_index = account.addresses.last().unwrap().key_index();
-    let latest_addresses_to_save_index = addresses_to_save
-        .iter()
-        .filter(|a| !a.internal())
-        .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
-    let is_latest_address_empty = if latest_account_address_index > latest_addresses_to_save_index {
-        account.addresses.last().unwrap().outputs.is_empty()
+    let is_latest_public_address_empty = if latest_public_address_index > max_new_public_index {
+        public_addresses
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.outputs().is_empty())
+            .unwrap_or(false)
     } else {
         addresses_to_save
             .iter()
@@ -852,11 +862,24 @@ async fn perform_sync(
             .unwrap_or(0)
             == 0
     };
+    let is_latest_internal_address_empty = if latest_internal_address_index > max_new_internal_index {
+        internal_addresses
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.outputs().is_empty())
+            .unwrap_or(true)
+    } else {
+        addresses_to_save
+            .iter()
+            .filter(|a| *a.internal())
+            .max_by_key(|a| a.key_index())
+            .map(|a| a.outputs.len())
+            .unwrap_or(0)
+            == 0
+    };
 
-    // save to unwrap since we always have one address
-    if !is_latest_address_empty {
+    if !is_latest_public_address_empty {
         // save to unwrap since we always have one address
-        let latest_index = std::cmp::max(latest_account_address_index, latest_addresses_to_save_index);
+        let latest_index = std::cmp::max(latest_public_address_index, max_new_public_index);
         // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we don't
         // want to require an unlock for syncing
         if let Ok(iota_address) = crate::address::get_iota_address(
@@ -880,8 +903,46 @@ async fn perform_sync(
         .await
         {
             log::debug!(
-                "[SYNC] generated new unused address {} at index",
+                "[SYNC] generated new unused public address {} at index {}",
                 iota_address.to_bech32(),
+                latest_index + 1
+            );
+            let address = Address {
+                address: iota_address,
+                key_index: latest_index + 1,
+                internal: false,
+                outputs: Default::default(),
+            };
+            addresses_to_save.push(address);
+        };
+    }
+
+    if !is_latest_internal_address_empty {
+        let latest_index = std::cmp::max(latest_internal_address_index, max_new_internal_index);
+        if let Ok(iota_address) = crate::address::get_iota_address(
+            &account,
+            latest_index + 1,
+            false,
+            // save to unwrap since we always have one address
+            account
+                .addresses()
+                .first()
+                .unwrap()
+                .address()
+                .bech32_hrp()
+                .to_string()
+                .clone(),
+            GenerateAddressMetadata {
+                syncing: true,
+                network: account.network(),
+            },
+        )
+        .await
+        {
+            log::debug!(
+                "[SYNC] generated new unused internal address {} at index {}",
+                iota_address.to_bech32(),
+                latest_index + 1
             );
             let address = Address {
                 address: iota_address,
@@ -894,6 +955,7 @@ async fn perform_sync(
     }
 
     addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
+    addresses_to_save.sort_unstable_by_key(|a| *a.internal());
     addresses_to_save.dedup();
 
     log::debug!("[SYNC] perform_sync finished");
@@ -1926,45 +1988,98 @@ async fn perform_transfer(
             // generate a new change address to send the remainder value
             RemainderValueStrategy::ChangeAddress => {
                 let change_address = if let Some(address) = account_.latest_change_address() {
-                    log::debug!(
-                        "[TRANSFER] using latest latest_change_address as remainder target: {}",
-                        address.address().to_bech32()
-                    );
-                    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-                    {
-                        let ledger = match account_.signer_type() {
-                            #[cfg(feature = "ledger-nano")]
-                            SignerType::LedgerNano => true,
-                            #[cfg(feature = "ledger-nano-simulator")]
-                            SignerType::LedgerNanoSimulator => true,
-                            _ => false,
-                        };
-                        if ledger {
-                            transfer_obj
-                                .emit_event_if_needed(
-                                    account_.id().to_string(),
-                                    TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
-                                        address: address.address().to_bech32(),
-                                    }),
-                                )
-                                .await;
-                            log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
-                            let regenerated_address = crate::address::get_new_change_address(
-                                &account_,
-                                *address.key_index(),
-                                account_.bech32_hrp(),
-                                GenerateAddressMetadata {
-                                    syncing: false,
-                                    network: account_.network(),
-                                },
+                    if address.outputs().is_empty() {
+                        log::debug!(
+                            "[TRANSFER] using latest latest_change_address as remainder target: {}",
+                            address.address().to_bech32()
+                        );
+                        transfer_obj
+                            .emit_event_if_needed(
+                                account_.id().to_string(),
+                                TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                    address: address.address().to_bech32(),
+                                }),
                             )
-                            .await?;
-                            if address.address().inner != regenerated_address.address().inner {
-                                return Err(crate::Error::LedgerMnemonicMismatch);
+                            .await;
+                        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                        {
+                            let ledger = match account_.signer_type() {
+                                #[cfg(feature = "ledger-nano")]
+                                SignerType::LedgerNano => true,
+                                #[cfg(feature = "ledger-nano-simulator")]
+                                SignerType::LedgerNanoSimulator => true,
+                                _ => false,
+                            };
+                            if ledger {
+                                log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
+                                let regenerated_address = crate::address::get_new_change_address(
+                                    &account_,
+                                    *address.key_index(),
+                                    account_.bech32_hrp(),
+                                    GenerateAddressMetadata {
+                                        syncing: false,
+                                        network: account_.network(),
+                                    },
+                                )
+                                .await?;
+                                if address.address().inner != regenerated_address.address().inner {
+                                    return Err(crate::Error::LedgerMnemonicMismatch);
+                                }
                             }
                         }
+                        address.clone()
+                    } else {
+                        let address = crate::address::get_new_change_address(
+                            &account_,
+                            // Index +1 because we want a new address
+                            address.key_index() + 1,
+                            account_.bech32_hrp(),
+                            GenerateAddressMetadata {
+                                syncing: true,
+                                network: account_.network(),
+                            },
+                        )
+                        .await?;
+                        log::debug!(
+                            "[TRANSFER] generated new change address as remainder target: {}",
+                            address.address().to_bech32()
+                        );
+                        transfer_obj
+                            .emit_event_if_needed(
+                                account_.id().to_string(),
+                                TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
+                                    address: address.address().to_bech32(),
+                                }),
+                            )
+                            .await;
+                        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                        {
+                            let ledger = match account_.signer_type() {
+                                #[cfg(feature = "ledger-nano")]
+                                SignerType::LedgerNano => true,
+                                #[cfg(feature = "ledger-nano-simulator")]
+                                SignerType::LedgerNanoSimulator => true,
+                                _ => false,
+                            };
+                            if ledger {
+                                log::debug!("[TRANSFER] regnerate address so it's displayed on the ledger");
+                                let regenerated_address = crate::address::get_new_change_address(
+                                    &account_,
+                                    *address.key_index(),
+                                    account_.bech32_hrp(),
+                                    GenerateAddressMetadata {
+                                        syncing: false,
+                                        network: account_.network(),
+                                    },
+                                )
+                                .await?;
+                                if address.address().inner != regenerated_address.address().inner {
+                                    return Err(crate::Error::LedgerMnemonicMismatch);
+                                }
+                            }
+                        }
+                        address
                     }
-                    address.address().clone()
                 } else {
                     // Generate an address with syncing: true so it doesn't get displayed, then generate it with
                     // syncing:false so the user can verify it on the ledger
@@ -1974,7 +2089,7 @@ async fn perform_transfer(
                         0,
                         account_.bech32_hrp(),
                         GenerateAddressMetadata {
-                            syncing: false,
+                            syncing: true,
                             network: account_.network(),
                         },
                     )
@@ -1998,21 +2113,22 @@ async fn perform_transfer(
                         },
                     )
                     .await?;
-                    let addr = change_address.address().clone();
                     log::debug!(
                         "[TRANSFER] generated new change address as remainder target: {}",
-                        addr.to_bech32()
+                        change_address.address().to_bech32()
                     );
-                    account_.append_addresses(vec![change_address]);
-                    addresses_to_watch.push(addr.clone());
-                    addr
+                    change_address
                 };
+                account_.append_addresses(vec![change_address.clone()]);
+                account_.save().await?;
+                addresses_to_watch.push(change_address.address().clone());
+
                 account_handle
                     .change_addresses_to_sync
                     .lock()
                     .await
-                    .insert(change_address.clone());
-                change_address
+                    .insert(change_address.address().clone());
+                change_address.address().clone()
             }
             // keep the remainder value on the address
             RemainderValueStrategy::ReuseAddress => {
