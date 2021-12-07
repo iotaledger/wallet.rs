@@ -725,7 +725,6 @@ async fn perform_sync(
 
     // generate all missing addresses
     if !addresses_to_save.is_empty() {
-        log::debug!("[SYNC] generate missing addresses");
         let new_addresses = addresses_to_save.clone();
         let max_new_public_index = new_addresses
             .iter()
@@ -759,9 +758,13 @@ async fn perform_sync(
                 .addresses()
                 .iter()
                 .any(|a| a.key_index() == &key_index && !a.internal())
+                && addresses_to_save
+                    .iter()
+                    .any(|a| a.key_index() == &key_index && !a.internal())
             {
-                // generate address
-                let iota_address = crate::address::get_iota_address(
+                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+                // don't want to require an unlock for syncing
+                if let Ok(iota_address) = crate::address::get_iota_address(
                     &account,
                     key_index,
                     false,
@@ -771,14 +774,21 @@ async fn perform_sync(
                         network: account.network(),
                     },
                 )
-                .await?;
-                let address = Address {
-                    address: iota_address,
-                    key_index,
-                    internal: false,
-                    outputs: Default::default(),
+                .await
+                {
+                    log::debug!(
+                        "[SYNC] generated missing public address {} at index {}",
+                        iota_address.to_bech32(),
+                        key_index
+                    );
+                    let address = Address {
+                        address: iota_address,
+                        key_index,
+                        internal: false,
+                        outputs: Default::default(),
+                    };
+                    addresses_to_save.push(address);
                 };
-                addresses_to_save.push(address);
             }
         }
         // generate missing internal addresses
@@ -787,9 +797,13 @@ async fn perform_sync(
                 .addresses()
                 .iter()
                 .any(|a| a.key_index() == &key_index && *a.internal())
+                && addresses_to_save
+                    .iter()
+                    .any(|a| a.key_index() == &key_index && *a.internal())
             {
-                // generate address
-                let iota_address = crate::address::get_iota_address(
+                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+                // don't want to require an unlock for syncing
+                if let Ok(iota_address) = crate::address::get_iota_address(
                     &account,
                     key_index,
                     true,
@@ -799,14 +813,21 @@ async fn perform_sync(
                         network: account.network(),
                     },
                 )
-                .await?;
-                let address = Address {
-                    address: iota_address,
-                    key_index,
-                    internal: true,
-                    outputs: Default::default(),
+                .await
+                {
+                    log::debug!(
+                        "[SYNC] generated missing internal address {} at index {}",
+                        iota_address.to_bech32(),
+                        key_index
+                    );
+                    let address = Address {
+                        address: iota_address,
+                        key_index,
+                        internal: true,
+                        outputs: Default::default(),
+                    };
+                    addresses_to_save.push(address);
                 };
-                addresses_to_save.push(address);
             }
         }
     }
@@ -836,9 +857,9 @@ async fn perform_sync(
     if !is_latest_address_empty {
         // save to unwrap since we always have one address
         let latest_index = std::cmp::max(latest_account_address_index, latest_addresses_to_save_index);
-        log::debug!("[SYNC] generating a new unused address");
-        // generate new unused address
-        let iota_address = crate::address::get_iota_address(
+        // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we don't
+        // want to require an unlock for syncing
+        if let Ok(iota_address) = crate::address::get_iota_address(
             &account,
             latest_index + 1,
             false,
@@ -856,17 +877,24 @@ async fn perform_sync(
                 network: account.network(),
             },
         )
-        .await?;
-        let address = Address {
-            address: iota_address,
-            key_index: latest_index + 1,
-            internal: false,
-            outputs: Default::default(),
+        .await
+        {
+            log::debug!(
+                "[SYNC] generated new unused address {} at index",
+                iota_address.to_bech32(),
+            );
+            let address = Address {
+                address: iota_address,
+                key_index: latest_index + 1,
+                internal: false,
+                outputs: Default::default(),
+            };
+            addresses_to_save.push(address);
         };
-        addresses_to_save.push(address);
     }
 
     addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
+    addresses_to_save.dedup();
 
     log::debug!("[SYNC] perform_sync finished");
     Ok(SyncedAccountData {
