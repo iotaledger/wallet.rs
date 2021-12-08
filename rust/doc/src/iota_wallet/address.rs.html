@@ -756,14 +756,14 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Address</span> {
     <span class="doccomment">/// The address.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">with</span> <span class="op">=</span> <span class="string">&quot;crate::serde::iota_address_serde&quot;</span>)]</span>
-    <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">address</span>: <span class="ident">AddressWrapper</span>,
     <span class="doccomment">/// The address key index.</span>
     <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;keyIndex&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="ident">key_index</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">key_index</span>: <span class="ident">usize</span>,
     <span class="doccomment">/// Determines if an address is a public or an internal (change) address.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
-    <span class="ident">internal</span>: <span class="ident">bool</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">internal</span>: <span class="ident">bool</span>,
     <span class="doccomment">/// The address outputs.</span>
     <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">set</span> <span class="op">=</span> <span class="string">&quot;pub(crate)&quot;</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">outputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>,
