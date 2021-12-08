@@ -257,14 +257,14 @@ impl AddressWrapper {
 pub struct Address {
     /// The address.
     #[serde(with = "crate::serde::iota_address_serde")]
-    address: AddressWrapper,
+    pub(crate) address: AddressWrapper,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
-    key_index: usize,
+    pub(crate) key_index: usize,
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
-    internal: bool,
+    pub(crate) internal: bool,
     /// The address outputs.
     #[getset(set = "pub(crate)")]
     pub(crate) outputs: HashMap<OutputId, AddressOutput>,

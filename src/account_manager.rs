@@ -148,7 +148,7 @@ impl AccountManagerBuilder {
     /// Sets the storage config to be used.
     pub fn with_storage(mut self, storage_folder: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_folder = storage_folder.as_ref().to_path_buf();
-        self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
+        self.storage_encryption_key = password.map(storage_password_to_encryption_key);
         Ok(self)
     }
 

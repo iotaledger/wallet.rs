@@ -330,7 +330,7 @@ pub fn actor_runtime() -> &'static Arc<Mutex<ActorRuntime>> {
 // check if the snapshot path is different than the current loaded one
 // if it is, write the current snapshot and load the new one
 async fn check_snapshot(
-    mut runtime: &mut ActorRuntime,
+    runtime: &mut ActorRuntime,
     snapshot_path: &Path,
     password: Option<Arc<Password>>,
 ) -> Result<()> {
@@ -345,7 +345,7 @@ async fn check_snapshot(
         // if the current loaded snapshot is different than the snapshot we're tring to use,
         // save the current snapshot and clear the cache
         if curr_snapshot_path != snapshot_path {
-            switch_snapshot(&mut runtime, snapshot_path, password).await?;
+            switch_snapshot(runtime, snapshot_path, password).await?;
         } else if let Some(password) = password {
             if snapshot_path.exists() {
                 stronghold_response_to_result(
@@ -363,7 +363,7 @@ async fn check_snapshot(
             }
         }
     } else {
-        load_actors(&mut runtime, snapshot_path, password).await?;
+        load_actors(runtime, snapshot_path, password).await?;
         CURRENT_SNAPSHOT_PATH
             .get_or_init(Default::default)
             .lock()
@@ -396,7 +396,7 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -
         .as_ref()
     {
         if persist && !runtime.spawned_client_paths.is_empty() {
-            save_snapshot(&mut runtime, curr_snapshot_path).await?;
+            save_snapshot(runtime, curr_snapshot_path).await?;
         }
         for path in &runtime.spawned_client_paths {
             stronghold_response_to_result(runtime.stronghold.kill_stronghold(path.clone(), false).await)?;
@@ -411,24 +411,20 @@ async fn clear_stronghold_cache(mut runtime: &mut ActorRuntime, persist: bool) -
     Ok(())
 }
 
-async fn load_actors(
-    mut runtime: &mut ActorRuntime,
-    snapshot_path: &Path,
-    password: Option<Arc<Password>>,
-) -> Result<()> {
+async fn load_actors(runtime: &mut ActorRuntime, snapshot_path: &Path, password: Option<Arc<Password>>) -> Result<()> {
     // load all actors to prevent lost data on save
-    load_private_data_actor(&mut runtime, snapshot_path, password.clone()).await?;
-    load_records_actor(&mut runtime, snapshot_path, password).await?;
+    load_private_data_actor(runtime, snapshot_path, password.clone()).await?;
+    load_records_actor(runtime, snapshot_path, password).await?;
     Ok(())
 }
 
 async fn switch_snapshot(
-    mut runtime: &mut ActorRuntime,
+    runtime: &mut ActorRuntime,
     snapshot_path: &Path,
     password: Option<Arc<Password>>,
 ) -> Result<()> {
-    clear_stronghold_cache(&mut runtime, true).await?;
-    load_actors(&mut runtime, snapshot_path, password).await?;
+    clear_stronghold_cache(runtime, true).await?;
+    load_actors(runtime, snapshot_path, password).await?;
 
     CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
@@ -469,7 +465,7 @@ pub async fn load_snapshot(snapshot_path: &Path, password: Vec<u8>) -> Result<()
     load_snapshot_internal(&mut runtime, snapshot_path, password).await
 }
 
-async fn load_snapshot_internal(mut runtime: &mut ActorRuntime, snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
+async fn load_snapshot_internal(runtime: &mut ActorRuntime, snapshot_path: &Path, password: Vec<u8>) -> Result<()> {
     if CURRENT_SNAPSHOT_PATH
         .get_or_init(Default::default)
         .lock()
@@ -486,7 +482,7 @@ async fn load_snapshot_internal(mut runtime: &mut ActorRuntime, snapshot_path: &
             save_snapshot(runtime, snapshot_path).await?;
         }
     }
-    check_snapshot(&mut runtime, snapshot_path, Some(Arc::new(Password(password.clone())))).await?;
+    check_snapshot(runtime, snapshot_path, Some(Arc::new(Password(password.clone())))).await?;
     set_password(&snapshot_path, password).await;
     crate::event::emit_stronghold_status_change(&get_status(snapshot_path).await).await;
     Ok(())
