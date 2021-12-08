@@ -47,7 +47,7 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
-    match catch_unwind(AssertUnwindSafe(|| f())) {
+    match catch_unwind(AssertUnwindSafe(f)) {
         Ok(result) => result,
         Err(panic) => Ok(panic_to_response_message(panic)),
     }

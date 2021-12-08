@@ -721,12 +721,8 @@ impl AccountHandle {
         )
         .await?;
 
-        account
-            .do_mut(|account| {
-                account.addresses.push(address.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(vec![address.clone()]);
+        account.save().await?;
 
         // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
         self.monitor_address(address.address().clone());
@@ -776,12 +772,8 @@ impl AccountHandle {
             );
         }
 
-        account
-            .do_mut(|account| {
-                account.addresses.extend(addresses.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(addresses.clone());
+        account.save().await?;
 
         // Don't monitor if too many addresses
         if addresses.len() < 1000 {
@@ -1222,11 +1214,11 @@ impl Account {
         Ok(())
     }
 
-    pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
-        let res = f(self)?;
-        self.save().await?;
-        Ok(res)
-    }
+    // pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
+    //     let res = f(self)?;
+    //     self.save().await?;
+    //     Ok(res)
+    // }
 
     /// Do something with the indexed messages.
     pub(crate) async fn with_messages<T, C: FnOnce(&Vec<MessageIndexation>) -> T>(&self, f: C) -> T {
@@ -1448,16 +1440,20 @@ impl Account {
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
-        addresses
-            .into_iter()
-            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
+        addresses.into_iter().for_each(|address| {
+            match self
+                .addresses
+                .iter()
+                .position(|a| a.key_index() == address.key_index() && a.internal() == address.internal())
+            {
                 Some(index) => {
                     self.addresses[index] = address;
                 }
                 None => {
                     self.addresses.push(address);
                 }
-            });
+            }
+        });
     }
 
     /// Gets the node info from /api/v1/info endpoint
