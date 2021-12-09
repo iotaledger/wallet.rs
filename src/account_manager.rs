@@ -1845,7 +1845,7 @@ async fn discover_accounts(
                     }
                     empty_accounts.push((account_handle, synced_account_data));
                 } else {
-                    //add previous empty accounts, so we don't have gaps in the account list
+                    // add previous empty accounts, so we don't have gaps in the account list
                     for empty_account in empty_accounts.drain(..) {
                         synced_accounts.push(empty_account);
                     }
