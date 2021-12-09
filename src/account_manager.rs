@@ -19,7 +19,7 @@ use crate::{
 };
 
 use std::{
-    collections::{hash_map::DefaultHasher, HashMap},
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
     convert::TryInto,
     fs,
     hash::{Hash, Hasher},
@@ -1796,9 +1796,19 @@ async fn discover_accounts(
     sync_accounts_lock: Arc<Mutex<()>>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
-    let last_account_index = accounts.read().await.len() - 1;
-    let mut index = last_account_index + 1;
+    let mut account_indexes = HashSet::new();
+    for account_handle in accounts.read().await.values() {
+        let account = account_handle.read().await;
+        account_indexes.insert(*account.index());
+    }
+    // start from 0 in case there are gaps in the accounts
+    let mut index = 0;
     loop {
+        // skip exisiting account indexes
+        while account_indexes.contains(&index) {
+            index += 1;
+        }
+
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
             accounts.clone(),
@@ -1827,9 +1837,9 @@ async fn discover_accounts(
                     .addresses
                     .iter()
                     .all(|a| a.balance() == 0 && a.outputs().is_empty());
-                log::debug!("[SYNC] discovered account is empty? {}", is_empty);
+                log::debug!("[SYNC] discovered account {} is empty? {}", index, is_empty);
                 if is_empty {
-                    if index - last_account_index >= threshold {
+                    if index - (account_indexes.len() - 1) >= threshold {
                         break;
                     }
                 } else {
