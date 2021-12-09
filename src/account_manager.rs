@@ -1796,6 +1796,7 @@ async fn discover_accounts(
     sync_accounts_lock: Arc<Mutex<()>>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
+    let mut empty_accounts = vec![];
     let mut account_indexes = HashSet::new();
     for account_handle in accounts.read().await.values() {
         let account = account_handle.read().await;
@@ -1842,7 +1843,12 @@ async fn discover_accounts(
                     if index - (account_indexes.len() - 1) >= threshold {
                         break;
                     }
+                    empty_accounts.push((account_handle, synced_account_data));
                 } else {
+                    //add previous empty accounts, so we don't have gaps in the account list
+                    for empty_account in empty_accounts.drain(..) {
+                        synced_accounts.push(empty_account);
+                    }
                     synced_accounts.push((account_handle, synced_account_data));
                 }
                 index += 1;
