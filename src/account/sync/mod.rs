@@ -750,21 +750,21 @@ async fn perform_sync(
         .map(|a| a.key_index())
         .unwrap_or(&0);
 
+    let bech32_hrp = match account.addresses().first() {
+        Some(address) => address.address().bech32_hrp().to_string(),
+        None => {
+            crate::client::get_client(account.client_options())
+                .await?
+                .read()
+                .await
+                .get_network_info()
+                .await?
+                .bech32_hrp
+        }
+    };
     // generate all missing addresses
     if !addresses_to_save.is_empty() {
         log::debug!("[SYNC] check for missing addresses");
-        let bech32_hrp = match account.addresses().first() {
-            Some(address) => address.address().bech32_hrp().to_string(),
-            None => {
-                crate::client::get_client(account.client_options())
-                    .await?
-                    .read()
-                    .await
-                    .get_network_info()
-                    .await?
-                    .bech32_hrp
-            }
-        };
 
         // generate missing public addresses
         for key_index in *latest_public_address_index..*max_new_public_index {
@@ -878,7 +878,6 @@ async fn perform_sync(
     };
 
     if !is_latest_public_address_empty {
-        // save to unwrap since we always have one address
         let latest_index = std::cmp::max(latest_public_address_index, max_new_public_index);
         // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we don't
         // want to require an unlock for syncing
@@ -886,15 +885,7 @@ async fn perform_sync(
             &account,
             latest_index + 1,
             false,
-            // save to unwrap since we always have one address
-            account
-                .addresses()
-                .first()
-                .unwrap()
-                .address()
-                .bech32_hrp()
-                .to_string()
-                .clone(),
+            bech32_hrp.clone(),
             GenerateAddressMetadata {
                 syncing: true,
                 network: account.network(),
@@ -923,15 +914,7 @@ async fn perform_sync(
             &account,
             latest_index + 1,
             false,
-            // save to unwrap since we always have one address
-            account
-                .addresses()
-                .first()
-                .unwrap()
-                .address()
-                .bech32_hrp()
-                .to_string()
-                .clone(),
+            bech32_hrp.clone(),
             GenerateAddressMetadata {
                 syncing: true,
                 network: account.network(),
