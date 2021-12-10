@@ -1,4 +1,4 @@
-package org.iota.example;
+package org.iota.wallet.example;
 
 import java.util.concurrent.TimeUnit;
 import java.lang.Runnable;

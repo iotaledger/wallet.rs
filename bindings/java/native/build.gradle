@@ -31,7 +31,7 @@ task cargoBuild(type: Exec) {
     }
 }
 compileJava {
-    dependsOn cargoBuild
+    //dependsOn cargoBuild
 }
 
 task cargoClean(type: Exec) {
