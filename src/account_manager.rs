@@ -1550,6 +1550,7 @@ impl AccountsSynchronizer {
             let (account_handle, data) = res?;
             let account_handle_ = account_handle.clone();
             let mut account = account_handle_.write().await;
+            log::debug!("[AccountsSynchronizer] synced account {}", account.index());
             let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                 .addresses()
                 .iter()
@@ -1581,7 +1582,9 @@ impl AccountsSynchronizer {
             Some((is_empty, client_options, signer_type)) => {
                 if !is_empty || self.account_discovery_threshold > 0 {
                     if self.discover_accounts {
-                        log::debug!("[SYNC] running account discovery because the latest account is not empty");
+                        log::debug!(
+                            "[AccountsSynchronizer] running account discovery because the latest account is not empty"
+                        );
                         discover_accounts(
                             self.accounts.clone(),
                             self.account_discovery_threshold,
@@ -1597,7 +1600,9 @@ impl AccountsSynchronizer {
                         Ok(vec![])
                     }
                 } else {
-                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
+                    log::debug!(
+                        "[AccountsSynchronizer] skipping account discovery because the latest account is empty"
+                    );
                     Ok(vec![])
                 }
             }
@@ -1613,7 +1618,10 @@ impl AccountsSynchronizer {
                     let account_handle_ = account_handle.clone();
                     let mut account = account_handle_.write().await;
                     account.set_skip_persistence(false);
-                    account.set_addresses(synced_account_data.addresses.to_vec());
+                    // only set the addresses if they aren't empty
+                    if !synced_account_data.addresses.is_empty() {
+                        account.set_addresses(synced_account_data.addresses.to_vec());
+                    }
                     account.save().await?;
                     accounts.insert(account.id().clone(), account_handle.clone());
                     discovered_account_ids.push(account.id().clone());
@@ -1861,6 +1869,7 @@ async fn discover_accounts(
             }
         }
     }
+    log::error!("[SYNC] finished discover_accounts");
     Ok(synced_accounts)
 }
 

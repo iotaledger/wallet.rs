@@ -612,7 +612,8 @@ async fn perform_sync(
     return_all_addresses: bool,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
-        "[SYNC] perform_sync: syncing with address_index = {}, gap_limit = {}",
+        "[SYNC] perform_sync: syncing account {} with address_index = {}, gap_limit = {}",
+        account_handle.read().await.index(),
         address_index,
         gap_limit
     );
