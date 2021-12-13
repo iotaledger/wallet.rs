@@ -28,8 +28,16 @@ pub(crate) async fn get_events(
     struct ResponseWrapper {
         data: EventIds,
     }
-    let resp: ResponseWrapper = reqwest::get(node.url).await?.json().await?;
-    Ok(resp.data)
+    let res = reqwest::get(node.url).await?;
+    let status_code = res.status().as_u16();
+    let res_text = res.text().await?;
+    match status_code {
+        200 => {
+            let resp: ResponseWrapper = serde_json::from_str(&res_text)?;
+            Ok(resp.data)
+        }
+        _ => Err(iota_client::Error::ResponseError(status_code, res_text).into()),
+    }
 }
 
 // GET /api/plugins/participation/events/{eventID} : Returns the event information as a JSON payload.
@@ -44,8 +52,16 @@ pub(crate) async fn get_event_information(
     struct ResponseWrapper {
         data: EventInformation,
     }
-    let resp: ResponseWrapper = reqwest::get(node.url).await?.json().await?;
-    Ok(resp.data)
+    let res = reqwest::get(node.url).await?;
+    let status_code = res.status().as_u16();
+    let res_text = res.text().await?;
+    match status_code {
+        200 => {
+            let resp: ResponseWrapper = serde_json::from_str(&res_text)?;
+            Ok(resp.data)
+        }
+        _ => Err(iota_client::Error::ResponseError(status_code, res_text).into()),
+    }
 }
 
 // GET /api/plugins/participation/events/{eventID}/status : Returns the status of the given event
@@ -62,8 +78,16 @@ pub(crate) async fn get_event_status(
     struct ResponseWrapper {
         data: EventStatus,
     }
-    let resp: ResponseWrapper = reqwest::get(node.url).await?.json().await?;
-    Ok(resp.data)
+    let res = reqwest::get(node.url).await?;
+    let status_code = res.status().as_u16();
+    let res_text = res.text().await?;
+    match status_code {
+        200 => {
+            let resp: ResponseWrapper = serde_json::from_str(&res_text)?;
+            Ok(resp.data)
+        }
+        _ => Err(iota_client::Error::ResponseError(status_code, res_text).into()),
+    }
 }
 
 // GET /api/plugins/participation/addresses/{bech32address} : Returns the staking rewards as a JSON payload.
@@ -78,8 +102,16 @@ pub(crate) async fn get_address_staking_status(
     struct ResponseWrapper {
         data: AddressStakingStatus,
     }
-    let resp: ResponseWrapper = reqwest::get(node.url).await?.json().await?;
-    Ok(resp.data)
+    let res = reqwest::get(node.url).await?;
+    let status_code = res.status().as_u16();
+    let res_text = res.text().await?;
+    match status_code {
+        200 => {
+            let resp: ResponseWrapper = serde_json::from_str(&res_text)?;
+            Ok(resp.data)
+        }
+        _ => Err(iota_client::Error::ResponseError(status_code, res_text).into()),
+    }
 }
 
 // GET /api/plugins/participation/outputs/{outputId} : Returns the amount and start milestone index for an output for
@@ -95,6 +127,14 @@ pub(crate) async fn get_output_participation(
     struct ResponseWrapper {
         data: OutputStatusResponse,
     }
-    let resp: ResponseWrapper = reqwest::get(node.url).await?.json().await?;
-    Ok(resp.data)
+    let res = reqwest::get(node.url).await?;
+    let status_code = res.status().as_u16();
+    let res_text = res.text().await?;
+    match status_code {
+        200 => {
+            let resp: ResponseWrapper = serde_json::from_str(&res_text)?;
+            Ok(resp.data)
+        }
+        _ => Err(iota_client::Error::ResponseError(status_code, res_text).into()),
+    }
 }

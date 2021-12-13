@@ -33,7 +33,7 @@ async fn main() -> iota_wallet::Result<()> {
             // first we'll create an example account and store it
             manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
             let client_options = ClientOptionsBuilder::new()
-                .with_node("http://localhost:14265")?
+                .with_node("https://devnet01.hornet.zone/")?
                 .build()
                 .unwrap();
             manager
@@ -44,7 +44,7 @@ async fn main() -> iota_wallet::Result<()> {
         }
     };
     let client_options = ClientOptionsBuilder::new()
-        .with_node("http://localhost:14265")?
+        .with_node("https://devnet01.hornet.zone/")?
         .build()
         .unwrap();
     account.set_client_options(client_options).await?;
