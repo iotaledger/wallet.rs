@@ -273,7 +273,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">convert::TryInto</span>, <span class="ident">sync::Arc</span>};
 
 <span class="doccomment">/// Unsubscribe from all topics associated with the account.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unsubscribe</span>(<span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">write</span>().<span class="kw">await</span>;
@@ -371,18 +371,18 @@
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">process_output</span>(<span class="ident">payload</span>: <span class="ident">String</span>, <span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">process_output</span>(<span class="ident">payload</span>: <span class="ident">String</span>, <span class="ident">account_handle</span>: <span class="ident">AccountHandle</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
 
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">OutputResponse</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="ident">payload</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">output_address</span>: <span class="ident">IotaAddress</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span>.<span class="ident">output</span>.<span class="ident">clone</span>() {
-        <span class="ident">OutputDto::SignatureLockedSingle</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OutputDto::SignatureLockedSingle</span>(<span class="ident">output</span>) =&gt; {
             (<span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">address</span>).<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::InvalidAddress</span>)<span class="question-mark">?</span>
         }
-        <span class="ident">OutputDto::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">OutputDto::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) =&gt; {
             (<span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">address</span>).<span class="ident">try_into</span>().<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::InvalidAddress</span>)<span class="question-mark">?</span>
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">_</span> =&gt; {
             <span class="macro">log::debug!</span>(<span class="string">&quot;[MQTT] ignoring output type&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
@@ -391,10 +391,10 @@
     <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>
         .<span class="ident">addresses</span>()
         .<span class="ident">iter</span>()
-        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">output_address</span>)
+        .<span class="ident">find</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">output_address</span>)
     {
-        <span class="prelude-val">Some</span>(<span class="ident">address</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">address</span>) =&gt; <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+        <span class="prelude-val">None</span> =&gt; {
             <span class="macro">log::debug!</span>(<span class="string">&quot;[MQTT] address not found&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
@@ -402,14 +402,14 @@
 
     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">AddressOutput::from_output_response</span>(<span class="ident">output</span>, <span class="ident">address</span>.<span class="ident">bech32_hrp</span>().<span class="ident">to_string</span>())<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>.<span class="ident">message_id</span>).<span class="kw">await</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">message</span>) =&gt; {
             <span class="kw">if</span> <span class="op">!</span><span class="ident">message</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>) {
                 <span class="ident">message</span>
             } <span class="kw">else</span> {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
             }
         }
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">None</span> =&gt; {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>())
                 .<span class="kw">await</span><span class="question-mark">?</span>
                 .<span class="ident">read</span>()
@@ -436,23 +436,23 @@
     };
 
     <span class="kw">let</span> <span class="ident">message_addresses</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
-            <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) =&gt; <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
+            <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">output_addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">essence</span>
                     .<span class="ident">outputs</span>()
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">output</span> {
-                        <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                        <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+                        <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+                        <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>().<span class="ident">clone</span>(),
+                        <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
                     })
                     .<span class="ident">collect</span>();
                 <span class="kw">let</span> <span class="ident">input_addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">essence</span>
                     .<span class="ident">inputs</span>()
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">input</span> {
-                        <span class="ident">TransactionInput::Utxo</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">i</span>.<span class="ident">metadata</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">address</span>.<span class="ident">clone</span>()),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+                        <span class="ident">TransactionInput::Utxo</span>(<span class="ident">i</span>) =&gt; <span class="ident">i</span>.<span class="ident">metadata</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">address</span>.<span class="ident">clone</span>()),
+                        <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
                     })
                     .<span class="ident">flatten</span>()
                     .<span class="ident">collect</span>();
@@ -461,15 +461,15 @@
                 <span class="ident">addresses</span>
             }
         },
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
+        <span class="kw">_</span> =&gt; <span class="macro">vec!</span>[],
     };
 
     <span class="kw">let</span> <span class="ident">message_is_internal</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message</span>.<span class="ident">payload</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) =&gt; {
             <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
             <span class="ident">essence</span>.<span class="ident">internal</span>()
         }
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     };
 
     <span class="kw">let</span> <span class="ident">storage_path</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">storage_path</span>().<span class="ident">clone</span>();

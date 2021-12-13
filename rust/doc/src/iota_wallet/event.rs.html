@@ -1019,7 +1019,7 @@
 <span class="doccomment">/// The event identifier type.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">EventId</span> <span class="op">=</span> [<span class="ident">u8</span>; <span class="number">32</span>];
 
-<span class="kw">fn</span> <span class="ident">generate_indexation_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">fn</span> <span class="ident">generate_indexation_id</span>() -&gt; <span class="ident">String</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">key</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
     <span class="ident">crypto::utils::rand::fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">key</span>).<span class="ident">unwrap</span>();
     <span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">key</span>)
@@ -1035,14 +1035,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BalanceChange</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">spent</span>(<span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">spent</span>(<span class="ident">value</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">spent</span>: <span class="ident">value</span>,
             <span class="ident">received</span>: <span class="number">0</span>,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">received</span>(<span class="ident">value</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">received</span>(<span class="ident">value</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">spent</span>: <span class="number">0</span>,
             <span class="ident">received</span>: <span class="ident">value</span>,
@@ -1258,13 +1258,13 @@
 }
 
 <span class="kw">trait</span> <span class="ident">EventHandler</span> {
-    <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">EventId</span>;
+    <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">EventId</span>;
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">event_handler_impl</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ident</span>) =&gt; {
         <span class="kw">impl</span> <span class="ident">EventHandler</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
-            <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">EventId</span> {
+            <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">EventId</span> {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>
             }
         }
@@ -1377,7 +1377,7 @@
 <span class="kw">type</span> <span class="ident">TransferProgressListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferProgressHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="kw">type</span> <span class="ident">MigrationProgressListeners</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MigrationProgressHandler</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
-<span class="kw">fn</span> <span class="ident">generate_event_id</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">fn</span> <span class="ident">generate_event_id</span>() -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id</span> <span class="op">=</span> [<span class="number">0</span>; <span class="number">32</span>];
     <span class="ident">crypto::utils::rand::fill</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id</span>).<span class="ident">unwrap</span>();
     <span class="ident">id</span>
@@ -1385,74 +1385,74 @@
 
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_event_listener</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">EventHandler</span><span class="op">&gt;</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">EventId</span>, <span class="ident">listeners</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">listeners</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="ident">listeners</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>) {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="ident">listeners</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">id</span>() <span class="op">==</span> <span class="ident">id</span>) {
         <span class="ident">listeners</span>.<span class="ident">remove</span>(<span class="ident">position</span>);
     }
 }
 
 <span class="doccomment">/// Gets the balance change listeners array.</span>
-<span class="kw">fn</span> <span class="ident">balance_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">BalanceListeners</span> {
+<span class="kw">fn</span> <span class="ident">balance_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">BalanceListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">BalanceListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the transaction listeners array.</span>
-<span class="kw">fn</span> <span class="ident">transaction_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionListeners</span> {
+<span class="kw">fn</span> <span class="ident">transaction_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">TransactionListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the transaction confirmation change listeners array.</span>
-<span class="kw">fn</span> <span class="ident">transaction_confirmation_change_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionConfirmationChangeListeners</span> {
+<span class="kw">fn</span> <span class="ident">transaction_confirmation_change_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionConfirmationChangeListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">TransactionConfirmationChangeListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the transaction reattachment listeners array.</span>
-<span class="kw">fn</span> <span class="ident">transaction_reattachment_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionReattachmentListeners</span> {
+<span class="kw">fn</span> <span class="ident">transaction_reattachment_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransactionReattachmentListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">TransactionReattachmentListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the balance change listeners array.</span>
-<span class="kw">fn</span> <span class="ident">error_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ErrorListeners</span> {
+<span class="kw">fn</span> <span class="ident">error_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ErrorListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">ErrorListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the stronghold status change listeners array.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
-<span class="kw">fn</span> <span class="ident">stronghold_status_change_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StrongholdStatusChangeListeners</span> {
+<span class="kw">fn</span> <span class="ident">stronghold_status_change_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StrongholdStatusChangeListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">StrongholdStatusChangeListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets the address consolodation needed listeners array.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-<span class="kw">fn</span> <span class="ident">address_consolidation_needed_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">AddressConsolidationNeededListeners</span> {
+<span class="kw">fn</span> <span class="ident">address_consolidation_needed_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">AddressConsolidationNeededListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">AddressConsolidationNeededListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Gets address that will be generated with a prompt on the ledger.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
-<span class="kw">fn</span> <span class="ident">ledger_address_generation_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">LedgerAddressGenerationListeners</span> {
+<span class="kw">fn</span> <span class="ident">ledger_address_generation_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">LedgerAddressGenerationListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">LedgerAddressGenerationListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
-<span class="kw">fn</span> <span class="ident">transfer_progress_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransferProgressListeners</span> {
+<span class="kw">fn</span> <span class="ident">transfer_progress_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">TransferProgressListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">TransferProgressListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
-<span class="kw">fn</span> <span class="ident">migration_progress_listeners</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">MigrationProgressListeners</span> {
+<span class="kw">fn</span> <span class="ident">migration_progress_listeners</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">MigrationProgressListeners</span> {
     <span class="kw">static</span> <span class="ident">LISTENERS</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">MigrationProgressListeners</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">LISTENERS</span>
 }
 
 <span class="doccomment">/// Listen to balance changes.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_balance_change</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">BalanceEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_balance_change</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">BalanceEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">balance_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">BalanceEventHandler</span> {
@@ -1474,17 +1474,17 @@
     <span class="ident">message_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MessageId</span><span class="op">&gt;</span>,
     <span class="ident">balance_change</span>: <span class="ident">BalanceChange</span>,
     <span class="ident">persist</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">balance_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">remainder</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">balance_change</span>.<span class="ident">spent</span> <span class="op">&gt;</span> <span class="number">0</span> {
         <span class="prelude-val">Some</span>(<span class="bool-val">false</span>)
     } <span class="kw">else</span> {
         <span class="kw">match</span> <span class="ident">message_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">account</span>
+            <span class="prelude-val">Some</span>(<span class="ident">id</span>) =&gt; <span class="ident">account</span>
                 .<span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>)
                 .<span class="kw">await</span>
                 .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">message</span><span class="op">|</span> <span class="ident">message</span>.<span class="ident">is_remainder</span>(<span class="ident">address</span>)),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
         }
     };
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">BalanceEvent</span> {
@@ -1518,7 +1518,7 @@
     <span class="ident">account</span>: <span class="kw-2">&amp;</span><span class="ident">Account</span>,
     <span class="ident">message</span>: <span class="ident">Message</span>,
     <span class="ident">persist</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionEvent</span> {
         <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
@@ -1530,17 +1530,17 @@
         <span class="kw">let</span> <span class="ident">storage_handle</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="ident">account</span>.<span class="ident">storage_path</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage_handle</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
         <span class="kw">match</span> <span class="ident">event_type</span> {
-            <span class="ident">TransactionEventType::Broadcast</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">TransactionEventType::Broadcast</span> =&gt; {
                 <span class="ident">storage</span>.<span class="ident">save_broadcast_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             }
-            <span class="ident">TransactionEventType::NewTransaction</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">TransactionEventType::NewTransaction</span> =&gt; {
                 <span class="ident">storage</span>.<span class="ident">save_new_transaction_event</span>(<span class="kw-2">&amp;</span><span class="ident">event</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             }
         }
     }
 
     <span class="kw">for</span> <span class="ident">listener</span> <span class="kw">in</span> <span class="ident">listeners</span>.<span class="ident">deref</span>() {
-        <span class="kw">if</span> <span class="ident">listener</span>.<span class="ident">event_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">event_type</span> {
+        <span class="kw">if</span> <span class="ident">listener</span>.<span class="ident">event_type</span> <span class="op">==</span> <span class="ident">event_type</span> {
             (<span class="ident">listener</span>.<span class="ident">on_event</span>)(<span class="kw-2">&amp;</span><span class="ident">event</span>);
         }
     }
@@ -1554,7 +1554,7 @@
     <span class="ident">message</span>: <span class="ident">Message</span>,
     <span class="ident">confirmed</span>: <span class="ident">bool</span>,
     <span class="ident">persist</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_confirmation_change_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionConfirmationChangeEvent</span> {
         <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
@@ -1585,7 +1585,7 @@
     <span class="ident">reattached_message_id</span>: <span class="ident">MessageId</span>,
     <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">Message</span>,
     <span class="ident">persist</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">transaction_reattachment_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">event</span> <span class="op">=</span> <span class="ident">TransactionReattachmentEvent</span> {
         <span class="ident">indexation_id</span>: <span class="ident">generate_indexation_id</span>(),
@@ -1614,7 +1614,7 @@
 <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">add_transaction_listener</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(
     <span class="ident">event_type</span>: <span class="ident">TransactionEventType</span>,
     <span class="ident">cb</span>: <span class="ident">F</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">transaction_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">TransactionEventHandler</span> {
@@ -1626,7 +1626,7 @@
 }
 
 <span class="doccomment">/// Listen to new messages.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_new_transaction</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_new_transaction</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="ident">add_transaction_listener</span>(<span class="ident">TransactionEventType::NewTransaction</span>, <span class="ident">cb</span>).<span class="kw">await</span>
 }
 
@@ -1638,7 +1638,7 @@
 <span class="doccomment">/// Listen to transaction confirmation state change.</span>
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_confirmation_state_change</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionConfirmationChangeEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(
     <span class="ident">cb</span>: <span class="ident">F</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">transaction_confirmation_change_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">TransactionConfirmationChangeEventHandler</span> {
@@ -1649,7 +1649,7 @@
 }
 
 <span class="doccomment">/// Listen to transaction reattachment change.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_reattachment</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionReattachmentEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_reattachment</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionReattachmentEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">transaction_reattachment_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">TransactionReattachmentEventHandler</span> {
@@ -1670,7 +1670,7 @@
 }
 
 <span class="doccomment">/// Listen to transaction broadcast.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_broadcast</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_broadcast</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransactionEvent</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="ident">add_transaction_listener</span>(<span class="ident">TransactionEventType::Broadcast</span>, <span class="ident">cb</span>).<span class="kw">await</span>
 }
 
@@ -1687,7 +1687,7 @@
 }
 
 <span class="doccomment">/// Listen to errors.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_error</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Error</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_error</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Error</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">error_listeners</span>().<span class="ident">lock</span>().<span class="ident">unwrap</span>();
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">ErrorHandler</span> {
@@ -1700,7 +1700,7 @@
 <span class="doccomment">/// Removes the error listener associated with the given identifier.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remove_error_listener</span>(<span class="ident">id</span>: <span class="kw-2">&amp;</span><span class="ident">EventId</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">error_listeners</span>().<span class="ident">lock</span>().<span class="ident">unwrap</span>();
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="ident">listeners</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">id</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">id</span>) {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">position</span>) <span class="op">=</span> <span class="ident">listeners</span>.<span class="ident">iter</span>().<span class="ident">position</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">id</span>() <span class="op">==</span> <span class="ident">id</span>) {
         <span class="ident">listeners</span>.<span class="ident">remove</span>(<span class="ident">position</span>);
     }
 }
@@ -1716,7 +1716,7 @@
 <span class="doccomment">/// Listen to stronghold status change events.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)))]</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_stronghold_status_change</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::StrongholdStatus</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_stronghold_status_change</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::StrongholdStatus</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">stronghold_status_change_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">StrongholdStatusChangeEventHandler</span> {
@@ -1736,7 +1736,7 @@
 <span class="doccomment">/// Listen to `address consolidation needed` events.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_address_consolidation_needed</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">AddressConsolidationNeeded</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_address_consolidation_needed</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">AddressConsolidationNeeded</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">address_consolidation_needed_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">AddressConsolidationNeededHandler</span> {
@@ -1770,7 +1770,7 @@
 <span class="doccomment">/// Listen to `ledger address generation` events.</span>
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;ledger-nano-simulator&quot;</span>))))]</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_ledger_address_generation</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">LedgerAddressGeneration</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_ledger_address_generation</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">LedgerAddressGeneration</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">listeners</span> <span class="op">=</span> <span class="ident">ledger_address_generation_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">listeners</span>.<span class="ident">push</span>(<span class="ident">LedgerAddressGenerationHandler</span> {
@@ -1802,7 +1802,7 @@
 }
 
 <span class="doccomment">/// Listen to a transfer event.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_transfer_progress</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransferProgress</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_transfer_progress</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">TransferProgress</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">transfer_progress_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">TransferProgressHandler</span> {
@@ -1828,7 +1828,7 @@
 }
 
 <span class="doccomment">/// Listen to a migration event.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_migration_progress</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">MigrationProgress</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">EventId</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_migration_progress</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">MigrationProgress</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>(<span class="ident">cb</span>: <span class="ident">F</span>) -&gt; <span class="ident">EventId</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">l</span> <span class="op">=</span> <span class="ident">migration_progress_listeners</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">generate_event_id</span>();
     <span class="ident">l</span>.<span class="ident">push</span>(<span class="ident">MigrationProgressHandler</span> {
@@ -1883,9 +1883,9 @@
                 <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                 <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">to_string</span>();
                 <span class="ident">on_balance_change</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">balance_change</span>.<span class="ident">spent</span> <span class="op">=</span><span class="op">=</span> <span class="number">5</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">balance_change</span>.<span class="ident">received</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">balance_change</span>.<span class="ident">spent</span> <span class="op">==</span> <span class="number">5</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">balance_change</span>.<span class="ident">received</span> <span class="op">==</span> <span class="number">0</span>);
                 })
                 .<span class="kw">await</span>;
 
@@ -1913,8 +1913,8 @@
                 <span class="kw">let</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
 
                 <span class="ident">on_new_transaction</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message_</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">==</span> <span class="ident">message_</span>);
                 })
                 .<span class="kw">await</span>;
 
@@ -1936,8 +1936,8 @@
                 <span class="kw">let</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
 
                 <span class="ident">on_reattachment</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message_</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">==</span> <span class="ident">message_</span>);
                 })
                 .<span class="kw">await</span>;
 
@@ -1959,8 +1959,8 @@
                 <span class="kw">let</span> <span class="ident">message_</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">clone</span>();
 
                 <span class="ident">on_broadcast</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message_</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">==</span> <span class="ident">message_</span>);
                 })
                 .<span class="kw">await</span>;
 
@@ -1983,9 +1983,9 @@
                 <span class="kw">let</span> <span class="ident">confirmed</span> <span class="op">=</span> <span class="bool-val">true</span>;
 
                 <span class="ident">on_confirmation_state_change</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">=</span><span class="op">=</span> <span class="ident">message_</span>);
-                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">confirmed</span> <span class="op">=</span><span class="op">=</span> <span class="ident">confirmed</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">account_id</span> <span class="op">==</span> <span class="ident">account_id</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">message</span> <span class="op">==</span> <span class="ident">message_</span>);
+                    <span class="macro">assert!</span>(<span class="ident">event</span>.<span class="ident">confirmed</span> <span class="op">==</span> <span class="ident">confirmed</span>);
                 })
                 .<span class="kw">await</span>;
 

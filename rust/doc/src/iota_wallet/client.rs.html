@@ -800,12 +800,12 @@
 <span class="kw">type</span> <span class="ident">ClientInstanceMap</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">ClientOptions</span>, <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Gets the client instances map.</span>
-<span class="kw">fn</span> <span class="ident">instances</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ClientInstanceMap</span> {
+<span class="kw">fn</span> <span class="ident">instances</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">ClientInstanceMap</span> {
     <span class="kw">static</span> <span class="ident">INSTANCES</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">ClientInstanceMap</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">INSTANCES</span>
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_client</span>(<span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="ident">ClientOptions</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">instances</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
 
     <span class="kw">if</span> <span class="op">!</span><span class="ident">map</span>.<span class="ident">contains_key</span>(<span class="ident">options</span>) {
@@ -930,19 +930,19 @@
     <span class="ident">api_timeout</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Api</span>, <span class="ident">Duration</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">convert_urls</span>(<span class="ident">urls</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">convert_urls</span>(<span class="ident">urls</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err</span> <span class="op">=</span> <span class="prelude-val">None</span>;
     <span class="kw">let</span> <span class="ident">urls</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">urls</span>
         .<span class="ident">iter</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">node</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">Url::parse</span>(<span class="ident">node</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">url</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">validate_url</span>(<span class="ident">url</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">url</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">url</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">url</span>) =&gt; <span class="kw">match</span> <span class="ident">validate_url</span>(<span class="ident">url</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">url</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">url</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
                     <span class="ident">err</span>.<span class="ident">replace</span>(<span class="ident">e</span>);
                     <span class="prelude-val">None</span>
                 }
             },
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
                 <span class="ident">err</span>.<span class="ident">replace</span>(<span class="ident">e</span>.<span class="ident">into</span>());
                 <span class="prelude-val">None</span>
             }
@@ -959,7 +959,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ClientOptionsBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">primary_node</span>: <span class="prelude-val">None</span>,
             <span class="ident">primary_pow_node</span>: <span class="prelude-val">None</span>,
@@ -979,18 +979,18 @@
 
 <span class="kw">impl</span> <span class="ident">ClientOptionsBuilder</span> {
     <span class="doccomment">/// Initialises a new instance of the builder.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::default</span>()
     }
 
     <span class="doccomment">/// Sets the primary node.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_primary_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_primary_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">primary_node</span>.<span class="ident">replace</span>(<span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>.<span class="ident">into</span>());
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
 
     <span class="doccomment">/// Sets the primary PoW node.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_primary_pow_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_primary_pow_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">primary_pow_node</span>.<span class="ident">replace</span>(<span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>.<span class="ident">into</span>());
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
@@ -1001,7 +1001,7 @@
         <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">jwt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">basic_auth_name_pwd</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">primary_node</span>.<span class="ident">replace</span>(<span class="ident">Node</span> {
             <span class="ident">url</span>: <span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>,
             <span class="ident">auth</span>: <span class="ident">NodeAuth</span> {
@@ -1020,7 +1020,7 @@
         <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">jwt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">basic_auth_name_pwd</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">primary_pow_node</span>.<span class="ident">replace</span>(<span class="ident">Node</span> {
             <span class="ident">url</span>: <span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>,
             <span class="ident">auth</span>: <span class="ident">NodeAuth</span> {
@@ -1046,7 +1046,7 @@
     <span class="doccomment">///     .expect(&quot;invalid nodes URLs&quot;)</span>
     <span class="doccomment">///     .build();</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_nodes</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_nodes</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">nodes_urls</span> <span class="op">=</span> <span class="ident">convert_urls</span>(<span class="ident">nodes</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">nodes</span>
             .<span class="ident">extend</span>(<span class="ident">nodes_urls</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">u</span><span class="op">|</span> <span class="ident">u</span>.<span class="ident">into</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Node</span><span class="op">&gt;</span><span class="op">&gt;</span>());
@@ -1054,7 +1054,7 @@
     }
 
     <span class="doccomment">/// Adds a node to the node list.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">nodes</span>.<span class="ident">push</span>(<span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>.<span class="ident">into</span>());
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
     }
@@ -1065,7 +1065,7 @@
         <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">jwt</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">basic_auth_name_pwd</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>)<span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">nodes</span>.<span class="ident">push</span>(<span class="ident">Node</span> {
             <span class="ident">url</span>: <span class="ident">validate_url</span>(<span class="ident">Url::parse</span>(<span class="ident">node</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>,
             <span class="ident">auth</span>: <span class="ident">NodeAuth</span> {
@@ -1079,7 +1079,7 @@
     }
 
     <span class="doccomment">/// Get node list from the node_pool_urls</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_pool_urls</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node_pool_urls</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_pool_urls</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node_pool_urls</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">nodes_urls</span> <span class="op">=</span> <span class="ident">convert_urls</span>(<span class="ident">node_pool_urls</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">node_pool_urls</span>.<span class="ident">extend</span>(<span class="ident">nodes_urls</span>);
         <span class="prelude-val">Ok</span>(<span class="self">self</span>)
@@ -1092,56 +1092,56 @@
     <span class="doccomment">/// use iota_wallet::client::ClientOptionsBuilder;</span>
     <span class="doccomment">/// let client_options = ClientOptionsBuilder::new().with_network(&quot;testnet2&quot;).build();</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_network</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">network</span>: <span class="ident">N</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_network</span><span class="op">&lt;</span><span class="ident">N</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">network</span>: <span class="ident">N</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">network</span>.<span class="ident">replace</span>(<span class="ident">network</span>.<span class="ident">into</span>());
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Set the node sync interval</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_sync_interval</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node_sync_interval</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_sync_interval</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">node_sync_interval</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">node_sync_interval</span>.<span class="ident">replace</span>(<span class="ident">node_sync_interval</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Disables the node syncing process.</span>
     <span class="doccomment">/// Every node will be considered healthy and ready to use.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_sync_disabled</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_node_sync_disabled</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">node_sync_enabled</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the MQTT broker options.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_mqtt_mqtt_broker_options</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_mqtt_mqtt_broker_options</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">options</span>: <span class="ident">BrokerOptions</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">mqtt_broker_options</span>.<span class="ident">replace</span>(<span class="ident">options</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the MQTT broker options.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_mqtt_disabled</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_mqtt_disabled</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">mqtt_enabled</span> <span class="op">=</span> <span class="bool-val">false</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets whether the PoW should be done locally or remotely.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_local_pow</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">local</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_local_pow</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">local</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">local_pow</span> <span class="op">=</span> <span class="ident">local</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the request timeout.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_request_timeout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_request_timeout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">timeout</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">request_timeout</span>.<span class="ident">replace</span>(<span class="ident">timeout</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the request timeout for a specific API usage.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_api_timeout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">api</span>: <span class="ident">Api</span>, <span class="ident">timeout</span>: <span class="ident">Duration</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_api_timeout</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">api</span>: <span class="ident">Api</span>, <span class="ident">timeout</span>: <span class="ident">Duration</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">api_timeout</span>.<span class="ident">insert</span>(<span class="ident">api</span>, <span class="ident">timeout</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Builds the options.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">ClientOptions</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">build</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">ClientOptions</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">ClientOptions</span> {
             <span class="ident">primary_node</span>: <span class="self">self</span>.<span class="ident">primary_node</span>,
             <span class="ident">primary_pow_node</span>: <span class="self">self</span>.<span class="ident">primary_pow_node</span>,
@@ -1176,42 +1176,42 @@
 <span class="kw">impl</span> <span class="ident">FromStr</span> <span class="kw">for</span> <span class="ident">Api</span> {
     <span class="kw">type</span> <span class="prelude-val">Err</span> <span class="op">=</span> <span class="ident">String</span>;
 
-    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident"><span class="self">Self</span>::Err</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="string">&quot;GetTips&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::GetTips</span>,
-            <span class="string">&quot;PostMessage&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::PostMessage</span>,
-            <span class="string">&quot;GetOutput&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::GetOutput</span>,
-            <span class="string">&quot;GetBalance&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::GetBalance</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;unknown api kind `{}`&quot;</span>, <span class="ident">s</span>)),
+            <span class="string">&quot;GetTips&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::GetTips</span>,
+            <span class="string">&quot;PostMessage&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::PostMessage</span>,
+            <span class="string">&quot;GetOutput&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::GetOutput</span>,
+            <span class="string">&quot;GetBalance&quot;</span> =&gt; <span class="ident"><span class="self">Self</span>::GetBalance</span>,
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="macro">format!</span>(<span class="string">&quot;unknown api kind `{}`&quot;</span>, <span class="ident">s</span>)),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">t</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">Api</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
         <span class="ident">s</span>.<span class="ident">serialize_str</span>(<span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::GetTips</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;GetTips&quot;</span>,
-            <span class="ident"><span class="self">Self</span>::PostMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;PostMessage&quot;</span>,
-            <span class="ident"><span class="self">Self</span>::GetOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;GetOutput&quot;</span>,
-            <span class="ident"><span class="self">Self</span>::GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;GetBalance&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::GetTips</span> =&gt; <span class="string">&quot;GetTips&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::PostMessage</span> =&gt; <span class="string">&quot;PostMessage&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::GetOutput</span> =&gt; <span class="string">&quot;GetOutput&quot;</span>,
+            <span class="ident"><span class="self">Self</span>::GetBalance</span> =&gt; <span class="string">&quot;GetBalance&quot;</span>,
         })
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Api</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Api</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Api</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">struct</span> <span class="ident">StringVisitor</span>;
         <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">StringVisitor</span> {
             <span class="kw">type</span> <span class="ident">Value</span> <span class="op">=</span> <span class="ident">Api</span>;
-            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+            <span class="kw">fn</span> <span class="ident">expecting</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
                 <span class="ident">formatter</span>.<span class="ident">write_str</span>(<span class="string">&quot;a string representing an Api&quot;</span>)
             }
 
-            <span class="kw">fn</span> <span class="ident">visit_str</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span>
+            <span class="kw">fn</span> <span class="ident">visit_str</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Value</span>, <span class="ident">E</span><span class="op">&gt;</span>
             <span class="kw">where</span>
                 <span class="ident">E</span>: <span class="ident">serde::de::Error</span>,
             {
@@ -1224,12 +1224,12 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota_client::Api</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">api</span>: <span class="ident">Api</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota_client::Api</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">api</span>: <span class="ident">Api</span>) -&gt; <span class="ident">iota_client::Api</span> {
         <span class="kw">match</span> <span class="ident">api</span> {
-            <span class="ident">Api::GetTips</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::GetTips</span>,
-            <span class="ident">Api::PostMessage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::PostMessage</span>,
-            <span class="ident">Api::GetOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::GetOutput</span>,
-            <span class="ident">Api::GetBalance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">iota_client::Api::GetBalance</span>,
+            <span class="ident">Api::GetTips</span> =&gt; <span class="ident">iota_client::Api::GetTips</span>,
+            <span class="ident">Api::PostMessage</span> =&gt; <span class="ident">iota_client::Api::PostMessage</span>,
+            <span class="ident">Api::GetOutput</span> =&gt; <span class="ident">iota_client::Api::GetOutput</span>,
+            <span class="ident">Api::GetBalance</span> =&gt; <span class="ident">iota_client::Api::GetBalance</span>,
         }
     }
 }
@@ -1254,7 +1254,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">BrokerOptions</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">iota_client::BrokerOptions</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">BrokerOptions</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">iota_client::BrokerOptions</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">value</span>: <span class="ident">BrokerOptions</span>) -&gt; <span class="ident">iota_client::BrokerOptions</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">iota_client::BrokerOptions::new</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">automatic_disconnect</span>) <span class="op">=</span> <span class="ident">value</span>.<span class="ident">automatic_disconnect</span> {
             <span class="ident">options</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">automatic_disconnect</span>(<span class="ident">automatic_disconnect</span>);
@@ -1298,7 +1298,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Url</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Node</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">url</span>: <span class="ident">Url</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">url</span>: <span class="ident">Url</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">url</span>,
             <span class="ident">auth</span>: <span class="prelude-val">None</span>,
@@ -1351,7 +1351,7 @@
 
 <span class="kw">impl</span> <span class="ident">ClientOptions</span> {
     <span class="doccomment">/// Gets a new client options builder instance.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ClientOptionsBuilder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>() -&gt; <span class="ident">ClientOptionsBuilder</span> {
         <span class="ident">ClientOptionsBuilder::new</span>()
     }
 }
@@ -1370,27 +1370,27 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">ClientOptions</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">primary_node</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">primary_node</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">primary_pow_node</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">primary_pow_node</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">nodes</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">nodes</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">node_pool_urls</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">node_pool_urls</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">network</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">network</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">mqtt_broker_options</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">mqtt_broker_options</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">local_pow</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">local_pow</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">request_timeout</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">request_timeout</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">primary_node</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">primary_node</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">primary_pow_node</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">primary_pow_node</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">nodes</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">nodes</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">node_pool_urls</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">node_pool_urls</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">network</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">network</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">mqtt_broker_options</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">mqtt_broker_options</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">local_pow</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">local_pow</span>
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">request_timeout</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">request_timeout</span>
     }
 }
 
-<span class="kw">fn</span> <span class="ident">default_local_pow</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">default_local_pow</span>() -&gt; <span class="ident">bool</span> {
     <span class="bool-val">true</span>
 }
 
-<span class="kw">fn</span> <span class="ident">default_node_sync_enabled</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">default_node_sync_enabled</span>() -&gt; <span class="ident">bool</span> {
     <span class="bool-val">true</span>
 }
 
-<span class="kw">fn</span> <span class="ident">default_mqtt_enabled</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">fn</span> <span class="ident">default_mqtt_enabled</span>() -&gt; <span class="ident">bool</span> {
     <span class="bool-val">true</span>
 }
 

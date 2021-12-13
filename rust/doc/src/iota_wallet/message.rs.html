@@ -1397,7 +1397,7 @@
 <span class="kw">const</span> <span class="ident">MILESTONE_ISSUE_RATE_SECS</span>: <span class="ident">i64</span> <span class="op">=</span> <span class="number">10</span>;
 
 <span class="kw">type</span> <span class="ident">MilestoneCache</span> <span class="op">=</span> <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">MilestoneResponse</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-<span class="kw">fn</span> <span class="ident">milestone_cache</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">MilestoneCache</span> {
+<span class="kw">fn</span> <span class="ident">milestone_cache</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">MilestoneCache</span> {
     <span class="kw">static</span> <span class="ident">MILESTONE_CACHE</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">MilestoneCache</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="ident">Default::default</span>);
     <span class="kw-2">&amp;</span><span class="ident">MILESTONE_CACHE</span>
 }
@@ -1416,7 +1416,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">RemainderValueStrategy</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::ChangeAddress</span>
     }
 }
@@ -1434,13 +1434,13 @@
     <span class="kw">pub</span> <span class="ident">output_kind</span>: <span class="ident">OutputKind</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">default_output_kind</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">OutputKind</span> {
+<span class="kw">fn</span> <span class="ident">default_output_kind</span>() -&gt; <span class="ident">OutputKind</span> {
     <span class="ident">OutputKind::SignatureLockedSingle</span>
 }
 
 <span class="kw">impl</span> <span class="ident">TransferOutput</span> {
     <span class="doccomment">/// Creates a new transfer output.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">amount</span>,
             <span class="ident">address</span>,
@@ -1467,7 +1467,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">TransferBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">outputs</span>: <span class="ident">Default::default</span>(),
             <span class="ident">indexation</span>: <span class="prelude-val">None</span>,
@@ -1480,7 +1480,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TransferBuilder</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferBuilder</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TransferBuilder</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1499,11 +1499,11 @@
 
         <span class="kw">impl</span> <span class="ident">IndexationPayloadBuilder</span> {
             <span class="doccomment">/// Builds the indexation.</span>
-            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">IndexationPayload</span><span class="op">&gt;</span> {
+            <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">IndexationPayload</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">indexation</span> <span class="op">=</span> <span class="ident">IndexationPayload::new</span>(
                     <span class="kw-2">&amp;</span><span class="kw">match</span> <span class="self">self</span>.<span class="ident">index</span> {
-                        <span class="ident">TransactionIndexation::String</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
-                        <span class="ident">TransactionIndexation::Raw</span>(<span class="ident">bytes</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bytes</span>,
+                        <span class="ident">TransactionIndexation::String</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span>.<span class="ident">as_bytes</span>().<span class="ident">to_vec</span>(),
+                        <span class="ident">TransactionIndexation::Raw</span>(<span class="ident">bytes</span>) =&gt; <span class="ident">bytes</span>,
                     },
                     <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>.<span class="ident">unwrap_or_default</span>(),
                 )<span class="question-mark">?</span>;
@@ -1532,8 +1532,8 @@
             <span class="prelude-val">Ok</span>(<span class="ident">TransferBuilder</span> {
                 <span class="ident">outputs</span>: <span class="ident">builder</span>.<span class="ident">outputs</span>,
                 <span class="ident">indexation</span>: <span class="kw">match</span> <span class="ident">builder</span>.<span class="ident">indexation</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">i</span>.<span class="ident">finish</span>().<span class="ident">map_err</span>(<span class="ident">serde::de::Error::custom</span>)<span class="question-mark">?</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">i</span>.<span class="ident">finish</span>().<span class="ident">map_err</span>(<span class="ident">serde::de::Error::custom</span>)<span class="question-mark">?</span>),
+                    <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
                 },
                 <span class="ident">remainder_value_strategy</span>: <span class="ident">builder</span>.<span class="ident">remainder_value_strategy</span>,
                 <span class="ident">input</span>: <span class="prelude-val">None</span>,
@@ -1546,7 +1546,7 @@
 
 <span class="kw">impl</span> <span class="ident">TransferBuilder</span> {
     <span class="doccomment">/// Initialises a new transfer to the given address.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">outputs</span>: <span class="macro">vec!</span>[<span class="ident">TransferOutput</span> {
                 <span class="ident">amount</span>,
@@ -1558,7 +1558,7 @@
     }
 
     <span class="doccomment">/// Creates a transfer with multiple outputs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_outputs</span>(<span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferOutput</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_outputs</span>(<span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferOutput</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span>(<span class="number">1</span>..<span class="number">125</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">outputs</span>.<span class="ident">len</span>()) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::BeeMessage</span>(
                 <span class="ident">iota_client::bee_message::Error::InvalidInputOutputCount</span>(<span class="ident">outputs</span>.<span class="ident">len</span>()),
@@ -1571,36 +1571,36 @@
     }
 
     <span class="doccomment">/// Sets the remainder value strategy for the transfer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_remainder_value_strategy</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">strategy</span>: <span class="ident">RemainderValueStrategy</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_remainder_value_strategy</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">strategy</span>: <span class="ident">RemainderValueStrategy</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">remainder_value_strategy</span> <span class="op">=</span> <span class="ident">strategy</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// (Optional) message indexation.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_indexation</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">indexation</span>: <span class="ident">IndexationPayload</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_indexation</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">indexation</span>: <span class="ident">IndexationPayload</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">indexation</span>.<span class="ident">replace</span>(<span class="ident">indexation</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the addresses and utxo to use as transaction input.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_input</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_input</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">replace</span>((<span class="ident">address</span>, <span class="ident">inputs</span>));
         <span class="self">self</span>
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_events</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">flag</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">with_events</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">flag</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">with_events</span> <span class="op">=</span> <span class="ident">flag</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Skip account syncing before transferring.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_skip_sync</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_skip_sync</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">skip_sync</span> <span class="op">=</span> <span class="bool-val">true</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Builds the transfer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Transfer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident">Transfer</span> {
         <span class="ident">Transfer</span> {
             <span class="ident">outputs</span>: <span class="self">self</span>.<span class="ident">outputs</span>,
             <span class="ident">indexation</span>: <span class="self">self</span>.<span class="ident">indexation</span>,
@@ -1631,12 +1631,12 @@
 
 <span class="kw">impl</span> <span class="ident">Transfer</span> {
     <span class="doccomment">/// Initialises the transfer builder.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TransferBuilder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">NonZeroU64</span>, <span class="ident">output_kind</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">OutputKind</span><span class="op">&gt;</span>) -&gt; <span class="ident">TransferBuilder</span> {
         <span class="ident">TransferBuilder::new</span>(<span class="ident">address</span>, <span class="ident">amount</span>, <span class="ident">output_kind</span>)
     }
 
     <span class="doccomment">/// Initialises the transfer builder with multiple outputs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder_with_outputs</span>(<span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferOutput</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">TransferBuilder</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">builder_with_outputs</span>(<span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransferOutput</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">TransferBuilder</span><span class="op">&gt;</span> {
         <span class="ident">TransferBuilder::with_outputs</span>(<span class="ident">outputs</span>)
     }
 
@@ -1646,7 +1646,7 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">amount</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">amount</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">outputs</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">o</span><span class="op">|</span> <span class="ident">o</span>.<span class="ident">amount</span>.<span class="ident">get</span>()).<span class="ident">sum</span>()
     }
 }
@@ -1669,14 +1669,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ValueUnit</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">ValueUnit::I</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;i&quot;</span>),
-            <span class="ident">ValueUnit::Ki</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ki&quot;</span>),
-            <span class="ident">ValueUnit::Mi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Mi&quot;</span>),
-            <span class="ident">ValueUnit::Gi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Gi&quot;</span>),
-            <span class="ident">ValueUnit::Ti</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ti&quot;</span>),
-            <span class="ident">ValueUnit::Pi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Pi&quot;</span>),
+            <span class="ident">ValueUnit::I</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;i&quot;</span>),
+            <span class="ident">ValueUnit::Ki</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ki&quot;</span>),
+            <span class="ident">ValueUnit::Mi</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Mi&quot;</span>),
+            <span class="ident">ValueUnit::Gi</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Gi&quot;</span>),
+            <span class="ident">ValueUnit::Ti</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Ti&quot;</span>),
+            <span class="ident">ValueUnit::Pi</span> =&gt; <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Pi&quot;</span>),
         }
     }
 }
@@ -1693,24 +1693,24 @@
 
 <span class="kw">impl</span> <span class="ident">Value</span> {
     <span class="doccomment">/// Ititialises a new Value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">u64</span>, <span class="ident">unit</span>: <span class="ident">ValueUnit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">value</span>: <span class="ident">u64</span>, <span class="ident">unit</span>: <span class="ident">ValueUnit</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">value</span>, <span class="ident">unit</span> }
     }
 
     <span class="doccomment">/// Formats the value with its unit.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_denomination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_denomination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
         <span class="macro">format!</span>(<span class="string">&quot;{} {}&quot;</span>, <span class="self">self</span>.<span class="ident">value</span>, <span class="self">self</span>.<span class="ident">unit</span>)
     }
 
     <span class="doccomment">/// The transaction value without its unit.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">without_denomination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">without_denomination</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="ident">multiplier</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">unit</span> {
-            <span class="ident">ValueUnit::I</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="ident">ValueUnit::Ki</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1000</span>,
-            <span class="ident">ValueUnit::Mi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1000000</span>,
-            <span class="ident">ValueUnit::Gi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1000000000</span>,
-            <span class="ident">ValueUnit::Ti</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1000000000000</span>,
-            <span class="ident">ValueUnit::Pi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1000000000000000</span>,
+            <span class="ident">ValueUnit::I</span> =&gt; <span class="number">1</span>,
+            <span class="ident">ValueUnit::Ki</span> =&gt; <span class="number">1000</span>,
+            <span class="ident">ValueUnit::Mi</span> =&gt; <span class="number">1000000</span>,
+            <span class="ident">ValueUnit::Gi</span> =&gt; <span class="number">1000000000</span>,
+            <span class="ident">ValueUnit::Ti</span> =&gt; <span class="number">1000000000000</span>,
+            <span class="ident">ValueUnit::Pi</span> =&gt; <span class="number">1000000000000000</span>,
         };
         <span class="self">self</span>.<span class="ident">value</span> <span class="op">*</span> <span class="ident">multiplier</span>
     }
@@ -1732,7 +1732,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TransactionSignatureLockedSingleOutput</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>, <span class="ident">remainder</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>, <span class="ident">remainder</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">address</span>: <span class="ident">AddressWrapper::new</span>(<span class="kw-2">*</span><span class="ident">output</span>.<span class="ident">address</span>(), <span class="ident">bech32_hrp</span>),
             <span class="ident">amount</span>: <span class="ident">output</span>.<span class="ident">amount</span>(),
@@ -1753,7 +1753,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TransactionSignatureLockedDustAllowanceOutput</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureLockedDustAllowanceOutput</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">SignatureLockedDustAllowanceOutput</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">address</span>: <span class="ident">AddressWrapper::new</span>(<span class="kw-2">*</span><span class="ident">output</span>.<span class="ident">address</span>(), <span class="ident">bech32_hrp</span>),
             <span class="ident">amount</span>: <span class="ident">output</span>.<span class="ident">amount</span>(),
@@ -1774,15 +1774,15 @@
 }
 
 <span class="kw">impl</span> <span class="ident">TransactionOutput</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">Output</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>, <span class="ident">remainder</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">Output</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>, <span class="ident">remainder</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">output</span> {
-            <span class="ident">Output::SignatureLockedSingle</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::SignatureLockedSingle</span>(
+            <span class="ident">Output::SignatureLockedSingle</span>(<span class="ident">output</span>) =&gt; <span class="ident"><span class="self">Self</span>::SignatureLockedSingle</span>(
                 <span class="ident">TransactionSignatureLockedSingleOutput::new</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>, <span class="ident">remainder</span>),
             ),
-            <span class="ident">Output::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::SignatureLockedDustAllowance</span>(
+            <span class="ident">Output::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) =&gt; <span class="ident"><span class="self">Self</span>::SignatureLockedDustAllowance</span>(
                 <span class="ident">TransactionSignatureLockedDustAllowanceOutput::new</span>(<span class="ident">output</span>, <span class="ident">bech32_hrp</span>),
             ),
-            <span class="ident">Output::Treasury</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Treasury</span>(<span class="ident">output</span>.<span class="ident">clone</span>()),
+            <span class="ident">Output::Treasury</span>(<span class="ident">output</span>) =&gt; <span class="ident"><span class="self">Self</span>::Treasury</span>(<span class="ident">output</span>.<span class="ident">clone</span>()),
         }
     }
 }
@@ -1821,62 +1821,62 @@
 
 <span class="kw">impl</span> <span class="ident">TransactionRegularEssence</span> {
     <span class="doccomment">/// Gets the transaction inputs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">TransactionInput</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">TransactionInput</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inputs</span>
     }
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">inputs_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">TransactionInput</span>] {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">inputs_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">TransactionInput</span>] {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">inputs</span>
     }
 
     <span class="doccomment">/// Gets the transaction outputs.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">TransactionOutput</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">outputs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">TransactionOutput</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">outputs</span>
     }
 
     <span class="doccomment">/// Gets the transaction chained payload.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">payload</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">payload</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Payload</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">payload</span>
     }
 
     <span class="doccomment">/// Whether the transaction is between the mnemonic accounts or not.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">internal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">internal</span>
     }
 
     <span class="doccomment">/// Whether the transaction is incoming or outgoing.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">incoming</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">incoming</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">incoming</span>
     }
 
     <span class="doccomment">/// The transactions&#39;s value.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">value</span>
     }
 
     <span class="doccomment">/// The transactions&#39;s remainder value sum.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remainder_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remainder_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="self">self</span>.<span class="ident">remainder_value</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">TransactionRegularEssence</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_incoming</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_incoming</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>]) -&gt; <span class="ident">bool</span> {
         <span class="op">!</span><span class="self">self</span>.<span class="ident">inputs</span>().<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">i</span> {
-            <span class="ident"><span class="kw">crate</span>::message::TransactionInput::Utxo</span>(<span class="ident">input</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">metadata</span> {
-                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">input_metadata</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">account_addresses</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">input_metadata</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a</span>.<span class="ident">address</span>()),
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident"><span class="kw">crate</span>::message::TransactionInput::Utxo</span>(<span class="ident">input</span>) =&gt; <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">metadata</span> {
+                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">input_metadata</span>) =&gt; <span class="ident">account_addresses</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">input_metadata</span>.<span class="ident">address</span> <span class="op">==</span> <span class="ident">a</span>.<span class="ident">address</span>()),
+                <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         })
     }
 
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">regular_essence</span>: <span class="kw-2">&amp;</span><span class="ident">RegularEssence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">regular_essence</span>: <span class="kw-2">&amp;</span><span class="ident">RegularEssence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">regular_essence</span>.<span class="ident">inputs</span>() {
             <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">clone</span>() {
-                <span class="ident">Input::Utxo</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Input::Utxo</span>(<span class="ident">i</span>) =&gt; {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
                     <span class="kw">let</span> <span class="ident">metadata</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">AddressOutput</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
@@ -1894,19 +1894,19 @@
                             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="ident">metadata</span>.<span class="ident">client_options</span>).<span class="kw">await</span><span class="question-mark">?</span>;
                             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">read</span>().<span class="kw">await</span>;
                             <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">i</span>).<span class="kw">await</span> {
-                                <span class="prelude-val">Ok</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">Ok</span>(<span class="ident">output</span>) =&gt; {
                                     <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span>
                                         <span class="ident">AddressOutput::from_output_response</span>(<span class="ident">output</span>, <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
                                     <span class="prelude-val">Some</span>(<span class="ident">output</span>)
                                 }
-                                <span class="prelude-val">Err</span>(<span class="ident">iota_client::Error::ResponseError</span>(<span class="ident">status_code</span>, <span class="kw">_</span>)) <span class="kw">if</span> <span class="ident">status_code</span> <span class="op">=</span><span class="op">=</span> <span class="number">404</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
+                                <span class="prelude-val">Err</span>(<span class="ident">iota_client::Error::ResponseError</span>(<span class="ident">status_code</span>, <span class="kw">_</span>)) <span class="kw">if</span> <span class="ident">status_code</span> <span class="op">==</span> <span class="number">404</span> =&gt; <span class="prelude-val">None</span>,
+                                <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>.<span class="ident">into</span>()),
                             }
                         }
                     };
                     <span class="ident">TransactionInput::Utxo</span>(<span class="ident">TransactionUtxoInput</span> { <span class="ident">input</span>: <span class="ident">i</span>, <span class="ident">metadata</span> })
                 }
-                <span class="ident">Input::Treasury</span>(<span class="ident">treasury</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TransactionInput::Treasury</span>(<span class="ident">treasury</span>),
+                <span class="ident">Input::Treasury</span>(<span class="ident">treasury</span>) =&gt; <span class="ident">TransactionInput::Treasury</span>(<span class="ident">treasury</span>),
             };
             <span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">input</span>);
         }
@@ -1914,9 +1914,9 @@
 
         <span class="kw">let</span> <span class="ident">tx_outputs</span> <span class="op">=</span> <span class="ident">regular_essence</span>.<span class="ident">outputs</span>();
         <span class="kw">match</span> <span class="ident">tx_outputs</span>.<span class="ident">len</span>() {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="number">0</span> =&gt; {}
             <span class="comment">// if the tx has one output, it is not a remainder output</span>
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="number">1</span> =&gt; {
                 <span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">TransactionOutput::new</span>(
                     <span class="ident">tx_outputs</span>.<span class="ident">first</span>().<span class="ident">unwrap</span>(),
                     <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(),
@@ -1924,14 +1924,14 @@
                 ));
             }
             <span class="comment">// if the tx has more than one output, we check which one is the remainder</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">tx_outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="ident">IotaAddress</span>, <span class="kw-2">&amp;</span><span class="ident">Output</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">tx_outputs</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> {
                         <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
-                            <span class="ident">Output::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                            <span class="ident">Output::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+                            <span class="ident">Output::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+                            <span class="ident">Output::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+                            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
                         };
                         (<span class="ident">address</span>, <span class="ident">output</span>)
                     })
@@ -1943,7 +1943,7 @@
                     <span class="kw">let</span> <span class="ident">address_belongs_to_account</span> <span class="op">=</span> <span class="ident">metadata</span>
                         .<span class="ident">account_addresses</span>
                         .<span class="ident">iter</span>()
-                        .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">address</span>);
+                        .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="ident">address</span>);
                     <span class="ident">address_belongs_to_account</span>
                 });
                 <span class="kw">if</span> <span class="ident">all_outputs_belongs_to_account</span> {
@@ -1952,35 +1952,35 @@
                         <span class="kw">let</span> <span class="ident">account_address</span> <span class="op">=</span> <span class="ident">metadata</span>
                             .<span class="ident">account_addresses</span>
                             .<span class="ident">iter</span>()
-                            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">output_address</span>)
+                            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="ident">output_address</span>)
                             .<span class="ident">unwrap</span>(); <span class="comment">// safe to unwrap since we already asserted that the address belongs to the account</span>
 
                         <span class="comment">// if the output is listed on the inputs, it&#39;s the remainder output.</span>
                         <span class="kw">if</span> <span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">input</span> {
-                            <span class="ident">TransactionInput::Utxo</span>(<span class="ident">input</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">TransactionInput::Utxo</span>(<span class="ident">input</span>) =&gt; {
                                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">metadata</span> {
-                                    <span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">output_address</span>
+                                    <span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="ident">output_address</span>
                                 } <span class="kw">else</span> {
                                     <span class="bool-val">false</span>
                                 }
                             }
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         }) {
                             <span class="ident">remainder</span>.<span class="ident">replace</span>(<span class="ident">account_address</span>);
                             <span class="kw">break</span>;
                         }
                         <span class="kw">match</span> <span class="ident">remainder</span> {
-                            <span class="prelude-val">Some</span>(<span class="ident">remainder_address</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">Some</span>(<span class="ident">remainder_address</span>) =&gt; {
                                 <span class="kw">let</span> <span class="ident">address_index</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">key_index</span>();
                                 <span class="comment">// if the address index is the highest or it&#39;s the same as the previous one and this is</span>
                                 <span class="comment">// a change address, we assume that it holds the remainder value</span>
                                 <span class="kw">if</span> <span class="ident">address_index</span> <span class="op">&gt;</span> <span class="kw-2">*</span><span class="ident">remainder_address</span>.<span class="ident">key_index</span>()
-                                    <span class="op">|</span><span class="op">|</span> (<span class="ident">address_index</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">remainder_address</span>.<span class="ident">key_index</span>() <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">internal</span>())
+                                    <span class="op">|</span><span class="op">|</span> (<span class="ident">address_index</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">remainder_address</span>.<span class="ident">key_index</span>() <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">internal</span>())
                                 {
                                     <span class="ident">remainder</span>.<span class="ident">replace</span>(<span class="ident">account_address</span>);
                                 }
                             }
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">None</span> =&gt; {
                                 <span class="ident">remainder</span>.<span class="ident">replace</span>(<span class="ident">account_address</span>);
                             }
                         }
@@ -1990,25 +1990,25 @@
                         <span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">TransactionOutput::new</span>(
                             <span class="ident">output</span>,
                             <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(),
-                            <span class="ident">remainder</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">output_address</span>),
+                            <span class="ident">remainder</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">output_address</span>),
                         ));
                     }
                 } <span class="kw">else</span> {
                     <span class="kw">let</span> <span class="ident">sent</span> <span class="op">=</span> <span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">i</span> {
-                        <span class="ident">TransactionInput::Utxo</span>(<span class="ident">input</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">metadata</span> {
-                            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">input_metadata</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">metadata</span>
+                        <span class="ident">TransactionInput::Utxo</span>(<span class="ident">input</span>) =&gt; <span class="kw">match</span> <span class="ident">input</span>.<span class="ident">metadata</span> {
+                            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">input_metadata</span>) =&gt; <span class="ident">metadata</span>
                                 .<span class="ident">account_addresses</span>
                                 .<span class="ident">iter</span>()
-                                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">input_metadata</span>.<span class="ident">address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">a</span>.<span class="ident">address</span>()),
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">input_metadata</span>.<span class="ident">address</span> <span class="op">==</span> <span class="ident">a</span>.<span class="ident">address</span>()),
+                            <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
                         },
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                     });
                     <span class="kw">for</span> (<span class="ident">output_address</span>, <span class="ident">output</span>) <span class="kw">in</span> <span class="ident">tx_outputs</span> {
                         <span class="kw">let</span> <span class="ident">address_belongs_to_account</span> <span class="op">=</span> <span class="ident">metadata</span>
                             .<span class="ident">account_addresses</span>
                             .<span class="ident">iter</span>()
-                            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">output_address</span>);
+                            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">address</span>().<span class="ident">as_ref</span>() <span class="op">==</span> <span class="ident">output_address</span>);
                         <span class="kw">if</span> <span class="ident">sent</span> {
                             <span class="kw">let</span> <span class="ident">remainder</span> <span class="op">=</span> <span class="ident">address_belongs_to_account</span>;
                             <span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">TransactionOutput::new</span>(<span class="ident">output</span>, <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(), <span class="ident">remainder</span>));
@@ -2025,9 +2025,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remainder_value</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="ident">outputs</span> {
             <span class="kw">let</span> (<span class="ident">output_value</span>, <span class="ident">remainder</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
-                <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">amount</span>, <span class="ident">o</span>.<span class="ident">remainder</span>),
-                <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">amount</span>, <span class="bool-val">false</span>),
-                <span class="ident">TransactionOutput::Treasury</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">amount</span>(), <span class="bool-val">false</span>),
+                <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; (<span class="ident">o</span>.<span class="ident">amount</span>, <span class="ident">o</span>.<span class="ident">remainder</span>),
+                <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; (<span class="ident">o</span>.<span class="ident">amount</span>, <span class="bool-val">false</span>),
+                <span class="ident">TransactionOutput::Treasury</span>(<span class="ident">o</span>) =&gt; (<span class="ident">o</span>.<span class="ident">amount</span>(), <span class="bool-val">false</span>),
             };
             <span class="kw">if</span> <span class="ident">remainder</span> {
                 <span class="ident">remainder_value</span> <span class="op">+</span><span class="op">=</span> <span class="ident">output_value</span>;
@@ -2070,9 +2070,9 @@
 
 <span class="kw">impl</span> <span class="ident">TransactionEssence</span> {
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">Essence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">Essence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">essence</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">essence</span> {
-            <span class="ident">Essence::Regular</span>(<span class="ident">regular</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Regular</span>(<span class="ident">TransactionRegularEssence::new</span>(<span class="ident">regular</span>, <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>),
+            <span class="ident">Essence::Regular</span>(<span class="ident">regular</span>) =&gt; <span class="ident"><span class="self">Self</span>::Regular</span>(<span class="ident">TransactionRegularEssence::new</span>(<span class="ident">regular</span>, <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">essence</span>)
     }
@@ -2087,21 +2087,21 @@
 
 <span class="kw">impl</span> <span class="ident">MessageTransactionPayload</span> {
     <span class="doccomment">/// The transaction essence.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">essence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">TransactionEssence</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">essence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">TransactionEssence</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">essence</span>
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">essence_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TransactionEssence</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">essence_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TransactionEssence</span> {
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">essence</span>
     }
 
     <span class="doccomment">/// The unlock blocks.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">UnlockBlock</span>] {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">UnlockBlock</span>] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">unlock_blocks</span>
     }
 
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionPayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionPayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">for</span> <span class="ident">unlock_block</span> <span class="kw">in</span> <span class="ident">payload</span>.<span class="ident">unlock_blocks</span>().<span class="ident">as_ref</span>() {
             <span class="ident">unlock_blocks</span>.<span class="ident">push</span>(<span class="ident">unlock_block</span>.<span class="ident">clone</span>());
@@ -2147,7 +2147,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">MessageMilestonePayloadEssence</span> {
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">MilestonePayloadEssence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">MilestonePayloadEssence</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">index</span>: <span class="ident">essence</span>.<span class="ident">index</span>(),
             <span class="ident">timestamp</span>: <span class="ident">essence</span>.<span class="ident">timestamp</span>(),
@@ -2157,7 +2157,7 @@
             <span class="ident">next_pow_score_milestone_index</span>: <span class="ident">essence</span>.<span class="ident">next_pow_score_milestone_index</span>(),
             <span class="ident">public_keys</span>: <span class="ident">essence</span>.<span class="ident">public_keys</span>().<span class="ident">to_vec</span>(),
             <span class="ident">receipt</span>: <span class="kw">match</span> <span class="ident">essence</span>.<span class="ident">receipt</span>() {
-                <span class="prelude-val">Some</span>(<span class="ident">p</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">p</span>) =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Payload::Receipt</span>(<span class="ident">receipt</span>) <span class="op">=</span> <span class="ident">p</span> {
                         <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Receipt</span>(<span class="ident">Box::new</span>(<span class="ident">MessageReceiptPayload::new</span>(
                             <span class="ident">receipt</span>, <span class="ident">metadata</span>,
@@ -2166,7 +2166,7 @@
                         <span class="prelude-val">None</span>
                     }
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
             },
         })
     }
@@ -2181,17 +2181,17 @@
 
 <span class="kw">impl</span> <span class="ident">MessageMilestonePayload</span> {
     <span class="doccomment">/// The milestone essence.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">essence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">MessageMilestonePayloadEssence</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">essence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">MessageMilestonePayloadEssence</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">essence</span>
     }
 
     <span class="doccomment">/// The milestone signatures.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signatures</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signatures</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">signatures</span>
     }
 
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">MilestonePayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">MilestonePayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">essence</span>: <span class="ident">MessageMilestonePayloadEssence::new</span>(<span class="ident">payload</span>.<span class="ident">essence</span>(), <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>,
             <span class="ident">signatures</span>: <span class="ident">payload</span>.<span class="ident">signatures</span>().<span class="ident">to_vec</span>(),
@@ -2204,7 +2204,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageTailTransactionHash</span>(<span class="ident">TailTransactionHash</span>);
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MessageTailTransactionHash</span> {
-    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MessageTailTransactionHash</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize</span><span class="op">&lt;</span><span class="ident">D</span><span class="op">&gt;</span>(<span class="ident">deserializer</span>: <span class="ident">D</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MessageTailTransactionHash</span>, <span class="ident">D::Error</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">D</span>: <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -2216,8 +2216,8 @@
         }
         <span class="kw">let</span> <span class="ident">tail</span> <span class="op">=</span> <span class="ident">TailTransactionHashOptions::deserialize</span>(<span class="ident">deserializer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">hash</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">tail</span> {
-            <span class="ident">TailTransactionHashOptions::Raw</span>(<span class="ident">hash</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">MessageTailTransactionHash</span>(<span class="ident">hash</span>),
-            <span class="ident">TailTransactionHashOptions::Trytes</span>(<span class="ident">trytes</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">TailTransactionHashOptions::Raw</span>(<span class="ident">hash</span>) =&gt; <span class="ident">MessageTailTransactionHash</span>(<span class="ident">hash</span>),
+            <span class="ident">TailTransactionHashOptions::Trytes</span>(<span class="ident">trytes</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">trytes</span>
                     .<span class="ident">chars</span>()
                     .<span class="ident">map</span>(<span class="ident">iota_migration::ternary::Tryte::try_from</span>)
@@ -2236,7 +2236,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">MessageTailTransactionHash</span> {
-    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">serialize</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Serializer</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">s</span>: <span class="ident">S</span>) -&gt; <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">S::Ok</span>, <span class="ident">S::Error</span><span class="op">&gt;</span> {
         <span class="ident">s</span>.<span class="ident">serialize_str</span>(
             <span class="kw-2">&amp;</span><span class="ident">iota_migration::ternary::Trits</span>::<span class="op">&lt;</span><span class="ident">iota_migration::ternary::T5B1</span><span class="op">&gt;</span><span class="ident">::try_from_raw</span>(
                 <span class="ident">bytemuck::cast_slice</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()),
@@ -2252,7 +2252,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">AsRef</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MessageTailTransactionHash</span> {
-    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+    <span class="kw">fn</span> <span class="ident">as_ref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>()
     }
 }
@@ -2270,7 +2270,7 @@
 
 <span class="kw">impl</span> <span class="ident">MessageMigratedFundsEntry</span> {
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">entry</span>: <span class="kw-2">&amp;</span><span class="ident">MigratedFundsEntry</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">entry</span>: <span class="kw-2">&amp;</span><span class="ident">MigratedFundsEntry</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">tail_transaction_hash</span>: <span class="ident">MessageTailTransactionHash</span>(<span class="ident">entry</span>.<span class="ident">tail_transaction_hash</span>().<span class="ident">clone</span>()),
             <span class="ident">output</span>: <span class="ident">TransactionSignatureLockedSingleOutput::new</span>(<span class="ident">entry</span>.<span class="ident">output</span>(), <span class="ident">metadata</span>.<span class="ident">bech32_hrp</span>.<span class="ident">clone</span>(), <span class="bool-val">false</span>),
@@ -2298,7 +2298,7 @@
 
 <span class="kw">impl</span> <span class="ident">MessageReceiptPayload</span> {
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ReceiptPayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="kw-2">&amp;</span><span class="ident">ReceiptPayload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">migrated_at</span>: <span class="ident">payload</span>.<span class="ident">migrated_at</span>(),
             <span class="ident">last</span>: <span class="ident">payload</span>.<span class="ident">last</span>(),
@@ -2333,22 +2333,22 @@
 }
 
 <span class="kw">impl</span> <span class="ident">MessagePayload</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="ident">Payload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">payload</span>: <span class="ident">Payload</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">payload</span> {
-            <span class="ident">Payload::Transaction</span>(<span class="ident">tx</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Payload::Transaction</span>(<span class="ident">tx</span>) =&gt; {
                 <span class="ident"><span class="self">Self</span>::Transaction</span>(<span class="ident">Box::new</span>(<span class="ident">MessageTransactionPayload::new</span>(<span class="kw-2">&amp;</span><span class="ident">tx</span>, <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>))
             }
-            <span class="ident">Payload::Milestone</span>(<span class="ident">milestone</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Payload::Milestone</span>(<span class="ident">milestone</span>) =&gt; {
                 <span class="ident"><span class="self">Self</span>::Milestone</span>(<span class="ident">Box::new</span>(<span class="ident">MessageMilestonePayload::new</span>(<span class="kw-2">&amp;</span><span class="ident">milestone</span>, <span class="ident">metadata</span>).<span class="kw">await</span><span class="question-mark">?</span>))
             }
-            <span class="ident">Payload::Indexation</span>(<span class="ident">indexation</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Indexation</span>(<span class="ident">indexation</span>),
-            <span class="ident">Payload::Receipt</span>(<span class="ident">receipt</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Receipt</span>(<span class="ident">Box::new</span>(<span class="ident">MessageReceiptPayload::new</span>(<span class="kw-2">&amp;</span><span class="ident">receipt</span>, <span class="ident">metadata</span>))),
-            <span class="ident">Payload::TreasuryTransaction</span>(<span class="ident">treasury_tx</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::TreasuryTransaction</span>(<span class="ident">treasury_tx</span>),
+            <span class="ident">Payload::Indexation</span>(<span class="ident">indexation</span>) =&gt; <span class="ident"><span class="self">Self</span>::Indexation</span>(<span class="ident">indexation</span>),
+            <span class="ident">Payload::Receipt</span>(<span class="ident">receipt</span>) =&gt; <span class="ident"><span class="self">Self</span>::Receipt</span>(<span class="ident">Box::new</span>(<span class="ident">MessageReceiptPayload::new</span>(<span class="kw-2">&amp;</span><span class="ident">receipt</span>, <span class="ident">metadata</span>))),
+            <span class="ident">Payload::TreasuryTransaction</span>(<span class="ident">treasury_tx</span>) =&gt; <span class="ident"><span class="self">Self</span>::TreasuryTransaction</span>(<span class="ident">treasury_tx</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">payload</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">storage_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u64</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">storage_hash</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher::new</span>();
         <span class="ident">serde_json::to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>).<span class="ident">unwrap</span>().<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="ident">hasher</span>.<span class="ident">finish</span>()
@@ -2391,16 +2391,16 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_bech32_hrp</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bech32_hrp</span>: <span class="ident">String</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">payload</span>.<span class="ident">as_mut</span>() {
             <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence_mut</span>() {
-                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) =&gt; {
                     <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">outputs</span>.<span class="ident">iter_mut</span>() {
                         <span class="kw">match</span> <span class="ident">output</span> {
-                            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">output</span>) =&gt; {
                                 <span class="ident">output</span>.<span class="ident">address</span>.<span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">bech32_hrp</span>.<span class="ident">clone</span>();
                             }
-                            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">output</span>) =&gt; {
                                 <span class="ident">output</span>.<span class="ident">address</span>.<span class="ident">bech32_hrp</span> <span class="op">=</span> <span class="ident">bech32_hrp</span>.<span class="ident">clone</span>();
                             }
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                            <span class="kw">_</span> =&gt; {}
                         }
                     }
                 }
@@ -2408,17 +2408,17 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_remainder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">AddressWrapper</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_remainder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">AddressWrapper</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">payload</span> {
             <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
-                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) =&gt; {
                     <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">outputs</span>() {
                         <span class="kw">let</span> (<span class="ident">output_address</span>, <span class="ident">remainder</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
-                            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="ident">o</span>.<span class="ident">remainder</span>),
-                            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="bool-val">false</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+                            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="ident">o</span>.<span class="ident">remainder</span>),
+                            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; (<span class="ident">o</span>.<span class="ident">address</span>(), <span class="bool-val">false</span>),
+                            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
                         };
-                        <span class="kw">if</span> <span class="ident">output_address</span> <span class="op">=</span><span class="op">=</span> <span class="ident">address</span> {
+                        <span class="kw">if</span> <span class="ident">output_address</span> <span class="op">==</span> <span class="ident">address</span> {
                             <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">remainder</span>);
                         }
                     }
@@ -2436,19 +2436,19 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">id</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">id</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">id</span>
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">Ordering</span> {
         <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">cmp</span>(<span class="ident">other</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Message</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cmp</span>(<span class="ident">other</span>))
     }
 }
@@ -2456,14 +2456,14 @@
 <span class="kw">fn</span> <span class="ident">transaction_inputs_belonging_to_account</span>(
     <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionRegularEssence</span>,
     <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionInput</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionInput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">inputs</span>() {
         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput::Utxo</span>(<span class="ident">i</span>) <span class="op">=</span> <span class="ident">input</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">i</span>.<span class="ident">metadata</span> {
                 <span class="kw">if</span> <span class="ident">account_addresses</span>
                     .<span class="ident">iter</span>()
-                    .<span class="ident">any</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">address</span>)
+                    .<span class="ident">any</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>() <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">metadata</span>.<span class="ident">address</span>)
                 {
                     <span class="ident">inputs</span>.<span class="ident">push</span>(<span class="ident">input</span>.<span class="ident">clone</span>());
                 }
@@ -2476,17 +2476,17 @@
 <span class="kw">fn</span> <span class="ident">transaction_outputs_belonging_to_account</span>(
     <span class="ident">essence</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionRegularEssence</span>,
     <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionOutput</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionOutput</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">for</span> <span class="ident">output</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">outputs</span>() {
         <span class="kw">let</span> <span class="ident">output_address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">output</span> {
-            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+            <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+            <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+            <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
         };
         <span class="kw">if</span> <span class="ident">account_addresses</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">output_address</span>)
+            .<span class="ident">any</span>(<span class="op">|</span><span class="ident">address</span><span class="op">|</span> <span class="ident">address</span>.<span class="ident">address</span>() <span class="op">==</span> <span class="ident">output_address</span>)
         {
             <span class="ident">outputs</span>.<span class="ident">push</span>(<span class="ident">output</span>.<span class="ident">clone</span>());
         }
@@ -2499,11 +2499,11 @@
     <span class="ident">accounts</span>: <span class="ident">AccountStore</span>,
     <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span>[<span class="ident">Address</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs_belonging_to_account</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">outputs_belonging_to_account</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">account_handle</span>) <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">iter</span>() {
-        <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">account_id</span> {
+        <span class="kw">if</span> <span class="ident">id</span> <span class="op">==</span> <span class="ident">account_id</span> {
             <span class="ident">inputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_inputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account_addresses</span>));
             <span class="ident">outputs_belonging_to_account</span>.<span class="ident">extend</span>(<span class="ident">transaction_outputs_belonging_to_account</span>(<span class="ident">essence</span>, <span class="ident">account_addresses</span>));
         } <span class="kw">else</span> {
@@ -2554,7 +2554,7 @@
         <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Address</span>],
         <span class="ident">bech32_hrp</span>: <span class="ident">String</span>,
         <span class="ident">client_options</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ClientOptions</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    ) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">id</span>,
             <span class="ident">iota_message</span>,
@@ -2567,16 +2567,16 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_confirmed</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_confirmed</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">confirmed</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">confirmed</span> <span class="op">=</span> <span class="ident">confirmed</span>;
         <span class="self">self</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">packed_payload</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">payload</span>().<span class="ident">pack_new</span>();
 
         <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">iota_message</span>.<span class="ident">payload</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">payload</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(
+            <span class="prelude-val">Some</span>(<span class="ident">payload</span>) =&gt; <span class="prelude-val">Some</span>(
                 <span class="ident">MessagePayload::new</span>(
                     <span class="ident">payload</span>.<span class="ident">clone</span>(),
                     <span class="kw-2">&amp;</span><span class="ident">TransactionBuilderMetadata</span> {
@@ -2590,7 +2590,7 @@
                 )
                 .<span class="kw">await</span><span class="question-mark">?</span>,
             ),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">None</span>,
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">timestamp</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
@@ -2598,12 +2598,12 @@
         <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client_guard</span>.<span class="ident">read</span>().<span class="kw">await</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">metadata</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>).<span class="kw">await</span> {
             <span class="ident">timestamp</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">metadata</span>.<span class="ident">referenced_by_milestone_index</span> {
-                <span class="prelude-val">Some</span>(<span class="ident">ms_index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">ms_index</span>) =&gt; {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">date_time</span> <span class="op">=</span> <span class="ident">Utc::now</span>();
                     <span class="kw">let</span> <span class="ident">initial</span> <span class="op">=</span> <span class="ident">ms_index</span> <span class="op">/</span> <span class="ident">MILESTONE_CACHE_RANGE</span>;
                     <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident">initial</span>..<span class="ident">initial</span> <span class="op">+</span> <span class="ident">MILESTONE_CACHE_RANGE</span>;
                     <span class="kw">match</span> <span class="ident">milestone_cache</span>().<span class="ident">write</span>().<span class="kw">await</span>.<span class="ident">entry</span>(<span class="ident">range</span>) {
-                        <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Entry::Vacant</span>(<span class="ident">entry</span>) =&gt; {
                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">milestone</span>) <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_milestone</span>(<span class="ident">ms_index</span>).<span class="kw">await</span> {
                                 <span class="ident">date_time</span> <span class="op">=</span> <span class="ident">DateTime::from_utc</span>(
                                     <span class="ident">NaiveDateTime::from_timestamp</span>(<span class="ident">milestone</span>.<span class="ident">timestamp</span> <span class="kw">as</span> <span class="ident">i64</span>, <span class="number">0</span>),
@@ -2612,7 +2612,7 @@
                                 <span class="ident">entry</span>.<span class="ident">insert</span>(<span class="ident">milestone</span>);
                             }
                         }
-                        <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Entry::Occupied</span>(<span class="ident">entry</span>) =&gt; {
                             <span class="kw">let</span> <span class="ident">milestone</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">entry</span>.<span class="ident">get</span>();
                             <span class="kw">let</span> <span class="ident">index_diff</span> <span class="op">=</span> <span class="ident">ms_index</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">-</span> <span class="ident">milestone</span>.<span class="ident">index</span> <span class="kw">as</span> <span class="ident">i64</span>;
                             <span class="kw">let</span> <span class="ident">approx_timestamp</span> <span class="op">=</span>
@@ -2622,7 +2622,7 @@
                     }
                     <span class="ident">date_time</span>
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Utc::now</span>(),
+                <span class="kw">_</span> =&gt; <span class="ident">Utc::now</span>(),
             };
         }
 
@@ -2650,7 +2650,7 @@
         <span class="ident">account_id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
         <span class="ident">account_addresses</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Address</span>],
         <span class="ident">client_options</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">ClientOptions</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MessageBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">MessageBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
         <span class="ident">MessageBuilder::new</span>(
             <span class="ident">id</span>,
             <span class="ident">iota_message</span>,
@@ -2669,20 +2669,20 @@
     }
 
     <span class="doccomment">/// The message&#39;s addresses.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">AddressWrapper</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">payload</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
-                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">essence</span>
+            <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) =&gt; <span class="kw">match</span> <span class="ident">tx</span>.<span class="ident">essence</span>() {
+                <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) =&gt; <span class="ident">essence</span>
                     .<span class="ident">outputs</span>()
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">output</span> {
-                        <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                        <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">o</span>.<span class="ident">address</span>(),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented!</span>(),
+                        <span class="ident">TransactionOutput::SignatureLockedDustAllowance</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+                        <span class="ident">TransactionOutput::SignatureLockedSingle</span>(<span class="ident">o</span>) =&gt; <span class="ident">o</span>.<span class="ident">address</span>(),
+                        <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
                     })
                     .<span class="ident">collect</span>(),
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">vec!</span>[],
+            <span class="kw">_</span> =&gt; <span class="macro">vec!</span>[],
         }
     }
 }

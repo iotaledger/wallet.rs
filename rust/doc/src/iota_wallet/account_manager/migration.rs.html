@@ -618,7 +618,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">MigrationDataFinder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Creates a new migration accoutn data finder.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>], <span class="ident">seed</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">nodes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>], <span class="ident">seed</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hasher</span> <span class="op">=</span> <span class="ident">DefaultHasher::new</span>();
         <span class="ident">seed</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">hasher</span>);
         <span class="kw">let</span> <span class="ident">seed_hash</span> <span class="op">=</span> <span class="ident">hasher</span>.<span class="ident">finish</span>();
@@ -641,25 +641,25 @@
     }
 
     <span class="doccomment">/// Sets the permanode to use.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_permanode</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">permanode</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_permanode</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">permanode</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">permanode</span>.<span class="ident">replace</span>(<span class="ident">permanode</span>);
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the security level.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_security_level</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_security_level</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">security_level</span> <span class="op">=</span> <span class="ident">level</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the gap limit.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_gap_limit</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">gap_limit</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_gap_limit</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">gap_limit</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">gap_limit</span> <span class="op">=</span> <span class="ident">gap_limit</span>;
         <span class="self">self</span>
     }
 
     <span class="doccomment">/// Sets the initial address index.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_initial_address_index</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">initial_address_index</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_initial_address_index</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">initial_address_index</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">initial_address_index</span> <span class="op">=</span> <span class="ident">initial_address_index</span>;
         <span class="self">self</span>
     }
@@ -667,7 +667,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">finish</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">previous_inputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputData</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">MigrationMetadata</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">MigrationMetadata</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs</span>: <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputData</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">initial_address_index</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">legacy_client_builder</span> <span class="op">=</span> <span class="ident">iota_migration::ClientBuilder::new</span>().<span class="ident">quorum</span>(<span class="bool-val">true</span>);
@@ -732,7 +732,7 @@
 
             <span class="ident">address_index</span> <span class="op">+</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">gap_limit</span>;
             <span class="comment">// if balance didn&#39;t change, we stop searching for balance</span>
-            <span class="kw">if</span> <span class="ident">current_balance</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">current_balance</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">break</span>;
             }
         }
@@ -756,7 +756,7 @@
     <span class="ident">timeout</span>: <span class="ident">Duration</span>,
     <span class="ident">offset</span>: <span class="ident">i64</span>,
     <span class="ident">log_file_path</span>: <span class="ident">P</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">MigrationBundle</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">MigrationBundle</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">legacy_client_builder</span> <span class="op">=</span> <span class="ident">iota_migration::ClientBuilder::new</span>().<span class="ident">quorum</span>(<span class="bool-val">true</span>);
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">permanode</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">permanode</span> {
         <span class="ident">legacy_client_builder</span> <span class="op">=</span> <span class="ident">legacy_client_builder</span>.<span class="ident">permanode</span>(<span class="ident">permanode</span>)<span class="question-mark">?</span>;
@@ -767,17 +767,17 @@
     <span class="kw">let</span> <span class="ident">legacy_client</span> <span class="op">=</span> <span class="ident">legacy_client_builder</span>.<span class="ident">build</span>()<span class="question-mark">?</span>;
 
     <span class="kw">match</span> <span class="ident">address_inputs</span>.<span class="ident">len</span>() {
-        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::EmptyInputList</span>),
-        <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {}
-        <span class="kw">_</span> <span class="kw">if</span> <span class="ident">address_inputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">spent</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::SpentAddressOnBundle</span>),
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="number">0</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::EmptyInputList</span>),
+        <span class="number">1</span> =&gt; {}
+        <span class="kw">_</span> <span class="kw">if</span> <span class="ident">address_inputs</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">input</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">spent</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::SpentAddressOnBundle</span>),
+        <span class="kw">_</span> =&gt; {}
     }
 
     <span class="kw">let</span> <span class="ident">deposit_address</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">latest_address</span>().<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">deposit_address_bech32</span> <span class="op">=</span> <span class="ident">deposit_address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>();
     <span class="kw">let</span> <span class="ident">deposit_address</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">BeeAddress::try_from_bech32</span>(<span class="kw-2">&amp;</span><span class="ident">deposit_address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>()) {
-        <span class="prelude-val">Ok</span>(<span class="ident">BeeAddress::Ed25519</span>(<span class="ident">a</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">a</span>,
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::InvalidAddress</span>),
+        <span class="prelude-val">Ok</span>(<span class="ident">BeeAddress::Ed25519</span>(<span class="ident">a</span>)) =&gt; <span class="ident">a</span>,
+        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::InvalidAddress</span>),
     };
     <span class="kw">let</span> <span class="ident">deposit_address_trytes</span> <span class="op">=</span> <span class="ident">encode_migration_address</span>(<span class="ident">deposit_address</span>)<span class="question-mark">?</span>;
 
@@ -908,8 +908,8 @@
         .<span class="ident">as_bytes</span>(),
     )<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">spent_bundle_hashes</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">spent_bundle_hashes</span>.<span class="ident">is_empty</span>() {
-        <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">spent_bundle_hashes</span>),
-        <span class="bool-val">true</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;null&quot;</span>.<span class="ident">to_string</span>(),
+        <span class="bool-val">false</span> =&gt; <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">spent_bundle_hashes</span>),
+        <span class="bool-val">true</span> =&gt; <span class="string">&quot;null&quot;</span>.<span class="ident">to_string</span>(),
     };
     <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;spentBundleHashes: {}\n&quot;</span>, <span class="ident">spent_bundle_hashes</span>).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
     <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;mine: {}\n&quot;</span>, <span class="ident">bundle_mine</span>).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
@@ -936,7 +936,7 @@
     <span class="ident">nodes</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>],
     <span class="ident">bundle</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BundledTransaction</span><span class="op">&gt;</span>,
     <span class="ident">mwm</span>: <span class="ident">u8</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">iota_migration::crypto::hashes::ternary::Hash</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">iota_migration::crypto::hashes::ternary::Hash</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">iota_migration::ClientBuilder::new</span>();
     <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">nodes</span> {
         <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">node</span>(<span class="ident">node</span>)<span class="question-mark">?</span>;
@@ -986,7 +986,7 @@
     <span class="ident">legacy_client</span>: <span class="kw-2">&amp;</span><span class="ident">iota_migration::Client</span>,
     <span class="ident">bundle_hash</span>: <span class="kw-2">&amp;</span><span class="ident">iota_migration::crypto::hashes::ternary::Hash</span>,
     <span class="ident">bundle_hash_string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
     <span class="macro">log::debug!</span>(<span class="string">&quot;[MIGRATION] checking confirmation for bundle `{}`&quot;</span>, <span class="ident">bundle_hash_string</span>);
     <span class="kw">let</span> <span class="ident">hashes</span> <span class="op">=</span> <span class="ident">legacy_client</span>
         .<span class="ident">find_transactions</span>()

@@ -929,14 +929,14 @@
 <span class="kw">const</span> <span class="ident">SEED_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-seed&quot;</span>;
 <span class="kw">const</span> <span class="ident">DERIVE_OUTPUT_RECORD_PATH</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;iota-wallet-derived&quot;</span>;
 
-<span class="kw">fn</span> <span class="ident">records_client_path</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">records_client_path</span>() -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> {
     <span class="string">b&quot;iota-wallet-records&quot;</span>.<span class="ident">to_vec</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">stronghold_response_to_result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">status</span>: <span class="ident">ResultMessage</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">stronghold_response_to_result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">status</span>: <span class="ident">ResultMessage</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">status</span> {
-        <span class="ident">ResultMessage::Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">v</span>),
-        <span class="ident">ResultMessage::Error</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::FailedToPerformAction</span>(<span class="ident">e</span>)),
+        <span class="ident">ResultMessage::Ok</span>(<span class="ident">v</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">v</span>),
+        <span class="ident">ResultMessage::Error</span>(<span class="ident">e</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">Error::FailedToPerformAction</span>(<span class="ident">e</span>)),
     }
 }
 
@@ -946,7 +946,7 @@
     <span class="ident">client_path</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="ident">flags</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StrongholdFlags</span><span class="op">&gt;</span>,
     <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">password</span>.<span class="ident">is_none</span>() {
         <span class="ident">on_stronghold_access</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     }
@@ -988,7 +988,7 @@
     <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>,
     <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">load_actor</span>(
         <span class="ident">runtime</span>,
         <span class="ident">snapshot_path</span>,
@@ -1003,7 +1003,7 @@
     <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>,
     <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">load_actor</span>(
         <span class="ident">runtime</span>,
         <span class="ident">snapshot_path</span>,
@@ -1014,7 +1014,7 @@
     .<span class="kw">await</span>
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_stronghold_access</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">snapshot_path</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">on_stronghold_access</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">snapshot_path</span>: <span class="ident">S</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">passwords</span> <span class="op">=</span> <span class="ident">PASSWORD_STORE</span>.<span class="ident">get_or_init</span>(<span class="ident">default_password_store</span>).<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="kw">if</span> <span class="op">!</span><span class="ident">passwords</span>.<span class="ident">contains_key</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>.<span class="ident">as_ref</span>().<span class="ident">to_path_buf</span>()) {
         <span class="prelude-val">Err</span>(<span class="ident">Error::PasswordNotSet</span>)
@@ -1057,7 +1057,7 @@
 }
 
 <span class="doccomment">/// Gets the stronghold status for the given snapshot.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_status</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Status</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_status</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="ident">Status</span> {
     <span class="kw">let</span> <span class="ident">password_clear_interval</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">PASSWORD_CLEAR_INTERVAL</span>
         .<span class="ident">get_or_init</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">DEFAULT_PASSWORD_CLEAR_INTERVAL</span>)))
         .<span class="ident">lock</span>()
@@ -1074,7 +1074,7 @@
             <span class="ident">snapshot</span>: <span class="kw">if</span> <span class="ident">locked</span> {
                 <span class="ident">SnapshotStatus::Locked</span>
             } <span class="kw">else</span> {
-                <span class="ident">SnapshotStatus::Unlocked</span>(<span class="kw">if</span> <span class="ident">password_clear_interval</span>.<span class="ident">as_millis</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="ident">SnapshotStatus::Unlocked</span>(<span class="kw">if</span> <span class="ident">password_clear_interval</span>.<span class="ident">as_millis</span>() <span class="op">==</span> <span class="number">0</span> {
                     <span class="ident">password_clear_interval</span>
                 } <span class="kw">else</span> {
                     <span class="ident">password_clear_interval</span> <span class="op">-</span> <span class="ident">access_instant</span>.<span class="ident">elapsed</span>()
@@ -1089,7 +1089,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">default_password_store</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">default_password_store</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">PathBuf</span>, <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="ident">thread::spawn</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="ident"><span class="kw">crate</span>::spawn</span>(<span class="kw">async</span> {
             <span class="kw">loop</span> {
@@ -1099,7 +1099,7 @@
                     .<span class="kw">await</span>;
                 <span class="ident">sleep</span>(<span class="ident">interval</span>).<span class="kw">await</span>;
 
-                <span class="kw">if</span> <span class="ident">interval</span>.<span class="ident">as_nanos</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">if</span> <span class="ident">interval</span>.<span class="ident">as_nanos</span>() <span class="op">==</span> <span class="number">0</span> {
                     <span class="kw">continue</span>;
                 }
 
@@ -1119,7 +1119,7 @@
                 <span class="kw">for</span> <span class="ident">snapshot_path</span> <span class="kw">in</span> <span class="ident">snapshots_paths_to_clear</span> {
                     <span class="ident">passwords</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>);
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">curr_snapshot_path</span>) <span class="op">=</span> <span class="ident">current_snapshot_path</span> {
-                        <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span> <span class="op">=</span><span class="op">=</span> <span class="ident">curr_snapshot_path</span> {
+                        <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="ident">snapshot_path</span> <span class="op">==</span> <span class="ident">curr_snapshot_path</span> {
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
                             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">clear_stronghold_cache</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="bool-val">true</span>);
                         }
@@ -1145,14 +1145,14 @@
     <span class="ident">passwords</span>.<span class="ident">insert</span>(<span class="ident">snapshot_path</span>, <span class="ident">Arc::new</span>(<span class="ident">Password</span>(<span class="ident">password</span>)));
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_password_if_needed</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_password_if_needed</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">password</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">password</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">password</span>),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">get_password</span>(<span class="ident">snapshot_path</span>).<span class="kw">await</span>,
+        <span class="prelude-val">Some</span>(<span class="ident">password</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">password</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="ident">get_password</span>(<span class="ident">snapshot_path</span>).<span class="kw">await</span>,
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_password</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_password</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="ident">PASSWORD_STORE</span>
         .<span class="ident">get_or_init</span>(<span class="ident">default_password_store</span>)
         .<span class="ident">lock</span>()
@@ -1186,7 +1186,7 @@
     <span class="ident">loaded_client_paths</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">actor_runtime</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ActorRuntime</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">actor_runtime</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ActorRuntime</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">static</span> <span class="ident">SYSTEM</span>: <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ActorRuntime</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Lazy::new</span>(<span class="op">|</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="ident">system</span> <span class="op">=</span> <span class="ident">SystemBuilder::new</span>()
             .<span class="ident">log</span>(<span class="ident">slog::Logger::root</span>(<span class="ident">slog::Discard</span>, <span class="macro">slog::o!</span>()))
@@ -1217,7 +1217,7 @@
     <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>,
     <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">curr_snapshot_path</span> <span class="op">=</span> <span class="ident">CURRENT_SNAPSHOT_PATH</span>
         .<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>)
         .<span class="ident">lock</span>()
@@ -1259,7 +1259,7 @@
 }
 
 <span class="comment">// saves the snapshot to the file system.</span>
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_snapshot</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">save_snapshot</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">stronghold_response_to_result</span>(
         <span class="ident">runtime</span>
             .<span class="ident">stronghold</span>
@@ -1272,7 +1272,7 @@
     )
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear_stronghold_cache</span>(<span class="kw-2">mut</span> <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">persist</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear_stronghold_cache</span>(<span class="kw-2">mut</span> <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">persist</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">curr_snapshot_path</span>) <span class="op">=</span> <span class="ident">CURRENT_SNAPSHOT_PATH</span>
         .<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>)
         .<span class="ident">lock</span>()
@@ -1295,7 +1295,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_actors</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_actors</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="comment">// load all actors to prevent lost data on save</span>
     <span class="ident">load_private_data_actor</span>(<span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">password</span>.<span class="ident">clone</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_records_actor</span>(<span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1306,7 +1306,7 @@
     <span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>,
     <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>,
     <span class="ident">password</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Password</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="ident">clear_stronghold_cache</span>(<span class="ident">runtime</span>, <span class="bool-val">true</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_actors</span>(<span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1327,10 +1327,10 @@
 }
 
 <span class="doccomment">/// Removes the snapshot from memory and clears the password.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unload_snapshot</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">persist</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">unload_snapshot</span>(<span class="ident">storage_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">persist</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">current_snapshot_path</span> <span class="op">=</span> <span class="ident">CURRENT_SNAPSHOT_PATH</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">clone</span>();
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">current_snapshot_path</span> {
-        <span class="kw">if</span> <span class="ident">current</span> <span class="op">=</span><span class="op">=</span> <span class="ident">storage_path</span> {
+        <span class="kw">if</span> <span class="ident">current</span> <span class="op">==</span> <span class="ident">storage_path</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
             <span class="ident">clear_stronghold_cache</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">persist</span>).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">CURRENT_SNAPSHOT_PATH</span>.<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>).<span class="ident">lock</span>().<span class="kw">await</span>.<span class="ident">take</span>();
@@ -1344,18 +1344,18 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_snapshot</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_snapshot</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">load_snapshot_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">password</span>).<span class="kw">await</span>
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_snapshot_internal</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">load_snapshot_internal</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">CURRENT_SNAPSHOT_PATH</span>
         .<span class="ident">get_or_init</span>(<span class="ident">Default::default</span>)
         .<span class="ident">lock</span>()
         .<span class="kw">await</span>
         .<span class="ident">as_deref</span>()
-        <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">snapshot_path</span>)
+        <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">snapshot_path</span>)
     {
         <span class="kw">let</span> (<span class="ident">is_password_empty</span>, <span class="ident">is_password_updated</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">passwords</span> <span class="op">=</span> <span class="ident">PASSWORD_STORE</span>.<span class="ident">get_or_init</span>(<span class="ident">default_password_store</span>).<span class="ident">lock</span>().<span class="kw">await</span>;
@@ -1373,7 +1373,7 @@
 }
 
 <span class="doccomment">/// Changes the snapshot password.</span>
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">current_password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">new_password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">current_password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">new_password</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">load_snapshot_internal</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="ident">current_password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1389,7 +1389,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">mnemonic</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_mnemonic</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">mnemonic</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1417,7 +1417,7 @@
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">derive</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">chain</span>: <span class="ident">Chain</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Location</span><span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">derive</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">chain</span>: <span class="ident">Chain</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Location</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">derive_output</span> <span class="op">=</span> <span class="ident">Location::generic</span>(<span class="ident">SECRET_VAULT_PATH</span>, <span class="ident">DERIVE_OUTPUT_RECORD_PATH</span>);
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">runtime</span>
         .<span class="ident">stronghold</span>
@@ -1436,7 +1436,7 @@
     }
 }
 
-<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_key</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">derived_location</span>: <span class="ident">Location</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_public_key</span>(<span class="ident">runtime</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActorRuntime</span>, <span class="ident">derived_location</span>: <span class="ident">Location</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="number">32</span>]<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">runtime</span>
         .<span class="ident">stronghold</span>
         .<span class="ident">runtime_exec</span>(<span class="ident">Procedure::Ed25519PublicKey</span> {
@@ -1455,7 +1455,7 @@
     <span class="ident">account_index</span>: <span class="ident">usize</span>,
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">internal</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1485,7 +1485,7 @@
     <span class="ident">account_index</span>: <span class="ident">usize</span>,
     <span class="ident">address_index</span>: <span class="ident">usize</span>,
     <span class="ident">internal</span>: <span class="ident">bool</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Ed25519Signature</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Ed25519Signature</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_private_data_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1516,7 +1516,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
     <span class="ident">load_records_actor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
@@ -1525,7 +1525,7 @@
     <span class="prelude-val">Ok</span>(<span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>).<span class="ident">to_string</span>())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">store_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">record</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1545,7 +1545,7 @@
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">remove_record</span>(<span class="ident">snapshot_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">runtime</span> <span class="op">=</span> <span class="ident">actor_runtime</span>().<span class="ident">lock</span>().<span class="kw">await</span>;
     <span class="ident">check_snapshot</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">runtime</span>, <span class="ident">snapshot_path</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
@@ -1647,7 +1647,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_read</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_read</span>() -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
             .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
             .<span class="ident">map</span>(<span class="ident">char::from</span>)
@@ -1667,7 +1667,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_delete</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">write_and_delete</span>() -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
             .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
             .<span class="ident">map</span>(<span class="ident">char::from</span>)
@@ -1720,7 +1720,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password</span>() -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
             .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
             .<span class="ident">map</span>(<span class="ident">char::from</span>)
@@ -1743,7 +1743,7 @@
     }
 
     <span class="attribute">#[<span class="ident">tokio::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password_invalid</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">change_password_invalid</span>() -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">snapshot_path</span>: <span class="ident">String</span> <span class="op">=</span> <span class="ident">thread_rng</span>()
             .<span class="ident">sample_iter</span>(<span class="kw-2">&amp;</span><span class="ident">Alphanumeric</span>)
             .<span class="ident">map</span>(<span class="ident">char::from</span>)
@@ -1759,8 +1759,8 @@
         <span class="kw">let</span> <span class="ident">wrong_password</span> <span class="op">=</span> [<span class="number">16</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">let</span> <span class="ident">new_password</span> <span class="op">=</span> [<span class="number">6</span>; <span class="number">32</span>].<span class="ident">to_vec</span>();
         <span class="kw">match</span> <span class="ident"><span class="kw">super</span>::change_password</span>(<span class="kw-2">&amp;</span><span class="ident">snapshot_path</span>, <span class="ident">wrong_password</span>, <span class="ident">new_password</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span> {
-            <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::Error::FailedToPerformAction</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;expected a stronghold error when changing password&quot;</span>),
+            <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">super</span>::Error::FailedToPerformAction</span>(<span class="kw">_</span>)) =&gt; {}
+            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected a stronghold error when changing password&quot;</span>),
         }
 
         <span class="prelude-val">Ok</span>(())
