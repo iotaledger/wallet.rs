@@ -4,7 +4,6 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <!--The identifier of the parent POM-->
   <parent>
       <groupId>org.iota.wallet</groupId>
       <artifactId>native-parent</artifactId>
@@ -15,8 +14,21 @@
   <artifactId>native</artifactId>
   <packaging>jar</packaging>
 
+  <!-- Move output to the same as gradle output so instructions are consistent -->
   <build>
     <finalName>${project.artifactId}</finalName>
     <directory>build</directory>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <!-- Move final jar to the libs folder -->
+          <outputDirectory>build/libs</outputDirectory>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 </project>

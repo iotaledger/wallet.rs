@@ -17,7 +17,7 @@ tasks.withType(Test) {
     systemProperties System.properties
 }
 startScripts {
-    classpath += files('../../native/target/release')
+    classpath += files('../../target/release')
 }
 
 task customCleanTask(type: Delete) {
@@ -38,7 +38,7 @@ test {
     dependsOn customCleanTask
     
     // Set rust output .so/.lib files to path
-    systemProperty "java.library.path", file("../../native/target/release")
+    systemProperty "java.library.path", file("../../target/release")
 }
 
 mainClassName = 'org.iota.wallet.example.ExampleApp'

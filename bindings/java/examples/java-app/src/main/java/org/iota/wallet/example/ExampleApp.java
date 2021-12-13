@@ -1,4 +1,4 @@
-package org.iota.example;
+package org.iota.wallet.example;
 
 import java.nio.file.Paths;
 import java.util.Arrays;

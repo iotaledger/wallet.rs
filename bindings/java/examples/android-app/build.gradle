@@ -48,7 +48,7 @@ dependencies {
 // ANCHOR:cargo
 def libsPath = "${projectDir}/src/main/jniLibs"
 def rustBuildType = "release"
-def rustBasePath = "../../native"
+def rustBasePath = "../../"
 def archTriplets = [
         //'armeabi-v7a': 'armv7-linux-androideabi',
         'arm64-v8a': 'aarch64-linux-android',
