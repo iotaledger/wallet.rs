@@ -87,34 +87,33 @@ pub async fn monitor_account_addresses_balance(account_handle: AccountHandle) {
 }
 
 /// Monitor address for balance changes.
-pub async fn monitor_address_balance(_account_handle: AccountHandle, _addresses: Vec<AddressWrapper>) {
-    // todo uncomment this part again
-    // let client_options = account_handle.client_options().await;
-    // let client_options_ = client_options.clone();
+pub async fn monitor_address_balance(account_handle: AccountHandle, addresses: Vec<AddressWrapper>) {
+    let client_options = account_handle.client_options().await;
+    let client_options_ = client_options.clone();
 
-    // if *client_options.mqtt_enabled() {
-    // subscribe_to_topics(
-    //     client_options_,
-    //     // safe to unwrap: we know the topics are valid
-    //     addresses
-    //         .into_iter()
-    //         .map(|address| Topic::new(format!("addresses/{}/outputs", address.to_bech32())).unwrap())
-    //         .collect(),
-    //     move |topic_event| {
-    //         log::info!("[MQTT] got {:?}", topic_event);
-    //         if account_handle.is_mqtt_enabled() {
-    //             let payload = topic_event.payload.clone();
-    //             let account_handle = account_handle.clone();
-    //             crate::spawn(async move {
-    //                 let _ = process_output(payload, account_handle.clone()).await;
-    //             });
-    //         } else {
-    //             log::info!("[MQTT] event ignored because account disabled mqtt");
-    //         }
-    //     },
-    // )
-    // .await
-    // }
+    if *client_options.mqtt_enabled() {
+        subscribe_to_topics(
+            client_options_,
+            // safe to unwrap: we know the topics are valid
+            addresses
+                .into_iter()
+                .map(|address| Topic::new(format!("addresses/{}/outputs", address.to_bech32())).unwrap())
+                .collect(),
+            move |topic_event| {
+                log::info!("[MQTT] got {:?}", topic_event);
+                if account_handle.is_mqtt_enabled() {
+                    let payload = topic_event.payload.clone();
+                    let account_handle = account_handle.clone();
+                    crate::spawn(async move {
+                        let _ = process_output(payload, account_handle.clone()).await;
+                    });
+                } else {
+                    log::info!("[MQTT] event ignored because account disabled mqtt");
+                }
+            },
+        )
+        .await
+    }
 }
 
 async fn process_output(payload: String, account_handle: AccountHandle) -> crate::Result<bool> {
