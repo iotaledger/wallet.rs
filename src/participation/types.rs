@@ -10,9 +10,9 @@ use std::{convert::TryInto, io::Read};
 /// Particiapation index
 pub(crate) const PARTICIPATE: &str = "PARTICIPATE";
 /// Event id for the shimmer staking
-pub(crate) const SHIMMER_EVENT_ID: &str = "6652309b69b5b93066a761ee17244b0bff49d365e1677b95ee4e4fc77ad8ddb8";
+pub(crate) const SHIMMER_EVENT_ID: &str = "5fea3ff4e80c6b8f853038c131a67a2d18cc68bb621191884aad7acfd3cd9d1c";
 /// Event id for the assembly staking
-pub(crate) const ASSEMBLY_EVENT_ID: &str = "b089e0141e800fbfcdad7effac311c03b958135f4b0a8fa708a552ea5aadec44";
+pub(crate) const ASSEMBLY_EVENT_ID: &str = "9cf7821a6f041c0a99aa4b415f6cd93c385992bdda07e5df9a5cbdb1a1454ecc";
 
 /// Possible participation event types
 pub enum ParticipationEventType {
