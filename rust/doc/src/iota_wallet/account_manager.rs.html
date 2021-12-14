@@ -2592,6 +2592,19 @@
 <span id="2592">2592</span>
 <span id="2593">2593</span>
 <span id="2594">2594</span>
+<span id="2595">2595</span>
+<span id="2596">2596</span>
+<span id="2597">2597</span>
+<span id="2598">2598</span>
+<span id="2599">2599</span>
+<span id="2600">2600</span>
+<span id="2601">2601</span>
+<span id="2602">2602</span>
+<span id="2603">2603</span>
+<span id="2604">2604</span>
+<span id="2605">2605</span>
+<span id="2606">2606</span>
+<span id="2607">2607</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -3427,9 +3440,10 @@
     <span class="doccomment">/// Sets the password for the stored accounts.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_storage_password</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">password</span>: <span class="ident">P</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">key</span> <span class="op">=</span> <span class="ident">storage_password_to_encryption_key</span>(<span class="ident">password</span>.<span class="ident">as_ref</span>());
-        <span class="ident"><span class="kw">crate</span>::storage::set_encryption_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>, <span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">is_empty</span>() {
+            <span class="ident"><span class="kw">crate</span>::storage::set_encryption_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>, <span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
             <span class="ident"><span class="self">Self</span>::load_accounts</span>(
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">accounts</span>,
                 <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>,
@@ -3440,12 +3454,24 @@
             <span class="self">self</span>.<span class="ident">loaded_accounts</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>);
             <span class="ident"><span class="kw">crate</span>::spawn</span>(<span class="ident"><span class="self">Self</span>::start_monitoring</span>(<span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>()));
         } <span class="kw">else</span> {
+            <span class="comment">// first get the messages with the old encryption key</span>
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_messages</span> <span class="op">=</span> <span class="ident">HashMap::new</span>();
+            <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
+                <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
+                <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="ident">account_messages</span>.<span class="ident">insert</span>(<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>(), <span class="ident">messages</span>);
+            }
+
+            <span class="ident"><span class="kw">crate</span>::storage::set_encryption_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">storage_path</span>, <span class="ident">key</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+
             <span class="comment">// save the accounts and messages again to reencrypt with the new key</span>
             <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
                 <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">None</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="ident">messages</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="ident">account_messages</span>
+                    .<span class="ident">get</span>(<span class="ident">account</span>.<span class="ident">id</span>())
+                    .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::Storage</span>(<span class="string">&quot;missing account messages&quot;</span>.<span class="ident">to_string</span>()))<span class="question-mark">?</span>;
+                <span class="ident">account</span>.<span class="ident">save_messages</span>(<span class="ident">messages</span>.<span class="ident">to_vec</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
             }
         }
 
