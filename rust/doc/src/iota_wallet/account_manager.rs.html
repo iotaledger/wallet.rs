@@ -2577,6 +2577,21 @@
 <span id="2577">2577</span>
 <span id="2578">2578</span>
 <span id="2579">2579</span>
+<span id="2580">2580</span>
+<span id="2581">2581</span>
+<span id="2582">2582</span>
+<span id="2583">2583</span>
+<span id="2584">2584</span>
+<span id="2585">2585</span>
+<span id="2586">2586</span>
+<span id="2587">2587</span>
+<span id="2588">2588</span>
+<span id="2589">2589</span>
+<span id="2590">2590</span>
+<span id="2591">2591</span>
+<span id="2592">2592</span>
+<span id="2593">2593</span>
+<span id="2594">2594</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -4129,6 +4144,7 @@
             <span class="kw">let</span> (<span class="ident">account_handle</span>, <span class="ident">data</span>) <span class="op">=</span> <span class="ident">res</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">account_handle_</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">clone</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle_</span>.<span class="ident">write</span>().<span class="kw">await</span>;
+            <span class="macro">log::debug!</span>(<span class="string">&quot;[AccountsSynchronizer] synced account {}&quot;</span>, <span class="ident">account</span>.<span class="ident">index</span>());
             <span class="kw">let</span> <span class="ident">addresses_before_sync</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">u64</span>, <span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">OutputId</span>, <span class="ident">AddressOutput</span><span class="op">&gt;</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">account</span>
                 .<span class="ident">addresses</span>()
                 .<span class="ident">iter</span>()
@@ -4160,7 +4176,9 @@
             <span class="prelude-val">Some</span>((<span class="ident">is_empty</span>, <span class="ident">client_options</span>, <span class="ident">signer_type</span>)) =&gt; {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">is_empty</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">account_discovery_threshold</span> <span class="op">&gt;</span> <span class="number">0</span> {
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">discover_accounts</span> {
-                        <span class="macro">log::debug!</span>(<span class="string">&quot;[SYNC] running account discovery because the latest account is not empty&quot;</span>);
+                        <span class="macro">log::debug!</span>(
+                            <span class="string">&quot;[AccountsSynchronizer] running account discovery because the latest account is not empty&quot;</span>
+                        );
                         <span class="ident">discover_accounts</span>(
                             <span class="self">self</span>.<span class="ident">accounts</span>.<span class="ident">clone</span>(),
                             <span class="self">self</span>.<span class="ident">account_discovery_threshold</span>,
@@ -4176,7 +4194,9 @@
                         <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
                     }
                 } <span class="kw">else</span> {
-                    <span class="macro">log::debug!</span>(<span class="string">&quot;[SYNC] skipping account discovery because the latest account is empty&quot;</span>);
+                    <span class="macro">log::debug!</span>(
+                        <span class="string">&quot;[AccountsSynchronizer] skipping account discovery because the latest account is empty&quot;</span>
+                    );
                     <span class="prelude-val">Ok</span>(<span class="macro">vec!</span>[])
                 }
             }
@@ -4192,7 +4212,10 @@
                     <span class="kw">let</span> <span class="ident">account_handle_</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">clone</span>();
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle_</span>.<span class="ident">write</span>().<span class="kw">await</span>;
                     <span class="ident">account</span>.<span class="ident">set_skip_persistence</span>(<span class="bool-val">false</span>);
-                    <span class="ident">account</span>.<span class="ident">set_addresses</span>(<span class="ident">synced_account_data</span>.<span class="ident">addresses</span>.<span class="ident">to_vec</span>());
+                    <span class="comment">// only set the addresses if they aren&#39;t empty</span>
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">synced_account_data</span>.<span class="ident">addresses</span>.<span class="ident">is_empty</span>() {
+                        <span class="ident">account</span>.<span class="ident">set_addresses</span>(<span class="ident">synced_account_data</span>.<span class="ident">addresses</span>.<span class="ident">to_vec</span>());
+                    }
                     <span class="ident">account</span>.<span class="ident">save</span>().<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="ident">accounts</span>.<span class="ident">insert</span>(<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>(), <span class="ident">account_handle</span>.<span class="ident">clone</span>());
                     <span class="ident">discovered_account_ids</span>.<span class="ident">push</span>(<span class="ident">account</span>.<span class="ident">id</span>().<span class="ident">clone</span>());
@@ -4375,6 +4398,7 @@
     <span class="ident">sync_accounts_lock</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span><span class="op">&gt;</span>,
 ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">AccountHandle</span>, <span class="ident">SyncedAccountData</span>)<span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">synced_accounts</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">empty_accounts</span> <span class="op">=</span> <span class="macro">vec!</span>[];
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_indexes</span> <span class="op">=</span> <span class="ident">HashSet::new</span>();
     <span class="kw">for</span> <span class="ident">account_handle</span> <span class="kw">in</span> <span class="ident">accounts</span>.<span class="ident">read</span>().<span class="kw">await</span>.<span class="ident">values</span>() {
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">read</span>().<span class="kw">await</span>;
@@ -4421,7 +4445,12 @@
                     <span class="kw">if</span> <span class="ident">index</span> <span class="op">-</span> (<span class="ident">account_indexes</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">threshold</span> {
                         <span class="kw">break</span>;
                     }
+                    <span class="ident">empty_accounts</span>.<span class="ident">push</span>((<span class="ident">account_handle</span>, <span class="ident">synced_account_data</span>));
                 } <span class="kw">else</span> {
+                    <span class="comment">// add previous empty accounts, so we don&#39;t have gaps in the account list</span>
+                    <span class="kw">for</span> <span class="ident">empty_account</span> <span class="kw">in</span> <span class="ident">empty_accounts</span>.<span class="ident">drain</span>(..) {
+                        <span class="ident">synced_accounts</span>.<span class="ident">push</span>(<span class="ident">empty_account</span>);
+                    }
                     <span class="ident">synced_accounts</span>.<span class="ident">push</span>((<span class="ident">account_handle</span>, <span class="ident">synced_account_data</span>));
                 }
                 <span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -4434,6 +4463,7 @@
             }
         }
     }
+    <span class="macro">log::error!</span>(<span class="string">&quot;[SYNC] finished discover_accounts&quot;</span>);
     <span class="prelude-val">Ok</span>(<span class="ident">synced_accounts</span>)
 }
 

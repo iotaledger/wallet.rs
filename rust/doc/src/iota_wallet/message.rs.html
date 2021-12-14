@@ -2660,7 +2660,7 @@
             <span class="ident">account_addresses</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">next</span>()
-                .<span class="ident">unwrap</span>()
+                .<span class="ident">expect</span>(<span class="string">&quot;No address in account&quot;</span>)
                 .<span class="ident">address</span>()
                 .<span class="ident">bech32_hrp</span>()
                 .<span class="ident">to_string</span>(),

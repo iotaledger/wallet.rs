@@ -2714,7 +2714,7 @@
             .<span class="ident">iter</span>()
             .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>())
             .<span class="ident">max_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">key_index</span>())
-            .<span class="ident">unwrap</span>()
+            .<span class="ident">expect</span>(<span class="string">&quot;No latest address in the account&quot;</span>)
     }
 
     <span class="doccomment">/// Returns the most recent change address of the account.</span>
