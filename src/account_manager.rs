@@ -833,9 +833,10 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             Self::load_accounts(
                 &self.accounts,
                 &self.storage_path,
@@ -846,12 +847,24 @@ impl AccountManager {
             self.loaded_accounts.store(true, Ordering::SeqCst);
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
+            // first get the messages with the old encryption key
+            let mut account_messages = HashMap::new();
+            for account_handle in self.accounts.read().await.values() {
+                let account = account_handle.read().await;
+                let messages = account.list_messages(0, 0, None).await?;
+                account_messages.insert(account.id().clone(), messages);
+            }
+
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             // save the accounts and messages again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
                 let mut account = account_handle.write().await;
                 account.save().await?;
-                let messages = account.list_messages(0, 0, None).await?;
-                account.save_messages(messages).await?;
+                let messages = account_messages
+                    .get(account.id())
+                    .ok_or_else(|| crate::Error::Storage("missing account messages".to_string()))?;
+                account.save_messages(messages.to_vec()).await?;
             }
         }
 
