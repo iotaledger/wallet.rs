@@ -1326,7 +1326,7 @@ impl Message {
             account_addresses
                 .iter()
                 .next()
-                .unwrap()
+                .expect("No address in account")
                 .address()
                 .bech32_hrp()
                 .to_string(),

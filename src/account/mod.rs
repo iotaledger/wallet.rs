@@ -1255,7 +1255,7 @@ impl Account {
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
-            .unwrap()
+            .expect("No latest address in the account")
     }
 
     /// Returns the most recent change address of the account.
