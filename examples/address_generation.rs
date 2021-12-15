@@ -4,14 +4,14 @@
 //! cargo run --example address_generation --release
 // add --features "ledger-nano" for LedgerNano
 
-use std::time::Instant;
-use wallet_core::{
+use iota_wallet::{
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
     signing::SignerType,
     Result,
 };
+use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {

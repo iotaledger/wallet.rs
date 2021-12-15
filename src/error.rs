@@ -250,12 +250,6 @@ pub enum Error {
     EmptyOutputAmount,
 }
 
-// impl Drop for Error {
-//     fn drop(&mut self) {
-//         crate::event::emit_error(self);
-//     }
-// }
-
 impl From<iota_client::Error> for Error {
     fn from(error: iota_client::Error) -> Self {
         Self::ClientError(Box::new(error))

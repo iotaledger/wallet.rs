@@ -3,12 +3,12 @@
 
 //! cargo run --example storage --release
 
-use std::time::Instant;
-use wallet_core::{
+use iota_wallet::{
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
     Result,
 };
+use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {

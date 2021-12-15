@@ -6,7 +6,7 @@
 // In this example we will try to send transactions from multiple threads simultaneously to the first 300 addresses of
 // the first account (ping_account)
 
-use wallet_core::{
+use iota_wallet::{
     account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
@@ -109,7 +109,7 @@ async fn main() -> Result<()> {
                         n,
                         res.message_id.expect("No message created yet")
                     );
-                    wallet_core::Result::Ok(n)
+                    iota_wallet::Result::Ok(n)
                 })
                 .await
             });

@@ -195,7 +195,7 @@ impl ClientOptionsBuilder {
     ///
     /// # Examples
     /// ```
-    /// use wallet_core::client::options::ClientOptionsBuilder;
+    /// use iota_wallet::client::options::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::new()
     ///     .with_nodes(&[
     ///         "https://api.lb-0.h.chrysalis-devnet.iota.cafe",
@@ -248,7 +248,7 @@ impl ClientOptionsBuilder {
     ///
     /// # Examples
     /// ```
-    /// use wallet_core::client::options::ClientOptionsBuilder;
+    /// use iota_wallet::client::options::ClientOptionsBuilder;
     /// let client_options = ClientOptionsBuilder::new().with_network("testnet2").finish();
     /// ```
     pub fn with_network<N: Into<String>>(mut self, network: N) -> Self {

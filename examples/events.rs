@@ -3,7 +3,7 @@
 
 //! cargo run --example events --release
 
-use wallet_core::{
+use iota_wallet::{
     account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,

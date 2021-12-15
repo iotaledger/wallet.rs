@@ -3,14 +3,14 @@
 
 //! cargo run --example wallet --release
 
-use std::time::Instant;
-use wallet_core::{
+use iota_wallet::{
     account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
     Result,
 };
+use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {

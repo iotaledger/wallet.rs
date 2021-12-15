@@ -3,13 +3,13 @@
 
 //! cargo run --example background_syncing --release
 
-use tokio::time::{sleep, Duration};
-use wallet_core::{
+use iota_wallet::{
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
     Result,
 };
+use tokio::time::{sleep, Duration};
 
 #[tokio::main]
 async fn main() -> Result<()> {
