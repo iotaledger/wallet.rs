@@ -1,20 +1,14 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::message::{
-    MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
-};
-
-use iota_client::crypto::signatures::ed25519::{
-    PublicKey as RustPublicKey, Signature as RustSignature
+use iota_wallet::{
+    message::{MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust},
+    iota_client::crypto::signatures::ed25519::{PublicKey as RustPublicKey, Signature as RustSignature},
 };
 
 use std::convert::TryInto;
 
-use crate::{
-    ReceiptPayload,
-    Result
-};
+use crate::{ReceiptPayload, Result};
 
 const SECRET_KEY_LENGTH: usize = 32;
 const SIGNATURE_LENGTH: usize = 64;
@@ -134,14 +128,14 @@ impl PublicKey {
         self.0.verify(&sig.0, &msg)
     }
 
-    pub fn to_compressed_bytes(&self) -> Vec<u8> {
-        self.0.to_compressed_bytes().to_vec()
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_bytes().to_vec()
     }
 
-    pub fn from_compressed_bytes(bs: Vec<u8>) -> Result<Self> {
+    pub fn try_from_bytes(bs: Vec<u8>) -> Result<Self> {
         let mut bs_arr: [u8; SECRET_KEY_LENGTH] = [0; SECRET_KEY_LENGTH];
         bs_arr.copy_from_slice(&bs[0..SECRET_KEY_LENGTH]);
-        match RustPublicKey::from_compressed_bytes(bs_arr) {
+        match RustPublicKey::try_from_bytes(bs_arr) {
             Ok(bytes) => Ok(Self(bytes)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
@@ -150,20 +144,21 @@ impl PublicKey {
 impl core::convert::TryFrom<&[u8; 32]> for PublicKey {
     type Error = anyhow::Error;
     fn try_from(bytes: &[u8; 32]) -> Result<Self, Self::Error> {
-        match RustPublicKey::from_compressed_bytes(*bytes) {
+        match RustPublicKey::try_from_bytes(*bytes) {
             Ok(k) => Ok(Self(k)),
             Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
     }
 }
-
 impl core::fmt::Display for PublicKey {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            hex::encode(self.to_compressed_bytes())
-        )
+        write!(f, "{}", hex::encode(self.to_bytes()))
+    }
+}
+
+impl From<RustPublicKey> for PublicKey {
+    fn from(output: RustPublicKey) -> Self {
+        Self(output)
     }
 }
 
@@ -183,11 +178,7 @@ impl Signature {
 
 impl core::fmt::Display for Signature {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            hex::encode(self.to_bytes())
-        )
+        write!(f, "{}", hex::encode(self.to_bytes()))
     }
 }
 

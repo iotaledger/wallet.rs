@@ -29,18 +29,18 @@ We recommend you update _Rust_ to the latest stable version [rustup update stabl
 - Installing _openssl_ with _vcpkg_ :
 
     ```
-    $ ./vcpkg.exe install openssl:x64-windows
-    $ ./vcpkg.exe integrate install
+    ./vcpkg.exe install openssl:x64-windows
+    ./vcpkg.exe integrate install
     # you may want to add this to the system environment variables since you'll need it to compile the crate
-    $ set VCPKGRS_DYNAMIC=1
+    set VCPKGRS_DYNAMIC=1
     ```
 
 - Installing _openssl_ with _chocolatey_ :
 
     ```
-    $ choco install openssl
+    choco install openssl
     # you may need to set the OPENSSL_ROOT_DIR environment variable
-    $ set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+    set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
     ```
 
 ### macOS
@@ -48,10 +48,10 @@ We recommend you update _Rust_ to the latest stable version [rustup update stabl
  _cmake_ and _openssl_ can be installed with [_Homebrew_](https://docs.brew.sh/) by running the following commands:
 
 ```
-$ brew install cmake
-$ brew install openssl@1.1
+brew install cmake
+brew install openssl@1.1
 # you may want to add this to your .zshrc or .bashrc since you'll need it to compile the crate
-$ OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
+OPENSSL_ROOT_DIR=$(brew --prefix openssl@1.1)
 ```
 
 ### Linux
@@ -72,25 +72,29 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" 
 In order to use the library, you first need to create an _AccountManager_ :
 
 ```rust
-use iota_wallet::{
-    account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType,
-};
+use iota_wallet::{account_manager::AccountManager, client::ClientOptionsBuilder, signing::SignerType};
 use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
     let storage_folder: PathBuf = "./my-db".into();
-    let manager =
-        AccountManager::builder()
-            .with_storage(&storage_folder, None)
-            .finish()
-            .await?;
-    let client_options = ClientOptionsBuilder::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
+    let manager = AccountManager::builder()
+        .with_storage(&storage_folder, None)?
+        .finish()
+        .await?;
+    manager.set_stronghold_password("password").await?;
+    // If no mnemonic is provided, then the Stronghold file is the only way for a backup
+    manager.store_mnemonic(SignerType::Stronghold, None).await?;
+    let client_options = ClientOptionsBuilder::new()
+        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
+        .build()?;
     let account = manager
-        .create_account(client_options)
-        .signer_type(SignerType::EnvMnemonic)
+        .create_account(client_options)?
+        .signer_type(SignerType::Stronghold)
         .initialise()
         .await?;
+    let address = account.generate_address().await?;
+    println!("Address: {}", address.address().to_bech32());
     Ok(())
 }
 ```

@@ -64,22 +64,13 @@ pub struct MessageIndexation {
 }
 
 #[derive(Default)]
-pub struct MessageQueryFilter<'a> {
+pub struct MessageQueryFilter {
     message_type: Option<MessageType>,
-    ignore_ids: Option<&'a HashMap<MessageId, Message>>,
 }
 
-impl<'a> MessageQueryFilter<'a> {
+impl MessageQueryFilter {
     pub fn message_type(message_type: Option<MessageType>) -> Self {
-        Self {
-            message_type,
-            ignore_ids: Default::default(),
-        }
-    }
-
-    pub fn with_ignore_ids(mut self, ignore_ids: &'a HashMap<MessageId, Message>) -> Self {
-        self.ignore_ids.replace(ignore_ids);
-        self
+        Self { message_type }
     }
 }
 
@@ -222,10 +213,11 @@ impl StorageManager {
         if !self.account_indexation.contains(&index) {
             init_account_dependency_index!(self, key, message_indexation);
             self.account_indexation.push(index);
-            self.storage
-                .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
-                .await?;
         }
+        // store it every time, because the password might changed
+        self.storage
+            .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
+            .await?;
         Ok(())
     }
 
@@ -269,7 +261,7 @@ impl StorageManager {
     pub fn query_message_indexation(
         &self,
         account: &Account,
-        filter: &MessageQueryFilter<'_>,
+        filter: &MessageQueryFilter,
     ) -> crate::Result<Vec<&MessageIndexation>> {
         let message_indexation = self.message_indexation(account)?;
 
@@ -356,7 +348,7 @@ impl StorageManager {
         account: &Account,
         count: usize,
         skip: usize,
-        filter: MessageQueryFilter<'_>,
+        filter: MessageQueryFilter,
     ) -> crate::Result<Vec<Message>> {
         let filtered_message_indexation = self.query_message_indexation(account, &filter)?;
 
@@ -367,30 +359,18 @@ impl StorageManager {
         } else {
             iter.take(count).collect::<Vec<&MessageIndexation>>()
         } {
-            let message: Option<Message> = match &filter.ignore_ids {
-                Some(ignore_ids) => {
-                    if !ignore_ids.contains_key(&index.key) {
-                        let message = self.get(&index.key.to_string()).await?;
-                        Some(serde_json::from_str(&message)?)
-                    } else {
-                        None
-                    }
-                }
-                None => {
-                    let message = self.get(&index.key.to_string()).await?;
-                    Some(serde_json::from_str(&message)?)
-                }
-            };
-            if let Some(mut message) = message {
-                // we update the `incoming` prop because we store only one copy of the message on the db
-                // so on internal transactions the `incoming` prop is wrong without this
-                if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
-                    let TransactionEssence::Regular(essence) = tx.essence_mut();
-                    essence.incoming = index.incoming.unwrap_or_default();
-                }
-                messages.push(message);
+            let mut message: Message = serde_json::from_str(&self.get(&index.key.to_string()).await?)?;
+
+            // we update the `incoming` prop because we store only one copy of the message on the db
+            // so on internal transactions the `incoming` prop is wrong without this
+            if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
+                let TransactionEssence::Regular(essence) = tx.essence_mut();
+                essence.incoming = index.incoming.unwrap_or_default();
             }
+
+            messages.push(message);
         }
+
         Ok(messages)
     }
 }
@@ -671,47 +651,24 @@ fn parse_accounts(
     accounts: &[String],
     encryption_key: &Option<[u8; 32]>,
 ) -> crate::Result<Vec<Account>> {
-    let mut err = None;
-    let accounts: Vec<Option<Account>> = accounts
-        .iter()
-        .map(|account| {
-            let account_json = if account.starts_with('{') {
-                Some(account.to_string())
-            } else if let Some(key) = encryption_key {
-                match decrypt_record(account, key) {
-                    Ok(json) => Some(json),
-                    Err(e) => {
-                        err.replace(e);
-                        None
-                    }
-                }
-            } else {
-                None
-            };
-            if let Some(json) = account_json {
-                match serde_json::from_str::<Account>(&json) {
-                    Ok(mut acc) => {
-                        acc.set_storage_path(storage_path.to_path_buf());
-                        Some(acc)
-                    }
-                    Err(e) => {
-                        err.replace(e.into());
-                        None
-                    }
-                }
-            } else {
-                err.replace(crate::Error::StorageIsEncrypted);
-                None
-            }
-        })
-        .collect();
-
-    if let Some(err) = err {
-        Err(err)
-    } else {
-        let accounts = accounts.into_iter().map(|account| account.unwrap()).collect();
-        Ok(accounts)
+    let mut parsed_accounts: Vec<Account> = Vec::new();
+    for account in accounts {
+        let account_json = if account.starts_with('{') {
+            Some(account.to_string())
+        } else if let Some(key) = encryption_key {
+            Some(decrypt_record(account, key)?)
+        } else {
+            None
+        };
+        if let Some(json) = account_json {
+            let mut acc = serde_json::from_str::<Account>(&json)?;
+            acc.set_storage_path(storage_path.to_path_buf());
+            parsed_accounts.push(acc);
+        } else {
+            return Err(crate::Error::StorageIsEncrypted);
+        }
     }
+    Ok(parsed_accounts)
 }
 
 #[cfg(test)]

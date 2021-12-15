@@ -8,9 +8,8 @@ use iota_wallet::{
         TransactionInput as RustWalletInput, TransactionOutput as RustWalletOutput,
         TransactionRegularEssence as TransactionRegularEssenceRust,
     },
+    iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
 };
-
-use iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock};
 
 pub enum InputKind {
     Utxo = 0,
@@ -168,7 +167,7 @@ impl UnlockBlock {
     pub fn kind(&self) -> UnlockBlockKind {
         match self.unlock_block {
             RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
-            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference
+            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
         }
     }
 

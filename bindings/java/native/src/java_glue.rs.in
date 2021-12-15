@@ -26,17 +26,18 @@ use anyhow::{
 };
 
 use iota_wallet::{
-    account::{
-        AccountBalance,
-    },
     message::{
         MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
     address::{
         OutputKind, AddressWrapper, IotaAddress,
     },
-    client::{
-        Api,
+    client::Api,
+    iota_client::{
+        bee_message::payload::{
+            milestone::MilestoneId,
+            transaction::TransactionId,
+        },
     },
     event::{
         EventId, BalanceChange,
@@ -143,6 +144,92 @@ foreign_class!(class RustHex {
     }
 });
 
+foreign_class!( 
+    #[derive(camelCaseAliases, Display)]
+    class MigrationData {
+        self_type MigrationData;
+        private constructor = empty;
+        private fn MigrationData::to_string(&self) -> String; alias to_string;
+        /// Total seed balance.
+        fn MigrationData::balance(&self) -> u64;
+        /// The index of the last checked address.
+        /// Useful if you want to call the finder again.
+        fn MigrationData::last_checked_address_index(&self) -> u64;
+        /// Migration inputs.
+        fn MigrationData::inputs(&self) -> Vec<InputData>;
+        /// If any of the inputs are spent
+        fn MigrationData::spent_addresses(&self) -> bool;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class MigrationBundle {
+        self_type MigrationBundle;
+        private constructor = empty;
+        private fn MigrationBundle::to_string(&self) -> String; alias to_string;
+        /// The bundle crackability if it was mined.
+        fn MigrationBundle::crackability(&self) -> f64;
+        /// The bundle hash.
+        fn MigrationBundle::bundle_hash(&self) -> &str; alias getBundleHash;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class MigrationAddress {
+        self_type MigrationAddress;
+        private constructor = empty;
+        private fn MigrationAddress::to_string(&self) -> String; alias to_string;
+        /// address tryte encoded
+        fn MigrationAddress::trytes(&self) -> &str;
+        /// address bech32 encoded
+        fn MigrationAddress::bech32(&self) -> &str;
+    }
+);
+
+foreign_class!(
+    /// Finds account data for the migration from legacy network.
+    #[derive(camelCaseAliases, Display)]
+    class MigrationBundleOptions {
+        self_type MigrationBundleOptions;
+        constructor MigrationBundleOptions::default() -> MigrationBundleOptions;
+        private fn MigrationBundleOptions::to_string(&self) -> String; alias to_string;
+        fn MigrationBundleOptions::set_mine(&mut self, node: bool);
+        fn MigrationBundleOptions::mine(&self) -> bool;
+        /// Sets the timeout in seconds, negative to set default
+        fn MigrationBundleOptions::set_timeouts(&mut self, secs: i64);
+        /// Returns the set timeout, defaults to 10 minutes
+        fn MigrationBundleOptions::timeouts(&self) -> u64;
+        fn MigrationBundleOptions::set_offset(&mut self, offset: Option<i64>);
+        fn MigrationBundleOptions::offset(&self) -> Option<i64>;
+        fn MigrationBundleOptions::set_log_file_name(&mut self, log_file_name: &str);
+        fn MigrationBundleOptions::log_file_name(&self) -> Option<String>; alias logFileName;
+    }
+);
+
+foreign_class!(
+    /// Address can be used as input to spend balance
+    #[derive(camelCaseAliases, Display)]
+    class InputData {
+        self_type InputData;
+        private constructor = empty;
+        private fn InputData::to_string(&self) -> String; alias to_string;
+        /// Input address
+        fn InputData::address(&self) -> &str;
+        /// Security level
+        fn InputData::security_lvl(&self) -> u8;
+        /// Balance of the address
+        fn InputData::balance(&self) -> u64;
+        /// Index of the address
+        fn InputData::index(&self) -> u64;
+        /// Spent status
+        fn InputData::spent(&self) -> bool;
+        /// Spent bundlehashes
+        fn InputData::spent_bundlehashes(&self) -> Vec<String>;
+    }
+);
+
 foreign_class!(class AccountManagerBuilder {
     self_type AccountManagerBuilder;
     constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
@@ -156,50 +243,85 @@ foreign_class!(class AccountManagerBuilder {
     fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
 });
 
-foreign_class!(class AccountManager {
-    self_type AccountManager;
-    private constructor = empty;
-    fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
-    fn AccountManager::start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()>; alias startBackgroundSync;
-    fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
-    fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
-    fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
-    fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
-    fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
-    fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
-    fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
-    fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
-    fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
-    fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
-    fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
-    fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-    fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-    fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-    fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
-    fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
-    fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
-    fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
-});
+foreign_class!(
+    #[derive(camelCaseAliases)]
+    class AccountManager {
+        self_type AccountManager;
+        private constructor = empty;
+        fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
+        fn AccountManager::start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()>; alias startBackgroundSync;
+        fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
+        fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
+        fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
+        fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
+        fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
+        fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
+        fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
+        fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
+        fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
+        fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
+        fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
+        fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
+        fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
+        fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
+        fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
+
+        /// Gets the legacy migration data for the seed.
+        fn AccountManager::get_migration_data(&self, nodes: Vec<String>, seed: &str, permanode: Option<&str>, security_level: i8, initial_address_index: i64, gap_limit: i64) -> Result<MigrationData>;
+        /// Convert the first address from the first account to a migration tryte address
+        fn AccountManager::get_migration_address(&self, ledger_prompt: bool, account_id: String) -> Result<MigrationAddress>;
+        /// Creates the bundle for migration associated with the given input indexes,
+        /// Performs bundle mining if the address is spent and `mine` is true,
+        /// And signs the bundle. Returns the bundle hash.
+        /// It logs the operations to `$storage_path.join(log_file_name)`.
+        fn AccountManager::create_migration_bundle(&self, seed: String, input_address_indexes: Vec<u64>, options: MigrationBundleOptions) -> Result<MigrationBundle>;
+        /// Sends the migration bundle to the given node. mwm 0 for default(14)
+        fn AccountManager::send_migration_bundle(&self, nodes: Vec<String>, bundle_hash: String, mwm: u8) -> Result<()>;
+    }
+);
 
 foreign_class!(
+    /// Account sync helper.
+    #[derive(camelCaseAliases)]
     class AccountSynchronizer {
         self_type AccountSynchronizer;
         private constructor = empty;
-
-        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer; alias gapLimit;
-        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer; alias skipPersistence;
-        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer; alias addressIndex;
+        /// Number of address indexes that are generated.
+        fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer;
+        /// Skip saving new messages and addresses on the account object.
+        /// The found data is returned on the `execute` call but won't be persisted on the database.
+        fn AccountSynchronizer::skip_persistence(&mut self) -> AccountSynchronizer;
+        /// Skip syncing existing change addresses.
+        fn AccountSynchronizer::skip_change_addresses(&mut self) -> AccountSynchronizer;
+        /// Initial address index to start syncing.
+        fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer;
+        /// Syncs account with the tangle.
+        /// The account syncing process ensures that the latest metadata (balance, transactions)
+        /// associated with an account is fetched from the tangle and is stored locally.
         fn AccountSynchronizer::execute(&mut self) -> Result<SyncedAccount>;
     }
 );
 
 foreign_class!(
+    /// The accounts synchronizer.
+    #[derive(camelCaseAliases)]
     class AccountsSynchronizer {
         self_type AccountsSynchronizer;
         private constructor = empty;
-
-        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer; alias gapLimit;
-        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer; alias addressIndex;
+        /// Number of address indexes that are generated.
+        fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer;
+        /// Initial address index to start syncing.
+        fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer;
+        /// Skips the account discovery process.
+        fn AccountsSynchronizer::skip_account_discovery(&mut self) -> AccountsSynchronizer;
+        /// Skip syncing existing change addresses.
+        fn AccountsSynchronizer::skip_change_addresses(&mut self) -> AccountsSynchronizer;
+        /// Sets the minimum number of accounts to check on the discovery process.
+        fn AccountsSynchronizer::account_discovery_threshold(&mut self, account_discovery_threshold: usize) -> AccountsSynchronizer;
+        /// Syncs the accounts with the Tangle.
         fn AccountsSynchronizer::execute(&mut self) -> Result<Vec<SyncedAccount>>;
     }
 );
@@ -241,10 +363,14 @@ foreign_class!(class ClientOptionsBuilder {
     fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
 });
 
-foreign_class!(class ClientOptions{
-    self_type ClientOptions;
-    private constructor = empty;
-});
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class ClientOptions {
+        self_type ClientOptions;
+        private constructor = empty;
+        private fn ClientOptions::to_string(&self) -> String; alias to_string;
+    }
+);
 
 foreign_class!(
     #[derive(Display)]
@@ -265,6 +391,30 @@ foreign_class!(
         private fn MessageId::to_string(&self) -> String;
         fn MessageId::fromString(str_rep: &str) -> MessageId {
             MessageId::from_str(str_rep).unwrap()
+        }
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class TransactionId {
+        self_type TransactionId;
+        private constructor = empty;
+        private fn TransactionId::to_string(&self) -> String; alias to_string;
+        fn TransactionId::fromString(str_rep: &str) -> TransactionId {
+            TransactionId::from_str(str_rep).unwrap()
+        }
+    }
+);
+
+foreign_class!(
+    #[derive(Display)]
+    class MilestoneId {
+        self_type MilestoneId;
+        private constructor = empty;
+        private fn MilestoneId::to_string(&self) -> String; alias to_string;
+        fn MilestoneId::fromString(str_rep: &str) -> MilestoneId {
+            MilestoneId::from_str(str_rep).unwrap()
         }
     }
 );
@@ -325,11 +475,62 @@ foreign_class!(
     class Address {
         self_type Address;
         private constructor = empty;
+        fn Address::builder() -> AddressBuilder;
         private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
         private fn Address::to_string(&self) -> String;
         fn Address::balance(&self) -> u64; alias getBalance;
         fn Address::readable(&self) -> String; alias getReadable;
         fn Address::address(&self) -> AddressWrapper;
+    }
+);
+
+foreign_class!(
+    /// An Address output.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class AddressOutput {
+        self_type AddressOutput;
+        private constructor = empty;
+        private fn AddressOutput::eq(&self, o: &AddressOutput) -> bool; alias rustEq;
+        private fn AddressOutput::to_string(&self) -> String; alias to_string;
+        /// Transaction ID of the output
+        fn AddressOutput::transaction_id(&self) -> TransactionId;
+        fn AddressOutput::set_transaction_id(&mut self, transaction_id: TransactionId);
+        /// Message ID of the output
+        fn AddressOutput::message_id(&self) -> MessageId;
+        fn AddressOutput::set_message_id(&mut self, message_id: MessageId);
+        /// Output index.
+        fn AddressOutput::index(&self) -> u16;
+        fn AddressOutput::set_index(&mut self, index: u16);
+        /// Output amount.
+        fn AddressOutput::amount(&self) -> u64;
+        fn AddressOutput::set_amount(&mut self, amount: u64);
+        /// Spend status of the output,
+        fn AddressOutput::is_spent(&self) -> bool;
+        fn AddressOutput::set_spent(&mut self, is_spent: bool);
+        /// Associated address.
+        fn AddressOutput::address(&self) -> AddressWrapper;
+        fn AddressOutput::set_address(&mut self, address: AddressWrapper);
+        /// Output kind.
+        fn AddressOutput::kind(&self) -> OutputKind;
+        fn AddressOutput::set_kind(&mut self, kind: OutputKind);
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases)]
+    class AddressBuilder {
+        self_type AddressBuilder;
+        private constructor = empty;
+        /// Defines the address.
+        fn AddressBuilder::address(&self, address: AddressWrapper) -> AddressBuilder;
+        /// Sets the address key index.
+        fn AddressBuilder::key_index(&self, key_index: usize) -> AddressBuilder;
+        /// Sets the address outputs.
+        fn AddressBuilder::outputs(&self, outputs: Vec<AddressOutput>) -> AddressBuilder;
+        /// Sets the `internal` flag.
+        fn AddressBuilder::internal(&self, internal: bool) -> AddressBuilder;
+        /// Builds the address.
+        fn AddressBuilder::build(&self) -> Result<Address>;
     }
 );
 
@@ -362,46 +563,45 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class AccountBalance {
         self_type AccountBalance;
         private constructor = empty;
-        fn AccountBalance::getTotal(&self) -> u64 {
-            this.total
-        }
-        fn AccountBalance::getAvailable(&self) -> u64 {
-            this.available
-        }
-        fn AccountBalance::getIncoming(&self) -> u64 {
-            this.incoming
-        }
-        fn AccountBalance::getOutgoing(&self) -> u64 {
-            this.outgoing
-        }
+        private fn AccountBalance::to_string(&self) -> String; alias to_string;
+        fn AccountBalance::get_total(&self) -> u64;
+        fn AccountBalance::get_available(&self) -> u64;
+        fn AccountBalance::get_incoming(&self) -> u64;
+        fn AccountBalance::get_outgoing(&self) -> u64;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class Account {
         self_type Account;
         private constructor = empty;
+        private fn Account::to_string(&self) -> String; alias to_string;
+
         fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
-        fn Account::generate_address(&self) -> Result<Address>; alias generateAddress;
-        fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>; alias generateAddresses;
-        fn Account::get_unused_address(&self) -> Result<Address>; alias getUnusedAddress;
-        fn Account::is_latest_address_unused(&self) -> Result<bool>; alias isLatestAddressUnused;
-        fn Account::latest_address(&self) -> Address; alias latestAddress;
-        fn Account::set_alias(&self, alias: String) -> Result<()>; alias setAlias;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>; alias setClientOptions;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>; alias listMessages;
-        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>; alias listSpentAddresses;
-        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>; alias listUnspentAddresses;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>; alias getMessage;
+        fn Account::generate_address(&self) -> Result<Address>;
+        fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>;
+        fn Account::get_unused_address(&self) -> Result<Address>;
+        fn Account::is_latest_address_unused(&self) -> Result<bool>;
+        fn Account::latest_address(&self) -> Address;
+        fn Account::set_alias(&self, alias: String) -> Result<()>;
+        fn Account::client_options(&self) -> ClientOptions;
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> Result<AccountBalance>;
 
         fn Account::id(&self) -> String;
-        fn Account::created_at(&self) -> DateTime<Local>; alias createdAt;
-        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>; alias lastSyncedAt;
+        fn Account::created_at(&self) -> DateTime<Local>;
+        fn Account::sync(&self) -> AccountSynchronizer;
+        fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
     }
 );
 
@@ -864,8 +1064,8 @@ foreign_class!(
         private constructor = empty;
         private fn PublicKey::to_string(&self) -> String; alias to_string;
         fn PublicKey::verify(&self, sig: Signature, msg: Vec<u8>) -> bool;
-        fn PublicKey::to_compressed_bytes(&self) -> Vec<u8>;
-        fn PublicKey::from_compressed_bytes(bs: Vec<u8>) -> Result<PublicKey>;
+        fn PublicKey::to_bytes(&self) -> Vec<u8>;
+        fn PublicKey::try_from_bytes(bs: Vec<u8>) -> Result<PublicKey>;
     }
 );
 

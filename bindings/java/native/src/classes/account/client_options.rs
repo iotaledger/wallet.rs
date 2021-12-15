@@ -65,6 +65,25 @@ pub struct ClientOptions {
     options: ClientOptionsRust,
 }
 
+
+impl core::fmt::Display for ClientOptions {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "{:?}", 
+            self.options
+        )
+    }
+}
+
+impl From<ClientOptionsRust> for ClientOptions {
+    fn from(options: ClientOptionsRust) -> Self {
+        Self {
+            options
+        }
+    }
+}
+
 impl ClientOptions {
     pub fn to_inner(self) -> ClientOptionsRust {
         self.options

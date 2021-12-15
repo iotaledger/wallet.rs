@@ -1,5 +1,20 @@
 # Changelog
 
+## \[1.0.5]
+
+- Attempt to fix the wrong number of messages returned from `list_messages()`.
+  - [db2399e0](https://github.com/iotaledger/wallet.rs/commit/db2399e03f407956fe20faebd7fba4adef9c4440) account,storage: partially remove caching ([#826](https://github.com/iotaledger/wallet.rs/pull/826)) on 2021-12-04
+
+## \[1.0.4]
+
+- Use default target features from `rustc` to determine SSE inclusion for RocksDB
+  - [72327a47](https://github.com/iotaledger/wallet.rs/commit/72327a470cf0c57d930a4769f18d5e2dac857485) fix: Use default target features for RocksDB SSE inclusion ([#797](https://github.com/iotaledger/wallet.rs/pull/797)) on 2021-11-25
+
+## \[1.0.3]
+
+- Don't retry messages without a transaction payload.
+  - [8950cc58](https://github.com/iotaledger/wallet.rs/commit/8950cc5844279d5656cc014ce31b9e6eb3be7068) fix: don't retry message without a transaction payload ([#795](https://github.com/iotaledger/wallet.rs/pull/795)) on 2021-11-19
+
 ## \[1.0.2]
 
 - Fix build scripts and workflows

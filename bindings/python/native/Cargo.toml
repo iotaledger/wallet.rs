@@ -1,28 +1,32 @@
-[workspace]
-
 [package]
-name = "iota-wallet-python-binding"
+name = "iota-wallet-python"
 version = "0.2.0"
-authors = ["Bing-Yang Lin <bingyang.lin@iota.org>"]
-license = "MIT"
-edition = "2018"
+authors = ["IOTA Stiftung"]
+edition = "2021"
+description = "Python bindings for the IOTA wallet library"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = ["iota", "wallet", "transaction", "python"]
+categories = ["cryptography::cryptocurrencies"]
 
 [lib]
 name = "iota_wallet"
 crate-type = ["cdylib"]
 
 [dependencies]
-iota-wallet = { path = "../../../", version = "0.2.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5f8fd262526aa09e2f548b3711964ea8fc18bc0b", features = ["mqtt"] }
-chrono = "0.4"
-serde_json = "1.0"
-serde = "1.0"
-tokio = { version = "1.5", features = ["rt", "rt-multi-thread"] }
-hex = "0.4"
+chrono = { version = "0.4.19", default-features = false }
 dict_derive = "0.3.0"
-futures = "0.3"
-once_cell = "1.7"
-url = "2.2"
+futures = { version = "0.3.17", default-features = false }
+hex = { version = "0.4.3", default-features = false }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "981136e9118a092cd4de6735e616858140b33019", default-features = false, features = ["async", "mqtt"] }
+iota-wallet = { path = "../../../", version = "0.2.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
+once_cell = { version = "1.8.0", default-features = false }
+serde = { version = "1.0.130", default-features = false, features = ["derive"] }
+serde_json = { version = "1.0.68", default-features = false }
+tokio = { version = "1.12.0", default-features = false }
+url = { version = "2.2.2", default-features = false }
 
 [dependencies.pyo3]
 version = "0.13"

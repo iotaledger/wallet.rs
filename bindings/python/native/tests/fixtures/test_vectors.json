@@ -34,6 +34,12 @@
             },
             "alias": "Alice",
             "backup_dir_path": "./backup"
+        },
+        "migration": {
+            "legacy_node": "https://nodes.devnet.iota.org",
+            "test_only_seed": "TRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEEDTRYTESEED",
+            "permanode": "https://chronicle.iota.org/api",
+            "min_weight_magnitude": 9
         }
     },
     "account_initialiser": {

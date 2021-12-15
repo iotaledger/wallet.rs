@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{MessageIndexation, MessageQueryFilter},
 };
@@ -719,12 +719,8 @@ impl AccountHandle {
         )
         .await?;
 
-        account
-            .do_mut(|account| {
-                account.addresses.push(address.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(vec![address.clone()]);
+        account.save().await?;
 
         // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
         self.monitor_address(address.address().clone());
@@ -774,12 +770,8 @@ impl AccountHandle {
             );
         }
 
-        account
-            .do_mut(|account| {
-                account.addresses.extend(addresses.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(addresses.clone());
+        account.save().await?;
 
         // Don't monitor if too many addresses
         if addresses.len() < 1000 {
@@ -980,11 +972,11 @@ impl Account {
         Ok(())
     }
 
-    pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
-        let res = f(self)?;
-        self.save().await?;
-        Ok(res)
-    }
+    // pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
+    //     let res = f(self)?;
+    //     self.save().await?;
+    //     Ok(res)
+    // }
 
     /// Do something with the indexed messages.
     pub(crate) async fn with_messages<T, C: FnOnce(&Vec<MessageIndexation>) -> T>(&self, f: C) -> T {
@@ -1021,7 +1013,7 @@ impl Account {
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
-            .unwrap()
+            .expect("No latest address in the account")
     }
 
     /// Returns the most recent change address of the account.
@@ -1165,9 +1157,7 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
-        let mut cached_messages = self.cached_messages.lock().await;
-
-        let messages = crate::storage::get(&self.storage_path)
+        let mut messages = crate::storage::get(&self.storage_path)
             .await
             .expect("storage adapter not set")
             .lock()
@@ -1176,55 +1166,13 @@ impl Account {
                 self,
                 count,
                 from,
-                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&cached_messages),
+                MessageQueryFilter::message_type(message_type.clone()),
             )
             .await?;
 
-        let mut message_list: Vec<Message> = if let Some(message_type) = message_type {
-            let mut list = Vec::new();
-            for message in cached_messages.values() {
-                let matches = match message_type {
-                    MessageType::Received => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Sent => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            !essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
-                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
-                };
-                if matches {
-                    list.push(message.clone());
-                }
-            }
-            list
-        } else {
-            cached_messages.values().cloned().collect()
-        };
+        messages.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
 
-        // we cache messages with known confirmation since they'll never be updated
-        for message in &messages {
-            if message.confirmed().is_some() {
-                cached_messages.insert(*message.id(), message.clone());
-            }
-        }
-
-        message_list.extend(messages);
-        message_list.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
-
-        Ok(message_list)
+        Ok(messages)
     }
 
     /// Gets the spent addresses.
@@ -1250,16 +1198,20 @@ impl Account {
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
-        addresses
-            .into_iter()
-            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
+        addresses.into_iter().for_each(|address| {
+            match self
+                .addresses
+                .iter()
+                .position(|a| a.key_index() == address.key_index() && a.internal() == address.internal())
+            {
                 Some(index) => {
                     self.addresses[index] = address;
                 }
                 None => {
                     self.addresses.push(address);
                 }
-            });
+            }
+        });
     }
 
     /// Gets the node info from /api/v1/info endpoint

@@ -35,9 +35,9 @@ use std::{
 /// Migration address
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MigrationAddress {
-    // address tryte encoded
+    /// address tryte encoded
     pub trytes: String,
-    // address bech32 encoded
+    /// address bech32 encoded
     pub bech32: String,
 }
 
@@ -55,9 +55,12 @@ pub struct MigrationData {
     pub spent_addresses: bool,
 }
 
+/// Migration bundle.
 #[derive(Debug, Clone)]
 pub struct MigrationBundle {
+    /// The bundle crackability if it was mined.
     pub crackability: f64,
+    /// Migration bundle.
     pub bundle: Vec<BundledTransaction>,
 }
 
@@ -68,7 +71,7 @@ pub struct MigrationDataFinder<'a> {
     seed: TernarySeed,
     pub(crate) seed_hash: u64,
     pub(crate) security_level: u8,
-    gap_limit: u64,
+    pub(crate) gap_limit: u64,
     pub(crate) initial_address_index: u64,
 }
 
@@ -119,6 +122,12 @@ impl<'a> MigrationDataFinder<'a> {
     /// Sets the security level.
     pub fn with_security_level(mut self, level: u8) -> Self {
         self.security_level = level;
+        self
+    }
+
+    /// Sets the gap limit.
+    pub fn with_gap_limit(mut self, gap_limit: u64) -> Self {
+        self.gap_limit = gap_limit;
         self
     }
 

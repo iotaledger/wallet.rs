@@ -14,7 +14,7 @@ keywords:
 The [IOTA Wallet Node.js binding](https://www.npmjs.com/package/@iota/wallet) is published on [npmjs.com](https://www.npmjs.com/).
 
 :::info
-You can find a guide for exchanges and the most common use cases in the [Chrysalis documentation](https://chrysalis.docs.iota.org/guides/exchange_guide), which is based on `wallet.rs` and `Node.js`. 
+You can find a guide for exchanges and the most common use cases in the [Chrysalis documentation](https://wiki.iota.org/chrysalis-docs/guides/exchange), which is based on `wallet.rs` and `Node.js`. 
 :::
 
 ## Security

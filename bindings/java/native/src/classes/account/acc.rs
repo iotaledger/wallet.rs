@@ -5,6 +5,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     acc_manager::AccountSignerType,
+    sync::AccountSynchronizer,
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
@@ -12,7 +13,7 @@ use crate::{
     Result,
 };
 use iota_wallet::{
-    account::{AccountBalance, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
+    account::{AccountBalance as AccountBalanceRust, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
     message::{MessageId, MessageType},
     DateTime, Local,
 };
@@ -72,11 +73,7 @@ impl AccountInitialiser {
     }
 
     pub fn initialise(&self) -> Result<Account> {
-        let acc_handle_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
+        let acc_handle_res = crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
 
         match acc_handle_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -85,6 +82,7 @@ impl AccountInitialiser {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Account {
     handle: AccountHandleRust,
 }
@@ -97,11 +95,7 @@ impl From<AccountHandleRust> for Account {
 
 impl Account {
     pub fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>> {
-        let msgs_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
+        let msgs_res = crate::block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -115,11 +109,7 @@ impl Account {
         jwt: Option<&str>,
         auth: Option<(&str, &str)>,
     ) -> Result<NodeInfoWrapper> {
-        let msgs_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
+        let msgs_res = crate::block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -128,16 +118,16 @@ impl Account {
     }
 
     pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
-        let msg_res = tokio::runtime::Builder::new_current_thread()
-            .enable_all()
-            .build()
-            .unwrap()
-            .block_on(async move { self.handle.transfer(transfer.to_inner()).await });
+        let msg_res = crate::block_on(async move { self.handle.transfer(transfer.to_inner()).await });
 
         match msg_res {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(msg) => Ok(msg.into()),
         }
+    }
+
+    pub fn sync(&self) -> AccountSynchronizer {
+        crate::block_on(async move { self.handle.sync().await }).into()
     }
 
     pub fn generate_address(&self) -> Result<Address> {
@@ -190,6 +180,10 @@ impl Account {
         }
     }
 
+    pub fn client_options(&self) -> ClientOptions {
+        crate::block_on(async move { self.handle.client_options().await }).into()
+    }
+
     pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
         let opts = crate::block_on(async move { self.handle.set_client_options(options.to_inner()).await });
 
@@ -228,7 +222,11 @@ impl Account {
     }
 
     pub fn balance(&self) -> Result<AccountBalance> {
-        crate::block_on(async move { self.handle.balance().await.map_err(|e| anyhow!(e.to_string())) })
+        let balance = crate::block_on(async move { self.handle.balance().await });
+        match balance {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(b) => Ok(b.into()),
+        }
     }
 
     pub fn id(&self) -> String {
@@ -241,5 +239,50 @@ impl Account {
 
     pub fn last_synced_at(&self) -> Option<DateTime<Local>> {
         crate::block_on(async move { self.handle.last_synced_at().await })
+    }
+
+    pub fn to_string(&self) -> String {
+        format!("{:?}", self.handle)
+    }
+}
+
+impl core::fmt::Display for Account {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f, "{:?}", self.handle
+        )
+    }
+}
+
+pub struct AccountBalance(AccountBalanceRust);
+
+impl AccountBalance {
+    pub fn get_total(&self) -> u64 {
+        self.0.total
+    }
+    pub fn get_available(&self) -> u64 {
+        self.0.available
+    }
+    pub fn get_incoming(&self) -> u64 {
+        self.0.incoming
+    }
+    pub fn get_outgoing(&self) -> u64 {
+        self.0.outgoing
+    }
+}
+
+impl From<AccountBalanceRust> for AccountBalance {
+    fn from(balance: AccountBalanceRust) -> Self {
+        Self(balance)
+    }
+}
+
+impl core::fmt::Display for AccountBalance {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "total={}, available={}, incoming={}, outgoing={}", 
+            self.get_total(), self.get_available(), self.get_incoming(), self.get_outgoing()
+        )
     }
 }

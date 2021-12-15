@@ -47,7 +47,7 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
-    match catch_unwind(AssertUnwindSafe(|| f())) {
+    match catch_unwind(AssertUnwindSafe(f)) {
         Ok(result) => result,
         Err(panic) => Ok(panic_to_response_message(panic)),
     }
@@ -236,6 +236,7 @@ impl WalletMessageHandler {
                 permanode,
                 seed,
                 security_level,
+                gap_limit,
                 initial_address_index,
             } => {
                 convert_async_panics(|| async {
@@ -249,6 +250,9 @@ impl WalletMessageHandler {
                     }
                     if let Some(initial_address_index) = initial_address_index {
                         finder = finder.with_initial_address_index(*initial_address_index);
+                    }
+                    if let Some(gap_limit) = gap_limit {
+                        finder = finder.with_gap_limit(*gap_limit);
                     }
                     let data = self.account_manager.get_migration_data(finder).await?;
                     seed.zeroize();
