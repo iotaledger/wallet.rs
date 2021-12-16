@@ -419,16 +419,16 @@ impl AccountManager {
         if finder.initial_address_index == 0 {
             self.cached_migration_data.lock().await.remove(&finder.seed_hash);
         }
-        let metadata = finder
-            .finish(
-                self.cached_migration_data
-                    .lock()
-                    .await
-                    .get(&finder.seed_hash)
-                    .map(|c| c.inputs.clone())
-                    .unwrap_or_default(),
-            )
-            .await?;
+        let migration_data = self.cached_migration_data.lock().await;
+        let previous_inputs = migration_data
+            .get(&finder.seed_hash)
+            .map(|c| c.inputs.clone())
+            .unwrap_or_default();
+        // drop migration_data before calling finder.finish().await, because otherwise the lock will be held until it
+        // finished which makes parallel executions impossible
+        drop(migration_data);
+
+        let metadata = finder.finish(previous_inputs).await?;
         self.cached_migration_data
             .lock()
             .await
