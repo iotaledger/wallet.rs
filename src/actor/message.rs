@@ -357,14 +357,6 @@ pub enum MessageType {
         event_ids: Vec<String>,
     },
     #[cfg(feature = "participation")]
-    /// Participate with new funds that didn't participate already
-    ParticipateWithRemainingFunds {
-        /// account which should participate
-        account_identifier: AccountIdentifier,
-        /// participation information to send
-        participations: Vec<crate::participation::types::Participation>,
-    },
-    #[cfg(feature = "participation")]
     /// Get participating overview
     GetParticipationOverview,
     #[cfg(feature = "participation")]
@@ -460,10 +452,6 @@ impl Serialize for MessageType {
             #[cfg(feature = "participation")]
             MessageType::StopParticipating { .. } => {
                 serializer.serialize_unit_variant("MessageType", 36, "StopParticipating")
-            }
-            #[cfg(feature = "participation")]
-            MessageType::ParticipateWithRemainingFunds { .. } => {
-                serializer.serialize_unit_variant("MessageType", 37, "ParticipateWithRemainingFunds")
             }
             #[cfg(feature = "participation")]
             MessageType::GetParticipationOverview => {

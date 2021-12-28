@@ -448,20 +448,6 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            MessageType::ParticipateWithRemainingFunds {
-                account_identifier,
-                participations,
-            } => {
-                convert_async_panics(|| async {
-                    let messages = self
-                        .account_manager
-                        .participate_with_remaining_funds(account_identifier.clone(), participations.clone())
-                        .await?;
-                    Ok(ResponseType::SentParticipation(messages))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
             MessageType::GetParticipationOverview => {
                 convert_async_panics(|| async {
                     let overview = self.account_manager.get_participation_overview().await?;

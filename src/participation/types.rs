@@ -95,7 +95,7 @@ pub struct Participations {
 impl Participations {
     // https://github.com/alexsporn/treasury/blob/main/specifications/chrysalis-referendum-rfc.md#structure-of-the-participation
     /// Serialize to bytes
-    pub(crate) fn to_bytes(&self) -> crate::Result<Vec<u8>> {
+    pub fn to_bytes(&self) -> crate::Result<Vec<u8>> {
         let mut bytes: Vec<u8> = vec![self
             .participations
             .len()
@@ -118,7 +118,7 @@ impl Participations {
         Ok(bytes)
     }
     /// Deserialize from bytes
-    pub(crate) fn from_bytes<R: Read + ?Sized>(bytes: &mut R) -> crate::Result<Participations> {
+    pub fn from_bytes<R: Read + ?Sized>(bytes: &mut R) -> crate::Result<Participations> {
         let mut participations = Vec::new();
         let mut participations_len = [0u8; 1];
         bytes.read_exact(&mut participations_len)?;
@@ -173,8 +173,3 @@ mod tests {
         assert_eq!(participations, deserialized_participations);
     }
 }
-
-// events
-// pub struct StakedAccount {
-//     messages: Vec<Message>,
-// }

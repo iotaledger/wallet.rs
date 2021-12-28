@@ -1,8 +1,6 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "participation")]
-use crate::message::{MessagePayload, TransactionEssence};
 use crate::{
     account_manager::{AccountOptions, AccountStore},
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
@@ -975,87 +973,6 @@ impl AccountHandle {
         // by using the participate function with en empty vec we will just send transactions only with the remaining or
         // no events
         self.participate(Vec::new()).await
-    }
-
-    #[cfg(feature = "participation")]
-    /// Participate with funds that aren't already participating in provided events
-    pub async fn participate_with_remaining_funds(
-        &self,
-        participations: Vec<crate::participation::types::Participation>,
-    ) -> crate::Result<Vec<Message>> {
-        log::debug!("participate_with_remaining_funds");
-        let participation_overview = self.get_participation_overview().await?;
-        let balance = self.balance().await?;
-        let mut event_ids_to_search_outputs_for = Vec::new();
-
-        if balance.available > participation_overview.shimmer_staked_funds
-            && participations
-                .iter()
-                .any(|p| p.event_id == crate::participation::types::SHIMMER_EVENT_ID)
-        {
-            event_ids_to_search_outputs_for.push(crate::participation::types::SHIMMER_EVENT_ID);
-        }
-
-        if balance.available > participation_overview.assembly_staked_funds
-            && participations
-                .iter()
-                .any(|p| p.event_id == crate::participation::types::ASSEMBLY_EVENT_ID)
-        {
-            event_ids_to_search_outputs_for.push(crate::participation::types::ASSEMBLY_EVENT_ID);
-        }
-        let account = self.read().await;
-        let sent_messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
-        let mut available_outputs: Vec<AddressOutput> = Vec::new();
-        for address in account.addresses() {
-            let address_outputs = address.available_outputs(&sent_messages);
-            available_outputs.extend(address_outputs.into_iter().cloned());
-        }
-
-        // filter outputs that are already used for the events
-        let mut outputs_to_send: HashMap<iota_client::bee_message::output::OutputId, AddressOutput> = HashMap::new();
-        for output in available_outputs {
-            let mut output_is_already_participating = false;
-            // get indexation data
-            let indexation_data = match account.get_message(&output.message_id).await {
-                Some(message) => match message.payload {
-                    Some(MessagePayload::Transaction(tx)) => {
-                        let TransactionEssence::Regular(essence) = tx.essence();
-                        match essence.payload() {
-                            Some(iota_client::bee_message::payload::Payload::Indexation(indexation)) => {
-                                Some(indexation.data().to_owned())
-                            }
-                            _ => None,
-                        }
-                    }
-                    _ => None,
-                },
-                None => None,
-            };
-            // check if output is already participating in one of the provided participation events
-            if let Some(indexation_data) = indexation_data {
-                if let Ok(message_participation) =
-                    crate::participation::types::Participations::from_bytes(&mut &indexation_data[..])
-                {
-                    for id in &event_ids_to_search_outputs_for {
-                        if message_participation.participations.iter().any(|e| &e.event_id == id) {
-                            output_is_already_participating = true;
-                            log::debug!("Output {} already participates in event {}", output.id()?, id);
-                        }
-                    }
-                }
-            }
-            if !output_is_already_participating {
-                outputs_to_send.insert(output.id()?, output);
-            }
-        }
-        drop(account);
-        log::debug!("Remaining output to stake {:?}", outputs_to_send);
-        self.sync_internal()
-            .await
-            .execute()
-            .await?
-            .send_participation_transfers(participations, Some(outputs_to_send.into_values().collect()))
-            .await
     }
 
     #[cfg(feature = "participation")]

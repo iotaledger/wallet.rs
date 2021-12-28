@@ -1428,19 +1428,6 @@ impl AccountManager {
         let account = self.get_account(0).await?;
         account.get_participation_events().await
     }
-
-    #[cfg(feature = "participation")]
-    /// Participate in events with funds that aren't already participating
-    pub async fn participate_with_remaining_funds(
-        &self,
-        account_identifier: AccountIdentifier,
-        participations: Vec<crate::participation::types::Participation>,
-    ) -> crate::Result<Vec<Message>> {
-        self.get_account(account_identifier)
-            .await?
-            .participate_with_remaining_funds(participations)
-            .await
-    }
 }
 
 macro_rules! event_getters_impl {

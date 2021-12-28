@@ -84,17 +84,6 @@ async fn main() -> iota_wallet::Result<()> {
     //     messages.iter().map(|m| m.id()).collect::<Vec<&MessageId>>()
     // );
 
-    // let messages = account
-    //     .participate_with_remaining_funds(vec![Participation {
-    //         event_id: "e5501ea9c8d950bceffc635275e7ce179a2334c42e9cc4e31c0f3c2c74db3d6a".to_string(),
-    //         answers: vec![],
-    //     }])
-    //     .await?;
-    // println!(
-    //     "Message sent: {:?}",
-    //     messages.iter().map(|m| m.id()).collect::<Vec<&MessageId>>()
-    // );
-
     // for _ in 0..30 {
     //     println!("{:?}", manager.get_participation_overview().await?);
     //     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
