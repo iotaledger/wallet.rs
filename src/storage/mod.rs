@@ -7,6 +7,8 @@ pub mod rocksdb;
 /// Stronghold storage.
 pub mod stronghold;
 
+#[cfg(feature = "participation")]
+use crate::address::AddressWrapper;
 use crate::{
     account::Account,
     event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionReattachmentEvent},
@@ -262,6 +264,32 @@ impl StorageManager {
                 .await?,
         )?;
         Ok(participations)
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn save_participation_address(
+        &mut self,
+        account_index: usize,
+        participation_address: AddressWrapper,
+    ) -> crate::Result<()> {
+        self.storage
+            .set(
+                &format!("ACCOUNT-{}-PARTICIPATIONADDRESS", account_index),
+                participation_address,
+            )
+            .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn get_participation_address(&self, account_index: usize) -> crate::Result<AddressWrapper> {
+        let participation_address: AddressWrapper = serde_json::from_str(
+            &self
+                .storage
+                .get(&format!("ACCOUNT-{}-PARTICIPATIONADDRESS", account_index))
+                .await?,
+        )?;
+        Ok(participation_address)
     }
 
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {

@@ -948,6 +948,7 @@ impl AccountHandle {
     ) -> crate::Result<Vec<Message>> {
         self.sync_internal()
             .await
+            .address_index(0)
             .execute()
             .await?
             .send_participation_transfers(participations, None)

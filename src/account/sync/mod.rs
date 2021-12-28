@@ -1701,10 +1701,35 @@ impl SyncedAccount {
         // the address outputs exceed the threshold, so we push a transfer to our vector
         if !available_outputs.is_empty() {
             for outputs in available_outputs.chunks(max_inputs) {
+                // save to unwrap since we checked that it's not empty
+                let mut participation_address = outputs.first().unwrap().address.clone();
+                if let Ok(read_participation_address) = crate::storage::get(&account.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .get_participation_address(*account.index())
+                    .await
+                {
+                    // only use read_participation_address if it's also in an input, otherwise the participation doesn't
+                    // count
+                    if outputs
+                        .iter()
+                        .any(|output| output.address == read_participation_address)
+                    {
+                        participation_address = read_participation_address;
+                    }
+                }
+                // save the address so it can be used the next time
+                crate::storage::get(&account.storage_path)
+                    .await?
+                    .lock()
+                    .await
+                    .save_participation_address(*account.index(), participation_address.clone())
+                    .await?;
+
                 transfers.push(
                     Transfer::builder(
-                        // save to unwrap since we checked that it's not empty
-                        outputs.first().unwrap().address.clone(),
+                        participation_address,
                         NonZeroU64::new(outputs.iter().fold(0, |v, o| v + o.amount)).unwrap(),
                         None,
                     )

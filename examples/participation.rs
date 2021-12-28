@@ -33,7 +33,7 @@ async fn main() -> iota_wallet::Result<()> {
             // first we'll create an example account and store it
             manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
             let client_options = ClientOptionsBuilder::new()
-                .with_node("https://devnet01.hornet.zone/")?
+                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
                 .build()
                 .unwrap();
             manager
@@ -44,7 +44,7 @@ async fn main() -> iota_wallet::Result<()> {
         }
     };
     let client_options = ClientOptionsBuilder::new()
-        .with_node("https://devnet01.hornet.zone/")?
+        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
         .build()
         .unwrap();
     account.set_client_options(client_options).await?;
@@ -62,7 +62,7 @@ async fn main() -> iota_wallet::Result<()> {
     // println!("Sending participation transfers...");
     // let messages = account
     //     .participate(vec![Participation {
-    //         event_id: "e5501ea9c8d950bceffc635275e7ce179a2334c42e9cc4e31c0f3c2c74db3d6a".to_string(),
+    //         event_id: "06a12548272eb51813a02932dec882656cffe3568090f8675675844d4e2ec186".to_string(),
     //         answers: vec![],
     //     }])
     //     .await?;
@@ -76,7 +76,7 @@ async fn main() -> iota_wallet::Result<()> {
     // println!("Sending stop participation transfers...");
     // let messages = account
     //     .stop_participating(vec![
-    //         "e5501ea9c8d950bceffc635275e7ce179a2334c42e9cc4e31c0f3c2c74db3d6a".to_string()
+    //         "06a12548272eb51813a02932dec882656cffe3568090f8675675844d4e2ec186".to_string()
     //     ])
     //     .await?;
     // println!(
