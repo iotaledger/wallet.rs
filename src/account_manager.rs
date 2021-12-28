@@ -43,7 +43,6 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
-use std::str::FromStr;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -698,7 +697,7 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
                 bech32_hrp,
             ),
         })
