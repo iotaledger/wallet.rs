@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.6]
+
+- Fixes the syncing so when an `addressIndex` is provided, only addresses with an index >= will be synced.
+  - [0faf9725](https://github.com/iotaledger/wallet.rs/commit/0faf97259300af81f658f0d91596fadb9d0f70b6) Fix: only sync addresses >= address_start_index ([#843](https://github.com/iotaledger/wallet.rs/pull/843)) on 2021-12-27
+
 ## \[1.0.5]
 
 - Attempt to fix the wrong number of messages returned from `list_messages()`.

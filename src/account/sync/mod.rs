@@ -443,6 +443,8 @@ async fn sync_messages(
     options: AccountOptions,
     skip_change_addresses: bool,
     change_addresses_to_sync: HashSet<AddressWrapper>,
+    // only sync messages for addresses >= this index
+    address_start_index: usize,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     log::debug!("[SYNC] sync_messages");
     let mut messages = vec![];
@@ -464,10 +466,14 @@ async fn sync_messages(
 
     let client = crate::client::get_client(&client_options).await?;
 
-    log::debug!("[SYNC] sync_messages for {} addresses", account.addresses().len());
-
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    let account_addresses = account.addresses().clone();
+    let account_addresses: Vec<Address> = account
+        .addresses()
+        .iter()
+        .filter(|address| address.key_index() >= &address_start_index)
+        .cloned()
+        .collect();
+    log::debug!("[SYNC] sync_messages for {} addresses", account_addresses.len());
     drop(account);
     for addresses_chunk in account_addresses
         .to_vec()
@@ -702,6 +708,7 @@ async fn perform_sync(
             options,
             skip_change_addresses,
             change_addresses_to_sync,
+            address_index,
         )
         .await?;
         found_addresses.extend(synced_addresses);

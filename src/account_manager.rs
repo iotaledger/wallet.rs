@@ -43,7 +43,6 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
-use std::str::FromStr;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -419,16 +418,18 @@ impl AccountManager {
         if finder.initial_address_index == 0 {
             self.cached_migration_data.lock().await.remove(&finder.seed_hash);
         }
-        let metadata = finder
-            .finish(
-                self.cached_migration_data
-                    .lock()
-                    .await
-                    .get(&finder.seed_hash)
-                    .map(|c| c.inputs.clone())
-                    .unwrap_or_default(),
-            )
-            .await?;
+        // lock mutex in the closure, so it gets dropped before calling finder.finish(previous_inputs).await to allow
+        // parallel executions
+        let previous_inputs = {
+            self.cached_migration_data
+                .lock()
+                .await
+                .get(&finder.seed_hash)
+                .map(|c| c.inputs.clone())
+                .unwrap_or_default()
+        };
+
+        let metadata = finder.finish(previous_inputs).await?;
         self.cached_migration_data
             .lock()
             .await
@@ -696,7 +697,7 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
                 bech32_hrp,
             ),
         })
