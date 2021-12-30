@@ -1141,8 +1141,7 @@ impl AccountSynchronizer {
         };
         Self {
             account_handle,
-            // by default we synchronize from the latest address (supposedly unspent)
-            address_index: latest_address_index,
+            address_index: 0,
             gap_limit: if latest_address_index == 0 {
                 default_gap_limit
             } else {
