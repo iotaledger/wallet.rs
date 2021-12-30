@@ -168,11 +168,11 @@ pub(crate) async fn sync_address(
                 let message_id = *found_output.message_id();
 
                 // if we already have the message stored
-                // and the confirmation state is known
+                // and the confirmation state is confirmed
                 // we skip the `get_message` call
                 if account_messages
                     .iter()
-                    .any(|(id, confirmed)| id == &message_id && confirmed.is_some())
+                    .any(|(id, confirmed)| id == &message_id && confirmed.unwrap_or(false))
                 {
                     return crate::Result::Ok((found_output, None));
                 }
@@ -573,7 +573,7 @@ async fn sync_messages(
                         outputs.insert(output.id()?, output);
 
                         // if we already have the message stored
-                        // and the confirmation state is known
+                        // and the confirmation state is confirmed
                         // we skip the `get_message` call
                         if known_confirmed_messages.contains(&output_message_id) {
                             continue;
