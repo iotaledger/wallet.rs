@@ -452,11 +452,11 @@ async fn sync_messages(
     let account = account_handle.read().await.clone();
     let client_options = account.client_options().clone();
 
-    let messages_with_known_confirmation: Vec<MessageId> = account
+    let known_confirmed_messages: Vec<MessageId> = account
         .with_messages(|messages| {
             messages
                 .iter()
-                .filter(|m| m.confirmed.is_some())
+                .filter(|m| m.confirmed.unwrap_or(false))
                 .map(|m| m.key)
                 .collect()
         })
@@ -492,7 +492,7 @@ async fn sync_messages(
                 continue;
             }
             let client = client.clone();
-            let messages_with_known_confirmation = messages_with_known_confirmation.clone();
+            let known_confirmed_messages = known_confirmed_messages.clone();
             let mut outputs = address.outputs.clone();
 
             tasks.push(async move {
@@ -575,7 +575,7 @@ async fn sync_messages(
                         // if we already have the message stored
                         // and the confirmation state is known
                         // we skip the `get_message` call
-                        if messages_with_known_confirmation.contains(&output_message_id) {
+                        if known_confirmed_messages.contains(&output_message_id) {
                             continue;
                         }
 
