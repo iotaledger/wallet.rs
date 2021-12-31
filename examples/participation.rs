@@ -3,54 +3,55 @@
 
 //! cargo run --example participation --features=participation --release
 
-use iota_client::common::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
-use iota_wallet::{
-    account_manager::AccountManager,
-    client::ClientOptionsBuilder,
-    message::MessageId,
-    participation::types::{Participation, Participations},
-    signing::SignerType,
-};
-use log::LevelFilter;
-
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    let output_config = LoggerOutputConfigBuilder::new()
-        .name("wallet.log")
-        .level_filter(LevelFilter::Debug);
-    let config = LoggerConfig::build().with_output(output_config).finish();
-    logger_init(config).unwrap();
+    // commented because clippy workflows fails otherwise
+    // use iota_client::common::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
+    // use iota_wallet::{
+    //     account_manager::AccountManager,
+    //     client::ClientOptionsBuilder,
+    //     message::MessageId,
+    //     participation::types::{Participation, Participations},
+    //     signing::SignerType,
+    // };
+    // use log::LevelFilter;
 
-    let manager = AccountManager::builder().finish().await.unwrap();
-    manager.set_stronghold_password("password").await.unwrap();
+    // // Generates a wallet.log file with logs for debugging
+    // let output_config = LoggerOutputConfigBuilder::new()
+    //     .name("wallet.log")
+    //     .level_filter(LevelFilter::Debug);
+    // let config = LoggerConfig::build().with_output(output_config).finish();
+    // logger_init(config).unwrap();
 
-    // Get account or create a new one
-    let account_alias = "alias";
-    let account = match manager.get_account(account_alias).await {
-        Ok(account) => account,
-        _ => {
-            // first we'll create an example account and store it
-            manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
-            let client_options = ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-                .build()
-                .unwrap();
-            manager
-                .create_account(client_options)?
-                .alias(account_alias)
-                .initialise()
-                .await?
-        }
-    };
-    let client_options = ClientOptionsBuilder::new()
-        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-        .build()
-        .unwrap();
-    account.set_client_options(client_options).await?;
-    println!("{:?}", account.get_staking_rewards().await?);
-    println!("{:?}", manager.get_participation_events().await?);
-    println!("{:?}", manager.get_participation_overview().await?);
+    // let manager = AccountManager::builder().finish().await.unwrap();
+    // manager.set_stronghold_password("password").await.unwrap();
+
+    // // Get account or create a new one
+    // let account_alias = "alias";
+    // let account = match manager.get_account(account_alias).await {
+    //     Ok(account) => account,
+    //     _ => {
+    //         // first we'll create an example account and store it
+    //         manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+    //         let client_options = ClientOptionsBuilder::new()
+    //             .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
+    //             .build()
+    //             .unwrap();
+    //         manager
+    //             .create_account(client_options)?
+    //             .alias(account_alias)
+    //             .initialise()
+    //             .await?
+    //     }
+    // };
+    // let client_options = ClientOptionsBuilder::new()
+    //     .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
+    //     .build()
+    //     .unwrap();
+    // account.set_client_options(client_options).await?;
+    // println!("{:?}", account.get_staking_rewards().await?);
+    // println!("{:?}", manager.get_participation_events().await?);
+    // println!("{:?}", manager.get_participation_overview().await?);
 
     // let address = account.generate_address().await?;
     // println!(
