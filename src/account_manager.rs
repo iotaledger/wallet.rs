@@ -1959,6 +1959,8 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     Err(crate::Error::ClientError(ref e)) => {
                         if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
                             no_need_promote_or_reattach.push(message_id);
+                        } else {
+                            log::debug!("[POLLING] retrying failed: {:?}", e);
                         }
                     }
                     _ => {}

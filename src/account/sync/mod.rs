@@ -2425,8 +2425,53 @@ pub(crate) async fn repost_message(
 
             let (id, message) = match action {
                 RepostAction::Promote => client.promote(message_id).await?,
-                RepostAction::Reattach => client.reattach(message_id).await?,
-                RepostAction::Retry => client.retry(message_id).await?,
+                // Reattach with the local message
+                RepostAction::Reattach => match client.reattach(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if reattaching with the message from the node failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
+                RepostAction::Retry => match client.retry(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if retrying failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
             };
             let message = Message::from_iota_message(
                 id,
