@@ -2405,6 +2405,10 @@ pub(crate) async fn repost_message(
     let message = match account.get_message(message_id).await {
         Some(message_to_repost) => {
             let mut message_to_repost = message_to_repost.clone();
+
+            let client = crate::client::get_client(account.client_options()).await?;
+            let client = client.read().await;
+
             // check all reattachments of the message we want to promote/rettry/reattach
             while let Some(reattachment_message_id) = message_to_repost.reattachment_message_id {
                 match account.get_message(&reattachment_message_id).await {
@@ -2414,19 +2418,78 @@ pub(crate) async fn repost_message(
                             return Err(crate::Error::ClientError(Box::new(
                                 iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                             )));
+                        } else {
+                            let metadata = client.get_message().metadata(&reattachment_message_id).await?;
+                            if metadata.conflict_reason.is_some() {
+                                // if the message is conflicting, then any reattachment is also useless, because it
+                                // can't get confirmed or was already confirmed
+                                return Err(crate::Error::ClientError(Box::new(
+                                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                                )));
+                            }
                         }
                     }
                     None => break,
                 }
             }
-
-            let client = crate::client::get_client(account.client_options()).await?;
-            let client = client.read().await;
+            let metadata = client.get_message().metadata(message_id).await?;
+            if metadata.conflict_reason.is_some() {
+                // if the message is conflicting, then any reattachment is also useless, because it can't get confirmed
+                // or was already confirmed
+                return Err(crate::Error::ClientError(Box::new(
+                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                )));
+            }
 
             let (id, message) = match action {
                 RepostAction::Promote => client.promote(message_id).await?,
-                RepostAction::Reattach => client.reattach(message_id).await?,
-                RepostAction::Retry => client.retry(message_id).await?,
+                // Reattach with the local message
+                RepostAction::Reattach => match client.reattach(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if reattaching with the message from the node failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
+                RepostAction::Retry => match client.retry(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if retrying failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
             };
             let message = Message::from_iota_message(
                 id,
