@@ -2606,6 +2606,8 @@
 <span id="2606">2606</span>
 <span id="2607">2607</span>
 <span id="2608">2608</span>
+<span id="2609">2609</span>
+<span id="2610">2610</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -4567,6 +4569,8 @@
                     <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="kw-2">ref</span> <span class="ident">e</span>)) =&gt; {
                         <span class="kw">if</span> <span class="kw">let</span> <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">as_ref</span>() {
                             <span class="ident">no_need_promote_or_reattach</span>.<span class="ident">push</span>(<span class="ident">message_id</span>);
+                        } <span class="kw">else</span> {
+                            <span class="macro">log::debug!</span>(<span class="string">&quot;[POLLING] retrying failed: {:?}&quot;</span>, <span class="ident">e</span>);
                         }
                     }
                     <span class="kw">_</span> =&gt; {}
