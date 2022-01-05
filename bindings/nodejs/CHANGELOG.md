@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.8]
+
+- Use local data when reattaching transactions and check inclusion state for reattached messages.
+  - [88f62028](https://github.com/iotaledger/wallet.rs/commit/88f62028fc812ef4145fde8e033d8383559d8f24) Use local transaction payload to reattach ([#851](https://github.com/iotaledger/wallet.rs/pull/851)) on 2022-01-05
+
 ## \[1.0.7]
 
 - Start syncing from address index 0 by default;
