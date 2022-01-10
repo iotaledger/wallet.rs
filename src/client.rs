@@ -456,6 +456,7 @@ impl From<Api> for iota_client::Api {
 
 /// The MQTT broker options.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BrokerOptions {
     // We need to use `pub` here or these is no way to let the user create BrokerOptions
     #[serde(rename = "automaticDisconnect")]
@@ -507,6 +508,7 @@ pub struct NodeAuth {
 /// Node definition.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Hash, Getters)]
 #[getset(get = "pub(crate)")]
+#[serde(deny_unknown_fields)]
 pub struct Node {
     /// Node url.
     pub url: Url,
@@ -531,6 +533,7 @@ impl From<Url> for Node {
 #[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
 /// Need to set the get methods to be public for binding
 #[getset(get = "pub")]
+#[serde(deny_unknown_fields)]
 pub struct ClientOptions {
     /// The primary node to connect to.
     #[serde(rename = "node")] // here just for DB compatibility; can be changed when migrations are implemented

@@ -32,11 +32,14 @@ use std::{
     },
 };
 
+pub(crate) mod schema;
 mod sync;
 pub(crate) use sync::{AccountSynchronizeStep, SyncedAccountData};
 pub use sync::{AccountSynchronizer, SyncedAccount};
 
 const ACCOUNT_ID_PREFIX: &str = "wallet-account://";
+pub(crate) const SCHEMA_VERSION_KEY: &str = "wallet-account-schema-version";
+pub(crate) const LATEST_SCHEMA_VERSION: usize = 1;
 
 /// The account identifier.
 #[derive(Debug, Clone, Serialize, Eq)]
@@ -518,6 +521,7 @@ fn monitor_address(account_handle: AccountHandle) {
 /// Account definition.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
+#[serde(deny_unknown_fields)]
 pub struct Account {
     /// The account identifier.
     #[getset(set = "pub(crate)")]

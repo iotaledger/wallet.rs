@@ -246,6 +246,9 @@ pub enum Error {
     /// reqwest error
     #[error("{0}")]
     ReqwestError(#[from] reqwest::Error),
+    /// Couldn't migrate account schema
+    #[error("{0}")]
+    AccountSchemaMigrationError(String),
 }
 
 impl Drop for Error {
@@ -396,6 +399,7 @@ impl serde::Serialize for Error {
             Self::InvalidParticipations => serialize_variant(self, serializer, "InvalidParticipations"),
             #[cfg(feature = "participation")]
             Self::ReqwestError(_) => serialize_variant(self, serializer, "ReqwestError"),
+            Self::AccountSchemaMigrationError(_) => serialize_variant(self, serializer, "AccountSchemaMigrationError"),
         }
     }
 }

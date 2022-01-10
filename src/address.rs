@@ -52,6 +52,7 @@ impl FromStr for OutputKind {
 /// An Address output.
 #[derive(Debug, Getters, Setters, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[getset(get = "pub")]
+#[serde(deny_unknown_fields)]
 pub struct AddressOutput {
     /// Transaction ID of the output
     #[serde(rename = "transactionId")]

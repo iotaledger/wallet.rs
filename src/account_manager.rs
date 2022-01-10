@@ -828,12 +828,28 @@ impl AccountManager {
         Ok(())
     }
 
+    async fn get_account_schema_version(&self) -> crate::Result<Option<usize>> {
+        let storage_manager = crate::storage::get(&self.storage_path).await?;
+        let account_schema_version = storage_manager.lock().await.get_account_schema_version().await;
+        account_schema_version
+    }
+
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
+        let schema_version = self.get_account_schema_version().await?;
 
         if self.accounts.read().await.is_empty() {
             crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
+            if let Some(schema_version) = schema_version {
+                let storage_manger = crate::storage::get(&self.storage_path).await?;
+                storage_manger
+                    .lock()
+                    .await
+                    .set_account_schema_version(schema_version)
+                    .await?;
+            }
 
             Self::load_accounts(
                 &self.accounts,
@@ -854,6 +870,15 @@ impl AccountManager {
             }
 
             crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
+            if let Some(schema_version) = schema_version {
+                let storage_manager = crate::storage::get(&self.storage_path).await?;
+                storage_manager
+                    .lock()
+                    .await
+                    .set_account_schema_version(schema_version)
+                    .await?;
+            }
 
             // save the accounts and messages again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
@@ -1176,6 +1201,14 @@ impl AccountManager {
             manager.set_stronghold_password(stronghold_password).await?;
             let stronghold_storage_path = self.storage_folder.join(STRONGHOLD_FILENAME);
             let stronghold_storage = crate::storage::get(&stronghold_storage_path).await?;
+
+            if let Some(schema_version) = self.get_account_schema_version().await? {
+                stronghold_storage
+                    .lock()
+                    .await
+                    .set_account_schema_version(schema_version)
+                    .await?;
+            }
 
             for (account_id, account_handle) in self.accounts.read().await.iter() {
                 let mut account = account_handle.write().await;

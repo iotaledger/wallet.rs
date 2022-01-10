@@ -22,6 +22,7 @@ use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{
+    cmp::Ordering,
     collections::HashMap,
     convert::TryInto,
     io::{Read, Write},
@@ -196,6 +197,8 @@ impl StorageManager {
             }
         }
 
+        self.migrate_account_schema_if_needed().await?;
+
         let mut accounts = Vec::new();
         for account_index in self.account_indexation.clone() {
             accounts.push(self.get(&account_index.key).await?);
@@ -221,6 +224,84 @@ impl StorageManager {
             .set(ACCOUNT_INDEXATION_KEY, &self.account_indexation)
             .await?;
         Ok(())
+    }
+
+    pub(in crate) async fn get_account_schema_version(&mut self) -> crate::Result<Option<usize>> {
+        match self.storage.get(crate::account::SCHEMA_VERSION_KEY).await {
+            Ok(schema_version) => {
+                let schema_version = schema_version.parse::<usize>().map_err(|e| {
+                    crate::Error::AccountSchemaMigrationError(format!(
+                        "Couldn't convert schema version '{}' to number; {:?}",
+                        schema_version, e
+                    ))
+                })?;
+                Ok(Some(schema_version))
+            }
+            Err(crate::Error::RecordNotFound) => Ok(None),
+            Err(e) => {
+                return Err(crate::Error::AccountSchemaMigrationError(format!(
+                    "Couldn't read schema version from storage; {:?}",
+                    e
+                )))
+            }
+        }
+    }
+
+    pub(in crate) async fn set_account_schema_version(&mut self, schema_version: usize) -> crate::Result<()> {
+        self.storage
+            .set(crate::account::SCHEMA_VERSION_KEY, schema_version)
+            .await
+    }
+
+    async fn migrate_account_schema_if_needed(&mut self) -> crate::Result<()> {
+        let schema_version = match self.get_account_schema_version().await? {
+            Some(schema_version) => schema_version,
+            None => {
+                if self.account_indexation.is_empty() {
+                    // There are no accounts in the storage and it implies that this is a newly created storage
+                    // So here's a good place to set the latest schema version since encryption is already handled
+                    return self
+                        .set_account_schema_version(crate::account::LATEST_SCHEMA_VERSION)
+                        .await;
+                } else {
+                    // Assume default version of 1 if schema version is not set for existing data
+                    1
+                }
+            }
+        };
+
+        match schema_version.cmp(&crate::account::LATEST_SCHEMA_VERSION) {
+            Ordering::Equal => Ok(()),
+            Ordering::Less => {
+                let mut records = HashMap::new();
+
+                for account_index in self.account_indexation.iter() {
+                    let record = self.storage.get(&account_index.key).await?;
+                    let record = crate::account::schema::migrate(
+                        schema_version..=crate::account::LATEST_SCHEMA_VERSION,
+                        record,
+                    )?;
+                    records.insert(account_index.key.clone(), record);
+                }
+
+                if records.is_empty() {
+                    return Err(crate::Error::AccountSchemaMigrationError(
+                        "Couldn't migrate empty records; Please make sure there's records to migrate".to_string(),
+                    ));
+                }
+
+                records.insert(
+                    crate::account::SCHEMA_VERSION_KEY.to_string(),
+                    crate::account::LATEST_SCHEMA_VERSION.to_string(),
+                );
+                self.storage.batch_set(records).await
+            }
+            Ordering::Greater => Err(crate::Error::AccountSchemaMigrationError(format!(
+                "Migration from higher version `{}` to lower version `{}` not permitted",
+                schema_version,
+                crate::account::LATEST_SCHEMA_VERSION
+            ))),
+        }
     }
 
     #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
