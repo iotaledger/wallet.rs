@@ -1,5 +1,12 @@
 # Changelog
 
+## \[1.0.9]
+
+- Detect confirmed reattachments.
+  - [88f62028](https://github.com/iotaledger/wallet.rs/commit/88f62028fc812ef4145fde8e033d8383559d8f24) Use local transaction payload to reattach ([#851](https://github.com/iotaledger/wallet.rs/pull/851)) on 2022-01-05
+  - [ea5e87fb](https://github.com/iotaledger/wallet.rs/commit/ea5e87fb4925e014c8da351b20df8ea45eac00ec) apply version updates ([#852](https://github.com/iotaledger/wallet.rs/pull/852)) on 2022-01-05
+  - [21e51d83](https://github.com/iotaledger/wallet.rs/commit/21e51d834bc215d11acf3b111c4b74694b3b4526) Reattached message confirmation detection ([#853](https://github.com/iotaledger/wallet.rs/pull/853)) on 2022-01-10
+
 ## \[1.0.8]
 
 - Use local data when reattaching transactions and check inclusion state for reattached messages.
