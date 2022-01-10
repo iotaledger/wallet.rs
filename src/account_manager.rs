@@ -1774,7 +1774,8 @@ async fn poll(
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let mut message = account.get_message(&message_id).await.unwrap();
-            if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
+            let client = client.read().await;
+            if let Ok(metadata) = client.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included
                         || ledger_inclusion_state == LedgerInclusionStateDto::NoTransaction;
@@ -1788,6 +1789,28 @@ async fn poll(
                             retried_data.account_handle.account_options.persist_events,
                         )
                         .await?;
+                    } else {
+                        // if it's not confirmed we ask the node for the included message for this transaction, because
+                        // someone else could have reattached it
+                        if !confirmed {
+                            if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message.payload {
+                                if let Ok(reattachment_message) = client
+                                    .get_included_message(&tx_payload.to_transaction_payload()?.id())
+                                    .await
+                                {
+                                    message.set_reattachment_message_id(Some(reattachment_message.id().0));
+                                    message.set_confirmed(Some(true));
+                                    account.save_messages(vec![message.clone()]).await?;
+                                    emit_confirmation_state_change(
+                                        &account,
+                                        message,
+                                        confirmed,
+                                        retried_data.account_handle.account_options.persist_events,
+                                    )
+                                    .await?;
+                                }
+                            }
+                        }
                     }
                 }
             } else if message.payload().is_none() {
