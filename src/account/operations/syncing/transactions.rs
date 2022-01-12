@@ -11,7 +11,7 @@ use iota_client::{
     bee_message::{
         input::{Input, UtxoInput},
         output::OutputId,
-        payload::transaction::Essence,
+        payload::transaction::TransactionEssence,
         MessageId,
     },
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
@@ -83,7 +83,7 @@ pub(crate) async fn sync_transactions(
                             if let Ok(included_message) = client.get_included_message(&transaction.payload.id()).await {
                                 updated_transaction_and_outputs(
                                     transaction,
-                                    included_message.id().0,
+                                    included_message.id(),
                                     InclusionState::Confirmed,
                                     &mut updated_transactions,
                                     &mut spent_output_ids,
@@ -139,7 +139,7 @@ fn updated_transaction_and_outputs(
     transaction.message_id.replace(message_id);
     transaction.inclusion_state = inclusion_state;
     // get spent inputs
-    let Essence::Regular(essence) = transaction.payload.essence();
+    let TransactionEssence::Regular(essence) = transaction.payload.essence();
     for input in essence.inputs() {
         if let Input::Utxo(input) = input {
             spent_output_ids.push(*input.output_id());

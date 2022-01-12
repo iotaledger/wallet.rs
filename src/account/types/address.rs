@@ -17,7 +17,7 @@ pub struct AccountAddress {
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
-    pub(crate) key_index: usize,
+    pub(crate) key_index: u32,
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
     pub(crate) internal: bool,
@@ -36,7 +36,7 @@ pub struct AddressWithBalance {
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
-    pub(crate) key_index: usize,
+    pub(crate) key_index: u32,
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
     pub(crate) internal: bool,

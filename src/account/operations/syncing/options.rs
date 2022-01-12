@@ -19,7 +19,7 @@ pub struct SyncOptions {
     // 0 by default, using a higher value will be faster, but could result in a wrong balance, since addresses with a
     // lower index aren't synced
     #[serde(rename = "addressStartIndex", default = "default_address_start_index")]
-    pub address_start_index: usize,
+    pub address_start_index: u32,
     // 0 by default, no new address should be generated during syncing
     #[serde(rename = "gapLimit", default = "default_gap_limit")]
     pub gap_limit: usize,
@@ -43,7 +43,7 @@ fn default_automatic_output_consolidation() -> bool {
     true
 }
 
-fn default_address_start_index() -> usize {
+fn default_address_start_index() -> u32 {
     0
 }
 

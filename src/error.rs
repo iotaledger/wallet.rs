@@ -196,13 +196,13 @@ pub enum Error {
     FailedToGetRemainder,
     /// Too many outputs
     #[error("too many outputs: {0}, max is {1}")]
-    TooManyOutputs(usize, usize),
+    TooManyOutputs(usize, u16),
     /// Too many outputs
     #[error("too many outputs: {0}, max is {1}")]
-    TooManyInputs(usize, usize),
+    TooManyInputs(usize, u16),
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
-    ConsolidationRequired(usize, usize),
+    ConsolidationRequired(usize, u16),
     /// Provided input address not found
     #[error("provided input address not found")]
     InputAddressNotFound,

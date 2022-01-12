@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub struct Event {
     /// Associated account index.
     #[serde(rename = "accountIndex")]
-    pub account_index: usize,
+    pub account_index: u32,
     /// The event
     pub event: WalletEvent,
 }

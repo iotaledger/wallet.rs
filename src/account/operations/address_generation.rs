@@ -9,9 +9,9 @@ use crate::{
         types::address::{AccountAddress, AddressWrapper},
     },
     client,
-    signing::{GenerateAddressMetadata, Network},
 };
 
+use iota_client::signing::{mnemonic::IOTA_COIN_TYPE, GenerateAddressMetadata, Network};
 use serde::{Deserialize, Serialize};
 
 /// Options for address generation
@@ -36,19 +36,18 @@ impl Default for AddressGenerationOptions {
 /// Generate addresses and stores them in the account
 pub async fn generate_addresses(
     account_handle: &AccountHandle,
-    amount: usize,
+    amount: u32,
     options: AddressGenerationOptions,
 ) -> crate::Result<Vec<AccountAddress>> {
     log::debug!("[ADDRESS GENERATION] generating {} addresses", amount);
     let mut account = account_handle.write().await;
-    let signer = crate::signing::get_signer().await;
-    let mut signer = signer.lock().await;
+    let mut signer = account_handle.signer.lock().await;
 
     // get the highest index for the public or internal addresses
     let highest_current_index_plus_one = if options.internal {
-        account.internal_addresses.len()
+        account.internal_addresses.len() as u32
     } else {
-        account.public_addresses.len()
+        account.public_addresses.len() as u32
     };
 
     // get bech32_hrp
@@ -86,7 +85,13 @@ pub async fn generate_addresses(
         }
 
         let address = signer
-            .generate_address(&account, address_index, options.internal, options.metadata.clone())
+            .generate_address(
+                IOTA_COIN_TYPE,
+                account.index,
+                address_index,
+                options.internal,
+                options.metadata.clone(),
+            )
             .await?;
 
         let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());

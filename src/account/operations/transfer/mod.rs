@@ -16,8 +16,7 @@ use crate::account::{
 use input_selection::select_inputs;
 
 use iota_client::bee_message::{
-    constants::{INPUT_OUTPUT_COUNT_MAX, INPUT_OUTPUT_COUNT_RANGE},
-    output::OutputId,
+    output::{OutputId, OUTPUT_COUNT_MAX, OUTPUT_COUNT_RANGE},
     payload::transaction::{TransactionId, TransactionPayload},
     MessageId,
 };
@@ -50,15 +49,15 @@ pub async fn send_transfer(
         return Err(crate::Error::EmptyOutputAmount);
     };
     // validate outputs amount
-    if !INPUT_OUTPUT_COUNT_RANGE.contains(&outputs.len()) {
-        return Err(crate::Error::TooManyOutputs(outputs.len(), INPUT_OUTPUT_COUNT_MAX));
+    if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
+        return Err(crate::Error::TooManyOutputs(outputs.len(), OUTPUT_COUNT_MAX));
     }
     let custom_inputs: Option<Vec<OutputId>> = {
         if let Some(options) = options.clone() {
             // validate inputs amount
             if let Some(inputs) = &options.custom_inputs {
-                if !INPUT_OUTPUT_COUNT_RANGE.contains(&inputs.len()) {
-                    return Err(crate::Error::TooManyInputs(inputs.len(), INPUT_OUTPUT_COUNT_MAX));
+                if !OUTPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
+                    return Err(crate::Error::TooManyInputs(inputs.len(), OUTPUT_COUNT_MAX));
                 }
             }
             options.custom_inputs

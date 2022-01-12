@@ -12,8 +12,8 @@ use std::collections::HashSet;
 /// checked, if an account has balance, the counter is reset
 pub async fn recover_accounts(
     account_manager: &AccountManager,
-    address_gap_limit: usize,
-    account_gap_limit: usize,
+    address_gap_limit: u32,
+    account_gap_limit: u32,
 ) -> crate::Result<Vec<AccountHandle>> {
     log::debug!("[recover_accounts]");
     let mut account_indexes_to_keep = HashSet::new();

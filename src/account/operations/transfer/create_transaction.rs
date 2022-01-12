@@ -1,35 +1,33 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::account::{
+    constants::MIN_DUST_ALLOWANCE_VALUE,
+    handle::AccountHandle,
+    operations::{
+        address_generation::AddressGenerationOptions,
+        transfer::{Remainder, RemainderValueStrategy, TransferOptions, TransferOutput},
+    },
+    types::{
+        address::{AccountAddress, AddressWithBalance},
+        OutputData, OutputKind,
+    },
+};
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, PreparedTransactionData, TransactionIO, TransferProgressEvent, WalletEvent};
-use crate::{
-    account::{
-        constants::MIN_DUST_ALLOWANCE_VALUE,
-        handle::AccountHandle,
-        operations::{
-            address_generation::AddressGenerationOptions,
-            transfer::{Remainder, RemainderValueStrategy, TransferOptions, TransferOutput},
-        },
-        types::{
-            address::{AccountAddress, AddressWithBalance},
-            OutputData, OutputKind,
-        },
-    },
-    signing::TransactionInput,
-};
 
 use iota_client::{
     bee_message::{
         address::Address,
         input::{Input, UtxoInput},
-        output::{Output, SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput},
+        output::{ExtendedOutput, Output},
         payload::{
-            transaction::{Essence, RegularEssence},
+            transaction::{RegularTransactionEssence, TransactionEssence},
             Payload,
         },
     },
     common::packable::Packable,
+    signing::TransactionInput,
 };
 
 use std::time::Instant;
@@ -40,7 +38,7 @@ pub(crate) async fn create_transaction(
     inputs: Vec<OutputData>,
     outputs: Vec<TransferOutput>,
     options: Option<TransferOptions>,
-) -> crate::Result<(Essence, Vec<TransactionInput>, Option<Remainder>)> {
+) -> crate::Result<(TransactionEssence, Vec<TransactionInput>, Option<Remainder>)> {
     log::debug!("[TRANSFER] create_transaction");
     let create_transaction_start_time = Instant::now();
 
@@ -92,12 +90,10 @@ pub(crate) async fn create_transaction(
         let address = Address::try_from_bech32(&output.address)?;
         total_output_amount += output.amount;
         match output.output_kind {
-            Some(crate::account::types::OutputKind::SignatureLockedSingle) | None => {
-                outputs_for_essence.push(SignatureLockedSingleOutput::new(address, output.amount)?.into());
+            Some(crate::account::types::OutputKind::Extended) | None => {
+                outputs_for_essence.push(Output::Extended(ExtendedOutput::new(address, output.amount)));
             }
-            Some(crate::account::types::OutputKind::SignatureLockedDustAllowance) => {
-                outputs_for_essence.push(SignatureLockedDustAllowanceOutput::new(address, output.amount)?.into());
-            }
+            // todo handle other outputs
             _ => return Err(crate::error::Error::InvalidOutputKind("Treasury".to_string())),
         }
     }
@@ -172,16 +168,20 @@ pub(crate) async fn create_transaction(
             amount: remainder_value,
         });
         match options_.remainder_output_kind {
-            Some(OutputKind::SignatureLockedDustAllowance) => outputs_for_essence.push(
-                SignatureLockedDustAllowanceOutput::new(remainder_address.address.inner, remainder_value)?.into(),
-            ),
-            _ => outputs_for_essence
-                .push(SignatureLockedSingleOutput::new(remainder_address.address.inner, remainder_value)?.into()),
+            Some(OutputKind::Extended) => {
+                outputs_for_essence.push(Output::Extended(ExtendedOutput::new(
+                    remainder_address.address.inner,
+                    remainder_value,
+                )));
+            }
+            _ => {
+                todo!("handle other outputs")
+            }
         }
     }
 
     // Build transaction essence
-    let mut essence_builder = RegularEssence::builder();
+    let mut essence_builder = RegularTransactionEssence::builder();
 
     // Order inputs and add them to the essence
     inputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
@@ -205,7 +205,7 @@ pub(crate) async fn create_transaction(
     }
 
     let essence = essence_builder.finish()?;
-    let essence = Essence::Regular(essence);
+    let essence = TransactionEssence::Regular(essence);
 
     #[cfg(feature = "events")]
     {

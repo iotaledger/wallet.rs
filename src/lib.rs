@@ -22,8 +22,6 @@ pub mod error;
 #[cfg(feature = "events")]
 /// The event module.
 pub mod events;
-/// Signing interfaces for address generation and transaction signing.
-pub mod signing;
 
 // todo: add Stronghold support, refactor, check if it can't lock funds if it's stored with locked outputs and
 // transaction creation failed so they should be unlocked again and other edge cases

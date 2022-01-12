@@ -1,14 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
-        types::AccountBalance,
-    },
-    signing::GenerateAddressMetadata,
+use crate::account::{
+    handle::AccountHandle,
+    operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
+    types::AccountBalance,
 };
+
+use iota_client::signing::{GenerateAddressMetadata, Network};
 
 use std::cmp;
 
@@ -19,14 +18,14 @@ use std::cmp;
 /// will be removed again, to keep the account size smaller
 pub(crate) async fn search_addresses_with_funds(
     account_handle: &AccountHandle,
-    address_gap_limit: usize,
+    address_gap_limit: u32,
 ) -> crate::Result<AccountBalance> {
     log::debug!("[search_addresses_with_funds]");
     let client = crate::client::get_client().await?;
     let bech32_hrp = client.get_bech32_hrp().await?;
     let network = match bech32_hrp.as_str() {
-        "iota" => crate::signing::Network::Mainnet,
-        _ => crate::signing::Network::Testnet,
+        "iota" => Network::Mainnet,
+        _ => Network::Testnet,
     };
 
     // store the length so we can remove addresses with higher indexes later if they don't have balance
@@ -110,8 +109,8 @@ pub(crate) async fn search_addresses_with_funds(
 /// addresses_len was before we generated new addresses in search_addresses_with_funds
 async fn clean_account_after_recovery(
     account_handle: &AccountHandle,
-    old_highest_public_address_index: usize,
-    old_highest_internal_address_index: usize,
+    old_highest_public_address_index: u32,
+    old_highest_internal_address_index: u32,
 ) -> AccountHandle {
     let mut account = account_handle.write().await;
     let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.balance != 0);

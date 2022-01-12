@@ -16,12 +16,9 @@ pub use operations::{
     transfer::{RemainderValueStrategy, TransferOptions, TransferOutput},
 };
 
-use crate::{
-    account::types::{
-        address::{AccountAddress, AddressWithBalance},
-        AccountBalance, OutputData,
-    },
-    signing::SignerType,
+use crate::account::types::{
+    address::{AccountAddress, AddressWithBalance},
+    AccountBalance, OutputData,
 };
 
 use getset::{Getters, Setters};
@@ -38,12 +35,9 @@ pub struct Account {
     #[getset(set = "pub(crate)")]
     id: String,
     /// The account index
-    index: usize,
+    index: u32,
     /// The account alias.
     alias: String,
-    /// The account's signer type.
-    #[serde(rename = "signerType")]
-    signer_type: SignerType,
     pub(crate) public_addresses: Vec<AccountAddress>,
     pub(crate) internal_addresses: Vec<AccountAddress>,
     // used to improve performance for syncing and getbalance because it's in most cases only a subset of all addresses
@@ -70,6 +64,6 @@ pub struct Account {
 pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,
     pub(crate) automatic_output_consolidation: bool,
-    /* #[cfg(feature = "storage")]
-     * pub(crate) persist_events: bool, */
+    // #[cfg(feature = "storage")]
+    // pub(crate) persist_events: bool,
 }

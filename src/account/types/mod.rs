@@ -73,10 +73,14 @@ pub enum InclusionState {
 /// The output kind enum.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OutputKind {
-    /// SignatureLockedSingle output.
-    SignatureLockedSingle,
-    /// Dust allowance output.
-    SignatureLockedDustAllowance,
+    /// Alias output.
+    Alias,
+    /// Extended output.
+    Extended,
+    /// Foundry output.
+    Foundry,
+    /// Nft output.
+    Nft,
     /// Treasury output.
     Treasury,
 }
@@ -86,8 +90,10 @@ impl FromStr for OutputKind {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let kind = match s {
-            "SignatureLockedSingle" => Self::SignatureLockedSingle,
-            "SignatureLockedDustAllowance" => Self::SignatureLockedDustAllowance,
+            "Alias" => Self::Alias,
+            "Extended" => Self::Extended,
+            "Foundry" => Self::Foundry,
+            "Nft" => Self::Nft,
             "Treasury" => Self::Treasury,
             _ => return Err(crate::Error::InvalidOutputKind(s.to_string())),
         };
@@ -106,7 +112,7 @@ pub enum AccountIdentifier {
     /// Account alias as identifier.
     Alias(String),
     /// An index identifier.
-    Index(usize),
+    Index(u32),
 }
 
 impl<'de> Deserialize<'de> for AccountIdentifier {
@@ -143,8 +149,8 @@ impl From<&String> for AccountIdentifier {
 }
 
 // When the identifier is an index.
-impl From<usize> for AccountIdentifier {
-    fn from(value: usize) -> Self {
+impl From<u32> for AccountIdentifier {
+    fn from(value: u32) -> Self {
         Self::Index(value)
     }
 }

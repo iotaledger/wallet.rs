@@ -53,7 +53,7 @@ impl EventEmitter {
 
     /// Invokes all listeners of `event`, passing a reference to `payload` as an
     /// argument to each of them.
-    pub fn emit(&self, account_index: usize, event: WalletEvent) {
+    pub fn emit(&self, account_index: u32, event: WalletEvent) {
         let event_type = match &event {
             WalletEvent::BalanceChange(_) => WalletEventType::BalanceChange,
             WalletEvent::TransactionInclusion(_) => WalletEventType::TransactionInclusion,

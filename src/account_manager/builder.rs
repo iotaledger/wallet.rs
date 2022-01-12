@@ -9,9 +9,9 @@ use crate::{
     account::handle::AccountHandle,
     account_manager::AccountManager,
     client::options::{ClientOptions, ClientOptionsBuilder},
-    signing::SignerType,
 };
 
+use iota_client::signing::{mnemonic::MnemonicSigner, SignerHandle};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -27,7 +27,11 @@ pub struct AccountManagerBuilder {
     #[cfg(feature = "storage")]
     storage_options: Option<StorageOptions>,
     client_options: ClientOptions,
-    signer_type: SignerType,
+    #[serde(default = "default_signer", skip_serializing, skip_deserializing)]
+    signer: SignerHandle,
+}
+pub fn default_signer() -> SignerHandle {
+    MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -67,12 +71,7 @@ impl Default for AccountManagerBuilder {
                 .with_node_sync_disabled()
                 .finish()
                 .unwrap(),
-            #[cfg(feature = "stronghold")]
-            signer_type: SignerType::Stronghold,
-            #[cfg(all(feature = "mnemonic", not(feature = "stronghold")))]
-            signer_type: SignerType::Mnemonic,
-            #[cfg(not(any(feature = "mnemonic", feature = "stronghold")))]
-            signer_type: SignerType::Custom("Signer unintialized".to_string()),
+            signer: MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap(),
         }
     }
 }
@@ -87,9 +86,9 @@ impl AccountManagerBuilder {
         self.client_options = options;
         self
     }
-    /// Set the signer type to be used.
-    pub fn with_signer_type(mut self, signer_type: SignerType) -> Self {
-        self.signer_type = signer_type;
+    /// Set the signer to be used.
+    pub fn with_signer(mut self, signer: SignerHandle) -> Self {
+        self.signer = signer;
         self
     }
     /// Set the signer type to be used.
@@ -103,7 +102,6 @@ impl AccountManagerBuilder {
     /// Builds the account manager
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        crate::signing::set_signer(self.signer_type.clone());
         crate::client::set_client(self.client_options.clone()).await?;
 
         #[cfg(feature = "storage")]
@@ -129,9 +127,9 @@ impl AccountManagerBuilder {
                 options.storage_file_name,
             )
             .await?;
-            let (client_options, signer_type) = match data.0 {
-                Some(data) => (data.client_options, data.signer_type),
-                None => (self.client_options, self.signer_type),
+            let (client_options, signer) = match data.0 {
+                Some(data) => (data.client_options, data.signer),
+                None => (self.client_options, self.signer),
             };
             #[cfg(feature = "events")]
             let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
@@ -142,12 +140,12 @@ impl AccountManagerBuilder {
                 accounts: Arc::new(RwLock::new(
                     data.1
                         .into_iter()
-                        .map(|a| AccountHandle::new(a, event_emitter.clone()))
+                        .map(|a| AccountHandle::new(a, signer.clone(), event_emitter.clone()))
                         .collect(),
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
-                signer_type,
+                signer,
                 #[cfg(feature = "events")]
                 event_emitter,
             });
@@ -156,7 +154,7 @@ impl AccountManagerBuilder {
             accounts: Arc::new(RwLock::new(Vec::new())),
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
             client_options: Arc::new(RwLock::new(self.client_options)),
-            signer_type: self.signer_type,
+            signer: self.signer,
             #[cfg(feature = "events")]
             event_emitter: Arc::new(Mutex::new(EventEmitter::new())),
         })

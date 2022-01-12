@@ -17,12 +17,11 @@ use crate::{
         types::{AccountBalance, AccountIdentifier},
     },
     client::options::ClientOptions,
-    signing::SignerType,
 };
 use builder::AccountManagerBuilder;
 use operations::{get_account, recover_accounts, start_background_syncing};
 
-use iota_client::Client;
+use iota_client::{signing::SignerHandle, Client};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -44,7 +43,7 @@ pub struct AccountManager {
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
-    pub(crate) signer_type: SignerType,
+    pub(crate) signer: SignerHandle,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
 }
@@ -61,11 +60,7 @@ impl AccountManager {
         #[cfg(not(feature = "events"))]
         return AccountBuilder::new(self.accounts.clone(), self.signer_type.clone());
         #[cfg(feature = "events")]
-        AccountBuilder::new(
-            self.accounts.clone(),
-            self.signer_type.clone(),
-            self.event_emitter.clone(),
-        )
+        AccountBuilder::new(self.accounts.clone(), self.signer.clone(), self.event_emitter.clone())
     }
     /// Get an account with an AccountIdentifier
     pub async fn get_account<I: Into<AccountIdentifier>>(&self, identifier: I) -> crate::Result<AccountHandle> {
@@ -89,8 +84,8 @@ impl AccountManager {
     /// checked, if an account has balance, the counter is reset
     pub async fn recover_accounts(
         &self,
-        address_gap_limit: usize,
-        account_gap_limit: usize,
+        address_gap_limit: u32,
+        account_gap_limit: u32,
     ) -> crate::Result<Vec<AccountHandle>> {
         recover_accounts(self, address_gap_limit, account_gap_limit).await
     }
@@ -165,8 +160,7 @@ impl AccountManager {
     /// it securely. If you lose it, you potentially lose everything. With Stronghold this function needs to be
     /// called onnly once to initialize it, later the Stronghold password is required to use it.
     pub async fn store_mnemonic(&self, mnemonic: Option<String>) -> crate::Result<String> {
-        let signer = crate::signing::get_signer().await;
-        let mut signer = signer.lock().await;
+        let mut signer = self.signer.lock().await;
         let mnemonic = match mnemonic {
             Some(m) => {
                 self.verify_mnemonic(&m)?;

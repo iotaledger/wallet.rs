@@ -57,11 +57,7 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
     let outputs = outputs::output_response_to_output_data(account_handle, output_responses).await?;
 
     // only when actively called or also in the background syncing?
-    let signer_type = {
-        let account = account_handle.read().await;
-        account.signer_type.clone()
-    };
-    match signer_type {
+    match account_handle.signer.signer_type {
         #[cfg(feature = "ledger-nano")]
         // don't automatically consoldiate with ledger accounts, because they require approval from the user
         SignerType::LedgerNano => {}

@@ -20,7 +20,7 @@ async-trait =  { version ="0.1.51", default-features = false }
 futures =  { version = "0.3.17", default-features = false }
 getset =  { version = "0.1.1", default-features = false }
 hex =  { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "250ed5537caa5c4adaf119fb8628c14a65a837dd", default-features = false, features = ["async"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "e9e58257283a93e4ce5637d8529cb0061c66708e", default-features = false, features = ["async"] }
 iota-crypto = { version = "0.7.0", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false, features = ["std"] }
@@ -38,14 +38,11 @@ rocksdb = { git="https://github.com/iotaledger/rust-rocksdb", rev = "d2c579660e6
 # riker = { version = "0.4.2", default-features = false }
 # slog = { version = "2.7.0", default-features = false }
 
-# ledger hardware wallets
-iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13b80e169aaa19cde9cd825e8444be0973", default-features = false, optional = true }
-
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
 default = ["mnemonic", "events", "storage"]
-ledger-nano = ["iota-ledger"]
-ledger-nano-simulator = ["iota-ledger"]
+ledger-nano = ["iota-client/ledger"]
+ledger-nano-simulator = ["iota-client/ledger"]
 # stronghold = []
 storage = ["rocksdb"]
 # actor = []

@@ -120,17 +120,13 @@ pub(crate) async fn get_outputs(
 pub(crate) fn get_output_amount_and_address(output: &OutputDto) -> crate::Result<(u64, Address, OutputKind)> {
     match output {
         OutputDto::Treasury(_) => Err(crate::Error::InvalidOutputKind("Treasury".to_string())),
-        OutputDto::SignatureLockedSingle(ref r) => match &r.address {
+        OutputDto::Extended(ref r) => match &r.address {
             AddressDto::Ed25519(addr) => {
                 let output_address = Address::from(Ed25519Address::from_str(&addr.address)?);
-                Ok((r.amount, output_address, OutputKind::SignatureLockedSingle))
+                Ok((r.amount, output_address, OutputKind::Extended))
             }
+            _ => todo!(),
         },
-        OutputDto::SignatureLockedDustAllowance(ref r) => match &r.address {
-            AddressDto::Ed25519(addr) => {
-                let output_address = Address::from(Ed25519Address::from_str(&addr.address)?);
-                Ok((r.amount, output_address, OutputKind::SignatureLockedDustAllowance))
-            }
-        },
+        _ => todo!(),
     }
 }

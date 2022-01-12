@@ -10,7 +10,7 @@ use crate::account::{
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 use iota_client::bee_message::{
-    constants::{INPUT_OUTPUT_COUNT_MAX, INPUT_OUTPUT_COUNT_RANGE},
+    input::{INPUT_COUNT_MAX, INPUT_COUNT_RANGE},
     output::OutputId,
 };
 
@@ -65,14 +65,12 @@ pub(crate) async fn select_inputs(
     let network_id = client.get_network_id().await?;
 
     let mut signature_locked_outputs = Vec::new();
-    let mut dust_allowance_outputs = Vec::new();
     for (output_id, output) in account.unspent_outputs.iter() {
         // check if not in pending transaction (locked_outputs) and if from the correct network
         if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
             match output.kind {
-                OutputKind::SignatureLockedSingle => signature_locked_outputs.push(output),
-                OutputKind::SignatureLockedDustAllowance => dust_allowance_outputs.push(output),
-                _ => {}
+                OutputKind::Extended => signature_locked_outputs.push(output),
+                _ => todo!(),
             }
         }
     }
@@ -82,13 +80,10 @@ pub(crate) async fn select_inputs(
     // Sort inputs so we can get the biggest inputs first and don't reach the input limit, if we don't have the
     // funds spread over too many outputs
     signature_locked_outputs.sort_by(|a, b| b.amount.cmp(&a.amount));
-    dust_allowance_outputs.sort_by(|a, b| b.amount.cmp(&a.amount));
 
     let mut input_sum = 0;
     let selected_outputs: Vec<OutputData> = signature_locked_outputs
         .into_iter()
-        // add dust_allowance_outputs only at the end so we don't try to move them when we might have still dust
-        .chain(dust_allowance_outputs.into_iter())
         .take_while(|input| {
             let value = input.amount;
             let old_sum = input_sum;
@@ -112,7 +107,7 @@ pub(crate) async fn select_inputs(
             remainder_value
         )));
     }
-    if !INPUT_OUTPUT_COUNT_RANGE.contains(&selected_outputs.len()) {
+    if !INPUT_COUNT_RANGE.contains(&(selected_outputs.len() as u16)) {
         #[cfg(feature = "events")]
         account_handle
             .event_emitter
@@ -121,7 +116,7 @@ pub(crate) async fn select_inputs(
             .emit(account.index, WalletEvent::ConsolidationRequired);
         return Err(crate::Error::ConsolidationRequired(
             selected_outputs.len(),
-            INPUT_OUTPUT_COUNT_MAX,
+            INPUT_COUNT_MAX,
         ));
     }
 

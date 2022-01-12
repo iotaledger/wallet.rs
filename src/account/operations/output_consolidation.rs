@@ -35,8 +35,8 @@ pub(crate) async fn consolidate_outputs(account_handle: &AccountHandle) -> crate
         for output_id in &address.output_ids {
             if !account.locked_outputs.contains(output_id) {
                 if let Some(output) = account.outputs.get(output_id) {
-                    // only consolidate SignatureLockedSingle outputs so we can't get problems with the dust protection
-                    if !output.is_spent && output.kind == OutputKind::SignatureLockedSingle {
+                    // todo handle other output types?
+                    if !output.is_spent && output.kind == OutputKind::Extended {
                         unspent_outputs.push(output.clone());
                     }
                 }

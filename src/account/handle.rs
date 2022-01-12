@@ -21,6 +21,7 @@ use crate::events::{
     EventEmitter,
 };
 
+use iota_client::signing::SignerHandle;
 use tokio::sync::{Mutex, RwLock};
 
 use std::{ops::Deref, sync::Arc};
@@ -29,6 +30,7 @@ use std::{ops::Deref, sync::Arc};
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     account: Arc<RwLock<Account>>,
+    pub(crate) signer: SignerHandle,
     // mutex to prevent multiple sync calls at the same or almost the same time, the u128 is a timestamp
     // if the last synced time was < `MIN_SYNC_INTERVAL` second ago, we don't sync, but only calculate the balance
     // again, because sending transactions can change that
@@ -40,16 +42,18 @@ pub struct AccountHandle {
 impl AccountHandle {
     /// Create a new AccountHandle with an Account
     #[cfg(not(feature = "events"))]
-    pub(crate) fn new(account: Account) -> Self {
+    pub(crate) fn new(account: Account, signer: SignerHandle) -> Self {
         Self {
+            signer,
             account: Arc::new(RwLock::new(account)),
             last_synced: Default::default(),
         }
     }
     #[cfg(feature = "events")]
-    pub(crate) fn new(account: Account, event_emitter: Arc<Mutex<EventEmitter>>) -> Self {
+    pub(crate) fn new(account: Account, signer: SignerHandle, event_emitter: Arc<Mutex<EventEmitter>>) -> Self {
         Self {
             account: Arc::new(RwLock::new(account)),
+            signer,
             last_synced: Default::default(),
             event_emitter,
         }
@@ -137,7 +141,7 @@ impl AccountHandle {
     /// ```
     pub async fn generate_addresses(
         &self,
-        amount: usize,
+        amount: u32,
         options: Option<AddressGenerationOptions>,
     ) -> crate::Result<Vec<AccountAddress>> {
         let options = options.unwrap_or_default();
@@ -261,7 +265,7 @@ impl AccountHandle {
     /// has balance, the counter is reset
     /// Addresses that got crated during this operation and have a higher key_index than the latest one with balance,
     /// will be removed again, to keep the account size smaller
-    pub(crate) async fn search_addresses_with_funds(&self, address_gap_limit: usize) -> crate::Result<AccountBalance> {
+    pub(crate) async fn search_addresses_with_funds(&self, address_gap_limit: u32) -> crate::Result<AccountBalance> {
         search_addresses_with_funds(self, address_gap_limit).await
     }
 }

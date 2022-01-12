@@ -111,7 +111,7 @@ pub(crate) async fn get() -> crate::Result<Arc<tokio::sync::Mutex<StorageManager
 pub(crate) struct StorageManager {
     storage: Storage,
     // account indexes for accounts in the database
-    account_indexes: HashSet<usize>,
+    account_indexes: HashSet<u32>,
 }
 
 impl StorageManager {
@@ -161,7 +161,7 @@ impl StorageManager {
             .await
     }
 
-    pub async fn remove_account(&mut self, account_index: usize) -> crate::Result<()> {
+    pub async fn remove_account(&mut self, account_index: u32) -> crate::Result<()> {
         self.storage
             .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
             .await?;

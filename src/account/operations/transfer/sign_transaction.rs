@@ -1,26 +1,22 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::account::{
+    handle::AccountHandle,
+    operations::transfer::{Remainder, TransactionPayload},
+};
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::transfer::{Remainder, TransactionPayload},
-    },
-    signing::{SignMessageMetadata, TransactionInput},
-};
 
-use iota_client::bee_message::{
-    address::Address,
-    payload::transaction::Essence,
-    unlock::{UnlockBlock, UnlockBlocks},
+use iota_client::{
+    bee_message::{payload::transaction::TransactionEssence, unlock_block::UnlockBlocks},
+    signing::{mnemonic::IOTA_COIN_TYPE, verify_unlock_blocks, Network, SignMessageMetadata, TransactionInput},
 };
 
 /// Function to sign a transaction essence
 pub(crate) async fn sign_tx_essence(
     account_handle: &AccountHandle,
-    essence: Essence,
+    essence: TransactionEssence,
     mut transaction_inputs: Vec<TransactionInput>,
     remainder: Option<Remainder>,
 ) -> crate::Result<TransactionPayload> {
@@ -42,21 +38,30 @@ pub(crate) async fn sign_tx_essence(
         .address
         .bech32_hrp()
     {
-        "iota" => crate::signing::Network::Mainnet,
-        _ => crate::signing::Network::Testnet,
+        "iota" => Network::Mainnet,
+        _ => Network::Testnet,
     };
 
-    let unlock_blocks = crate::signing::get_signer()
-        .await
+    let remainder = match remainder_deposit_address {
+        Some(remainder_deposit_address) => Some(iota_client::signing::types::AccountAddress {
+            address: remainder_deposit_address.address.inner,
+            key_index: remainder_deposit_address.key_index,
+            internal: remainder_deposit_address.internal,
+        }),
+        None => None,
+    };
+    let unlock_blocks = account_handle
+        .signer
         .lock()
         .await
-        .sign_transaction(
-            &account,
+        .sign_transaction_essence(
+            IOTA_COIN_TYPE,
+            account.index,
             &essence,
             &mut transaction_inputs,
             SignMessageMetadata {
                 remainder_value,
-                remainder_deposit_address: remainder_deposit_address.as_ref(),
+                remainder_deposit_address: remainder.as_ref(),
                 network,
             },
         )
@@ -91,33 +96,4 @@ pub(crate) async fn sign_tx_essence(
     verify_unlock_blocks(&transaction_payload, input_addresses)?;
     log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
     Ok(transaction_payload)
-}
-
-fn verify_unlock_blocks(transaction_payload: &TransactionPayload, inputs: Vec<Address>) -> crate::Result<()> {
-    let essence_hash = transaction_payload.essence().hash();
-    let Essence::Regular(essence) = transaction_payload.essence();
-    let unlock_blocks = transaction_payload.unlock_blocks();
-    for (index, address) in inputs.iter().enumerate() {
-        verify_signature(address, unlock_blocks, index, &essence_hash)?;
-    }
-    Ok(())
-}
-
-fn verify_signature(
-    address: &Address,
-    unlock_blocks: &UnlockBlocks,
-    index: usize,
-    essence_hash: &[u8; 32],
-) -> crate::Result<()> {
-    let signature_unlock_block = match unlock_blocks.get(index) {
-        Some(unlock_block) => match unlock_block {
-            UnlockBlock::Signature(b) => b,
-            UnlockBlock::Reference(b) => match unlock_blocks.get(b.index().into()) {
-                Some(UnlockBlock::Signature(unlock_block)) => unlock_block,
-                _ => return Err(crate::Error::MissingUnlockBlock),
-            },
-        },
-        None => return Err(crate::Error::MissingUnlockBlock),
-    };
-    Ok(address.verify(essence_hash, signature_unlock_block)?)
 }
