@@ -19,23 +19,26 @@ cd wallet.rs/bindings/java
 cargo build --release
 ```
 
-Source code will be generated under `native/src/main/java/org/iota/wallet`
-Binaries can be found at `native/target/release`
+Source code will be generated under `wallet.rs/bindings/java/native/src/main/java/org/iota/wallet`
 
-Then we need to generate the jar file containing the newly generated source files.
+Binaries can be found at `wallet.rs/bindings/java/target/release`
+
+Once this step succeeds we need to generate the jar file containing the newly generated Java source files.
 ### Gradle
 
-Make gradlew executable (`chmod +x gradlew`), then run
+Make `gradlew` executable (`chmod +x gradlew`) if needed, then run
 ```
+cd wallet.rs/bindings/java
 ./gradlew jar
 ```
 
 ### Maven
 ```
+cd wallet.rs/bindings/java
 mvn install
 ```
 
-The jar will be found at `wallet.rs/bindings/java/native/build/native.jar`
+The jar will be found at `wallet.rs/bindings/java/native/build/libs/native.jar`
 
 ## Running the Java example
 

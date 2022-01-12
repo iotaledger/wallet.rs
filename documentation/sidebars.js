@@ -46,6 +46,32 @@ module.exports = {
           id: 'libraries/rust/api_reference',
           label: 'API Reference'
         },
+        {
+          type: 'category',
+          label: 'Java',
+          items: [
+            {
+              type: 'doc',
+              id: 'libraries/java/getting_started',
+              label: 'Getting Started'
+            },
+            {
+              type: 'doc',
+              id: 'libraries/java/android_development',
+              label: 'Android'
+            },
+            {
+              type: 'doc',
+              id: 'libraries/java/examples',
+              label: 'Examples'
+            },
+            {
+              type: 'doc',
+              id: 'libraries/java/api_reference',
+              label: 'API Reference'
+            },
+          ]
+        }
       ]
     },
     {
