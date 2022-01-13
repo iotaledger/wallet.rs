@@ -43,7 +43,6 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 use serde::Serialize;
-use std::str::FromStr;
 use tokio::{
     sync::{
         broadcast::{channel as broadcast_channel, Receiver as BroadcastReceiver, Sender as BroadcastSender},
@@ -419,16 +418,18 @@ impl AccountManager {
         if finder.initial_address_index == 0 {
             self.cached_migration_data.lock().await.remove(&finder.seed_hash);
         }
-        let metadata = finder
-            .finish(
-                self.cached_migration_data
-                    .lock()
-                    .await
-                    .get(&finder.seed_hash)
-                    .map(|c| c.inputs.clone())
-                    .unwrap_or_default(),
-            )
-            .await?;
+        // lock mutex in the closure, so it gets dropped before calling finder.finish(previous_inputs).await to allow
+        // parallel executions
+        let previous_inputs = {
+            self.cached_migration_data
+                .lock()
+                .await
+                .get(&finder.seed_hash)
+                .map(|c| c.inputs.clone())
+                .unwrap_or_default()
+        };
+
+        let metadata = finder.finish(previous_inputs).await?;
         self.cached_migration_data
             .lock()
             .await
@@ -696,7 +697,7 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
                 bech32_hrp,
             ),
         })
@@ -833,9 +834,10 @@ impl AccountManager {
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             Self::load_accounts(
                 &self.accounts,
                 &self.storage_path,
@@ -846,12 +848,24 @@ impl AccountManager {
             self.loaded_accounts.store(true, Ordering::SeqCst);
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
+            // first get the messages with the old encryption key
+            let mut account_messages = HashMap::new();
+            for account_handle in self.accounts.read().await.values() {
+                let account = account_handle.read().await;
+                let messages = account.list_messages(0, 0, None).await?;
+                account_messages.insert(account.id().clone(), messages);
+            }
+
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             // save the accounts and messages again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
                 let mut account = account_handle.write().await;
                 account.save().await?;
-                let messages = account.list_messages(0, 0, None).await?;
-                account.save_messages(messages).await?;
+                let messages = account_messages
+                    .get(account.id())
+                    .ok_or_else(|| crate::Error::Storage("missing account messages".to_string()))?;
+                account.save_messages(messages.to_vec()).await?;
             }
         }
 
@@ -1760,7 +1774,8 @@ async fn poll(
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let mut message = account.get_message(&message_id).await.unwrap();
-            if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
+            let client = client.read().await;
+            if let Ok(metadata) = client.get_message().metadata(&message_id).await {
                 if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
                     let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included
                         || ledger_inclusion_state == LedgerInclusionStateDto::NoTransaction;
@@ -1774,6 +1789,28 @@ async fn poll(
                             retried_data.account_handle.account_options.persist_events,
                         )
                         .await?;
+                    } else {
+                        // if it's not confirmed we ask the node for the included message for this transaction, because
+                        // someone else could have reattached it
+                        if !confirmed {
+                            if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message.payload {
+                                if let Ok(reattachment_message) = client
+                                    .get_included_message(&tx_payload.to_transaction_payload()?.id())
+                                    .await
+                                {
+                                    message.set_reattachment_message_id(Some(reattachment_message.id().0));
+                                    message.set_confirmed(Some(true));
+                                    account.save_messages(vec![message.clone()]).await?;
+                                    emit_confirmation_state_change(
+                                        &account,
+                                        message,
+                                        confirmed,
+                                        retried_data.account_handle.account_options.persist_events,
+                                    )
+                                    .await?;
+                                }
+                            }
+                        }
                     }
                 }
             } else if message.payload().is_none() {
@@ -1945,6 +1982,8 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                     Err(crate::Error::ClientError(ref e)) => {
                         if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
                             no_need_promote_or_reattach.push(message_id);
+                        } else {
+                            log::debug!("[POLLING] retrying failed: {:?}", e);
                         }
                     }
                     _ => {}

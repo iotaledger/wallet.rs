@@ -374,6 +374,27 @@ The _Transfer_ object used in [SyncedAccount](#syncedaccount)
 | skip_sync                | `bool`                      | `False`           | Whether to skip the sync process                                    |
 | output_kind              | `str`                       | `null`            | Should be _SignatureLockedSingle_ or _SignatureLockedDustAllowance_ |
 
+## TransferOutput
+
+| Param                    | Type                        | Default           | Description                                                         |
+| ------------------------ | --------------------------- | ----------------- | ------------------------------------------------------------------- |
+| amount                   | `int`                       | `undefined`       | The amount to transfer                                              |
+| address                  | `str`                       | `undefined`       | The address to send                                                 |
+| output_kind              | `str`                       | `null`            | Should be _SignatureLockedSingle_ or _SignatureLockedDustAllowance_ |
+
+## TransferWithOutputs
+
+### constructor(outputs: list[TransferOutput], indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional)): [TransferWithOutputs](#transferwithoutputs)
+
+The _Transfer_ object used in [SyncedAccount](#syncedaccount)
+
+| Param                    | Type                        | Default           | Description                                                         |
+| ------------------------ | --------------------------- | ----------------- | ------------------------------------------------------------------- |
+| outputs                   | `list[TransferOutput]`     | `undefined`       | The amount to transfer                                              |
+| indexation               | `[Indexation](#indexation)` | `null`            | The indexation payload                                              |
+| remainder_value_strategy | `str`                       | `_ChangeAddress_` | Should be _ReuseAddress_ or _ChangeAddress_                         |
+| skip_sync                | `bool`                      | `False`           | Whether to skip the sync process                                    |
+
 ## SyncedAccount
 
 The result of a _sync_ operation on an Account.
@@ -441,6 +462,16 @@ Returns the Bech32 HRP string.
 Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
 
 ### transfer(transfer_obj): [WalletMessage](#walletmessage)
+
+Transfer tokens.
+
+| Param        | Type                    | Default     | Description                  |
+| ------------ | ----------------------- | ----------- | ---------------------------- |
+| transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
+
+Returns the [WalletMessage](#walletmessage) which makes the transfering.
+
+### transfer_with_outputs(transfer_obj): [WalletMessage](#walletmessage)
 
 Transfer tokens.
 

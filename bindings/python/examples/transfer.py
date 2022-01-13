@@ -84,6 +84,7 @@ input()
 
 print(f"Available balance {account.balance()['available']}")
 
+# transfer with a single output
 # NOTE: Replace with the address of your choice!
 transfer = iw.Transfer(
     amount=1_000_000,
@@ -92,5 +93,18 @@ transfer = iw.Transfer(
 )
 
 node_response = account.transfer(transfer)
+message_id = node_response['id']
+print(f'Please check https://explorer.iota.org/devnet/addr/{message_id}')
+
+# transfer with multiple outputs
+# NOTE: Replace with the addresses of your choice!
+transfer_outputs = [
+    {"address": 'atoi1qrzlf0weq5x72qypl8falyw9fgwp6hfqu5kzwkf8aujjqxj36f3dx99rvqu', "amount": 1_000_000},
+    {"address": 'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r', "amount": 1_000_000}
+]
+
+transfer = iw.TransferWithOutputs(outputs=transfer_outputs, remainder_value_strategy="ReuseAddress")
+
+node_response = account.transfer_with_outputs(transfer)
 message_id = node_response['id']
 print(f'Please check https://explorer.iota.org/devnet/addr/{message_id}')
