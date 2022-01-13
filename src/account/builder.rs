@@ -11,6 +11,8 @@ use crate::{
 };
 
 use iota_client::signing::SignerHandle;
+#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+use iota_client::signing::SignerType;
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;

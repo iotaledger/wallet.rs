@@ -36,6 +36,8 @@ pub mod logger;
 // #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 // pub(crate) mod stronghold;
 
+pub use iota_client::signing;
+
 pub use error::Error;
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;

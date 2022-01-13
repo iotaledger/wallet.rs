@@ -5,36 +5,6 @@ use serde::ser::{SerializeStruct, Serializer};
 
 use std::path::PathBuf;
 
-/// Each of the account initialisation required fields.
-#[derive(Debug)]
-pub enum AccountInitialiseRequiredField {
-    /// `signer_type` field.
-    SignerType,
-}
-
-impl std::fmt::Display for AccountInitialiseRequiredField {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
-/// Each of the address builder required fields.
-#[derive(Debug)]
-pub enum AddressBuildRequiredField {
-    /// address field.
-    Address,
-    /// key_index field.
-    KeyIndex,
-    /// outputs field.
-    Outputs,
-}
-
-impl std::fmt::Display for AddressBuildRequiredField {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", format!("{:?}", self).to_lowercase())
-    }
-}
-
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -101,12 +71,6 @@ pub enum Error {
     /// Invalid transaction identifier.
     #[error("invalid transaction id received by node")]
     InvalidTransactionId,
-    /// Address build error: required field not filled.
-    #[error("address build error, field `{0}` is required")]
-    AddressBuildRequiredField(AddressBuildRequiredField),
-    /// Account initialisation error: required field not filled.
-    #[error("account initialisation error, field `{0}` is required")]
-    AccountInitialiseRequiredField(AccountInitialiseRequiredField),
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota_client::bee_message::Error),
@@ -145,43 +109,9 @@ pub enum Error {
     /// accounts)
     #[error("cannot use index identifier when two signer types are used")]
     CannotUseIndexIdentifier,
-    /// No ledger signer error
-    #[error("no ledger signer")]
-    NoLedgerSignerError,
-    /// Ledger transport error
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger transport error")]
-    LedgerMiscError,
-    /// Dongle Locked
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger locked")]
-    LedgerDongleLocked,
-    /// Denied by User
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("denied by user")]
-    LedgerDeniedByUser,
-    /// Ledger Device not found
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger device not found")]
-    LedgerDeviceNotFound,
-    /// Ledger Essence Too Large
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger essence too large")]
-    LedgerEssenceTooLarge,
-    /// Ledger transport error
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger app compiled for testnet but used with mainnet or vice versa")]
-    LedgerNetMismatch,
-    /// Wrong ledger seed error
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-    #[error("ledger mnemonic is mismatched")]
-    LedgerMnemonicMismatch,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
-    /// Dust error, for example no dust allowance ouptut on an address.
-    #[error("Dust error: {0}")]
-    DustError(String),
     /// Leaving dust error, for example sending 2.5 from 3 Mi, would leave 0.5 (dust) behind.
     #[error("Leaving dust error: {0}")]
     LeavingDustError(String),
@@ -278,27 +208,6 @@ impl From<crate::stronghold::Error> for Error {
     }
 }
 
-// map most errors to a single error but there are some errors that
-// need special care.
-// LedgerDongleLocked: Ask the user to unlock the dongle
-// LedgerDeniedByUser: The user denied a signing
-// LedgerDeviceNotFound: No usable Ledger device was found
-// LedgerMiscError: Everything else.
-// LedgerEssenceTooLarge: Essence with bip32 input indices need more space then the internal buffer is big
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-impl From<iota_ledger::api::errors::APIError> for Error {
-    fn from(error: iota_ledger::api::errors::APIError) -> Self {
-        log::info!("ledger error: {}", error);
-        match error {
-            iota_ledger::api::errors::APIError::SecurityStatusNotSatisfied => Error::LedgerDongleLocked,
-            iota_ledger::api::errors::APIError::ConditionsOfUseNotSatisfied => Error::LedgerDeniedByUser,
-            iota_ledger::api::errors::APIError::TransportError => Error::LedgerDeviceNotFound,
-            iota_ledger::api::errors::APIError::EssenceTooLarge => Error::LedgerEssenceTooLarge,
-            _ => Error::LedgerMiscError,
-        }
-    }
-}
-
 impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
     where
@@ -337,10 +246,6 @@ impl serde::Serialize for Error {
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
             Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
             Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
-            Self::AddressBuildRequiredField(_) => serialize_variant(self, serializer, "AddressBuildRequiredField"),
-            Self::AccountInitialiseRequiredField(_) => {
-                serialize_variant(self, serializer, "AccountInitialiseRequiredField")
-            }
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
             Self::MnemonicEncode(_) => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
@@ -352,23 +257,7 @@ impl serde::Serialize for Error {
             Self::RecordEncrypt(_) => serialize_variant(self, serializer, "RecordEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
-            Self::NoLedgerSignerError => serialize_variant(self, serializer, "NoLedgerSignerError"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerMiscError => serialize_variant(self, serializer, "LedgerMiscError"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerDongleLocked => serialize_variant(self, serializer, "LedgerDongleLocked"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerDeniedByUser => serialize_variant(self, serializer, "LedgerDeniedByUser"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerDeviceNotFound => serialize_variant(self, serializer, "LedgerDeviceNotFound"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerEssenceTooLarge => serialize_variant(self, serializer, "LedgerEssenceTooLarge"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerNetMismatch => serialize_variant(self, serializer, "LedgerNetMismatch"),
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            Self::LedgerMnemonicMismatch => serialize_variant(self, serializer, "LedgerMnemonicMismatch"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
-            Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),

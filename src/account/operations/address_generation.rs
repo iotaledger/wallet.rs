@@ -74,11 +74,17 @@ pub async fn generate_addresses(
         let mut changed_metadata = options.metadata.clone();
         changed_metadata.syncing = true;
         let addresses = signer
-            .generate_addresses(&account, address_range, options.internal, changed_metadata)
+            .generate_addresses(
+                IOTA_COIN_TYPE,
+                account.index,
+                address_range.clone(),
+                options.internal,
+                changed_metadata,
+            )
             .await?;
         for address in addresses {
             let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
-            self.event_emitter.lock().await.emit(
+            account_handle.event_emitter.lock().await.emit(
                 account.index,
                 WalletEvent::LedgerAddressGeneration(AddressData {
                     address: address_wrapper.to_bech32(),

@@ -19,7 +19,7 @@ use crate::{
     client::options::ClientOptions,
 };
 use builder::AccountManagerBuilder;
-use operations::{get_account, recover_accounts, start_background_syncing};
+use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};
 
 use iota_client::{signing::SignerHandle, Client};
 #[cfg(feature = "events")]
@@ -155,23 +155,11 @@ impl AccountManager {
         Ok(())
     }
 
-    /// Sets the mnemonic for the signer, if none was provided, a random Bip39 mnemonic will be generated with the
-    /// English word list and returned. Apart from a Stronghold backup it's the only way to recover funds, so save
-    /// it securely. If you lose it, you potentially lose everything. With Stronghold this function needs to be
-    /// called onnly once to initialize it, later the Stronghold password is required to use it.
-    pub async fn store_mnemonic(&self, mnemonic: Option<String>) -> crate::Result<String> {
-        let mut signer = self.signer.lock().await;
-        let mnemonic = match mnemonic {
-            Some(m) => {
-                self.verify_mnemonic(&m)?;
-                m
-            }
-            None => self.generate_mnemonic()?,
-        };
-        signer
-            .store_mnemonic(std::path::Path::new(""), mnemonic.clone())
-            .await?;
-        Ok(mnemonic)
+    /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
+    /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
+    /// duplicated
+    pub async fn verify_integrity(&self) -> crate::Result<()> {
+        verify_integrity(self).await
     }
 
     // storage feature

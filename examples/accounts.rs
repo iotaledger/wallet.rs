@@ -7,6 +7,7 @@ use iota_wallet::{
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
+    signing::mnemonic::MnemonicSigner,
     Result,
 };
 use std::time::Instant;
@@ -17,25 +18,20 @@ async fn main() -> Result<()> {
     init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
-        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-        .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")?
-        .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")?
-        // .with_node("https://chrysalis-nodes.iota.org/")?
-        // .with_node("http://localhost:14265")?
+        .with_node("http://localhost:14265")?
         .with_node_sync_disabled()
-        .finish()
-        .unwrap();
+        .finish()?;
+
+    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
 
     let manager = AccountManager::builder()
         .with_client_options(client_options)
+        .with_signer(signer)
         .finish()
         .await?;
-    // manager.set_stronghold_password("password").await?;
 
     // Get account or create a new one
     let account_alias = "first_account";
-    let mnemonic = "giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally".to_string();
-    manager.store_mnemonic(Some(mnemonic)).await?;
 
     // create first account
     let _first_account = match manager.get_account(account_alias).await {

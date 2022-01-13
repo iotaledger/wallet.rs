@@ -6,6 +6,7 @@
 use iota_wallet::{
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
+    signing::mnemonic::MnemonicSigner,
     Result,
 };
 use std::time::Instant;
@@ -15,16 +16,16 @@ async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
     init_logger("wallet.log", LevelFilter::Debug)?;
 
+    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+
     let manager = AccountManager::builder()
         .with_storage_folder("wallet-database")
+        .with_signer(signer)
         .finish()
         .await?;
-    // manager.set_stronghold_password("password").await?;
 
     // Get account or create a new one
     let account_alias = "logger";
-    let mnemonic = "giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally".to_string();
-    manager.store_mnemonic(Some(mnemonic)).await?;
     let account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
