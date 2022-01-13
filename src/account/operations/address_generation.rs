@@ -64,17 +64,19 @@ pub async fn generate_addresses(
             }
         }
     };
-    let mut generate_addresses = Vec::new();
-    for address_index in highest_current_index_plus_one..highest_current_index_plus_one + amount {
-        #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
-        // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
-        // have it visible on the computer first, so we need to generate it without the prompt first
-        if !options.metadata.syncing {
-            let mut changed_metadata = options.metadata.clone();
-            changed_metadata.syncing = true;
-            let address = signer
-                .generate_address(&account, address_index, options.internal, changed_metadata)
-                .await?;
+
+    let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
+
+    #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
+    // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
+    // have it visible on the computer first, so we need to generate it without the prompt first
+    if !options.metadata.syncing {
+        let mut changed_metadata = options.metadata.clone();
+        changed_metadata.syncing = true;
+        let addresses = signer
+            .generate_addresses(&account, address_range, options.internal, changed_metadata)
+            .await?;
+        for address in addresses {
             let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
             self.event_emitter.lock().await.emit(
                 account.index,
@@ -83,26 +85,28 @@ pub async fn generate_addresses(
                 }),
             );
         }
+    }
 
-        let address = signer
-            .generate_address(
-                IOTA_COIN_TYPE,
-                account.index,
-                address_index,
-                options.internal,
-                options.metadata.clone(),
-            )
-            .await?;
+    let addresses = signer
+        .generate_addresses(
+            IOTA_COIN_TYPE,
+            account.index,
+            address_range,
+            options.internal,
+            options.metadata.clone(),
+        )
+        .await?;
 
-        let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
-
-        generate_addresses.push(AccountAddress {
-            address: address_wrapper,
-            key_index: address_index,
+    let generate_addresses: Vec<AccountAddress> = addresses
+        .into_iter()
+        .enumerate()
+        .map(|(index, address)| AccountAddress {
+            address: AddressWrapper::new(address, bech32_hrp.clone()),
+            key_index: highest_current_index_plus_one + index as u32,
             internal: options.internal,
             used: false,
-        });
-    }
+        })
+        .collect();
 
     // add addresses to the account
     if options.internal {

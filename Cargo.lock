@@ -805,7 +805,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=e9e58257283a93e4ce5637d8529cb0061c66708e#e9e58257283a93e4ce5637d8529cb0061c66708e"
+source = "git+https://github.com/iotaledger/iota.rs?rev=622097d858a3647008d6649e8b3e885dab6ad295#622097d858a3647008d6649e8b3e885dab6ad295"
 dependencies = [
  "async-trait",
  "bee-common",
