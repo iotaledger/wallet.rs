@@ -12,14 +12,24 @@ use iota_client::bee_message::{
 };
 use serde::{Deserialize, Deserializer, Serialize};
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
     pub(crate) total: u64,
+    // balance that can currently spend
     pub(crate) available: u64,
+    // currently required amount for the byte cost
+    pub(crate) byte_cost_deposit: u64,
+    pub(crate) native_tokens: HashMap<String, u128>,
+    // todo: should it look like this?
+    pub(crate) nfts: HashMap<String, u128>,
+    // todo: should it look like this?
+    pub(crate) foundrys: HashMap<String, u128>,
+    // todo: should it look like this?
+    pub(crate) alias_outputs: HashMap<String, u128>,
 }
 
 /// An output with metadata

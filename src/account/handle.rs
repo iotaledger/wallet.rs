@@ -229,6 +229,8 @@ impl AccountHandle {
         Ok(AccountBalance {
             total: total_balance,
             available: total_balance - locked_balance,
+            // todo set other values
+            ..Default::default()
         })
     }
 
