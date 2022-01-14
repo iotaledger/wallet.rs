@@ -1,5 +1,5 @@
 ---
-description: Official IOTA Client Library Java API reference.
+description: Official IOTA Wallet Library Java API reference.
 image: /img/logo/iota_mark_light.png
 keywords:
 - api
@@ -9,7 +9,7 @@ keywords:
 - endpoint
 - builder
 ---
-# API Reference - IOTA Client Library - Java binding
+# API Reference - IOTA Wallet Library - Java binding
 
 ### Api
 

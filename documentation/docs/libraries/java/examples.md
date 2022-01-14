@@ -1,5 +1,5 @@
 ---
-description: Official IOTA Client Library Java API examples.
+description: Official IOTA Wallet Library Java API examples.
 image: /img/logo/iota_mark_light.png
 keywords:
 - api
