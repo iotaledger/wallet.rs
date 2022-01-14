@@ -26,7 +26,6 @@ use iota_client::{
             Payload,
         },
     },
-    common::packable::Packable,
     signing::TransactionInput,
 };
 
@@ -138,7 +137,7 @@ pub(crate) async fn create_transaction(
                         )
                         .await?
                         .first()
-                        .expect("Didn't generated an address")
+                        .expect("Didn't generate an address")
                         .clone();
                     #[cfg(feature = "events")]
                     {
@@ -182,13 +181,7 @@ pub(crate) async fn create_transaction(
 
     // Build transaction essence
     let mut essence_builder = RegularTransactionEssence::builder();
-
-    // Order inputs and add them to the essence
-    inputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
     essence_builder = essence_builder.with_inputs(inputs_for_essence);
-
-    // Order outputs and add them to the essence
-    outputs_for_essence.sort_unstable_by_key(|a| a.pack_new());
     essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
     // Optional add indexation payload

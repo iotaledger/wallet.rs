@@ -66,7 +66,7 @@ checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 [[package]]
 name = "bee-common"
 version = "0.5.0"
-source = "git+https://github.com/Thoralf-M/bee?branch=patch-1#02cbfaed46730d61649d3466da294561c6bbd12c"
+source = "git+https://github.com/iotaledger/bee?branch=shimmer-develop#2397630198787c617e0c70baa88ac7a291bc44fd"
 dependencies = [
  "autocfg",
  "fern",
@@ -79,22 +79,25 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.7.0"
-source = "git+https://github.com/Thoralf-M/bee?branch=patch-1#02cbfaed46730d61649d3466da294561c6bbd12c"
+source = "git+https://github.com/iotaledger/bee?branch=shimmer-develop#2397630198787c617e0c70baa88ac7a291bc44fd"
 dependencies = [
  "bee-common",
  "bee-message",
+ "bee-packable",
  "thiserror",
 ]
 
 [[package]]
 name = "bee-message"
 version = "0.2.0"
-source = "git+https://github.com/Thoralf-M/bee?branch=patch-1#02cbfaed46730d61649d3466da294561c6bbd12c"
+source = "git+https://github.com/iotaledger/bee?branch=shimmer-develop#2397630198787c617e0c70baa88ac7a291bc44fd"
 dependencies = [
  "bech32 0.8.1",
  "bee-common",
+ "bee-packable",
  "bee-pow",
  "bee-ternary",
+ "bitflags",
  "bytemuck",
  "derive_more",
  "digest",
@@ -107,9 +110,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "bee-packable"
+version = "0.1.0"
+source = "git+https://github.com/iotaledger/bee?branch=coordicide#856123277f2a7b5353fa7f2472ceaf1932be4df7"
+dependencies = [
+ "autocfg",
+ "bee-packable-derive",
+ "primitive-types",
+ "serde",
+]
+
+[[package]]
+name = "bee-packable-derive"
+version = "0.1.0"
+source = "git+https://github.com/iotaledger/bee?branch=coordicide#856123277f2a7b5353fa7f2472ceaf1932be4df7"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro-error",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "bee-pow"
 version = "0.2.0"
-source = "git+https://github.com/Thoralf-M/bee?branch=patch-1#02cbfaed46730d61649d3466da294561c6bbd12c"
+source = "git+https://github.com/iotaledger/bee?branch=shimmer-develop#2397630198787c617e0c70baa88ac7a291bc44fd"
 dependencies = [
  "bee-ternary",
  "iota-crypto 0.9.1",
@@ -119,7 +145,7 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.1.7"
-source = "git+https://github.com/Thoralf-M/bee?branch=patch-1#02cbfaed46730d61649d3466da294561c6bbd12c"
+source = "git+https://github.com/iotaledger/bee?branch=shimmer-develop#2397630198787c617e0c70baa88ac7a291bc44fd"
 dependencies = [
  "bee-ledger",
  "bee-message",
@@ -805,11 +831,12 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=622097d858a3647008d6649e8b3e885dab6ad295#622097d858a3647008d6649e8b3e885dab6ad295"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5beafba5c4ce7a6055c7bc28f5dfebe8724f2b70#5beafba5c4ce7a6055c7bc28f5dfebe8724f2b70"
 dependencies = [
  "async-trait",
  "bee-common",
  "bee-message",
+ "bee-packable",
  "bee-pow",
  "bee-rest-api",
  "futures",
