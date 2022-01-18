@@ -19,7 +19,7 @@ use iota_wallet::{
 use crate::Result;
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Address(AddressRust);
+pub struct Address(pub AddressRust);
 
 impl Display for Address {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {

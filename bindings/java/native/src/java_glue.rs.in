@@ -560,28 +560,50 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases)]
     class AccountInitialiser{
         self_type AccountInitialiser;
         private constructor = empty;
-        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser; alias signerType;
+        /// Sets the account type.
+        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser;
+        /// Defines the account alias. If not defined, we'll generate one.
         fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
-        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
+        /// Time of account creation.
+        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
+        /// Messages associated with the seed.
+        /// The account can be initialised with locally stored messages.
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
+        /// Address history associated with the seed.
+        /// The account can be initialised with locally stored address history.
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
-        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser; alias skipPersistence;
+        /// Skips storing the account to the database.
+        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser;
+        /// Enables creating multiple accounts without history.
+        /// The wallet disables it by default to simplify account discovery.
+        fn AccountInitialiser::allow_create_multiple_empty_accounts(&mut self) -> AccountInitialiser;
+        /// Initialises the account.
         fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
     }
 );
 
 foreign_class!(
+    /// Account balance information.
     #[derive(camelCaseAliases, Display)]
     class AccountBalance {
         self_type AccountBalance;
         private constructor = empty;
         private fn AccountBalance::to_string(&self) -> String; alias to_string;
+        /// Account's total balance.
         fn AccountBalance::get_total(&self) -> u64;
+        // The available balance is the balance users are allowed to spend.
+        /// For example, if a user with 50i total account balance has made a message spending 20i,
+        /// the available balance should be (50i-30i) = 20i.
         fn AccountBalance::get_available(&self) -> u64;
+        /// Balances from message with `incoming: true`.
+        /// Note that this may not be accurate since the node prunes the messags.
         fn AccountBalance::get_incoming(&self) -> u64;
+        /// Balances from message with `incoming: false`.
+        /// Note that this may not be accurate since the node prunes the messags.
         fn AccountBalance::get_outgoing(&self) -> u64;
     }
 );
@@ -592,27 +614,90 @@ foreign_class!(
         self_type Account;
         private constructor = empty;
         private fn Account::to_string(&self) -> String; alias to_string;
-
+        /// Consolidate account outputs.
+        fn Account::consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>>;
+        /// Send messages.
         fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
+        /// Retry message.
+        fn Account::retry(&self, message_id: MessageId) -> Result<Message>;
+        /// Promote message.
+        fn Account::promote(&self, message_id: &MessageId) -> Result<Message>;
+        /// Reattach message.
+        fn Account::reattach(&self, message_id: &MessageId) -> Result<Message>;
+        /// Gets a new unused address and links it to this account.
         fn Account::generate_address(&self) -> Result<Address>;
+        /// Gets amount new unused addresses and links them to this account.
         fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>;
+        /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+        /// which is an address without balance.
         fn Account::get_unused_address(&self) -> Result<Address>;
+        /// Syncs the latest address with the Tangle and determines whether it's unused or not.
+        /// An unused address is an address without balance and associated message history.
+        /// Note that such address might have been used in the past, because the message history might have been pruned by
+        /// the node.
         fn Account::is_latest_address_unused(&self) -> Result<bool>;
+        /// Returns the most recent address of the account.
         fn Account::latest_address(&self) -> Address;
-        fn Account::set_alias(&self, alias: String) -> Result<()>;
-        fn Account::client_options(&self) -> ClientOptions;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
-        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
-        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
-        fn Account::alias(&self) -> String;
+        /// Gets the account balance information.
         fn Account::balance(&self) -> Result<AccountBalance>;
-
+        /// Updates the account alias.
+        fn Account::set_alias(&self, alias: String) -> Result<()>;
+        /// Updates the account's client options.
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        /// Gets a list of transactions on this account.
+        /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
+        /// `sync` should be called first.
+        ///
+        /// * `count` - Number of (most recent) messages to fetch.
+        /// * `from` - Starting point of the subset to fetch.
+        /// * `message_type` - Optional message type filter.
+        ///
+        /// # Example
+        ///
+        /// // gets 10 received messages, skipping the first 5 most recent messages.
+        /// ClientOptions clientOptions = ClientOptionsBuilder::new()
+        ///     .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+        ///     .build();
+        /// 
+        /// AccountManager manager = AccountManager.builder()
+        ///     .withStorage("./test-storage", null)
+        ///     .finish();
+        /// manager.setStrongholdPassword("password");
+        /// manager.storeMnemonic(SignerType.STRONGHOLD, null);
+        ///
+        /// Account account = manager
+        ///     .createAccount(clientOptions)
+        ///     .unwrap()
+        ///     .initialise();
+        /// account.listMessages(10, 5, MessageType.RECEIVED));
+        ///
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
+        /// Gets the spent addresses.
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
+        /// Gets the unspent addresses.
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
+        /// Gets a message with the given id associated with this account.
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
+        /// Gets the node info from /api/v1/info endpoint
+        /// TODO: Add auth and url in one NodeInfoOptions struct.
+        fn Account::get_node_info(&self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<NodeInfoWrapper>;
+        
+        /// The account alias.
+        fn Account::alias(&self) -> String;
+        /// Gets the available balance on the given address.
+        /// fn Account::address_available_balance(&self, address: Address) -> Result<u64>;
+        /// Returns the address bech32 human readable part.
+        fn Account::bech32_hrp(&self) -> String;
+        /// The account identifier.
         fn Account::id(&self) -> String;
+        /// Time of account creation.
         fn Account::created_at(&self) -> DateTime<Local>;
+        /// Returns the builder to setup the process to synchronize this account with the Tangle.
         fn Account::sync(&self) -> AccountSynchronizer;
+        /// Time the account was last synced with the Tangle.
         fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
+        /// The client options.
+        fn Account::client_options(&self) -> ClientOptions;
     }
 );
 

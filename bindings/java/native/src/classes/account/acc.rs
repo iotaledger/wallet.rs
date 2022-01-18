@@ -75,6 +75,11 @@ impl AccountInitialiser {
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
+    pub fn allow_create_multiple_empty_accounts(&mut self) -> Self {
+        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().allow_create_multiple_empty_accounts();
+        AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
+    }
+
     pub fn initialise(&self) -> Result<Account> {
         let acc_handle_res =
             crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
@@ -108,17 +113,27 @@ impl Account {
         }
     }
 
-    pub fn get_node_info(
-        &self,
-        url: Option<&str>,
-        jwt: Option<&str>,
-        auth: Option<(&str, &str)>,
-    ) -> Result<NodeInfoWrapper> {
-        let msgs_res = crate::block_on(async move { self.handle.get_node_info(url, jwt, auth).await });
-
+    pub fn retry(&self, message_id: MessageId) -> Result<Message> {
+        let msgs_res = crate::block_on(async move { self.handle.retry(&message_id).await });
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
-            Ok(info) => Ok(info.into()),
+            Ok(msgs) => Ok(msgs.into()),
+        }
+    }
+
+    pub fn promote(&self, message_id: &MessageId) -> Result<Message> {
+        let msgs_res = crate::block_on(async move { self.handle.promote(&message_id).await });
+        match msgs_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msgs) => Ok(msgs.into()),
+        }
+    }
+
+    pub fn reattach(&self, message_id: &MessageId) -> Result<Message> {
+        let msgs_res = crate::block_on(async move { self.handle.reattach(&message_id).await });
+        match msgs_res {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(msgs) => Ok(msgs.into()),
         }
     }
 
@@ -232,6 +247,23 @@ impl Account {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(b) => Ok(b.into()),
         }
+    }
+
+    pub fn get_node_info(&self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<NodeInfoWrapper> {
+        let auth_opt = match username {
+            Some(user) => Some((user, password.unwrap())),
+            None => None,
+        };
+
+        let info = crate::block_on(async move { self.handle.get_node_info(Some(node), jwt, auth_opt).await });
+        match info {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(i) => Ok(i.into()),
+        }
+    }
+
+    pub fn bech32_hrp(&self) -> String {
+        crate::block_on(async move { self.handle.bech32_hrp().await })
     }
 
     pub fn id(&self) -> String {
