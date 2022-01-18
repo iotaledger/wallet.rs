@@ -885,7 +885,7 @@
     )<span class="question-mark">?</span>;
     <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;receiveAddressBech32: {}\n&quot;</span>, <span class="ident">deposit_address_bech32</span>).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
     <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;balance: {}\n&quot;</span>, <span class="ident">address_inputs</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">balance</span>).<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>()).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
-    <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;timestamp: {}\n&quot;</span>, <span class="ident">Utc::now</span>().<span class="ident">to_string</span>()).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
+    <span class="ident">log</span>.<span class="ident">write_all</span>(<span class="macro">format!</span>(<span class="string">&quot;timestamp: {}\n&quot;</span>, <span class="ident">Utc::now</span>()).<span class="ident">as_bytes</span>())<span class="question-mark">?</span>;
     <span class="ident">log</span>.<span class="ident">write_all</span>(
         <span class="macro">format!</span>(
             <span class="string">&quot;spentAddresses: {:?}\n&quot;</span>,
