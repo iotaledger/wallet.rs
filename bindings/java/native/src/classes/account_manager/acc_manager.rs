@@ -99,7 +99,17 @@ impl AccountManagerBuilder {
             .with_output_consolidation_threshold(threshold);
         AccountManagerBuilder::new_with_builder(new_builder)
     }
-
+    
+    /// Skip polling
+    pub fn with_skip_polling(&mut self) -> Self {
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_skip_polling();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
     /// Disables the automatic output consolidation process.
     pub fn with_automatic_output_consolidation_disabled(&mut self) -> Self {
         let new_builder = self

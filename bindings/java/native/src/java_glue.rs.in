@@ -31,7 +31,7 @@ use iota_wallet::{
         MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
     address::{
-        OutputKind, AddressWrapper, IotaAddress,
+        OutputKind, AddressWrapper, IotaAddress, parse as parseAddress
     },
     client::Api,
     iota_client::{
@@ -231,18 +231,22 @@ foreign_class!(
     }
 );
 
-foreign_class!(class AccountManagerBuilder {
-    self_type AccountManagerBuilder;
-    constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
-    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
-    fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder; alias withPollingInterval;
-    fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder; alias withOutputConsolidationThreshold;
-    fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
-    fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
-    fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
-    fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder; alias withMultipleEmptyAccounts;
-    fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
-});
+foreign_class!(
+    #[derive(camelCaseAliases)]
+    class AccountManagerBuilder {
+        self_type AccountManagerBuilder;
+        constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>;
+        fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_skip_polling(&mut self) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder;
+        fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
+    }
+);
 
 foreign_class!(
     #[derive(camelCaseAliases)]
@@ -542,6 +546,12 @@ foreign_class!(
         fn AddressWrapper::from(address: &str, bech32_hrp: String) -> Result<AddressWrapper> {
             match IotaAddress::try_from_bech32(address) {
                 Ok(addr) => Ok(AddressWrapper::new(addr, bech32_hrp)),
+                Err(e) => Err(anyhow!(e)),
+            }
+        }
+        fn AddressWrapper::parse(address: &str,) -> Result<AddressWrapper> {
+            match parseAddress(address){
+                Ok(addr) => Ok(addr),
                 Err(e) => Err(anyhow!(e)),
             }
         }
