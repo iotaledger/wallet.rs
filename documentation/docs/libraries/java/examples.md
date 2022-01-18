@@ -30,34 +30,106 @@ Gradle: `./gradlew examples:java-app:test --info`
 Maven: `cd examples/java-app && mvn test`
 
 
-For the rest of the examples in this document we will be using the `node()` method below:
+## Backup and Restore Example
+
+1. Create an account manager and set a password:
+
 ```java
-private static Client node() {
-    String nodeUrl = "https://chrysalis-nodes.iota.cafe:443";
-    Client iota = Client.Builder()
-        // Insert your node URL here
-        .withNode(nodeUrl) 
-        // Or instead here but with authentication
-        .withNodeAuth("https://somechrysalisiotanode.com", "jwt_or_null", "name_or_null", "password_or_null")
-        // Choose pow mode
-        .withLocalPow(true)
-        // You can also set a time-out in seconds for the API calls
-        .withRequestTimeout(5)
-        //Then create the Client instance
-        .finish();
-    return iota;
+AccountManager manager = AccountManager.Builder().finish();
+
+manager.setStrongholdPassword("password");
+manager.storeMnemonic(AccountSignerType.STRONGHOLD, null);
+
+```
+
+2. Create your account:
+
+```java
+ClientOptions clientOptions = new ClientOptionsBuilder()
+    .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+    .build();
+Account account = manager
+    .createAccount(client_options)
+    .alias("alias")
+    .initialise();
+String id = account.id();
+
+```
+
+3. You can secure your account in a backup file:
+```java
+// backup the stored accounts to ./backup/${backup_name}
+Path backupPath = manager.backup("./backup");
+```
+
+
+4. You can import the backup later, or in another application using the following snippet:
+```java
+manager.importAccounts(backupPath, "password");
+
+Account imported_account_handle = manager.getAccount(id);
+```
+
+That's it! You can now backup and restore your account!
+
+## Transfer funds
+
+1. Get or Create your account:
+```java
+AccountManager manager = AccountManager.Builder().finish();
+
+manager.setStrongholdPassword("password");
+
+// Get account or create a new one
+String accountAlias = "alias";
+Account account;
+try {
+    account = manager.getAccount(accountAlias)
+} catch (WalletException e) {
+    // first we'll create an example account and store it
+    manager.storeMnemonic(AccountSignerType.STRONGHOLD, null);
+    ClientOptions clientOptions = new ClientOptionsBuilder()
+        .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+        .build();
+    account = manager
+        .createAccount(client_options)
+        .alias(accountAlias)
+        .initialise();
 }
 ```
 
-***
-
-The most basic example is creating a client, and then requesting the information about the node. 
+2. Generate the address:
 ```java
-
+Address address = account.generateAddress();
 ```
 
-Example output of the code would be:
-```bash
+3. Print and wait
+```java
+System.out.println("Send iotas from the faucet to {} and press enter after the transaction got confirmed" +
+    address
+);
+
+System.in.read();
+```
+
+4. Send and wait
+```java
+System.out.println("Sending transfer...");
+Message message = account
+    .transfer(
+        Transfer.builder(
+            AddressWrapper.parse("atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r"),
+            10000000,
+            OutputKind.SIGNATURE_LOCKED_DUST_ALLOWANCE),
+        )
+        .finish(),
+    );
+System.out.println("Message sent: " + message.id());
+```
+
+## Event listening
+
+```java
 
 ```
 
