@@ -20,7 +20,7 @@ async-trait =  { version ="0.1.51", default-features = false }
 futures =  { version = "0.3.17", default-features = false }
 getset =  { version = "0.1.1", default-features = false }
 hex =  { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5beafba5c4ce7a6055c7bc28f5dfebe8724f2b70", default-features = false, features = ["async"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "e11be4d06edabd618c949cf8c83bcad9dd584375", default-features = false, features = ["async"] }
 iota-crypto = { version = "0.7.0", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false, features = ["std"] }

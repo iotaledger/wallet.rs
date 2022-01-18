@@ -179,8 +179,9 @@ pub(crate) async fn create_transaction(
         }
     }
 
+    let client = crate::client::get_client().await?;
     // Build transaction essence
-    let mut essence_builder = RegularTransactionEssence::builder();
+    let mut essence_builder = RegularTransactionEssence::builder(client.get_network_id().await?);
     essence_builder = essence_builder.with_inputs(inputs_for_essence);
     essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
