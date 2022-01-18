@@ -204,7 +204,7 @@ impl StorageManager {
                 message_indexation
             );
         }
-        parse_accounts(&self.storage.storage_path, &accounts, &self.storage.encryption_key)
+        parse_accounts(&self.storage.storage_path, &accounts)
     }
 
     pub async fn save_account(&mut self, key: &str, account: &Account) -> crate::Result<()> {
@@ -646,17 +646,11 @@ pub(crate) fn decrypt_record(record: &str, encryption_key: &[u8; 32]) -> crate::
     Ok(String::from_utf8_lossy(&pt).to_string())
 }
 
-fn parse_accounts(
-    storage_path: &Path,
-    accounts: &[String],
-    encryption_key: &Option<[u8; 32]>,
-) -> crate::Result<Vec<Account>> {
+fn parse_accounts(storage_path: &Path, accounts: &[String]) -> crate::Result<Vec<Account>> {
     let mut parsed_accounts: Vec<Account> = Vec::new();
     for account in accounts {
         let account_json = if account.starts_with('{') {
             Some(account.to_string())
-        } else if let Some(key) = encryption_key {
-            Some(decrypt_record(account, key)?)
         } else {
             None
         };
@@ -705,7 +699,7 @@ mod tests {
 
     #[test]
     fn parse_accounts_invalid() {
-        let response = super::parse_accounts(&PathBuf::new(), &["{}".to_string()], &None);
+        let response = super::parse_accounts(&PathBuf::new(), &["{}".to_string()]);
         assert!(response.is_err());
     }
 
@@ -733,7 +727,6 @@ mod tests {
         let response = super::parse_accounts(
             &storage_path,
             &[serde_json::to_string(&*account_handle.read().await).unwrap()],
-            &None,
         );
         assert!(response.is_ok());
         let parsed_accounts = response.unwrap();

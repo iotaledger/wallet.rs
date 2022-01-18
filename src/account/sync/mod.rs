@@ -272,11 +272,7 @@ async fn sync_address_list(
     log::debug!("[SYNC] address_list length: {}", addresses.len());
 
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    for addresses_chunk in addresses
-        .chunks(SYNC_CHUNK_SIZE)
-        .map(|x: &[Address]| x.to_vec())
-        .into_iter()
-    {
+    for addresses_chunk in addresses.chunks(SYNC_CHUNK_SIZE).map(|x: &[Address]| x.to_vec()) {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
             let mut address = address.clone();
@@ -479,7 +475,6 @@ async fn sync_messages(
         .to_vec()
         .chunks(SYNC_CHUNK_SIZE)
         .map(|x: &[Address]| x.to_vec())
-        .into_iter()
     {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
