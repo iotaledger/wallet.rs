@@ -60,14 +60,14 @@ impl Default for AccountManagerBuilder {
             #[cfg(feature = "storage")]
             storage_options: None,
             client_options: ClientOptionsBuilder::new()
-                .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
-                .unwrap()
-                .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")
-                .unwrap()
-                .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")
-                .unwrap()
+                // .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+                // .unwrap()
+                // .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")
+                // .unwrap()
+                // .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")
+                // .unwrap()
                 // .with_node("https://chrysalis-nodes.iota.org/")?
-                // .with_node("http://localhost:14265")?
+                .with_node("http://localhost:14265").unwrap()
                 .with_node_sync_disabled()
                 .finish()
                 .unwrap(),

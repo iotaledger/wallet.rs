@@ -51,5 +51,6 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
+    manager.verify_integrity().await?;
     Ok(())
 }

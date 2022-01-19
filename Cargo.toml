@@ -31,8 +31,7 @@ tokio = { version = "1.12.0", default-features = false }
 url = { version = "2.2.2", default-features = false, features = ["serde"] }
 
 # storage
-rocksdb = { git="https://github.com/iotaledger/rust-rocksdb", rev = "d2c579660e6c72ec1f14f0f2781cef5e3171d380", default-features = false, features = ["lz4"], optional = true }
-
+rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"], optional = true }
 # stronghold
 # iota_stronghold = { version = "0.4.1", default-features = false }
 # riker = { version = "0.4.2", default-features = false }
