@@ -1,0 +1,55 @@
+
+#### withStorage(storage_path , password): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Sets the storage config to be used.
+
+| Parameter       | Type |  Description |
+| --------------- | -------- | -------- |
+| storage_path | String |   |
+| password | String |   |
+
+#### withPollingInterval(polling_interval): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Sets the polling interval.
+
+| Parameter       | Type |  Description |
+| --------------- | -------- | -------- |
+| polling_interval | float |   |
+
+#### withSkipPolling(): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Skip polling
+
+
+#### withOutputConsolidationThreshold(threshold): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Sets the number of outputs an address must have to trigger the automatic consolidation process.
+
+| Parameter       | Type |  Description |
+| --------------- | -------- | -------- |
+| threshold | long |   |
+
+#### withAutomaticOutputConsolidationDisabled(): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Disables the automatic output consolidation process.
+
+
+#### withSyncSpentOutputs(): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Enables fetching spent output history on sync.
+
+
+#### withEventPersistence(): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Enables event persistence.
+
+
+#### withMultipleEmptyAccounts(): [AccountManagerBuilder](#accountmanagerbuilder)
+
+Enables creating multiple accounts without history. The wallet disables it by default to simplify account discovery.
+
+
+#### finish(): [AccountManager](#accountmanager)
+
+Builds the manager.
+

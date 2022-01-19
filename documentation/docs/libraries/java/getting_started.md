@@ -16,7 +16,10 @@ To use the library, we recommend you update Rust to the latest stable version [`
 
 Ensure you have first installed the required dependencies for the library [here](https://github.com/iotaledger/wallet.rs/blob/dev/README.md). Then also install the following programs:
 
-- [Gradle](https://gradle.org/install/) v4 or higher or [Maven](https://maven.apache.org/download.cgi) installed
+- Java & JDK (Make sure $JAVA_HOME env variable) is set
+- [Gradle](https://gradle.org/install/) v4 or higher or [Maven](https://maven.apache.org/download.cgi) installe
+- Cargo ndk (`cargo install cargo-ndk`)
+- Cargo fmt (`rustup component add rustfmt`)
 
 
 Download or clone the `wallet.rs` repository
@@ -95,4 +98,4 @@ mvn exec:exec
 
 ## API Reference
 
-API Reference can be found [here](api_reference.md).
+API Reference can be found [here](api_reference).
