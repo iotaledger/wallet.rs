@@ -190,7 +190,7 @@ impl AccountInitialiser {
         self
     }
 
-    // Address history associated with the seed.
+    /// Address history associated with the seed.
     /// The account can be initialised with locally stored address history.
     pub fn addresses(mut self, addresses: Vec<Address>) -> Self {
         self.addresses = addresses;
@@ -1341,7 +1341,7 @@ impl Account {
         Ok(spent_addresses)
     }
 
-    /// Gets the spent addresses.
+    /// Gets the unspent addresses.
     pub async fn list_unspent_addresses(&self) -> crate::Result<Vec<&Address>> {
         let sent_messages = self.list_messages(0, 0, Some(MessageType::Sent)).await?;
         let unspent_addresses = self
