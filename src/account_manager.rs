@@ -13,7 +13,7 @@ use crate::{
         BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
         TransactionReattachmentEvent,
     },
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{StorageAdapter, Timestamp},
 };
@@ -38,10 +38,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota_client::{
-    bee_message::prelude::{Address, MessageId, OutputId},
-    bee_rest_api::types::dtos::LedgerInclusionStateDto,
-};
+use iota_client::bee_message::prelude::{Address, MessageId, OutputId};
 use serde::Serialize;
 use tokio::{
     sync::{
@@ -1774,50 +1771,111 @@ async fn poll(
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let mut message = account.get_message(&message_id).await.unwrap();
+            let mut confirmed = false;
+            if message.payload().is_none() {
+                // we set the status for messages without a payload to confirmed even if we aren't sure if it got
+                // included, because it will otherwise always stay in the unconfirmed messages
+                message.set_confirmed(Some(true));
+                account.save_messages(vec![message.clone()]).await?;
+                continue;
+            }
             let client = client.read().await;
+
+            // check the metadata for this message
             if let Ok(metadata) = client.get_message().metadata(&message_id).await {
-                if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
-                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included
-                        || ledger_inclusion_state == LedgerInclusionStateDto::NoTransaction;
-                    if message.confirmed() != &Some(confirmed) {
-                        message.set_confirmed(Some(confirmed));
-                        account.save_messages(vec![message.clone()]).await?;
-                        emit_confirmation_state_change(
-                            &account,
-                            message,
-                            confirmed,
-                            retried_data.account_handle.account_options.persist_events,
-                        )
-                        .await?;
-                    } else {
-                        // if it's not confirmed we ask the node for the included message for this transaction, because
-                        // someone else could have reattached it
-                        if !confirmed {
-                            if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message.payload {
-                                if let Ok(reattachment_message) = client
-                                    .get_included_message(&tx_payload.to_transaction_payload()?.id())
-                                    .await
-                                {
-                                    message.set_reattachment_message_id(Some(reattachment_message.id().0));
-                                    message.set_confirmed(Some(true));
-                                    account.save_messages(vec![message.clone()]).await?;
-                                    emit_confirmation_state_change(
-                                        &account,
-                                        message,
-                                        confirmed,
-                                        retried_data.account_handle.account_options.persist_events,
-                                    )
-                                    .await?;
+                // we assume that the transaction is confirmed when it gets referenced by a milestone
+                if metadata.ledger_inclusion_state.is_some() {
+                    log::debug!(
+                        "[POLLING] ledger_inclusion_state for {}, setting it as confirmed",
+                        message_id
+                    );
+                    confirmed = true;
+                }
+            }
+            // if not confirmed, check the metadata for a possible reattached message
+            if !confirmed {
+                if let Some(reattached_message_id) = message.reattachment_message_id {
+                    if let Ok(metadata) = client.get_message().metadata(&reattached_message_id).await {
+                        // we assume that the transaction is confirmed when it gets referenced by a milestone
+                        if metadata.ledger_inclusion_state.is_some() {
+                            log::debug!(
+                                "[POLLING] ledger_inclusion_state for reattchment of {}, setting it as confirmed",
+                                message_id
+                            );
+                            confirmed = true;
+                        }
+                    }
+                }
+            }
+
+            // if it's not confirmed we ask the node for the included message for this transaction, because
+            // there could be another attachment
+            if !confirmed {
+                if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message.payload {
+                    if let Ok(reattachment_message) = client
+                        .get_included_message(&tx_payload.to_transaction_payload()?.id())
+                        .await
+                    {
+                        log::debug!(
+                            "[POLLING] detected confirmed transaction: {} for {}",
+                            reattachment_message.id().0,
+                            message_id
+                        );
+                        // if it's not the same message id, then it got reattached
+                        if reattachment_message.id().0 != message_id {
+                            message.set_reattachment_message_id(Some(reattachment_message.id().0));
+                        }
+                        confirmed = true;
+                    }
+                }
+            }
+
+            // check if an input got already spent, because it could be that the transaction was confirmed long ago and
+            // the messages are already pruned
+            if let Some(MessagePayload::Transaction(tx)) = &message.payload() {
+                let TransactionEssence::Regular(essence) = tx.essence();
+                let mut spent_input = false;
+                for input in essence.inputs() {
+                    if let TransactionInput::Utxo(input) = input {
+                        match client.get_output(&input.input).await {
+                            Ok(output) => {
+                                if output.is_spent {
+                                    spent_input = true;
+                                }
+                            }
+                            Err(err) => {
+                                match &err {
+                                    iota_client::Error::ResponseError(_, message) => {
+                                        // if the node doesn't know about this output, then it got spent already and
+                                        // pruned
+                                        if message.contains("output not found") {
+                                            spent_input = true;
+                                        } else {
+                                            return Err(err.into());
+                                        }
+                                    }
+                                    _ => return Err(err.into()),
                                 }
                             }
                         }
                     }
                 }
-            } else if message.payload().is_none() {
-                // we set the status for messages without a payload to confirmed even if we aren't sure if it got
-                // included, because it will otherwise always stay be in the unconfirmed messages
+                if spent_input {
+                    log::debug!("[POLLING] input got spent, setting {} as confirmed", message_id);
+                    confirmed = true;
+                }
+            }
+
+            if confirmed {
                 message.set_confirmed(Some(true));
                 account.save_messages(vec![message.clone()]).await?;
+                emit_confirmation_state_change(
+                    &account,
+                    message,
+                    true,
+                    retried_data.account_handle.account_options.persist_events,
+                )
+                .await?;
             }
         }
         account.save().await?;
@@ -1971,12 +2029,12 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                 // We only want to retry transaction payloads
                 Some(MessagePayload::Transaction(_)) => match synced.retry(&message_id).await {
                     Ok(new_message) => {
-                        // if the payload is the same, it was reattached; otherwise it was promoted
-                        if new_message.payload() == &message_payload {
+                        // if there is a payload, it was reattached; otherwise it was promoted
+                        if new_message.payload().is_some() {
                             log::debug!("[POLLING] reattached and new message is {:?}", new_message);
                             reattachments.push((message_id, new_message));
                         } else {
-                            log::debug!("[POLLING] promoted and new message is {:?}", new_message);
+                            log::debug!("[POLLING] promoted with message {:?}", new_message);
                         }
                     }
                     Err(crate::Error::ClientError(ref e)) => {

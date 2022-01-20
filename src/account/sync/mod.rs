@@ -10,7 +10,9 @@ use crate::{
         emit_balance_change, emit_confirmation_state_change, emit_transaction_event, AddressData, BalanceChange,
         PreparedTransactionData, TransactionEventType, TransactionIO, TransferProgressType,
     },
-    message::{Message, MessageType, RemainderValueStrategy, Transfer},
+    message::{
+        Message, MessagePayload, MessageType, RemainderValueStrategy, TransactionEssence, TransactionInput, Transfer,
+    },
     signing::{GenerateAddressMetadata, SignMessageMetadata, SignerType},
 };
 
@@ -2399,46 +2401,61 @@ pub(crate) async fn repost_message(
 
     let message = match account.get_message(message_id).await {
         Some(message_to_repost) => {
-            let mut message_to_repost = message_to_repost.clone();
-
             let client = crate::client::get_client(account.client_options()).await?;
             let client = client.read().await;
 
-            // check all reattachments of the message we want to promote/rettry/reattach
-            while let Some(reattachment_message_id) = message_to_repost.reattachment_message_id {
-                match account.get_message(&reattachment_message_id).await {
-                    Some(m) => {
-                        message_to_repost = m.clone();
-                        if message_to_repost.confirmed().unwrap_or(false) {
-                            return Err(crate::Error::ClientError(Box::new(
-                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                            )));
-                        } else {
-                            let metadata = client.get_message().metadata(&reattachment_message_id).await?;
-                            if metadata.conflict_reason.is_some() {
-                                // if the message is conflicting, then any reattachment is also useless, because it
-                                // can't get confirmed or was already confirmed
-                                return Err(crate::Error::ClientError(Box::new(
-                                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                                )));
+            // check if one of the inputs got spent
+            if let Some(MessagePayload::Transaction(tx)) = message_to_repost.payload() {
+                let TransactionEssence::Regular(essence) = tx.essence();
+                let mut spent_input = false;
+                for input in essence.inputs() {
+                    if let TransactionInput::Utxo(input) = input {
+                        match client.get_output(&input.input).await {
+                            Ok(output) => {
+                                if output.is_spent {
+                                    spent_input = true;
+                                }
+                            }
+                            Err(err) => {
+                                match &err {
+                                    iota_client::Error::ResponseError(_, message) => {
+                                        // if the node doesn't know about this output, then it got spent already and
+                                        // pruned
+                                        if message.contains("output not found") {
+                                            spent_input = true;
+                                        } else {
+                                            return Err(err.into());
+                                        }
+                                    }
+                                    _ => return Err(err.into()),
+                                }
                             }
                         }
                     }
-                    None => break,
+                }
+                if spent_input {
+                    return Err(crate::Error::ClientError(Box::new(
+                        iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                    )));
                 }
             }
-            let metadata = client.get_message().metadata(message_id).await?;
-            if metadata.conflict_reason.is_some() {
-                // if the message is conflicting, then any reattachment is also useless, because it can't get confirmed
-                // or was already confirmed
-                return Err(crate::Error::ClientError(Box::new(
-                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
-                )));
-            }
+
+            if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message_to_repost.payload {
+                if client
+                    .get_included_message(&tx_payload.to_transaction_payload()?.id())
+                    .await
+                    .is_ok()
+                {
+                    // if the transaction got already confirmed, then we don't need to reattach it
+                    return Err(crate::Error::ClientError(Box::new(
+                        iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                    )));
+                } else {
+                }
+            };
 
             let (id, message) = match action {
                 RepostAction::Promote => client.promote(message_id).await?,
-                // Reattach with the local message
                 RepostAction::Reattach => match client.reattach(message_id).await {
                     Ok(res) => res,
                     Err(err) => match err {
