@@ -777,6 +777,48 @@ impl MessageTransactionPayload {
             unlock_blocks: unlock_blocks.into_boxed_slice(),
         })
     }
+
+    /// Convert to a transaction payload from bee_message
+    pub fn to_transaction_payload(&self) -> crate::Result<TransactionPayload> {
+        let mut essence = iota_client::bee_message::payload::transaction::RegularEssenceBuilder::new();
+        let TransactionEssence::Regular(message_essence) = self.essence();
+        let mut inputs = Vec::new();
+        for input in message_essence.inputs() {
+            if let TransactionInput::Utxo(input) = input {
+                inputs.push(iota_client::bee_message::input::Input::Utxo(input.input.clone()));
+            }
+        }
+        inputs.sort_unstable_by_key(|a| a.pack_new());
+        essence = essence.with_inputs(inputs);
+        let mut outputs = Vec::new();
+        for output in message_essence.outputs() {
+            match output {
+                TransactionOutput::SignatureLockedSingle(output) => {
+                    outputs.push(iota_client::bee_message::output::Output::SignatureLockedSingle(
+                        SignatureLockedSingleOutput::new(output.address.inner, output.amount)?,
+                    ))
+                }
+                TransactionOutput::SignatureLockedDustAllowance(output) => {
+                    outputs.push(iota_client::bee_message::output::Output::SignatureLockedDustAllowance(
+                        SignatureLockedDustAllowanceOutput::new(output.address.inner, output.amount)?,
+                    ))
+                }
+                _ => {}
+            }
+        }
+        outputs.sort_unstable_by_key(|a| a.pack_new());
+        essence = essence.with_outputs(outputs);
+        if let Some(indexation) = message_essence.payload() {
+            essence = essence.with_payload(indexation.clone());
+        }
+        let essence = essence.finish()?;
+        Ok(TransactionPayload::builder()
+            .with_essence(Essence::Regular(essence))
+            .with_unlock_blocks(iota_client::bee_message::unlock::UnlockBlocks::new(
+                self.unlock_blocks.to_vec(),
+            )?)
+            .finish()?)
+    }
 }
 
 /// Milestone payload essence.

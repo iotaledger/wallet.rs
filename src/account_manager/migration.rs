@@ -358,7 +358,7 @@ pub(crate) async fn create_bundle<P: AsRef<Path>>(
     )?;
     log.write_all(format!("receiveAddressBech32: {}\n", deposit_address_bech32).as_bytes())?;
     log.write_all(format!("balance: {}\n", address_inputs.iter().map(|a| a.balance).sum::<u64>()).as_bytes())?;
-    log.write_all(format!("timestamp: {}\n", Utc::now().to_string()).as_bytes())?;
+    log.write_all(format!("timestamp: {}\n", Utc::now()).as_bytes())?;
     log.write_all(
         format!(
             "spentAddresses: {:?}\n",

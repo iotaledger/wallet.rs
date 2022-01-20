@@ -35,7 +35,7 @@ pub async fn unsubscribe(account_handle: AccountHandle) -> crate::Result<()> {
             let mut topics = Vec::new();
             for m in messages {
                 if m.confirmed.is_none() {
-                    topics.push(Topic::new(format!("messages/{}/metadata", m.key.to_string()))?);
+                    topics.push(Topic::new(format!("messages/{}/metadata", m.key))?);
                 }
             }
             crate::Result::Ok(topics)

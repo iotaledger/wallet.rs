@@ -168,11 +168,11 @@ pub(crate) async fn sync_address(
                 let message_id = *found_output.message_id();
 
                 // if we already have the message stored
-                // and the confirmation state is known
+                // and the confirmation state is confirmed
                 // we skip the `get_message` call
                 if account_messages
                     .iter()
-                    .any(|(id, confirmed)| id == &message_id && confirmed.is_some())
+                    .any(|(id, confirmed)| id == &message_id && confirmed.unwrap_or(false))
                 {
                     return crate::Result::Ok((found_output, None));
                 }
@@ -272,11 +272,7 @@ async fn sync_address_list(
     log::debug!("[SYNC] address_list length: {}", addresses.len());
 
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    for addresses_chunk in addresses
-        .chunks(SYNC_CHUNK_SIZE)
-        .map(|x: &[Address]| x.to_vec())
-        .into_iter()
-    {
+    for addresses_chunk in addresses.chunks(SYNC_CHUNK_SIZE).map(|x: &[Address]| x.to_vec()) {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
             let mut address = address.clone();
@@ -452,11 +448,11 @@ async fn sync_messages(
     let account = account_handle.read().await.clone();
     let client_options = account.client_options().clone();
 
-    let messages_with_known_confirmation: Vec<MessageId> = account
+    let known_confirmed_messages: Vec<MessageId> = account
         .with_messages(|messages| {
             messages
                 .iter()
-                .filter(|m| m.confirmed.is_some())
+                .filter(|m| m.confirmed.unwrap_or(false))
                 .map(|m| m.key)
                 .collect()
         })
@@ -479,7 +475,6 @@ async fn sync_messages(
         .to_vec()
         .chunks(SYNC_CHUNK_SIZE)
         .map(|x: &[Address]| x.to_vec())
-        .into_iter()
     {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
@@ -492,7 +487,7 @@ async fn sync_messages(
                 continue;
             }
             let client = client.clone();
-            let messages_with_known_confirmation = messages_with_known_confirmation.clone();
+            let known_confirmed_messages = known_confirmed_messages.clone();
             let mut outputs = address.outputs.clone();
 
             tasks.push(async move {
@@ -573,9 +568,9 @@ async fn sync_messages(
                         outputs.insert(output.id()?, output);
 
                         // if we already have the message stored
-                        // and the confirmation state is known
+                        // and the confirmation state is confirmed
                         // we skip the `get_message` call
-                        if messages_with_known_confirmation.contains(&output_message_id) {
+                        if known_confirmed_messages.contains(&output_message_id) {
                             continue;
                         }
 
@@ -1141,8 +1136,7 @@ impl AccountSynchronizer {
         };
         Self {
             account_handle,
-            // by default we synchronize from the latest address (supposedly unspent)
-            address_index: latest_address_index,
+            address_index: 0,
             gap_limit: if latest_address_index == 0 {
                 default_gap_limit
             } else {
@@ -2555,6 +2549,10 @@ pub(crate) async fn repost_message(
     let message = match account.get_message(message_id).await {
         Some(message_to_repost) => {
             let mut message_to_repost = message_to_repost.clone();
+
+            let client = crate::client::get_client(account.client_options()).await?;
+            let client = client.read().await;
+
             // check all reattachments of the message we want to promote/rettry/reattach
             while let Some(reattachment_message_id) = message_to_repost.reattachment_message_id {
                 match account.get_message(&reattachment_message_id).await {
@@ -2564,19 +2562,78 @@ pub(crate) async fn repost_message(
                             return Err(crate::Error::ClientError(Box::new(
                                 iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
                             )));
+                        } else {
+                            let metadata = client.get_message().metadata(&reattachment_message_id).await?;
+                            if metadata.conflict_reason.is_some() {
+                                // if the message is conflicting, then any reattachment is also useless, because it
+                                // can't get confirmed or was already confirmed
+                                return Err(crate::Error::ClientError(Box::new(
+                                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                                )));
+                            }
                         }
                     }
                     None => break,
                 }
             }
-
-            let client = crate::client::get_client(account.client_options()).await?;
-            let client = client.read().await;
+            let metadata = client.get_message().metadata(message_id).await?;
+            if metadata.conflict_reason.is_some() {
+                // if the message is conflicting, then any reattachment is also useless, because it can't get confirmed
+                // or was already confirmed
+                return Err(crate::Error::ClientError(Box::new(
+                    iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                )));
+            }
 
             let (id, message) = match action {
                 RepostAction::Promote => client.promote(message_id).await?,
-                RepostAction::Reattach => client.reattach(message_id).await?,
-                RepostAction::Retry => client.retry(message_id).await?,
+                // Reattach with the local message
+                RepostAction::Reattach => match client.reattach(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if reattaching with the message from the node failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
+                RepostAction::Retry => match client.retry(message_id).await {
+                    Ok(res) => res,
+                    Err(err) => match err {
+                        iota_client::Error::NoNeedPromoteOrReattach(_) => {
+                            return Err(crate::Error::ClientError(Box::new(
+                                iota_client::Error::NoNeedPromoteOrReattach(message_id.to_string()),
+                            )))
+                        }
+                        // if retrying failed, we reattach it with the local data
+                        _ => match message_to_repost.payload {
+                            Some(crate::message::MessagePayload::Transaction(tx_payload)) => {
+                                let msg = client
+                                    .message()
+                                    .finish_message(Some(Payload::Transaction(Box::new(
+                                        tx_payload.to_transaction_payload()?,
+                                    ))))
+                                    .await?;
+                                (msg.id().0, msg)
+                            }
+                            _ => return Err(crate::Error::MessageNotFound),
+                        },
+                    },
+                },
             };
             let message = Message::from_iota_message(
                 id,
