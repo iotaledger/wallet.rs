@@ -202,6 +202,28 @@ impl AccountManager {
         }
     }
 
+    pub fn is_latest_address_unused(&mut self) -> Result<bool> {
+        match crate::block_on(async move {
+            self.manager
+                .is_latest_address_unused()
+                .await
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(b) => Ok(b),
+        }
+    }
+
+    pub fn set_client_options(&mut self, options: ClientOptions) -> Result<()> {
+        match crate::block_on(async move {
+            self.manager
+                .set_client_options(options.to_inner())
+                .await
+        }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
+    }
+
     pub fn generate_mnemonic(&mut self) -> Result<String> {
         match self.manager.generate_mnemonic() {
             Err(e) => Err(anyhow!(e.to_string())),

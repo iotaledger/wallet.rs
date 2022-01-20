@@ -7,7 +7,7 @@ use iota_wallet::{
     address::{AddressWrapper, OutputKind},
     message::{
         Message as MessageRust, MessageId, RemainderValueStrategy as RemainderValueStrategyRust,
-        Transfer as TransferRust, TransferBuilder as TransferBuilderRust,
+        Transfer as TransferRust, TransferBuilder as TransferBuilderRust, TransferOutput as TransferOutputRust,
     },
 };
 
@@ -42,6 +42,37 @@ impl Transfer {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct TransferOutput(TransferOutputRust);
+
+impl TransferOutput {
+    pub fn new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferOutput {
+        Self(TransferOutputRust::new(address, NonZeroU64::new(amount).unwrap(), output_kind))
+    }
+
+    pub fn get_amount(&mut self) -> u64 {
+        self.0.amount.into()
+    }
+    
+    pub fn get_address(&mut self) -> AddressWrapper {
+        self.0.address.clone()
+    }
+
+    pub fn get_output_kind(&mut self) -> OutputKind {
+        self.0.output_kind.clone().into()
+    }
+
+    pub fn to_inner(self) -> TransferOutputRust {
+        self.0
+    }
+}
+
+impl core::fmt::Display for TransferOutput {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.0)
+    }
+}
+
 pub struct TransferBuilder {
     builder: Rc<RefCell<Option<TransferBuilderRust>>>,
 }
@@ -55,6 +86,10 @@ impl TransferBuilder {
                 output_kind,
             )))),
         }
+    }
+
+    pub fn with_outputs(outputs: Vec<TransferOutput>) -> Self {
+        TransferBuilder::new_with_builder(TransferBuilderRust::with_outputs(outputs.iter().map(|o| o.clone().0).collect()).unwrap())
     }
 
     pub fn new_with_builder(builder: TransferBuilderRust) -> Self {

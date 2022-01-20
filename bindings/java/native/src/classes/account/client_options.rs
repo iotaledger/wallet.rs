@@ -133,6 +133,87 @@ impl ClientOptionsBuilder {
         ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
+    pub fn with_nodes(&mut self, nodes: Vec<String>) -> ClientOptionsBuilder {
+        let nodes_arr: Vec<&str> = nodes
+            .iter()
+            .map(|s| {
+                let st: &str = &s;
+                st
+            })
+            .collect();
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_nodes(nodes_arr.as_slice())
+            .unwrap();
+            ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
+    pub fn with_node_auth(
+        &mut self,
+        node: &str,
+        jwt: Option<&str>,
+        username: Option<&str>,
+        password: Option<&str>,
+    ) -> ClientOptionsBuilder {
+        let auth_opt = match username {
+            Some(user) => Some((user, password.unwrap())),
+            None => None,
+        };
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_node_auth(node, jwt, auth_opt)
+            .unwrap();
+            ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
+    pub fn with_primary_node_auth(
+        &mut self,
+        node: &str,
+        jwt: Option<&str>,
+        username: Option<&str>,
+        password: Option<&str>,
+    ) -> ClientOptionsBuilder {
+        let auth_opt = match username {
+            Some(user) => Some((user, password.unwrap())),
+            None => None,
+        };
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_primary_node_auth(node, jwt, auth_opt)
+            .unwrap();
+            ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
+    pub fn with_primary_pow_node_auth(
+        &mut self,
+        node: &str,
+        jwt: Option<&str>,
+        username: Option<&str>,
+        password: Option<&str>,
+    ) -> ClientOptionsBuilder {
+        let auth_opt = match username {
+            Some(user) => Some((user, password.unwrap())),
+            None => None,
+        };
+        let new_builder = self
+            .builder
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .with_node_auth(node, jwt, auth_opt)
+            .unwrap();
+            ClientOptionsBuilder::new_with_builder(new_builder)
+    }
+
     pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {
         let nodes_urls: Vec<&str> = node_pool_urls.iter().map(|x| &**x).collect();
         let new_builder = self
