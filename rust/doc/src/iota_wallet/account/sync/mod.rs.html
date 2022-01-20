@@ -2651,6 +2651,23 @@
 <span id="2651">2651</span>
 <span id="2652">2652</span>
 <span id="2653">2653</span>
+<span id="2654">2654</span>
+<span id="2655">2655</span>
+<span id="2656">2656</span>
+<span id="2657">2657</span>
+<span id="2658">2658</span>
+<span id="2659">2659</span>
+<span id="2660">2660</span>
+<span id="2661">2661</span>
+<span id="2662">2662</span>
+<span id="2663">2663</span>
+<span id="2664">2664</span>
+<span id="2665">2665</span>
+<span id="2666">2666</span>
+<span id="2667">2667</span>
+<span id="2668">2668</span>
+<span id="2669">2669</span>
+<span id="2670">2670</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -2663,7 +2680,9 @@
         <span class="ident">emit_balance_change</span>, <span class="ident">emit_confirmation_state_change</span>, <span class="ident">emit_transaction_event</span>, <span class="ident">AddressData</span>, <span class="ident">BalanceChange</span>,
         <span class="ident">PreparedTransactionData</span>, <span class="ident">TransactionEventType</span>, <span class="ident">TransactionIO</span>, <span class="ident">TransferProgressType</span>,
     },
-    <span class="ident">message</span>::{<span class="ident">Message</span>, <span class="ident">MessageType</span>, <span class="ident">RemainderValueStrategy</span>, <span class="ident">Transfer</span>},
+    <span class="ident">message</span>::{
+        <span class="ident">Message</span>, <span class="ident">MessagePayload</span>, <span class="ident">MessageType</span>, <span class="ident">RemainderValueStrategy</span>, <span class="ident">TransactionEssence</span>, <span class="ident">TransactionInput</span>, <span class="ident">Transfer</span>,
+    },
     <span class="ident">signing</span>::{<span class="ident">GenerateAddressMetadata</span>, <span class="ident">SignMessageMetadata</span>, <span class="ident">SignerType</span>},
 };
 
@@ -5052,46 +5071,61 @@
 
     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">get_message</span>(<span class="ident">message_id</span>).<span class="kw">await</span> {
         <span class="prelude-val">Some</span>(<span class="ident">message_to_repost</span>) =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_to_repost</span> <span class="op">=</span> <span class="ident">message_to_repost</span>.<span class="ident">clone</span>();
-
             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::client::get_client</span>(<span class="ident">account</span>.<span class="ident">client_options</span>()).<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">read</span>().<span class="kw">await</span>;
 
-            <span class="comment">// check all reattachments of the message we want to promote/rettry/reattach</span>
-            <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reattachment_message_id</span>) <span class="op">=</span> <span class="ident">message_to_repost</span>.<span class="ident">reattachment_message_id</span> {
-                <span class="kw">match</span> <span class="ident">account</span>.<span class="ident">get_message</span>(<span class="kw-2">&amp;</span><span class="ident">reattachment_message_id</span>).<span class="kw">await</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">m</span>) =&gt; {
-                        <span class="ident">message_to_repost</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">clone</span>();
-                        <span class="kw">if</span> <span class="ident">message_to_repost</span>.<span class="ident">confirmed</span>().<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>) {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(
-                                <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()),
-                            )));
-                        } <span class="kw">else</span> {
-                            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="ident">reattachment_message_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-                            <span class="kw">if</span> <span class="ident">metadata</span>.<span class="ident">conflict_reason</span>.<span class="ident">is_some</span>() {
-                                <span class="comment">// if the message is conflicting, then any reattachment is also useless, because it</span>
-                                <span class="comment">// can&#39;t get confirmed or was already confirmed</span>
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(
-                                    <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()),
-                                )));
+            <span class="comment">// check if one of the inputs got spent</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">MessagePayload::Transaction</span>(<span class="ident">tx</span>)) <span class="op">=</span> <span class="ident">message_to_repost</span>.<span class="ident">payload</span>() {
+                <span class="kw">let</span> <span class="ident">TransactionEssence::Regular</span>(<span class="ident">essence</span>) <span class="op">=</span> <span class="ident">tx</span>.<span class="ident">essence</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">spent_input</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">essence</span>.<span class="ident">inputs</span>() {
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TransactionInput::Utxo</span>(<span class="ident">input</span>) <span class="op">=</span> <span class="ident">input</span> {
+                        <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">get_output</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>.<span class="ident">input</span>).<span class="kw">await</span> {
+                            <span class="prelude-val">Ok</span>(<span class="ident">output</span>) =&gt; {
+                                <span class="kw">if</span> <span class="ident">output</span>.<span class="ident">is_spent</span> {
+                                    <span class="ident">spent_input</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                                }
+                            }
+                            <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                                <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">err</span> {
+                                    <span class="ident">iota_client::Error::ResponseError</span>(<span class="kw">_</span>, <span class="ident">message</span>) =&gt; {
+                                        <span class="comment">// if the node doesn&#39;t know about this output, then it got spent already and</span>
+                                        <span class="comment">// pruned</span>
+                                        <span class="kw">if</span> <span class="ident">message</span>.<span class="ident">contains</span>(<span class="string">&quot;output not found&quot;</span>) {
+                                            <span class="ident">spent_input</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                                        } <span class="kw">else</span> {
+                                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>());
+                                        }
+                                    }
+                                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>()),
+                                }
                             }
                         }
                     }
-                    <span class="prelude-val">None</span> =&gt; <span class="kw">break</span>,
+                }
+                <span class="kw">if</span> <span class="ident">spent_input</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(
+                        <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()),
+                    )));
                 }
             }
-            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">client</span>.<span class="ident">get_message</span>().<span class="ident">metadata</span>(<span class="ident">message_id</span>).<span class="kw">await</span><span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="ident">metadata</span>.<span class="ident">conflict_reason</span>.<span class="ident">is_some</span>() {
-                <span class="comment">// if the message is conflicting, then any reattachment is also useless, because it can&#39;t get confirmed</span>
-                <span class="comment">// or was already confirmed</span>
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(
-                    <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()),
-                )));
-            }
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::message::MessagePayload::Transaction</span>(<span class="ident">tx_payload</span>)) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">message_to_repost</span>.<span class="ident">payload</span> {
+                <span class="kw">if</span> <span class="ident">client</span>
+                    .<span class="ident">get_included_message</span>(<span class="kw-2">&amp;</span><span class="ident">tx_payload</span>.<span class="ident">to_transaction_payload</span>()<span class="question-mark">?</span>.<span class="ident">id</span>())
+                    .<span class="kw">await</span>
+                    .<span class="ident">is_ok</span>()
+                {
+                    <span class="comment">// if the transaction got already confirmed, then we don&#39;t need to reattach it</span>
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::ClientError</span>(<span class="ident">Box::new</span>(
+                        <span class="ident">iota_client::Error::NoNeedPromoteOrReattach</span>(<span class="ident">message_id</span>.<span class="ident">to_string</span>()),
+                    )));
+                } <span class="kw">else</span> {
+                }
+            };
 
             <span class="kw">let</span> (<span class="ident">id</span>, <span class="ident">message</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">action</span> {
                 <span class="ident">RepostAction::Promote</span> =&gt; <span class="ident">client</span>.<span class="ident">promote</span>(<span class="ident">message_id</span>).<span class="kw">await</span><span class="question-mark">?</span>,
-                <span class="comment">// Reattach with the local message</span>
                 <span class="ident">RepostAction::Reattach</span> =&gt; <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">reattach</span>(<span class="ident">message_id</span>).<span class="kw">await</span> {
                     <span class="prelude-val">Ok</span>(<span class="ident">res</span>) =&gt; <span class="ident">res</span>,
                     <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">match</span> <span class="ident">err</span> {
