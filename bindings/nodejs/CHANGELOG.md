@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.10]
+
+- Don't retry pruned messages forever, inputs are checked if they're spent so the status can be updated even if the messages got pruned already.
+  - [7025a189](https://github.com/iotaledger/wallet.rs/commit/7025a189a1efc4dd6eafeff999934ddec434eb2a) fix: retry/confirmation detection ([#860](https://github.com/iotaledger/wallet.rs/pull/860)) on 2022-01-20
+
 ## \[1.0.9]
 
 - Detect confirmed reattachments.
