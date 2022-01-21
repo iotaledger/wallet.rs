@@ -387,6 +387,18 @@
 <span id="387">387</span>
 <span id="388">388</span>
 <span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -627,6 +639,14 @@
     <span class="doccomment">/// Couldn&#39;t get a spent output from a node.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;couldn&#39;t get a spent output from node&quot;</span>)]</span>
     <span class="ident">SpentOutputNotFound</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Participation is invalid</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;participations is invalid&quot;</span>)]</span>
+    <span class="ident">InvalidParticipations</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// reqwest error</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;{0}&quot;</span>)]</span>
+    <span class="ident">ReqwestError</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">reqwest::Error</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Error</span> {
@@ -773,6 +793,10 @@
             <span class="ident"><span class="self">Self</span>::TaskJoinError</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;TaskJoinError&quot;</span>),
             <span class="ident"><span class="self">Self</span>::StdThreadJoinError</span> =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;StdThreadJoinError&quot;</span>),
             <span class="ident"><span class="self">Self</span>::SpentOutputNotFound</span> =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;SpentOutputNotFound&quot;</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident"><span class="self">Self</span>::InvalidParticipations</span> =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidParticipations&quot;</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident"><span class="self">Self</span>::ReqwestError</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;ReqwestError&quot;</span>),
         }
     }
 }

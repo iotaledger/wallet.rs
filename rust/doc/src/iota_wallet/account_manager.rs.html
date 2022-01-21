@@ -2689,6 +2689,55 @@
 <span id="2689">2689</span>
 <span id="2690">2690</span>
 <span id="2691">2691</span>
+<span id="2692">2692</span>
+<span id="2693">2693</span>
+<span id="2694">2694</span>
+<span id="2695">2695</span>
+<span id="2696">2696</span>
+<span id="2697">2697</span>
+<span id="2698">2698</span>
+<span id="2699">2699</span>
+<span id="2700">2700</span>
+<span id="2701">2701</span>
+<span id="2702">2702</span>
+<span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
+<span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
+<span id="2719">2719</span>
+<span id="2720">2720</span>
+<span id="2721">2721</span>
+<span id="2722">2722</span>
+<span id="2723">2723</span>
+<span id="2724">2724</span>
+<span id="2725">2725</span>
+<span id="2726">2726</span>
+<span id="2727">2727</span>
+<span id="2728">2728</span>
+<span id="2729">2729</span>
+<span id="2730">2730</span>
+<span id="2731">2731</span>
+<span id="2732">2732</span>
+<span id="2733">2733</span>
+<span id="2734">2734</span>
+<span id="2735">2735</span>
+<span id="2736">2736</span>
+<span id="2737">2737</span>
+<span id="2738">2738</span>
+<span id="2739">2739</span>
+<span id="2740">2740</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -4066,6 +4115,55 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_seed_checksum</span>(<span class="ident">seed</span>: <span class="ident">String</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
         <span class="ident">iota_migration::client::migration::get_seed_checksum</span>(<span class="ident">seed</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident"><span class="kw">crate</span>::Error::LegacyClientError</span>(<span class="ident">Box::new</span>(<span class="ident">e</span>)))
+    }
+
+    <span class="comment">// participation</span>
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Participate in events</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">participate</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">account_identifier</span>: <span class="ident">AccountIdentifier</span>,
+        <span class="ident">participations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::Participation</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">get_account</span>(<span class="ident">account_identifier</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>
+            .<span class="ident">participate</span>(<span class="ident">participations</span>)
+            .<span class="kw">await</span>
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Stop participating from provided events</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">stop_participating</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">account_identifier</span>: <span class="ident">AccountIdentifier</span>,
+        <span class="ident">event_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">get_account</span>(<span class="ident">account_identifier</span>)
+            .<span class="kw">await</span><span class="question-mark">?</span>
+            .<span class="ident">stop_participating</span>(<span class="ident">event_ids</span>)
+            .<span class="kw">await</span>
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Get a participating overview of the accounts by looking at the messages</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_participation_overview</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::ParticipatingAccounts</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">participation_information</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::participation::types::ParticipatingAccounts</span> { <span class="ident">accounts</span>: <span class="ident">Vec::new</span>() };
+        <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_accounts</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="ident">accounts</span> {
+            <span class="ident">participation_information</span>
+                .<span class="ident">accounts</span>
+                .<span class="ident">push</span>(<span class="ident">account</span>.<span class="ident">get_participation_overview</span>().<span class="kw">await</span><span class="question-mark">?</span>);
+        }
+        <span class="prelude-val">Ok</span>(<span class="ident">participation_information</span>)
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Get a participating events data</span>
+    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_participation_events</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::EventData</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_account</span>(<span class="number">0</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="ident">account</span>.<span class="ident">get_participation_events</span>().<span class="kw">await</span>
     }
 }
 

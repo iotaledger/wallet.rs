@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["get_address_staking_status",""],["get_event_information",""],["get_event_status",""],["get_events","GET /api/plugins/participation/events : Lists all events, returning their EventID."],["get_output_participation",""]]});

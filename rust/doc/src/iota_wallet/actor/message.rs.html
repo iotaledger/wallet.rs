@@ -654,6 +654,51 @@
 <span id="654">654</span>
 <span id="655">655</span>
 <span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -996,6 +1041,28 @@
     },
     <span class="doccomment">/// Stop background syncing.</span>
     <span class="ident">StopBackgroundSync</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Participate in a voting or staking events</span>
+    <span class="ident">Participate</span> {
+        <span class="doccomment">/// account which should participate</span>
+        <span class="ident">account_identifier</span>: <span class="ident">AccountIdentifier</span>,
+        <span class="doccomment">/// participation information to send</span>
+        <span class="ident">participations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::Participation</span><span class="op">&gt;</span>,
+    },
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Stop participating in a voting or staking events</span>
+    <span class="ident">StopParticipating</span> {
+        <span class="doccomment">/// account which should stop participate</span>
+        <span class="ident">account_identifier</span>: <span class="ident">AccountIdentifier</span>,
+        <span class="doccomment">/// Event ids to stop participating from</span>
+        <span class="ident">event_ids</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    },
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Get participating overview</span>
+    <span class="ident">GetParticipationOverview</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Get participation events</span>
+    <span class="ident">GetParticipationEvents</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Serialize</span> <span class="kw">for</span> <span class="ident">MessageType</span> {
@@ -1080,6 +1147,20 @@
             }
             <span class="ident">MessageType::StopBackgroundSync</span> =&gt; {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">34</span>, <span class="string">&quot;StopBackgroundSync&quot;</span>)
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::Participate</span> { .. } =&gt; <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">35</span>, <span class="string">&quot;Participate&quot;</span>),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::StopParticipating</span> { .. } =&gt; {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">36</span>, <span class="string">&quot;StopParticipating&quot;</span>)
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::GetParticipationOverview</span> =&gt; {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">38</span>, <span class="string">&quot;GetParticipationOverview&quot;</span>)
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::GetParticipationEvents</span> =&gt; {
+                <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">39</span>, <span class="string">&quot;GetParticipationEvents&quot;</span>)
             }
         }
     }
@@ -1270,6 +1351,15 @@
     <span class="ident">GetLegacyAddressChecksum</span>(<span class="ident">String</span>),
     <span class="doccomment">/// All went fine.</span>
     <span class="prelude-val">Ok</span>(()),
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Sent participations response.</span>
+    <span class="ident">SentParticipation</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">WalletMessage</span><span class="op">&gt;</span>),
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Participating accounts with their staking rewards.</span>
+    <span class="ident">ParticipationOverview</span>(<span class="ident"><span class="kw">crate</span>::participation::types::ParticipatingAccounts</span>),
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="doccomment">/// Get data about participation events.</span>
+    <span class="ident">EventsData</span>(<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::EventData</span><span class="op">&gt;</span>),
 }
 
 <span class="doccomment">/// The message type.</span>

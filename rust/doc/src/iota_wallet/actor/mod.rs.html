@@ -802,6 +802,50 @@
 <span id="802">802</span>
 <span id="803">803</span>
 <span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -1220,6 +1264,50 @@
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
                     <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">stop_background_sync</span>()<span class="question-mark">?</span>;
                     <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::Ok</span>(()))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::Participate</span> {
+                <span class="ident">account_identifier</span>,
+                <span class="ident">participations</span>,
+            } =&gt; {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">account_manager</span>
+                        .<span class="ident">participate</span>(<span class="ident">account_identifier</span>.<span class="ident">clone</span>(), <span class="ident">participations</span>.<span class="ident">clone</span>())
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SentParticipation</span>(<span class="ident">messages</span>))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::StopParticipating</span> {
+                <span class="ident">account_identifier</span>,
+                <span class="ident">event_ids</span>,
+            } =&gt; {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">messages</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">account_manager</span>
+                        .<span class="ident">stop_participating</span>(<span class="ident">account_identifier</span>.<span class="ident">clone</span>(), <span class="ident">event_ids</span>.<span class="ident">clone</span>())
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::SentParticipation</span>(<span class="ident">messages</span>))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::GetParticipationOverview</span> =&gt; {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">overview</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_participation_overview</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::ParticipationOverview</span>(<span class="ident">overview</span>))
+                })
+                .<span class="kw">await</span>
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+            <span class="ident">MessageType::GetParticipationEvents</span> =&gt; {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
+                    <span class="kw">let</span> <span class="ident">events_data</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_participation_events</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::EventsData</span>(<span class="ident">events_data</span>))
                 })
                 .<span class="kw">await</span>
             }

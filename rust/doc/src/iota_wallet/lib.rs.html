@@ -574,6 +574,9 @@
 <span id="574">574</span>
 <span id="575">575</span>
 <span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -599,6 +602,9 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">message</span>;
 <span class="doccomment">/// The monitor module.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">monitor</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+<span class="doccomment">/// Participation interfaces.</span>
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">participation</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">serde</span>;
 <span class="doccomment">/// Signing interfaces.</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signing</span>;
