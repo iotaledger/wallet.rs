@@ -1042,12 +1042,7 @@ impl AccountHandle {
             HashMap::new();
 
         // We split the addresses into chunks so we don't get timeouts if we have thousands
-        for addresses_chunk in account
-            .addresses()
-            .chunks(100)
-            .map(|x: &[Address]| x.to_vec())
-            .into_iter()
-        {
+        for addresses_chunk in account.addresses().chunks(100).map(|x: &[Address]| x.to_vec()) {
             let mut tasks = Vec::new();
             for address in addresses_chunk {
                 let node = node.clone();

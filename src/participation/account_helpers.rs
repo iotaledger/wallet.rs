@@ -19,11 +19,7 @@ pub(crate) async fn get_outputs_participation(
     let mut assembly_staked_funds = 0;
 
     // We split the outputs into chunks so we don't get timeouts if we have thousands
-    for output_ids_chunk in address_outputs
-        .chunks(100)
-        .map(|x: &[AddressOutput]| x.to_vec())
-        .into_iter()
-    {
+    for output_ids_chunk in address_outputs.chunks(100).map(|x: &[AddressOutput]| x.to_vec()) {
         let mut tasks = Vec::new();
         for output in output_ids_chunk {
             let node = node.clone();
@@ -71,7 +67,7 @@ pub(crate) async fn get_addresses_staking_rewards(
     let mut shimmer_rewards_below_minimum = 0;
     let mut assembly_rewards_below_minimum = 0;
     // We split the addresses into chunks so we don't get timeouts if we have thousands
-    for addresses_chunk in addresses.chunks(100).map(|x: &[Address]| x.to_vec()).into_iter() {
+    for addresses_chunk in addresses.chunks(100).map(|x: &[Address]| x.to_vec()) {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
             let node = node.clone();
