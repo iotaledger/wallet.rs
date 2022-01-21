@@ -23,6 +23,9 @@ pub mod event;
 pub mod message;
 /// The monitor module.
 pub mod monitor;
+#[cfg(feature = "participation")]
+/// Participation interfaces.
+pub mod participation;
 pub(crate) mod serde;
 /// Signing interfaces.
 pub mod signing;

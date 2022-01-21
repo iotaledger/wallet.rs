@@ -48,6 +48,9 @@ iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13
 bytemuck = { version = "1.5.1", default-features = false }
 iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "656279e628e5f9d9288477cd4d2dc4170ea4bf0e", default-features = false, package = "iota-core" }
 
+# participation
+reqwest = { version = "0.11.6", default-features = false, features = ["json"], optional = true }
+
 [dependencies.iota-crypto]
 version = "0.5.0"
 default-features = false
@@ -66,3 +69,4 @@ default = ["stronghold"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
 stronghold = []
+participation = ["reqwest"]

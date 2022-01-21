@@ -7,6 +7,8 @@ pub mod rocksdb;
 /// Stronghold storage.
 pub mod stronghold;
 
+#[cfg(feature = "participation")]
+use crate::address::AddressWrapper;
 use crate::{
     account::Account,
     event::{BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionReattachmentEvent},
@@ -236,6 +238,58 @@ impl StorageManager {
         let address: iota_client::bee_message::address::Address =
             serde_json::from_str(&self.storage.get("FIRST_LEDGER_ADDRESS").await?)?;
         Ok(address)
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn save_participations(
+        &mut self,
+        account_index: usize,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<()> {
+        self.storage
+            .set(&format!("ACCOUNT-{}-PARTICIPATIONS", account_index), participations)
+            .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn get_participations(
+        &self,
+        account_index: usize,
+    ) -> crate::Result<Vec<crate::participation::types::Participation>> {
+        let participations: Vec<crate::participation::types::Participation> = serde_json::from_str(
+            &self
+                .storage
+                .get(&format!("ACCOUNT-{}-PARTICIPATIONS", account_index))
+                .await?,
+        )?;
+        Ok(participations)
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn save_participation_address(
+        &mut self,
+        account_index: usize,
+        participation_address: AddressWrapper,
+    ) -> crate::Result<()> {
+        self.storage
+            .set(
+                &format!("ACCOUNT-{}-PARTICIPATIONADDRESS", account_index),
+                participation_address,
+            )
+            .await?;
+        Ok(())
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn get_participation_address(&self, account_index: usize) -> crate::Result<AddressWrapper> {
+        let participation_address: AddressWrapper = serde_json::from_str(
+            &self
+                .storage
+                .get(&format!("ACCOUNT-{}-PARTICIPATIONADDRESS", account_index))
+                .await?,
+        )?;
+        Ok(participation_address)
     }
 
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {

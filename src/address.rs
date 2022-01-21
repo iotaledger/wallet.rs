@@ -220,7 +220,7 @@ impl AddressBuilder {
 }
 
 /// An address and its network type.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AddressWrapper {
     pub(crate) inner: IotaAddress,
     pub(crate) bech32_hrp: String,

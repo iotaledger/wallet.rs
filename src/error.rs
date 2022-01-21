@@ -238,6 +238,14 @@ pub enum Error {
     /// Couldn't get a spent output from a node.
     #[error("couldn't get a spent output from node")]
     SpentOutputNotFound,
+    #[cfg(feature = "participation")]
+    /// Participation is invalid
+    #[error("participations is invalid")]
+    InvalidParticipations,
+    #[cfg(feature = "participation")]
+    /// reqwest error
+    #[error("{0}")]
+    ReqwestError(#[from] reqwest::Error),
 }
 
 impl Drop for Error {
@@ -384,6 +392,10 @@ impl serde::Serialize for Error {
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::SpentOutputNotFound => serialize_variant(self, serializer, "SpentOutputNotFound"),
+            #[cfg(feature = "participation")]
+            Self::InvalidParticipations => serialize_variant(self, serializer, "InvalidParticipations"),
+            #[cfg(feature = "participation")]
+            Self::ReqwestError(_) => serialize_variant(self, serializer, "ReqwestError"),
         }
     }
 }

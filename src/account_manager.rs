@@ -1376,6 +1376,55 @@ impl AccountManager {
         iota_migration::client::migration::get_seed_checksum(seed)
             .map_err(|e| crate::Error::LegacyClientError(Box::new(e)))
     }
+
+    // participation
+    #[cfg(feature = "participation")]
+    /// Participate in events
+    pub async fn participate(
+        &self,
+        account_identifier: AccountIdentifier,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<Vec<Message>> {
+        self.get_account(account_identifier)
+            .await?
+            .participate(participations)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Stop participating from provided events
+    pub async fn stop_participating(
+        &self,
+        account_identifier: AccountIdentifier,
+        event_ids: Vec<String>,
+    ) -> crate::Result<Vec<Message>> {
+        self.get_account(account_identifier)
+            .await?
+            .stop_participating(event_ids)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get a participating overview of the accounts by looking at the messages
+    pub async fn get_participation_overview(
+        &self,
+    ) -> crate::Result<crate::participation::types::ParticipatingAccounts> {
+        let mut participation_information = crate::participation::types::ParticipatingAccounts { accounts: Vec::new() };
+        let accounts = self.get_accounts().await?;
+        for account in accounts {
+            participation_information
+                .accounts
+                .push(account.get_participation_overview().await?);
+        }
+        Ok(participation_information)
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get a participating events data
+    pub async fn get_participation_events(&self) -> crate::Result<Vec<crate::participation::types::EventData>> {
+        let account = self.get_account(0).await?;
+        account.get_participation_events().await
+    }
 }
 
 macro_rules! event_getters_impl {

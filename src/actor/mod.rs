@@ -419,6 +419,50 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "participation")]
+            MessageType::Participate {
+                account_identifier,
+                participations,
+            } => {
+                convert_async_panics(|| async {
+                    let messages = self
+                        .account_manager
+                        .participate(account_identifier.clone(), participations.clone())
+                        .await?;
+                    Ok(ResponseType::SentParticipation(messages))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::StopParticipating {
+                account_identifier,
+                event_ids,
+            } => {
+                convert_async_panics(|| async {
+                    let messages = self
+                        .account_manager
+                        .stop_participating(account_identifier.clone(), event_ids.clone())
+                        .await?;
+                    Ok(ResponseType::SentParticipation(messages))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationOverview => {
+                convert_async_panics(|| async {
+                    let overview = self.account_manager.get_participation_overview().await?;
+                    Ok(ResponseType::ParticipationOverview(overview))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationEvents => {
+                convert_async_panics(|| async {
+                    let events_data = self.account_manager.get_participation_events().await?;
+                    Ok(ResponseType::EventsData(events_data))
+                })
+                .await
+            }
         };
 
         let response = match response {

@@ -106,7 +106,7 @@ pub struct TransferBuilder {
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
     /// The input to use (skips input selection)
-    input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    input: Option<Vec<(AddressWrapper, Vec<AddressOutput>)>>,
     /// Whether the transfer should emit events or not.
     with_events: bool,
     /// Whether the transfer should skip account syncing or not.
@@ -231,7 +231,26 @@ impl TransferBuilder {
 
     /// Sets the addresses and utxo to use as transaction input.
     pub(crate) fn with_input(mut self, address: AddressWrapper, inputs: Vec<AddressOutput>) -> Self {
-        self.input.replace((address, inputs));
+        self.input.replace(vec![(address, inputs)]);
+        self
+    }
+
+    #[cfg(feature = "participation")]
+    /// Sets the utxos to use as transaction input.
+    pub(crate) fn with_inputs(mut self, inputs: Vec<AddressOutput>) -> Self {
+        let mut address_inputs: HashMap<AddressWrapper, Vec<AddressOutput>> = HashMap::new();
+
+        for input in inputs {
+            address_inputs
+                .entry(input.address.clone())
+                .and_modify(|e| e.push(input.clone()))
+                .or_insert_with(|| vec![input]);
+        }
+        let mut final_address_inputs = Vec::new();
+        for value in address_inputs {
+            final_address_inputs.push(value);
+        }
+        self.input.replace(final_address_inputs);
         self
     }
 
@@ -269,7 +288,7 @@ pub struct Transfer {
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
     /// The addresses to use as input.
-    pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    pub(crate) input: Option<Vec<(AddressWrapper, Vec<AddressOutput>)>>,
     /// Whether the transfer should emit events or not.
     pub(crate) with_events: bool,
     /// Whether the transfer should skip account syncing or not.
