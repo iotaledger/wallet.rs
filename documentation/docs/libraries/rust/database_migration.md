@@ -2,7 +2,7 @@
 
 The implemetion is based on original ideas described [here](https://github.com/Thoralf-M/wallet-core/blob/dev/documentation/database_migration.md) by Thoralf.
 
-To create a new schema, a new module with the corresponding schema version should be created in the `schema` module, in this case it's `v2`. The sample code snippet shows a sample implementation from `schema::v1::Account` to `schema::v2::Account`. `schema::v2::Account` renames field `something` to `another`, introduces a new field `value` with a default value of 5, and not immediately obvious by perusing `schema::v2::Account` is the change in `ClientOptions` struct, primary_node will no longer be de/serialized as 'node' but as 'primaryNode', network is renamed to network_id and will be de/serialized as 'networkId'.
+To create a new schema, a new module with the corresponding schema version should be created in the `schema` module, in this case it's `v2`. The example code snippet shows a sample implementation from `schema::v1::Account` to `schema::v2::Account`. `schema::v2::Account` renames field `something` to `another`, introduces a new field `value` with a default value of 5, and not immediately obvious by perusing `schema::v2::Account` is the change in `ClientOptions` struct, primary_node will no longer be de/serialized as 'node' but as 'primaryNode', network is renamed to network_id and will be de/serialized as 'networkId'.
 
 New schema versions reuse unchanged struct and enum types from previous schema to save time, effort and possible bugs in converting between types that are identical but have different parent modules.
 
