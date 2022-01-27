@@ -1975,11 +1975,14 @@ async fn discover_accounts(
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
         let account_handle = account_initialiser.initialise().await?;
-        log::debug!(
-            "[SYNC] discovering account {}, signer type {:?}",
-            account_handle.read().await.alias(),
-            account_handle.read().await.signer_type()
-        );
+        {
+            let account = account_handle.read().await;
+            log::debug!(
+                "[SYNC] discovering account {}, signer type {:?}",
+                account.alias(),
+                account.signer_type()
+            );
+        }
         let mut synchronizer = account_handle.sync().await;
         if let Some(gap_limit) = gap_limit {
             synchronizer = synchronizer.gap_limit(gap_limit);
