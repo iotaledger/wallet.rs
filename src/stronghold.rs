@@ -444,7 +444,12 @@ async fn unset_password(storage_path: &Path) {
 
 /// Removes the snapshot from memory and clears the password.
 pub async fn unload_snapshot(storage_path: &Path, persist: bool) -> Result<()> {
-    if CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.is_some() {
+    if CURRENT_SNAPSHOT_PATH
+        .get_or_init(Default::default)
+        .lock()
+        .await
+        .is_some()
+    {
         let mut runtime = actor_runtime().lock().await;
         clear_stronghold_cache(&mut runtime, persist).await?;
         CURRENT_SNAPSHOT_PATH.get_or_init(Default::default).lock().await.take();
