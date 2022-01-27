@@ -228,7 +228,7 @@ fn flapigen_expand(target: &str, source_dir: &Path, file: &Path, out_dir: &Path)
     }
 
     let swig_gen = flapigen::Generator::new(LanguageConfig::JavaConfig(java_cfg))
-        .rustfmt_bindings(true)
+        .rustfmt_bindings(false)
         .remove_not_generated_files_from_output_directory(false)
         .merge_type_map("chrono_support", include_str!("src/foreign_types/chrono_include.rs"))
         .merge_type_map("foreign_types", include_str!("src/foreign_types/types.rs"))
