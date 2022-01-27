@@ -31,7 +31,7 @@ use iota_wallet::{
         MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
     },
     address::{
-        OutputKind, AddressWrapper, IotaAddress, parse as parseAddress
+        AddressWrapper, IotaAddress, parse as parseAddress
     },
     client::Api,
     iota_client::{
@@ -119,6 +119,7 @@ foreign_enum!(
 
 foreign_enum!(
     enum OutputKind {
+        NONE = OutputKind::None,
         SIGNATURE_LOCKED_SINGLE = OutputKind::SignatureLockedSingle,
         SIGNATURE_LOCKED_DUST_ALLOWANCE = OutputKind::SignatureLockedDustAllowance,
         TREASURY = OutputKind::Treasury,
@@ -437,7 +438,7 @@ foreign_class!(
 
 foreign_class!(
     /// The options builder for a client connected to multiple nodes.
-    #[derive(camelCaseAliases, Display)]
+    #[derive(camelCaseAliases)]
     class ClientOptionsBuilder {
         self_type ClientOptionsBuilder;
         /// Initialises a new instance of the builder.
@@ -485,7 +486,7 @@ foreign_class!(
         /// Every node will be considered healthy and ready to use.
         fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder;
         /// Sets the MQTT broker options.
-        fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
+        fn ClientOptionsBuilder::with_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
         /// Disables MQTT
         fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder;
         /// Sets whether the PoW should be done locally or remotely.
@@ -681,11 +682,11 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(camelCaseAliases, Display)]
+    #[derive(camelCaseAliases)]
     class AddressWrapper {
         self_type AddressWrapper;
         private constructor = empty;
-        private fn AddressWrapper::to_string(&self) -> String {
+        fn AddressWrapper::to_string(&self) -> String {
             format!("{:?}", this)
         }
         /// Create an Address based on its address and Bech segments
@@ -866,14 +867,16 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class Transfer {
         self_type Transfer;
         private constructor = empty;
+        private fn Transfer::to_string(&self) -> String; alias to_string;
         /// Creates a new Builder for making a Transfer object
         /// @param address The addres we want to send to
         /// @param amount The amount we want to send
-        /// @param output_kind The kind of output we wish to use
-        fn Transfer::builder(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
+        /// @param output_kind The kind of output we wish to use, can be OutputKind.NONE
+        fn Transfer::builder(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferBuilder;
     }
 );
 
@@ -882,13 +885,12 @@ foreign_class!(
     #[derive(camelCaseAliases, Display)]
     class TransferOutput {
         self_type TransferOutput;
-        private constructor = empty;
-        private fn TransferOutput::to_string(&self) -> String; alias to_string;
         /// Transfer output
         /// @param address The addres we want to send to
         /// @param amount The amount we want to send
         /// @param output_kind The kind of output we wish to use. Defaults to SIGNATURE_LOCKED_SINGLE
-        fn TransferOutput::new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferOutput;
+        constructor TransferOutput::new(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferOutput;
+        private fn TransferOutput::to_string(&self) -> String; alias to_string;
         /// The output value.
         fn TransferOutput::get_amount(&mut self) -> u64;
         /// The output address.
@@ -902,14 +904,14 @@ foreign_class!(
     #[derive(camelCaseAliases)]
     class TransferBuilder {
         self_type TransferBuilder;
-        /// Creates a transfer with multiple outputs.
-        /// @param outputs List of outputs
-        constructor TransferBuilder::with_outputs(outputs: Vec<TransferOutput>) -> TransferBuilder;
         /// Initialises a new transfer to the given address.
         /// @param address The addres we want to send to
         /// @param amount The amount we want to send
         /// @param output_kind The kind of output we wish to use
-        fn TransferBuilder::new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
+        //constructor TransferBuilder::new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
+        /// Creates a transfer with multiple outputs.
+        /// @param outputs List of outputs
+        constructor TransferBuilder::with_outputs(outputs: Vec<TransferOutput>) -> TransferBuilder;
         /// Sets the remainder value strategy for the transfer.
         /// @param strategy The type of strategy we use to handle the remainder
         fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;

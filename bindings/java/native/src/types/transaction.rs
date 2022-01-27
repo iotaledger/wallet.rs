@@ -11,14 +11,44 @@ use iota_wallet::{
     },
 };
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum InputKind {
     Utxo = 0,
     Treasury = 1,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub enum UnlockBlockKind {
     Reference = 0,
     Ed25519 = 1,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum OutputKind {
+    None = 0,
+    SignatureLockedSingle = 1,
+    SignatureLockedDustAllowance = 2,
+    Treasury = 3,
+}
+
+
+impl From<RustOutputKind> for OutputKind {
+    fn from(kind: RustOutputKind) -> Self {
+        match kind {
+            RustOutputKind::SignatureLockedSingle => OutputKind::SignatureLockedSingle,
+            RustOutputKind::SignatureLockedDustAllowance => OutputKind::SignatureLockedDustAllowance,
+            RustOutputKind::Treasury => OutputKind::Treasury,
+        }
+    }
+}
+
+pub fn output_kind_enum_to_type(strategy: OutputKind) -> Option<RustOutputKind> {
+    match strategy {
+        OutputKind::None => None,
+        OutputKind::SignatureLockedSingle => Some(RustOutputKind::SignatureLockedSingle),
+        OutputKind::SignatureLockedDustAllowance => Some(RustOutputKind::SignatureLockedDustAllowance),
+        OutputKind::Treasury => Some(RustOutputKind::Treasury),
+    }
 }
 
 pub struct MessageTransactionPayload {
@@ -145,11 +175,11 @@ pub struct TransactionOutput {
 }
 
 impl TransactionOutput {
-    pub fn kind(&self) -> RustOutputKind {
+    pub fn kind(&self) -> OutputKind {
         match self.output {
-            RustWalletOutput::SignatureLockedSingle(_) => RustOutputKind::SignatureLockedSingle,
-            RustWalletOutput::SignatureLockedDustAllowance(_) => RustOutputKind::SignatureLockedDustAllowance,
-            RustWalletOutput::Treasury(_) => RustOutputKind::Treasury,
+            RustWalletOutput::SignatureLockedSingle(_) => OutputKind::SignatureLockedSingle,
+            RustWalletOutput::SignatureLockedDustAllowance(_) => OutputKind::SignatureLockedDustAllowance,
+            RustWalletOutput::Treasury(_) => OutputKind::Treasury,
         }
     }
 

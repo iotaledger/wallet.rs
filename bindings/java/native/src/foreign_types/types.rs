@@ -213,6 +213,7 @@ foreign_typemap!(
     ($p:f_type, option = "NullAnnotations") <= "@NonNull AddressOutput[]";
 );
 
+
 foreign_typemap!(
     ($p:r_type) Vec<TransferOutput> <= internal_aliases::JForeignObjectsArray<TransferOutput> {
         $out = jobject_array_to_vec_of_objects(env, $p);
@@ -220,3 +221,41 @@ foreign_typemap!(
     ($p:f_type, option = "NoNullAnnotations") <= "TransferOutput[]";
     ($p:f_type, option = "NullAnnotations") <= "@NonNull TransferOutput[]";
 );
+
+/*
+#[repr(transparent)]
+pub struct JForeignObjectsArrayForSlice<T: SwigForeignClass> {
+    pub(crate) inner: jobjectArray,
+    pub(crate) _marker: ::std::marker::PhantomData<T>,
+}
+foreign_typemap!(
+    ($p:r_type) <T: SwigForeignClass + Clone> &[T] <= JForeignObjectsArrayForSlice<T> {
+        let arr = crate::internal_aliases::JForeignObjectsArray{ inner: $p.inner, _marker: $p._marker};
+        $out = &jobject_array_to_vec_of_objects(env, arr);
+    };
+    ($p:f_type, option = "NoNullAnnotations", unique_prefix = "/*slice*/") <= "/*slice*/swig_f_type!(T) []";
+    ($p:f_type, option = "NullAnnotations", unique_prefix = "/*slice*/") <= "/*slice*/@NonNull swig_f_type!(T, NoNullAnnotations) []";
+); 
+
+#[swig_from_foreigner_hint = "T []"]
+impl<T: SwigForeignClass + Clone> SwigInto<Vec<T>>  for jobjectArray {
+    fn swig_into(self, env: *mut JNIEnv) -> Vec<T> {
+        let class_id = <T>::jni_class_name();
+        let jcls: jclass = unsafe { (**env).FindClass.unwrap()(env, class_id) };
+        let field_id = swig_c_str!("mNativeObj");
+        let type_id = swig_c_str!("J");
+        let field_id: jfieldID = unsafe { (**env).GetFieldID.unwrap()(env, jcls, field_id, type_id) };
+        assert!(!field_id.is_null());
+
+        let length = unsafe { (**env).GetArrayLength.unwrap()(env, self) };
+        // pub GetObjectArrayElement: Option<unsafe extern "system" fn(_: *mut JNIEnv, _: jobjectArray, _: jsize) -> jobject>,
+
+        let result = Vec::with_capacity(length as usize);
+
+        for i in 0..length {
+            let obj = unsafe { (**env).GetObjectArrayElement.unwrap()(env, self, i) };
+        }
+
+        result
+    }
+}*/

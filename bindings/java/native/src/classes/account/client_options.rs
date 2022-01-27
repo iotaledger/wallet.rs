@@ -252,7 +252,7 @@ impl ClientOptionsBuilder {
     }
 
     /// Sets the MQTT broker options.
-    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
+    pub fn with_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
         let new_builder = self
             .builder
             .borrow_mut()
