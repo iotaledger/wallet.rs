@@ -30,6 +30,7 @@ use std::{
 };
 
 const ACCOUNT_INDEXATION_KEY: &str = "iota-wallet-account-indexation";
+const KCV_KEY: &str = "iota-wallet-key-checksum_value";
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 struct AccountIndexation {
@@ -83,6 +84,25 @@ struct Storage {
 }
 
 impl Storage {
+    async fn new(
+        storage_path: PathBuf,
+        storage_adapter: Box<dyn StorageAdapter + Send + Sync + 'static>,
+        encryption_key: Option<[u8; 32]>,
+    ) -> crate::Result<Self> {
+        let storage_id = storage_adapter.id();
+        let mut storage = Storage {
+            storage_path,
+            inner: storage_adapter,
+            encryption_key: None,
+        };
+
+        if storage_id != stronghold::STORAGE_ID && encryption_key.is_some() {
+            storage.set_encryption_key(encryption_key.unwrap()).await?;
+        }
+
+        Ok(storage)
+    }
+
     fn id(&self) -> &'static str {
         self.inner.id()
     }
@@ -136,6 +156,28 @@ impl Storage {
     async fn remove(&mut self, key: &str) -> crate::Result<()> {
         self.inner.remove(key).await
     }
+
+    async fn set_encryption_key(&mut self, encryption_key: [u8; 32]) -> crate::Result<()> {
+        let record = key_checksum_value(&encryption_key)?;
+        self.inner.set(KCV_KEY, serde_json::to_string(&record)?).await?;
+        self.encryption_key.replace(encryption_key);
+        Ok(())
+    }
+
+    async fn get_encryption_key_checksum(&self) -> crate::Result<Vec<u8>> {
+        let record = self.inner.get(KCV_KEY).await?;
+        Ok(serde_json::from_str(&record)?)
+    }
+
+    fn clear_encryption_key(&mut self) -> crate::Result<()> {
+        self.encryption_key.take();
+        Ok(())
+    }
+
+    #[cfg(test)]
+    async fn remove_encryption_key_checksum(&mut self) -> crate::Result<()> {
+        self.inner.remove(KCV_KEY).await
+    }
 }
 
 pub(crate) struct StorageManager {
@@ -180,8 +222,7 @@ impl StorageManager {
         self.storage.id()
     }
 
-    #[cfg(test)]
-    pub fn is_encrypted(&self) -> bool {
+    pub(crate) fn is_encrypted(&self) -> bool {
         self.storage.encryption_key.is_some()
     }
 
@@ -429,6 +470,87 @@ impl StorageManager {
     }
 }
 
+fn key_checksum_value(encryption_key: &[u8; 32]) -> crate::Result<Vec<u8>> {
+    let mut nonce = [0u8; XChaCha20Poly1305::NONCE_LENGTH];
+    crypto::utils::rand::fill(&mut nonce).map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
+    key_checksum_value_with_nonce(encryption_key, nonce)
+}
+
+fn key_checksum_value_with_nonce(
+    encryption_key: &[u8; 32],
+    nonce: [u8; XChaCha20Poly1305::NONCE_LENGTH],
+) -> crate::Result<Vec<u8>> {
+    let mut tag = vec![0u8; XChaCha20Poly1305::TAG_LENGTH];
+    let data = [0u8; XChaCha20Poly1305::KEY_LENGTH];
+
+    let mut ciphertext = [0u8; XChaCha20Poly1305::KEY_LENGTH];
+    // we can unwrap here since we know the lengths are valid
+    XChaCha20Poly1305::encrypt(
+        encryption_key.try_into().unwrap(),
+        &nonce.try_into().unwrap(),
+        &[],
+        &data,
+        &mut ciphertext,
+        tag.as_mut_slice().try_into().unwrap(),
+    )
+    .map_err(|e| crate::Error::RecordEncrypt(format!("{:?}", e)))?;
+
+    let mut data = Vec::from(nonce);
+    data.extend_from_slice(&ciphertext[0..3]);
+
+    Ok(data)
+}
+
+fn split_key_checksum(record: &[u8]) -> crate::Result<([u8; XChaCha20Poly1305::NONCE_LENGTH], Vec<u8>)> {
+    let mut record = record;
+
+    let mut nonce = [0u8; XChaCha20Poly1305::NONCE_LENGTH];
+    let mut kcv = Vec::new();
+
+    record.read_exact(&mut nonce)?;
+    record.read_to_end(&mut kcv)?;
+
+    Ok((nonce, kcv))
+}
+
+pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32]) -> crate::Result<bool> {
+    let record = crate::storage::get_encryption_key_checksum(storage_path).await;
+
+    match record {
+        Ok(record) => {
+            let (nonce, _kcv) = split_key_checksum(&record)?;
+            if record == key_checksum_value_with_nonce(encryption_key, nonce)? {
+                Ok(true)
+            } else {
+                Ok(false)
+            }
+        }
+        Err(crate::Error::RecordNotFound) => {
+            let storage_handle = crate::storage::get(storage_path).await?;
+            let is_valid = match storage_handle.lock().await.get(ACCOUNT_INDEXATION_KEY).await {
+                // Existing DB
+                Ok(indexation) => match serde_json::from_str::<Vec<AccountIndexation>>(&indexation) {
+                    Ok(_account_indexation) => {
+                        // DB is not encrypted, or is it possible that someone already set the correct password?
+                        // Maybe come back to review this decision if we ever decide to have a `change_storage_password` function
+                        Ok(true)
+                    }
+                    Err(_) => match decrypt_record(&indexation, encryption_key) {
+                        Ok(indexation) => Ok(serde_json::from_str::<Vec<AccountIndexation>>(&indexation).is_ok()),
+                        Err(_) => Ok(false),
+                    },
+                },
+                // Newly created DB
+                Err(crate::Error::RecordNotFound) => Ok(true),
+                // Some other error
+                Err(e) => Err(e),
+            };
+            is_valid
+        }
+        Err(e) => Err(e),
+    }
+}
+
 async fn load_optional_data<T: DeserializeOwned + Default>(storage: &Storage, key: &str) -> crate::Result<T> {
     let record = match storage.get(key).await {
         Ok(record) => serde_json::from_str(&record)?,
@@ -571,19 +693,12 @@ pub(crate) async fn set<P: AsRef<Path>>(
     storage_path: P,
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
-) {
+) -> crate::Result<()> {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     #[allow(unused_variables)]
     let storage_id = storage.id();
-    let storage = Storage {
-        storage_path: storage_path.as_ref().to_path_buf(),
-        inner: storage,
-        encryption_key: if storage_id == stronghold::STORAGE_ID {
-            None
-        } else {
-            encryption_key
-        },
-    };
+    let storage = Storage::new(storage_path.as_ref().to_path_buf(), storage, encryption_key).await?;
+
     let storage_manager = StorageManager {
         storage,
         account_indexation: Default::default(),
@@ -598,6 +713,8 @@ pub(crate) async fn set<P: AsRef<Path>>(
         storage_path.as_ref().to_path_buf(),
         Arc::new(Mutex::new(storage_manager)),
     );
+
+    Ok(())
 }
 
 pub(crate) async fn remove(storage_path: &Path) -> Option<String> {
@@ -614,8 +731,27 @@ pub(crate) async fn set_encryption_key(storage_path: &Path, encryption_key: [u8;
     let instances = INSTANCES.get_or_init(Default::default).read().await;
     if let Some(instance) = instances.get(storage_path) {
         let mut storage_manager = instance.lock().await;
-        storage_manager.storage.encryption_key.replace(encryption_key);
-        Ok(())
+        storage_manager.storage.set_encryption_key(encryption_key).await
+    } else {
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
+    }
+}
+
+pub(crate) async fn get_encryption_key_checksum(storage_path: &Path) -> crate::Result<Vec<u8>> {
+    let instances = INSTANCES.get_or_init(Default::default).read().await;
+    if let Some(instance) = instances.get(storage_path) {
+        let storage_manager = instance.lock().await;
+        storage_manager.storage.get_encryption_key_checksum().await
+    } else {
+        Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
+    }
+}
+
+pub(crate) async fn clear_encryption_key(storage_path: &Path) -> crate::Result<()> {
+    let instances = INSTANCES.get_or_init(Default::default).read().await;
+    if let Some(instance) = instances.get(storage_path) {
+        let mut storage_manager = instance.lock().await;
+        storage_manager.storage.clear_encryption_key()
     } else {
         Err(crate::Error::StorageAdapterNotSet(storage_path.to_path_buf()))
     }
@@ -745,7 +881,7 @@ mod tests {
         }
 
         let path = "./the-storage-path";
-        super::set(path, None, Box::new(MyAdapter {})).await;
+        super::set(path, None, Box::new(MyAdapter {})).await.unwrap();
         let adapter = super::get(&PathBuf::from(path)).await.unwrap();
         let adapter = adapter.lock().await;
         assert_eq!(adapter.get("").await.unwrap(), "MY_ADAPTER_GET_RESPONSE".to_string());
@@ -786,5 +922,137 @@ mod tests {
         let parsed_accounts = response.unwrap();
         let parsed_account = parsed_accounts.first().unwrap();
         assert_eq!(parsed_account, &*account_handle.read().await);
+    }
+
+    #[tokio::test]
+    async fn remove_encryption_key_checksum() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let storage_handle = crate::storage::get(manager.storage_path()).await.unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .get_encryption_key_checksum()
+            .await
+            .unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .remove_encryption_key_checksum()
+            .await
+            .unwrap();
+        match storage_handle
+            .lock()
+            .await
+            .storage
+            .get_encryption_key_checksum()
+            .await
+            .err()
+            .unwrap()
+        {
+            crate::Error::RecordNotFound => {}
+            e => panic!("{:?}", e),
+        };
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password_without_kcv() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let _ = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager.clear_storage_password().await.unwrap();
+        let storage_handle = crate::storage::get(manager.storage_path()).await.unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .remove_encryption_key_checksum()
+            .await
+            .unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn correct_storage_password_without_kcv() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let _ = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager.clear_storage_password().await.unwrap();
+        let storage_handle = crate::storage::get(manager.storage_path()).await.unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .remove_encryption_key_checksum()
+            .await
+            .unwrap();
+
+        manager.set_storage_password("password").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password_without_kcv_and_all_accounts_deleted() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager
+            .remove_account(account_handle.read().await.id())
+            .await
+            .expect("failed to remove account");
+        manager.clear_storage_password().await.unwrap();
+        let storage_handle = crate::storage::get(manager.storage_path()).await.unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .remove_encryption_key_checksum()
+            .await
+            .unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn correct_storage_password_without_kcv_and_all_accounts_deleted() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager
+            .remove_account(account_handle.read().await.id())
+            .await
+            .expect("failed to remove account");
+        manager.clear_storage_password().await.unwrap();
+        let storage_handle = crate::storage::get(manager.storage_path()).await.unwrap();
+        storage_handle
+            .lock()
+            .await
+            .storage
+            .remove_encryption_key_checksum()
+            .await
+            .unwrap();
+
+        manager.set_storage_password("password").await.unwrap();
     }
 }

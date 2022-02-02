@@ -238,7 +238,7 @@ impl AccountManagerBuilder {
         };
 
         if let Some(storage) = storage {
-            crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
+            crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await?;
         }
 
         let sync_accounts_lock = Arc::new(Mutex::new(()));
@@ -700,6 +700,11 @@ impl AccountManager {
         })
     }
 
+    async fn unload_accounts(accounts: &AccountStore) -> crate::Result<()> {
+        accounts.write().await.clear();
+        Ok(())
+    }
+
     async fn load_accounts(
         accounts: &AccountStore,
         storage_file_path: &Path,
@@ -828,11 +833,33 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Clear the encryption key and then unload decrypted accounts in memory. Does nothing if storage is not encrypted
+    pub async fn clear_storage_password(&self) -> crate::Result<()> {
+        let is_encrypted = crate::storage::get(self.storage_path())
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .is_encrypted();
+
+        if is_encrypted {
+            crate::storage::clear_encryption_key(&self.storage_path).await?;
+            Self::unload_accounts(&self.accounts).await?;
+            self.loaded_accounts.store(false, Ordering::SeqCst);
+        }
+
+        Ok(())
+    }
+
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
 
         if self.accounts.read().await.is_empty() {
+            if !crate::storage::is_key_valid(&self.storage_path, &key).await? {
+                return Err(crate::Error::RecordDecrypt("Invalid storage password".to_string()));
+            }
+
             crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
             Self::load_accounts(
@@ -2548,6 +2575,82 @@ mod tests {
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;
+    }
+
+    #[tokio::test]
+    async fn clear_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        assert!(manager.get_account(account_id).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn clear_non_existent_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        manager.get_account(account_id).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let _ = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        manager.clear_storage_password().await.unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn correct_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id_1 = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        manager.set_storage_password("password").await.unwrap();
+
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        let account_id_2 = manager.get_accounts().await.unwrap().first().unwrap().id().await;
+
+        assert_eq!(account_id_1, account_id_2);
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password_after_deleting_all_accounts() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager
+            .remove_account(account_handle.read().await.id())
+            .await
+            .expect("failed to remove account");
+        manager.clear_storage_password().await.unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
     }
 
     #[tokio::test]
