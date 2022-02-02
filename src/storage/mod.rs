@@ -532,7 +532,6 @@ pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32])
                 Ok(indexation) => match serde_json::from_str::<Vec<AccountIndexation>>(&indexation) {
                     Ok(_account_indexation) => {
                         // DB is not encrypted, or is it possible that someone already set the correct password?
-                        // Maybe come back to review this decision if we ever decide to have a `change_storage_password` function
                         Ok(true)
                     }
                     Err(_) => match decrypt_record(&indexation, encryption_key) {
