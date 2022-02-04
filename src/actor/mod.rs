@@ -125,6 +125,9 @@ impl WalletMessageHandler {
             MessageType::SetStoragePassword(password) => {
                 convert_async_panics(|| async { self.set_storage_password(password).await }).await
             }
+            MessageType::ClearStoragePassword => {
+                convert_async_panics(|| async { self.clear_storage_password().await }).await
+            }
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async { self.set_stronghold_password(password).await }).await
@@ -663,6 +666,11 @@ impl WalletMessageHandler {
     async fn set_storage_password(&self, password: &str) -> Result<ResponseType> {
         self.account_manager.set_storage_password(password).await?;
         Ok(ResponseType::StoragePasswordSet)
+    }
+
+    async fn clear_storage_password(&self) -> Result<ResponseType> {
+        self.account_manager.clear_storage_password().await?;
+        Ok(ResponseType::StoragePasswordCleared)
     }
 
     #[cfg(feature = "stronghold")]
