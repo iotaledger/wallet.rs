@@ -847,6 +847,14 @@
 <span id="846">846</span>
 <span id="847">847</span>
 <span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -973,6 +981,9 @@
             }
             <span class="ident">MessageType::SetStoragePassword</span>(<span class="ident">password</span>) =&gt; {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">set_storage_password</span>(<span class="ident">password</span>).<span class="kw">await</span> }).<span class="kw">await</span>
+            }
+            <span class="ident">MessageType::ClearStoragePassword</span> =&gt; {
+                <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> { <span class="self">self</span>.<span class="ident">clear_storage_password</span>().<span class="kw">await</span> }).<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
             <span class="ident">MessageType::SetStrongholdPassword</span>(<span class="ident">password</span>) =&gt; {
@@ -1512,6 +1523,11 @@
     <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">set_storage_password</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">password</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">set_storage_password</span>(<span class="ident">password</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StoragePasswordSet</span>)
+    }
+
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">clear_storage_password</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResponseType</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">clear_storage_password</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::StoragePasswordCleared</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;stronghold&quot;</span>)]</span>
