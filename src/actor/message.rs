@@ -167,6 +167,8 @@ pub enum MessageType {
     },
     /// Sets the password used to encrypt/decrypt the storage.
     SetStoragePassword(String),
+    /// Clears the password used to encrypt/decrypt the storage.
+    ClearStoragePassword,
     /// Set stronghold snapshot password.
     #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
@@ -384,74 +386,77 @@ impl Serialize for MessageType {
             MessageType::SetStoragePassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 9, "SetStoragePassword")
             }
+            MessageType::ClearStoragePassword => {
+                serializer.serialize_unit_variant("MessageType", 10, "ClearStoragePassword")
+            }
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(_) => {
-                serializer.serialize_unit_variant("MessageType", 10, "SetStrongholdPassword")
+                serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPassword")
             }
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPasswordClearInterval(_) => {
-                serializer.serialize_unit_variant("MessageType", 11, "SetStrongholdPasswordClearInterval")
+                serializer.serialize_unit_variant("MessageType", 12, "SetStrongholdPasswordClearInterval")
             }
             #[cfg(feature = "stronghold")]
             MessageType::GetStrongholdStatus => {
-                serializer.serialize_unit_variant("MessageType", 12, "GetStrongholdStatus")
+                serializer.serialize_unit_variant("MessageType", 13, "GetStrongholdStatus")
             }
             #[cfg(feature = "stronghold")]
-            MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 13, "LockStronghold"),
-            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 14, "SendTransfer"),
+            MessageType::LockStronghold => serializer.serialize_unit_variant("MessageType", 14, "LockStronghold"),
+            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 15, "SendTransfer"),
             MessageType::InternalTransfer { .. } => {
-                serializer.serialize_unit_variant("MessageType", 15, "InternalTransfer")
+                serializer.serialize_unit_variant("MessageType", 16, "InternalTransfer")
             }
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 16, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 17, "VerifyMnemonic"),
-            MessageType::StoreMnemonic { .. } => serializer.serialize_unit_variant("MessageType", 18, "StoreMnemonic"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 17, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 18, "VerifyMnemonic"),
+            MessageType::StoreMnemonic { .. } => serializer.serialize_unit_variant("MessageType", 19, "StoreMnemonic"),
             MessageType::IsLatestAddressUnused => {
-                serializer.serialize_unit_variant("MessageType", 19, "IsLatestAddressUnused")
+                serializer.serialize_unit_variant("MessageType", 20, "IsLatestAddressUnused")
             }
             #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
-            MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 20, "GetLedgerStatus"),
-            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 21, "DeleteStorage"),
+            MessageType::GetLedgerStatus(_) => serializer.serialize_unit_variant("MessageType", 21, "GetLedgerStatus"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 22, "DeleteStorage"),
             #[cfg(feature = "stronghold")]
             MessageType::ChangeStrongholdPassword { .. } => {
-                serializer.serialize_unit_variant("MessageType", 22, "ChangeStrongholdPassword")
+                serializer.serialize_unit_variant("MessageType", 23, "ChangeStrongholdPassword")
             }
             MessageType::SetClientOptions(_) => {
-                serializer.serialize_unit_variant("MessageType", 23, "SetClientOptions")
+                serializer.serialize_unit_variant("MessageType", 24, "SetClientOptions")
             }
             MessageType::GetMigrationData { .. } => {
-                serializer.serialize_unit_variant("MessageType", 24, "GetMigrationData")
+                serializer.serialize_unit_variant("MessageType", 25, "GetMigrationData")
             }
             MessageType::CreateMigrationBundle { .. } => {
-                serializer.serialize_unit_variant("MessageType", 25, "CreateMigrationBundle")
+                serializer.serialize_unit_variant("MessageType", 26, "CreateMigrationBundle")
             }
             MessageType::SendMigrationBundle { .. } => {
-                serializer.serialize_unit_variant("MessageType", 26, "SendMigrationBundle")
+                serializer.serialize_unit_variant("MessageType", 27, "SendMigrationBundle")
             }
-            MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 27, "GetSeedChecksum"),
+            MessageType::GetSeedChecksum(_) => serializer.serialize_unit_variant("MessageType", 28, "GetSeedChecksum"),
             MessageType::GetMigrationAddress { .. } => {
-                serializer.serialize_unit_variant("MessageType", 28, "GetMigrationAddress")
+                serializer.serialize_unit_variant("MessageType", 29, "GetMigrationAddress")
             }
-            MessageType::MineBundle { .. } => serializer.serialize_unit_variant("MessageType", 29, "MineBundle"),
+            MessageType::MineBundle { .. } => serializer.serialize_unit_variant("MessageType", 30, "MineBundle"),
             MessageType::GetLedgerMigrationData { .. } => {
-                serializer.serialize_unit_variant("MessageType", 30, "GetLedgerMigrationData")
+                serializer.serialize_unit_variant("MessageType", 31, "GetLedgerMigrationData")
             }
             MessageType::SendLedgerMigrationBundle { .. } => {
-                serializer.serialize_unit_variant("MessageType", 31, "SendLedgerMigrationBundle")
+                serializer.serialize_unit_variant("MessageType", 32, "SendLedgerMigrationBundle")
             }
             MessageType::GetLegacyAddressChecksum(_) => {
-                serializer.serialize_unit_variant("MessageType", 32, "GetLegacyAddressChecksum")
+                serializer.serialize_unit_variant("MessageType", 33, "GetLegacyAddressChecksum")
             }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 33, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 34, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
             }
             #[cfg(feature = "participation")]
-            MessageType::Participate { .. } => serializer.serialize_unit_variant("MessageType", 35, "Participate"),
+            MessageType::Participate { .. } => serializer.serialize_unit_variant("MessageType", 36, "Participate"),
             #[cfg(feature = "participation")]
             MessageType::StopParticipating { .. } => {
-                serializer.serialize_unit_variant("MessageType", 36, "StopParticipating")
+                serializer.serialize_unit_variant("MessageType", 37, "StopParticipating")
             }
             #[cfg(feature = "participation")]
             MessageType::GetParticipationOverview => {
@@ -584,6 +589,8 @@ pub enum ResponseType {
     BackupRestored,
     /// SetStoragePassword response.
     StoragePasswordSet,
+    /// ClearStoragePassword response.
+    StoragePasswordCleared,
     /// SetStrongholdPassword response.
     #[cfg(feature = "stronghold")]
     #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
