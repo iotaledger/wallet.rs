@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.11]
+
+- Fix prebuilt binaries and postinstall scripts
+  - [ed4eb358](https://github.com/iotaledger/wallet.rs/commit/ed4eb358a6afd7f90e947b9dd0d80a9bed9e9692) fix(bindings/nodejs): Resolve issues with prebuilt binaries and postinstall scripts ([#755](https://github.com/iotaledger/wallet.rs/pull/755)) on 2022-02-05
+
 ## \[1.0.10]
 
 - Don't retry pruned messages forever, inputs are checked if they're spent so the status can be updated even if the messages got pruned already.
