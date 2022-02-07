@@ -43,8 +43,11 @@ pub struct ParticipatingAccount {
     /// The index of the account
     #[serde(rename = "accountIndex")]
     pub account_index: usize,
-    /// The events the acount participates at the moment
+    /// The events the acount participates
     pub participations: Vec<Participation>,
+    #[serde(rename = "trackedParticipations")]
+    /// The events the acount participates at the moment with their amount
+    pub tracked_participations: HashMap<String, crate::participation::response_types::TrackedParticipation>,
     /// Fund that are currently staking for assembly
     #[serde(rename = "assemblyStakedFunds")]
     pub assembly_staked_funds: u64,
