@@ -4,6 +4,8 @@
 use crate::address::{Address, AddressOutput};
 use iota_client::node_manager::Node;
 
+use std::collections::HashMap;
+
 // helper function to get the staked funds and participations
 pub(crate) async fn get_outputs_participation(
     address_outputs: Vec<AddressOutput>,
