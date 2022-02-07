@@ -5,7 +5,7 @@ use crate::participation::response_types::{EventInformation, EventStatus};
 
 use serde::{Deserialize, Serialize};
 
-use std::{convert::TryInto, io::Read};
+use std::{collections::HashMap, convert::TryInto, io::Read};
 
 /// Particiapation index
 pub(crate) const PARTICIPATE: &str = "PARTICIPATE";
