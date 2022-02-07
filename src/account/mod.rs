@@ -1026,16 +1026,12 @@ impl AccountHandle {
             available_outputs.extend(address_outputs.into_iter().cloned().collect::<Vec<AddressOutput>>());
         }
 
-        let (shimmer_staked_funds, assembly_staked_funds): (
+        let (shimmer_staked_funds, assembly_staked_funds, tracked_participations): (
             u64,
             u64,
-            // HashMap<String, crate::participation::response_types::TrackedParticipation>,
-        ) = crate::participation::account_helpers::get_outputs_participation(
-            available_outputs,
-            node.clone(),
-            assembly_event_id,
-        )
-        .await?;
+            HashMap<String, crate::participation::response_types::TrackedParticipation>,
+        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone(),
+        assembly_event_id,).await?;
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
@@ -1048,6 +1044,7 @@ impl AccountHandle {
         Ok(crate::participation::types::ParticipatingAccount {
             account_index: *account.index(),
             participations: read_participations,
+            tracked_participations,
             assembly_staked_funds,
             assembly_rewards_below_minimum,
             assembly_rewards,
