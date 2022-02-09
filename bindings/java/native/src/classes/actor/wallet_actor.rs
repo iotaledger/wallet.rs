@@ -1,10 +1,8 @@
-use crate::{
-    block_on, event_manager::EventType,
-};
+use crate::{block_on, event_manager::EventType};
 
 use super::{
-    destroy as destroy_actor, init as init_actor, init_logger, 
-    listen as add_event_listener, send_message as send_actor_message,
+    destroy as destroy_actor, init as init_actor, init_logger, listen as add_event_listener,
+    send_message as send_actor_message,
 };
 
 use bee_common::logger::{LoggerConfig, LoggerOutputConfigBuilder};
@@ -17,7 +15,11 @@ pub trait ActorCallback {
 }
 
 impl Actor {
-    pub fn iota_initialize(callback: Box<dyn ActorCallback + Send + 'static>, actor_id: &str, storage_path: Option<&str>) {
+    pub fn iota_initialize(
+        callback: Box<dyn ActorCallback + Send + 'static>,
+        actor_id: &str,
+        storage_path: Option<&str>,
+    ) {
         block_on(init_actor(
             actor_id,
             move |event| {

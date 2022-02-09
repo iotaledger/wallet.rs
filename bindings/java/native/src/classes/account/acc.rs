@@ -5,15 +5,18 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     acc_manager::AccountSignerType,
-    sync::AccountSynchronizer,
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
+    sync::AccountSynchronizer,
     types::NodeInfoWrapper,
     Result,
 };
 use iota_wallet::{
-    account::{AccountBalance as AccountBalanceRust, AccountHandle as AccountHandleRust, AccountInitialiser as AccountInitialiserRust},
+    account::{
+        AccountBalance as AccountBalanceRust, AccountHandle as AccountHandleRust,
+        AccountInitialiser as AccountInitialiserRust,
+    },
     message::{MessageId, MessageType},
     DateTime, Local,
 };
@@ -73,7 +76,8 @@ impl AccountInitialiser {
     }
 
     pub fn initialise(&self) -> Result<Account> {
-        let acc_handle_res = crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
+        let acc_handle_res =
+            crate::block_on(async move { self.initialiser.borrow_mut().take().unwrap().initialise().await });
 
         match acc_handle_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -95,7 +99,8 @@ impl From<AccountHandleRust> for Account {
 
 impl Account {
     pub fn consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>> {
-        let msgs_res = crate::block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
+        let msgs_res =
+            crate::block_on(async move { self.handle.consolidate_outputs(include_dust_allowance_outputs).await });
 
         match msgs_res {
             Err(e) => Err(anyhow!(e.to_string())),
@@ -248,9 +253,7 @@ impl Account {
 
 impl core::fmt::Display for Account {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f, "{:?}", self.handle
-        )
+        write!(f, "{:?}", self.handle)
     }
 }
 
@@ -281,8 +284,11 @@ impl core::fmt::Display for AccountBalance {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "total={}, available={}, incoming={}, outgoing={}", 
-            self.get_total(), self.get_available(), self.get_incoming(), self.get_outgoing()
+            "total={}, available={}, incoming={}, outgoing={}",
+            self.get_total(),
+            self.get_available(),
+            self.get_incoming(),
+            self.get_outgoing()
         )
     }
 }

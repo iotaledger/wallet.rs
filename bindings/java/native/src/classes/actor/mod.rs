@@ -1,4 +1,3 @@
-
 pub mod wallet_actor;
 
 mod actors;
@@ -30,9 +29,7 @@ use std::{
     time::Duration,
 };
 
-use crate::{
-    event_manager::EventType,
-};
+use crate::event_manager::EventType;
 
 pub const POLLING_INTERVAL_MS: u64 = 30_000;
 

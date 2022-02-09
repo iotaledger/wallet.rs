@@ -1,5 +1,4 @@
-
-/* CONFIGURATION */
+// CONFIGURATION
 // add other android system headers to this list as necessary
 static INCLUDE_SYS_H: [&str; 1] = ["jni.h"];
 
@@ -26,16 +25,15 @@ mod attributes;
 // build files at will.
 
 use std::{
-    env,
-    fmt,
-    fs, fs::File,
+    env, fmt, fs,
+    fs::File,
     io::prelude::*,
     path::{Path, PathBuf},
-    process::Stdio
+    process::Stdio,
 };
 
 use bindgen::RustTarget;
-use flapigen::{JavaConfig, LanguageConfig, JavaReachabilityFence};
+use flapigen::{JavaConfig, JavaReachabilityFence, LanguageConfig};
 use walkdir::WalkDir;
 
 fn main() {
@@ -44,7 +42,7 @@ fn main() {
     // JNI generation.
     let target = env::var("TARGET").unwrap();
     let include_dirs = if ANDROID_TARGETS.contains(&target.as_str()) {
-         get_cc_system_include_dirs().expect("Can't get NDK's system include dirs")
+        get_cc_system_include_dirs().expect("Can't get NDK's system include dirs")
     } else {
         let java_home = env::var("JAVA_HOME").expect("JAVA_HOME env variable not settted");
 
@@ -68,10 +66,7 @@ fn main() {
 fn gen_bindings(include_dirs: Vec<PathBuf>, target: &str) {
     let include_headers: Vec<_> = INCLUDE_SYS_H
         .iter()
-        .map(|h| {
-            search_file_in_directory(&include_dirs, h)
-                .expect(format!("Could not find header {}", h).as_ref())
-        })
+        .map(|h| search_file_in_directory(&include_dirs, h).expect(format!("Could not find header {}", h).as_ref()))
         .collect();
 
     let src_dir = Path::new(RUST_SRC_DIR);
@@ -105,7 +100,7 @@ fn gen_bindings(include_dirs: Vec<PathBuf>, target: &str) {
     for dir in &include_dirs {
         println!("cargo:rerun-if-changed={}", dir.display());
     }
-    //if the generated files were deleted (e.g by gradle -q clean), regenerate them
+    // if the generated files were deleted (e.g by gradle -q clean), regenerate them
     println!("cargo:rerun-if-changed={}", out_dir);
 }
 
@@ -168,12 +163,7 @@ where
     Err(())
 }
 
-fn gen_binding<P1, P2>(
-    target: &str,
-    include_dirs: &[P1],
-    c_headers: &[P2],
-    output_rust: &Path,
-) -> Result<(), String>
+fn gen_binding<P1, P2>(target: &str, include_dirs: &[P1], c_headers: &[P2], output_rust: &Path) -> Result<(), String>
 where
     P1: AsRef<Path> + fmt::Debug,
     P2: AsRef<Path> + fmt::Debug,
@@ -181,31 +171,28 @@ where
     assert!(!c_headers.is_empty());
     let c_file_path = &c_headers[0];
 
-    let mut bindings: bindgen::Builder =
-        bindgen::builder().header(c_file_path.as_ref().to_str().unwrap());
+    let mut bindings: bindgen::Builder = bindgen::builder().header(c_file_path.as_ref().to_str().unwrap());
     bindings = include_dirs.iter().fold(bindings, |acc, x| {
         acc.clang_arg("-I".to_string() + x.as_ref().to_str().unwrap())
     });
     println!("Generate binding for {:?}", c_headers);
-    bindings = bindings
-        .rust_target(RustTarget::Stable_1_19);
+    bindings = bindings.rust_target(RustTarget::Stable_1_19);
     bindings = if target.contains("windows") {
-        //see https://github.com/servo/rust-bindgen/issues/578
+        // see https://github.com/servo/rust-bindgen/issues/578
         bindings.trust_clang_mangling(false)
     } else {
         bindings
     };
-    bindings = c_headers[1..].iter().fold(
-        Ok(bindings),
-        |acc: Result<bindgen::Builder, String>, header| {
+    bindings = c_headers[1..]
+        .iter()
+        .fold(Ok(bindings), |acc: Result<bindgen::Builder, String>, header| {
             let c_file_path = header;
             let c_file_str = c_file_path
                 .as_ref()
                 .to_str()
                 .ok_or_else(|| format!("Invalid unicode in path to {:?}", c_file_path.as_ref()))?;
             Ok(acc.unwrap().clang_arg("-include").clang_arg(c_file_str))
-        },
-    )?;
+        })?;
 
     let generated_bindings = bindings
         //        .clang_arg(format!("-target {}", target))
@@ -219,15 +206,18 @@ where
 }
 
 fn flapigen_expand(target: &str, source_dir: &Path, file: &Path, out_dir: &Path) {
-    let have_java_9 = fs::read_to_string(out_dir.join(JNI_HEADERS_FILE)).unwrap().contains("JNI_VERSION_9");
+    let have_java_9 = fs::read_to_string(out_dir.join(JNI_HEADERS_FILE))
+        .unwrap()
+        .contains("JNI_VERSION_9");
 
     let mut java_cfg = JavaConfig::new(
-       Path::new("src")
-           .join("main")
-           .join("java")
-           .join(PACKAGE_ID.replace(".", "/")),
-       PACKAGE_ID.to_string(),
-   ).use_reachability_fence(if have_java_9 {
+        Path::new("src")
+            .join("main")
+            .join("java")
+            .join(PACKAGE_ID.replace(".", "/")),
+        PACKAGE_ID.to_string(),
+    )
+    .use_reachability_fence(if have_java_9 {
         JavaReachabilityFence::Std
     } else {
         JavaReachabilityFence::GenerateFence(8)
@@ -254,11 +244,8 @@ fn flapigen_expand(target: &str, source_dir: &Path, file: &Path, out_dir: &Path)
 }
 
 fn write_include_file(source_dir: &Path, swig_file: &Path) -> std::io::Result<()> {
-    let rs_rel_file = Path::new(swig_file.parent().unwrap_or(Path::new("."))).join(
-        swig_file
-            .file_stem()
-            .expect("Got invalid file (no filename)"),
-    );
+    let rs_rel_file = Path::new(swig_file.parent().unwrap_or(Path::new(".")))
+        .join(swig_file.file_stem().expect("Got invalid file (no filename)"));
     let rs_path = source_dir.join(&rs_rel_file);
 
     if rs_path.exists() {

@@ -1,11 +1,11 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use getset::{CopyGetters, Getters};
-use std::{path::PathBuf, time::Duration, convert::TryFrom};
-use serde::{Deserialize, Serialize};
 use crate::Result;
 use anyhow::anyhow;
+use getset::{CopyGetters, Getters};
+use serde::{Deserialize, Serialize};
+use std::{convert::TryFrom, path::PathBuf, time::Duration};
 
 use iota_wallet::{
     event::{

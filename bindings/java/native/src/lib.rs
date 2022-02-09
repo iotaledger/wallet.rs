@@ -7,8 +7,8 @@ pub mod verifylink;
 mod classes;
 mod types;
 
-mod jni_c_headers;
 mod java_glue;
+mod jni_c_headers;
 
 pub use crate::java_glue::*;
 

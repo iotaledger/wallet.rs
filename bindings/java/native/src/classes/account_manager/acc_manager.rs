@@ -4,9 +4,8 @@
 use anyhow::anyhow;
 use iota_wallet::{
     account_manager::{
-        AccountManager as AccountManagerRust, 
-        AccountManagerBuilder as AccountManagerBuilderRust,
-        MigrationDataFinder as RustMigrationDataFinder
+        AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
+        MigrationDataFinder as RustMigrationDataFinder,
     },
     message::MessageId,
     signing::SignerType,
@@ -24,7 +23,7 @@ use crate::{
     client_options::ClientOptions,
     message::Message,
     sync::AccountsSynchronizer,
-    types::{MigrationBundle, MigrationData, MigrationBundleOptions, MigrationAddress},
+    types::{MigrationAddress, MigrationBundle, MigrationBundleOptions, MigrationData},
     Result,
 };
 
@@ -143,7 +142,6 @@ pub struct AccountManager {
 }
 
 impl AccountManager {
-
     pub fn storage_path(&self) -> &Path {
         self.manager.storage_path()
     }
@@ -302,13 +300,15 @@ impl AccountManager {
         }
     }
 
-    pub fn get_migration_data(&self, nodes: Vec<String>,
+    pub fn get_migration_data(
+        &self,
+        nodes: Vec<String>,
         seed: &str,
         permanode: Option<&str>,
         security_level: i8,
         initial_address_index: i64,
-        gap_limit: i64
-    ) -> Result<MigrationData>{
+        gap_limit: i64,
+    ) -> Result<MigrationData> {
         let nodes_arr: Vec<&str> = nodes
             .iter()
             .map(|s| {
@@ -335,9 +335,8 @@ impl AccountManager {
                     Err(e) => Err(anyhow!(e.to_string())),
                     Ok(data) => Ok(data.into()),
                 }
-            },
+            }
         }
-        
     }
 
     pub fn get_migration_address(&self, ledger_prompt: bool, account_id: String) -> Result<MigrationAddress> {
@@ -347,16 +346,24 @@ impl AccountManager {
         }
     }
 
-    pub fn create_migration_bundle(&self, seed: String, input_address_indexes: Vec<u64>, options: MigrationBundleOptions) -> Result<MigrationBundle> {
-        match crate::block_on(async move { self.manager
-            .create_migration_bundle(
-                &seed,
-                &input_address_indexes,
-                options.mine(),
-                Duration::from_secs(options.timeouts()),
-                options.offset().unwrap_or(0),
-                &options.log_file_name().unwrap_or("migration.log".to_string())
-        ).await }) {
+    pub fn create_migration_bundle(
+        &self,
+        seed: String,
+        input_address_indexes: Vec<u64>,
+        options: MigrationBundleOptions,
+    ) -> Result<MigrationBundle> {
+        match crate::block_on(async move {
+            self.manager
+                .create_migration_bundle(
+                    &seed,
+                    &input_address_indexes,
+                    options.mine(),
+                    Duration::from_secs(options.timeouts()),
+                    options.offset().unwrap_or(0),
+                    &options.log_file_name().unwrap_or("migration.log".to_string()),
+                )
+                .await
+        }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(a) => Ok(a.into()),
         }
@@ -371,7 +378,11 @@ impl AccountManager {
             })
             .collect();
         let mwm_real = if mwm < 1 { 14 } else { mwm };
-        match crate::block_on(async move { self.manager.send_migration_bundle(&nodes_arr, &bundle_hash, mwm_real).await }) {
+        match crate::block_on(async move {
+            self.manager
+                .send_migration_bundle(&nodes_arr, &bundle_hash, mwm_real)
+                .await
+        }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }
