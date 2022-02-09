@@ -1,5 +1,47 @@
 # Changelog
 
+## \[1.0.11]
+
+- Fix prebuilt binaries and postinstall scripts
+  - [ed4eb358](https://github.com/iotaledger/wallet.rs/commit/ed4eb358a6afd7f90e947b9dd0d80a9bed9e9692) fix(bindings/nodejs): Resolve issues with prebuilt binaries and postinstall scripts ([#755](https://github.com/iotaledger/wallet.rs/pull/755)) on 2022-02-05
+
+## \[1.0.10]
+
+- Don't retry pruned messages forever, inputs are checked if they're spent so the status can be updated even if the messages got pruned already.
+  - [7025a189](https://github.com/iotaledger/wallet.rs/commit/7025a189a1efc4dd6eafeff999934ddec434eb2a) fix: retry/confirmation detection ([#860](https://github.com/iotaledger/wallet.rs/pull/860)) on 2022-01-20
+
+## \[1.0.9]
+
+- Detect confirmed reattachments.
+  - [88f62028](https://github.com/iotaledger/wallet.rs/commit/88f62028fc812ef4145fde8e033d8383559d8f24) Use local transaction payload to reattach ([#851](https://github.com/iotaledger/wallet.rs/pull/851)) on 2022-01-05
+  - [ea5e87fb](https://github.com/iotaledger/wallet.rs/commit/ea5e87fb4925e014c8da351b20df8ea45eac00ec) apply version updates ([#852](https://github.com/iotaledger/wallet.rs/pull/852)) on 2022-01-05
+  - [21e51d83](https://github.com/iotaledger/wallet.rs/commit/21e51d834bc215d11acf3b111c4b74694b3b4526) Reattached message confirmation detection ([#853](https://github.com/iotaledger/wallet.rs/pull/853)) on 2022-01-10
+
+## \[1.0.8]
+
+- Use local data when reattaching transactions and check inclusion state for reattached messages.
+  - [88f62028](https://github.com/iotaledger/wallet.rs/commit/88f62028fc812ef4145fde8e033d8383559d8f24) Use local transaction payload to reattach ([#851](https://github.com/iotaledger/wallet.rs/pull/851)) on 2022-01-05
+
+## \[1.0.7]
+
+- Start syncing from address index 0 by default;
+  Don't skip unconfirmed messages during syncing;
+  - [3b51dd95](https://github.com/iotaledger/wallet.rs/commit/3b51dd95998968867655fe2c4ec44d41aa252178) Improve syncing ([#633](https://github.com/iotaledger/wallet.rs/pull/633)) on 2021-05-27
+  - [c39362f3](https://github.com/iotaledger/wallet.rs/commit/c39362f3f2ea2975754a623884d8d7a7ae09ce6c) apply version updates ([#628](https://github.com/iotaledger/wallet.rs/pull/628)) on 2021-05-27
+  - [e09167ae](https://github.com/iotaledger/wallet.rs/commit/e09167ae97493961980d5ab9f8d448ae46c53799) improve syncing speed and add logger example ([#638](https://github.com/iotaledger/wallet.rs/pull/638)) on 2021-06-02
+  - [29ce49c5](https://github.com/iotaledger/wallet.rs/commit/29ce49c57e93498398f2403f8c25540dd0586cdf) apply version updates ([#641](https://github.com/iotaledger/wallet.rs/pull/641)) on 2021-06-04
+  - [492eb4f6](https://github.com/iotaledger/wallet.rs/commit/492eb4f66a27cf97ee6dc8de337d70e587ba7820) Start syncing from address index 0 by default ([#848](https://github.com/iotaledger/wallet.rs/pull/848)) on 2021-12-30
+
+## \[1.0.6]
+
+- Fixes the syncing so when an `addressIndex` is provided, only addresses with an index >= will be synced.
+  - [0faf9725](https://github.com/iotaledger/wallet.rs/commit/0faf97259300af81f658f0d91596fadb9d0f70b6) Fix: only sync addresses >= address_start_index ([#843](https://github.com/iotaledger/wallet.rs/pull/843)) on 2021-12-27
+
+## \[1.0.5]
+
+- Attempt to fix the wrong number of messages returned from `list_messages()`.
+  - [db2399e0](https://github.com/iotaledger/wallet.rs/commit/db2399e03f407956fe20faebd7fba4adef9c4440) account,storage: partially remove caching ([#826](https://github.com/iotaledger/wallet.rs/pull/826)) on 2021-12-04
+
 ## \[1.0.4]
 
 - Use default target features from `rustc` to determine SSE inclusion for RocksDB

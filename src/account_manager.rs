@@ -13,14 +13,14 @@ use crate::{
         BalanceEvent, TransactionConfirmationChangeEvent, TransactionEvent, TransactionEventType,
         TransactionReattachmentEvent,
     },
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessagePayload, MessageType, TransactionEssence, TransactionInput, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{StorageAdapter, Timestamp},
 };
 
 use std::{
-    str::FromStr,
-    collections::{hash_map::DefaultHasher, HashMap},
+    //str::FromStr,
+    collections::{hash_map::DefaultHasher, HashMap, HashSet},
     convert::TryInto,
     fs,
     hash::{Hash, Hasher},
@@ -39,10 +39,7 @@ use std::{
 use chrono::prelude::*;
 use futures::FutureExt;
 use getset::Getters;
-use iota_client::{
-    bee_message::prelude::{Address, MessageId, OutputId},
-    bee_rest_api::types::dtos::LedgerInclusionStateDto,
-};
+use iota_client::bee_message::prelude::{Address, MessageId, OutputId};
 use serde::Serialize;
 use tokio::{
     sync::{
@@ -147,7 +144,7 @@ impl AccountManagerBuilder {
     /// Sets the storage config to be used.
     pub fn with_storage(mut self, storage_folder: impl AsRef<Path>, password: Option<&str>) -> crate::Result<Self> {
         self.storage_folder = storage_folder.as_ref().to_path_buf();
-        self.storage_encryption_key = password.map(|p| storage_password_to_encryption_key(p));
+        self.storage_encryption_key = password.map(storage_password_to_encryption_key);
         Ok(self)
     }
 
@@ -241,7 +238,7 @@ impl AccountManagerBuilder {
         };
 
         if let Some(storage) = storage {
-            crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await;
+            crate::storage::set(&storage_file_path, self.storage_encryption_key, storage).await?;
         }
 
         let sync_accounts_lock = Arc::new(Mutex::new(()));
@@ -418,16 +415,18 @@ impl AccountManager {
         if finder.initial_address_index == 0 {
             self.cached_migration_data.lock().await.remove(&finder.seed_hash);
         }
-        let metadata = finder
-            .finish(
-                self.cached_migration_data
-                    .lock()
-                    .await
-                    .get(&finder.seed_hash)
-                    .map(|c| c.inputs.clone())
-                    .unwrap_or_default(),
-            )
-            .await?;
+        // lock mutex in the closure, so it gets dropped before calling finder.finish(previous_inputs).await to allow
+        // parallel executions
+        let previous_inputs = {
+            self.cached_migration_data
+                .lock()
+                .await
+                .get(&finder.seed_hash)
+                .map(|c| c.inputs.clone())
+                .unwrap_or_default()
+        };
+
+        let metadata = finder.finish(previous_inputs).await?;
         self.cached_migration_data
             .lock()
             .await
@@ -695,10 +694,15 @@ impl AccountManager {
                 .collect::<String>(),
             value: *output_tx.value().to_inner() as u64,
             address: AddressWrapper::new(
-                Address::from_str(&decode_migration_address(output_tx.address().clone())?.to_string())?,
+                Address::Ed25519(decode_migration_address(output_tx.address().clone())?),
                 bech32_hrp,
             ),
         })
+    }
+
+    async fn unload_accounts(accounts: &AccountStore) -> crate::Result<()> {
+        accounts.write().await.clear();
+        Ok(())
     }
 
     async fn load_accounts(
@@ -829,12 +833,35 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Clear the encryption key and then unload decrypted accounts in memory. Does nothing if storage is not encrypted
+    pub async fn clear_storage_password(&self) -> crate::Result<()> {
+        let is_encrypted = crate::storage::get(self.storage_path())
+            .await
+            .unwrap()
+            .lock()
+            .await
+            .is_encrypted();
+
+        if is_encrypted {
+            crate::storage::clear_encryption_key(&self.storage_path).await?;
+            Self::unload_accounts(&self.accounts).await?;
+            self.loaded_accounts.store(false, Ordering::SeqCst);
+        }
+
+        Ok(())
+    }
+
     /// Sets the password for the stored accounts.
     pub async fn set_storage_password<P: AsRef<str>>(&self, password: P) -> crate::Result<()> {
         let key = storage_password_to_encryption_key(password.as_ref());
-        crate::storage::set_encryption_key(&self.storage_path, key).await?;
 
         if self.accounts.read().await.is_empty() {
+            if !crate::storage::is_key_valid(&self.storage_path, &key).await? {
+                return Err(crate::Error::RecordDecrypt("Invalid storage password".to_string()));
+            }
+
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             Self::load_accounts(
                 &self.accounts,
                 &self.storage_path,
@@ -845,12 +872,24 @@ impl AccountManager {
             self.loaded_accounts.store(true, Ordering::SeqCst);
             crate::spawn(Self::start_monitoring(self.accounts.clone()));
         } else {
+            // first get the messages with the old encryption key
+            let mut account_messages = HashMap::new();
+            for account_handle in self.accounts.read().await.values() {
+                let account = account_handle.read().await;
+                let messages = account.list_messages(0, 0, None).await?;
+                account_messages.insert(account.id().clone(), messages);
+            }
+
+            crate::storage::set_encryption_key(&self.storage_path, key).await?;
+
             // save the accounts and messages again to reencrypt with the new key
             for account_handle in self.accounts.read().await.values() {
                 let mut account = account_handle.write().await;
                 account.save().await?;
-                let messages = account.list_messages(0, 0, None).await?;
-                account.save_messages(messages).await?;
+                let messages = account_messages
+                    .get(account.id())
+                    .ok_or_else(|| crate::Error::Storage("missing account messages".to_string()))?;
+                account.save_messages(messages.to_vec()).await?;
             }
         }
 
@@ -1364,6 +1403,55 @@ impl AccountManager {
         iota_migration::client::migration::get_seed_checksum(seed)
             .map_err(|e| crate::Error::LegacyClientError(Box::new(e)))
     }
+
+    // participation
+    #[cfg(feature = "participation")]
+    /// Participate in events
+    pub async fn participate(
+        &self,
+        account_identifier: AccountIdentifier,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<Vec<Message>> {
+        self.get_account(account_identifier)
+            .await?
+            .participate(participations)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Stop participating from provided events
+    pub async fn stop_participating(
+        &self,
+        account_identifier: AccountIdentifier,
+        event_ids: Vec<String>,
+    ) -> crate::Result<Vec<Message>> {
+        self.get_account(account_identifier)
+            .await?
+            .stop_participating(event_ids)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get a participating overview of the accounts by looking at the messages
+    pub async fn get_participation_overview(
+        &self,
+    ) -> crate::Result<crate::participation::types::ParticipatingAccounts> {
+        let mut participation_information = crate::participation::types::ParticipatingAccounts { accounts: Vec::new() };
+        let accounts = self.get_accounts().await?;
+        for account in accounts {
+            participation_information
+                .accounts
+                .push(account.get_participation_overview().await?);
+        }
+        Ok(participation_information)
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get a participating events data
+    pub async fn get_participation_events(&self) -> crate::Result<Vec<crate::participation::types::EventData>> {
+        let account = self.get_account(0).await?;
+        account.get_participation_events().await
+    }
 }
 
 macro_rules! event_getters_impl {
@@ -1549,6 +1637,7 @@ impl AccountsSynchronizer {
             let (account_handle, data) = res?;
             let account_handle_ = account_handle.clone();
             let mut account = account_handle_.write().await;
+            log::debug!("[AccountsSynchronizer] synced account {}", account.index());
             let addresses_before_sync: Vec<(String, u64, HashMap<OutputId, AddressOutput>)> = account
                 .addresses()
                 .iter()
@@ -1580,7 +1669,9 @@ impl AccountsSynchronizer {
             Some((is_empty, client_options, signer_type)) => {
                 if !is_empty || self.account_discovery_threshold > 0 {
                     if self.discover_accounts {
-                        log::debug!("[SYNC] running account discovery because the latest account is not empty");
+                        log::debug!(
+                            "[AccountsSynchronizer] running account discovery because the latest account is not empty"
+                        );
                         discover_accounts(
                             self.accounts.clone(),
                             self.account_discovery_threshold,
@@ -1596,7 +1687,9 @@ impl AccountsSynchronizer {
                         Ok(vec![])
                     }
                 } else {
-                    log::debug!("[SYNC] skipping account discovery because the latest account is empty");
+                    log::debug!(
+                        "[AccountsSynchronizer] skipping account discovery because the latest account is empty"
+                    );
                     Ok(vec![])
                 }
             }
@@ -1612,7 +1705,10 @@ impl AccountsSynchronizer {
                     let account_handle_ = account_handle.clone();
                     let mut account = account_handle_.write().await;
                     account.set_skip_persistence(false);
-                    account.set_addresses(synced_account_data.addresses.to_vec());
+                    // only set the addresses if they aren't empty
+                    if !synced_account_data.addresses.is_empty() {
+                        account.set_addresses(synced_account_data.addresses.to_vec());
+                    }
                     account.save().await?;
                     accounts.insert(account.id().clone(), account_handle.clone());
                     discovered_account_ids.push(account.id().clone());
@@ -1751,27 +1847,111 @@ async fn poll(
 
         for message_id in retried_data.no_need_promote_or_reattach {
             let mut message = account.get_message(&message_id).await.unwrap();
-            if let Ok(metadata) = client.read().await.get_message().metadata(&message_id).await {
-                if let Some(ledger_inclusion_state) = metadata.ledger_inclusion_state {
-                    let confirmed = ledger_inclusion_state == LedgerInclusionStateDto::Included
-                        || ledger_inclusion_state == LedgerInclusionStateDto::NoTransaction;
-                    if message.confirmed() != &Some(confirmed) {
-                        message.set_confirmed(Some(confirmed));
-                        account.save_messages(vec![message.clone()]).await?;
-                        emit_confirmation_state_change(
-                            &account,
-                            message,
-                            confirmed,
-                            retried_data.account_handle.account_options.persist_events,
-                        )
-                        .await?;
-                    }
-                }
-            } else if message.payload().is_none() {
+            let mut confirmed = false;
+            if message.payload().is_none() {
                 // we set the status for messages without a payload to confirmed even if we aren't sure if it got
-                // included, because it will otherwise always stay be in the unconfirmed messages
+                // included, because it will otherwise always stay in the unconfirmed messages
                 message.set_confirmed(Some(true));
                 account.save_messages(vec![message.clone()]).await?;
+                continue;
+            }
+            let client = client.read().await;
+
+            // check the metadata for this message
+            if let Ok(metadata) = client.get_message().metadata(&message_id).await {
+                // we assume that the transaction is confirmed when it gets referenced by a milestone
+                if metadata.ledger_inclusion_state.is_some() {
+                    log::debug!(
+                        "[POLLING] ledger_inclusion_state for {}, setting it as confirmed",
+                        message_id
+                    );
+                    confirmed = true;
+                }
+            }
+            // if not confirmed, check the metadata for a possible reattached message
+            if !confirmed {
+                if let Some(reattached_message_id) = message.reattachment_message_id {
+                    if let Ok(metadata) = client.get_message().metadata(&reattached_message_id).await {
+                        // we assume that the transaction is confirmed when it gets referenced by a milestone
+                        if metadata.ledger_inclusion_state.is_some() {
+                            log::debug!(
+                                "[POLLING] ledger_inclusion_state for reattchment of {}, setting it as confirmed",
+                                message_id
+                            );
+                            confirmed = true;
+                        }
+                    }
+                }
+            }
+
+            // if it's not confirmed we ask the node for the included message for this transaction, because
+            // there could be another attachment
+            if !confirmed {
+                if let Some(crate::message::MessagePayload::Transaction(tx_payload)) = &message.payload {
+                    if let Ok(reattachment_message) = client
+                        .get_included_message(&tx_payload.to_transaction_payload()?.id())
+                        .await
+                    {
+                        log::debug!(
+                            "[POLLING] detected confirmed transaction: {} for {}",
+                            reattachment_message.id().0,
+                            message_id
+                        );
+                        // if it's not the same message id, then it got reattached
+                        if reattachment_message.id().0 != message_id {
+                            message.set_reattachment_message_id(Some(reattachment_message.id().0));
+                        }
+                        confirmed = true;
+                    }
+                }
+            }
+
+            // check if an input got already spent, because it could be that the transaction was confirmed long ago and
+            // the messages are already pruned
+            if let Some(MessagePayload::Transaction(tx)) = &message.payload() {
+                let TransactionEssence::Regular(essence) = tx.essence();
+                let mut spent_input = false;
+                for input in essence.inputs() {
+                    if let TransactionInput::Utxo(input) = input {
+                        match client.get_output(&input.input).await {
+                            Ok(output) => {
+                                if output.is_spent {
+                                    spent_input = true;
+                                }
+                            }
+                            Err(err) => {
+                                match &err {
+                                    iota_client::Error::ResponseError(_, message) => {
+                                        // if the node doesn't know about this output, then it got spent already and
+                                        // pruned
+                                        if message.contains("output not found") {
+                                            spent_input = true;
+                                        } else {
+                                            return Err(err.into());
+                                        }
+                                    }
+                                    _ => return Err(err.into()),
+                                }
+                            }
+                        }
+                    }
+                }
+                if spent_input {
+                    log::debug!("[POLLING] input got spent, setting {} as confirmed", message_id);
+                    confirmed = true;
+                }
+            }
+
+            if confirmed {
+                message.set_confirmed(Some(true));
+                account.save_messages(vec![message.clone()]).await?;
+                emit_confirmation_state_change(
+                    &account,
+                    message,
+                    true,
+                    retried_data.account_handle.account_options.persist_events,
+                )
+                .await?;
             }
         }
         account.save().await?;
@@ -1795,9 +1975,20 @@ async fn discover_accounts(
     sync_accounts_lock: Arc<Mutex<()>>,
 ) -> crate::Result<Vec<(AccountHandle, SyncedAccountData)>> {
     let mut synced_accounts = vec![];
-    let last_account_index = accounts.read().await.len() - 1;
-    let mut index = last_account_index + 1;
+    let mut empty_accounts = vec![];
+    let mut account_indexes = HashSet::new();
+    for account_handle in accounts.read().await.values() {
+        let account = account_handle.read().await;
+        account_indexes.insert(*account.index());
+    }
+    // start from 0 in case there are gaps in the accounts
+    let mut index = 0;
     loop {
+        // skip exisiting account indexes
+        while account_indexes.contains(&index) {
+            index += 1;
+        }
+
         let mut account_initialiser = AccountInitialiser::new(
             client_options.clone(),
             accounts.clone(),
@@ -1811,11 +2002,14 @@ async fn discover_accounts(
             account_initialiser = account_initialiser.signer_type(signer_type.clone());
         }
         let account_handle = account_initialiser.initialise().await?;
-        log::debug!(
-            "[SYNC] discovering account {}, signer type {:?}",
-            account_handle.read().await.alias(),
-            account_handle.read().await.signer_type()
-        );
+        {
+            let account = account_handle.read().await;
+            log::debug!(
+                "[SYNC] discovering account {}, signer type {:?}",
+                account.alias(),
+                account.signer_type()
+            );
+        }
         let mut synchronizer = account_handle.sync().await;
         if let Some(gap_limit) = gap_limit {
             synchronizer = synchronizer.gap_limit(gap_limit);
@@ -1826,12 +2020,17 @@ async fn discover_accounts(
                     .addresses
                     .iter()
                     .all(|a| a.balance() == 0 && a.outputs().is_empty());
-                log::debug!("[SYNC] discovered account is empty? {}", is_empty);
+                log::debug!("[SYNC] discovered account {} is empty? {}", index, is_empty);
                 if is_empty {
-                    if index - last_account_index >= threshold {
+                    if index - (account_indexes.len() - 1) >= threshold {
                         break;
                     }
+                    empty_accounts.push((account_handle, synced_account_data));
                 } else {
+                    // add previous empty accounts, so we don't have gaps in the account list
+                    for empty_account in empty_accounts.drain(..) {
+                        synced_accounts.push(empty_account);
+                    }
                     synced_accounts.push((account_handle, synced_account_data));
                 }
                 index += 1;
@@ -1844,6 +2043,7 @@ async fn discover_accounts(
             }
         }
     }
+    log::error!("[SYNC] finished discover_accounts");
     Ok(synced_accounts)
 }
 
@@ -1908,17 +2108,19 @@ async fn retry_unconfirmed_transactions(synced_accounts: &[SyncedAccount]) -> cr
                 // We only want to retry transaction payloads
                 Some(MessagePayload::Transaction(_)) => match synced.retry(&message_id).await {
                     Ok(new_message) => {
-                        // if the payload is the same, it was reattached; otherwise it was promoted
-                        if new_message.payload() == &message_payload {
+                        // if there is a payload, it was reattached; otherwise it was promoted
+                        if new_message.payload().is_some() {
                             log::debug!("[POLLING] reattached and new message is {:?}", new_message);
                             reattachments.push((message_id, new_message));
                         } else {
-                            log::debug!("[POLLING] promoted and new message is {:?}", new_message);
+                            log::debug!("[POLLING] promoted with message {:?}", new_message);
                         }
                     }
                     Err(crate::Error::ClientError(ref e)) => {
                         if let iota_client::Error::NoNeedPromoteOrReattach(_) = e.as_ref() {
                             no_need_promote_or_reattach.push(message_id);
+                        } else {
+                            log::debug!("[POLLING] retrying failed: {:?}", e);
                         }
                     }
                     _ => {}
@@ -1940,7 +2142,7 @@ fn backup_filename(original: &str) -> String {
     let date = Local::now();
     format!(
         "{}-iota-wallet-backup{}",
-        date.format("%FT%H-%M-%S").to_string(),
+        date.format("%FT%H-%M-%S"),
         if original.is_empty() {
             "".to_string()
         } else {
@@ -2373,6 +2575,82 @@ mod tests {
             assert_eq!(account_store.read().await.len(), 1);
         })
         .await;
+    }
+
+    #[tokio::test]
+    async fn clear_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        assert!(manager.get_account(account_id).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn clear_non_existent_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        manager.get_account(account_id).await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let _ = crate::test_utils::AccountCreator::new(&manager).create().await;
+
+        manager.clear_storage_password().await.unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
+    }
+
+    #[tokio::test]
+    async fn correct_storage_password() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account = crate::test_utils::AccountCreator::new(&manager).create().await;
+        let account_id_1 = account.id().await;
+
+        manager.clear_storage_password().await.unwrap();
+        manager.set_storage_password("password").await.unwrap();
+
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        let account_id_2 = manager.get_accounts().await.unwrap().first().unwrap().id().await;
+
+        assert_eq!(account_id_1, account_id_2);
+    }
+
+    #[tokio::test]
+    async fn wrong_storage_password_after_deleting_all_accounts() {
+        let manager = crate::test_utils::get_account_manager().await;
+        manager.set_storage_password("password").await.unwrap();
+
+        let account_handle = crate::test_utils::AccountCreator::new(&manager).create().await;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+
+        manager
+            .remove_account(account_handle.read().await.id())
+            .await
+            .expect("failed to remove account");
+        manager.clear_storage_password().await.unwrap();
+
+        match manager.set_storage_password("wrong-password").await.err().unwrap() {
+            crate::Error::RecordDecrypt(_) => {}
+            e => panic!("{:?}", e),
+        }
     }
 
     #[tokio::test]

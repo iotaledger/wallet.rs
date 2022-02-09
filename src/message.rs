@@ -106,7 +106,7 @@ pub struct TransferBuilder {
     /// The strategy to use for the remainder value.
     remainder_value_strategy: RemainderValueStrategy,
     /// The input to use (skips input selection)
-    input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    input: Option<Vec<(AddressWrapper, Vec<AddressOutput>)>>,
     /// Whether the transfer should emit events or not.
     with_events: bool,
     /// Whether the transfer should skip account syncing or not.
@@ -231,7 +231,26 @@ impl TransferBuilder {
 
     /// Sets the addresses and utxo to use as transaction input.
     pub(crate) fn with_input(mut self, address: AddressWrapper, inputs: Vec<AddressOutput>) -> Self {
-        self.input.replace((address, inputs));
+        self.input.replace(vec![(address, inputs)]);
+        self
+    }
+
+    #[cfg(feature = "participation")]
+    /// Sets the utxos to use as transaction input.
+    pub(crate) fn with_inputs(mut self, inputs: Vec<AddressOutput>) -> Self {
+        let mut address_inputs: HashMap<AddressWrapper, Vec<AddressOutput>> = HashMap::new();
+
+        for input in inputs {
+            address_inputs
+                .entry(input.address.clone())
+                .and_modify(|e| e.push(input.clone()))
+                .or_insert_with(|| vec![input]);
+        }
+        let mut final_address_inputs = Vec::new();
+        for value in address_inputs {
+            final_address_inputs.push(value);
+        }
+        self.input.replace(final_address_inputs);
         self
     }
 
@@ -269,7 +288,7 @@ pub struct Transfer {
     /// The strategy to use for the remainder value.
     pub(crate) remainder_value_strategy: RemainderValueStrategy,
     /// The addresses to use as input.
-    pub(crate) input: Option<(AddressWrapper, Vec<AddressOutput>)>,
+    pub(crate) input: Option<Vec<(AddressWrapper, Vec<AddressOutput>)>>,
     /// Whether the transfer should emit events or not.
     pub(crate) with_events: bool,
     /// Whether the transfer should skip account syncing or not.
@@ -757,6 +776,48 @@ impl MessageTransactionPayload {
             essence: TransactionEssence::new(payload.essence(), metadata).await?,
             unlock_blocks: unlock_blocks.into_boxed_slice(),
         })
+    }
+
+    /// Convert to a transaction payload from bee_message
+    pub fn to_transaction_payload(&self) -> crate::Result<TransactionPayload> {
+        let mut essence = iota_client::bee_message::payload::transaction::RegularEssenceBuilder::new();
+        let TransactionEssence::Regular(message_essence) = self.essence();
+        let mut inputs = Vec::new();
+        for input in message_essence.inputs() {
+            if let TransactionInput::Utxo(input) = input {
+                inputs.push(iota_client::bee_message::input::Input::Utxo(input.input.clone()));
+            }
+        }
+        inputs.sort_unstable_by_key(|a| a.pack_new());
+        essence = essence.with_inputs(inputs);
+        let mut outputs = Vec::new();
+        for output in message_essence.outputs() {
+            match output {
+                TransactionOutput::SignatureLockedSingle(output) => {
+                    outputs.push(iota_client::bee_message::output::Output::SignatureLockedSingle(
+                        SignatureLockedSingleOutput::new(output.address.inner, output.amount)?,
+                    ))
+                }
+                TransactionOutput::SignatureLockedDustAllowance(output) => {
+                    outputs.push(iota_client::bee_message::output::Output::SignatureLockedDustAllowance(
+                        SignatureLockedDustAllowanceOutput::new(output.address.inner, output.amount)?,
+                    ))
+                }
+                _ => {}
+            }
+        }
+        outputs.sort_unstable_by_key(|a| a.pack_new());
+        essence = essence.with_outputs(outputs);
+        if let Some(indexation) = message_essence.payload() {
+            essence = essence.with_payload(indexation.clone());
+        }
+        let essence = essence.finish()?;
+        Ok(TransactionPayload::builder()
+            .with_essence(Essence::Regular(essence))
+            .with_unlock_blocks(iota_client::bee_message::unlock::UnlockBlocks::new(
+                self.unlock_blocks.to_vec(),
+            )?)
+            .finish()?)
     }
 }
 
@@ -1307,7 +1368,7 @@ impl Message {
             account_addresses
                 .iter()
                 .next()
-                .unwrap()
+                .expect("No address in account")
                 .address()
                 .bech32_hrp()
                 .to_string(),

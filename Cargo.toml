@@ -1,8 +1,15 @@
 [package]
 name = "iota-wallet"
 version = "0.2.0"
-authors = ["Lucas Nogueira <lucas.nogueira@iota.org>"]
-edition = "2018"
+authors = ["IOTA Stiftung"]
+edition = "2021"
+description = "A stateful package for IOTA value transactions"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = ["iota", "wallet", "transaction"]
+categories = ["cryptography::cryptocurrencies"]
 
 [package.metadata.docs.rs]
 all-features = true
@@ -11,50 +18,55 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dependencies]
 async-trait = {version = "0.1.51", default-features = false }
 backtrace = {version = "0.3.62", default-features = false }
-bee-common = { version = "0.4.1", default-features = false }
+bee-common = { version = "0.5.0", default-features = false }
 chrono = { version = "0.4.19", default-features = false, features = ["serde"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { version = "1.1.0", default-features = false, features = ["async", "mqtt"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "981136e9118a092cd4de6735e616858140b33019", default-features = false, features = ["async", "mqtt"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
+rand = { version = "0.8.4", default-features = false }
+rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 serde_repr = { version = "0.1.7", default-features = false }
 thiserror = { version = "1.0.29", default-features = false }
 tokio = { version = "1.12.0", default-features = false, features = ["macros"]}
 url = { version = "2.2.2", default-features = false, features = ["serde"] }
-rand = { version = "0.8.4", default-features = false }
-rocksdb = { git="https://github.com/iotaledger/rust-rocksdb", rev = "d2c579660e6c72ec1f14f0f2781cef5e3171d380", default-features = false, features = ["lz4"] }
 zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
 
 # stronghold
-iota_stronghold = "0.4.1"
-riker = "0.4.2"
-slog = "2.7.0"
+iota_stronghold = { version = "0.4.1", default-features = false }
+riker = { version = "0.4.2", default-features = false }
+slog = { version = "2.7.0", default-features = false }
 
 # ledger hardware wallets
-iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13b80e169aaa19cde9cd825e8444be0973", optional = true  }
+iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13b80e169aaa19cde9cd825e8444be0973", default-features = false, optional = true }
 
 # migration
-iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "8d6e152103048cfefd15c69b956156fae15a9643", package = "iota-core" }
-bytemuck = "1.5.1"
+bytemuck = { version = "1.5.1", default-features = false }
+iota-migration = { git = "https://github.com/iotaledger/iota.rs", rev = "656279e628e5f9d9288477cd4d2dc4170ea4bf0e", default-features = false, package = "iota-core" }
+
+# participation
+reqwest = { version = "0.11.6", default-features = false, features = ["json"], optional = true }
 
 [dependencies.iota-crypto]
 version = "0.5.0"
+default-features = false
 features = ["random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"]
 
 [dev-dependencies]
-anyhow = "1.0"
-reqwest = { version = "0.11", features = ["json"] }
-rusty-fork = "0.3"
-tokio = { version = "1.5", features = ["full"] }
-quickcheck = "1.0"
-quickcheck_macros = "1.0"
+anyhow = { version = "1.0", default-features = false }
+reqwest = { version = "0.11", default-features = false, features = ["json"] }
+rusty-fork = { version = "0.3", default-features = false }
+tokio = { version = "1.5", default-features = false, features = ["full"] }
+quickcheck = { version = "1.0", default-features = false }
+quickcheck_macros = { version = "1.0", default-features = false }
 
 [features]
 default = ["stronghold"]
 ledger-nano = ["iota-ledger"]
 ledger-nano-simulator = ["iota-ledger"]
 stronghold = []
+participation = ["reqwest"]

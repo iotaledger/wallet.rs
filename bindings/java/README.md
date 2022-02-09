@@ -56,4 +56,4 @@ Specific instructions in `wallet.rs/bindings/java/examples/android-app/README.md
 
 ## Documentation
 
-Documentation can be found [here](https://wallet-lib.docs.iota.org/libraries/nodejs).
+Documentation can be found [here](https://wallet-lib.docs.iota.org/docs/specification).

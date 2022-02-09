@@ -1,45 +1,50 @@
 [package]
 name = "iota-wallet-java"
 version = "0.3.0"
-authors = ["Brord van Wierst <brord@iota.org>"]
-edition = "2018"
+authors = ["IOTA Stiftung"]
+edition = "2021"
+description = "Java bindings for the IOTA wallet library"
+documentation = "https://wiki.iota.org/wallet.rs/welcome"
+homepage = "https://www.iota.org/"
+repository = "https://github.com/iotaledger/wallet.rs"
+license = "Apache-2.0"
+keywords = ["iota", "wallet", "transaction", "java"]
+categories = ["cryptography::cryptocurrencies"]
 build = "build.rs"
 
+[lib]
+crate_type = ["cdylib"]
+
 [dependencies]
-iota-wallet = { path = "../../../", version = "0.2.0" }
-bee-message = { version  = "=0.1.5", default-features = false }
-bee-rest-api = { version  = "=0.1.3", default-features = false }
-bee-common = { version  = "0.4.1", default-features = false }
-log = { version = "0.4.14", default-features = false }
+anyhow = { version = "1.0.38", default-features = false }
+bee-message = { version  = "0.1.5", default-features = false }
 chrono = { version = "0.4.19", default-features = false }
 env_logger = { version = "0.9.0", default-features = false }
-anyhow = { version = "1.0.38", default-features = false }
 hex = { version = "0.4.3", default-features = false }
+iota-wallet = { path = "../../../", version = "0.2.0" }
+log = { version = "0.4.14", default-features = false }
 
 # Generating bindings
-jni = "0.19" 
-flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs", default-features = false }
 getset = { version = "0.1.1", default-features = false }
+jni = { version = "0.19", default-features = false }
 
 # await block_on etc management
-tokio = { version = "1.12.0", default-features = false }
-once_cell = { version = "1.8", default-features = false }
 futures = { version = "0.3.17", default-features = false }
-riker = "0.4"
+riker = { version = "0.4", default-features = false }
+once_cell = { version = "1.8", default-features = false }
+tokio = { version = "1.12.0", default-features = false }
 
 # Needed for serialization
 serde = { version = "1.0.130", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 
-[lib]
-crate_type = ["cdylib"]
-
 [build-dependencies]
-flapigen = { git = "https://github.com/Dushistov/flapigen-rs" }
-env_logger = "0.9.0"
-walkdir = "2.2.7"
-cc = "1.0.67"
-bindgen = "0.59.1"
+flapigen = { git = "https://github.com/Dushistov/flapigen-rs", default-features = false }
+env_logger = { version = "0.9.0", default-features = false }
+walkdir = { version = "2.2.7", default-features = false }
+cc = { version = "1.0.67", default-features = false }
+bindgen = { version = "0.59.1", default-features = false, features = ["runtime"] }
 
 [features]
 default = ["stronghold"]

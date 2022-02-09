@@ -47,7 +47,7 @@ fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
 }
 
 fn convert_panics<F: FnOnce() -> Result<ResponseType>>(f: F) -> Result<ResponseType> {
-    match catch_unwind(AssertUnwindSafe(|| f())) {
+    match catch_unwind(AssertUnwindSafe(f)) {
         Ok(result) => result,
         Err(panic) => Ok(panic_to_response_message(panic)),
     }
@@ -124,6 +124,9 @@ impl WalletMessageHandler {
             }
             MessageType::SetStoragePassword(password) => {
                 convert_async_panics(|| async { self.set_storage_password(password).await }).await
+            }
+            MessageType::ClearStoragePassword => {
+                convert_async_panics(|| async { self.clear_storage_password().await }).await
             }
             #[cfg(feature = "stronghold")]
             MessageType::SetStrongholdPassword(password) => {
@@ -419,6 +422,50 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "participation")]
+            MessageType::Participate {
+                account_identifier,
+                participations,
+            } => {
+                convert_async_panics(|| async {
+                    let messages = self
+                        .account_manager
+                        .participate(account_identifier.clone(), participations.clone())
+                        .await?;
+                    Ok(ResponseType::SentParticipation(messages))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::StopParticipating {
+                account_identifier,
+                event_ids,
+            } => {
+                convert_async_panics(|| async {
+                    let messages = self
+                        .account_manager
+                        .stop_participating(account_identifier.clone(), event_ids.clone())
+                        .await?;
+                    Ok(ResponseType::SentParticipation(messages))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationOverview => {
+                convert_async_panics(|| async {
+                    let overview = self.account_manager.get_participation_overview().await?;
+                    Ok(ResponseType::ParticipationOverview(overview))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            MessageType::GetParticipationEvents => {
+                convert_async_panics(|| async {
+                    let events_data = self.account_manager.get_participation_events().await?;
+                    Ok(ResponseType::EventsData(events_data))
+                })
+                .await
+            }
         };
 
         let response = match response {
@@ -619,6 +666,11 @@ impl WalletMessageHandler {
     async fn set_storage_password(&self, password: &str) -> Result<ResponseType> {
         self.account_manager.set_storage_password(password).await?;
         Ok(ResponseType::StoragePasswordSet)
+    }
+
+    async fn clear_storage_password(&self) -> Result<ResponseType> {
+        self.account_manager.clear_storage_password().await?;
+        Ok(ResponseType::StoragePasswordCleared)
     }
 
     #[cfg(feature = "stronghold")]

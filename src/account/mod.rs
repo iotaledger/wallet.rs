@@ -6,7 +6,7 @@ use crate::{
     address::{Address, AddressBuilder, AddressOutput, AddressWrapper},
     client::{ClientOptions, Node},
     event::TransferProgressType,
-    message::{Message, MessagePayload, MessageType, TransactionEssence, Transfer},
+    message::{Message, MessageType, Transfer},
     signing::{GenerateAddressMetadata, SignerType},
     storage::{MessageIndexation, MessageQueryFilter},
 };
@@ -719,12 +719,8 @@ impl AccountHandle {
         )
         .await?;
 
-        account
-            .do_mut(|account| {
-                account.addresses.push(address.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(vec![address.clone()]);
+        account.save().await?;
 
         // monitor on a non-async function to prevent cycle computing the `monitor_address_balance` fn type
         self.monitor_address(address.address().clone());
@@ -774,12 +770,8 @@ impl AccountHandle {
             );
         }
 
-        account
-            .do_mut(|account| {
-                account.addresses.extend(addresses.clone());
-                Ok(())
-            })
-            .await?;
+        account.append_addresses(addresses.clone());
+        account.save().await?;
 
         // Don't monitor if too many addresses
         if addresses.len() < 1000 {
@@ -947,6 +939,161 @@ impl AccountHandle {
     ) -> crate::Result<NodeInfoWrapper> {
         self.inner.read().await.get_node_info(url, jwt, auth).await
     }
+
+    #[cfg(feature = "participation")]
+    /// Participate in a staking or voting event
+    pub async fn participate(
+        &self,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<Vec<Message>> {
+        self.sync_internal()
+            .await
+            .address_index(0)
+            .execute()
+            .await?
+            .send_participation_transfers(participations, None)
+            .await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Stop participating from provided staking or voting events
+    pub async fn stop_participating(&self, event_ids: Vec<String>) -> crate::Result<Vec<Message>> {
+        let account = self.read().await;
+        let storage = crate::storage::get(&account.storage_path).await?;
+        let mut storage = storage.lock().await;
+        if let Ok(mut participations) = storage.get_participations(*account.index()).await {
+            // remove provided events
+            participations = participations
+                .into_iter()
+                .filter(|p| !event_ids.contains(&p.event_id))
+                .collect();
+            storage.save_participations(*account.index(), participations).await?;
+        };
+        drop(storage);
+        drop(account);
+        // by using the participate function with en empty vec we will just send transactions only with the remaining or
+        // no events
+        self.participate(Vec::new()).await
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get an overview of the participations with the staked funds and the accumulated rewards.
+    pub async fn get_participation_overview(&self) -> crate::Result<crate::participation::types::ParticipatingAccount> {
+        let account_balance = self.balance().await?;
+        let account = self.read().await;
+        let read_participations = match crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .get_participations(*account.index())
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => Vec::new(),
+        };
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+
+        let mut available_outputs: Vec<AddressOutput> = Vec::new();
+        let sent_messages = account.list_messages(0, 0, Some(MessageType::Confirmed)).await?;
+        for address in account.addresses() {
+            let address_outputs = address.available_outputs(&sent_messages);
+            available_outputs.extend(address_outputs.into_iter().cloned().collect::<Vec<AddressOutput>>());
+        }
+
+        let (shimmer_staked_funds, assembly_staked_funds): (
+            u64,
+            u64,
+            // HashMap<String, crate::participation::response_types::TrackedParticipation>,
+        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone()).await?;
+
+        let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
+            crate::participation::account_helpers::get_addresses_staking_rewards(
+                account.addresses().clone(),
+                node.clone(),
+            )
+            .await?;
+
+        Ok(crate::participation::types::ParticipatingAccount {
+            account_index: *account.index(),
+            participations: read_participations,
+            assembly_staked_funds,
+            assembly_rewards_below_minimum,
+            assembly_rewards,
+            assembly_unstaked_funds: account_balance.total - assembly_staked_funds,
+            shimmer_staked_funds,
+            shimmer_rewards_below_minimum,
+            shimmer_rewards,
+            shimmer_unstaked_funds: account_balance.total - shimmer_staked_funds,
+        })
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get the staking rewards of all addresses for all staking events.
+    pub async fn get_staking_rewards(
+        &self,
+    ) -> crate::Result<HashMap<String, crate::participation::response_types::StakingStatus>> {
+        let account = self.read().await;
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+        let mut total_staking_status: HashMap<String, crate::participation::response_types::StakingStatus> =
+            HashMap::new();
+
+        // We split the addresses into chunks so we don't get timeouts if we have thousands
+        for addresses_chunk in account.addresses().chunks(100).map(|x: &[Address]| x.to_vec()) {
+            let mut tasks = Vec::new();
+            for address in addresses_chunk {
+                let node = node.clone();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        let staking_status = crate::participation::endpoints::get_address_staking_status(
+                            node,
+                            address.address().to_bech32(),
+                        )
+                        .await?;
+                        crate::Result::Ok(staking_status)
+                    })
+                    .await
+                });
+            }
+            let results = futures::future::try_join_all(tasks).await?;
+            for res in results {
+                let staking_status = res?;
+                for (event_id, status) in staking_status.rewards {
+                    total_staking_status
+                        .entry(event_id)
+                        .and_modify(|e| e.amount += status.amount)
+                        .or_insert_with(|| status);
+                }
+            }
+        }
+
+        Ok(total_staking_status)
+    }
+
+    #[cfg(feature = "participation")]
+    /// Get an overview of the staked funds and the accumulated rewards.
+    pub async fn get_participation_events(&self) -> crate::Result<Vec<crate::participation::types::EventData>> {
+        let account = self.read().await;
+        let client = crate::client::get_client(&account.client_options).await?;
+        let client = client.read().await;
+        let node = client.get_node().await?;
+        let event_ids = crate::participation::endpoints::get_events(node.clone(), None).await?;
+        log::debug!("[get_participation_events] event_ids {:?}", event_ids);
+        let mut events_data = Vec::new();
+        for id in event_ids.event_ids {
+            let event_information = crate::participation::endpoints::get_event_information(node.clone(), &id).await?;
+            let event_status = crate::participation::endpoints::get_event_status(node.clone(), &id).await?;
+            events_data.push(crate::participation::types::EventData {
+                event_id: id,
+                information: event_information,
+                status: event_status,
+            });
+        }
+        Ok(events_data)
+    }
 }
 
 /// Account balance information.
@@ -980,11 +1127,11 @@ impl Account {
         Ok(())
     }
 
-    pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
-        let res = f(self)?;
-        self.save().await?;
-        Ok(res)
-    }
+    // pub(crate) async fn do_mut<R>(&mut self, f: impl FnOnce(&mut Self) -> crate::Result<R>) -> crate::Result<R> {
+    //     let res = f(self)?;
+    //     self.save().await?;
+    //     Ok(res)
+    // }
 
     /// Do something with the indexed messages.
     pub(crate) async fn with_messages<T, C: FnOnce(&Vec<MessageIndexation>) -> T>(&self, f: C) -> T {
@@ -1021,7 +1168,7 @@ impl Account {
             .iter()
             .filter(|a| !a.internal())
             .max_by_key(|a| a.key_index())
-            .unwrap()
+            .expect("No latest address in the account")
     }
 
     /// Returns the most recent change address of the account.
@@ -1165,9 +1312,7 @@ impl Account {
         from: usize,
         message_type: Option<MessageType>,
     ) -> crate::Result<Vec<Message>> {
-        let mut cached_messages = self.cached_messages.lock().await;
-
-        let messages = crate::storage::get(&self.storage_path)
+        let mut messages = crate::storage::get(&self.storage_path)
             .await
             .expect("storage adapter not set")
             .lock()
@@ -1176,55 +1321,13 @@ impl Account {
                 self,
                 count,
                 from,
-                MessageQueryFilter::message_type(message_type.clone()).with_ignore_ids(&cached_messages),
+                MessageQueryFilter::message_type(message_type.clone()),
             )
             .await?;
 
-        let mut message_list: Vec<Message> = if let Some(message_type) = message_type {
-            let mut list = Vec::new();
-            for message in cached_messages.values() {
-                let matches = match message_type {
-                    MessageType::Received => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Sent => {
-                        if let Some(MessagePayload::Transaction(tx)) = message.payload() {
-                            let TransactionEssence::Regular(essence) = tx.essence();
-                            !essence.incoming()
-                        } else {
-                            false
-                        }
-                    }
-                    MessageType::Failed => !message.broadcasted(),
-                    MessageType::Unconfirmed => message.confirmed().is_none(),
-                    MessageType::Value => matches!(message.payload(), Some(MessagePayload::Transaction(_))),
-                    MessageType::Confirmed => message.confirmed().unwrap_or_default(),
-                };
-                if matches {
-                    list.push(message.clone());
-                }
-            }
-            list
-        } else {
-            cached_messages.values().cloned().collect()
-        };
+        messages.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
 
-        // we cache messages with known confirmation since they'll never be updated
-        for message in &messages {
-            if message.confirmed().is_some() {
-                cached_messages.insert(*message.id(), message.clone());
-            }
-        }
-
-        message_list.extend(messages);
-        message_list.sort_unstable_by(|a, b| a.timestamp().cmp(b.timestamp()));
-
-        Ok(message_list)
+        Ok(messages)
     }
 
     /// Gets the spent addresses.
@@ -1250,16 +1353,20 @@ impl Account {
     }
 
     pub(crate) fn append_addresses(&mut self, addresses: Vec<Address>) {
-        addresses
-            .into_iter()
-            .for_each(|address| match self.addresses.iter().position(|a| a == &address) {
+        addresses.into_iter().for_each(|address| {
+            match self
+                .addresses
+                .iter()
+                .position(|a| a.key_index() == address.key_index() && a.internal() == address.internal())
+            {
                 Some(index) => {
                     self.addresses[index] = address;
                 }
                 None => {
                     self.addresses.push(address);
                 }
-            });
+            }
+        });
     }
 
     /// Gets the node info from /api/v1/info endpoint

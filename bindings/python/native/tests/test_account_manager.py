@@ -218,4 +218,4 @@ def test_get_migration_data():
             [legacy_node], bundle['bundle_hash'], min_weight_magnitude)
 
     except ValueError as e:
-        assert 'Input value is < dust protection value' in str(e)
+        assert 'input list is empty' in str(e)
