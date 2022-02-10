@@ -1,4 +1,3 @@
-
 export declare enum MessageType {
   /// Message received.
   Received = 1,
@@ -73,7 +72,7 @@ export declare interface Transaction {
   type: 'Transaction';
   data: {
     essence: Essence;
-    unlock_blocks: {
+    unlockBlocks: {
       type: 'Signature'
       data: {
         type: 'Ed25519'
