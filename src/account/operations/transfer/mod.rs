@@ -28,13 +28,15 @@ use iota_client::{
     },
     signing::types::InputSigningData,
 };
-pub use options::{RemainderValueStrategy, TransferOptions};
 
+pub use options::{RemainderValueStrategy, TransferOptions};
 use packable::bounded::TryIntoBoundedU16Error;
+use serde::Serialize;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// The result of a transfer, message_id is an option because submitting the transaction could fail
+#[derive(Debug, Serialize)]
 pub struct TransferResult {
     pub transaction_id: TransactionId,
     pub message_id: Option<MessageId>,
