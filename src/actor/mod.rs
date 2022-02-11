@@ -20,8 +20,17 @@ use std::{
     path::Path,
 };
 
+mod account_method;
 mod message;
-pub use message::*;
+mod message_type;
+mod response;
+mod response_type;
+
+pub use account_method::AccountMethod;
+pub use message::Message;
+pub use message_type::{AccountToCreate, MessageType};
+pub use response::Response;
+pub use response_type::ResponseType;
 
 /// The Wallet message handler.
 pub struct WalletMessageHandler {
