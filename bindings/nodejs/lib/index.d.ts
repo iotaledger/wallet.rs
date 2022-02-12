@@ -16,7 +16,7 @@ export declare enum MessageType {
 export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
-  payload: {
+  payload?: {
     type: 'Indexation'
     data: {
       data: number[]
@@ -36,7 +36,7 @@ export declare type Essence = {
 
 export declare interface UtxoInput {
   input: string;
-  metadata: {
+  metadata?: {
     transactionId: string;
     messageId: string;
     index: number;
