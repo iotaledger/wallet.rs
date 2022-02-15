@@ -5,13 +5,14 @@ use crate::{
     account::{
         operations::{
             syncing::SyncOptions,
-            transfer::{TransferOptions, TransferOutput},
+            transfer::TransferOptions,
         },
         types::AccountIdentifier,
     },
     client::options::ClientOptions,
 };
 
+use iota_client::bee_message::output::Output;
 use serde::{ser::Serializer, Deserialize, Serialize};
 use super::account_method::AccountMethod;
 use std::{path::PathBuf, time::Duration};
@@ -27,7 +28,7 @@ pub struct AccountToCreate {
 
 /// The messages that can be sent to the actor.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "cmd", content = "payload", rename_all = "camelCase")]
+#[serde(tag = "cmd", content = "payload")]
 pub enum MessageType {
     /// Creates an account.
     CreateAccount(Box<AccountToCreate>),
@@ -65,7 +66,7 @@ pub enum MessageType {
     SendTransfer {
         /// The account identifier.
         account_id: AccountIdentifier,
-        outputs: Vec<TransferOutput>,
+        outputs: Vec<Output>,
         options: Option<TransferOptions>,
     },
     /// Generates a new mnemonic.

@@ -3,7 +3,7 @@
 
 pub use crate::{
     account::{
-        operations::transfer::{TransferOptions, TransferOutput, TransferResult},
+        operations::transfer::{TransferOptions, TransferResult},
         types::AccountIdentifier,
     },
     account_manager::AccountManager,
@@ -12,6 +12,7 @@ pub use crate::{
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
+use iota_client::bee_message::output::Output;
 use zeroize::Zeroize;
 
 use std::{
@@ -260,7 +261,7 @@ impl WalletMessageHandler {
     async fn send_transfer(
         &self,
         account_id: &AccountIdentifier,
-        outputs: Vec<TransferOutput>,
+        outputs: Vec<Output>,
         options: Option<TransferOptions>,
     ) -> Result<ResponseType> {
         let account = self.account_manager.get_account(account_id.clone()).await?;
