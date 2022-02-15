@@ -7,9 +7,11 @@ pub(crate) mod address;
 pub(crate) mod address_serde;
 use crate::account::constants::ACCOUNT_ID_PREFIX;
 
-use iota_client::bee_message::{
-    address::Address, output::OutputId, payload::transaction::TransactionPayload, MessageId,
+use iota_client::{
+    bee_message::{address::Address, output::OutputId, payload::transaction::TransactionPayload, MessageId},
+    bee_rest_api::types::responses::OutputResponse,
 };
+
 use serde::{Deserialize, Deserializer, Serialize};
 
 use std::{collections::HashMap, str::FromStr};
@@ -38,6 +40,9 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
+    /// The output response
+    #[serde(rename = "outputResponse")]
+    pub output_response: OutputResponse,
     /// Message ID
     #[serde(rename = "messageId")]
     pub message_id: MessageId,
@@ -47,13 +52,9 @@ pub struct OutputData {
     pub is_spent: bool,
     /// Associated address.
     pub address: Address,
-    pub kind: OutputKind,
     /// Network ID
     #[serde(rename = "networkId")]
     pub network_id: u64,
-    // get it from the milestone that confirmed it (get metadata of the oupt and calculate the time backwards if the
-    // milestone was pruned)
-    pub timestamp: u128,
     pub remainder: bool,
 }
 
@@ -63,13 +64,12 @@ pub struct Transaction {
     pub payload: TransactionPayload,
     pub message_id: Option<MessageId>,
     pub inclusion_state: InclusionState,
+    // remove because we have a timestamp in the outputs?
     pub timestamp: u128,
     // network id to ignore outputs when set_client_options is used to switch to another network
     pub network_id: u64,
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
-    // do we want this field? could be used for internal transfers later, but not really necessary
-    pub internal: bool,
 }
 
 /// Possible InclusionStates for transactions
@@ -85,8 +85,8 @@ pub enum InclusionState {
 pub enum OutputKind {
     /// Alias output.
     Alias,
-    /// Extended output.
-    Extended,
+    /// Basic output.
+    Basic,
     /// Foundry output.
     Foundry,
     /// Nft output.
@@ -101,7 +101,7 @@ impl FromStr for OutputKind {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let kind = match s {
             "Alias" => Self::Alias,
-            "Extended" => Self::Extended,
+            "Basic" => Self::Basic,
             "Foundry" => Self::Foundry,
             "Nft" => Self::Nft,
             "Treasury" => Self::Treasury,

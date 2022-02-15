@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
         address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
         amount: 1_000_000,
         // we create a dust allowance outputs so we can reuse our address even with remainder
-        output_kind: Some(OutputKind::Extended),
+        output_kind: Some(OutputKind::Basic),
     }];
     // let res = account.send(outputs, None).await?;
     let res = account

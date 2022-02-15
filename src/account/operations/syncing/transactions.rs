@@ -8,12 +8,7 @@ use crate::account::{
 };
 
 use iota_client::{
-    bee_message::{
-        input::{Input, UtxoInput},
-        output::OutputId,
-        payload::transaction::TransactionEssence,
-        MessageId,
-    },
+    bee_message::{input::Input, output::OutputId, payload::transaction::TransactionEssence, MessageId},
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 
@@ -53,10 +48,7 @@ pub(crate) async fn sync_transactions(
         // only check transaction from the network we're connected to
         if transaction.network_id == network_id {
             // use first output of the transaction to check if it got confirmed
-            if let Ok(output_response) = client
-                .get_output(&UtxoInput::from(OutputId::new(transaction.payload.id(), 0)?))
-                .await
-            {
+            if let Ok(output_response) = client.get_output(&OutputId::new(transaction.payload.id(), 0)?).await {
                 updated_transaction_and_outputs(
                     transaction,
                     MessageId::from_str(&output_response.message_id)?,
@@ -65,7 +57,7 @@ pub(crate) async fn sync_transactions(
                     &mut spent_output_ids,
                 );
             } else if let Some(message_id) = transaction.message_id {
-                let metadata = client.get_message().metadata(&message_id).await?;
+                let metadata = client.get_message_metadata(&message_id).await?;
                 if let Some(inclusion_state) = metadata.ledger_inclusion_state {
                     match inclusion_state {
                         LedgerInclusionStateDto::Included => {

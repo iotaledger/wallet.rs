@@ -16,7 +16,7 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
+    // init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
         .with_node("http://localhost:14265")?
@@ -65,7 +65,7 @@ async fn main() -> Result<()> {
     let outputs = vec![TransferOutput {
         address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
         amount: 1_000_000,
-        output_kind: Some(OutputKind::Extended),
+        output_kind: Some(OutputKind::Basic),
     }];
     // let res = account.send(outputs, None).await?;
     let res = account

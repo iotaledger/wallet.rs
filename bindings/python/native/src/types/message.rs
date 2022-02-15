@@ -29,7 +29,7 @@ use iota_wallet::{
         Message as RustWalletMessage, MessageMilestonePayloadEssence as RustWalletMilestonePayloadEssence,
         MessagePayload as RustWalletPayload, MessageTransactionPayload as RustWalletMessageTransactionPayload,
         TransactionBuilderMetadata as RustWalletTransactionBuilderMetadata,
-        TransactionEssence as RustWalletTransactionEssence, TransactionInput as RustWalletInput,
+        TransactionEssence as RustWalletTransactionEssence, InputSigningData as RustWalletInput,
         TransactionOutput as RustWalletOutput,
     },
 };

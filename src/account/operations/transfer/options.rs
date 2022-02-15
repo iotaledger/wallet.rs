@@ -3,7 +3,7 @@
 
 use crate::account::types::{address::AccountAddress, OutputKind};
 
-use iota_client::bee_message::{output::OutputId, payload::indexation::IndexationPayload};
+use iota_client::bee_message::{output::OutputId, payload::tagged_data::TaggedDataPayload};
 use serde::{Deserialize, Serialize};
 
 /// Options for value transfers
@@ -13,7 +13,7 @@ pub struct TransferOptions {
     pub remainder_value_strategy: RemainderValueStrategy,
     #[serde(rename = "remainderOutputKind", default)]
     pub remainder_output_kind: Option<OutputKind>,
-    pub indexation: Option<IndexationPayload>,
+    pub tagged_data_payload: Option<TaggedDataPayload>,
     #[serde(rename = "skipSync", default)]
     pub skip_sync: bool,
     #[serde(rename = "customInputs", default)]

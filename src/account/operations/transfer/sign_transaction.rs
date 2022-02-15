@@ -9,15 +9,15 @@ use crate::account::{
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 use iota_client::{
-    bee_message::{payload::transaction::TransactionEssence, unlock_block::UnlockBlocks},
-    signing::{mnemonic::IOTA_COIN_TYPE, verify_unlock_blocks, Network, SignMessageMetadata, TransactionInput},
+    bee_message::{address::Address, payload::transaction::TransactionEssence, unlock_block::UnlockBlocks},
+    signing::{types::InputSigningData, verify_unlock_blocks, Network, SignMessageMetadata},
 };
 
 /// Function to sign a transaction essence
 pub(crate) async fn sign_tx_essence(
     account_handle: &AccountHandle,
     essence: TransactionEssence,
-    mut transaction_inputs: Vec<TransactionInput>,
+    mut transaction_inputs: Vec<InputSigningData>,
     remainder: Option<Remainder>,
 ) -> crate::Result<TransactionPayload> {
     log::debug!("[TRANSFER] sign_tx_essence");
@@ -55,8 +55,6 @@ pub(crate) async fn sign_tx_essence(
         .lock()
         .await
         .sign_transaction_essence(
-            IOTA_COIN_TYPE,
-            account.index,
             &essence,
             &mut transaction_inputs,
             SignMessageMetadata {
@@ -74,24 +72,9 @@ pub(crate) async fn sign_tx_essence(
 
     // Validate signature after signing. The hashed public key needs to match the input address
     let mut input_addresses = Vec::new();
-    for input in transaction_inputs {
-        if input.address_internal {
-            let position = account
-                .internal_addresses
-                .binary_search_by_key(&(input.address_index, input.address_internal), |a| {
-                    (a.key_index, a.internal)
-                })
-                .map_err(|e| crate::Error::InputAddressNotFound)?;
-            input_addresses.push(account.internal_addresses[position].address.inner);
-        } else {
-            let position = account
-                .public_addresses
-                .binary_search_by_key(&(input.address_index, input.address_internal), |a| {
-                    (a.key_index, a.internal)
-                })
-                .map_err(|e| crate::Error::InputAddressNotFound)?;
-            input_addresses.push(account.public_addresses[position].address.inner);
-        }
+    for input_signing_data in &transaction_inputs {
+        let address = Address::try_from_bech32(&input_signing_data.bech32_address)?;
+        input_addresses.push(address);
     }
     verify_unlock_blocks(&transaction_payload, input_addresses)?;
     log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);

@@ -109,7 +109,6 @@ pub async fn send_transfer(
                 .as_millis(),
             inclusion_state: InclusionState::Pending,
             incoming: false,
-            internal: false,
         },
     );
     account.pending_transactions.insert(transaction_id);

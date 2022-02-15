@@ -36,6 +36,8 @@ pub struct Account {
     id: String,
     /// The account index
     index: u32,
+    /// The coin type
+    coin_type: u32,
     /// The account alias.
     alias: String,
     pub(crate) public_addresses: Vec<AccountAddress>,

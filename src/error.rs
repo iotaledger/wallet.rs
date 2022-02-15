@@ -41,7 +41,7 @@ pub enum Error {
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
-    #[error("insufficient funds {0}/{1} available or input address used as output")]
+    #[error("insufficient funds {0}/{1} available")]
     InsufficientFunds(u64, u64),
     /// Account isn't empty (has history or balance) - can't delete account.
     #[error("can't delete account: account has history or balance")]
@@ -74,6 +74,9 @@ pub enum Error {
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota_client::bee_message::Error),
+    /// Bee rest api error
+    #[error("{0}")]
+    BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
     /// Path provided to `import_accounts` isn't a valid file
     #[error("provided backup path isn't a valid file")]
     InvalidBackupFile,
@@ -247,6 +250,7 @@ impl serde::Serialize for Error {
             Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
             Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
+            Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::MnemonicEncode(_) => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),

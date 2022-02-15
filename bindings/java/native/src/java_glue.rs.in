@@ -1092,7 +1092,7 @@ foreign_class!(
     class RegularEssence {
         self_type RegularEssence;
         private constructor = empty;
-        fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
+        fn RegularEssence::inputs(&self) -> Vec<InputSigningData>;
         fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
         fn RegularEssence::internal(&self) -> bool;
 
@@ -1108,11 +1108,11 @@ foreign_class!(
 
 foreign_class!(
     #[derive(Display)]
-    class TransactionInput {
-        self_type TransactionInput;
+    class InputSigningData {
+        self_type InputSigningData;
         private constructor = empty;
-        private fn TransactionInput::to_string(&self) -> String;
-        fn TransactionInput::kind(&self) -> InputKind;
+        private fn InputSigningData::to_string(&self) -> String;
+        fn InputSigningData::kind(&self) -> InputKind;
     }
 );
 

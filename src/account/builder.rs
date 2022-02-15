@@ -10,9 +10,9 @@ use crate::{
     client::options::ClientOptions,
 };
 
-use iota_client::signing::SignerHandle;
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use iota_client::signing::SignerType;
+use iota_client::{constants::IOTA_COIN_TYPE, signing::SignerHandle};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -79,6 +79,7 @@ impl AccountBuilder {
         let account = Account {
             id: index.to_string(),
             index,
+            coin_type: IOTA_COIN_TYPE,
             alias: self.alias.clone().unwrap_or_else(|| index.to_string()),
             public_addresses: Vec::new(),
             internal_addresses: Vec::new(),

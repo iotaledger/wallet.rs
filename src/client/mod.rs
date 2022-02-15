@@ -1,7 +1,6 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-pub mod api;
 // pub(crate) mod mqtt;
 pub mod node;
 pub mod options;
@@ -116,12 +115,12 @@ pub(crate) async fn set_client(options: ClientOptions) -> crate::Result<()> {
         client_builder = client_builder.with_node_sync_disabled();
     }
 
-    if let Some(request_timeout) = options.request_timeout() {
-        client_builder = client_builder.with_request_timeout(*request_timeout);
+    if let Some(api_timeout) = options.api_timeout() {
+        client_builder = client_builder.with_api_timeout(*api_timeout);
     }
 
-    for (api, timeout) in options.api_timeout() {
-        client_builder = client_builder.with_api_timeout(api.clone().into(), *timeout);
+    if let Some(remote_pow_timeout) = options.remote_pow_timeout() {
+        client_builder = client_builder.with_remote_pow_timeout(*remote_pow_timeout);
     }
 
     let client = client_builder.finish().await?;

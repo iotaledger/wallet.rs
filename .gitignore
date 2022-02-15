@@ -12,3 +12,5 @@ book
 wallet.log
 /.idea
 alice-database
+iota.rs.log
+/walletdb

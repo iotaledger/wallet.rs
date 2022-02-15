@@ -10,9 +10,9 @@ use crate::account::{
 #[cfg(feature = "events")]
 use crate::events::types::WalletEvent;
 
-use iota_client::{bee_message::output::OutputId, bee_rest_api::types::responses::OutputsAddressResponse};
+use iota_client::{bee_message::output::OutputId, node_api::indexer_api::query_parameters::QueryParameter};
 
-use std::{str::FromStr, time::Instant};
+use std::time::Instant;
 
 /// Get the balance and return only addresses with a positive balance
 pub(crate) async fn get_addresses_with_balance(
@@ -40,7 +40,6 @@ pub(crate) async fn get_addresses_with_balance(
     for addresses_chunk in address_before_syncing
         .chunks(PARALLEL_REQUESTS_AMOUNT)
         .map(|x: &[AccountAddress]| x.to_vec())
-        .into_iter()
     {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
@@ -114,34 +113,30 @@ pub(crate) async fn get_address_output_ids(
             tasks.push(async move {
                 tokio::spawn(async move {
                     let client = client;
-                    let outputs_response = client
-                        .get_address()
-                        .outputs_response(&address.address().to_bech32(), Default::default())
+                    let output_ids = client
+                        .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                         .await?;
-                    crate::Result::Ok((address, outputs_response))
+
+                    crate::Result::Ok((address, output_ids))
                 })
                 .await
             });
         }
         let results = futures::future::try_join_all(tasks).await?;
         for res in results {
-            let (mut address, outputs_response): (AddressWithBalance, OutputsAddressResponse) = res?;
-            if !outputs_response.output_ids.is_empty() || options.sync_all_addresses {
-                let mut address_outputs = Vec::new();
-                for output_id in &outputs_response.output_ids {
-                    found_outputs.push(OutputId::from_str(output_id)?);
-                    address_outputs.push(OutputId::from_str(output_id)?);
-                }
-                address.output_ids = address_outputs;
-                addresses_with_outputs.push(address);
+            let (mut address, output_ids): (AddressWithBalance, Vec<OutputId>) = res?;
+            if !output_ids.is_empty() || options.sync_all_addresses {
+                found_outputs.extend(output_ids.iter().cloned());
                 #[cfg(feature = "events")]
-                if outputs_response.output_ids.len() > consolidation_threshold {
+                if output_ids.len() > consolidation_threshold {
                     account_handle
                         .event_emitter
                         .lock()
                         .await
                         .emit(account_index, WalletEvent::ConsolidationRequired);
                 }
+                address.output_ids = output_ids;
+                addresses_with_outputs.push(address);
             }
         }
     }

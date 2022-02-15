@@ -6,19 +6,12 @@ use iota_client::node_manager::validate_url;
 use serde::{Deserialize, Serialize};
 use url::Url;
 
-use crate::client::{
-    api::Api,
-    node::{Node, NodeAuth},
-};
+use crate::client::node::{Node, NodeAuth};
 
-use std::{
-    collections::HashMap,
-    hash::{Hash, Hasher},
-    time::Duration,
-};
+use std::{hash::Hash, time::Duration};
 
 /// The client options type.
-#[derive(Serialize, Deserialize, Clone, Debug, Eq, Getters)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Getters)]
 /// Need to set the get methods to be public for binding
 #[getset(get = "pub")]
 pub struct ClientOptions {
@@ -52,12 +45,12 @@ pub struct ClientOptions {
     /// Enable node synchronization or not.
     #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
     node_sync_enabled: bool,
-    /// The request timeout.
-    #[serde(rename = "requestTimeout")]
-    request_timeout: Option<Duration>,
     /// The API timeout.
-    #[serde(rename = "apiTimeout", default)]
-    api_timeout: HashMap<Api, Duration>,
+    #[serde(rename = "apiTimeout")]
+    api_timeout: Option<Duration>,
+    /// The timeout for remote PoW.
+    #[serde(rename = "remotePowTimeout")]
+    remote_pow_timeout: Option<Duration>,
 }
 
 pub fn default_local_pow() -> bool {
@@ -74,33 +67,8 @@ impl ClientOptions {
     }
 }
 
-impl Hash for ClientOptions {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.primary_node.hash(state);
-        self.primary_pow_node.hash(state);
-        self.nodes.hash(state);
-        self.node_pool_urls.hash(state);
-        self.network.hash(state);
-        // self.mqtt_broker_options.hash(state);
-        self.local_pow.hash(state);
-        self.request_timeout.hash(state);
-    }
-}
-
-impl PartialEq for ClientOptions {
-    fn eq(&self, other: &Self) -> bool {
-        self.primary_node == other.primary_node
-            && self.primary_pow_node == other.primary_pow_node
-            && self.nodes == other.nodes
-            && self.node_pool_urls == other.node_pool_urls
-            && self.network == other.network
-            // && self.mqtt_broker_options == other.mqtt_broker_options
-            && self.local_pow == other.local_pow
-            && self.request_timeout == other.request_timeout
-    }
-}
-
 /// The options builder for a client connected to multiple nodes.
+#[derive(Debug, Clone, PartialEq, Eq, Default, Hash)]
 pub struct ClientOptionsBuilder {
     primary_node: Option<Node>,
     primary_pow_node: Option<Node>,
@@ -112,27 +80,8 @@ pub struct ClientOptionsBuilder {
     local_pow: bool,
     node_sync_interval: Option<Duration>,
     node_sync_enabled: bool,
-    request_timeout: Option<Duration>,
-    api_timeout: HashMap<Api, Duration>,
-}
-
-impl Default for ClientOptionsBuilder {
-    fn default() -> Self {
-        Self {
-            primary_node: None,
-            primary_pow_node: None,
-            nodes: Vec::new(),
-            node_pool_urls: Vec::new(),
-            network: None,
-            // mqtt_broker_options: None,
-            // mqtt_enabled: default_mqtt_enabled(),
-            local_pow: default_local_pow(),
-            node_sync_interval: None,
-            node_sync_enabled: default_node_sync_enabled(),
-            request_timeout: None,
-            api_timeout: Default::default(),
-        }
-    }
+    api_timeout: Option<Duration>,
+    remote_pow_timeout: Option<Duration>,
 }
 
 impl ClientOptionsBuilder {
@@ -287,15 +236,15 @@ impl ClientOptionsBuilder {
         self
     }
 
-    /// Sets the request timeout.
-    pub fn with_request_timeout(mut self, timeout: Duration) -> Self {
-        self.request_timeout.replace(timeout);
+    /// Sets the default request timeout.
+    pub fn with_api_timeout(mut self, timeout: Duration) -> Self {
+        self.api_timeout.replace(timeout);
         self
     }
 
-    /// Sets the request timeout for a specific API usage.
-    pub fn with_api_timeout(mut self, api: Api, timeout: Duration) -> Self {
-        self.api_timeout.insert(api, timeout);
+    /// Sets the request timeout for API usage.
+    pub fn with_remote_pow_timeout(mut self, timeout: Duration) -> Self {
+        self.remote_pow_timeout.replace(timeout);
         self
     }
 
@@ -312,8 +261,8 @@ impl ClientOptionsBuilder {
             local_pow: self.local_pow,
             node_sync_interval: self.node_sync_interval,
             node_sync_enabled: self.node_sync_enabled,
-            request_timeout: self.request_timeout,
             api_timeout: self.api_timeout,
+            remote_pow_timeout: self.remote_pow_timeout,
         };
         Ok(options)
     }

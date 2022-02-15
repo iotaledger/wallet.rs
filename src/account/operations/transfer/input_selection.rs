@@ -1,11 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    constants::MIN_DUST_ALLOWANCE_VALUE,
-    handle::AccountHandle,
-    types::{OutputData, OutputKind},
-};
+use crate::account::{constants::MIN_DUST_ALLOWANCE_VALUE, handle::AccountHandle, types::OutputData};
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
@@ -13,6 +9,8 @@ use iota_client::bee_message::{
     input::{INPUT_COUNT_MAX, INPUT_COUNT_RANGE},
     output::OutputId,
 };
+
+// todo use try_select_inputs() from iota.rs
 
 /// Selects inputs for a transaction and locks them in the account, so they don't get used again
 pub(crate) async fn select_inputs(
@@ -68,10 +66,7 @@ pub(crate) async fn select_inputs(
     for (output_id, output) in account.unspent_outputs.iter() {
         // check if not in pending transaction (locked_outputs) and if from the correct network
         if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
-            match output.kind {
-                OutputKind::Extended => signature_locked_outputs.push(output),
-                _ => todo!(),
-            }
+            signature_locked_outputs.push(output);
         }
     }
 

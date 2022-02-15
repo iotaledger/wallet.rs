@@ -11,7 +11,10 @@ use crate::{
     client,
 };
 
-use iota_client::signing::{mnemonic::IOTA_COIN_TYPE, GenerateAddressMetadata, Network};
+use iota_client::{
+    constants::IOTA_COIN_TYPE,
+    signing::{GenerateAddressMetadata, Network},
+};
 use serde::{Deserialize, Serialize};
 
 /// Options for address generation

@@ -5,7 +5,7 @@ use iota_wallet::{
     address::OutputKind as RustOutputKind,
     message::{
         MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
-        TransactionInput as RustWalletInput, TransactionOutput as RustWalletOutput,
+        InputSigningData as RustWalletInput, TransactionOutput as RustWalletOutput,
         TransactionRegularEssence as TransactionRegularEssenceRust,
     },
     iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
@@ -76,12 +76,12 @@ pub struct RegularEssence {
 }
 
 impl RegularEssence {
-    pub fn inputs(&self) -> Vec<TransactionInput> {
+    pub fn inputs(&self) -> Vec<InputSigningData> {
         self.essence
             .inputs()
             .iter()
             .cloned()
-            .map(|input| TransactionInput { input: input })
+            .map(|input| InputSigningData { input: input })
             .collect()
     }
 
@@ -122,11 +122,11 @@ impl RegularEssence {
 }
 
 #[derive(Clone)]
-pub struct TransactionInput {
+pub struct InputSigningData {
     input: RustWalletInput,
 }
 
-impl TransactionInput {
+impl InputSigningData {
     pub fn kind(&self) -> InputKind {
         match self.input {
             RustWalletInput::Utxo(_) => InputKind::Utxo,

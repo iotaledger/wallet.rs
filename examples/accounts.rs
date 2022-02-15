@@ -3,6 +3,7 @@
 
 //! cargo run --example accounts --release
 
+use iota_client::utils::request_funds_from_faucet;
 use iota_wallet::{
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
@@ -15,7 +16,7 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
+    // init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
         .with_node("http://localhost:14265")?
@@ -65,7 +66,17 @@ async fn main() -> Result<()> {
         println!("Accounts: {:#?}", a);
     }
 
-    let _address = account.generate_addresses(5, None).await?;
+    let addresses = account.generate_addresses(5, None).await?;
+
+    println!(
+        "{}",
+        request_funds_from_faucet(
+            "http://localhost:14265/api/plugins/faucet/v1/enqueue",
+            &addresses[0].address().to_bech32()
+        )
+        .await?
+    );
+    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
 
     let addresses = account.list_addresses().await?;
     println!("Addresses: {}", addresses.len());

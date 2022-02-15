@@ -1,32 +1,43 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    constants::MIN_DUST_ALLOWANCE_VALUE,
-    handle::AccountHandle,
-    operations::{
-        address_generation::AddressGenerationOptions,
-        transfer::{Remainder, RemainderValueStrategy, TransferOptions, TransferOutput},
-    },
-    types::{
-        address::{AccountAddress, AddressWithBalance},
-        OutputData, OutputKind,
-    },
-};
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, PreparedTransactionData, TransactionIO, TransferProgressEvent, WalletEvent};
+use crate::{
+    account::{
+        constants::MIN_DUST_ALLOWANCE_VALUE,
+        handle::AccountHandle,
+        operations::{
+            address_generation::AddressGenerationOptions,
+            transfer::{Remainder, RemainderValueStrategy, TransferOptions, TransferOutput},
+        },
+        types::{
+            address::{AccountAddress, AddressWithBalance},
+            OutputData, OutputKind,
+        },
+    },
+    Result,
+};
 
+use crypto::{
+    hashes::{blake2b::Blake2b256, Digest},
+    keys::slip10::Chain,
+};
 use iota_client::{
     bee_message::{
         address::Address,
         input::{Input, UtxoInput},
-        output::{ExtendedOutput, Output},
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, Output,
+        },
         payload::{
             transaction::{RegularTransactionEssence, TransactionEssence},
             Payload,
         },
     },
-    signing::TransactionInput,
+    packable::PackableExt,
+    signing::types::InputSigningData,
 };
 
 use std::time::Instant;
@@ -37,20 +48,24 @@ pub(crate) async fn create_transaction(
     inputs: Vec<OutputData>,
     outputs: Vec<TransferOutput>,
     options: Option<TransferOptions>,
-) -> crate::Result<(TransactionEssence, Vec<TransactionInput>, Option<Remainder>)> {
+) -> crate::Result<(TransactionEssence, Vec<InputSigningData>, Option<Remainder>)> {
     log::debug!("[TRANSFER] create_transaction");
     let create_transaction_start_time = Instant::now();
 
     let mut total_input_amount = 0;
     let mut inputs_for_essence: Vec<Input> = Vec::new();
-    let mut inputs_for_signing: Vec<TransactionInput> = Vec::new();
+    let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
     #[cfg(feature = "events")]
     let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
     #[cfg(feature = "events")]
     let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
+    let coin_type = { account_handle.read().await.coin_type };
+    let account_index = { account_handle.read().await.index };
     let addresses = account_handle.list_addresses_with_balance().await?;
+
     for utxo in &inputs {
-        total_input_amount += utxo.amount;
+        let output = Output::try_from(&utxo.output_response.output)?;
+        total_input_amount += output.amount();
         let input = Input::Utxo(UtxoInput::from(utxo.output_id));
         inputs_for_essence.push(input.clone());
         // instead of finding the key_index and internal by iterating over all addresses we could also add this data to
@@ -64,15 +79,25 @@ pub(crate) async fn create_transaction(
             // don't panic
             .expect("Didn't find input address in account"))
         .clone();
-        inputs_for_signing.push(TransactionInput {
-            input,
-            address_index: associated_address.key_index,
-            address_internal: associated_address.internal,
+
+        // 44 is for BIP 44 (HD wallets) and 4218 is the registered index for IOTA https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+        let chain = Chain::from_u32_hardened(vec![
+            44,
+            coin_type,
+            account_index,
+            associated_address.internal as u32,
+            associated_address.key_index,
+        ]);
+
+        inputs_for_signing.push(InputSigningData {
+            output_response: utxo.output_response.clone(),
+            chain: Some(chain),
+            bech32_address: associated_address.address.to_bech32(),
         });
         #[cfg(feature = "events")]
         inputs_for_event.push(TransactionIO {
             address: associated_address.address.to_bech32(),
-            amount: utxo.amount,
+            amount: output.amount(),
             remainder: None,
         })
     }
@@ -89,8 +114,12 @@ pub(crate) async fn create_transaction(
         let address = Address::try_from_bech32(&output.address)?;
         total_output_amount += output.amount;
         match output.output_kind {
-            Some(crate::account::types::OutputKind::Extended) | None => {
-                outputs_for_essence.push(Output::Extended(ExtendedOutput::new(address, output.amount)));
+            Some(crate::account::types::OutputKind::Basic) | None => {
+                outputs_for_essence.push(Output::Basic(
+                    BasicOutputBuilder::new(output.amount)?
+                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
+                        .finish()?,
+                ));
             }
             // todo handle other outputs
             _ => return Err(crate::error::Error::InvalidOutputKind("Treasury".to_string())),
@@ -167,11 +196,14 @@ pub(crate) async fn create_transaction(
             amount: remainder_value,
         });
         match options_.remainder_output_kind {
-            Some(OutputKind::Extended) => {
-                outputs_for_essence.push(Output::Extended(ExtendedOutput::new(
-                    remainder_address.address.inner,
-                    remainder_value,
-                )));
+            Some(OutputKind::Basic) | None => {
+                outputs_for_essence.push(Output::Basic(
+                    BasicOutputBuilder::new(remainder_value)?
+                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                            remainder_address.address.inner,
+                        )))
+                        .finish()?,
+                ));
             }
             _ => {
                 todo!("handle other outputs")
@@ -183,18 +215,29 @@ pub(crate) async fn create_transaction(
     // Build transaction essence
     let mut essence_builder = RegularTransactionEssence::builder(client.get_network_id().await?);
     essence_builder = essence_builder.with_inputs(inputs_for_essence);
+
+    let input_outputs = inputs_for_signing
+        .iter()
+        .map(|i| Ok(Output::try_from(&i.output_response.output)?.pack_to_vec()))
+        .collect::<Result<Vec<Vec<u8>>>>()?;
+    let input_outputs = input_outputs.into_iter().flatten().collect::<Vec<u8>>();
+    let inputs_commitment = Blake2b256::digest(&input_outputs)
+        .try_into()
+        .map_err(|_e| crate::Error::Blake2b256("Hashing outputs for inputs_commitment failed."))?;
+    essence_builder = essence_builder.with_inputs_commitment(inputs_commitment);
+
     essence_builder = essence_builder.with_outputs(outputs_for_essence);
 
-    // Optional add indexation payload
+    // Optional add a tagged payload
     #[cfg(feature = "events")]
-    let mut indexation_data: Option<String> = None;
+    let mut tagged_data: Option<String> = None;
     if let Some(options) = options {
-        if let Some(indexation) = &options.indexation {
+        if let Some(tagged_data_payload) = &options.tagged_data_payload {
             #[cfg(feature = "events")]
             {
-                indexation_data = Some(hex::encode(indexation.data()));
+                tagged_data = Some(hex::encode(tagged_data_payload.data()));
             }
-            essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
+            essence_builder = essence_builder.with_payload(Payload::TaggedData(Box::new(tagged_data_payload.clone())));
         }
     }
 
@@ -209,7 +252,7 @@ pub(crate) async fn create_transaction(
             WalletEvent::TransferProgress(TransferProgressEvent::PreparedTransaction(PreparedTransactionData {
                 inputs: inputs_for_event,
                 outputs: outputs_for_event,
-                data: indexation_data,
+                data: tagged_data,
             })),
         );
     }

@@ -14,7 +14,7 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
+    // init_logger("wallet.log", LevelFilter::Debug)?;
 
     let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
 

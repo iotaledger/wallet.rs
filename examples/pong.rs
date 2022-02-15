@@ -18,7 +18,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("pong-wallet.log", LevelFilter::Debug)?;
+    // init_logger("pong-wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
         .with_node("http://localhost:14265")?
@@ -88,7 +88,7 @@ async fn main() -> Result<()> {
                         address: ping_addresses_[address_index].address().to_bech32(),
                         // send one or two Mi for more different transactions
                         amount: n * 1_000_000,
-                        output_kind: Some(OutputKind::Extended),
+                        output_kind: Some(OutputKind::Basic),
                     }];
                     let res = pong_account_
                         .send(

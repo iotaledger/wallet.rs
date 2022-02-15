@@ -15,7 +15,7 @@ use std::time::Instant;
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
+    // init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
         .with_node("http://localhost:14265")?

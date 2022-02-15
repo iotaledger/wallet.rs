@@ -53,7 +53,7 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
     let (new_output_ids, addresses_with_balance) =
         addresses::get_address_output_ids(account_handle, options, addresses_with_balance.clone()).await?;
 
-    let output_responses = outputs::get_outputs(account_handle, options, new_output_ids.clone()).await?;
+    let output_responses = outputs::get_outputs(account_handle, new_output_ids.clone()).await?;
     let outputs = outputs::output_response_to_output_data(account_handle, output_responses).await?;
 
     // only when actively called or also in the background syncing?

@@ -4,7 +4,7 @@
 use crate::account::{
     handle::AccountHandle,
     operations::transfer::{send_transfer, TransferResult},
-    types::{address::AddressWithBalance, OutputData, OutputKind},
+    types::{address::AddressWithBalance, OutputData},
     TransferOptions, TransferOutput,
 };
 
@@ -35,10 +35,8 @@ pub(crate) async fn consolidate_outputs(account_handle: &AccountHandle) -> crate
         for output_id in &address.output_ids {
             if !account.locked_outputs.contains(output_id) {
                 if let Some(output) = account.outputs.get(output_id) {
-                    // todo handle other output types?
-                    if !output.is_spent && output.kind == OutputKind::Extended {
-                        unspent_outputs.push(output.clone());
-                    }
+                    // todo handle other output types
+                    unspent_outputs.push(output.clone());
                 }
             }
         }

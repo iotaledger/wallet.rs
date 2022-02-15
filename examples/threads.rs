@@ -17,7 +17,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
+    // init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptionsBuilder::new()
         .with_node("http://localhost:14265")?
@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
                     let outputs = vec![TransferOutput {
                         address: "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj".to_string(),
                         amount: 1_000_000,
-                        output_kind: Some(OutputKind::Extended),
+                        output_kind: Some(OutputKind::Basic),
                     }];
                     let res = account_
                         .send(
