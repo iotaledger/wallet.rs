@@ -6,8 +6,12 @@
 // In this example we will try to send transactions from multiple threads simultaneously to the first 1000 addresses of
 // the second account (pong_account)
 
+use iota_client::bee_message::output::{
+    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+    BasicOutputBuilder, Output,
+};
 use iota_wallet::{
-    account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
+    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
@@ -84,12 +88,14 @@ async fn main() -> Result<()> {
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
-                    let outputs = vec![TransferOutput {
-                        address: pong_addresses_[address_index].address().to_bech32(),
+                    let outputs = vec![Output::Basic(
                         // send one or two Mi for more different transactions
-                        amount: n * 1_000_000,
-                        output_kind: Some(OutputKind::Basic),
-                    }];
+                        BasicOutputBuilder::new(n * 1_000_000)?
+                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                *pong_addresses_[address_index].address().as_ref(),
+                            )))
+                            .finish()?,
+                    )];
                     let res = ping_account_
                         .send(
                             outputs,
@@ -100,7 +106,7 @@ async fn main() -> Result<()> {
                         )
                         .await?;
                     println!(
-                        "Message from thread {} sent: https://explorer.iota.org/devnet/message/{}",
+                        "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,
                         res.message_id.expect("No message created yet")
                     );

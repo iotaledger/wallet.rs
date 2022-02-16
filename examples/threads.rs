@@ -5,8 +5,15 @@
 
 // In this example we will try to send transactions from multiple threads simultaneously
 
+use iota_client::bee_message::{
+    address::Address,
+    output::{
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        BasicOutputBuilder, Output,
+    },
+};
 use iota_wallet::{
-    account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
+    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
@@ -60,11 +67,15 @@ async fn main() -> Result<()> {
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
-                    let outputs = vec![TransferOutput {
-                        address: "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj".to_string(),
-                        amount: 1_000_000,
-                        output_kind: Some(OutputKind::Basic),
-                    }];
+                    let outputs = vec![Output::Basic(
+                        BasicOutputBuilder::new(1_000_000)?
+                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                Address::try_from_bech32(
+                                    "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
+                                )?,
+                            )))
+                            .finish()?,
+                    )];
                     let res = account_
                         .send(
                             outputs,
@@ -75,7 +86,7 @@ async fn main() -> Result<()> {
                         )
                         .await?;
                     println!(
-                        "Message from thread {} sent: https://explorer.iota.org/devnet/message/{}",
+                        "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,
                         res.message_id.expect("No message created yet")
                     );

@@ -3,8 +3,15 @@
 
 //! cargo run --example events --release
 
+use iota_client::bee_message::{
+    address::Address,
+    output::{
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        BasicOutputBuilder, Output,
+    },
+};
 use iota_wallet::{
-    account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
+    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     signing::mnemonic::MnemonicSigner,
@@ -52,12 +59,13 @@ async fn main() -> Result<()> {
     println!("Balance: {:?}", balance);
 
     // send transaction
-    let outputs = vec![TransferOutput {
-        address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-        amount: 1_000_000,
-        // we create a dust allowance outputs so we can reuse our address even with remainder
-        output_kind: Some(OutputKind::Basic),
-    }];
+    let outputs = vec![Output::Basic(
+        BasicOutputBuilder::new(1_000_000)?
+            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?,
+            )))
+            .finish()?,
+    )];
     // let res = account.send(outputs, None).await?;
     let res = account
         .send(
@@ -69,7 +77,7 @@ async fn main() -> Result<()> {
         )
         .await?;
     println!(
-        "Transaction: {} Message sent: https://explorer.iota.org/devnet/message/{}",
+        "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,
         res.message_id.expect("No message created yet")
     );

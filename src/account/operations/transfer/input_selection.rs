@@ -1,24 +1,25 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{constants::MIN_DUST_ALLOWANCE_VALUE, handle::AccountHandle, types::OutputData};
+use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
-use iota_client::bee_message::{
-    input::{INPUT_COUNT_MAX, INPUT_COUNT_RANGE},
-    output::OutputId,
+use iota_client::{
+    api::input_selection::{try_select_inputs, types::SelectedTransactionData},
+    bee_message::{address::Address, input::INPUT_COUNT_MAX, output::Output},
+    signing::types::InputSigningData,
 };
-
-// todo use try_select_inputs() from iota.rs
 
 /// Selects inputs for a transaction and locks them in the account, so they don't get used again
 pub(crate) async fn select_inputs(
     account_handle: &AccountHandle,
-    amount_to_send: u64,
-    custom_inputs: Option<Vec<OutputId>>,
-) -> crate::Result<Vec<OutputData>> {
+    outputs: Vec<Output>,
+    custom_inputs: Option<Vec<InputSigningData>>,
+    remainder_address: Option<Address>,
+) -> crate::Result<SelectedTransactionData> {
     log::debug!("[TRANSFER] select_inputs");
+    // lock so the same inputs can't be selected in multiple transfers
     let mut account = account_handle.write().await;
     #[cfg(feature = "events")]
     account_handle.event_emitter.lock().await.emit(
@@ -29,99 +30,44 @@ pub(crate) async fn select_inputs(
     // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
     // that the amount is enough)
     if let Some(custom_inputs) = custom_inputs {
-        let mut total_input_amount = 0;
-        let mut inputs = Vec::new();
-        for input in custom_inputs {
-            if account.locked_outputs.contains(&input) {
-                return Err(crate::Error::CustomInputError(format!(
-                    "{} already used in another transaction",
-                    input
-                )));
-            }
-            match account.unspent_outputs.get(&input) {
-                Some(output) => {
-                    total_input_amount += output.amount;
-                    inputs.push(output.clone());
-                }
-                None => return Err(crate::Error::CustomInputError(format!("Unknown input: {}", input))),
-            }
-        }
-        if total_input_amount != amount_to_send {
-            return Err(crate::Error::CustomInputError(format!(
-                "Inputs amount {} doesn't match amount to send {}",
-                total_input_amount, amount_to_send,
-            )));
-        }
+        let selected_transaction_data = try_select_inputs(custom_inputs, outputs, true, remainder_address).await?;
+
         // lock outputs so they don't get used by another transaction
-        for output in &inputs {
-            account.locked_outputs.insert(output.output_id);
+        for output in &selected_transaction_data.inputs {
+            account.locked_outputs.insert(output.output_id()?);
         }
-        return Ok(inputs);
+        return Ok(selected_transaction_data);
     }
 
     let client = crate::client::get_client().await?;
     let network_id = client.get_network_id().await?;
 
-    let mut signature_locked_outputs = Vec::new();
+    let mut available_outputs = Vec::new();
     for (output_id, output) in account.unspent_outputs.iter() {
         // check if not in pending transaction (locked_outputs) and if from the correct network
         if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
-            signature_locked_outputs.push(output);
+            available_outputs.push(output.input_signing_data()?);
         }
     }
 
-    // todo try to select matching inputs first, only if that's not possible we should select the inputs like below
-
-    // Sort inputs so we can get the biggest inputs first and don't reach the input limit, if we don't have the
-    // funds spread over too many outputs
-    signature_locked_outputs.sort_by(|a, b| b.amount.cmp(&a.amount));
-
-    let mut input_sum = 0;
-    let selected_outputs: Vec<OutputData> = signature_locked_outputs
-        .into_iter()
-        .take_while(|input| {
-            let value = input.amount;
-            let old_sum = input_sum;
-            input_sum += value;
-            old_sum < amount_to_send
-                || (old_sum - amount_to_send < MIN_DUST_ALLOWANCE_VALUE && old_sum != amount_to_send)
-        })
-        .cloned()
-        .collect();
-
-    // recalculate the input sum, because during take_while() we maybe also added a last output, even if it didn't get
-    // added anymore
-    let selected_input_sum: u64 = selected_outputs.iter().map(|o| o.amount).sum();
-    if selected_input_sum < amount_to_send {
-        return Err(crate::Error::InsufficientFunds(selected_input_sum, amount_to_send));
-    }
-    let remainder_value = selected_input_sum - amount_to_send;
-    if remainder_value != 0 && remainder_value < MIN_DUST_ALLOWANCE_VALUE {
-        return Err(crate::Error::LeavingDustError(format!(
-            "Transaction would leave dust behind ({}i)",
-            remainder_value
-        )));
-    }
-    if !INPUT_COUNT_RANGE.contains(&(selected_outputs.len() as u16)) {
-        #[cfg(feature = "events")]
-        account_handle
-            .event_emitter
-            .lock()
-            .await
-            .emit(account.index, WalletEvent::ConsolidationRequired);
-        return Err(crate::Error::ConsolidationRequired(
-            selected_outputs.len(),
-            INPUT_COUNT_MAX,
-        ));
-    }
+    let selected_transaction_data = match try_select_inputs(available_outputs, outputs, false, remainder_address).await
+    {
+        Ok(r) => r,
+        Err(iota_client::Error::ConsolidationRequired(output_count)) => {
+            #[cfg(feature = "events")]
+            account_handle
+                .event_emitter
+                .lock()
+                .await
+                .emit(account.index, WalletEvent::ConsolidationRequired);
+            return Err(crate::Error::ConsolidationRequired(output_count, INPUT_COUNT_MAX));
+        }
+        Err(e) => return Err(e.into()),
+    };
 
     // lock outputs so they don't get used by another transaction
-    for output in &selected_outputs {
-        // log::debug!(
-        //     "[TRANSFER] select_inputs: lock {}",
-        //     output.output_id,
-        // );
-        account.locked_outputs.insert(output.output_id);
+    for output in &selected_transaction_data.inputs {
+        account.locked_outputs.insert(output.output_id()?);
     }
-    Ok(selected_outputs)
+    Ok(selected_transaction_data)
 }

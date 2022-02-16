@@ -65,7 +65,7 @@ pub enum TransferProgressEvent {
     /// Generating remainder value deposit address.
     GeneratingRemainderDepositAddress(AddressData),
     /// Prepared transaction.
-    PreparedTransaction(PreparedTransactionData),
+    PreparedTransaction(PreparedTransactionEventData),
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.
@@ -93,7 +93,7 @@ pub struct AddressData {
 /// Prepared transaction event data.
 #[derive(Debug, Clone, Getters, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[getset(get = "pub")]
-pub struct PreparedTransactionData {
+pub struct PreparedTransactionEventData {
     /// Transaction inputs.
     pub inputs: Vec<TransactionIO>,
     /// Transaction outputs.

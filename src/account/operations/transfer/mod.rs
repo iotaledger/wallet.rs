@@ -3,24 +3,34 @@
 
 // transfer or transaction?
 
-mod create_transaction;
 mod input_selection;
 mod options;
+mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use crate::account::{
-    handle::AccountHandle,
-    types::{address::AccountAddress, InclusionState, OutputData, Transaction},
+use crate::{
+    account::{
+        handle::AccountHandle,
+        types::{address::AccountAddress, InclusionState, Transaction},
+        AddressGenerationOptions,
+    },
+    events::types::{AddressData, TransferProgressEvent, WalletEvent},
 };
 use input_selection::select_inputs;
 
-use iota_client::bee_message::{
-    output::{OutputId, OUTPUT_COUNT_MAX, OUTPUT_COUNT_RANGE},
-    payload::transaction::{TransactionId, TransactionPayload},
-    MessageId,
+use iota_client::{
+    bee_message::{
+        input::INPUT_COUNT_RANGE,
+        output::{Output, OUTPUT_COUNT_RANGE},
+        payload::transaction::{TransactionId, TransactionPayload},
+        MessageId,
+    },
+    signing::types::InputSigningData,
 };
-pub use options::{RemainderValueStrategy, TransferOptions, TransferOutput};
+pub use options::{RemainderValueStrategy, TransferOptions};
+
+use packable::bounded::TryIntoBoundedU16Error;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -40,51 +50,122 @@ pub(crate) struct Remainder {
 /// inputs.
 pub async fn send_transfer(
     account_handle: &AccountHandle,
-    outputs: Vec<TransferOutput>,
+    outputs: Vec<Output>,
     options: Option<TransferOptions>,
 ) -> crate::Result<TransferResult> {
     log::debug!("[TRANSFER] send_transfer");
-    let amount = outputs.iter().map(|x| x.amount).sum();
-    if amount == 0 {
-        return Err(crate::Error::EmptyOutputAmount);
-    };
-    // validate outputs amount
+    // validate amounts
     if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
-        return Err(crate::Error::TooManyOutputs(outputs.len(), OUTPUT_COUNT_MAX));
+        return Err(crate::Error::BeeMessage(
+            iota_client::bee_message::Error::InvalidOutputCount(TryIntoBoundedU16Error::Truncated(outputs.len())),
+        ));
     }
-    let custom_inputs: Option<Vec<OutputId>> = {
+
+    let custom_inputs: Option<Vec<InputSigningData>> = {
         if let Some(options) = options.clone() {
             // validate inputs amount
             if let Some(inputs) = &options.custom_inputs {
-                if !OUTPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                    return Err(crate::Error::TooManyInputs(inputs.len(), OUTPUT_COUNT_MAX));
+                if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
+                    return Err(crate::Error::BeeMessage(
+                        iota_client::bee_message::Error::InvalidInputCount(TryIntoBoundedU16Error::Truncated(
+                            inputs.len(),
+                        )),
+                    ));
                 }
+                let account = account_handle.read().await;
+                let mut input_outputs = Vec::new();
+                for output_id in inputs {
+                    match account.unspent_outputs().get(output_id) {
+                        Some(output) => input_outputs.push(output.input_signing_data()?),
+                        None => {
+                            return Err(crate::Error::CustomInputError(format!(
+                                "Custom input {} not found in unspent outputs",
+                                output_id
+                            )))
+                        }
+                    }
+                }
+                Some(input_outputs)
+            } else {
+                None
             }
-            options.custom_inputs
         } else {
             None
         }
     };
-    let inputs = select_inputs(account_handle, amount, custom_inputs).await?;
+
+    let remainder_address = match &options {
+        Some(options) => {
+            match &options.remainder_value_strategy {
+                RemainderValueStrategy::ReuseAddress => {
+                    // select_inputs will select an address from the inputs if it's none
+                    None
+                }
+                RemainderValueStrategy::ChangeAddress => {
+                    let remainder_address = account_handle
+                        .generate_addresses(
+                            1,
+                            Some(AddressGenerationOptions {
+                                internal: true,
+                                ..Default::default()
+                            }),
+                        )
+                        .await?
+                        .first()
+                        .expect("Didn't generate an address")
+                        .clone();
+                    #[cfg(feature = "events")]
+                    {
+                        let account_index = account_handle.read().await.index;
+                        account_handle.event_emitter.lock().await.emit(
+                            account_index,
+                            WalletEvent::TransferProgress(TransferProgressEvent::GeneratingRemainderDepositAddress(
+                                AddressData {
+                                    address: remainder_address.address.to_bech32(),
+                                },
+                            )),
+                        );
+                    }
+                    Some(remainder_address.address().inner)
+                }
+                RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
+            }
+        }
+        None => None,
+    };
+
+    let selected_transaction_data = select_inputs(account_handle, outputs, custom_inputs, remainder_address).await?;
     // can we unlock the outputs in a better way if the transaction creation fails?
-    let (essence, inputs_for_signing, remainder) =
-        match create_transaction::create_transaction(account_handle, inputs.clone(), outputs.clone(), options).await {
-            Ok(res) => res,
-            Err(err) => {
-                // unlock outputs so they are available for a new transaction
-                unlock_inputs(account_handle, inputs).await?;
-                return Err(err);
-            }
-        };
-    let transaction_payload =
-        match sign_transaction::sign_tx_essence(account_handle, essence, inputs_for_signing, remainder).await {
-            Ok(res) => res,
-            Err(err) => {
-                // unlock outputs so they are available for a new transaction
-                unlock_inputs(account_handle, inputs).await?;
-                return Err(err);
-            }
-        };
+    let prepared_transaction_data = match prepare_transaction::prepare_transaction(
+        account_handle,
+        selected_transaction_data.inputs.clone(),
+        selected_transaction_data.outputs.clone(),
+        options,
+    )
+    .await
+    {
+        Ok(res) => res,
+        Err(err) => {
+            // unlock outputs so they are available for a new transaction
+            unlock_inputs(account_handle, selected_transaction_data.inputs).await?;
+            return Err(err);
+        }
+    };
+    let transaction_payload = match sign_transaction::sign_tx_essence(
+        account_handle,
+        prepared_transaction_data.essence,
+        prepared_transaction_data.input_signing_data_entrys,
+        selected_transaction_data.remainder_output,
+    )
+    .await
+    {
+        Ok(res) => res,
+        Err(err) => {
+            // unlock outputs so they are available for a new transaction
+            unlock_inputs(account_handle, selected_transaction_data.inputs).await?;
+            return Err(err);
+        }
+    };
 
     let message_id =
         match submit_transaction::submit_transaction_payload(account_handle, transaction_payload.clone()).await {
@@ -127,10 +208,10 @@ pub async fn send_transfer(
 }
 
 // unlock outputs
-async fn unlock_inputs(account_handle: &AccountHandle, inputs: Vec<OutputData>) -> crate::Result<()> {
+async fn unlock_inputs(account_handle: &AccountHandle, inputs: Vec<InputSigningData>) -> crate::Result<()> {
     let mut account = account_handle.write().await;
-    for output in &inputs {
-        account.locked_outputs.remove(&output.output_id);
+    for input_signing_data in &inputs {
+        account.locked_outputs.remove(&input_signing_data.output_id()?);
     }
     Ok(())
 }

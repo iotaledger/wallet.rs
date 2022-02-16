@@ -5,10 +5,13 @@ use crate::account::{
     handle::AccountHandle,
     operations::transfer::{send_transfer, TransferResult},
     types::{address::AddressWithBalance, OutputData},
-    TransferOptions, TransferOutput,
+    TransferOptions,
 };
 
-use iota_client::bee_message::output::OutputId;
+use iota_client::bee_message::output::{
+    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+    BasicOutputBuilder, Output, OutputId,
+};
 
 /// Consolidates outputs from an account by sending them to the same address again if the output amount is >= the
 /// output_consolidation_threshold
@@ -59,12 +62,13 @@ pub(crate) async fn consolidate_outputs(account_handle: &AccountHandle) -> crate
     for outputs_on_one_address in outputs_to_consolidate {
         for outputs in outputs_on_one_address.chunks(output_consolidation_threshold) {
             let output_sum = outputs.iter().map(|o| o.amount).sum();
-            let consolidation_output = vec![TransferOutput {
-                // use the address from the input for the output
-                address: outputs[0].address.to_bech32(&bech32_hrp),
-                amount: output_sum,
-                output_kind: None,
-            }];
+            let consolidation_output = vec![Output::Basic(
+                BasicOutputBuilder::new(output_sum)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        outputs[0].address,
+                    )))
+                    .finish()?,
+            )];
             match send_transfer(
                 account_handle,
                 consolidation_output,

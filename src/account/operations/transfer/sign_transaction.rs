@@ -1,15 +1,17 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    handle::AccountHandle,
-    operations::transfer::{Remainder, TransactionPayload},
-};
+use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 use iota_client::{
-    bee_message::{address::Address, payload::transaction::TransactionEssence, unlock_block::UnlockBlocks},
+    bee_message::{
+        address::Address,
+        output::{unlock_condition::UnlockCondition, Output},
+        payload::transaction::TransactionEssence,
+        unlock_block::UnlockBlocks,
+    },
     signing::{types::InputSigningData, verify_unlock_blocks, Network, SignMessageMetadata},
 };
 
@@ -18,7 +20,7 @@ pub(crate) async fn sign_tx_essence(
     account_handle: &AccountHandle,
     essence: TransactionEssence,
     mut transaction_inputs: Vec<InputSigningData>,
-    remainder: Option<Remainder>,
+    remainder: Option<Output>,
 ) -> crate::Result<TransactionPayload> {
     log::debug!("[TRANSFER] sign_tx_essence");
     let account = account_handle.read().await;
@@ -28,7 +30,17 @@ pub(crate) async fn sign_tx_essence(
         WalletEvent::TransferProgress(TransferProgressEvent::SigningTransaction),
     );
     let (remainder_deposit_address, remainder_value) = match remainder {
-        Some(remainder) => (Some(remainder.address), remainder.amount),
+        Some(remainder) => {
+            let mut remainder_address = None;
+            if let Some(unlock_conditions) = remainder.unlock_conditions() {
+                for unlock_condition in unlock_conditions {
+                    if let UnlockCondition::Address(address_unlock_condition) = unlock_condition {
+                        remainder_address.replace(*address_unlock_condition.address());
+                    }
+                }
+            }
+            (remainder_address, remainder.amount())
+        }
         None => (None, 0),
     };
     let network = match account
@@ -42,14 +54,15 @@ pub(crate) async fn sign_tx_essence(
         _ => Network::Testnet,
     };
 
-    let remainder = match remainder_deposit_address {
-        Some(remainder_deposit_address) => Some(iota_client::signing::types::AccountAddress {
-            address: remainder_deposit_address.address.inner,
-            key_index: remainder_deposit_address.key_index,
-            internal: remainder_deposit_address.internal,
-        }),
-        None => None,
-    };
+    // todo remainder address
+    // let remainder = match remainder_deposit_address {
+    //     Some(remainder_deposit_address) => Some(iota_client::signing::types::AccountAddress {
+    //         address: remainder_deposit_address.address.inner,
+    //         key_index: remainder_deposit_address.key_index,
+    //         internal: remainder_deposit_address.internal,
+    //     }),
+    //     None => None,
+    // };
     let unlock_blocks = account_handle
         .signer
         .lock()
@@ -59,7 +72,8 @@ pub(crate) async fn sign_tx_essence(
             &mut transaction_inputs,
             SignMessageMetadata {
                 remainder_value,
-                remainder_deposit_address: remainder.as_ref(),
+                // todo remainder address
+                remainder_deposit_address: None,
                 network,
             },
         )

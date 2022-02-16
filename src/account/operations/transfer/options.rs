@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::types::{address::AccountAddress, OutputKind};
+use crate::account::types::address::AccountAddress;
 
 use iota_client::bee_message::{output::OutputId, payload::tagged_data::TaggedDataPayload};
 use serde::{Deserialize, Serialize};
@@ -11,24 +11,11 @@ use serde::{Deserialize, Serialize};
 pub struct TransferOptions {
     #[serde(rename = "remainderValueStrategy", default)]
     pub remainder_value_strategy: RemainderValueStrategy,
-    #[serde(rename = "remainderOutputKind", default)]
-    pub remainder_output_kind: Option<OutputKind>,
     pub tagged_data_payload: Option<TaggedDataPayload>,
     #[serde(rename = "skipSync", default)]
     pub skip_sync: bool,
     #[serde(rename = "customInputs", default)]
     pub custom_inputs: Option<Vec<OutputId>>,
-}
-
-// clearer to have it here in transfer.rs or also mvoe it into the types folder?
-
-/// An output for a value transfer
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TransferOutput {
-    pub address: String,
-    pub amount: u64,
-    #[serde(rename = "outputKind", default)]
-    pub output_kind: Option<OutputKind>,
 }
 
 #[allow(clippy::enum_variant_names)]

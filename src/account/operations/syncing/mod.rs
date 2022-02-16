@@ -49,12 +49,15 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
     let addresses_with_balance = addresses::get_addresses_with_balance(account_handle, options).await?;
     log::debug!("[SYNC] found {} addresses_with_balance", addresses_with_balance.len());
 
-    // get outputs only for addresses that have > 0 as balance and add them also the the addresses_with_balance
-    let (new_output_ids, addresses_with_balance) =
+    // get outputs for addresses and add them also the the addresses_with_balance
+    let addresses_with_balance =
         addresses::get_address_output_ids(account_handle, options, addresses_with_balance.clone()).await?;
-
-    let output_responses = outputs::get_outputs(account_handle, new_output_ids.clone()).await?;
-    let outputs = outputs::output_response_to_output_data(account_handle, output_responses).await?;
+    let mut all_outputs = Vec::new();
+    for address in &addresses_with_balance {
+        let output_responses = outputs::get_outputs(account_handle, address.output_ids.clone()).await?;
+        let outputs = outputs::output_response_to_output_data(account_handle, output_responses, address).await?;
+        all_outputs.extend(outputs.into_iter());
+    }
 
     // only when actively called or also in the background syncing?
     match account_handle.signer.signer_type {
@@ -74,7 +77,7 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
     update_account(
         account_handle,
         addresses_with_balance,
-        outputs,
+        all_outputs,
         synced_transactions,
         spent_output_ids,
         options,

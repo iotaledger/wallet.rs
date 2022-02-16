@@ -89,7 +89,7 @@ pub(crate) async fn get_address_output_ids(
     account_handle: &AccountHandle,
     options: &SyncOptions,
     addresses_with_balance: Vec<AddressWithBalance>,
-) -> crate::Result<(Vec<OutputId>, Vec<AddressWithBalance>)> {
+) -> crate::Result<Vec<AddressWithBalance>> {
     log::debug!("[SYNC] start get_address_output_ids");
     let address_outputs_sync_start_time = Instant::now();
     let account = account_handle.read().await;
@@ -100,7 +100,6 @@ pub(crate) async fn get_address_output_ids(
         (account.index, account.account_options.output_consolidation_threshold);
     drop(account);
 
-    let mut found_outputs = Vec::new();
     let mut addresses_with_outputs = Vec::new();
     // We split the addresses into chunks so we don't get timeouts if we have thousands
     for addresses_chunk in &mut addresses_with_balance
@@ -125,25 +124,21 @@ pub(crate) async fn get_address_output_ids(
         let results = futures::future::try_join_all(tasks).await?;
         for res in results {
             let (mut address, output_ids): (AddressWithBalance, Vec<OutputId>) = res?;
-            if !output_ids.is_empty() || options.sync_all_addresses {
-                found_outputs.extend(output_ids.iter().cloned());
-                #[cfg(feature = "events")]
-                if output_ids.len() > consolidation_threshold {
-                    account_handle
-                        .event_emitter
-                        .lock()
-                        .await
-                        .emit(account_index, WalletEvent::ConsolidationRequired);
-                }
-                address.output_ids = output_ids;
-                addresses_with_outputs.push(address);
+            #[cfg(feature = "events")]
+            if output_ids.len() > consolidation_threshold {
+                account_handle
+                    .event_emitter
+                    .lock()
+                    .await
+                    .emit(account_index, WalletEvent::ConsolidationRequired);
             }
+            address.output_ids = output_ids;
+            addresses_with_outputs.push(address);
         }
     }
     log::debug!(
         "[SYNC] finished get_address_output_ids in {:.2?}",
         address_outputs_sync_start_time.elapsed()
     );
-    // addresses with current outputs, historic outputs are ignored
-    Ok((found_outputs, addresses_with_outputs))
+    Ok(addresses_with_outputs)
 }

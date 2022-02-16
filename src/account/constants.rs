@@ -14,8 +14,5 @@ pub(crate) const PARALLEL_REQUESTS_AMOUNT: usize = 500;
 /// this is done to prevent unnecessary simultaneous synchronizations
 pub(crate) const MIN_SYNC_INTERVAL: u128 = 5000;
 
-/// The minimum amount of IOTA tokens an address with outputs needs to have
-pub(crate) const MIN_DUST_ALLOWANCE_VALUE: u64 = 1_000_000;
-
 /// The account prefix (do we really need this?)
 pub(crate) const ACCOUNT_ID_PREFIX: &str = "wallet-account://";

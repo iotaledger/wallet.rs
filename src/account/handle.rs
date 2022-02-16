@@ -7,7 +7,7 @@ use crate::account::{
         address_generation::AddressGenerationOptions,
         balance_finder::search_addresses_with_funds,
         syncing::{sync_account, SyncOptions},
-        transfer::{send_transfer, TransferOptions, TransferOutput, TransferResult},
+        transfer::{send_transfer, TransferOptions, TransferResult},
     },
     types::{
         address::{AccountAddress, AddressWithBalance},
@@ -21,7 +21,7 @@ use crate::events::{
     EventEmitter,
 };
 
-use iota_client::signing::SignerHandle;
+use iota_client::{bee_message::output::Output, signing::SignerHandle};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{ops::Deref, sync::Arc};
@@ -93,11 +93,7 @@ impl AccountHandle {
     ///     println!("Message sent: {}", message_id);
     /// }
     /// ```
-    pub async fn send(
-        &self,
-        outputs: Vec<TransferOutput>,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
+    pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
         // sync account before sending a transaction
         #[cfg(feature = "events")]
         {

@@ -3,8 +3,12 @@
 
 //! cargo run --example split_funds --release
 
+use iota_client::bee_message::output::{
+    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+    BasicOutputBuilder, Output,
+};
 use iota_wallet::{
-    account::{types::OutputKind, RemainderValueStrategy, TransferOptions, TransferOutput},
+    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
     logger::{init_logger, LevelFilter},
@@ -46,9 +50,9 @@ async fn main() -> Result<()> {
     };
 
     let _address = account.generate_addresses(5, None).await?;
-    let _address = account.generate_addresses(300, None).await?;
+    let addresses = account.generate_addresses(300, None).await?;
     let mut bech32_addresses = Vec::new();
-    for ad in _address {
+    for ad in addresses {
         bech32_addresses.push(ad.address().to_bech32());
     }
 
@@ -64,13 +68,19 @@ async fn main() -> Result<()> {
     println!("Addresses with balance: {}", addresses_with_balance.len());
 
     // send transaction
-    for chunk in bech32_addresses.chunks(100).map(|x| x.to_vec()).into_iter() {
+    for chunk in addresses.chunks(100).map(|x| x.to_vec()).into_iter() {
         let outputs = chunk
             .into_iter()
-            .map(|a| TransferOutput {
-                address: a.to_string(),
-                amount: 1_000_000,
-                output_kind: Some(OutputKind::Basic),
+            .map(|a| {
+                Output::Basic(
+                    BasicOutputBuilder::new(1_000_000)
+                        .unwrap()
+                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                            *a.address().as_ref(),
+                        )))
+                        .finish()
+                        .unwrap(),
+                )
             })
             .collect();
         match account
@@ -84,7 +94,7 @@ async fn main() -> Result<()> {
             .await
         {
             Ok(res) => println!(
-                "Message sent: https://explorer.iota.org/devnet/message/{}",
+                "Message sent: http://localhost:14265/api/v2/messages/{}",
                 res.message_id.expect("No message created yet")
             ),
             Err(e) => println!("{}", e),

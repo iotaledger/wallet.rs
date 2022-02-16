@@ -940,6 +940,7 @@ dependencies = [
  "iota-crypto",
  "log",
  "once_cell",
+ "packable",
  "rocksdb",
  "serde",
  "serde_json",

@@ -7,9 +7,11 @@ pub(crate) mod address;
 pub(crate) mod address_serde;
 use crate::account::constants::ACCOUNT_ID_PREFIX;
 
+use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_message::{address::Address, output::OutputId, payload::transaction::TransactionPayload, MessageId},
     bee_rest_api::types::responses::OutputResponse,
+    signing::types::InputSigningData,
 };
 
 use serde::{Deserialize, Deserializer, Serialize};
@@ -43,9 +45,6 @@ pub struct OutputData {
     /// The output response
     #[serde(rename = "outputResponse")]
     pub output_response: OutputResponse,
-    /// Message ID
-    #[serde(rename = "messageId")]
-    pub message_id: MessageId,
     pub amount: u64,
     /// If an output is spent
     #[serde(rename = "isSpent")]
@@ -56,6 +55,18 @@ pub struct OutputData {
     #[serde(rename = "networkId")]
     pub network_id: u64,
     pub remainder: bool,
+    // bip32 path
+    pub chain: Option<Chain>,
+}
+
+impl OutputData {
+    pub fn input_signing_data(&self) -> crate::Result<InputSigningData> {
+        Ok(InputSigningData {
+            output_response: self.output_response.clone(),
+            chain: self.chain.clone(),
+            bech32_address: self.address.to_bech32("atoi"),
+        })
+    }
 }
 
 /// A transaction with metadata

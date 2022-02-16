@@ -33,7 +33,7 @@ async function run() {
     });
 
     console.log(
-        `Check your message on https://explorer.iota.org/devnet/message/${response.id}`,
+        `Check your message on http://localhost:14265/api/v2/messages/${response.id}`,
     );
 }
 

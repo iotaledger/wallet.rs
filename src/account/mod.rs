@@ -13,7 +13,7 @@ pub(crate) mod operations;
 pub mod types;
 pub use operations::{
     address_generation::AddressGenerationOptions,
-    transfer::{RemainderValueStrategy, TransferOptions, TransferOutput},
+    transfer::{RemainderValueStrategy, TransferOptions},
 };
 
 use crate::account::types::{
