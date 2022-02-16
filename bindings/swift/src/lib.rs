@@ -14,7 +14,7 @@ use tokio::runtime::Runtime;
 // use bee_common::logger::{LoggerConfig, LoggerOutputConfigBuilder};
 // use log::LevelFilter;
 
-type Callback = extern "C" fn(*const c_char, *mut c_void);
+type Callback = extern "C" fn(message: *const c_char, error: *const c_char, context: *mut c_void);
 type IotaWalletHandle = WalletMessageHandler;
 
 #[derive(Debug)]
@@ -24,9 +24,19 @@ struct CallbackContext {
 
 unsafe impl Send for CallbackContext {}
 
-pub(crate) fn runtime() -> &'static Arc<Runtime> {
+fn runtime() -> &'static Arc<Runtime> {
     static INSTANCE: OnceCell<Arc<Runtime>> = OnceCell::new();
-    INSTANCE.get_or_init(|| Arc::new(Runtime::new().unwrap()))
+    INSTANCE.get_or_init(|| {
+        Arc::new(
+            tokio::runtime::Builder::new_multi_thread()
+                .thread_name("org.iota.binding.thread")
+                // Remove worker_threads restriction or bump it up depending on performance requirement
+                .worker_threads(1)
+                .enable_all()
+                .build()
+                .unwrap(),
+        )
+    })
 }
 
 #[no_mangle]
@@ -55,7 +65,7 @@ pub extern "C" fn iota_destroy(handle: *mut IotaWalletHandle) {
         Box::from_raw(handle);
     }
 }
-
+/// warning: callback will be invoked from another thread so context must be safe to `Send` across threads
 #[no_mangle]
 pub extern "C" fn iota_send_message(
     handle: *mut IotaWalletHandle,
@@ -65,13 +75,15 @@ pub extern "C" fn iota_send_message(
 ) {
     let (handle, c_message) = unsafe {
         if handle.is_null() || message.is_null() {
-            return callback(std::ptr::null(), context);
+            let error = CString::new("Null error; either wallet handle or message is invalid").unwrap();
+            return callback(std::ptr::null(), error.as_ptr(), context);
         }
 
         let handle = if let Some(handle) = handle.as_ref() {
             handle
         } else {
-            return callback(std::ptr::null(), context);
+            let error = CString::new("Invalid handle").unwrap();
+            return callback(std::ptr::null(), error.as_ptr(), context);
         };
 
         (handle, CStr::from_ptr(message))
@@ -81,8 +93,8 @@ pub extern "C" fn iota_send_message(
     let message_type = match serde_json::from_str::<MessageType>(message) {
         Ok(message_type) => message_type,
         Err(e) => {
-            eprintln!("{:?}", e);
-            return callback(std::ptr::null(), context);
+            let error = CString::new(format!("{:?}", e)).unwrap();
+            return callback(std::ptr::null(), error.as_ptr(), context);
         }
     };
 
@@ -93,7 +105,7 @@ pub extern "C" fn iota_send_message(
         let response = actor::send_message(handle, message_type).await;
         let response = serde_json::to_string(&response).unwrap();
         let response = CString::new(response).unwrap();
-        callback(response.as_ptr(), callback_context.data); // Callback from another thread, data better be useable from any thread
+        callback(response.as_ptr(), std::ptr::null(), callback_context.data);
     });
 }
 
