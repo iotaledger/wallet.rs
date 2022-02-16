@@ -1,21 +1,21 @@
-use iota_wallet::actor::{Message, MessageType};
+use iota_wallet::{
+    actor,
+    actor::{MessageType, WalletMessageHandler},
+};
 use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_void},
-    sync::Mutex
 };
 
-mod wallet;
+use once_cell::sync::OnceCell;
+use std::sync::Arc;
+use tokio::runtime::Runtime;
 
 // use bee_common::logger::{LoggerConfig, LoggerOutputConfigBuilder};
 // use log::LevelFilter;
-use once_cell::sync::OnceCell;
-use tokio::{runtime::Runtime, sync::mpsc::UnboundedSender};
-
-use iota_wallet::account_manager::AccountManager;
 
 type Callback = extern "C" fn(*const c_char, *mut c_void);
-type IotaWalletTx = UnboundedSender<Message>;
+type IotaWalletHandle = WalletMessageHandler;
 
 #[derive(Debug)]
 struct CallbackContext {
@@ -24,67 +24,57 @@ struct CallbackContext {
 
 unsafe impl Send for CallbackContext {}
 
-pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
-    static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
-    let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
-    runtime.lock().unwrap().block_on(cb)
+pub(crate) fn runtime() -> &'static Arc<Runtime> {
+    static INSTANCE: OnceCell<Arc<Runtime>> = OnceCell::new();
+    INSTANCE.get_or_init(|| Arc::new(Runtime::new().unwrap()))
 }
 
 #[no_mangle]
-pub extern "C" fn iota_initialize(storage_path: *const c_char) -> *mut IotaWalletTx {
-    let c_storage_path: Option<&str> = if storage_path.is_null() {
+pub extern "C" fn iota_initialize(storage_path: *const c_char) -> *mut IotaWalletHandle {
+    let path = if storage_path.is_null() {
         None
     } else {
         let c_storage_path = unsafe { CStr::from_ptr(storage_path) };
-        Some(c_storage_path.to_str().unwrap())
+        Some(c_storage_path.to_str().unwrap().to_string())
     };
 
-    let manager = block_on(async move {
-        if let Some(path) = c_storage_path {
-            AccountManager::builder().with_storage_folder(path).finish().await
-        } else {
-            AccountManager::builder().finish().await
-        }
-    });
+    let handle = runtime().block_on(actor::create_message_handler(path));
 
-    match manager {
-        Ok(manager) => {
-            let tx = wallet::spawn_actor(manager);
-            Box::into_raw(Box::new(tx))
-        }
+    match handle {
+        Ok(handle) => Box::into_raw(Box::new(handle)),
         _ => std::ptr::null_mut(),
     }
 }
 
 #[no_mangle]
-pub extern "C" fn iota_destroy(tx: *mut IotaWalletTx) {
-    if tx.is_null() {
+pub extern "C" fn iota_destroy(handle: *mut IotaWalletHandle) {
+    if handle.is_null() {
         return;
     }
     unsafe {
-        Box::from_raw(tx);
+        Box::from_raw(handle);
     }
 }
 
 #[no_mangle]
 pub extern "C" fn iota_send_message(
-    tx: *mut IotaWalletTx,
+    handle: *mut IotaWalletHandle,
     message: *const c_char,
     callback: Callback,
     context: *mut c_void,
 ) {
-    let (tx, c_message) = unsafe {
-        if tx.is_null() || message.is_null() {
+    let (handle, c_message) = unsafe {
+        if handle.is_null() || message.is_null() {
             return callback(std::ptr::null(), context);
         }
 
-        let tx = if let Some(tx) = tx.as_ref() {
-            tx
+        let handle = if let Some(handle) = handle.as_ref() {
+            handle
         } else {
             return callback(std::ptr::null(), context);
         };
 
-        (tx, CStr::from_ptr(message))
+        (handle, CStr::from_ptr(message))
     };
 
     let message = c_message.to_str().unwrap();
@@ -98,9 +88,9 @@ pub extern "C" fn iota_send_message(
 
     let callback_context = CallbackContext { data: context };
 
-    wallet::runtime().spawn(async move {
+    runtime().spawn(async move {
         let callback_context = callback_context;
-        let response = wallet::send_message(tx, message_type).await;
+        let response = actor::send_message(handle, message_type).await;
         let response = serde_json::to_string(&response).unwrap();
         let response = CString::new(response).unwrap();
         callback(response.as_ptr(), callback_context.data); // Callback from another thread, data better be useable from any thread
