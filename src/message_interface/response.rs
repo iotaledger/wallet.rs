@@ -3,7 +3,7 @@
 
 use serde::Serialize;
 
-use crate::actor::{message_type::MessageType, response_type::ResponseType};
+use crate::message_interface::{message_type::MessageType, response_type::ResponseType};
 
 /// The actor response type.
 #[derive(Serialize, Debug)]

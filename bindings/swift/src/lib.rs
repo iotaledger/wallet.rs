@@ -1,7 +1,8 @@
 use iota_wallet::{
-    actor,
-    actor::{MessageType, WalletMessageHandler},
+    message_interface,
+    message_interface::{MessageType, WalletMessageHandler},
 };
+
 use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_void},
@@ -48,7 +49,7 @@ pub extern "C" fn iota_initialize(storage_path: *const c_char) -> *mut IotaWalle
         Some(c_storage_path.to_str().unwrap().to_string())
     };
 
-    let handle = runtime().block_on(actor::create_message_handler(path));
+    let handle = runtime().block_on(message_interface::create_message_handler(path));
 
     match handle {
         Ok(handle) => Box::into_raw(Box::new(handle)),
@@ -102,7 +103,7 @@ pub extern "C" fn iota_send_message(
 
     runtime().spawn(async move {
         let callback_context = callback_context;
-        let response = actor::send_message(handle, message_type).await;
+        let response = message_interface::send_message(handle, message_type).await;
         let response = serde_json::to_string(&response).unwrap();
         let response = CString::new(response).unwrap();
         callback(response.as_ptr(), std::ptr::null(), callback_context.data);

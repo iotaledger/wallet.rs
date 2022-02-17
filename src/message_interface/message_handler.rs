@@ -21,11 +21,13 @@ use std::{
     path::Path,
 };
 
-use crate::actor::account_method::AccountMethod;
-use crate::actor::message::Message;
-use crate::actor::message_type::{AccountToCreate, MessageType};
-use crate::actor::response::Response;
-use crate::actor::response_type::ResponseType;
+use crate::message_interface::{
+    account_method::AccountMethod,
+    message::Message,
+    message_type::{AccountToCreate, MessageType},
+    response::Response,
+    response_type::ResponseType
+};
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
     let msg = if let Some(message) = panic.downcast_ref::<String>() {
