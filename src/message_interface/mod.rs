@@ -1,24 +1,22 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-
 mod account_method;
 mod message;
+mod message_handler;
 mod message_type;
 mod response;
 mod response_type;
-mod message_handler;
 
 pub use account_method::AccountMethod;
 pub use message::Message;
+pub use message_handler::WalletMessageHandler;
 pub use message_type::{AccountToCreate, MessageType};
 pub use response::Response;
 pub use response_type::ResponseType;
-pub use message_handler::WalletMessageHandler;
 
 use crate::{account_manager::AccountManager, Result};
 use tokio::sync::mpsc::unbounded_channel;
-
 
 pub async fn create_message_handler(path: Option<String>) -> Result<WalletMessageHandler> {
     let manager = if let Some(path) = path {
@@ -36,5 +34,3 @@ pub async fn send_message(handle: &WalletMessageHandler, message_type: MessageTy
     handle.handle(message).await;
     message_rx.recv().await.unwrap()
 }
-
-

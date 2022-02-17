@@ -2,10 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{
-        operations::transfer::TransferOptions,
-        types::AccountIdentifier,
-    },
+    account::{operations::transfer::TransferOptions, types::AccountIdentifier},
     account_manager::AccountManager,
     Result,
 };
@@ -26,7 +23,7 @@ use crate::message_interface::{
     message::Message,
     message_type::{AccountToCreate, MessageType},
     response::Response,
-    response_type::ResponseType
+    response_type::ResponseType,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {

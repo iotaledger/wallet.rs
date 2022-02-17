@@ -1,10 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::{
-    message_type::MessageType,
-    response::Response,
-};
+use super::{message_type::MessageType, response::Response};
 
 use tokio::sync::mpsc::UnboundedSender;
 

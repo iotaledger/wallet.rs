@@ -14,7 +14,6 @@ use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     client::options::ClientOptionsBuilder,
-    logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
     Result,
 };

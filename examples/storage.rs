@@ -3,12 +3,7 @@
 
 //! cargo run --example storage --release
 
-use iota_wallet::{
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, Result};
 use std::time::Instant;
 
 #[tokio::main]

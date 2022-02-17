@@ -3,27 +3,23 @@
 
 use crate::{
     account::{
-        operations::{
-            syncing::SyncOptions,
-            transfer::TransferOptions,
-        },
+        operations::{syncing::SyncOptions, transfer::TransferOptions},
         types::AccountIdentifier,
     },
     client::options::ClientOptions,
 };
 
+use super::account_method::AccountMethod;
 use iota_client::bee_message::output::Output;
 use serde::{ser::Serializer, Deserialize, Serialize};
-use super::account_method::AccountMethod;
 use std::{path::PathBuf, time::Duration};
-
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountToCreate {
     /// The account alias.
-    pub alias: Option<String>
+    pub alias: Option<String>,
 }
 
 /// The messages that can be sent to the actor.
@@ -116,4 +112,3 @@ impl Serialize for MessageType {
         }
     }
 }
-

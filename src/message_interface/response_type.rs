@@ -5,7 +5,8 @@ use crate::{
     account::{
         operations::transfer::TransferResult,
         types::{
-            address::{AccountAddress, AddressWithBalance}, AccountBalance, OutputData, Transaction
+            address::{AccountAddress, AddressWithBalance},
+            AccountBalance, OutputData, Transaction,
         },
         Account,
     },

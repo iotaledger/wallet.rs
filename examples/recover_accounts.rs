@@ -4,11 +4,7 @@
 //! cargo run --example recover_accounts --release
 
 use iota_wallet::{
-    account_manager::AccountManager,
-    client::options::ClientOptionsBuilder,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    Result,
+    account_manager::AccountManager, client::options::ClientOptionsBuilder, signing::mnemonic::MnemonicSigner, Result,
 };
 use std::time::Instant;
 

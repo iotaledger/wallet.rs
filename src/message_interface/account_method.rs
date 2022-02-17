@@ -1,9 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::operations::{
-    address_generation::AddressGenerationOptions, syncing::SyncOptions
-};
+use crate::account::operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions};
 
 use serde::Deserialize;
 
@@ -34,7 +32,6 @@ pub enum AccountMethod {
     /// consolidate outputs if necessary.
     SyncAccount {
         /// Sync options
-        options: Option<SyncOptions>
+        options: Option<SyncOptions>,
     },
 }
-
