@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use iota_wallet::{
     message_interface,
     message_interface::{MessageType, WalletMessageHandler},
