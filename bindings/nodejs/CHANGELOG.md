@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.12]
+
+- Update nodejs type definitions
+  - [b253d37e](https://github.com/iotaledger/wallet.rs/commit/b253d37e7ed4266af17d3cf3815963cf30ab4901) feat: update nodejs bindings ([#872](https://github.com/iotaledger/wallet.rs/pull/872)) on 2022-02-18
+
 ## \[1.0.11]
 
 - Fix prebuilt binaries and postinstall scripts
