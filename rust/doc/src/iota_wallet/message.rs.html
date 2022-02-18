@@ -1413,6 +1413,7 @@
 <span id="1412">1412</span>
 <span id="1413">1413</span>
 <span id="1414">1414</span>
+<span id="1415">1415</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -2163,6 +2164,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageTransactionPayload</span> {
     <span class="ident">essence</span>: <span class="ident">TransactionEssence</span>,
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;unlockBlocks&quot;</span>)]</span>
     <span class="ident">unlock_blocks</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">UnlockBlock</span>]<span class="op">&gt;</span>,
 }
 
