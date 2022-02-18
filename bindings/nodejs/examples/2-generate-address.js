@@ -13,8 +13,7 @@ async function run() {
 
     try {
         // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
-        const account = await manager.getAccount('Alice');
+        const account = await manager.getAccount('0');
         console.log('Account:', account);
 
         // Always sync before doing anything with the account

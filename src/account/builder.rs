@@ -95,6 +95,14 @@ impl AccountBuilder {
                 automatic_output_consolidation: true,
             },
         };
+        #[cfg(feature = "storage")]
+        log::debug!("[TRANSFER] storing account {}", account.index());
+        crate::storage::manager::get()
+            .await?
+            .lock()
+            .await
+            .save_account(&account)
+            .await?;
         #[cfg(not(feature = "events"))]
         let account_handle = AccountHandle::new(account);
         #[cfg(feature = "events")]

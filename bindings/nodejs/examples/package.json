@@ -1,6 +1,6 @@
 {
     "name": "examples",
     "dependencies": {
-        "@iota/wallet": "../../"
+        "@iota/wallet": "../"
     }
 }
