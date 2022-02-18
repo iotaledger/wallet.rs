@@ -1020,10 +1020,15 @@ impl AccountHandle {
         let node = client.get_node().await?;
 
         let mut available_outputs: Vec<AddressOutput> = Vec::new();
-        let sent_messages = account.list_messages(0, 0, Some(MessageType::Confirmed)).await?;
         for address in account.addresses() {
-            let address_outputs = address.available_outputs(&sent_messages);
-            available_outputs.extend(address_outputs.into_iter().cloned().collect::<Vec<AddressOutput>>());
+            available_outputs.extend(
+                address
+                    .outputs()
+                    .iter()
+                    .map(|output| output.1)
+                    .cloned()
+                    .collect::<Vec<AddressOutput>>(),
+            );
         }
 
         let (shimmer_staked_funds, assembly_staked_funds, tracked_participations): (
