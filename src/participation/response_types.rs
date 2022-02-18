@@ -84,7 +84,22 @@ pub struct EventStatus {
     #[serde(rename = "milestoneIndex")]
     milestone_index: u32,
     status: String,
+    questions: Option<Vec<Answers>>,
     checksum: String,
+}
+
+/// Answers
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Answers {
+    answers: Vec<AnswerStatus>,
+}
+
+/// Answer status
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnswerStatus {
+    value: u8,
+    current: u64,
+    accumulated: u64,
 }
 
 /// Staking rewards for an address
