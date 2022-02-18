@@ -16,7 +16,13 @@ export declare enum MessageType {
 export declare interface RegularEssence {
   inputs: Input[];
   outputs: Output[];
-  payload?: Payload[];
+  payload?: {
+    type: 'Indexation'
+    data: {
+      data: number[]
+      index: number[]
+    }
+  };
   incoming: boolean;
   internal: boolean;
   value: number;
@@ -35,7 +41,7 @@ export declare interface UtxoInput {
     messageId: string;
     index: number;
     amount: number;
-    is_spent: boolean;
+    isSpent: boolean;
     address: string;
   };
 }
@@ -54,31 +60,96 @@ export declare interface SignatureLockedDustAllowance {
   remainder: boolean;
 }
 
-export declare type Output =
-  | {
-      type: 'SignatureLockedSingleOutput';
-      data: SignatureLockedSingleOutput;
-    }
-  | {
-      type: 'SignatureLockedDustAllowance';
-      data: SignatureLockedDustAllowance;
-    };
+export declare type Output = {
+  type: 'SignatureLockedSingleOutput';
+  data: SignatureLockedSingleOutput;
+} | {
+  type: 'SignatureLockedDustAllowance';
+  data: SignatureLockedDustAllowance;
+};
 
 export declare interface Transaction {
-  essence: Essence;
+  type: 'Transaction';
+  data: {
+    essence: Essence;
+    unlockBlocks: {
+      type: 'Signature'
+      data: {
+        type: 'Ed25519'
+        data: {
+          public_key: number[]
+          signature: number[]
+        }
+      }
+    }[]
+  }
 }
 
-export declare type Payload = Transaction;
+interface ReceiptFunds {
+  output: {
+    address: string
+    amount: number
+    remainder: boolean
+  }
+  tailTransactionHash: string
+}
+
+interface Receipt {
+  type: 'Receipt'
+  data: {
+    last: boolean
+    migratedAt: number
+    funds: ReceiptFunds[]
+    transaction: {
+      data: {
+        input: {
+          data: string
+          type: 'Treasury'
+        }
+        output: {
+          data: {
+            amount: number
+          }
+        }
+      }
+      type: 'TreasuryTransaction'
+    }
+  }
+}
+
+interface MilestoneEssence {
+  index: number
+  merkleProof: number[]
+  nextPowScore: number
+  nextPowScoreMilestoneIndex: number
+  parents: string[]
+  publicKeys: number[]
+  receipt: Receipt
+  timestamp: number
+  value: number
+}
+
+export interface Milestone {
+  type: 'Milestone'
+  data: {
+    essence: MilestoneEssence
+    signatures: number[]
+  }
+}
+
+export declare type Payload = Transaction | Milestone;
 
 export declare interface Message {
+  id: string;
   version: number;
   parents: string[];
   payloadLength: number;
   payload: Payload;
   timestamp: string;
   nonce: number;
-  confirmed?: boolean;
+  confirmed: boolean;
   broadcasted: boolean;
+  reattachmentMessageId?: string | null;
 }
 
 export declare interface AddressOutput {
@@ -95,7 +166,9 @@ export declare interface Address {
   balance: number;
   keyIndex: number;
   internal: boolean;
-  outputs: AddressOutput[];
+  outputs: {
+    [outputId: string]: AddressOutput
+  };
 }
 
 export declare interface SyncOptions {
@@ -203,7 +276,7 @@ export declare class OutputKind {
   static signatureLockedDustAllowance(): OutputKind;
 }
 
-export declare class SyncedAccount {}
+export declare class SyncedAccount { }
 
 export declare type NodeUrl = string;
 
@@ -279,6 +352,7 @@ export declare interface TransactionEvent {
   accountId: string;
   message: Message;
 }
+
 export declare class AccountManager {
   constructor(options: ManagerOptions);
   startBackgroundSync(

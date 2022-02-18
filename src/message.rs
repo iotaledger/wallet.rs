@@ -748,6 +748,7 @@ impl TransactionEssence {
 #[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct MessageTransactionPayload {
     essence: TransactionEssence,
+    #[serde(rename = "unlockBlocks")]
     unlock_blocks: Box<[UnlockBlock]>,
 }
 
