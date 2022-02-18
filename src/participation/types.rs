@@ -47,7 +47,7 @@ pub struct ParticipatingAccount {
     pub participations: Vec<Participation>,
     #[serde(rename = "trackedParticipations")]
     /// The events the acount participates at the moment with their amount
-    pub tracked_participations: HashMap<String, crate::participation::response_types::TrackedParticipation>,
+    pub tracked_participations: HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
     /// Fund that are currently staking for assembly
     #[serde(rename = "assemblyStakedFunds")]
     pub assembly_staked_funds: u64,
