@@ -1,12 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::client::{Api, BrokerOptions, ClientOptions, Node};
+use iota_wallet::client::{node::Node, options::ClientOptions};
 use serde::Deserialize;
-use std::{collections::HashMap, path::PathBuf, time::Duration};
+use std::{path::PathBuf, time::Duration};
 use url::Url;
 
-pub use iota_wallet::account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER};
+pub use iota_wallet::account_manager::AccountManager;
+use iota_wallet::storage::constants::DEFAULT_STORAGE_FOLDER;
 
 #[derive(Deserialize)]
 #[serde(untagged)]
@@ -44,18 +45,20 @@ pub struct ClientOptionsDto {
     #[serde(rename = "nodePoolUrls", default)]
     pub node_pool_urls: Vec<Url>,
     pub network: Option<String>,
-    #[serde(rename = "mqttBrokerOptions")]
-    pub mqtt_broker_options: Option<BrokerOptions>,
+    // #[serde(rename = "mqttBrokerOptions")]
+    // pub mqtt_broker_options: Option<BrokerOptions>,
     #[serde(rename = "localPow", default = "default_local_pow")]
     pub local_pow: bool,
     #[serde(rename = "nodeSyncInterval")]
     pub node_sync_interval: Option<Duration>,
     #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
     pub node_sync_enabled: bool,
-    #[serde(rename = "requestTimeout")]
-    pub request_timeout: Option<Duration>,
-    #[serde(rename = "apiTimeout", default)]
-    pub api_timeout: HashMap<Api, Duration>,
+    /// The API timeout.
+    #[serde(rename = "apiTimeout")]
+    api_timeout: Option<Duration>,
+    /// The timeout for remote PoW.
+    #[serde(rename = "remotePowTimeout")]
+    remote_pow_timeout: Option<Duration>,
 }
 
 macro_rules! bind_client_option {
@@ -128,24 +131,26 @@ impl From<ClientOptionsDto> for ClientOptions {
         }
 
         client_builder = bind_client_option!(client_builder, options.network, with_network);
-        client_builder = bind_client_option!(
-            client_builder,
-            options.mqtt_broker_options,
-            with_mqtt_mqtt_broker_options
-        );
+        // client_builder = bind_client_option!(
+        //     client_builder,
+        //     options.mqtt_broker_options,
+        //     with_mqtt_mqtt_broker_options
+        // );
         client_builder = bind_client_option!(client_builder, options.node_sync_interval, with_node_sync_interval);
 
         if !options.node_sync_enabled {
             client_builder = client_builder.with_node_sync_disabled();
         }
 
-        client_builder = bind_client_option!(client_builder, options.request_timeout, with_request_timeout);
-
-        for (api, timeout) in options.api_timeout {
-            client_builder = client_builder.with_api_timeout(api, timeout);
+        if let Some(timeout) = options.api_timeout {
+            client_builder = client_builder.with_api_timeout(timeout);
         }
 
-        client_builder.build().unwrap()
+        if let Some(timeout) = options.remote_pow_timeout {
+            client_builder = client_builder.with_remote_pow_timeout(timeout);
+        }
+
+        client_builder.finish().unwrap()
     }
 }
 

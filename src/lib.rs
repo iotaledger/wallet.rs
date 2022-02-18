@@ -27,7 +27,7 @@ pub mod events;
 // transaction creation failed so they should be unlocked again and other edge cases
 #[cfg(feature = "storage")]
 /// The storage module.
-pub(crate) mod storage;
+pub mod storage;
 
 /// Module for debug logs.
 pub mod logger;

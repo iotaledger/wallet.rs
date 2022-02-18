@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// The default storage folder.
-pub(crate) const DEFAULT_STORAGE_FOLDER: &str = "./storage";
+pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
 
 /// The default stronghold storage file name.
 #[cfg(feature = "stronghold")]
