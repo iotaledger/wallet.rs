@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::client::{Api, BrokerOptions, ClientOptions, Node};
+use iota_wallet::client::{Api, BrokerOptions, ClientBuilder, Node};
 use serde::Deserialize;
 use std::{collections::HashMap, path::PathBuf, time::Duration};
 use url::Url;
@@ -33,7 +33,7 @@ pub fn default_local_pow() -> bool {
 }
 
 #[derive(Deserialize)]
-pub struct ClientOptionsDto {
+pub struct ClientBuilderDto {
     #[serde(rename = "primaryNode")]
     pub primary_node: Option<NodeDto>,
     #[serde(rename = "primaryPoWNode")]
@@ -68,8 +68,8 @@ macro_rules! bind_client_option {
     }};
 }
 
-impl From<ClientOptionsDto> for ClientOptions {
-    fn from(options: ClientOptionsDto) -> Self {
+impl From<ClientBuilderDto> for ClientBuilder {
+    fn from(options: ClientBuilderDto) -> Self {
         let mut client_builder = Self::builder()
             .with_node_pool_urls(
                 &options

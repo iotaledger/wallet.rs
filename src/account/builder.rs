@@ -3,16 +3,15 @@
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
+use crate::account::{
+    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions,
+};
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
-use crate::{
-    account::{constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions},
-    client::options::ClientOptions,
-};
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use iota_client::signing::SignerType;
-use iota_client::{constants::IOTA_COIN_TYPE, signing::SignerHandle};
+use iota_client::{builder::ClientBuilder, constants::IOTA_COIN_TYPE, signing::SignerHandle};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -24,7 +23,7 @@ use std::{
 
 /// The AccountBuilder
 pub struct AccountBuilder {
-    client_options: Option<ClientOptions>,
+    client_options: Option<ClientBuilder>,
     alias: Option<String>,
     signer: SignerHandle,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,

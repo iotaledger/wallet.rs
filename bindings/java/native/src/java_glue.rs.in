@@ -257,7 +257,7 @@ foreign_class!(
         fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
         fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
         fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
-        fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
+        fn AccountManager::create_account(&mut self, client_options: ClientBuilder) -> Result<AccountInitialiser>; alias createAccount;
         fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
         fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
         fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
@@ -345,30 +345,30 @@ foreign_class!(class BrokerOptions {
     fn BrokerOptions::max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions; alias maxReconnectionAttempts;
 });
 
-foreign_class!(class ClientOptionsBuilder {
-    self_type ClientOptionsBuilder;
-    constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryNode;
-    fn ClientOptionsBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryPoWNode;
-    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
-    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
-    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
-    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
-    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
-    fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder; alias withMqttDisabled;
-    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder; alias withMqttBrokerOptions;
-    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
-    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
-    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;
-    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
+foreign_class!(class ClientBuilder {
+    self_type ClientBuilder;
+    constructor ClientBuilder::new() -> ClientBuilder;
+    fn ClientBuilder::with_primary_node(&mut self, node: &str) -> ClientBuilder; alias withPrimaryNode;
+    fn ClientBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientBuilder; alias withPrimaryPoWNode;
+    fn ClientBuilder::with_node(&mut self, node: &str) -> ClientBuilder; alias withNode;
+    fn ClientBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientBuilder; alias withNodePoolUrls;
+    fn ClientBuilder::with_network(&mut self, network: String) -> ClientBuilder; alias withNetwork;
+    fn ClientBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientBuilder; alias withNodeSyncInterval;
+    fn ClientBuilder::with_node_sync_disabled(&mut self) -> ClientBuilder; alias withNodeSyncDisabled;
+    fn ClientBuilder::with_mqtt_disabled(&mut self) -> ClientBuilder; alias withMqttDisabled;
+    fn ClientBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientBuilder; alias withMqttBrokerOptions;
+    fn ClientBuilder::with_local_pow(&mut self, local: bool) -> ClientBuilder; alias withLocalPow;
+    fn ClientBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientBuilder; alias withRequestTimeout;
+    fn ClientBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientBuilder; alias withApiTimeout;
+    fn ClientBuilder::build(&mut self) -> Result<ClientBuilder>;
 });
 
 foreign_class!(
     #[derive(camelCaseAliases, Display)]
-    class ClientOptions {
-        self_type ClientOptions;
+    class ClientBuilder {
+        self_type ClientBuilder;
         private constructor = empty;
-        private fn ClientOptions::to_string(&self) -> String; alias to_string;
+        private fn ClientBuilder::to_string(&self) -> String; alias to_string;
     }
 );
 
@@ -589,8 +589,8 @@ foreign_class!(
         fn Account::is_latest_address_unused(&self) -> Result<bool>;
         fn Account::latest_address(&self) -> Address;
         fn Account::set_alias(&self, alias: String) -> Result<()>;
-        fn Account::client_options(&self) -> ClientOptions;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        fn Account::client_options(&self) -> ClientBuilder;
+        fn Account::set_client_options(&self, options: ClientBuilder) -> Result<()>;
         fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
         fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
         fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;

@@ -12,8 +12,8 @@ async function run() {
     });
 
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-        await manager.storeMnemonic();
+        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
+        // await manager.storeMnemonic();
 
         const account = await manager.createAccount({
             // todo replace with https://api.lb-0.h.chrysalis-devnet.iota.cafe when the new faucet is working

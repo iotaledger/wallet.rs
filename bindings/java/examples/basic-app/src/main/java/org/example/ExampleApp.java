@@ -50,13 +50,13 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
 
         BrokerOptions mqtt = new BrokerOptions();
         
-        ClientOptions clientOptions = new ClientOptionsBuilder()
+        ClientBuilder ClientBuilder = new ClientBuilder()
             .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
             .withMqttBrokerOptions(mqtt)
             .build();
         
         Account account = manager
-            .createAccount(clientOptions)
+            .createAccount(ClientBuilder)
             .signerType(AccountSignerType.STRONGHOLD)
             .alias("alias1")
             .initialise();

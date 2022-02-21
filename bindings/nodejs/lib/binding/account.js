@@ -18,7 +18,7 @@ const {
     listMessages,
     listAddresses,
     setAlias,
-    setClientOptions,
+    setClientBuilder,
     getMessage,
     getAddress,
     getUnusedAddress,
@@ -93,8 +93,8 @@ class Account {
         return setAlias.apply(this.account, [alias]);
     }
 
-    setClientOptions(options) {
-        return setClientOptions.apply(this.account, [JSON.stringify(options)]);
+    setClientBuilder(options) {
+        return setClientBuilder.apply(this.account, [JSON.stringify(options)]);
     }
 
     getMessage(id) {
