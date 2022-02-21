@@ -8,31 +8,23 @@ async function run() {
   } catch (e) {
     // ignore it
   }
+  const { AccountManagerForMessages } = require('../lib');
 
-  const { AccountManager, SignerType, MessageType } = require('../lib');
-  const manager = new AccountManager({
+  const manager = new AccountManagerForMessages({
     storagePath: './alice-database',
   });
-  manager.setStrongholdPassword('password');
-  manager.storeMnemonic(SignerType.Stronghold);
 
-  const account = manager.createAccount({
+  // manager.setStrongholdPassword('password');
+  // manager.storeMnemonic(SignerType.Stronghold);
+
+  const account = await manager.createAccount({
     clientOptions: {
-      node: 'http://api.hornet-3.testnet.chrysalis2.com',
-      requestTimeout: {
-        secs: 5000,
-        nanos: 0,
-      },
-      apiTimeout: {
-        PostMessage: {
-          secs: 6000,
-          nanos: 0,
-        },
-      },
+      node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
+      localPow: true,
     },
+    alias: 'Alice',
   });
-  console.log('messages', account.listMessages(0, 0, MessageType.Failed));
-  console.log(account.messageCount(MessageType.Failed));
+  console.log('Account created:', account);
   account.setAlias('new alias');
 
   const savedAccount = manager.getAccount('new alias');
