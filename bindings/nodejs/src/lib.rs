@@ -3,8 +3,11 @@
 
 #![allow(clippy::needless_borrow)]
 
-mod classes;
 pub mod types;
+// pub mod event_listener;
+pub mod message_handler;
+// pub use event_listener::*;
+pub use message_handler::*;
 
 use bee_common::logger::{logger_init, LoggerConfigBuilder};
 use neon::prelude::*;
@@ -22,12 +25,12 @@ pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     // Message handler methods.
-    cx.export_function("sendMessage", classes::message_handler::send_message)?;
-    cx.export_function("messageHandlerNew", classes::message_handler::message_handler_new)?;
+    cx.export_function("sendMessage", message_handler::send_message)?;
+    cx.export_function("messageHandlerNew", message_handler::message_handler_new)?;
 
-    // cx.export_function("eventListenerNew", classes::event_listener::event_listener_new)?;
-    // cx.export_function("listen", classes::event_listener::listen)?;
-    // cx.export_function("removeEventListeners", classes::event_listener::remove_event_listeners)?;
+    // cx.export_function("eventListenerNew", event_listener::event_listener_new)?;
+    // cx.export_function("listen", event_listener::listen)?;
+    // cx.export_function("removeEventListeners", event_listener::remove_event_listeners)?;
 
     cx.export_function("initLogger", init_logger)?;
     Ok(())

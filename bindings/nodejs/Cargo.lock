@@ -106,20 +106,6 @@ checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 
 [[package]]
 name = "bee-common"
-version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e70a15b5cdc7f8fc726fb18c4c4cc8bb725e56f27706d9254fdc94363bc883d3"
-dependencies = [
- "autocfg",
- "chrono",
- "fern",
- "log",
- "serde",
- "thiserror",
-]
-
-[[package]]
-name = "bee-common"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "70a0740d9b585483eba7812cd9e429fc6aa0337e624ea3b207545ceee3dc3c4f"
@@ -129,20 +115,7 @@ dependencies = [
  "log",
  "serde",
  "thiserror",
- "time 0.3.7",
-]
-
-[[package]]
-name = "bee-crypto"
-version = "0.2.1-alpha"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e9be03c91825c26fa8c93613362341df1136da233c8462ec2c59fe1be81c237"
-dependencies = [
- "bee-ternary 0.4.2-alpha",
- "byteorder",
- "lazy_static",
- "thiserror",
- "tiny-keccak",
+ "time",
 ]
 
 [[package]]
@@ -150,27 +123,10 @@ name = "bee-ledger"
 version = "0.7.0"
 source = "git+https://github.com/Thoralf-M/bee?rev=ad2a0044ae2b95f1332735dedeaaddb51b6f4653#ad2a0044ae2b95f1332735dedeaaddb51b6f4653"
 dependencies = [
- "bee-message 0.2.0",
+ "bee-message",
  "packable",
  "thiserror",
  "time-helper",
-]
-
-[[package]]
-name = "bee-message"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34340c856750db4c2c0bed1e709503c0fee94a82c984fa024bf9490be4ae18cd"
-dependencies = [
- "bech32",
- "bee-common 0.4.1",
- "bee-pow 0.1.0",
- "bee-ternary 0.4.2-alpha",
- "bytemuck",
- "digest",
- "hex",
- "iota-crypto 0.4.2",
- "thiserror",
 ]
 
 [[package]]
@@ -179,15 +135,15 @@ version = "0.2.0"
 source = "git+https://github.com/Thoralf-M/bee?rev=ad2a0044ae2b95f1332735dedeaaddb51b6f4653#ad2a0044ae2b95f1332735dedeaaddb51b6f4653"
 dependencies = [
  "bech32",
- "bee-pow 0.2.0",
- "bee-ternary 0.5.2",
+ "bee-pow",
+ "bee-ternary",
  "bitflags",
  "bytemuck",
  "derive_more",
  "digest",
  "hashbrown 0.12.0",
  "hex",
- "iota-crypto 0.9.1",
+ "iota-crypto",
  "iterator-sorted",
  "packable",
  "primitive-types",
@@ -198,23 +154,11 @@ dependencies = [
 
 [[package]]
 name = "bee-pow"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "612452ebcbc440512f0131a7058db63470b13828f1dc9c9b2024302673c767de"
-dependencies = [
- "bee-crypto",
- "bee-ternary 0.4.2-alpha",
- "iota-crypto 0.4.2",
- "thiserror",
-]
-
-[[package]]
-name = "bee-pow"
 version = "0.2.0"
 source = "git+https://github.com/Thoralf-M/bee?rev=ad2a0044ae2b95f1332735dedeaaddb51b6f4653#ad2a0044ae2b95f1332735dedeaaddb51b6f4653"
 dependencies = [
- "bee-ternary 0.5.2",
- "iota-crypto 0.9.1",
+ "bee-ternary",
+ "iota-crypto",
  "thiserror",
 ]
 
@@ -224,8 +168,8 @@ version = "0.2.0"
 source = "git+https://github.com/Thoralf-M/bee?rev=ad2a0044ae2b95f1332735dedeaaddb51b6f4653#ad2a0044ae2b95f1332735dedeaaddb51b6f4653"
 dependencies = [
  "bee-ledger",
- "bee-message 0.2.0",
- "bee-pow 0.2.0",
+ "bee-message",
+ "bee-pow",
  "hex",
  "multiaddr",
  "packable",
@@ -233,17 +177,6 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror",
-]
-
-[[package]]
-name = "bee-ternary"
-version = "0.4.2-alpha"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ec0259535d34f1bfd0c41bf5a6f0e3e33268dc9433e2ac3707e66715b51ce05"
-dependencies = [
- "autocfg",
- "num-traits",
- "serde",
 ]
 
 [[package]]
@@ -408,19 +341,6 @@ dependencies = [
  "cipher",
  "poly1305",
  "zeroize",
-]
-
-[[package]]
-name = "chrono"
-version = "0.4.19"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "670ad68c9088c2a963aaa298cb369688cf3f9465ce5e2d4ca10e6e0098a1ce73"
-dependencies = [
- "libc",
- "num-integer",
- "num-traits",
- "time 0.1.43",
- "winapi",
 ]
 
 [[package]]
@@ -931,13 +851,13 @@ version = "1.1.0"
 source = "git+https://github.com/iotaledger/iota.rs?rev=b841226676579c63bedc7fae4f3bf2d831403080#b841226676579c63bedc7fae4f3bf2d831403080"
 dependencies = [
  "async-trait",
- "bee-common 0.6.0",
- "bee-message 0.2.0",
- "bee-pow 0.2.0",
+ "bee-common",
+ "bee-message",
+ "bee-pow",
  "bee-rest-api",
  "futures",
  "hex",
- "iota-crypto 0.9.1",
+ "iota-crypto",
  "log",
  "num_cpus",
  "packable",
@@ -954,23 +874,12 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "558466ca403e13e2b849f6b1aa0ec98a602dd21a49421a24d69aa265261c2290"
-dependencies = [
- "blake2",
- "digest",
- "ed25519-zebra",
-]
-
-[[package]]
-name = "iota-crypto"
 version = "0.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8c98a3248cde6b42cb479a52089fe4fc20d12de51b8edd923294cd5240ec89b0"
 dependencies = [
  "aead",
- "bee-ternary 0.5.2",
+ "bee-ternary",
  "blake2",
  "chacha20poly1305",
  "digest",
@@ -995,7 +904,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-client",
- "iota-crypto 0.9.1",
+ "iota-crypto",
  "log",
  "once_cell",
  "packable",
@@ -1282,16 +1191,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f6bb902e437b6d86e03cce10a7e2af662292c5dfef23b65899ea3ac9354ad44"
 dependencies = [
  "winapi",
-]
-
-[[package]]
-name = "num-integer"
-version = "0.1.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"
-dependencies = [
- "autocfg",
- "num-traits",
 ]
 
 [[package]]
@@ -1738,17 +1637,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "serde_repr"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98d0516900518c29efa217c298fa1f4e6c6ffc85ae29fd7f4ee48f176e1a9ed5"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "serde_urlencoded"
 version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1870,16 +1758,6 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.1.43"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ca8a50ef2360fbd1eeb0ecd46795a87a19024eb4b53c5dc916ca1fd95fe62438"
-dependencies = [
- "libc",
- "winapi",
-]
-
-[[package]]
-name = "time"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "004cbc98f30fa233c61a38bc77e96a9106e65c88f2d3bef182ae952027e5753d"
@@ -1895,16 +1773,7 @@ version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "17c30f0091717eeeff0b556d830302d5563de8b72fd49127aa5899a06a369808"
 dependencies = [
- "time 0.3.7",
-]
-
-[[package]]
-name = "tiny-keccak"
-version = "2.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c9d3793400a45f954c52e73d068316d76b6f4e36977e3fcebb13a2721e80237"
-dependencies = [
- "crunchy",
+ "time",
 ]
 
 [[package]]
@@ -2107,18 +1976,13 @@ name = "wallet"
 version = "0.2.0"
 dependencies = [
  "backtrace",
- "bee-common 0.4.1",
- "bee-message 0.1.5",
- "futures",
- "hex",
+ "bee-common",
  "iota-wallet",
  "log",
  "neon",
  "once_cell",
- "rand",
  "serde",
  "serde_json",
- "serde_repr",
  "tokio",
  "url",
 ]

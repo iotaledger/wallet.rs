@@ -36,7 +36,7 @@ impl MessageHandler {
         };
 
         let manager =
-            AccountManager::builder().with_storage_folder(&options.storage_path.to_str().expect("no storage_path"));
+            AccountManager::builder().with_storage_folder(options.storage_path.to_str().expect("no storage_path"));
         // if !options.automatic_output_consolidation {
         //     manager = manager.with_automatic_output_consolidation_disabled();
         // }
