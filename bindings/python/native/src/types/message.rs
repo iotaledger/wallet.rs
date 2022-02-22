@@ -24,7 +24,7 @@ use iota_wallet::{
         Address as RustWalletAddress, AddressOutput as RustWalletAddressOutput, AddressWrapper as RustAddressWrapper,
         OutputKind as RustOutputKind,
     },
-    client::ClientOptions as RustWalletClientOptions,
+    client::ClientBuilder as RustWalletClientBuilder,
     message::{
         Message as RustWalletMessage, MessageMilestonePayloadEssence as RustWalletMilestonePayloadEssence,
         MessagePayload as RustWalletPayload, MessageTransactionPayload as RustWalletMessageTransactionPayload,
@@ -311,7 +311,7 @@ pub async fn to_rust_message(
     accounts: AccountStore,
     account_id: &str,
     account_addresses: &[RustWalletAddress],
-    client_options: &RustWalletClientOptions,
+    client_options: &RustWalletClientBuilder,
 ) -> Result<RustWalletMessage> {
     let mut parents = Vec::new();
     for parent in msg.parents {
@@ -463,7 +463,7 @@ pub async fn to_rust_payload(
     accounts: AccountStore,
     account_id: &str,
     account_addresses: &[RustWalletAddress],
-    client_options: &RustWalletClientOptions,
+    client_options: &RustWalletClientBuilder,
 ) -> Result<RustWalletPayload> {
     if let Some(transaction_payload) = &payload.transaction {
         let mut transaction = RustTransactionPayload::builder();

@@ -3,7 +3,7 @@
 
 use dict_derive::{FromPyObject as DeriveFromPyObject, IntoPyObject as DeriveIntoPyObject};
 use iota_wallet::client::{
-    Api as RustApi, BrokerOptions as RustBrokerOptions, ClientOptions as RustClientOptions, Node as RustNode,
+    Api as RustApi, BrokerOptions as RustBrokerOptions, ClientBuilder as RustClientBuilder, Node as RustNode,
     NodeAuth as RustNodeAuth,
 };
 use std::{
@@ -66,7 +66,7 @@ impl From<RustNode> for Node {
 }
 
 #[derive(Debug, DeriveFromPyObject, DeriveIntoPyObject)]
-pub struct ClientOptions {
+pub struct ClientBuilder {
     pub primary_node: Option<Node>,
     pub primary_pow_node: Option<Node>,
     pub nodes: Option<Vec<Node>>,
@@ -110,9 +110,9 @@ impl From<BrokerOptions> for RustBrokerOptions {
     }
 }
 
-impl From<ClientOptions> for RustClientOptions {
-    fn from(client_options: ClientOptions) -> Self {
-        let mut builder = RustClientOptions::builder();
+impl From<ClientBuilder> for RustClientBuilder {
+    fn from(client_options: ClientBuilder) -> Self {
+        let mut builder = RustClientBuilder::builder();
         if let Some(primary_node) = client_options.primary_node {
             let primary_node: RustNode = primary_node.into();
             if let Some(auth) = primary_node.auth {
@@ -209,8 +209,8 @@ impl From<&RustBrokerOptions> for BrokerOptions {
     }
 }
 
-impl From<RustClientOptions> for ClientOptions {
-    fn from(client_options: RustClientOptions) -> Self {
+impl From<RustClientBuilder> for ClientBuilder {
+    fn from(client_options: RustClientBuilder) -> Self {
         Self {
             primary_node: client_options.primary_node().as_ref().map(|n| n.clone().into()),
             primary_pow_node: client_options.primary_pow_node().as_ref().map(|n| n.clone().into()),

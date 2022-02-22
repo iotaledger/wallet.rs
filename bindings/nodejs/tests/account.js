@@ -17,7 +17,7 @@ async function run() {
   manager.storeMnemonic(SignerType.Stronghold);
 
   const account = manager.createAccount({
-    clientOptions: {
+    ClientBuilder: {
       node: 'http://api.hornet-3.testnet.chrysalis2.com',
       requestTimeout: {
         secs: 5000,

@@ -90,7 +90,7 @@ Creates a new account.
 | Param                 | Type                              | Default                   | Description                                              |
 | --------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------- |
 | account               | `object`                          | `{}`                      | The account to be created                                |
-| account.clientOptions | `[ClientOptions](#clientoptions)` | `undefined`               | The node configuration                                   |
+| account.ClientBuilder | `[ClientBuilder](#ClientBuilder)` | `undefined`               | The node configuration                                   |
 | [account.mnemonic]    | `string`                          | `undefined`               | The account BIP39 mnemonic                               |
 | [account.alias]       | `string`                          | `Account ${index + 1}`    | The account alias                                        |
 | [account.createdAt]   | `string`                          | the current date and time | The ISO 8601 date string of the account creation         |
@@ -194,13 +194,13 @@ Determines whether all accounts have unused their latest address after syncing w
 
 Returns a promise resolving to the boolean value.
 
-### setClientOptions(options)
+### setClientBuilder(options)
 
 Updates the client options for all accounts.
 
 | Param   | Type                              | Default | Description                    |
 | ------- | --------------------------------- | ------- | ------------------------------ |
-| options | `[ClientOptions](#clientoptions)` | `null`  | The new account client options |
+| options | `[ClientBuilder](#ClientBuilder)` | `null`  | The new account client options |
 
 ### generateMigrationAddress(address)
 
@@ -490,13 +490,13 @@ Updates the account alias.
 | ----- | -------- | ------- | --------------------- |
 | alias | `string` | `null`  | The new account alias |
 
-### setClientOptions(options)
+### setClientBuilder(options)
 
 Updates the account client options.
 
 | Param   | Type                              | Default | Description                    |
 | ------- | --------------------------------- | ------- | ------------------------------ |
-| options | `[ClientOptions](#clientoptions)` | `null`  | The new account client options |
+| options | `[ClientBuilder](#ClientBuilder)` | `null`  | The new account client options |
 
 ### getMessage(messageId)
 
@@ -531,7 +531,7 @@ Returns the latest address (the one with the biggest keyIndex).
 Synchronizes the account addresses with the Tangle and returns the latest address in the account,
 which is an address without balance.
 
-## ClientOptions
+## ClientBuilder
 
 | Field               | Type                        | Default     | Description                                                                                              |
 | ------------------- | --------------------------- | ----------- | -------------------------------------------------------------------------------------------------------- |

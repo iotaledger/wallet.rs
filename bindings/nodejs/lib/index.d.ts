@@ -166,7 +166,7 @@ export declare class Account {
   promote(messageId: string): Promise<Message>;
   consolidateOutputs(): Promise<Message[]>;
   setAlias(alias: string): void;
-  setClientOptions(options: ClientOptions): void;
+  setClientBuilder(options: ClientBuilder): void;
   getMessage(id: string): Message | undefined;
   getAddress(addressBech32: string): Address | undefined;
   generateAddress(): Address;
@@ -213,7 +213,7 @@ export declare interface Node {
   disabled?: boolean;
 }
 
-export declare interface ClientOptions {
+export declare interface ClientBuilder {
   primaryNode?: NodeUrl | Node;
   primaryPoWNode?: NodeUrl | Node;
   node?: NodeUrl | Node;
@@ -239,7 +239,7 @@ export declare enum SignerType {
 }
 
 export declare interface AccountToCreate {
-  clientOptions: ClientOptions;
+  ClientBuilder: ClientBuilder;
   alias?: string;
   createdAt?: string;
   signerType?: SignerType;
@@ -309,7 +309,7 @@ export declare class AccountManager {
   backup(destination: string, password: string): string;
   importAccounts(source: string, password: string): void;
   isLatestAddressUnused(): Promise<boolean>;
-  setClientOptions(options: ClientOptions): void;
+  setClientBuilder(options: ClientBuilder): void;
   // events
   getBalanceChangeEvents(
     count?: number,

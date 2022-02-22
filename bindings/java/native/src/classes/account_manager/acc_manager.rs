@@ -21,7 +21,7 @@ use std::{
 
 use crate::{
     acc::{Account, AccountInitialiser},
-    client_options::ClientOptions,
+    client_options::ClientBuilder,
     message::Message,
     sync::AccountsSynchronizer,
     types::{MigrationBundle, MigrationData, MigrationBundleOptions, MigrationAddress},
@@ -221,7 +221,7 @@ impl AccountManager {
         }
     }
 
-    pub fn create_account(&self, client_options: ClientOptions) -> Result<AccountInitialiser> {
+    pub fn create_account(&self, client_options: ClientBuilder) -> Result<AccountInitialiser> {
         match self.manager.create_account(client_options.to_inner()) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(initialiser) => Ok(AccountInitialiser::new(initialiser)),

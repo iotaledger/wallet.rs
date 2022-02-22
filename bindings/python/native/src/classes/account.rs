@@ -242,7 +242,7 @@ impl AccountHandle {
 
     /// Bridge to [Account#client_options](struct.Account.html#method.client_options).
     /// Return the client options of this account
-    fn client_options(&self) -> ClientOptions {
+    fn client_options(&self) -> ClientBuilder {
         crate::block_on(async { self.account_handle.client_options().await }).into()
     }
 
@@ -318,7 +318,7 @@ impl AccountHandle {
     }
 
     /// Bridge to [Account#set_client_options](struct.Account.html#method.set_client_options).
-    fn set_client_options(&self, options: ClientOptions) -> Result<()> {
+    fn set_client_options(&self, options: ClientBuilder) -> Result<()> {
         Ok(crate::block_on(async {
             self.account_handle.set_client_options(options.into()).await
         })?)

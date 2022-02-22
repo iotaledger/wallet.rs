@@ -22,9 +22,6 @@ pub enum Error {
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(Box<iota_client::Error>),
-    /// url parse error (client options builder).
-    #[error("`{0}`")]
-    UrlError(#[from] url::ParseError),
     /// Message not found.
     #[error("message not found")]
     MessageNotFound,
@@ -233,7 +230,6 @@ impl serde::Serialize for Error {
             #[cfg(feature = "stronghold")]
             Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
-            Self::UrlError(_) => serialize_variant(self, serializer, "UrlError"),
             Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
             Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),

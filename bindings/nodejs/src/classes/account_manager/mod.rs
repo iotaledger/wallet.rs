@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::types::ClientOptionsDto;
+use crate::types::ClientBuilderDto;
 use std::{num::NonZeroU64, sync::Arc, time::Duration};
 
 use iota_wallet::{account::AccountIdentifier, account_manager::AccountManager, signing::SignerType, DateTime, Local};
@@ -26,8 +26,8 @@ impl Default for AccountSignerType {
 
 #[derive(Deserialize)]
 pub struct AccountToCreate {
-    #[serde(rename = "clientOptions")]
-    pub client_options: ClientOptionsDto,
+    #[serde(rename = "ClientBuilder")]
+    pub client_options: ClientBuilderDto,
     pub alias: Option<String>,
     #[serde(rename = "createdAt")]
     pub created_at: Option<DateTime<Local>>,
@@ -643,7 +643,7 @@ pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .downcast_or_throw::<JsBox<Arc<AccountManagerWrapper>>, FunctionContext>(&mut cx)?,
     );
     let client_options = cx.argument::<JsString>(0)?.value(&mut cx);
-    let client_options = serde_json::from_str::<ClientOptionsDto>(&client_options).unwrap();
+    let client_options = serde_json::from_str::<ClientBuilderDto>(&client_options).unwrap();
 
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
