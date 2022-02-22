@@ -112,7 +112,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("listMessages", classes::account::list_messages)?;
     cx.export_function("listAddresses", classes::account::list_addresses)?;
     cx.export_function("setAlias", classes::account::set_alias)?;
-    cx.export_function("setClientBuilder", classes::account::set_client_options)?;
+    cx.export_function("setClientOptions", classes::account::set_client_options)?;
     cx.export_function("getMessage", classes::account::get_message)?;
     cx.export_function("getAddress", classes::account::get_address)?;
     cx.export_function("getUnusedAddress", classes::account::get_unused_address)?;
@@ -132,7 +132,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("syncAccounts", classes::account_manager::sync_accounts)?;
     cx.export_function("createAccount", classes::account_manager::create_account)?;
     cx.export_function("internalTransfer", classes::account_manager::internal_transfer)?;
-    cx.export_function("setClientBuilderManager", classes::account_manager::set_client_options)?;
+    cx.export_function("setClientOptionsManager", classes::account_manager::set_client_options)?;
     cx.export_function(
         "isLatestAddressUnused",
         classes::account_manager::is_latest_address_unused,

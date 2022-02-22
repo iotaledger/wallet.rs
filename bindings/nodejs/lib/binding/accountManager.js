@@ -20,7 +20,7 @@ const {
     generateMnemonic,
     removeAccount,
     syncAccounts,
-    setClientBuilderManager,
+    setClientOptionsManager,
     internalTransfer,
     isLatestAddressUnused,
     getBalanceChangeEvents,
@@ -67,8 +67,8 @@ class AccountManager {
         return removeAccount.apply(this.accountManager, [id]);
     }
 
-    setClientBuilder(options) {
-        return setClientBuilderManager.apply(this.accountManager, [
+    setClientOptions(options) {
+        return setClientOptionsManager.apply(this.accountManager, [
             JSON.stringify(options),
         ]);
     }

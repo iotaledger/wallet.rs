@@ -4,8 +4,8 @@
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use iota_wallet::client::{
-    Api, BrokerOptions as BrokerOptionsRust, ClientBuilder as ClientBuilderRust,
-    ClientBuilder as ClientBuilderRust,
+    Api, BrokerOptions as BrokerOptionsRust, ClientOptions as ClientOptionsRust,
+    ClientOptions as ClientOptionsRust,
 };
 
 use crate::Result;
@@ -61,12 +61,12 @@ impl BrokerOptions {
     }
 }
 
-pub struct ClientBuilder {
-    options: ClientBuilderRust,
+pub struct ClientOptions {
+    options: ClientOptionsRust,
 }
 
 
-impl core::fmt::Display for ClientBuilder {
+impl core::fmt::Display for ClientOptions {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
@@ -76,44 +76,44 @@ impl core::fmt::Display for ClientBuilder {
     }
 }
 
-impl From<ClientBuilderRust> for ClientBuilder {
-    fn from(options: ClientBuilderRust) -> Self {
+impl From<ClientOptionsRust> for ClientOptions {
+    fn from(options: ClientOptionsRust) -> Self {
         Self {
             options
         }
     }
 }
 
-impl ClientBuilder {
-    pub fn to_inner(self) -> ClientBuilderRust {
+impl ClientOptions {
+    pub fn to_inner(self) -> ClientOptionsRust {
         self.options
     }
 }
 
-pub struct ClientBuilder {
-    builder: Rc<RefCell<Option<ClientBuilderRust>>>,
+pub struct ClientOptions {
+    builder: Rc<RefCell<Option<ClientOptionsRust>>>,
 }
 
-impl Default for ClientBuilder {
+impl Default for ClientOptions {
     fn default() -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(ClientBuilderRust::default()))),
+            builder: Rc::new(RefCell::new(Option::from(ClientOptionsRust::default()))),
         }
     }
 }
 
-impl ClientBuilder {
+impl ClientOptions {
     pub fn new() -> Self {
         Self::default()
     }
 
-    fn new_with_builder(builder: ClientBuilderRust) -> Self {
+    fn new_with_builder(builder: ClientOptionsRust) -> Self {
         Self {
             builder: Rc::new(RefCell::new(Option::from(builder))),
         }
     }
 
-    pub fn with_primary_node(&mut self, node: &str) -> ClientBuilder {
+    pub fn with_primary_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
@@ -121,10 +121,10 @@ impl ClientBuilder {
             .unwrap()
             .with_primary_node(node)
             .unwrap();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_primary_pow_node(&mut self, node: &str) -> ClientBuilder {
+    pub fn with_primary_pow_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
@@ -132,15 +132,15 @@ impl ClientBuilder {
             .unwrap()
             .with_primary_pow_node(node)
             .unwrap();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node(&mut self, node: &str) -> ClientBuilder {
+    pub fn with_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node(node).unwrap();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientBuilder {
+    pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptions {
         let nodes_urls: Vec<&str> = node_pool_urls.iter().map(|x| &**x).collect();
         let new_builder = self
             .builder
@@ -149,62 +149,62 @@ impl ClientBuilder {
             .unwrap()
             .with_node_pool_urls(&nodes_urls)
             .unwrap();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_network(&mut self, network: String) -> ClientBuilder {
+    pub fn with_network(&mut self, network: String) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_network(network);
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientBuilder {
+    pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
             .take()
             .unwrap()
             .with_node_sync_interval(node_sync_interval);
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_disabled(&mut self) -> ClientBuilder {
+    pub fn with_node_sync_disabled(&mut self) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node_sync_disabled();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_mqtt_disabled(&mut self) -> ClientBuilder {
+    pub fn with_mqtt_disabled(&mut self) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_disabled();
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
     /// Sets the MQTT broker options.
-    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientBuilder {
+    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
             .take()
             .unwrap()
             .with_mqtt_mqtt_broker_options(options.builder.borrow_mut().take().unwrap());
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_local_pow(&mut self, local: bool) -> ClientBuilder {
+    pub fn with_local_pow(&mut self, local: bool) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_local_pow(local);
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_request_timeout(&mut self, timeout: Duration) -> ClientBuilder {
+    pub fn with_request_timeout(&mut self, timeout: Duration) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_request_timeout(timeout);
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientBuilder {
+    pub fn with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_api_timeout(api, timeout);
-        ClientBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn build(&mut self) -> Result<ClientBuilder> {
-        Ok(ClientBuilder {
+    pub fn build(&mut self) -> Result<ClientOptions> {
+        Ok(ClientOptions {
             options: self.builder.borrow_mut().take().unwrap().build().unwrap(),
         })
     }

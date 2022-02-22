@@ -13,14 +13,14 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientBuilder,
+    client::ClientOptions,
     signing::mnemonic::MnemonicSigner,
     Result,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 

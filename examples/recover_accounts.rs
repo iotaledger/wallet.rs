@@ -5,7 +5,7 @@
 
 use iota_wallet::{
     account_manager::AccountManager,
-    client::ClientBuilder,
+    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
     Result,
@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
     // init_logger("wallet.log", LevelFilter::Debug)?;
 
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 

@@ -44,7 +44,7 @@
 
 - Added generateAddresses function.
   - [ee3c0fa0](https://github.com/iotaledger/wallet.rs/commit/ee3c0fa0ae12cf80161d351a9f0af83c7c49f4a6) Add generateAddresses change file ([#660](https://github.com/iotaledger/wallet.rs/pull/660)) on 2021-06-11
-- Added primaryNode and primaryPoWNode to the ClientBuilder.
+- Added primaryNode and primaryPoWNode to the ClientOptions.
   - [3d66485c](https://github.com/iotaledger/wallet.rs/commit/3d66485ca11d21fbd64fafec9e68b377235c8c9b) Bindings/primary node ([#629](https://github.com/iotaledger/wallet.rs/pull/629)) on 2021-06-10
 - Added startBackgroundSync.
   - [bd44d4b0](https://github.com/iotaledger/wallet.rs/commit/bd44d4b04c46f6560404761615f78ba36774d726) Expose start_background_sync ([#640](https://github.com/iotaledger/wallet.rs/pull/640)) on 2021-06-07
@@ -186,7 +186,7 @@
   - [eaf3763](https://github.com/iotaledger/wallet.rs/commit/eaf3763215c0f58513bfac0408ec8a573123e71d) feat(stronghold): check if mnemonic is already set, closes [#409](https://github.com/iotaledger/wallet.rs/pull/409) ([#486](https://github.com/iotaledger/wallet.rs/pull/486)) on 2021-03-31
 - Fixes address outputs syncing.
   - [67fd04f](https://github.com/iotaledger/wallet.rs/commit/67fd04fc7e27a9a6e33eb1851df6cbc29dd77022) fix(sync): fetch output from the node if local copy is unspent ([#454](https://github.com/iotaledger/wallet.rs/pull/454)) on 2021-03-21
-- The wallet now validates the nodes provided to the account creation and the `setClientBuilder` API.
+- The wallet now validates the nodes provided to the account creation and the `setClientOptions` API.
   - [a77fb60](https://github.com/iotaledger/wallet.rs/commit/a77fb60a26e8df5de79c5b3accc5412d93061af7) feat(account): add client options validation ([#404](https://github.com/iotaledger/wallet.rs/pull/404)) on 2021-03-09
 
 ## \[0.0.6]

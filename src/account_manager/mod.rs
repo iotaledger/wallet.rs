@@ -16,7 +16,7 @@ use crate::{
         operations::syncing::SyncOptions,
         types::{AccountBalance, AccountIdentifier},
     },
-    client::ClientBuilder,
+    client::ClientOptions,
 };
 use builder::AccountManagerBuilder;
 use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};
@@ -42,7 +42,7 @@ pub struct AccountManager {
     pub(crate) accounts: Arc<RwLock<Vec<AccountHandle>>>,
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
-    pub(crate) client_options: Arc<RwLock<ClientBuilder>>,
+    pub(crate) client_options: Arc<RwLock<ClientOptions>>,
     pub(crate) signer: SignerHandle,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
@@ -91,7 +91,7 @@ impl AccountManager {
     }
 
     /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
-    pub async fn set_client_options(&self, options: ClientBuilder) -> crate::Result<()> {
+    pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
         log::debug!("[set_client_options]");
         let mut client_options = self.client_options.write().await;
         *client_options = options.clone();

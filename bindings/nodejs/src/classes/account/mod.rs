@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::types::ClientBuilderDto;
+use crate::types::ClientOptionsDto;
 
 use std::{num::NonZeroU64, str::FromStr};
 
@@ -350,7 +350,7 @@ pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     );
 
     let client_options = cx.argument::<JsString>(0)?.value(&mut cx);
-    let client_options = serde_json::from_str::<ClientBuilderDto>(&client_options).unwrap();
+    let client_options = serde_json::from_str::<ClientOptionsDto>(&client_options).unwrap();
 
     let id = account_wrapper.account_id.clone();
 
