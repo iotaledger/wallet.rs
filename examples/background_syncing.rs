@@ -4,15 +4,11 @@
 //! cargo run --example background_syncing --release
 
 use iota_wallet::{
-<<<<<<< HEAD
-    account_manager::AccountManager, client::options::ClientOptionsBuilder, signing::mnemonic::MnemonicSigner, Result,
-=======
     account_manager::AccountManager,
     client::ClientBuilder,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
     Result,
->>>>>>> shimmer-develop
 };
 use tokio::time::{sleep, Duration};
 

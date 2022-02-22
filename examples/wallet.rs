@@ -13,12 +13,8 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-<<<<<<< HEAD
-    client::options::ClientOptionsBuilder,
-=======
     client::ClientBuilder,
     logger::{init_logger, LevelFilter},
->>>>>>> shimmer-develop
     signing::mnemonic::MnemonicSigner,
     Result,
 };

@@ -262,4 +262,3 @@ impl WalletMessageHandler {
         Ok(ResponseType::SentTransfer(message))
     }
 }
-
