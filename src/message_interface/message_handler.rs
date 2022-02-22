@@ -1,4 +1,4 @@
-// Copyright 2020 IOTA Stiftung
+// Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
@@ -260,103 +260,5 @@ impl WalletMessageHandler {
         let account = self.account_manager.get_account(account_id.clone()).await?;
         let message = account.send(outputs, options).await?;
         Ok(ResponseType::SentTransfer(message))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{AccountToCreate, Message, MessageType, Response, ResponseType, WalletMessageHandler};
-    use crate::account_manager::AccountManager;
-    use tokio::sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender};
-
-    /// The wallet actor builder.
-    #[derive(Default)]
-    pub struct WalletBuilder {
-        rx: Option<UnboundedReceiver<Message>>,
-        message_handler: Option<WalletMessageHandler>,
-    }
-
-    impl WalletBuilder {
-        /// Creates a new wallet actor builder.
-        pub fn new() -> Self {
-            Self::default()
-        }
-
-        /// Sets the receiver for messages.
-        pub fn rx(mut self, rx: UnboundedReceiver<Message>) -> Self {
-            self.rx.replace(rx);
-            self
-        }
-
-        /// Sets the wallet message handler
-        pub fn message_handler(mut self, message_handler: WalletMessageHandler) -> Self {
-            self.message_handler.replace(message_handler);
-            self
-        }
-
-        /// Builds the Wallet actor.
-        pub async fn build(self) -> Wallet {
-            Wallet {
-                rx: self.rx.expect("rx is required"),
-                message_handler: self.message_handler.expect("message handler is required"),
-            }
-        }
-    }
-
-    /// The Account actor.
-    pub struct Wallet {
-        rx: UnboundedReceiver<Message>,
-        message_handler: WalletMessageHandler,
-    }
-
-    impl Wallet {
-        /// Runs the actor.
-        pub async fn run(mut self) {
-            println!("running wallet actor");
-
-            while let Some(message) = self.rx.recv().await {
-                self.message_handler.handle(message).await;
-            }
-        }
-    }
-
-    fn spawn_actor(manager: AccountManager) -> UnboundedSender<Message> {
-        let (tx, rx) = unbounded_channel();
-        std::thread::spawn(|| {
-            let runtime = tokio::runtime::Runtime::new().unwrap();
-            runtime.block_on(async move {
-                let actor = WalletBuilder::new()
-                    .rx(rx)
-                    .message_handler(WalletMessageHandler::with_manager(manager))
-                    .build()
-                    .await;
-                actor.run().await
-            });
-        });
-        tx
-    }
-
-    async fn send_message(tx: &UnboundedSender<Message>, message_type: MessageType) -> Response {
-        let (message_tx, mut message_rx) = unbounded_channel();
-        let message = Message::new(message_type, message_tx);
-        tx.send(message).unwrap();
-        message_rx.recv().await.unwrap()
-    }
-
-    #[tokio::test]
-    async fn create_account() {
-        let manager = AccountManager::builder().finish().await.unwrap();
-        let tx = spawn_actor(manager);
-
-        // create an account
-        let account = AccountToCreate { alias: None };
-        let response = send_message(&tx, MessageType::CreateAccount(Box::new(account))).await;
-        match response.response() {
-            ResponseType::CreatedAccount(account) => {
-                let id = account.id().clone();
-                println!("Created account id: {id}")
-            }
-            _ => panic!("unexpected response {:?}", response),
-        }
     }
 }

@@ -90,7 +90,7 @@ Creates a new account.
 | Param                 | Type                              | Default                   | Description                                              |
 | --------------------- | --------------------------------- | ------------------------- | -------------------------------------------------------- |
 | account               | `object`                          | `{}`                      | The account to be created                                |
-| account.clientOptions | `[ClientOptions](#clientoptions)` | `undefined`               | The node configuration                                   |
+| account.ClientOptions | `[ClientOptions](#ClientOptions)` | `undefined`               | The node configuration                                   |
 | [account.mnemonic]    | `string`                          | `undefined`               | The account BIP39 mnemonic                               |
 | [account.alias]       | `string`                          | `Account ${index + 1}`    | The account alias                                        |
 | [account.createdAt]   | `string`                          | the current date and time | The ISO 8601 date string of the account creation         |
@@ -200,7 +200,7 @@ Updates the client options for all accounts.
 
 | Param   | Type                              | Default | Description                    |
 | ------- | --------------------------------- | ------- | ------------------------------ |
-| options | `[ClientOptions](#clientoptions)` | `null`  | The new account client options |
+| options | `[ClientOptions](#ClientOptions)` | `null`  | The new account client options |
 
 ### generateMigrationAddress(address)
 
@@ -496,7 +496,7 @@ Updates the account client options.
 
 | Param   | Type                              | Default | Description                    |
 | ------- | --------------------------------- | ------- | ------------------------------ |
-| options | `[ClientOptions](#clientoptions)` | `null`  | The new account client options |
+| options | `[ClientOptions](#ClientOptions)` | `null`  | The new account client options |
 
 ### getMessage(messageId)
 

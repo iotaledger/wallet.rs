@@ -42,7 +42,7 @@ manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
 2. Create your account:
 
 ```rust
-let client_options = ClientOptionsBuilder::new()
+let client_options = ClientOptions::new()
     .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
     .build()
     .unwrap();

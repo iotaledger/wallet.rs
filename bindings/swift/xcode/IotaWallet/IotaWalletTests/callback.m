@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 #import <XCTest/XCTest.h>
 #import <IotaWallet/IotaWallet.h>
 

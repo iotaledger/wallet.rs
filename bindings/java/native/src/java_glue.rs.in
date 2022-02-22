@@ -345,22 +345,22 @@ foreign_class!(class BrokerOptions {
     fn BrokerOptions::max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions; alias maxReconnectionAttempts;
 });
 
-foreign_class!(class ClientOptionsBuilder {
-    self_type ClientOptionsBuilder;
-    constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryNode;
-    fn ClientOptionsBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryPoWNode;
-    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
-    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
-    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
-    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
-    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
-    fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder; alias withMqttDisabled;
-    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder; alias withMqttBrokerOptions;
-    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
-    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
-    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;
-    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
+foreign_class!(class ClientOptions {
+    self_type ClientOptions;
+    constructor ClientOptions::new() -> ClientOptions;
+    fn ClientOptions::with_primary_node(&mut self, node: &str) -> ClientOptions; alias withPrimaryNode;
+    fn ClientOptions::with_primary_pow_node(&mut self, node: &str) -> ClientOptions; alias withPrimaryPoWNode;
+    fn ClientOptions::with_node(&mut self, node: &str) -> ClientOptions; alias withNode;
+    fn ClientOptions::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptions; alias withNodePoolUrls;
+    fn ClientOptions::with_network(&mut self, network: String) -> ClientOptions; alias withNetwork;
+    fn ClientOptions::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptions; alias withNodeSyncInterval;
+    fn ClientOptions::with_node_sync_disabled(&mut self) -> ClientOptions; alias withNodeSyncDisabled;
+    fn ClientOptions::with_mqtt_disabled(&mut self) -> ClientOptions; alias withMqttDisabled;
+    fn ClientOptions::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptions; alias withMqttBrokerOptions;
+    fn ClientOptions::with_local_pow(&mut self, local: bool) -> ClientOptions; alias withLocalPow;
+    fn ClientOptions::with_request_timeout(&mut self, timeout: Duration) -> ClientOptions; alias withRequestTimeout;
+    fn ClientOptions::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptions; alias withApiTimeout;
+    fn ClientOptions::build(&mut self) -> Result<ClientOptions>;
 });
 
 foreign_class!(

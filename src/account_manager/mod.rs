@@ -16,7 +16,7 @@ use crate::{
         operations::syncing::SyncOptions,
         types::{AccountBalance, AccountIdentifier},
     },
-    client::options::ClientOptions,
+    client::ClientOptions,
 };
 use builder::AccountManagerBuilder;
 use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};

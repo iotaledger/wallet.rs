@@ -5,11 +5,7 @@
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{
-    account::handle::AccountHandle,
-    account_manager::AccountManager,
-    client::options::{ClientOptions, ClientOptionsBuilder},
-};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, client::ClientOptions};
 
 use iota_client::signing::{mnemonic::MnemonicSigner, SignerHandle};
 use serde::{Deserialize, Serialize};
@@ -31,6 +27,7 @@ pub struct AccountManagerBuilder {
     signer: SignerHandle,
 }
 pub fn default_signer() -> SignerHandle {
+    // todo remove
     MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap()
 }
 
@@ -59,7 +56,7 @@ impl Default for AccountManagerBuilder {
         Self {
             #[cfg(feature = "storage")]
             storage_options: None,
-            client_options: ClientOptionsBuilder::new()
+            client_options: ClientOptions::new()
                 // .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 // .unwrap()
                 // .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")
@@ -68,9 +65,7 @@ impl Default for AccountManagerBuilder {
                 // .unwrap()
                 // .with_node("https://chrysalis-nodes.iota.org/")?
                 .with_node("http://localhost:14265").unwrap()
-                .with_node_sync_disabled()
-                .finish()
-                .unwrap(),
+                .with_node_sync_disabled(),
             signer: MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap(),
         }
     }

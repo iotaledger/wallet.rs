@@ -5,7 +5,7 @@ use std::{cell::RefCell, rc::Rc, time::Duration};
 
 use iota_wallet::client::{
     Api, BrokerOptions as BrokerOptionsRust, ClientOptions as ClientOptionsRust,
-    ClientOptionsBuilder as ClientOptionsBuilderRust,
+    ClientOptions as ClientOptionsRust,
 };
 
 use crate::Result;
@@ -90,30 +90,30 @@ impl ClientOptions {
     }
 }
 
-pub struct ClientOptionsBuilder {
-    builder: Rc<RefCell<Option<ClientOptionsBuilderRust>>>,
+pub struct ClientOptions {
+    builder: Rc<RefCell<Option<ClientOptionsRust>>>,
 }
 
-impl Default for ClientOptionsBuilder {
+impl Default for ClientOptions {
     fn default() -> Self {
         Self {
-            builder: Rc::new(RefCell::new(Option::from(ClientOptionsBuilderRust::default()))),
+            builder: Rc::new(RefCell::new(Option::from(ClientOptionsRust::default()))),
         }
     }
 }
 
-impl ClientOptionsBuilder {
+impl ClientOptions {
     pub fn new() -> Self {
         Self::default()
     }
 
-    fn new_with_builder(builder: ClientOptionsBuilderRust) -> Self {
+    fn new_with_builder(builder: ClientOptionsRust) -> Self {
         Self {
             builder: Rc::new(RefCell::new(Option::from(builder))),
         }
     }
 
-    pub fn with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder {
+    pub fn with_primary_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
@@ -121,10 +121,10 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_primary_node(node)
             .unwrap();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder {
+    pub fn with_primary_pow_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
@@ -132,15 +132,15 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_primary_pow_node(node)
             .unwrap();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node(&mut self, node: &str) -> ClientOptionsBuilder {
+    pub fn with_node(&mut self, node: &str) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node(node).unwrap();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {
+    pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptions {
         let nodes_urls: Vec<&str> = node_pool_urls.iter().map(|x| &**x).collect();
         let new_builder = self
             .builder
@@ -149,58 +149,58 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_node_pool_urls(&nodes_urls)
             .unwrap();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_network(&mut self, network: String) -> ClientOptionsBuilder {
+    pub fn with_network(&mut self, network: String) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_network(network);
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder {
+    pub fn with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
             .take()
             .unwrap()
             .with_node_sync_interval(node_sync_interval);
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_node_sync_disabled(&mut self) -> ClientOptionsBuilder {
+    pub fn with_node_sync_disabled(&mut self) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_node_sync_disabled();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_mqtt_disabled(&mut self) -> ClientOptionsBuilder {
+    pub fn with_mqtt_disabled(&mut self) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_mqtt_disabled();
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
     /// Sets the MQTT broker options.
-    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder {
+    pub fn with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptions {
         let new_builder = self
             .builder
             .borrow_mut()
             .take()
             .unwrap()
             .with_mqtt_mqtt_broker_options(options.builder.borrow_mut().take().unwrap());
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder {
+    pub fn with_local_pow(&mut self, local: bool) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_local_pow(local);
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder {
+    pub fn with_request_timeout(&mut self, timeout: Duration) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_request_timeout(timeout);
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
-    pub fn with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder {
+    pub fn with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptions {
         let new_builder = self.builder.borrow_mut().take().unwrap().with_api_timeout(api, timeout);
-        ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptions::new_with_builder(new_builder)
     }
 
     pub fn build(&mut self) -> Result<ClientOptions> {

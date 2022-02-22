@@ -14,13 +14,19 @@ async function run() {
     storagePath: './alice-database',
   });
 
-  // manager.setStrongholdPassword('password');
-  // manager.storeMnemonic(SignerType.Stronghold);
-
-  const account = await manager.createAccount({
-    clientOptions: {
-      node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
-      localPow: true,
+  const account = manager.createAccount({
+    ClientOptions: {
+      node: 'http://api.hornet-3.testnet.chrysalis2.com',
+      requestTimeout: {
+        secs: 5000,
+        nanos: 0,
+      },
+      apiTimeout: {
+        PostMessage: {
+          secs: 6000,
+          nanos: 0,
+        },
+      },
     },
     alias: 'Alice',
   });

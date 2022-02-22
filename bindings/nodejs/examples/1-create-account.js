@@ -17,7 +17,7 @@ async function run() {
 
         const account = await manager.createAccount({
             // todo replace with https://api.lb-0.h.chrysalis-devnet.iota.cafe when the new faucet is working
-            clientOptions: {
+            ClientOptions: {
                 node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
                 localPow: true,
             },

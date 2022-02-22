@@ -4,7 +4,11 @@
 //! cargo run --example background_syncing --release
 
 use iota_wallet::{
-    account_manager::AccountManager, client::options::ClientOptionsBuilder, signing::mnemonic::MnemonicSigner, Result,
+    account_manager::AccountManager,
+    client::ClientOptions,
+    logger::{init_logger, LevelFilter},
+    signing::mnemonic::MnemonicSigner,
+    Result,
 };
 use tokio::time::{sleep, Duration};
 
@@ -13,10 +17,9 @@ async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
     // init_logger("wallet.log", LevelFilter::Debug)?;
 
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     let signer = MnemonicSigner::new("hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village")?;
 

@@ -69,13 +69,13 @@ Once the backend storage has been created, individual accounts for individual us
 ```javascript
     let account = await manager.createAccount({
         alias: 'Alice',  // an unique id from your existing user
-        clientOptions: { node: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe', localPow: false }
+        ClientOptions: { node: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe', localPow: false }
     })
 ```
 
 Each account is related to a specific IOTA network (mainnet / testnet), which is referenced by a node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
 
-For more information about _clientOptions_ , please refer to [Wallet NodeJs API Reference](api_reference.md).
+For more information about _ClientOptions_ , please refer to [Wallet NodeJs API Reference](api_reference.md).
 
  _Alias_ should be unique, and it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time new account is created. 
 Any account can be then referred to by its _index_ , _alias_ or one of its generated _addresses_ .

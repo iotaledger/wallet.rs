@@ -1,18 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{
-    account_manager::AccountManager, client::options::ClientOptionsBuilder, signing::mnemonic::MnemonicSigner, Result,
-};
+use iota_wallet::{account_manager::AccountManager, client::ClientOptions, signing::mnemonic::MnemonicSigner, Result};
 
 // can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
@@ -33,10 +30,9 @@ async fn account_recovery_empty() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
@@ -66,10 +62,9 @@ async fn account_recovery_existing_accounts() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance() -> Result<()> {
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
@@ -103,10 +98,9 @@ async fn account_recovery_with_balance() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
