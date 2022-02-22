@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    message::{MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust},
     iota_client::crypto::signatures::ed25519::{PublicKey as RustPublicKey, Signature as RustSignature},
+    message::{
+        MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
+    },
 };
 
 use std::convert::TryInto;

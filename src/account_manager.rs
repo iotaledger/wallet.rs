@@ -48,7 +48,6 @@ use tokio::{
     time::sleep,
 };
 use zeroize::Zeroize;
-
 pub(crate) mod migration;
 pub use crate::account_manager::migration::MigrationAddress;
 use iota_migration::client::migration::{

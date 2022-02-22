@@ -13,19 +13,46 @@ Clone project
 git clone https://github.com/iotaledger/wallet.rs
 ```
 
-Build the rust library
-```
-cd wallet.rs/bindings/java/native
-cargo build
-```
-
-- Running an example usign gradle
+Build the rust library (This generates the java source code and JNI library file)
 ```
 cd wallet.rs/bindings/java
-./gradlew examples:basic-app:test --info
+cargo build --release
 ```
 
-Make sure to make gradlew executable (`chmod +x gradlew`)
+Source code will be generated under `native/src/main/java/org/iota/wallet`
+Binaries can be found at `native/target/release`
+
+Then we need to generate the jar file containing the newly generated source files.
+### Gradle
+
+Make gradlew executable (`chmod +x gradlew`), then run
+```
+./gradlew jar
+```
+
+### Maven
+```
+mvn install
+```
+
+The jar will be found at `wallet.rs/bindings/java/native/build/native.jar`
+
+## Running the Java example
+
+### Gradle
+```
+./gradlew examples:java-app:test --info
+```
+
+### Maven
+```
+mvn exec:exec
+```
+
+## Running the Java example
+The Android app needs further compilation instructions.
+
+Specific instructions in `wallet.rs/bindings/java/examples/android-app/README.md`
 
 ## Documentation
 

@@ -1,11 +1,11 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use getset::{CopyGetters, Getters};
-use std::{path::PathBuf, time::Duration};
-
 use crate::Result;
 use anyhow::anyhow;
+use getset::{CopyGetters, Getters};
+use serde::{Deserialize, Serialize};
+use std::{convert::TryFrom, path::PathBuf, time::Duration};
 
 use iota_wallet::{
     event::{
@@ -19,6 +19,39 @@ use iota_wallet::{
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
+
+#[derive(Serialize, Deserialize, Copy, Clone)]
+pub enum EventType {
+    ErrorThrown = 0,
+    BalanceChange = 1,
+    NewTransaction = 2,
+    ConfirmationStateChange = 3,
+    Reattachment = 4,
+    Broadcast = 5,
+    StrongholdStatusChange = 6,
+    TransferProgress = 7,
+    MigrationProgress = 8,
+}
+
+impl TryFrom<&str> for EventType {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let event_type = match value {
+            "ErrorThrown" => EventType::ErrorThrown,
+            "BalanceChange" => EventType::BalanceChange,
+            "NewTransaction" => EventType::NewTransaction,
+            "ConfirmationStateChange" => EventType::ConfirmationStateChange,
+            "Reattachment" => EventType::Reattachment,
+            "Broadcast" => EventType::Broadcast,
+            "StrongholdStatusChange" => EventType::StrongholdStatusChange,
+            "TransferProgress" => EventType::TransferProgress,
+            "MigrationProgress" => EventType::MigrationProgress,
+            _ => return Err(format!("invalid event name {}", value)),
+        };
+        Ok(event_type)
+    }
+}
 
 pub struct EventManager {}
 
