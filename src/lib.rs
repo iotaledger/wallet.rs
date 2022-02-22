@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The IOTA Wallet Library
+// todo remove
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
@@ -36,8 +37,7 @@ pub mod logger;
 // #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 // pub(crate) mod stronghold;
 
-pub use iota_client::signing;
-pub use iota_client;
+pub use iota_client::{self, signing};
 
 pub use error::Error;
 /// The wallet Result type.

@@ -33,7 +33,7 @@ pub(crate) async fn sign_tx_essence(
         Some(remainder) => {
             let mut remainder_address = None;
             if let Some(unlock_conditions) = remainder.unlock_conditions() {
-                for unlock_condition in unlock_conditions {
+                for unlock_condition in unlock_conditions.iter() {
                     if let UnlockCondition::Address(address_unlock_condition) = unlock_condition {
                         remainder_address.replace(*address_unlock_condition.address());
                     }

@@ -78,7 +78,7 @@ pub(crate) async fn prepare_transaction(
     for output in &outputs {
         let mut address = None;
         if let Output::Basic(basic_output) = output {
-            for unlock_condition in basic_output.unlock_conditions() {
+            for unlock_condition in basic_output.unlock_conditions().iter() {
                 if let UnlockCondition::Address(address_unlock_condition) = unlock_condition {
                     address.replace(address_unlock_condition.address());
                     break;
