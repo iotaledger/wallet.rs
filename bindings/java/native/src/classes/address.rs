@@ -10,12 +10,7 @@ use std::{
 use iota_wallet::{
     message::MessageId,
     address::{Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust, AddressWrapper},
-    iota_client::bee_message::{
-        prelude::OutputId,
-        payload::transaction::TransactionId,
-    },
     iota_client::bee_message::{payload::transaction::TransactionId, prelude::OutputId},
-    message::MessageId,
 };
 
 use crate::{
