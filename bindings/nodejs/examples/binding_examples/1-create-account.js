@@ -24,7 +24,7 @@ async function run() {
         if (!account) {
             manager.storeMnemonic(SignerType.Stronghold);
             account = manager.createAccount({
-                clientOptions: {
+                ClientBuilder: {
                     node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
                     localPow: true,
                 },

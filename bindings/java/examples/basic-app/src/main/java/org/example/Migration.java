@@ -14,8 +14,8 @@ import org.iota.wallet.Account;
 import org.iota.wallet.AccountManager;
 import org.iota.wallet.AccountManagerBuilder;
 import org.iota.wallet.AccountSignerType;
-import org.iota.wallet.ClientOptions;
-import org.iota.wallet.ClientOptionsBuilder;
+import org.iota.wallet.ClientBuilder;
+import org.iota.wallet.ClientBuilder;
 import org.iota.wallet.EventManager;
 import org.iota.wallet.InputData;
 import org.iota.wallet.MigrationBundle;
@@ -131,13 +131,13 @@ public class Migration implements MigrationProgressListener {
             manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
         
             // network migration6 for the migration testnet, otherwise leave out the network option for mainnet
-            ClientOptions clientOptions = new ClientOptionsBuilder()
+            ClientBuilder ClientBuilder = new ClientBuilder()
                 .withNode(CHRYSALIS_NODE)
                 .withNetwork("migration6")
                 .build();
         
             this.account = manager
-                .createAccount(clientOptions)
+                .createAccount(ClientBuilder)
                 .alias("Migration")
                 .initialise();
         

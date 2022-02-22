@@ -13,17 +13,16 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::options::ClientOptionsBuilder,
+    client::ClientBuilder,
     signing::mnemonic::MnemonicSigner,
     Result,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientBuilder::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
 

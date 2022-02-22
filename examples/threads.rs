@@ -15,7 +15,12 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
+<<<<<<< HEAD
     client::options::ClientOptionsBuilder,
+=======
+    client::ClientBuilder,
+    logger::{init_logger, LevelFilter},
+>>>>>>> shimmer-develop
     signing::mnemonic::MnemonicSigner,
     Result,
 };
@@ -25,10 +30,9 @@ async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
     // init_logger("wallet.log", LevelFilter::Debug)?;
 
-    let client_options = ClientOptionsBuilder::new()
+    let client_options = ClientBuilder::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled()
-        .finish()?;
+        .with_node_sync_disabled();
 
     let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
 

@@ -7,7 +7,7 @@ use crate::{
     acc_manager::AccountSignerType,
     sync::AccountSynchronizer,
     address::Address,
-    client_options::ClientOptions,
+    client_options::ClientBuilder,
     message::{Message, Transfer},
     types::NodeInfoWrapper,
     Result,
@@ -180,11 +180,11 @@ impl Account {
         }
     }
 
-    pub fn client_options(&self) -> ClientOptions {
+    pub fn client_options(&self) -> ClientBuilder {
         crate::block_on(async move { self.handle.client_options().await }).into()
     }
 
-    pub fn set_client_options(&self, options: ClientOptions) -> Result<()> {
+    pub fn set_client_options(&self, options: ClientBuilder) -> Result<()> {
         let opts = crate::block_on(async move { self.handle.set_client_options(options.to_inner()).await });
 
         match opts {

@@ -112,7 +112,7 @@ Creat a new account.
 
 | Param          | Type                              | Default     | Description        |
 | -------------- | --------------------------------- | ----------- | ------------------ |
-| client_options | `[ClientOptions](#clientoptions)` | `undefined` | The client options |
+| client_options | `[ClientBuilder](#ClientBuilder)` | `undefined` | The client options |
 
 Returns a constructed [AccountInitialiser](#accountinitialiser).
 
@@ -428,7 +428,7 @@ Returns the created UNIX timestamp.
 
 Returns the last synced UNIX timestamp.
 
-### client_options(): [ClientOptions](#clientoptions)
+### client_options(): [ClientBuilder](#ClientBuilder)
 
 Returns the client options of this account.
 
@@ -543,7 +543,7 @@ Updates the account's client options.
 
 | Param   | Type                              | Default     | Description               |
 | ------- | --------------------------------- | ----------- | ------------------------- |
-| options | `[ClientOptions](#clientoptions)` | `undefined` | The client options to set |
+| options | `[ClientBuilder](#ClientBuilder)` | `undefined` | The client options to set |
 
 ### message_count(message_type (optional)): int
 
@@ -880,7 +880,7 @@ account_balance = {
 }
 ```
 
-## ClientOptions
+## ClientBuilder
 
 A dict with the following key:value pairs.
 
