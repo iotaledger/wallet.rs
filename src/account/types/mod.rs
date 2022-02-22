@@ -152,7 +152,10 @@ impl From<&str> for AccountIdentifier {
         if value.starts_with(ACCOUNT_ID_PREFIX) {
             Self::Id(value.to_string())
         } else {
-            Self::Alias(value.to_string())
+            match u32::from_str(value) {
+                Ok(index) => Self::Index(index),
+                Err(_) => Self::Alias(value.to_string()),
+            }
         }
     }
 }

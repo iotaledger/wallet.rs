@@ -12,11 +12,18 @@ class AccountForMessages {
     }
 
     async sync(options) {
+        console.log({
+            account_id: this.accountData.id,
+            method: {
+                name: 'SyncAccount',
+                data: options || {},
+            },
+        })
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     method: {
                         name: 'SyncAccount',
                         data: options || {},
@@ -31,7 +38,7 @@ class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     method: {
                         name: 'GetNodeInfo',
                         data: [url],
@@ -46,7 +53,7 @@ class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     method: {
                         name: 'GenerateAddress',
                     },
@@ -60,7 +67,7 @@ class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     method: {
                         name: 'GetLatestAddress',
                     },
@@ -74,7 +81,7 @@ class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     method: {
                         name: 'GetBalance',
                     },
@@ -88,7 +95,7 @@ class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'SendTransfer',
                 payload: {
-                    accountId: this.accountData.id,
+                    account_id: this.accountData.id,
                     transfer,
                 },
             }),

@@ -8,13 +8,11 @@ async function run() {
   } catch (e) {
     // ignore it
   }
+  const { AccountManagerForMessages } = require('../lib');
 
-  const { AccountManager, SignerType, MessageType } = require('../lib');
-  const manager = new AccountManager({
+  const manager = new AccountManagerForMessages({
     storagePath: './alice-database',
   });
-  manager.setStrongholdPassword('password');
-  manager.storeMnemonic(SignerType.Stronghold);
 
   const account = manager.createAccount({
     ClientOptions: {
@@ -30,9 +28,9 @@ async function run() {
         },
       },
     },
+    alias: 'Alice',
   });
-  console.log('messages', account.listMessages(0, 0, MessageType.Failed));
-  console.log(account.messageCount(MessageType.Failed));
+  console.log('Account created:', account);
   account.setAlias('new alias');
 
   const savedAccount = manager.getAccount('new alias');

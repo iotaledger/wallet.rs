@@ -16,3 +16,4 @@ iota.rs.log
 /walletdb
 /pingdb
 /pongdb
+Cargo.lock

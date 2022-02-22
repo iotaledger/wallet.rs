@@ -3,15 +3,13 @@
 
 const addon = require('../index.node');
 const mh = require('./messages/messageHandler.js');
-const el = require('./eventListener.js');
+// const el = require('./eventListener.js');
 const amm = require('./messages/accountManager.js');
-const am = require('./binding/accountManager.js');
 const { RemainderValueStrategy, OutputKind } = require('./utils.js');
 
 let { initLogger } = addon;
 let { MessageHandler } = mh;
-let { EventListener } = el;
-let { AccountManager } = am;
+// let { EventListener } = el;
 let { AccountManagerForMessages } = amm;
 
 // initLogger(JSON.stringify({
@@ -25,8 +23,7 @@ let { AccountManagerForMessages } = amm;
 module.exports = {
   MessageHandler,
   AccountManagerForMessages,
-  EventListener,
-  AccountManager,
+  // EventListener,
   RemainderValueStrategy,
   OutputKind,
   initLogger: (config) => initLogger(JSON.stringify(config)),

@@ -11,7 +11,6 @@ pub async fn get_account<I: Into<AccountIdentifier>>(
     account_manager: &AccountManager,
     identifier: I,
 ) -> crate::Result<AccountHandle> {
-    log::debug!("get_account");
     let account_id = identifier.into();
     let accounts = account_manager.accounts.read().await;
 

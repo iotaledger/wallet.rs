@@ -8,26 +8,10 @@ use tokio::sync::mpsc::unbounded_channel;
 
 use serde::Deserialize;
 
-use std::time::Duration;
-
-pub use iota_wallet::{
-    account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
-    actor::{AccountIdentifier, Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
-    address::parse as parse_address,
-    event::{
-        on_balance_change, on_broadcast, on_confirmation_state_change, on_error, on_migration_progress,
-        on_new_transaction, on_reattachment, on_stronghold_status_change, on_transfer_progress,
-        remove_balance_change_listener, remove_broadcast_listener, remove_confirmation_state_change_listener,
-        remove_error_listener, remove_migration_progress_listener, remove_new_transaction_listener,
-        remove_reattachment_listener, remove_stronghold_status_change_listener, remove_transfer_progress_listener,
-        EventId,
-    },
-    message::{IndexationPayload, MessageId, RemainderValueStrategy, Transfer, TransferOutput},
-    Error,
+use iota_wallet::{
+    account_manager::AccountManager,
+    message_interface::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
 };
-
-// The dummy id is used for the actor system, which we don't currently use.
-const DUMMY_ID: &str = "1";
 
 #[derive(Deserialize, Clone)]
 pub(crate) struct DispatchMessage {
@@ -51,30 +35,26 @@ impl MessageHandler {
             }
         };
 
-        let mut manager = AccountManager::builder()
-            .with_storage(&options.storage_path, options.storage_password.as_deref())
-            .expect("failed to init storage");
-        if !options.automatic_output_consolidation {
-            manager = manager.with_automatic_output_consolidation_disabled();
-        }
-        if options.sync_spent_outputs {
-            manager = manager.with_sync_spent_outputs();
-        }
-        if options.persist_events {
-            manager = manager.with_event_persistence();
-        }
-        if options.allow_create_multiple_empty_accounts {
-            manager = manager.with_multiple_empty_accounts();
-        }
-        if options.skip_polling {
-            manager = manager.with_skip_polling();
-        }
-        if let Some(polling_interval) = options.polling_interval {
-            manager = manager.with_polling_interval(Duration::from_secs(polling_interval));
-        }
-        if let Some(threshold) = options.output_consolidation_threshold {
-            manager = manager.with_output_consolidation_threshold(threshold);
-        }
+        let manager =
+            AccountManager::builder().with_storage_folder(options.storage_path.to_str().expect("no storage_path"));
+        // if !options.automatic_output_consolidation {
+        //     manager = manager.with_automatic_output_consolidation_disabled();
+        // }
+        // if options.sync_spent_outputs {
+        //     manager = manager.with_sync_spent_outputs();
+        // }
+        // if options.allow_create_multiple_empty_accounts {
+        //     manager = manager.with_multiple_empty_accounts();
+        // }
+        // if options.skip_polling {
+        //     manager = manager.with_skip_polling();
+        // }
+        // if let Some(polling_interval) = options.polling_interval {
+        //     manager = manager.with_polling_interval(Duration::from_secs(polling_interval));
+        // }
+        // if let Some(threshold) = options.output_consolidation_threshold {
+        //     manager = manager.with_output_consolidation_threshold(threshold);
+        // }
         let manager = crate::RUNTIME
             .block_on(manager.finish())
             .expect("error initializing account manager");
@@ -91,7 +71,7 @@ impl MessageHandler {
         match serde_json::from_str::<DispatchMessage>(&serialized_message) {
             Ok(message) => {
                 let (response_tx, mut response_rx) = unbounded_channel();
-                let wallet_message = WalletMessage::new(DUMMY_ID, message.message.clone(), response_tx);
+                let wallet_message = WalletMessage::new(message.message.clone(), response_tx);
 
                 self.message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
@@ -102,12 +82,8 @@ impl MessageHandler {
                         Ok(msg) => msg,
                         Err(e) => {
                             is_err = true;
-                            serde_json::to_string(&Response::new(
-                                DUMMY_ID,
-                                message.message,
-                                ResponseType::Error(e.into()),
-                            ))
-                            .expect("The response is generated manually, so unwrap is safe.")
+                            serde_json::to_string(&Response::new(message.message, ResponseType::Error(e.into())))
+                                .expect("The response is generated manually, so unwrap is safe.")
                         }
                     };
 
