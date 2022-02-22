@@ -10,10 +10,10 @@
 pub mod account;
 /// The account manager module.
 pub mod account_manager;
-/// The actor interface for the library. A different way to call the wallet functions, useful for bindings to other
-/// languages.
-// #[cfg(feature = "actor")]
-// pub mod actor;
+/// The message passing interface for the library. A different way to call the wallet functions, useful for bindings to
+/// other languages.
+#[cfg(feature = "message_interface")]
+pub mod message_interface;
 
 /// The client module to use iota_client for interactions with the IOTA Tangle.
 pub mod client;

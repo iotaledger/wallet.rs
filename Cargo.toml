@@ -18,6 +18,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 [dependencies]
 async-trait =  { version ="0.1.51", default-features = false }
 packable = { version = "0.2.0", default-features = false, features = [ "serde", "primitive-types" ] }
+backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures =  { version = "0.3.17", default-features = false }
 getset =  { version = "0.1.1", default-features = false }
 hex =  { version = "0.4.3", default-features = false }
@@ -29,6 +30,7 @@ serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 thiserror =  { version = "1.0.29", default-features = false }
 tokio = { version = "1.12.0", default-features = false }
+zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
 
 # storage
 rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"], optional = true }
@@ -44,6 +46,6 @@ ledger-nano = ["iota-client/ledger"]
 ledger-nano-simulator = ["iota-client/ledger"]
 # stronghold = []
 storage = ["rocksdb"]
-# actor = []
+message_interface = []
 events = []
 mnemonic = []
