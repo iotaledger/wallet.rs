@@ -23,7 +23,9 @@ use tokio::sync::mpsc::unbounded_channel;
 #[derive(Deserialize)]
 pub struct ManagerOptions {
     #[cfg(feature = "storage")]
+    #[serde(rename = "storageFolder")]
     storage_folder: Option<String>,
+    #[serde(rename = "clientOptions")]
     client_options: Option<String>,
     signer: Option<String>,
 }
