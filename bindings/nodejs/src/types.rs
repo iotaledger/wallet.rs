@@ -1,163 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::client::{node::Node, options::ClientOptions};
 use serde::Deserialize;
-use std::{path::PathBuf, time::Duration};
-use url::Url;
+use std::path::PathBuf;
 
 pub use iota_wallet::account_manager::AccountManager;
 use iota_wallet::storage::constants::DEFAULT_STORAGE_FOLDER;
 
-#[derive(Deserialize)]
-#[serde(untagged)]
-pub enum NodeDto {
-    Url(Url),
-    Node(Node),
-}
-
-impl From<NodeDto> for Node {
-    fn from(node: NodeDto) -> Self {
-        match node {
-            NodeDto::Url(url) => url.into(),
-            NodeDto::Node(node) => node,
-        }
-    }
-}
-
-pub fn default_node_sync_enabled() -> bool {
-    true
-}
-
-pub fn default_local_pow() -> bool {
-    true
-}
-
-#[derive(Deserialize)]
-pub struct ClientOptionsDto {
-    #[serde(rename = "primaryNode")]
-    pub primary_node: Option<NodeDto>,
-    #[serde(rename = "primaryPoWNode")]
-    pub primary_pow_node: Option<NodeDto>,
-    pub node: Option<NodeDto>,
-    #[serde(default)]
-    pub nodes: Vec<NodeDto>,
-    #[serde(rename = "nodePoolUrls", default)]
-    pub node_pool_urls: Vec<Url>,
-    pub network: Option<String>,
-    // #[serde(rename = "mqttBrokerOptions")]
-    // pub mqtt_broker_options: Option<BrokerOptions>,
-    #[serde(rename = "localPow", default = "default_local_pow")]
-    pub local_pow: bool,
-    #[serde(rename = "nodeSyncInterval")]
-    pub node_sync_interval: Option<Duration>,
-    #[serde(rename = "nodeSyncEnabled", default = "default_node_sync_enabled")]
-    pub node_sync_enabled: bool,
-    /// The API timeout.
-    #[serde(rename = "apiTimeout")]
-    api_timeout: Option<Duration>,
-    /// The timeout for remote PoW.
-    #[serde(rename = "remotePowTimeout")]
-    remote_pow_timeout: Option<Duration>,
-}
-
-macro_rules! bind_client_option {
-    ($builder:expr, $arg:expr, $fn_name:ident) => {{
-        let mut builder = $builder;
-        if let Some(value) = $arg {
-            builder = builder.$fn_name(value);
-        }
-        builder
-    }};
-}
-
-impl From<ClientOptionsDto> for ClientOptions {
-    fn from(options: ClientOptionsDto) -> Self {
-        let mut client_builder = Self::builder()
-            .with_node_pool_urls(
-                &options
-                    .node_pool_urls
-                    .iter()
-                    .map(|url| url.as_str())
-                    .collect::<Vec<&str>>()[..],
-            )
-            .unwrap()
-            .with_local_pow(options.local_pow);
-        if let Some(primary_node) = options.primary_node {
-            let node: Node = primary_node.into();
-            if let Some(auth) = node.auth {
-                client_builder = client_builder
-                    .with_primary_node_auth(
-                        node.url.as_str(),
-                        auth.jwt.as_deref(),
-                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
-                    )
-                    .unwrap();
-            } else {
-                client_builder = client_builder.with_primary_node(node.url.as_str()).unwrap();
-            }
-        }
-        if let Some(primary_pow_node) = options.primary_pow_node {
-            let node: Node = primary_pow_node.into();
-            if let Some(auth) = node.auth {
-                client_builder = client_builder
-                    .with_primary_pow_node_auth(
-                        node.url.as_str(),
-                        auth.jwt.as_deref(),
-                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
-                    )
-                    .unwrap();
-            } else {
-                client_builder = client_builder.with_primary_pow_node(node.url.as_str()).unwrap();
-            }
-        }
-        let mut nodes = options.nodes;
-        if let Some(node) = options.node {
-            nodes.push(node);
-        }
-        for node in nodes {
-            let node: Node = node.into();
-            if let Some(auth) = node.auth {
-                client_builder = client_builder
-                    .with_node_auth(
-                        node.url.as_str(),
-                        auth.jwt.as_deref(),
-                        auth.basic_auth_name_pwd.as_ref().map(|(ref x, ref y)| (&x[..], &y[..])),
-                    )
-                    .unwrap();
-            } else {
-                client_builder = client_builder.with_node(node.url.as_str()).unwrap();
-            }
-        }
-
-        client_builder = bind_client_option!(client_builder, options.network, with_network);
-        // client_builder = bind_client_option!(
-        //     client_builder,
-        //     options.mqtt_broker_options,
-        //     with_mqtt_mqtt_broker_options
-        // );
-        client_builder = bind_client_option!(client_builder, options.node_sync_interval, with_node_sync_interval);
-
-        if !options.node_sync_enabled {
-            client_builder = client_builder.with_node_sync_disabled();
-        }
-
-        if let Some(timeout) = options.api_timeout {
-            client_builder = client_builder.with_api_timeout(timeout);
-        }
-
-        if let Some(timeout) = options.remote_pow_timeout {
-            client_builder = client_builder.with_remote_pow_timeout(timeout);
-        }
-
-        client_builder.finish().unwrap()
-    }
-}
-
-fn default_storage_path() -> PathBuf {
-    DEFAULT_STORAGE_FOLDER.into()
-}
-
+// todo use from main Rust crate
 #[derive(Default, Deserialize)]
 pub struct ManagerOptions {
     #[serde(rename = "storagePath", default = "default_storage_path")]
@@ -181,6 +31,10 @@ pub struct ManagerOptions {
     pub skip_polling: bool,
     #[serde(rename = "pollingInterval")]
     pub polling_interval: Option<u64>,
+}
+
+fn default_storage_path() -> PathBuf {
+    DEFAULT_STORAGE_FOLDER.into()
 }
 
 fn default_automatic_output_consolidation() -> bool {

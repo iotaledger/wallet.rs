@@ -37,6 +37,7 @@ pub mod logger;
 // pub(crate) mod stronghold;
 
 pub use iota_client::signing;
+pub use iota_client;
 
 pub use error::Error;
 /// The wallet Result type.
