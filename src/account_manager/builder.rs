@@ -5,7 +5,7 @@
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, client::ClientBuilder};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, client::ClientOptions};
 
 use iota_client::signing::{mnemonic::MnemonicSigner, SignerHandle};
 use serde::{Deserialize, Serialize};
@@ -22,7 +22,7 @@ use std::sync::{atomic::AtomicUsize, Arc};
 pub struct AccountManagerBuilder {
     #[cfg(feature = "storage")]
     storage_options: Option<StorageOptions>,
-    client_options: ClientBuilder,
+    client_options: ClientOptions,
     #[serde(default = "default_signer", skip_serializing, skip_deserializing)]
     signer: SignerHandle,
 }
@@ -56,7 +56,7 @@ impl Default for AccountManagerBuilder {
         Self {
             #[cfg(feature = "storage")]
             storage_options: None,
-            client_options: ClientBuilder::new()
+            client_options: ClientOptions::new()
                 // .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
                 // .unwrap()
                 // .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")
@@ -77,7 +77,7 @@ impl AccountManagerBuilder {
         Default::default()
     }
     /// Set the IOTA client options.
-    pub fn with_client_options(mut self, options: ClientBuilder) -> Self {
+    pub fn with_client_options(mut self, options: ClientOptions) -> Self {
         self.client_options = options;
         self
     }

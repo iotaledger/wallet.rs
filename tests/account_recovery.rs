@@ -1,13 +1,13 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account_manager::AccountManager, client::ClientBuilder, signing::mnemonic::MnemonicSigner, Result};
+use iota_wallet::{account_manager::AccountManager, client::ClientOptions, signing::mnemonic::MnemonicSigner, Result};
 
 // can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
@@ -30,7 +30,7 @@ async fn account_recovery_empty() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
@@ -62,7 +62,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance() -> Result<()> {
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
@@ -98,7 +98,7 @@ async fn account_recovery_with_balance() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
-    let client_options = ClientBuilder::new()
+    let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 

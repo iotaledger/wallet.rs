@@ -72,7 +72,7 @@ In order to use the library you first need to create an `AccountManager`:
 
 ```rust
 use iota_wallet::{
-    account_manager::AccountManager, client::ClientBuilder, signing::SignerType,
+    account_manager::AccountManager, client::ClientOptions, signing::SignerType,
 };
 use std::path::PathBuf;
 
@@ -84,7 +84,7 @@ async fn main() -> iota_wallet::Result<()> {
             .with_storage(&storage_folder, None)
             .finish()
             .await?;
-    let client_options = ClientBuilder::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
+    let client_options = ClientOptions::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
     let account = manager
         .create_account(client_options)?
         .initialise()

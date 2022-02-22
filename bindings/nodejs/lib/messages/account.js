@@ -95,10 +95,10 @@ class AccountForMessages {
         );
     }
 
-    async setClientBuilder(options) {
+    async setClientOptions(options) {
         return JSON.parse(
             await this.messageHandler.sendMessage({
-                cmd: 'SetClientBuilder',
+                cmd: 'SetClientOptions',
                 payload: options,
             }),
         );

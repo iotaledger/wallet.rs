@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-pub use iota_client::{Client, ClientBuilder};
+pub use iota_client::{Client, ClientBuilder as ClientOptions};
 use once_cell::sync::Lazy;
 use tokio::sync::RwLock;
 
@@ -24,8 +24,8 @@ pub(crate) async fn get_client() -> crate::Result<Arc<Client>> {
     }
 }
 
-pub(crate) async fn set_client(client_builder: ClientBuilder) -> crate::Result<()> {
-    let client = client_builder.finish().await?;
+pub(crate) async fn set_client(client_options: ClientOptions) -> crate::Result<()> {
+    let client = client_options.finish().await?;
 
     let mut client_instance = client_instance().write().await;
     client_instance.replace(Arc::new(client));
