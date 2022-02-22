@@ -62,12 +62,6 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Invalid message identifier.
-    #[error("invalid message id received by node")]
-    InvalidMessageId,
-    /// Invalid transaction identifier.
-    #[error("invalid transaction id received by node")]
-    InvalidTransactionId,
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota_client::bee_message::Error),
@@ -80,9 +74,6 @@ pub enum Error {
     /// Backup `destination` argument is invalid
     #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
-    /// Mnemonic generation error.
-    #[error("mnemonic encode error: {0}")]
-    MnemonicEncode(String),
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
@@ -105,22 +96,12 @@ pub enum Error {
         "can't perform operation while storage is encrypted; use AccountManager::set_storage_password to decrypt storage"
     )]
     StorageIsEncrypted,
-    /// cannot use index to get account - multiple index sequences found (two or more different signer types stored on
-    /// accounts)
-    #[error("cannot use index identifier when two signer types are used")]
-    CannotUseIndexIdentifier,
     /// Account alias must be unique.
     #[error("can't create account: account alias already exists")]
     AccountAliasAlreadyExists,
-    /// Leaving dust error, for example sending 2.5 from 3 Mi, would leave 0.5 (dust) behind.
-    #[error("Leaving dust error: {0}")]
-    LeavingDustError(String),
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
-    /// Node not synced when creating account or updating client options.
-    #[error("nodes {0} not synced")]
-    NodesNotSynced(String),
     /// Failed to get remainder
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
@@ -136,36 +117,15 @@ pub enum Error {
     /// Provided input address not found
     #[error("provided input address not found")]
     InputAddressNotFound,
-    /// Mutex lock failed.
-    #[error("Mutex lock failed")]
-    PoisonError,
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
     /// std thread join error
     #[error("Thread join error")]
     StdThreadJoinError,
-    /// Couldn't get a spent output from a node.
-    #[error("couldn't get a spent output from node")]
-    SpentOutputNotFound,
-    #[cfg(feature = "mnemonic")]
     /// Blake2b256 Error
     #[error("{0}")]
     Blake2b256(&'static str),
-    #[cfg(feature = "mnemonic")]
-    #[error("invalid address or account index {0}")]
-    TryFromInt(#[from] std::num::TryFromIntError),
-    #[cfg(feature = "mnemonic")]
-    /// Crypto.rs error
-    #[error("{0}")]
-    Crypto(#[from] crypto::Error),
-    #[cfg(feature = "mnemonic")]
-    /// Mnemonic not set error
-    #[error("mnemonic not set")]
-    MnemonicNotSet,
-    /// Missing unlock block error
-    #[error("missing unlock block")]
-    MissingUnlockBlock,
     /// Custom input error
     #[error("custom input error {0}")]
     CustomInputError(String),
@@ -175,9 +135,6 @@ pub enum Error {
     /// Error from the logger in the bee_common crate.
     #[error("{0}")]
     BeeCommonLogger(iota_client::common::logger::Error),
-    /// Empty output amount error
-    #[error("output amount can't be 0")]
-    EmptyOutputAmount,
 }
 
 impl From<iota_client::Error> for Error {
@@ -243,11 +200,8 @@ impl serde::Serialize for Error {
             Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::InvalidMessageId => serialize_variant(self, serializer, "InvalidMessageId"),
-            Self::InvalidTransactionId => serialize_variant(self, serializer, "InvalidTransactionId"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
-            Self::MnemonicEncode(_) => serialize_variant(self, serializer, "MnemonicEncode"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
@@ -256,33 +210,19 @@ impl serde::Serialize for Error {
             Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),
             Self::RecordEncrypt(_) => serialize_variant(self, serializer, "RecordEncrypt"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
-            Self::CannotUseIndexIdentifier => serialize_variant(self, serializer, "CannotUseIndexIdentifier"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
-            Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
-            Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
             Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
             Self::TooManyInputs(_, _) => serialize_variant(self, serializer, "TooManyInputs"),
             Self::ConsolidationRequired(_, _) => serialize_variant(self, serializer, "ConsolidationRequired"),
             Self::InputAddressNotFound => serialize_variant(self, serializer, "InputAddressNotFound"),
-            Self::PoisonError => serialize_variant(self, serializer, "PoisonError"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
-            Self::SpentOutputNotFound => serialize_variant(self, serializer, "SpentOutputNotFound"),
-            #[cfg(feature = "mnemonic")]
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
-            #[cfg(feature = "mnemonic")]
-            Self::TryFromInt(_) => serialize_variant(self, serializer, "TryFromInt"),
-            #[cfg(feature = "mnemonic")]
-            Self::Crypto(_) => serialize_variant(self, serializer, "Crypto"),
-            #[cfg(feature = "mnemonic")]
-            Self::MnemonicNotSet => serialize_variant(self, serializer, "MnemonicNotSet"),
-            Self::MissingUnlockBlock => serialize_variant(self, serializer, "MissingUnlockBlock"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
             Self::BeeCommonLogger(_) => serialize_variant(self, serializer, "BeeCommonLogger"),
-            Self::EmptyOutputAmount => serialize_variant(self, serializer, "EmptyOutputAmount"),
         }
     }
 }

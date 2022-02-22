@@ -64,6 +64,7 @@ impl AccountBuilder {
         self.alias.replace(alias);
         self
     }
+
     // Build the Account
     pub async fn finish(&self) -> crate::Result<AccountHandle> {
         let mut accounts = self.accounts.write().await;
