@@ -16,7 +16,10 @@ pub use response::Response;
 pub use response_type::ResponseType;
 use serde::Deserialize;
 
+#[cfg(feature = "events")]
+use crate::events::types::{Event, WalletEventType};
 use crate::{account_manager::AccountManager, ClientOptions, Result};
+
 use iota_client::signing::SignerHandle;
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -62,6 +65,15 @@ pub async fn send_message(handle: &WalletMessageHandler, message_type: MessageTy
     message_rx.recv().await.unwrap()
 }
 
+#[cfg(feature = "events")]
+/// Listen to wallet events, empty vec will listen to all events
+pub async fn listen<F>(handle: &WalletMessageHandler, events: Vec<WalletEventType>, handler: F)
+where
+    F: Fn(&Event) + 'static + Clone + Send + Sync,
+{
+    handle.listen(events, handler).await;
+}
+
 #[cfg(test)]
 mod tests {
     use super::{AccountToCreate, ManagerOptions, MessageType, ResponseType};
@@ -104,8 +116,8 @@ mod tests {
         let response = super::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
             ResponseType::CreatedAccount(account) => {
-                let id = account.id().clone();
-                println!("Created account id: {id}")
+                let id = account.index();
+                println!("Created account index: {id}")
             }
             _ => panic!("unexpected response {:?}", response),
         }

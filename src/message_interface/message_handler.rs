@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "events")]
+use crate::events::types::{Event, WalletEventType};
 use crate::{
     account::{operations::transfer::TransferOptions, types::AccountIdentifier},
     account_manager::AccountManager,
@@ -72,6 +74,15 @@ impl WalletMessageHandler {
     /// Creates a new instance of the message handler with the specified account manager.
     pub fn with_manager(account_manager: AccountManager) -> Self {
         Self { account_manager }
+    }
+
+    #[cfg(feature = "events")]
+    /// Listen to wallet events, empty vec will listen to all events
+    pub async fn listen<F>(&self, events: Vec<WalletEventType>, handler: F)
+    where
+        F: Fn(&Event) + 'static + Clone + Send + Sync,
+    {
+        self.account_manager.listen(events, handler).await;
     }
 
     /// Handles a message.
