@@ -1401,11 +1401,11 @@ foreign_class!(
         private constructor = empty;
         private fn MessagePayload::to_string(&self) -> String; alias to_string;
         fn MessagePayload::payload_type(&self) -> MessagePayloadType;
-        fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>;
-        fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>;
-        fn MessagePayload::get_as_transaction(&self) -> Option<MessageTransactionPayload>;
-        fn MessagePayload::get_as_receipt(&self) -> Option<ReceiptPayload>;
-        fn MessagePayload::get_as_treasury(&self) -> Option<TreasuryTransactionPayload>;
+        fn MessagePayload::as_indexation(&self) -> Result<IndexationPayload>;
+        fn MessagePayload::as_milestone(&self) -> Result<MilestonePayload>;
+        fn MessagePayload::as_transaction(&self) -> Result<MessageTransactionPayload>;
+        fn MessagePayload::as_receipt(&self) -> Result<ReceiptPayload>;
+        fn MessagePayload::as_treasury(&self) -> Result<TreasuryTransactionPayload>;
     }
 );
 

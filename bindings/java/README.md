@@ -52,7 +52,7 @@ The jar will be found at `wallet.rs/bindings/java/native/build/libs/native.jar`
 mvn exec:exec
 ```
 
-## Running the Java example
+## Running the Android example
 The Android app needs further compilation instructions.
 
 Specific instructions in `wallet.rs/bindings/java/examples/android-app/README.md`
