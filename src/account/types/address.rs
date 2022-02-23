@@ -40,8 +40,8 @@ pub struct AddressWithBalance {
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
     pub(crate) internal: bool,
-    /// Balance
-    pub(crate) balance: u64,
+    /// Amount
+    pub(crate) amount: u64,
     /// Output ids
     pub(crate) output_ids: Vec<OutputId>,
 }

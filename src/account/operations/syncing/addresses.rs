@@ -2,10 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT,
-    handle::AccountHandle,
-    operations::syncing::SyncOptions,
-    types::address::{AccountAddress, AddressWithBalance},
+    constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::syncing::SyncOptions,
+    types::address::AddressWithBalance,
 };
 #[cfg(feature = "events")]
 use crate::events::types::WalletEvent;
@@ -15,76 +13,35 @@ use iota_client::{bee_message::output::OutputId, node_api::indexer_api::query_pa
 use std::time::Instant;
 
 /// Get the balance and return only addresses with a positive balance
-pub(crate) async fn get_addresses_with_balance(
+pub(crate) async fn get_addresses_to_sync(
     account_handle: &AccountHandle,
     options: &SyncOptions,
 ) -> crate::Result<Vec<AddressWithBalance>> {
-    log::debug!("[SYNC] start get_addresses_with_balance");
+    log::debug!("[SYNC] get_addresses_to_sync");
     let balance_sync_start_time = Instant::now();
 
-    let mut address_before_syncing = account_handle.list_addresses().await?;
+    let mut addresses_before_syncing = account_handle.list_addresses().await?;
     // Filter addresses when address_start_index is not 0 so we skip these addresses
     if options.address_start_index != 0 {
-        address_before_syncing = address_before_syncing
+        addresses_before_syncing = addresses_before_syncing
             .into_iter()
             .filter(|a| a.key_index >= options.address_start_index)
             .collect();
     }
 
-    let account = account_handle.read().await;
-    drop(account);
-
-    log::debug!("[SYNC] sync balance for {} addresses", address_before_syncing.len());
-    let client = crate::client::get_client().await?;
-    let mut addresses_with_balance = Vec::new();
-    for addresses_chunk in address_before_syncing
-        .chunks(PARALLEL_REQUESTS_AMOUNT)
-        .map(|x: &[AccountAddress]| x.to_vec())
-    {
-        let mut tasks = Vec::new();
-        for address in addresses_chunk {
-            let client = client.clone();
-            tasks.push(async move {
-                tokio::spawn(async move {
-                    let client = client;
-                    let balance_response = client.get_address().balance(&address.address().to_bech32()).await?;
-                    if balance_response.balance != 0 {
-                        log::debug!(
-                            "[SYNC] found {}i on {}",
-                            balance_response.balance,
-                            address.address().to_bech32()
-                        );
-                    }
-
-                    crate::Result::Ok(AddressWithBalance {
-                        address: address.address,
-                        key_index: address.key_index,
-                        internal: address.internal,
-                        balance: balance_response.balance,
-                        output_ids: Vec::new(),
-                    })
-                })
-                .await
-            });
-        }
-        let results = futures::future::try_join_all(tasks).await?;
-        for res in results {
-            let address = res?;
-            // only return addresses with balance or if we discover an account so we don't pass empty addresses around
-            // which only slows the process down
-            if address.balance != 0 || options.sync_all_addresses {
-                addresses_with_balance.push(address);
-            }
-        }
-    }
-    log::debug!(
-        "[SYNC] finished get_addresses_with_balance in {:.2?}",
-        balance_sync_start_time.elapsed()
-    );
-    Ok(addresses_with_balance)
+    Ok(addresses_before_syncing
+        .into_iter()
+        .map(|address| AddressWithBalance {
+            address: address.address,
+            key_index: address.key_index,
+            internal: address.internal,
+            amount: 0,
+            output_ids: Vec::new(),
+        })
+        .collect())
 }
 
-/// Get the current output ids for provided addresses
+/// Get the current output ids for provided addresses and only returns addresses that have outputs
 pub(crate) async fn get_address_output_ids(
     account_handle: &AccountHandle,
     options: &SyncOptions,
@@ -132,8 +89,11 @@ pub(crate) async fn get_address_output_ids(
                     .await
                     .emit(account_index, WalletEvent::ConsolidationRequired);
             }
-            address.output_ids = output_ids;
-            addresses_with_outputs.push(address);
+            // only return addresses with outputs
+            if !output_ids.is_empty() {
+                address.output_ids = output_ids;
+                addresses_with_outputs.push(address);
+            }
         }
     }
     log::debug!(

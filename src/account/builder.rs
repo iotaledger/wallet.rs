@@ -77,7 +77,6 @@ impl AccountBuilder {
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };
         let account = Account {
-            id: index.to_string(),
             index,
             coin_type: IOTA_COIN_TYPE,
             alias: self.alias.clone().unwrap_or_else(|| index.to_string()),

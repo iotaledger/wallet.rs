@@ -204,7 +204,7 @@ impl AccountHandle {
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         log::debug!("[BALANCE] get balance");
         let account = self.account.read().await;
-        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.balance()).sum();
+        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.amount()).sum();
         // for `available` get locked_outputs, sum outputs balance and subtract from total_balance
         log::debug!("[BALANCE] locked outputs: {:#?}", account.locked_outputs);
         let mut locked_balance = 0;
@@ -222,6 +222,13 @@ impl AccountHandle {
             total_balance,
             locked_balance
         );
+        if total_balance < locked_balance {
+            log::debug!("[BALANCE] total_balance is smaller than the available balance");
+            // It can happen that the locked_balance is greater than the available blance if a transaction wasn't
+            // confirmed when it got checked during syncing, but shortly after, when the outputs from the address were
+            // requested, so we just overwrite the locked_balance
+            locked_balance = total_balance;
+        };
         Ok(AccountBalance {
             total: total_balance,
             available: total_balance - locked_balance,

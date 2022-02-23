@@ -113,7 +113,7 @@ async fn clean_account_after_recovery(
     old_highest_internal_address_index: u32,
 ) -> AccountHandle {
     let mut account = account_handle.write().await;
-    let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.balance != 0);
+    let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.amount != 0);
     let highest_public_index_with_balance = addresses_with_balance
         .clone()
         .filter(|a| !a.internal)

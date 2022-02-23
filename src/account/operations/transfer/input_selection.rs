@@ -67,6 +67,7 @@ pub(crate) async fn select_inputs(
 
     // lock outputs so they don't get used by another transaction
     for output in &selected_transaction_data.inputs {
+        log::debug!("[TRANSFER] locking: {}", output.output_id()?);
         account.locked_outputs.insert(output.output_id()?);
     }
     Ok(selected_transaction_data)

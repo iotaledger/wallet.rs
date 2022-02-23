@@ -31,9 +31,6 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account {
-    /// The account identifier.
-    #[getset(set = "pub(crate)")]
-    id: String,
     /// The account index
     index: u32,
     /// The coin type
