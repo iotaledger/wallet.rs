@@ -97,14 +97,6 @@ async fn main() -> Result<()> {
         addresses
     };
 
-    println!(
-        "ping_account.list_addresses().await?.len() {}",
-        ping_account.list_addresses().await?.len()
-    );
-    println!(
-        "pong_account.list_addresses().await?.len() {}",
-        pong_account.list_addresses().await?.len()
-    );
     for address_index in 0..1000 {
         let mut threads = Vec::new();
         for n in 1..4 {
