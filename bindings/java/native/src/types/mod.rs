@@ -3,6 +3,7 @@
 
 mod index;
 mod info_response;
+mod input;
 mod migration;
 mod milestone;
 mod output;
@@ -14,6 +15,7 @@ mod unlock;
 
 pub use index::*;
 pub use info_response::*;
+pub use input::*;
 pub use migration::*;
 pub use milestone::*;
 pub use output::*;

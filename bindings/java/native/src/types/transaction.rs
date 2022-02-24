@@ -5,22 +5,14 @@ use iota_wallet::{
     iota_client::bee_message::prelude::Payload,
     message::{
         MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
-        TransactionInput as RustWalletInput, TransactionRegularEssence as TransactionRegularEssenceRust,
+        TransactionRegularEssence as TransactionRegularEssenceRust,
     },
 };
 
 use crate::{
-    types::{IndexationPayload, TransactionOutput, UnlockBlock},
+    types::{IndexationPayload, TransactionInput, TransactionOutput, UnlockBlock},
     Result,
 };
-
-use std::fmt::{Display, Formatter};
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum InputKind {
-    Utxo = 0,
-    Treasury = 1,
-}
 
 pub struct TransactionPayload {
     essence: Essence,
@@ -138,31 +130,5 @@ impl RegularEssence {
 impl core::fmt::Display for RegularEssence {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "{:?}", self.essence)
-    }
-}
-
-#[derive(Clone)]
-pub struct TransactionInput {
-    input: RustWalletInput,
-}
-
-impl TransactionInput {
-    pub fn kind(&self) -> InputKind {
-        match self.input {
-            RustWalletInput::Utxo(_) => InputKind::Utxo,
-            RustWalletInput::Treasury(_) => InputKind::Treasury,
-        }
-    }
-}
-
-impl Display for TransactionInput {
-    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "({:?})", self.input)
-    }
-}
-
-impl From<&RustWalletInput> for TransactionInput {
-    fn from(input: &RustWalletInput) -> Self {
-        Self { input: input.clone() }
     }
 }

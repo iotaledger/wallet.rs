@@ -1560,12 +1560,49 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class TransactionInput {
         self_type TransactionInput;
         private constructor = empty;
         private fn TransactionInput::to_string(&self) -> String;
+        private fn TransactionInput::eq(&self, o: &TransactionInput) -> bool; alias rustEq;
         fn TransactionInput::kind(&self) -> InputKind;
+        fn TransactionInput::as_utxo(&self) -> Result<UtxoInput>;
+        fn TransactionInput::as_treasury(&self) -> Result<TreasuryInput>;
+    }
+);
+
+foreign_class!(
+    /// `TreasuryInput` is an input which references a milestone which generated a `TreasuryOutput`.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class TreasuryInput {
+        self_type TreasuryInput;
+        /// Create a new TreasuryInput
+        /// @param id The MilestoneId which Generated a `TreasuryOutput`
+        constructor TreasuryInput::new(id: MilestoneId) -> Self;
+        private fn TreasuryInput::to_string(&self) -> String;
+        private fn TreasuryInput::eq(&self, o: &TreasuryInput) -> bool; alias rustEq;
+        /// Returns the milestones id of a `TreasuryInput`.
+        fn TreasuryInput::milestone_id(&self) -> MilestoneId;
+    }
+);
+
+foreign_class!(
+    /// Represents an input referencing an output.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class UtxoInput {
+        self_type UtxoInput;
+        private constructor = empty;
+        private fn UtxoInput::to_string(&self) -> String;
+        private fn UtxoInput::eq(&self, o: &UtxoInput) -> bool; alias rustEq;
+        /// Create a new `UtxoInput`
+        /// @param id The ouput Id
+        /// @param index The output Index
+        fn UtxoInput::from(id: TransactionId, index: u16) -> Result<UtxoInput>;
+        /// Returns the `TransactionId` of the Output.
+        fn UtxoInput::transaction_id(&self) -> TransactionId;
+        /// Returns the index of the Output.
+        fn UtxoInput::index(&self) -> u16;
     }
 );
 
