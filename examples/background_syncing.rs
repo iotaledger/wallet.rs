@@ -5,10 +5,9 @@
 
 use iota_wallet::{
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 use tokio::time::{sleep, Duration};
 

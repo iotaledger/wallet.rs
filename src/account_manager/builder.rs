@@ -5,7 +5,7 @@
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, client::ClientOptions};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 
 use iota_client::signing::{mnemonic::MnemonicSigner, SignerHandle};
 use serde::{Deserialize, Serialize};
@@ -97,8 +97,6 @@ impl AccountManagerBuilder {
     /// Builds the account manager
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        crate::client::set_client(self.client_options.clone()).await?;
-
         #[cfg(feature = "storage")]
         {
             let storage_folder = self.storage_options.unwrap_or_default().storage_folder;
@@ -126,6 +124,7 @@ impl AccountManagerBuilder {
                 Some(data) => (data.client_options, data.signer),
                 None => (self.client_options, self.signer),
             };
+            let client = client_options.clone().finish().await?;
             #[cfg(feature = "events")]
             let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
             return Ok(AccountManager {
@@ -135,7 +134,7 @@ impl AccountManagerBuilder {
                 accounts: Arc::new(RwLock::new(
                     data.1
                         .into_iter()
-                        .map(|a| AccountHandle::new(a, signer.clone(), event_emitter.clone()))
+                        .map(|a| AccountHandle::new(a, client.clone(), signer.clone(), event_emitter.clone()))
                         .collect(),
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),

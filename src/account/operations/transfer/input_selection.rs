@@ -39,8 +39,7 @@ pub(crate) async fn select_inputs(
         return Ok(selected_transaction_data);
     }
 
-    let client = crate::client::get_client().await?;
-    let network_id = client.get_network_id().await?;
+    let network_id = account_handle.client.get_network_id().await?;
 
     let mut available_outputs = Vec::new();
     for (output_id, output) in account.unspent_outputs.iter() {

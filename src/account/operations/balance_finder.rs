@@ -21,8 +21,8 @@ pub(crate) async fn search_addresses_with_funds(
     address_gap_limit: u32,
 ) -> crate::Result<AccountBalance> {
     log::debug!("[search_addresses_with_funds]");
-    let client = crate::client::get_client().await?;
-    let bech32_hrp = client.get_bech32_hrp().await?;
+
+    let bech32_hrp = account_handle.client.get_bech32_hrp().await?;
     let network = match bech32_hrp.as_str() {
         "iota" => Network::Mainnet,
         _ => Network::Testnet,

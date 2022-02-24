@@ -9,10 +9,9 @@ book
 .vscode
 *.ipynb
 *.stronghold
-wallet.log
 /.idea
 alice-database
-iota.rs.log
+*.log
 /walletdb
 /pingdb
 /pongdb

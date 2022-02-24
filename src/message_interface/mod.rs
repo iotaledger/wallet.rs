@@ -16,7 +16,7 @@ pub use response::Response;
 pub use response_type::ResponseType;
 use serde::Deserialize;
 
-use crate::{account_manager::AccountManager, client::ClientOptions, Result};
+use crate::{account_manager::AccountManager, ClientOptions, Result};
 use iota_client::signing::SignerHandle;
 use tokio::sync::mpsc::unbounded_channel;
 

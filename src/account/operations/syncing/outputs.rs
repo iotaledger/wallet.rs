@@ -21,9 +21,8 @@ pub(crate) async fn output_response_to_output_data(
     log::debug!("[SYNC] convert output_responses");
     // store outputs with network_id
     let account = account_handle.read().await;
-    let client = crate::client::get_client().await?;
-    let network_id = client.get_network_id().await?;
-    let bech32_hrp = client.get_bech32_hrp().await?;
+    let network_id = account_handle.client.get_network_id().await?;
+    let bech32_hrp = account_handle.client.get_bech32_hrp().await?;
     let mut outputs = Vec::new();
     for output in output_responses {
         let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output.output, None)?;
@@ -69,10 +68,9 @@ pub(crate) async fn get_outputs(
     let get_outputs_sync_start_time = Instant::now();
     let account = account_handle.read().await;
 
-    let client = crate::client::get_client().await?;
     drop(account);
 
-    let found_outputs = client.get_outputs(output_ids).await?;
+    let found_outputs = account_handle.client.get_outputs(output_ids).await?;
 
     log::debug!(
         "[SYNC] finished get_outputs in {:.2?}",

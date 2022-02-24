@@ -16,8 +16,9 @@ pub mod account_manager;
 #[cfg(feature = "message_interface")]
 pub mod message_interface;
 
-/// The client module to use iota_client for interactions with the IOTA Tangle.
-pub mod client;
+/// The ClientOptions to build the iota_client for interactions with the IOTA Tangle.
+pub use iota_client::ClientBuilder as ClientOptions;
+
 /// The error module.
 pub mod error;
 #[cfg(feature = "events")]

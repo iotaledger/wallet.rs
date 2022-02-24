@@ -15,10 +15,9 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 
 #[tokio::main]

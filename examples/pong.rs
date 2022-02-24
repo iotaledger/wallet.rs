@@ -16,10 +16,9 @@ use iota_client::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 
 #[tokio::main]
@@ -28,7 +27,7 @@ async fn main() -> Result<()> {
     init_logger("pong-wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptions::new()
-        .with_node("https://api.stardust-testnet.iotaledger.net")?
+        .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
     let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
@@ -89,7 +88,7 @@ async fn main() -> Result<()> {
         println!(
             "{}",
             request_funds_from_faucet(
-                "https://faucet.stardust-testnet.iotaledger.net/api/plugins/faucet/v1/enqueue",
+                "http://localhost:14265/api/plugins/faucet/v1/enqueue",
                 &addresses[0].address().to_bech32()
             )
             .await?

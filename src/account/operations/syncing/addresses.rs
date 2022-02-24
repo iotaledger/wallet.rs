@@ -51,7 +51,6 @@ pub(crate) async fn get_address_output_ids(
     let address_outputs_sync_start_time = Instant::now();
     let account = account_handle.read().await;
 
-    let client = crate::client::get_client().await?;
     #[cfg(feature = "events")]
     let (account_index, consolidation_threshold) =
         (account.index, account.account_options.output_consolidation_threshold);
@@ -65,7 +64,7 @@ pub(crate) async fn get_address_output_ids(
     {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
-            let client = client.clone();
+            let client = account_handle.client.clone();
             tasks.push(async move {
                 tokio::spawn(async move {
                     let client = client;

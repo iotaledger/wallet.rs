@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account_manager::AccountManager, client::ClientOptions, signing::mnemonic::MnemonicSigner, Result};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 // can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]

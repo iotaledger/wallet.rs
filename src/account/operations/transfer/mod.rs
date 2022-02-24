@@ -176,8 +176,8 @@ pub async fn send_transfer(
         };
 
     // store transaction payload to account (with db feature also store the account to the db) here before sending
-    let client = crate::client::get_client().await?;
-    let network_id = client.get_network_id().await?;
+
+    let network_id = account_handle.client.get_network_id().await?;
     let transaction_id = transaction_payload.id();
     let mut account = account_handle.write().await;
     account.transactions.insert(

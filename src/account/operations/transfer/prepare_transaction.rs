@@ -60,9 +60,8 @@ pub(crate) async fn prepare_transaction(
         })
     }
 
-    let client = crate::client::get_client().await?;
     // Build transaction essence
-    let mut essence_builder = RegularTransactionEssence::builder(client.get_network_id().await?);
+    let mut essence_builder = RegularTransactionEssence::builder(account_handle.client.get_network_id().await?);
     essence_builder = essence_builder.with_inputs(inputs_for_essence);
 
     let input_outputs = inputs_for_signing

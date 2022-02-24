@@ -72,7 +72,7 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" 
 In order to use the library, you first need to create an _AccountManager_ :
 
 ```rust
-use iota_wallet::{account_manager::AccountManager, client::ClientOptions, signing::SignerType};
+use iota_wallet::{account_manager::AccountManager, ClientOptions, signing::SignerType};
 use std::path::PathBuf;
 
 #[tokio::main]

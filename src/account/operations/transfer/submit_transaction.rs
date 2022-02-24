@@ -20,8 +20,8 @@ pub(crate) async fn submit_transaction_payload(
     #[cfg(feature = "events")]
     let account_index = account.index;
     drop(account);
-    let client = crate::client::get_client().await?;
-    let local_pow = client.get_local_pow().await;
+
+    let local_pow = account_handle.client.get_local_pow().await;
     if local_pow {
         log::debug!("[TRANSFER] doing local pow");
         #[cfg(feature = "events")]
@@ -30,28 +30,30 @@ pub(crate) async fn submit_transaction_payload(
             WalletEvent::TransferProgress(TransferProgressEvent::PerformingPoW),
         );
     }
-    let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
+    let message = finish_pow(
+        &account_handle.client,
+        Some(Payload::Transaction(Box::new(transaction_payload))),
+    )
+    .await?;
     // log::debug!("[TRANSFER] submitting message {:#?}", message);
     #[cfg(feature = "events")]
     account_handle.event_emitter.lock().await.emit(
         account_index,
         WalletEvent::TransferProgress(TransferProgressEvent::Broadcasting),
     );
-    let message_id = client.post_message(&message).await?;
+    let message_id = account_handle.client.post_message(&message).await?;
     log::debug!("[TRANSFER] submitted message {}", message_id);
-    drop(client);
     // spawn a thread which tries to get the message confirmed
+    let client = account_handle.client.clone();
     tokio::spawn(async move {
-        if let Ok(client) = crate::client::get_client().await {
-            if let Ok(messages) = client.retry_until_included(&message_id, None, None).await {
-                if let Some(confirmed_message) = messages.first() {
-                    if confirmed_message.0 != message_id {
-                        log::debug!(
-                            "[TRANSFER] reattached {}, new message id {}",
-                            message_id,
-                            confirmed_message.0
-                        );
-                    }
+        if let Ok(messages) = client.retry_until_included(&message_id, None, None).await {
+            if let Some(confirmed_message) = messages.first() {
+                if confirmed_message.0 != message_id {
+                    log::debug!(
+                        "[TRANSFER] reattached {}, new message id {}",
+                        message_id,
+                        confirmed_message.0
+                    );
                 }
             }
         }

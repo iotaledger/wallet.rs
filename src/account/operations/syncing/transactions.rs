@@ -36,8 +36,8 @@ pub(crate) struct TransactionSyncResult {
 pub(crate) async fn sync_transactions(account_handle: &AccountHandle) -> crate::Result<TransactionSyncResult> {
     log::debug!("[SYNC] sync pending transactions");
     let account = account_handle.read().await;
-    let client = crate::client::get_client().await?;
-    let network_id = client.get_network_id().await?;
+
+    let network_id = account_handle.client.get_network_id().await?;
 
     let mut updated_transactions = Vec::new();
     let mut spent_output_ids = Vec::new();
@@ -57,7 +57,7 @@ pub(crate) async fn sync_transactions(account_handle: &AccountHandle) -> crate::
         // only check transaction from the network we're connected to
         if transaction.network_id == network_id {
             if let Some(message_id) = transaction.message_id {
-                let metadata = client.get_message_metadata(&message_id).await?;
+                let metadata = account_handle.client.get_message_metadata(&message_id).await?;
                 if let Some(inclusion_state) = metadata.ledger_inclusion_state {
                     match inclusion_state {
                         LedgerInclusionStateDto::Included => {
@@ -78,7 +78,11 @@ pub(crate) async fn sync_transactions(account_handle: &AccountHandle) -> crate::
                             log::debug!("[SYNC] conflicting transaction {}", transaction_id);
                             // try to get the included message, because maybe only this attachment is conflicting
                             // because it got confirmed in another message
-                            if let Ok(included_message) = client.get_included_message(&transaction.payload.id()).await {
+                            if let Ok(included_message) = account_handle
+                                .client
+                                .get_included_message(&transaction.payload.id())
+                                .await
+                            {
                                 updated_transaction_and_outputs(
                                     transaction,
                                     included_message.id(),
@@ -93,7 +97,9 @@ pub(crate) async fn sync_transactions(account_handle: &AccountHandle) -> crate::
                                 let TransactionEssence::Regular(essence) = transaction.payload.essence();
                                 for input in essence.inputs() {
                                     if let Input::Utxo(input) = input {
-                                        if let Ok(output_response) = client.get_output(input.output_id()).await {
+                                        if let Ok(output_response) =
+                                            account_handle.client.get_output(input.output_id()).await
+                                        {
                                             if output_response.is_spent {
                                                 spent_output_ids.push(*input.output_id());
                                             } else {

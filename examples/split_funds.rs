@@ -10,10 +10,9 @@ use iota_client::bee_message::output::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 use std::time::Instant;
 
