@@ -76,7 +76,20 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::{AccountToCreate, ManagerOptions, MessageType, ResponseType};
+    use crate::{
+        message_interface,
+        message_interface::{AccountToCreate, ManagerOptions, MessageType, ResponseType}
+    };
+    #[cfg(feature = "events")]
+    use crate::events::types::WalletEvent;
+    
+    use iota_client::bee_message::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, Output,
+        },
+    };
 
     #[tokio::test]
     async fn create_account() {
@@ -113,7 +126,7 @@ mod tests {
 
         // create an account
         let account = AccountToCreate { alias: None };
-        let response = super::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let response = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
             ResponseType::CreatedAccount(account) => {
                 let id = account.index();
@@ -121,5 +134,46 @@ mod tests {
             }
             _ => panic!("unexpected response {:?}", response),
         }
+    }
+
+    #[cfg(feature = "events")]
+    #[tokio::test]
+    async fn events() {
+        let wallet_handle = super::create_message_handler(None).await.unwrap();
+
+        wallet_handle.listen(vec![], |event| {
+            match &event.event {
+                WalletEvent::TransferProgress(event) => println!("Received event....: {:?}", event),
+                _ => assert!(false),
+            }
+        }).await;
+
+
+        // create an account
+        let account = AccountToCreate {
+            alias: Some("alias".to_string()),
+        };
+        let _ = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+
+        // send transaction
+        let outputs = vec![Output::Basic(
+            BasicOutputBuilder::new(1_000_000)
+                .unwrap()
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                    Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")
+                        .unwrap(),
+                )))
+                .finish()
+                .unwrap(),
+        )];
+
+        let transfer = MessageType::SendTransfer {
+            account_id: "alias".into(),
+            outputs: outputs,
+            options: None,
+        };
+
+        let _response = message_interface::send_message(&wallet_handle, transfer).await;
+
     }
 }
