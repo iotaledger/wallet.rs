@@ -11,7 +11,7 @@ async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
     // init_logger("wallet.log", LevelFilter::Debug)?;
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
         .with_storage_folder("wallet-database")

@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
         .with_client_options(client_options)
