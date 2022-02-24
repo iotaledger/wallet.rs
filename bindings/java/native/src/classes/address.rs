@@ -9,7 +9,7 @@ use std::{
 
 use iota_wallet::{
     message::MessageId,
-    address::{Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust, AddressWrapper},
+    address::{Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust, OutputKind as RustOutputKind, AddressWrapper},
     iota_client::bee_message::{payload::transaction::TransactionId, prelude::OutputId},
 };
 
@@ -204,7 +204,7 @@ impl AddressOutput {
             amount: self.amount,
             is_spent: self.is_spent,
             address: self.address,
-            kind: output_kind_enum_to_type(self.kind).unwrap()
+            kind: output_kind_enum_to_type(self.kind).unwrap_or(RustOutputKind::SignatureLockedSingle)
         }
     }
 }

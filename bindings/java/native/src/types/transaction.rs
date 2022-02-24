@@ -2,14 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    address::OutputKind as RustOutputKind,
-    iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
     message::{
         MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
-        TransactionInput as RustWalletInput, TransactionOutput as RustWalletOutput,
+        TransactionInput as RustWalletInput,
         TransactionRegularEssence as TransactionRegularEssenceRust,
     },
 };
+
+use crate::{
+    Result,
+    types::{MessagePayload, UnlockBlock, TransactionOutput}
+};
+
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum InputKind {
@@ -17,46 +22,12 @@ pub enum InputKind {
     Treasury = 1,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub enum UnlockBlockKind {
-    Reference = 0,
-    Ed25519 = 1,
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum OutputKind {
-    None = 0,
-    SignatureLockedSingle = 1,
-    SignatureLockedDustAllowance = 2,
-    Treasury = 3,
-}
-
-
-impl From<RustOutputKind> for OutputKind {
-    fn from(kind: RustOutputKind) -> Self {
-        match kind {
-            RustOutputKind::SignatureLockedSingle => OutputKind::SignatureLockedSingle,
-            RustOutputKind::SignatureLockedDustAllowance => OutputKind::SignatureLockedDustAllowance,
-            RustOutputKind::Treasury => OutputKind::Treasury,
-        }
-    }
-}
-
-pub fn output_kind_enum_to_type(strategy: OutputKind) -> Option<RustOutputKind> {
-    match strategy {
-        OutputKind::None => None,
-        OutputKind::SignatureLockedSingle => Some(RustOutputKind::SignatureLockedSingle),
-        OutputKind::SignatureLockedDustAllowance => Some(RustOutputKind::SignatureLockedDustAllowance),
-        OutputKind::Treasury => Some(RustOutputKind::Treasury),
-    }
-}
-
-pub struct MessageTransactionPayload {
+pub struct TransactionPayload {
     essence: Essence,
     unlock_blocks: Vec<UnlockBlock>,
 }
 
-impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
+impl From<&Box<MessageTransactionPayloadRust>> for TransactionPayload {
     fn from(payload: &Box<MessageTransactionPayloadRust>) -> Self {
         Self {
             essence: Essence {
@@ -66,15 +37,13 @@ impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
                 .unlock_blocks()
                 .iter()
                 .cloned()
-                .map(|unlock_block| UnlockBlock {
-                    unlock_block: unlock_block,
-                })
+                .map(|unlock_block| unlock_block.into())
                 .collect(),
         }
     }
 }
 
-impl MessageTransactionPayload {
+impl TransactionPayload {
     pub fn essence(&self) -> Essence {
         self.essence.clone()
     }
@@ -83,20 +52,33 @@ impl MessageTransactionPayload {
         self.unlock_blocks.iter().cloned().collect()
     }
 }
-#[derive(Clone)]
+
+impl core::fmt::Display for TransactionPayload {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "essence={:?}, unlock_blocks=({:?})", self.essence, self.unlock_blocks)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct Essence {
     essence: TransactionEssenceRust,
 }
 
 impl Essence {
     #[allow(irrefutable_let_patterns)]
-    pub fn get_as_regular(&self) -> Option<RegularEssence> {
+    pub fn as_regular(&self) -> Result<RegularEssence> {
         if let TransactionEssenceRust::Regular(essence) = &self.essence {
-            return Some(RegularEssence {
+            return Ok(RegularEssence {
                 essence: essence.clone(),
             });
         };
-        None
+        Err(anyhow::anyhow!("Essence is not of type Regular"))
+    }
+}
+
+impl core::fmt::Display for Essence {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.essence)
     }
 }
 
@@ -110,8 +92,7 @@ impl RegularEssence {
         self.essence
             .inputs()
             .iter()
-            .cloned()
-            .map(|input| TransactionInput { input: input })
+            .map(|input| input.into() )
             .collect()
     }
 
@@ -120,14 +101,16 @@ impl RegularEssence {
         self.essence
             .outputs()
             .iter()
-            .cloned()
-            .map(|output| TransactionOutput { output: output })
+            .map(|output| output.into() )
             .collect()
     }
 
     /// Gets the transaction chained payload.
-    pub fn payload(&self) -> &Option<RustPayload> {
-        self.essence.payload()
+    pub fn payload(&self) -> Option<MessagePayload> {
+        match self.essence.payload() {
+            //Some(payload) => Some(payload.clone().into()),
+            _ => None,
+        }
     }
 
     /// Whether the transaction is between the mnemonic accounts or not.
@@ -151,6 +134,12 @@ impl RegularEssence {
     }
 }
 
+impl core::fmt::Display for RegularEssence {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.essence)
+    }
+}
+
 #[derive(Clone)]
 pub struct TransactionInput {
     input: RustWalletInput,
@@ -163,45 +152,16 @@ impl TransactionInput {
             RustWalletInput::Treasury(_) => InputKind::Treasury,
         }
     }
+}
 
-    pub fn to_string(&self) -> String {
-        format!("{:?}", self.input)
+impl Display for TransactionInput {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.input)
     }
 }
 
-#[derive(Clone)]
-pub struct TransactionOutput {
-    output: RustWalletOutput,
-}
-
-impl TransactionOutput {
-    pub fn kind(&self) -> OutputKind {
-        match self.output {
-            RustWalletOutput::SignatureLockedSingle(_) => OutputKind::SignatureLockedSingle,
-            RustWalletOutput::SignatureLockedDustAllowance(_) => OutputKind::SignatureLockedDustAllowance,
-            RustWalletOutput::Treasury(_) => OutputKind::Treasury,
-        }
-    }
-
-    pub fn to_string(&self) -> String {
-        format!("{:?}", self.output)
-    }
-}
-
-#[derive(Clone)]
-pub struct UnlockBlock {
-    unlock_block: RustUnlockBlock,
-}
-
-impl UnlockBlock {
-    pub fn kind(&self) -> UnlockBlockKind {
-        match self.unlock_block {
-            RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
-            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
-        }
-    }
-
-    pub fn to_string(&self) -> String {
-        format!("{:?}", self.unlock_block)
+impl From<&RustWalletInput> for TransactionInput {
+    fn from(input: &RustWalletInput) -> Self {
+        Self { input: input.clone() }
     }
 }

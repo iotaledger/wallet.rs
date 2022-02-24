@@ -11,7 +11,10 @@ use iota_wallet::{
     },
 };
 
-use crate::types::{IndexationPayload, MessagePayload, OutputKind, output_kind_enum_to_type};
+use crate::{
+    Result,
+    types::{IndexationPayload, MessagePayload, OutputKind, output_kind_enum_to_type}
+};
 
 use chrono::prelude::{DateTime, Utc};
 use std::num::NonZeroU64;
@@ -93,8 +96,12 @@ impl TransferBuilder {
         }
     }
 
-    pub fn with_outputs(outputs: Vec<TransferOutput>) -> Self {
-        TransferBuilder::new_with_builder(TransferBuilderRust::with_outputs(outputs.iter().map(|o| o.clone().0).collect()).unwrap())
+    pub fn new_from_outputs(outputs: Vec<TransferOutput>) -> Result<Self> {
+        match TransferBuilderRust::with_outputs(outputs.iter().map(|o| o.clone().0).collect()) {
+            Ok(b) => Ok(TransferBuilder::new_with_builder(b)),
+            Err(e) => Err(anyhow::anyhow!(e.to_string()))
+        }
+        
     }
 
     pub fn new_with_builder(builder: TransferBuilderRust) -> Self {
@@ -144,7 +151,7 @@ impl TransferBuilder {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Message {
     message: MessageRust,
 }
@@ -152,6 +159,12 @@ pub struct Message {
 impl From<MessageRust> for Message {
     fn from(message: MessageRust) -> Self {
         Self { message }
+    }
+}
+
+impl core::fmt::Display for Message {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.message)
     }
 }
 

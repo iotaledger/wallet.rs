@@ -1,12 +1,14 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::message::MessagePayload as MessagePayloadRust;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     Result,
     types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*}
 };
+
+use iota_wallet::message::MessagePayload as MessagePayloadRust;
 
 pub enum MessagePayloadType {
     Transaction = 1,
@@ -16,6 +18,7 @@ pub enum MessagePayloadType {
     TreasuryTransaction = 5,
 }
 
+#[derive(PartialEq, Clone, Debug, Serialize, Deserialize)]
 pub struct MessagePayload {
     payload: MessagePayloadRust,
 }
@@ -27,6 +30,24 @@ impl From<MessagePayloadRust> for MessagePayload {
 }
 
 impl MessagePayload {
+    pub fn deserialize(serialised_data: &str) -> Result<MessagePayload> {
+        let res = serde_json::from_str(&serialised_data);
+
+        match res {
+            Ok(s) => Ok(s),
+            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        }
+    }
+
+    pub fn serialize(&self) -> Result<String> {
+        let res = serde_json::to_string(self);
+
+        match res {
+            Ok(s) => Ok(s),
+            Err(e) => Err(anyhow::anyhow!(e.to_string())),
+        }
+    }
+
     pub fn to_inner(self) -> MessagePayloadRust {
         self.payload
     }
@@ -41,7 +62,7 @@ impl MessagePayload {
         }
     }
 
-    pub fn as_transaction(&self) -> Result<MessageTransactionPayload> {
+    pub fn as_transaction(&self) -> Result<TransactionPayload> {
         if let MessagePayloadRust::Transaction(payload) = &self.payload {
             Ok(payload.into())
         } else {
@@ -76,7 +97,7 @@ impl MessagePayload {
         }
     }
 
-    pub fn as_treasury(&self) -> Result<TreasuryTransactionPayload> {
+    pub fn as_treasury(&self) -> Result<TreasuryPayload> {
         if let MessagePayloadRust::TreasuryTransaction(payload) = &self.payload {
             Ok((*payload.clone()).into())
         } else {

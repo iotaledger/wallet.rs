@@ -3,7 +3,6 @@
 static INCLUDE_SYS_H: [&str; 1] = ["jni.h"];
 
 static RUST_SRC_DIR: &str = "src";
-static ANDROID_BASE_DIR: &str = "app";
 static ANDROID_ANNOTATION: &str = "androidx.annotation";
 static PACKAGE_ID: &str = "org.iota.wallet";
 

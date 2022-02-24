@@ -3,8 +3,9 @@
 
 use iota_wallet::message::{
     MessageMigratedFundsEntry as MigratedFundsEntryRust, MessageReceiptPayload as ReceiptPayloadRust,
-    TransactionSignatureLockedSingleOutput,
 };
+
+use crate::types::SignatureLockedSingleOutput;
 
 pub struct ReceiptPayload {
     payload: ReceiptPayloadRust,
@@ -43,7 +44,7 @@ impl MigratedFundsEntry {
         self.payload.tail_transaction_hash().as_ref().to_vec()
     }
 
-    pub fn output(&self) -> TransactionSignatureLockedSingleOutput {
-        self.payload.output().clone()
+    pub fn output(&self) -> SignatureLockedSingleOutput {
+        SignatureLockedSingleOutput::from_rust(self.payload.output().clone())
     }
 }
