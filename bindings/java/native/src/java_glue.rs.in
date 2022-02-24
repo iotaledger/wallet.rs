@@ -1547,7 +1547,7 @@ foreign_class!(
         /// Gets the transaction outputs.
         fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
         // Gets the transaction chained payload.
-        fn RegularEssence::payload(&self) -> Option<MessagePayload>;
+        fn RegularEssence::payload(&self) -> Result<Option<IndexationPayload>>;
         /// Whether the transaction is between the mnemonic accounts or not.
         fn RegularEssence::internal(&self) -> bool;
         /// Whether the transaction is incoming or outgoing.

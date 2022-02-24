@@ -1,3 +1,6 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 // CONFIGURATION
 // add other android system headers to this list as necessary
 static INCLUDE_SYS_H: [&str; 1] = ["jni.h"];

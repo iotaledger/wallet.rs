@@ -148,7 +148,7 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_nodes(nodes_arr.as_slice())
             .unwrap();
-            ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
     pub fn with_node_auth(
@@ -169,7 +169,7 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_node_auth(node, jwt, auth_opt)
             .unwrap();
-            ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
     pub fn with_primary_node_auth(
@@ -190,7 +190,7 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_primary_node_auth(node, jwt, auth_opt)
             .unwrap();
-            ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
     pub fn with_primary_pow_node_auth(
@@ -211,7 +211,7 @@ impl ClientOptionsBuilder {
             .unwrap()
             .with_node_auth(node, jwt, auth_opt)
             .unwrap();
-            ClientOptionsBuilder::new_with_builder(new_builder)
+        ClientOptionsBuilder::new_with_builder(new_builder)
     }
 
     pub fn with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder {

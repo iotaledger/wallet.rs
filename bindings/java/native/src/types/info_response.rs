@@ -86,7 +86,6 @@ impl InfoResponse {
     }
 }
 
-
 impl From<RustInfoResponse> for InfoResponse {
     fn from(info: RustInfoResponse) -> Self {
         Self {

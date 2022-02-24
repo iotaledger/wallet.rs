@@ -2,16 +2,16 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
+    iota_client::bee_message::prelude::Payload,
     message::{
         MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
-        TransactionInput as RustWalletInput,
-        TransactionRegularEssence as TransactionRegularEssenceRust,
+        TransactionInput as RustWalletInput, TransactionRegularEssence as TransactionRegularEssenceRust,
     },
 };
 
 use crate::{
+    types::{IndexationPayload, TransactionOutput, UnlockBlock},
     Result,
-    types::{MessagePayload, UnlockBlock, TransactionOutput}
 };
 
 use std::fmt::{Display, Formatter};
@@ -55,7 +55,11 @@ impl TransactionPayload {
 
 impl core::fmt::Display for TransactionPayload {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
-        write!(f, "essence={:?}, unlock_blocks=({:?})", self.essence, self.unlock_blocks)
+        write!(
+            f,
+            "essence={:?}, unlock_blocks=({:?})",
+            self.essence, self.unlock_blocks
+        )
     }
 }
 
@@ -89,27 +93,24 @@ pub struct RegularEssence {
 
 impl RegularEssence {
     pub fn inputs(&self) -> Vec<TransactionInput> {
-        self.essence
-            .inputs()
-            .iter()
-            .map(|input| input.into() )
-            .collect()
+        self.essence.inputs().iter().map(|input| input.into()).collect()
     }
 
     /// Gets the transaction outputs.
     pub fn outputs(&self) -> Vec<TransactionOutput> {
-        self.essence
-            .outputs()
-            .iter()
-            .map(|output| output.into() )
-            .collect()
+        self.essence.outputs().iter().map(|output| output.into()).collect()
     }
 
     /// Gets the transaction chained payload.
-    pub fn payload(&self) -> Option<MessagePayload> {
+    pub fn payload(&self) -> Result<Option<IndexationPayload>> {
         match self.essence.payload() {
-            //Some(payload) => Some(payload.clone().into()),
-            _ => None,
+            Some(Payload::Indexation(indexation)) => {
+                match IndexationPayload::new(indexation.index(), indexation.data()) {
+                    Ok(p) => Ok(Some(p)),
+                    Err(e) => Err(anyhow::anyhow!(e.to_string())),
+                }
+            }
+            _ => Ok(None),
         }
     }
 

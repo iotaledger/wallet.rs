@@ -76,7 +76,12 @@ impl AccountInitialiser {
     }
 
     pub fn allow_create_multiple_empty_accounts(&mut self) -> Self {
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().allow_create_multiple_empty_accounts();
+        let new_initialiser = self
+            .initialiser
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .allow_create_multiple_empty_accounts();
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
@@ -249,7 +254,13 @@ impl Account {
         }
     }
 
-    pub fn get_node_info(&self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<NodeInfoWrapper> {
+    pub fn get_node_info(
+        &self,
+        node: &str,
+        jwt: Option<&str>,
+        username: Option<&str>,
+        password: Option<&str>,
+    ) -> Result<NodeInfoWrapper> {
         let auth_opt = match username {
             Some(user) => Some((user, password.unwrap())),
             None => None,

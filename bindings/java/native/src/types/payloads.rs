@@ -4,8 +4,8 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*},
     Result,
-    types::{index::*, milestone::*, receipt::*, transaction::*, treasury::*}
 };
 
 use iota_wallet::message::MessagePayload as MessagePayloadRust;

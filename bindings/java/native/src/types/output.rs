@@ -1,23 +1,17 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 use iota_wallet::{
-    address::{
-        OutputKind as RustOutputKind,
-        AddressWrapper,
-    },
-    iota_client::bee_message::output::{
-        /*Output as RustOutput,
-        SignatureLockedSingleOutput as BeeSignatureLockedSingleOutput,*/ 
-        TreasuryOutput as RustTreasuryOutput,
-    },
+    address::{AddressWrapper, OutputKind as RustOutputKind},
+    iota_client::bee_message::output::TreasuryOutput as RustTreasuryOutput,
     message::{
         TransactionOutput as RustOutput,
-        TransactionSignatureLockedSingleOutput as RustSignatureLockedSingleOutput,
         TransactionSignatureLockedDustAllowanceOutput as RustSignatureLockedDustAllowanceOutput,
+        TransactionSignatureLockedSingleOutput as RustSignatureLockedSingleOutput,
     },
 };
 
-use crate::{
-    Result,
-};
+use crate::Result;
 use anyhow::Error;
 use std::fmt::{Display, Formatter};
 
@@ -109,13 +103,6 @@ impl SignatureLockedSingleOutput {
         self.0.clone()
     }
 }
-/*
-impl From<RustSignatureLockedSingleOutput> for SignatureLockedSingleOutput {
-    fn from(output: RustSignatureLockedSingleOutput) -> Self {
-        Self(output)
-    }
-}*/
-
 
 impl TryFrom<RustOutput> for SignatureLockedSingleOutput {
     type Error = Error;
@@ -132,6 +119,7 @@ impl Display for SignatureLockedSingleOutput {
         write!(f, "({:?})", self.0)
     }
 }
+
 /// Output type for deposits that enables an address to receive dust outputs. It can be consumed as an input like a
 /// regular SigLockedSingleOutput.
 #[derive(Clone, Debug)]
