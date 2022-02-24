@@ -8,15 +8,13 @@ pub(crate) mod transactions;
 use crate::account::{
     constants::MIN_SYNC_INTERVAL,
     handle::AccountHandle,
-    operations::output_consolidation::consolidate_outputs,
-    types::{address::AddressWithBalance, InclusionState, OutputData, Transaction},
+    operations::{output_consolidation::consolidate_outputs, syncing::transactions::TransactionSyncResult},
+    types::{address::AddressWithBalance, InclusionState, OutputData},
     AccountBalance,
 };
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use crate::signing::SignerType;
 pub use options::SyncOptions;
-
-use iota_client::bee_message::output::OutputId;
 
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
@@ -38,24 +36,29 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
             MIN_SYNC_INTERVAL
         );
         // calculate the balance because if we created a transaction the amount for the inputs is not available anymore
+        // todo handle bigger locked amount
         return account_handle.balance().await;
     }
 
     // sync transactions first so we maybe get confirmed outputs in the syncing process later
     // do we want a field in SyncOptions so it can be skipped?
-    let (synced_transactions, spent_output_ids) = transactions::sync_transactions(account_handle).await?;
+    let transaction_sync_result = transactions::sync_transactions(account_handle).await?;
 
-    // we get the balance first because it's a less heavy operation for the nodes
-    let addresses_with_balance = addresses::get_addresses_with_balance(account_handle, options).await?;
-    log::debug!("[SYNC] found {} addresses_with_balance", addresses_with_balance.len());
+    // one could skip addresses to sync, to sync faster (should we only add a field to the sync option to only sync
+    // specific addresses?)
+    let addresses_to_sync = addresses::get_addresses_to_sync(account_handle, options).await?;
+    log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
     // get outputs for addresses and add them also the the addresses_with_balance
-    let addresses_with_balance =
-        addresses::get_address_output_ids(account_handle, options, addresses_with_balance.clone()).await?;
+    let addresses_with_output_ids =
+        addresses::get_address_output_ids(account_handle, options, addresses_to_sync.clone()).await?;
     let mut all_outputs = Vec::new();
-    for address in &addresses_with_balance {
+    let mut addresses_with_balance = Vec::new();
+    for mut address in addresses_with_output_ids {
         let output_responses = outputs::get_outputs(account_handle, address.output_ids.clone()).await?;
-        let outputs = outputs::output_response_to_output_data(account_handle, output_responses, address).await?;
+        let outputs = outputs::output_response_to_output_data(account_handle, output_responses, &address).await?;
+        address.amount = outputs.iter().map(|output| output.amount).sum();
+        addresses_with_balance.push(address);
         all_outputs.extend(outputs.into_iter());
     }
 
@@ -78,8 +81,7 @@ pub async fn sync_account(account_handle: &AccountHandle, options: &SyncOptions)
         account_handle,
         addresses_with_balance,
         all_outputs,
-        synced_transactions,
-        spent_output_ids,
+        transaction_sync_result,
         options,
     )
     .await?;
@@ -101,8 +103,7 @@ async fn update_account(
     account_handle: &AccountHandle,
     addresses_with_balance: Vec<AddressWithBalance>,
     outputs: Vec<OutputData>,
-    synced_transactions: Vec<Transaction>,
-    spent_output_ids: Vec<OutputId>,
+    transaction_sync_result: TransactionSyncResult,
     options: &SyncOptions,
 ) -> crate::Result<()> {
     let mut account = account_handle.write().await;
@@ -140,7 +141,7 @@ async fn update_account(
         }
     }
 
-    for transaction in synced_transactions {
+    for transaction in transaction_sync_result.updated_transactions {
         match transaction.inclusion_state {
             InclusionState::Confirmed | InclusionState::Conflicting => {
                 account.pending_transactions.remove(&transaction.payload.id());
@@ -150,16 +151,23 @@ async fn update_account(
         account.transactions.insert(transaction.payload.id(), transaction);
     }
 
-    for spent_output_id in spent_output_ids {
-        if let Some(output) = account.outputs.get_mut(&spent_output_id) {
+    for output_to_unlock in transaction_sync_result.spent_output_ids {
+        if let Some(output) = account.outputs.get_mut(&output_to_unlock) {
             output.is_spent = true;
         }
-        if let Some(output) = account.unspent_outputs.get_mut(&spent_output_id) {
+        account.locked_outputs.remove(&output_to_unlock);
+        account.unspent_outputs.remove(&output_to_unlock);
+        log::debug!("[SYNC] Unlocked spent output {}", output_to_unlock);
+    }
+    for output_to_unlock in transaction_sync_result.output_ids_to_unlock {
+        if let Some(output) = account.outputs.get_mut(&output_to_unlock) {
             output.is_spent = true;
         }
-        account.locked_outputs.remove(&spent_output_id);
-        account.unspent_outputs.remove(&spent_output_id);
-        log::debug!("[SYNC] Unlocked {}", spent_output_id);
+        account.locked_outputs.remove(&output_to_unlock);
+        log::debug!(
+            "[SYNC] Unlocked unspent output {} because of a conflicting transaction",
+            output_to_unlock
+        );
     }
     #[cfg(feature = "storage")]
     log::debug!("[SYNC] storing account {}", account.index());

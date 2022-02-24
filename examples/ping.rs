@@ -6,29 +6,31 @@
 // In this example we will try to send transactions from multiple threads simultaneously to the first 1000 addresses of
 // the second account (pong_account)
 
-use iota_client::bee_message::output::{
-    unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, Output,
+use iota_client::{
+    bee_message::output::{
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        BasicOutputBuilder, Output,
+    },
+    request_funds_from_faucet,
 };
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    // init_logger("ping-wallet.log", LevelFilter::Debug)?;
+    init_logger("ping-wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
         .with_client_options(client_options)
@@ -63,10 +65,15 @@ async fn main() -> Result<()> {
         }
     };
 
-    let amount_addresses = 100;
+    let amount_addresses = 5;
     // generate addresses so we find all funds
     if ping_account.list_addresses().await?.len() < amount_addresses {
-        ping_account.generate_addresses(amount_addresses as u32, None).await?;
+        ping_account
+            .generate_addresses(
+                (amount_addresses - ping_account.list_addresses().await?.len()) as u32,
+                None,
+            )
+            .await?;
     }
     let balance = ping_account.sync(None).await?;
     println!("Balance: {:?}", balance);
@@ -74,12 +81,22 @@ async fn main() -> Result<()> {
     let pong_addresses = {
         let mut addresses = pong_account.list_addresses().await?;
         if addresses.len() < amount_addresses {
-            addresses = pong_account.generate_addresses(amount_addresses as u32, None).await?
+            addresses = pong_account
+                .generate_addresses((amount_addresses - addresses.len()) as u32, None)
+                .await?
         };
+        println!(
+            "{}",
+            request_funds_from_faucet(
+                "http://localhost:14265/api/plugins/faucet/v1/enqueue",
+                &addresses[0].address().to_bech32()
+            )
+            .await?
+        );
         addresses
     };
 
-    for address_index in 0..amount_addresses {
+    for address_index in 0..1000 {
         let mut threads = Vec::new();
         for n in 1..4 {
             let ping_account_ = ping_account.clone();
@@ -91,7 +108,7 @@ async fn main() -> Result<()> {
                         // send one or two Mi for more different transactions
                         BasicOutputBuilder::new(n * 1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                *pong_addresses_[address_index].address().as_ref(),
+                                *pong_addresses_[address_index % amount_addresses].address().as_ref(),
                             )))
                             .finish()?,
                     )];
@@ -117,12 +134,10 @@ async fn main() -> Result<()> {
 
         let results = futures::future::try_join_all(threads).await?;
         for thread in results {
-            match thread {
-                Ok(res) => println!("{}", res),
-                Err(e) => println!("{}", e),
+            if let Err(e) = thread {
+                println!("{}", e);
             }
         }
-        println!("sleep");
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
     // wait until user press enter so background tasks keep running

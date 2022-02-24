@@ -1,15 +1,12 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::account::{
+    handle::AccountHandle,
+    types::address::{AccountAddress, AddressWrapper},
+};
 #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
 use crate::events::types::{AddressData, WalletEvent};
-use crate::{
-    account::{
-        handle::AccountHandle,
-        types::address::{AccountAddress, AddressWrapper},
-    },
-    client,
-};
 
 use iota_client::{
     constants::IOTA_COIN_TYPE,
@@ -61,8 +58,7 @@ pub async fn generate_addresses(
             // the client Doesn't work for offline creating, should we use the network from the
             // GenerateAddressMetadata instead to use `iota` or `atoi`?
             None => {
-                let client = client::get_client().await?;
-                let bech32_hrp = client.get_bech32_hrp().await?;
+                let bech32_hrp = account_handle.client.get_bech32_hrp().await?;
                 bech32_hrp
             }
         }

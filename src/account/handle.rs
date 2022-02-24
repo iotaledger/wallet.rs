@@ -21,7 +21,7 @@ use crate::events::{
     EventEmitter,
 };
 
-use iota_client::{bee_message::output::Output, signing::SignerHandle};
+use iota_client::{bee_message::output::Output, signing::SignerHandle, Client};
 use tokio::sync::{Mutex, RwLock};
 
 use std::{ops::Deref, sync::Arc};
@@ -30,6 +30,7 @@ use std::{ops::Deref, sync::Arc};
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     account: Arc<RwLock<Account>>,
+    pub(crate) client: Client,
     pub(crate) signer: SignerHandle,
     // mutex to prevent multiple sync calls at the same or almost the same time, the u128 is a timestamp
     // if the last synced time was < `MIN_SYNC_INTERVAL` second ago, we don't sync, but only calculate the balance
@@ -42,17 +43,24 @@ pub struct AccountHandle {
 impl AccountHandle {
     /// Create a new AccountHandle with an Account
     #[cfg(not(feature = "events"))]
-    pub(crate) fn new(account: Account, signer: SignerHandle) -> Self {
+    pub(crate) fn new(account: Account, client: Client, signer: SignerHandle) -> Self {
         Self {
             signer,
+            client,
             account: Arc::new(RwLock::new(account)),
             last_synced: Default::default(),
         }
     }
     #[cfg(feature = "events")]
-    pub(crate) fn new(account: Account, signer: SignerHandle, event_emitter: Arc<Mutex<EventEmitter>>) -> Self {
+    pub(crate) fn new(
+        account: Account,
+        client: Client,
+        signer: SignerHandle,
+        event_emitter: Arc<Mutex<EventEmitter>>,
+    ) -> Self {
         Self {
             account: Arc::new(RwLock::new(account)),
+            client,
             signer,
             last_synced: Default::default(),
             event_emitter,
@@ -204,12 +212,12 @@ impl AccountHandle {
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         log::debug!("[BALANCE] get balance");
         let account = self.account.read().await;
-        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.balance()).sum();
+        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.amount()).sum();
         // for `available` get locked_outputs, sum outputs balance and subtract from total_balance
         log::debug!("[BALANCE] locked outputs: {:#?}", account.locked_outputs);
         let mut locked_balance = 0;
-        let client = crate::client::get_client().await?;
-        let network_id = client.get_network_id().await?;
+
+        let network_id = self.client.get_network_id().await?;
         for locked_output in &account.locked_outputs {
             if let Some(output) = account.unspent_outputs.get(locked_output) {
                 if output.network_id == network_id {
@@ -222,6 +230,13 @@ impl AccountHandle {
             total_balance,
             locked_balance
         );
+        if total_balance < locked_balance {
+            log::debug!("[BALANCE] total_balance is smaller than the available balance");
+            // It can happen that the locked_balance is greater than the available blance if a transaction wasn't
+            // confirmed when it got checked during syncing, but shortly after, when the outputs from the address were
+            // requested, so we just overwrite the locked_balance
+            locked_balance = total_balance;
+        };
         Ok(AccountBalance {
             total: total_balance,
             available: total_balance - locked_balance,
@@ -231,11 +246,11 @@ impl AccountHandle {
     }
 
     // Should only be called from the AccountManager so all accounts are on the same state
-    pub(crate) async fn update_account_with_new_client(&self) -> crate::Result<()> {
-        log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT]");
-        let client = crate::client::get_client().await?;
+    pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> crate::Result<()> {
+        self.client = client;
+        let bech32_hrp = self.client.get_bech32_hrp().await?;
+        log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);
         let mut account = self.account.write().await;
-        let bech32_hrp = client.get_bech32_hrp().await?;
         for address in &mut account.addresses_with_balance {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
@@ -245,6 +260,7 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
+        // Drop account before syncing because we locked it
         drop(account);
         // after we set the new client options we should sync the account because the network could have changed
         // we sync with all addresses, because otherwise the balance wouldn't get updated if an address doesn't has

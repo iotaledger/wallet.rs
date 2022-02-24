@@ -16,7 +16,7 @@ use crate::{
         operations::syncing::SyncOptions,
         types::{AccountBalance, AccountIdentifier},
     },
-    client::ClientOptions,
+    ClientOptions,
 };
 use builder::AccountManagerBuilder;
 use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};
@@ -60,7 +60,12 @@ impl AccountManager {
         #[cfg(not(feature = "events"))]
         return AccountBuilder::new(self.accounts.clone(), self.signer_type.clone());
         #[cfg(feature = "events")]
-        AccountBuilder::new(self.accounts.clone(), self.signer.clone(), self.event_emitter.clone())
+        AccountBuilder::new(
+            self.accounts.clone(),
+            self.client_options.clone(),
+            self.signer.clone(),
+            self.event_emitter.clone(),
+        )
     }
     /// Get an account with an AccountIdentifier
     pub async fn get_account<I: Into<AccountIdentifier>>(&self, identifier: I) -> crate::Result<AccountHandle> {
@@ -95,10 +100,10 @@ impl AccountManager {
         log::debug!("[set_client_options]");
         let mut client_options = self.client_options.write().await;
         *client_options = options.clone();
-        crate::client::set_client(options).await?;
-        let accounts = self.accounts.read().await;
-        for account in accounts.iter() {
-            account.update_account_with_new_client().await?;
+        let new_client = options.finish().await?;
+        let mut accounts = self.accounts.write().await;
+        for account in accounts.iter_mut() {
+            account.update_account_with_new_client(new_client.clone()).await?;
         }
         Ok(())
     }

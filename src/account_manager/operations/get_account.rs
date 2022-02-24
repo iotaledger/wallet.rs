@@ -15,14 +15,6 @@ pub async fn get_account<I: Into<AccountIdentifier>>(
     let accounts = account_manager.accounts.read().await;
 
     match account_id {
-        AccountIdentifier::Id(id) => {
-            for account_handle in accounts.iter() {
-                let account = account_handle.read().await;
-                if account.id() == &id {
-                    return Ok(account_handle.clone());
-                }
-            }
-        }
         AccountIdentifier::Index(index) => {
             for account_handle in accounts.iter() {
                 let account = account_handle.read().await;

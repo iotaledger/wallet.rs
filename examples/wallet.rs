@@ -13,23 +13,22 @@ use iota_client::bee_message::{
 use iota_wallet::{
     account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
-    client::ClientOptions,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    Result,
+    ClientOptions, Result,
 };
 use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    // init_logger("wallet.log", LevelFilter::Debug)?;
+    init_logger("wallet.log", LevelFilter::Debug)?;
 
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -98,10 +97,7 @@ async fn main() -> Result<()> {
     // // switch to mainnet
     // let client_options = ClientOptions::new()
     //     .with_node("https://chrysalis-nodes.iota.org/")?
-    //     .with_node("https://chrysalis-nodes.iota.cafe/")?
-    //     .with_node_sync_disabled()
-    //     .finish()
-    //     .unwrap();
+    //     .with_node_sync_disabled();
     // let now = Instant::now();
     // manager.set_client_options(client_options).await?;
     // println!("Syncing took: {:.2?}", now.elapsed());
@@ -109,12 +105,8 @@ async fn main() -> Result<()> {
 
     // // switch back to testnet
     // let client_options = ClientOptions::new()
-    //     .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node_sync_disabled()
-    //     .finish()
-    //     .unwrap();
+    //     .with_node("http://localhost:14265")?
+    //     .with_node_sync_disabled();
     // let now = Instant::now();
     // manager.set_client_options(client_options).await?;
     // println!("Syncing took: {:.2?}", now.elapsed());

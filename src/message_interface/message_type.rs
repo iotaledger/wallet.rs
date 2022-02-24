@@ -6,7 +6,7 @@ use crate::{
         operations::{syncing::SyncOptions, transfer::TransferOptions},
         types::AccountIdentifier,
     },
-    client::ClientOptions,
+    ClientOptions,
 };
 
 use super::account_method::AccountMethod;

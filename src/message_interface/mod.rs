@@ -16,7 +16,7 @@ pub use response::Response;
 pub use response_type::ResponseType;
 use serde::Deserialize;
 
-use crate::{account_manager::AccountManager, client::ClientOptions, Result};
+use crate::{account_manager::AccountManager, ClientOptions, Result};
 use iota_client::signing::SignerHandle;
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -64,7 +64,7 @@ pub async fn send_message(handle: &WalletMessageHandler, message_type: MessageTy
 
 #[cfg(test)]
 mod tests {
-    use super::{AccountToCreate, MessageType, ResponseType, ManagerOptions};
+    use super::{AccountToCreate, ManagerOptions, MessageType, ResponseType};
 
     #[tokio::test]
     async fn create_account() {
@@ -87,15 +87,15 @@ mod tests {
                "secs":20,
                "nanos":0
             }
-         }"#.to_string();
+         }"#
+        .to_string();
 
-         let options = ManagerOptions {
+        let options = ManagerOptions {
             #[cfg(feature = "storage")]
             storage_folder: Some("teststorage".to_string()),
             client_options: Some(client_options),
             signer: Some(signer),
-         };
-
+        };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 

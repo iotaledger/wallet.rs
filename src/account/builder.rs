@@ -3,15 +3,16 @@
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
-use crate::account::{
-    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions,
-};
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
+use crate::{
+    account::{constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions},
+    ClientOptions,
+};
 
 #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
 use iota_client::signing::SignerType;
-use iota_client::{builder::ClientBuilder, constants::IOTA_COIN_TYPE, signing::SignerHandle};
+use iota_client::{constants::IOTA_COIN_TYPE, signing::SignerHandle};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -23,7 +24,7 @@ use std::{
 
 /// The AccountBuilder
 pub struct AccountBuilder {
-    client_options: Option<ClientBuilder>,
+    client_options: Arc<RwLock<ClientOptions>>,
     alias: Option<String>,
     signer: SignerHandle,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
@@ -34,9 +35,13 @@ pub struct AccountBuilder {
 impl AccountBuilder {
     #[cfg(not(feature = "events"))]
     /// Create an IOTA client builder
-    pub fn new(accounts: Arc<RwLock<Vec<AccountHandle>>>, signer: SignerHandle) -> Self {
+    pub fn new(
+        accounts: Arc<RwLock<Vec<AccountHandle>>>,
+        client: Arc<RwLock<ClientOptions>>,
+        signer: SignerHandle,
+    ) -> Self {
         Self {
-            client_options: None,
+            client,
             alias: None,
             signer,
             accounts,
@@ -47,11 +52,12 @@ impl AccountBuilder {
     /// Create an IOTA client builder
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
+        client_options: Arc<RwLock<ClientOptions>>,
         signer: SignerHandle,
         event_emitter: Arc<Mutex<EventEmitter>>,
     ) -> Self {
         Self {
-            client_options: None,
+            client_options,
             alias: None,
             signer,
             accounts,
@@ -77,7 +83,6 @@ impl AccountBuilder {
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };
         let account = Account {
-            id: index.to_string(),
             index,
             coin_type: IOTA_COIN_TYPE,
             alias: self.alias.clone().unwrap_or_else(|| index.to_string()),
@@ -106,7 +111,12 @@ impl AccountBuilder {
         #[cfg(not(feature = "events"))]
         let account_handle = AccountHandle::new(account);
         #[cfg(feature = "events")]
-        let account_handle = AccountHandle::new(account, self.signer.clone(), self.event_emitter.clone());
+        let account_handle = AccountHandle::new(
+            account,
+            self.client_options.read().await.clone().finish().await?,
+            self.signer.clone(),
+            self.event_emitter.clone(),
+        );
         accounts.push(account_handle.clone());
         Ok(account_handle)
     }

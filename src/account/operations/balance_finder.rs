@@ -21,8 +21,8 @@ pub(crate) async fn search_addresses_with_funds(
     address_gap_limit: u32,
 ) -> crate::Result<AccountBalance> {
     log::debug!("[search_addresses_with_funds]");
-    let client = crate::client::get_client().await?;
-    let bech32_hrp = client.get_bech32_hrp().await?;
+
+    let bech32_hrp = account_handle.client.get_bech32_hrp().await?;
     let network = match bech32_hrp.as_str() {
         "iota" => Network::Mainnet,
         _ => Network::Testnet,
@@ -113,7 +113,7 @@ async fn clean_account_after_recovery(
     old_highest_internal_address_index: u32,
 ) -> AccountHandle {
     let mut account = account_handle.write().await;
-    let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.balance != 0);
+    let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.amount != 0);
     let highest_public_index_with_balance = addresses_with_balance
         .clone()
         .filter(|a| !a.internal)
