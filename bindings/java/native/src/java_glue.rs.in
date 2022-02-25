@@ -815,12 +815,7 @@ foreign_class!(
         /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
         /// `sync` should be called first.
         ///
-        /// * `count` - Number of (most recent) messages to fetch.
-        /// * `from` - Starting point of the subset to fetch.
-        /// * `message_type` - Optional message type filter.
-        ///
-        /// # Example
-        ///
+        /// ```
         /// // gets 10 received messages, skipping the first 5 most recent messages.
         /// ClientOptions clientOptions = ClientOptionsBuilder::new()
         ///     .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
@@ -837,10 +832,10 @@ foreign_class!(
         ///     .unwrap()
         ///     .initialise();
         /// account.listMessages(10, 5, MessageType.RECEIVED));
-        ///
-        /// @param count The amount of messages we want
-        /// @param from The position we start the messsage listing from
-        /// @param message_type The type of messagewe want to filter on, can be null
+        /// ```
+        /// @param count Number of (most recent) messages to fetch.
+        /// @param from Starting point of the subset to fetch.
+        /// @param message_type Optional message type filter., can be null
         fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
         /// Gets the spent addresses.
         fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
@@ -1564,7 +1559,7 @@ foreign_class!(
     class TransactionInput {
         self_type TransactionInput;
         private constructor = empty;
-        private fn TransactionInput::to_string(&self) -> String;
+        private fn TransactionInput::to_string(&self) -> String; alias to_string;
         private fn TransactionInput::eq(&self, o: &TransactionInput) -> bool; alias rustEq;
         fn TransactionInput::kind(&self) -> InputKind;
         fn TransactionInput::as_utxo(&self) -> Result<UtxoInput>;
@@ -1579,8 +1574,8 @@ foreign_class!(
         self_type TreasuryInput;
         /// Create a new TreasuryInput
         /// @param id The MilestoneId which Generated a `TreasuryOutput`
-        constructor TreasuryInput::new(id: MilestoneId) -> Self;
-        private fn TreasuryInput::to_string(&self) -> String;
+        constructor TreasuryInput::new(id: MilestoneId) -> TreasuryInput;
+        private fn TreasuryInput::to_string(&self) -> String; alias to_string;
         private fn TreasuryInput::eq(&self, o: &TreasuryInput) -> bool; alias rustEq;
         /// Returns the milestones id of a `TreasuryInput`.
         fn TreasuryInput::milestone_id(&self) -> MilestoneId;
@@ -1593,7 +1588,7 @@ foreign_class!(
     class UtxoInput {
         self_type UtxoInput;
         private constructor = empty;
-        private fn UtxoInput::to_string(&self) -> String;
+        private fn UtxoInput::to_string(&self) -> String; alias to_string;
         private fn UtxoInput::eq(&self, o: &UtxoInput) -> bool; alias rustEq;
         /// Create a new `UtxoInput`
         /// @param id The ouput Id

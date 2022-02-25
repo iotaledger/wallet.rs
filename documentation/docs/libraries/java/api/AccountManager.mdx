@@ -1,8 +1,11 @@
+### AccountManager
+The account manager.
+ 
+ Used to manage multiple accounts.
 
 #### Builder(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Initialises the account manager builder.
-
 
 #### getMigrationData(nodes , seed , permanode , security_level , initial_address_index , gap_limit): [MigrationData](#migrationdata)
 
@@ -10,12 +13,12 @@ Gets the legacy migration data for the seed.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| nodes | String[] |   |
-| seed | String |   |
-| permanode | String |   |
-| security_level | byte |   |
-| initial_address_index | long |   |
-| gap_limit | long |   |
+| nodes | String[] |  List of legacy nodes to connect to |
+| seed | String |  The seed we want to get data for |
+| permanode | String |  The legacy permanode URL |
+| security_level | byte |  The seed security level |
+| initial_address_index | long |  The starting index of the seed we searc |
+| gap_limit | long |  The maximum gap we cross without finding an address with balance |
 
 #### getMigrationAddress(ledger_prompt , account_id): [MigrationAddress](#migrationaddress)
 
@@ -28,7 +31,10 @@ Convert the first address from the first account to a migration tryte address
 
 #### createMigrationBundle(seed , input_address_indexes , options): [MigrationBundle](#migrationbundle)
 
-Creates the bundle for migration associated with the given input indexes, Performs bundle mining if the address is spent and `mine` is true, And signs the bundle. Returns the bundle hash. It logs the operations to `$storage_path.join(log_file_name)`.
+Creates the bundle for migration associated with the given input indexes,
+ Performs bundle mining if the address is spent and `mine` is true,
+ And signs the bundle. Returns the bundle hash.
+ It logs the operations to `$storage_path.join(log_file_name)`.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -52,13 +58,12 @@ Initialises the background polling and MQTT monitoring.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| polling_interval | float |   |
-| automatic_output_consolidation | boolean |   |
+| polling_interval | float |  Sets the polling interval in seconds |
+| automatic_output_consolidation | boolean |  If we automatically consolidate outputs |
 
 #### stopBackgroundSync(): void
 
 Stops the background polling and MQTT monitoring.
-
 
 #### setStoragePassword(password): void
 
@@ -66,7 +71,7 @@ Sets the password for the stored accounts.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| password | String |   |
+| password | String |  The Storage password |
 
 #### setStrongholdPassword(password): void
 
@@ -74,7 +79,7 @@ Sets the stronghold password.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| password | String |   |
+| password | String |  The Stronghold snapshot password |
 
 #### changeStrongholdPassword(current_password , new_password): void
 
@@ -82,13 +87,12 @@ Changes the stronghold password.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| current_password | String |   |
-| new_password | String |   |
+| current_password | String |  The current Stronghold password |
+| new_password | String |  The new Stronghold password |
 
 #### isLatestAddressUnused(): boolean
 
 Determines whether all accounts has the latest address unused.
-
 
 #### setClientOptions(options): void
 
@@ -98,23 +102,24 @@ Sets the client options for all accounts.
 | --------------- | -------- | -------- |
 | options | [ClientOptions](#clientoptions) |   |
 
-#### storeMnemonic(signer_type_enum , mnemonic): void
+#### storeMnemonic(signer_type , mnemonic): void
 
-Stores a mnemonic for the given signer type. If the mnemonic is not provided, we'll generate one.
+Stores a mnemonic for the given signer type.
+ If the mnemonic is not provided, we'll generate one.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| signer_type_enum | [AccountSignerType](#accountsignertype) |   |
+| signer_type | [AccountSignerType](#accountsignertype) |   |
 | mnemonic | String |   |
 
 #### generateMnemonic(): String
 
 Generates a new mnemonic.
 
-
 #### verifyMnemonic(mnemonic): void
 
-Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here should match the generated.
+Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
+ should match the generated.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -139,7 +144,6 @@ Deletes an account.
 #### syncAccounts(): [AccountsSynchronizer](#accountssynchronizer)
 
 Syncs all accounts.
-
 
 #### internalTransfer(from_account_id , to_account_id , amount): [Message](#message)
 
@@ -180,7 +184,6 @@ Gets the account associated with the given identifier.
 #### getAccounts(): [Account[]](#account)
 
 Gets all accounts from storage.
-
 
 #### reattach(account_id , message_id): [Message](#message)
 

@@ -1,18 +1,22 @@
+### MigrationProgressType
+Migration event type.
 
-#### values(): [MigrationProgressType[]](#migrationprogresstype)
+#### FETCHING_MIGRATION_DATA
 
+Fetching migration data on the given address range.
 
+#### MINING_BUNDLE
 
+Mining the bundle with the given spent address.
 
-#### valueOf(name): [MigrationProgressType](#migrationprogresstype)
+#### SIGNING_BUNDLE
 
+Signing the bundle.
 
+#### BROADCASTING_BUNDLE
 
-| Parameter       | Type |  Description |
-| --------------- | -------- | -------- |
-| name | String |   |
+Broadcasting the given bundle hash.
 
-#### getValue(): int
+#### TRANSACTION_CONFIRMED
 
-
-
+Transaction confirmation event.

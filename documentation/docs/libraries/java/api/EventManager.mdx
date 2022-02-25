@@ -1,7 +1,9 @@
+### EventManager
+
 
 #### subscribeErrors(cb): [EventId](#eventid)
 
-
+Listen to errors.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -9,7 +11,7 @@
 
 #### subscribeNewTransaction(cb): [EventId](#eventid)
 
-
+Listen to new messages.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -17,15 +19,15 @@
 
 #### subscribeConfirmationStateChange(cb): [EventId](#eventid)
 
-
+Listen to transaction confirmation state change.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
 | cb | [TransactionConfirmationChangeListener](#transactionconfirmationchangelistener) |   |
 
-#### subscribeReattachement(cb): [EventId](#eventid)
+#### subscribeReattachment(cb): [EventId](#eventid)
 
-
+Listen to transaction reattachment change.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -33,7 +35,7 @@
 
 #### subscribeBroadcast(cb): [EventId](#eventid)
 
-
+Listen to transaction broadcast.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -41,7 +43,7 @@
 
 #### subscribeTransferProgress(cb): [EventId](#eventid)
 
-
+Listen to a transfer event.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -49,7 +51,7 @@
 
 #### subscribeMigrationProgress(cb): [EventId](#eventid)
 
-
+Listen to a migration event.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -57,7 +59,7 @@
 
 #### subscribeBalanceChange(cb): [EventId](#eventid)
 
-
+Listen to balance changes.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -65,7 +67,7 @@
 
 #### subscribeStrongholdStatusChange(cb): [EventId](#eventid)
 
-
+Listen to stronghold status change events.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -73,7 +75,7 @@
 
 #### subscribeAddressConsolidationNeeded(cb): [EventId](#eventid)
 
-
+Listen to `address consolidation needed` events.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
@@ -81,51 +83,51 @@
 
 #### removeErrorListener(event): void
 
-
+Removes the error listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeNewTransactionListener(event): void
 
-
+Removes the new transaction listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeConfirmationStateChangeListener(event): void
 
-
-
-| Parameter       | Type |  Description |
-| --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
-
-#### removeReattachementListener(event): void
-
-
+Removes the new confirmation state change listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
+
+#### removeReattachmentListener(event): void
+
+Removes the reattachment listener associated with the given identifier.
+
+| Parameter       | Type |  Description |
+| --------------- | -------- | -------- |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeBroadcastListener(event): void
 
-
+Removes the broadcast listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeTransferProgressListener(event): void
 
-
+Remove a transfer event listener.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeMigrationProgressListener(event): void
 
@@ -133,28 +135,28 @@
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove Remove a migration event listener. |
 
 #### removeBalanceChangeListener(event): void
 
-
+Removes the balance change listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeStrongholdStatusChangeListener(event): void
 
-
+Removes the stronghold status change listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
 #### removeAddressConsolidationNeededListener(event): void
 
-
+Removes the balance change listener associated with the given identifier.
 
 | Parameter       | Type |  Description |
 | --------------- | -------- | -------- |
-| event | [EventId](#eventid) |   |
+| event | [EventId](#eventid) |  The ID of the listener we want to remove |
