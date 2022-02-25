@@ -1,6 +1,6 @@
 
 
-### TransferBuilder(test, test, test): [TransferBuilder](#transferbuilder)
+### TransferBuilder(address, amount, output_kind): [TransferBuilder](#transferbuilder)
 
 Initialises a new transfer to the given address.
 
@@ -10,7 +10,7 @@ Initialises a new transfer to the given address.
 | amount | long |  The amount we want to send |
 | output_kind | [OutputKind](#outputkind) |  The kind of output we wish to use |
 
-### newFromOutputs(test): [TransferBuilder](#transferbuilder)
+### newFromOutputs(outputs): [TransferBuilder](#transferbuilder)
 
 Creates a transfer with multiple outputs.
 
@@ -18,7 +18,7 @@ Creates a transfer with multiple outputs.
 | --------------- | -------- | -------- |
 | outputs | [TransferOutput[]](#transferoutput) |  List of outputs |
 
-### withRemainderValueStrategy(test): [TransferBuilder](#transferbuilder)
+### withRemainderValueStrategy(strategy): [TransferBuilder](#transferbuilder)
 
 Sets the remainder value strategy for the transfer.
 
@@ -26,7 +26,7 @@ Sets the remainder value strategy for the transfer.
 | --------------- | -------- | -------- |
 | strategy | [RemainderValueStrategy](#remaindervaluestrategy) |  The type of strategy we use to handle the remainder |
 
-### withRemainderToAccountWithAddress(test): [TransferBuilder](#transferbuilder)
+### withRemainderToAccountWithAddress(address): [TransferBuilder](#transferbuilder)
 
 Move the remainder value to an address that must belong to the source account.
 
@@ -34,7 +34,7 @@ Move the remainder value to an address that must belong to the source account.
 | --------------- | -------- | -------- |
 | address | [AddressWrapper](#addresswrapper) |  The address we send the remainder t o |
 
-### withIndexation(test): [TransferBuilder](#transferbuilder)
+### withIndexation(indexation): [TransferBuilder](#transferbuilder)
 
 (Optional) message indexation.
 

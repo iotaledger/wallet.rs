@@ -1,6 +1,6 @@
 
 
-### consolidateOutputs(test): [Message[]](#message)
+### consolidateOutputs(include_dust_allowance_outputs): [Message[]](#message)
 
 Consolidate account outputs.
 
@@ -8,7 +8,7 @@ Consolidate account outputs.
 | --------------- | -------- | -------- |
 | include_dust_allowance_outputs | boolean |  Wether we include dust outputs or not |
 
-### transfer(test): [Message](#message)
+### transfer(transfer): [Message](#message)
 
 Send messages.
 
@@ -16,7 +16,7 @@ Send messages.
 | --------------- | -------- | -------- |
 | transfer | [Transfer](#transfer) |  A transfer object, can be made using Transfer.builder |
 
-### retry(test): [Message](#message)
+### retry(message_id): [Message](#message)
 
 Retry message.
 
@@ -24,7 +24,7 @@ Retry message.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to retry |
 
-### promote(test): [Message](#message)
+### promote(message_id): [Message](#message)
 
 Promote message.
 
@@ -32,7 +32,7 @@ Promote message.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to promote |
 
-### reattach(test): [Message](#message)
+### reattach(message_id): [Message](#message)
 
 Reattach message.
 
@@ -44,7 +44,7 @@ Reattach message.
 
 Gets a new unused address and links it to this account.
 
-### generateAddresses(test): [Address[]](#address)
+### generateAddresses(amount): [Address[]](#address)
 
 Gets amount new unused addresses and links them to this account.
 
@@ -72,7 +72,7 @@ Returns the most recent address of the account.
 
 Gets the account balance information.
 
-### setAlias(test): void
+### setAlias(alias): void
 
 Updates the account alias.
 
@@ -80,7 +80,7 @@ Updates the account alias.
 | --------------- | -------- | -------- |
 | alias | String |  The new alias |
 
-### setClientOptions(test): void
+### setClientOptions(options): void
 
 Updates the account's client options.
 
@@ -88,7 +88,7 @@ Updates the account's client options.
 | --------------- | -------- | -------- |
 | options | [ClientOptions](#clientoptions) |  The new options |
 
-### listMessages(test, test, test): [Message[]](#message)
+### listMessages(count, from, message_type): [Message[]](#message)
 
 Gets a list of transactions on this account.
  It's fetched from the storage. To ensure the database is updated with the latest transactions,
@@ -127,7 +127,7 @@ Gets the spent addresses.
 
 Gets the unspent addresses.
 
-### getMessage(test): Optional&lt;[Message](#message)&gt;
+### getMessage(message_id): Optional&lt;[Message](#message)&gt;
 
 Gets a message with the given id associated with this account.
 
@@ -135,7 +135,7 @@ Gets a message with the given id associated with this account.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to get |
 
-### getNodeInfo(test, test, test, test): [NodeInfoWrapper](#nodeinfowrapper)
+### getNodeInfo(node, jwt, username, password): [NodeInfoWrapper](#nodeinfowrapper)
 
 Gets the node info from /api/v1/info endpoint
  TODO: Add auth and url in one NodeInfoOptions struct.

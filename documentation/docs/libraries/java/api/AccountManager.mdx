@@ -6,7 +6,7 @@ The account manager.
 
 Initialises the account manager builder.
 
-### getMigrationData(test, test, test, test, test, test): [MigrationData](#migrationdata)
+### getMigrationData(nodes, seed, permanode, security_level, initial_address_index, gap_limit): [MigrationData](#migrationdata)
 
 Gets the legacy migration data for the seed.
 
@@ -19,7 +19,7 @@ Gets the legacy migration data for the seed.
 | initial_address_index | long |  The starting index of the seed we searc |
 | gap_limit | long |  The maximum gap we cross without finding an address with balance |
 
-### getMigrationAddress(test, test): [MigrationAddress](#migrationaddress)
+### getMigrationAddress(ledger_prompt, account_id): [MigrationAddress](#migrationaddress)
 
 Convert the first address from the first account to a migration tryte address
 
@@ -28,7 +28,7 @@ Convert the first address from the first account to a migration tryte address
 | ledger_prompt | boolean |   |
 | account_id | String |   |
 
-### createMigrationBundle(test, test, test): [MigrationBundle](#migrationbundle)
+### createMigrationBundle(seed, input_address_indexes, options): [MigrationBundle](#migrationbundle)
 
 Creates the bundle for migration associated with the given input indexes,
  Performs bundle mining if the address is spent and `mine` is true,
@@ -41,7 +41,7 @@ Creates the bundle for migration associated with the given input indexes,
 | input_address_indexes | long[] |   |
 | options | [MigrationBundleOptions](#migrationbundleoptions) |   |
 
-### sendMigrationBundle(test, test, test): void
+### sendMigrationBundle(nodes, bundle_hash, mwm): void
 
 Sends the migration bundle to the given node. mwm 0 for default(14)
 
@@ -51,7 +51,7 @@ Sends the migration bundle to the given node. mwm 0 for default(14)
 | bundle_hash | String |   |
 | mwm | short |   |
 
-### startBackgroundSync(test, test): void
+### startBackgroundSync(polling_interval, automatic_output_consolidation): void
 
 Initialises the background polling and MQTT monitoring.
 
@@ -64,7 +64,7 @@ Initialises the background polling and MQTT monitoring.
 
 Stops the background polling and MQTT monitoring.
 
-### setStoragePassword(test): void
+### setStoragePassword(password): void
 
 Sets the password for the stored accounts.
 
@@ -72,7 +72,7 @@ Sets the password for the stored accounts.
 | --------------- | -------- | -------- |
 | password | String |  The Storage password |
 
-### setStrongholdPassword(test): void
+### setStrongholdPassword(password): void
 
 Sets the stronghold password.
 
@@ -80,7 +80,7 @@ Sets the stronghold password.
 | --------------- | -------- | -------- |
 | password | String |  The Stronghold snapshot password |
 
-### changeStrongholdPassword(test, test): void
+### changeStrongholdPassword(current_password, new_password): void
 
 Changes the stronghold password.
 
@@ -93,7 +93,7 @@ Changes the stronghold password.
 
 Determines whether all accounts has the latest address unused.
 
-### setClientOptions(test): void
+### setClientOptions(options): void
 
 Sets the client options for all accounts.
 
@@ -101,7 +101,7 @@ Sets the client options for all accounts.
 | --------------- | -------- | -------- |
 | options | [ClientOptions](#clientoptions) |   |
 
-### storeMnemonic(test, test): void
+### storeMnemonic(signer_type, mnemonic): void
 
 Stores a mnemonic for the given signer type.
  If the mnemonic is not provided, we'll generate one.
@@ -115,7 +115,7 @@ Stores a mnemonic for the given signer type.
 
 Generates a new mnemonic.
 
-### verifyMnemonic(test): void
+### verifyMnemonic(mnemonic): void
 
 Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
  should match the generated.
@@ -124,7 +124,7 @@ Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnem
 | --------------- | -------- | -------- |
 | mnemonic | String |   |
 
-### createAccount(test): [AccountInitialiser](#accountinitialiser)
+### createAccount(client_options): [AccountInitialiser](#accountinitialiser)
 
 Adds a new account.
 
@@ -132,7 +132,7 @@ Adds a new account.
 | --------------- | -------- | -------- |
 | client_options | [ClientOptions](#clientoptions) |   |
 
-### removeAccount(test): void
+### removeAccount(account_id): void
 
 Deletes an account.
 
@@ -144,7 +144,7 @@ Deletes an account.
 
 Syncs all accounts.
 
-### internalTransfer(test, test, test): [Message](#message)
+### internalTransfer(from_account_id, to_account_id, amount): [Message](#message)
 
 Transfers an amount from an account to another.
 
@@ -154,7 +154,7 @@ Transfers an amount from an account to another.
 | to_account_id | String |   |
 | amount | long |   |
 
-### backup(test, test): Path
+### backup(destination, stronghold_password): Path
 
 Backups the storage to the given destination
 
@@ -163,7 +163,7 @@ Backups the storage to the given destination
 | destination | String |   |
 | stronghold_password | String |   |
 
-### importAccounts(test, test): void
+### importAccounts(source, stronghold_password): void
 
 Import backed up accounts.
 
@@ -172,7 +172,7 @@ Import backed up accounts.
 | source | String |   |
 | stronghold_password | String |   |
 
-### getAccount(test): [Account](#account)
+### getAccount(account_id): [Account](#account)
 
 Gets the account associated with the given identifier.
 
@@ -184,7 +184,7 @@ Gets the account associated with the given identifier.
 
 Gets all accounts from storage.
 
-### reattach(test, test): [Message](#message)
+### reattach(account_id, message_id): [Message](#message)
 
 Reattaches an unconfirmed transaction.
 
@@ -193,7 +193,7 @@ Reattaches an unconfirmed transaction.
 | account_id | String |   |
 | message_id | [MessageId](#messageid) |   |
 
-### promote(test, test): [Message](#message)
+### promote(account_id, message_id): [Message](#message)
 
 Promotes an unconfirmed transaction.
 
@@ -202,7 +202,7 @@ Promotes an unconfirmed transaction.
 | account_id | String |   |
 | message_id | [MessageId](#messageid) |   |
 
-### retry(test, test): [Message](#message)
+### retry(account_id, message_id): [Message](#message)
 
 Retries an unconfirmed transaction.
 

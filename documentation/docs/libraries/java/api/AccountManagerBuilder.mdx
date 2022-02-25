@@ -4,7 +4,7 @@ Account manager builder.
 
 Initialises a new instance of the account manager builder with the default storage adapter.
 
-### withStorage(test, test): [AccountManagerBuilder](#accountmanagerbuilder)
+### withStorage(storage_path, password): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the storage config to be used.
 
@@ -13,7 +13,7 @@ Sets the storage config to be used.
 | storage_path | String |  The path where the database file will be saved |
 | password | String |  The storage password |
 
-### withPollingInterval(test): [AccountManagerBuilder](#accountmanagerbuilder)
+### withPollingInterval(polling_interval): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the polling interval.
 
@@ -25,7 +25,7 @@ Sets the polling interval.
 
 Skip polling
 
-### withOutputConsolidationThreshold(test): [AccountManagerBuilder](#accountmanagerbuilder)
+### withOutputConsolidationThreshold(threshold): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the number of outputs an address must have to trigger the automatic consolidation process.
 

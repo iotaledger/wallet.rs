@@ -1,6 +1,6 @@
 The accounts synchronizer.
 
-### gapLimit(test): [AccountsSynchronizer](#accountssynchronizer)
+### gapLimit(limit): [AccountsSynchronizer](#accountssynchronizer)
 
 Number of address indexes that are generated.
 
@@ -8,7 +8,7 @@ Number of address indexes that are generated.
 | --------------- | -------- | -------- |
 | limit | long |  The maximum gap we cross without finding an address with balance |
 
-### addressIndex(test): [AccountsSynchronizer](#accountssynchronizer)
+### addressIndex(address_index): [AccountsSynchronizer](#accountssynchronizer)
 
 Initial address index to start syncing.
 
@@ -24,7 +24,7 @@ Skips the account discovery process.
 
 Skip syncing existing change addresses.
 
-### accountDiscoveryThreshold(test): [AccountsSynchronizer](#accountssynchronizer)
+### accountDiscoveryThreshold(account_discovery_threshold): [AccountsSynchronizer](#accountssynchronizer)
 
 Sets the minimum number of accounts to check on the discovery process.
 

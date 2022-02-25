@@ -1,6 +1,6 @@
 
 
-### iotaInitialize(test, test, test): void
+### iotaInitialize(cb, actor_id, storage_path): void
 
 
 
@@ -10,7 +10,7 @@
 | actor_id | String |   |
 | storage_path | String |   |
 
-### iotaDestroy(test): void
+### iotaDestroy(actor_id): void
 
 
 
@@ -18,7 +18,7 @@
 | --------------- | -------- | -------- |
 | actor_id | String |   |
 
-### iotaSendMessage(test): void
+### iotaSendMessage(message): void
 
 
 
@@ -26,7 +26,7 @@
 | --------------- | -------- | -------- |
 | message | String |   |
 
-### iotaListen(test, test, test): void
+### iotaListen(actor_id, id, event): void
 
 
 
@@ -36,7 +36,7 @@
 | id | String |   |
 | event | [EventType](#eventtype) |   |
 
-### iotaInitLogger(test): void
+### iotaInitLogger(file_name): void
 
 
 
