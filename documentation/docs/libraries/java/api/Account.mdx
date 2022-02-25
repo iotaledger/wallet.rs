@@ -1,7 +1,6 @@
-### Account
 
 
-#### consolidateOutputs(include_dust_allowance_outputs): [Message[]](#message)
+### consolidateOutputs(test): [Message[]](#message)
 
 Consolidate account outputs.
 
@@ -9,7 +8,7 @@ Consolidate account outputs.
 | --------------- | -------- | -------- |
 | include_dust_allowance_outputs | boolean |  Wether we include dust outputs or not |
 
-#### transfer(transfer): [Message](#message)
+### transfer(test): [Message](#message)
 
 Send messages.
 
@@ -17,7 +16,7 @@ Send messages.
 | --------------- | -------- | -------- |
 | transfer | [Transfer](#transfer) |  A transfer object, can be made using Transfer.builder |
 
-#### retry(message_id): [Message](#message)
+### retry(test): [Message](#message)
 
 Retry message.
 
@@ -25,7 +24,7 @@ Retry message.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to retry |
 
-#### promote(message_id): [Message](#message)
+### promote(test): [Message](#message)
 
 Promote message.
 
@@ -33,7 +32,7 @@ Promote message.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to promote |
 
-#### reattach(message_id): [Message](#message)
+### reattach(test): [Message](#message)
 
 Reattach message.
 
@@ -41,11 +40,11 @@ Reattach message.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to reattach |
 
-#### generateAddress(): [Address](#address)
+### generateAddress(): [Address](#address)
 
 Gets a new unused address and links it to this account.
 
-#### generateAddresses(amount): [Address[]](#address)
+### generateAddresses(test): [Address[]](#address)
 
 Gets amount new unused addresses and links them to this account.
 
@@ -53,27 +52,27 @@ Gets amount new unused addresses and links them to this account.
 | --------------- | -------- | -------- |
 | amount | long |  The amount of addresses we generate |
 
-#### getUnusedAddress(): [Address](#address)
+### getUnusedAddress(): [Address](#address)
 
 Synchronizes the account addresses with the Tangle and returns the latest address in the account,
  which is an address without balance.
 
-#### isLatestAddressUnused(): boolean
+### isLatestAddressUnused(): boolean
 
 Syncs the latest address with the Tangle and determines whether it's unused or not.
  An unused address is an address without balance and associated message history.
  Note that such address might have been used in the past, because the message history might have been pruned by
  the node.
 
-#### latestAddress(): [Address](#address)
+### latestAddress(): [Address](#address)
 
 Returns the most recent address of the account.
 
-#### balance(): [AccountBalance](#accountbalance)
+### balance(): [AccountBalance](#accountbalance)
 
 Gets the account balance information.
 
-#### setAlias(alias): void
+### setAlias(test): void
 
 Updates the account alias.
 
@@ -81,7 +80,7 @@ Updates the account alias.
 | --------------- | -------- | -------- |
 | alias | String |  The new alias |
 
-#### setClientOptions(options): void
+### setClientOptions(test): void
 
 Updates the account's client options.
 
@@ -89,7 +88,7 @@ Updates the account's client options.
 | --------------- | -------- | -------- |
 | options | [ClientOptions](#clientoptions) |  The new options |
 
-#### listMessages(count , from , message_type): [Message[]](#message)
+### listMessages(test, test, test): [Message[]](#message)
 
 Gets a list of transactions on this account.
  It's fetched from the storage. To ensure the database is updated with the latest transactions,
@@ -120,15 +119,15 @@ Gets a list of transactions on this account.
 | from | long |  Starting point of the subset to fetch. |
 | message_type | [MessageType](#messagetype) |  Optional message type filter., can be null |
 
-#### listSpentAddresses(): [Address[]](#address)
+### listSpentAddresses(): [Address[]](#address)
 
 Gets the spent addresses.
 
-#### listUnspentAddresses(): [Address[]](#address)
+### listUnspentAddresses(): [Address[]](#address)
 
 Gets the unspent addresses.
 
-#### getMessage(message_id): Optional&lt;[Message](org/iota/wallet/Message.java)&gt;
+### getMessage(test): Optional&lt;[Message](#message)&gt;
 
 Gets a message with the given id associated with this account.
 
@@ -136,7 +135,7 @@ Gets a message with the given id associated with this account.
 | --------------- | -------- | -------- |
 | message_id | [MessageId](#messageid) |  The id of the message we want to get |
 
-#### getNodeInfo(node , jwt , username , password): [NodeInfoWrapper](#nodeinfowrapper)
+### getNodeInfo(test, test, test, test): [NodeInfoWrapper](#nodeinfowrapper)
 
 Gets the node info from /api/v1/info endpoint
  TODO: Add auth and url in one NodeInfoOptions struct.
@@ -148,30 +147,30 @@ Gets the node info from /api/v1/info endpoint
 | username | String |  The username, can be `null` |
 | password | String |  The password, can be `null`. Only checked if username is not `null` |
 
-#### alias(): String
+### alias(): String
 
 The account alias.
 
-#### bech32Hrp(): String
+### bech32Hrp(): String
 
 Returns the address bech32 human readable part.
 
-#### id(): String
+### id(): String
 
 The account identifier.
 
-#### createdAt(): Calendar
+### createdAt(): Calendar
 
 Time of account creation.
 
-#### sync(): [AccountSynchronizer](#accountsynchronizer)
+### sync(): [AccountSynchronizer](#accountsynchronizer)
 
 Returns the builder to setup the process to synchronize this account with the Tangle.
 
-#### lastSyncedAt(): Optional&lt;Calendar&gt;
+### lastSyncedAt(): Optional&lt;Calendar&gt;
 
 Time the account was last synced with the Tangle.
 
-#### clientOptions(): [ClientOptions](#clientoptions)
+### clientOptions(): [ClientOptions](#clientoptions)
 
 The current client options.

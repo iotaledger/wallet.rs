@@ -1,7 +1,6 @@
-### TransferBuilder
 
 
-#### TransferBuilder(address , amount , output_kind): [TransferBuilder](#transferbuilder)
+### TransferBuilder(test, test, test): [TransferBuilder](#transferbuilder)
 
 Initialises a new transfer to the given address.
 
@@ -11,7 +10,7 @@ Initialises a new transfer to the given address.
 | amount | long |  The amount we want to send |
 | output_kind | [OutputKind](#outputkind) |  The kind of output we wish to use |
 
-#### newFromOutputs(outputs): [TransferBuilder](#transferbuilder)
+### newFromOutputs(test): [TransferBuilder](#transferbuilder)
 
 Creates a transfer with multiple outputs.
 
@@ -19,7 +18,7 @@ Creates a transfer with multiple outputs.
 | --------------- | -------- | -------- |
 | outputs | [TransferOutput[]](#transferoutput) |  List of outputs |
 
-#### withRemainderValueStrategy(strategy): [TransferBuilder](#transferbuilder)
+### withRemainderValueStrategy(test): [TransferBuilder](#transferbuilder)
 
 Sets the remainder value strategy for the transfer.
 
@@ -27,7 +26,7 @@ Sets the remainder value strategy for the transfer.
 | --------------- | -------- | -------- |
 | strategy | [RemainderValueStrategy](#remaindervaluestrategy) |  The type of strategy we use to handle the remainder |
 
-#### withRemainderToAccountWithAddress(address): [TransferBuilder](#transferbuilder)
+### withRemainderToAccountWithAddress(test): [TransferBuilder](#transferbuilder)
 
 Move the remainder value to an address that must belong to the source account.
 
@@ -35,7 +34,7 @@ Move the remainder value to an address that must belong to the source account.
 | --------------- | -------- | -------- |
 | address | [AddressWrapper](#addresswrapper) |  The address we send the remainder t o |
 
-#### withIndexation(indexation): [TransferBuilder](#transferbuilder)
+### withIndexation(test): [TransferBuilder](#transferbuilder)
 
 (Optional) message indexation.
 
@@ -43,10 +42,10 @@ Move the remainder value to an address that must belong to the source account.
 | --------------- | -------- | -------- |
 | indexation | [IndexationPayload](#indexationpayload) |  Build a transfer with this specific payload |
 
-#### withSkipSync(): [TransferBuilder](#transferbuilder)
+### withSkipSync(): [TransferBuilder](#transferbuilder)
 
 Skip account syncing before transferring.
 
-#### finish(): [Transfer](#transfer)
+### finish(): [Transfer](#transfer)
 
 Builds the transfer.

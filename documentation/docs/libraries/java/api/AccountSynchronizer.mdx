@@ -1,7 +1,6 @@
-### AccountSynchronizer
 Account sync helper.
 
-#### gapLimit(limit): [AccountSynchronizer](#accountsynchronizer)
+### gapLimit(test): [AccountSynchronizer](#accountsynchronizer)
 
 Number of address indexes that are generated.
 
@@ -9,16 +8,16 @@ Number of address indexes that are generated.
 | --------------- | -------- | -------- |
 | limit | long |  The maximum gap we cross without finding an address with balance |
 
-#### skipPersistence(): [AccountSynchronizer](#accountsynchronizer)
+### skipPersistence(): [AccountSynchronizer](#accountsynchronizer)
 
 Skip saving new messages and addresses on the account object.
  The found data is returned on the `execute` call but won't be persisted on the database.
 
-#### skipChangeAddresses(): [AccountSynchronizer](#accountsynchronizer)
+### skipChangeAddresses(): [AccountSynchronizer](#accountsynchronizer)
 
 Skip syncing existing change addresses.
 
-#### addressIndex(address_index): [AccountSynchronizer](#accountsynchronizer)
+### addressIndex(test): [AccountSynchronizer](#accountsynchronizer)
 
 Initial address index to start syncing.
 
@@ -26,7 +25,7 @@ Initial address index to start syncing.
 | --------------- | -------- | -------- |
 | address_index | long |  The starting index |
 
-#### execute(): [SyncedAccount](#syncedaccount)
+### execute(): [SyncedAccount](#syncedaccount)
 
 Syncs account with the tangle.
  The account syncing process ensures that the latest metadata (balance, transactions)

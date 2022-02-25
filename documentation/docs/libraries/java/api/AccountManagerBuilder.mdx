@@ -1,11 +1,10 @@
-### AccountManagerBuilder
 Account manager builder.
 
-#### AccountManagerBuilder(): [AccountManagerBuilder](#accountmanagerbuilder)
+### AccountManagerBuilder(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Initialises a new instance of the account manager builder with the default storage adapter.
 
-#### withStorage(storage_path , password): [AccountManagerBuilder](#accountmanagerbuilder)
+### withStorage(test, test): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the storage config to be used.
 
@@ -14,7 +13,7 @@ Sets the storage config to be used.
 | storage_path | String |  The path where the database file will be saved |
 | password | String |  The storage password |
 
-#### withPollingInterval(polling_interval): [AccountManagerBuilder](#accountmanagerbuilder)
+### withPollingInterval(test): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the polling interval.
 
@@ -22,11 +21,11 @@ Sets the polling interval.
 | --------------- | -------- | -------- |
 | polling_interval | float |  the polling interval in seconds |
 
-#### withSkipPolling(): [AccountManagerBuilder](#accountmanagerbuilder)
+### withSkipPolling(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Skip polling
 
-#### withOutputConsolidationThreshold(threshold): [AccountManagerBuilder](#accountmanagerbuilder)
+### withOutputConsolidationThreshold(test): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Sets the number of outputs an address must have to trigger the automatic consolidation process.
 
@@ -34,23 +33,23 @@ Sets the number of outputs an address must have to trigger the automatic consoli
 | --------------- | -------- | -------- |
 | threshold | long |  The number of outputs an address must have to trigger the automatic consolidation process |
 
-#### withAutomaticOutputConsolidationDisabled(): [AccountManagerBuilder](#accountmanagerbuilder)
+### withAutomaticOutputConsolidationDisabled(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Disables the automatic output consolidation process.
 
-#### withSyncSpentOutputs(): [AccountManagerBuilder](#accountmanagerbuilder)
+### withSyncSpentOutputs(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Enables fetching spent output history on sync.
 
-#### withEventPersistence(): [AccountManagerBuilder](#accountmanagerbuilder)
+### withEventPersistence(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Enables event persistence.
 
-#### withMultipleEmptyAccounts(): [AccountManagerBuilder](#accountmanagerbuilder)
+### withMultipleEmptyAccounts(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Enables creating multiple accounts without history.
  The wallet disables it by default to simplify account discovery.
 
-#### finish(): [AccountManager](#accountmanager)
+### finish(): [AccountManager](#accountmanager)
 
 Builds the manager.

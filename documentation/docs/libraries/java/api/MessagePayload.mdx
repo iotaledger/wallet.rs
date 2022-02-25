@@ -1,7 +1,6 @@
-### MessagePayload
 
 
-#### deserialize(serialised_data): [MessagePayload](#messagepayload)
+### deserialize(test): [MessagePayload](#messagepayload)
 
 Turns a serialized message payload string back into its class
 
@@ -9,30 +8,30 @@ Turns a serialized message payload string back into its class
 | --------------- | -------- | -------- |
 | serialised_data | String |   |
 
-#### payloadType(): [MessagePayloadType](#messagepayloadtype)
+### payloadType(): [MessagePayloadType](#messagepayloadtype)
 
 Get the type of message this contains (used to select the correct getter)
 
-#### asIndexation(): [IndexationPayload](#indexationpayload)
+### asIndexation(): [IndexationPayload](#indexationpayload)
 
 
 
-#### asMilestone(): [MilestonePayload](#milestonepayload)
+### asMilestone(): [MilestonePayload](#milestonepayload)
 
 
 
-#### asTransaction(): [TransactionPayload](#transactionpayload)
+### asTransaction(): [TransactionPayload](#transactionpayload)
 
 
 
-#### asReceipt(): [ReceiptPayload](#receiptpayload)
+### asReceipt(): [ReceiptPayload](#receiptpayload)
 
 
 
-#### asTreasury(): [TreasuryPayload](#treasurypayload)
+### asTreasury(): [TreasuryPayload](#treasurypayload)
 
 
 
-#### serialize(): String
+### serialize(): String
 
 Serializes the message payload into a json string

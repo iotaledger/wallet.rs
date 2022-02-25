@@ -1,21 +1,20 @@
-### AccountBalance
 Account balance information.
 
-#### getTotal(): long
+### getTotal(): long
 
 Account's total balance.
 
-#### getAvailable(): long
+### getAvailable(): long
 
 For example, if a user with 50i total account balance has made a message spending 20i,
  the available balance should be (50i-30i) = 20i.
 
-#### getIncoming(): long
+### getIncoming(): long
 
 Balances from message with `incoming: true`.
  Note that this may not be accurate since the node prunes the messags.
 
-#### getOutgoing(): long
+### getOutgoing(): long
 
 Balances from message with `incoming: false`.
  Note that this may not be accurate since the node prunes the messags.

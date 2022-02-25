@@ -1,7 +1,6 @@
-### EventManager
 
 
-#### subscribeErrors(cb): [EventId](#eventid)
+### subscribeErrors(test): [EventId](#eventid)
 
 Listen to errors.
 
@@ -9,7 +8,7 @@ Listen to errors.
 | --------------- | -------- | -------- |
 | cb | [ErrorListener](#errorlistener) |   |
 
-#### subscribeNewTransaction(cb): [EventId](#eventid)
+### subscribeNewTransaction(test): [EventId](#eventid)
 
 Listen to new messages.
 
@@ -17,7 +16,7 @@ Listen to new messages.
 | --------------- | -------- | -------- |
 | cb | [NewTransactionListener](#newtransactionlistener) |   |
 
-#### subscribeConfirmationStateChange(cb): [EventId](#eventid)
+### subscribeConfirmationStateChange(test): [EventId](#eventid)
 
 Listen to transaction confirmation state change.
 
@@ -25,7 +24,7 @@ Listen to transaction confirmation state change.
 | --------------- | -------- | -------- |
 | cb | [TransactionConfirmationChangeListener](#transactionconfirmationchangelistener) |   |
 
-#### subscribeReattachment(cb): [EventId](#eventid)
+### subscribeReattachment(test): [EventId](#eventid)
 
 Listen to transaction reattachment change.
 
@@ -33,7 +32,7 @@ Listen to transaction reattachment change.
 | --------------- | -------- | -------- |
 | cb | [ReattachTransactionListener](#reattachtransactionlistener) |   |
 
-#### subscribeBroadcast(cb): [EventId](#eventid)
+### subscribeBroadcast(test): [EventId](#eventid)
 
 Listen to transaction broadcast.
 
@@ -41,7 +40,7 @@ Listen to transaction broadcast.
 | --------------- | -------- | -------- |
 | cb | [BroadcastTransactionListener](#broadcasttransactionlistener) |   |
 
-#### subscribeTransferProgress(cb): [EventId](#eventid)
+### subscribeTransferProgress(test): [EventId](#eventid)
 
 Listen to a transfer event.
 
@@ -49,7 +48,7 @@ Listen to a transfer event.
 | --------------- | -------- | -------- |
 | cb | [TransferProgressListener](#transferprogresslistener) |   |
 
-#### subscribeMigrationProgress(cb): [EventId](#eventid)
+### subscribeMigrationProgress(test): [EventId](#eventid)
 
 Listen to a migration event.
 
@@ -57,7 +56,7 @@ Listen to a migration event.
 | --------------- | -------- | -------- |
 | cb | [MigrationProgressListener](#migrationprogresslistener) |   |
 
-#### subscribeBalanceChange(cb): [EventId](#eventid)
+### subscribeBalanceChange(test): [EventId](#eventid)
 
 Listen to balance changes.
 
@@ -65,7 +64,7 @@ Listen to balance changes.
 | --------------- | -------- | -------- |
 | cb | [BalanceChangeListener](#balancechangelistener) |   |
 
-#### subscribeStrongholdStatusChange(cb): [EventId](#eventid)
+### subscribeStrongholdStatusChange(test): [EventId](#eventid)
 
 Listen to stronghold status change events.
 
@@ -73,7 +72,7 @@ Listen to stronghold status change events.
 | --------------- | -------- | -------- |
 | cb | [StrongholdStatusListener](#strongholdstatuslistener) |   |
 
-#### subscribeAddressConsolidationNeeded(cb): [EventId](#eventid)
+### subscribeAddressConsolidationNeeded(test): [EventId](#eventid)
 
 Listen to `address consolidation needed` events.
 
@@ -81,7 +80,7 @@ Listen to `address consolidation needed` events.
 | --------------- | -------- | -------- |
 | cb | [AddressConsolidationNeededListener](#addressconsolidationneededlistener) |   |
 
-#### removeErrorListener(event): void
+### removeErrorListener(test): void
 
 Removes the error listener associated with the given identifier.
 
@@ -89,7 +88,7 @@ Removes the error listener associated with the given identifier.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeNewTransactionListener(event): void
+### removeNewTransactionListener(test): void
 
 Removes the new transaction listener associated with the given identifier.
 
@@ -97,7 +96,7 @@ Removes the new transaction listener associated with the given identifier.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeConfirmationStateChangeListener(event): void
+### removeConfirmationStateChangeListener(test): void
 
 Removes the new confirmation state change listener associated with the given identifier.
 
@@ -105,7 +104,7 @@ Removes the new confirmation state change listener associated with the given ide
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeReattachmentListener(event): void
+### removeReattachmentListener(test): void
 
 Removes the reattachment listener associated with the given identifier.
 
@@ -113,7 +112,7 @@ Removes the reattachment listener associated with the given identifier.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeBroadcastListener(event): void
+### removeBroadcastListener(test): void
 
 Removes the broadcast listener associated with the given identifier.
 
@@ -121,7 +120,7 @@ Removes the broadcast listener associated with the given identifier.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeTransferProgressListener(event): void
+### removeTransferProgressListener(test): void
 
 Remove a transfer event listener.
 
@@ -129,7 +128,7 @@ Remove a transfer event listener.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeMigrationProgressListener(event): void
+### removeMigrationProgressListener(test): void
 
 
 
@@ -137,7 +136,7 @@ Remove a transfer event listener.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove Remove a migration event listener. |
 
-#### removeBalanceChangeListener(event): void
+### removeBalanceChangeListener(test): void
 
 Removes the balance change listener associated with the given identifier.
 
@@ -145,7 +144,7 @@ Removes the balance change listener associated with the given identifier.
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeStrongholdStatusChangeListener(event): void
+### removeStrongholdStatusChangeListener(test): void
 
 Removes the stronghold status change listener associated with the given identifier.
 
@@ -153,7 +152,7 @@ Removes the stronghold status change listener associated with the given identifi
 | --------------- | -------- | -------- |
 | event | [EventId](#eventid) |  The ID of the listener we want to remove |
 
-#### removeAddressConsolidationNeededListener(event): void
+### removeAddressConsolidationNeededListener(test): void
 
 Removes the balance change listener associated with the given identifier.
 

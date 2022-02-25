@@ -1,7 +1,6 @@
-### AccountInitialiser
 
 
-#### signerType(signer_type): [AccountInitialiser](#accountinitialiser)
+### signerType(test): [AccountInitialiser](#accountinitialiser)
 
 Sets the account type.
 
@@ -9,7 +8,7 @@ Sets the account type.
 | --------------- | -------- | -------- |
 | signer_type | [AccountSignerType](#accountsignertype) |   |
 
-#### alias(alias): [AccountInitialiser](#accountinitialiser)
+### alias(test): [AccountInitialiser](#accountinitialiser)
 
 Defines the account alias. If not defined, we'll generate one.
 
@@ -17,7 +16,7 @@ Defines the account alias. If not defined, we'll generate one.
 | --------------- | -------- | -------- |
 | alias | String |   |
 
-#### createdAt(created_at): [AccountInitialiser](#accountinitialiser)
+### createdAt(test): [AccountInitialiser](#accountinitialiser)
 
 Time of account creation.
 
@@ -25,7 +24,7 @@ Time of account creation.
 | --------------- | -------- | -------- |
 | created_at | long |   |
 
-#### messages(messages): [AccountInitialiser](#accountinitialiser)
+### messages(test): [AccountInitialiser](#accountinitialiser)
 
 Messages associated with the seed.
  The account can be initialised with locally stored messages.
@@ -34,7 +33,7 @@ Messages associated with the seed.
 | --------------- | -------- | -------- |
 | messages | [Message[]](#message) |   |
 
-#### addresses(addresses): [AccountInitialiser](#accountinitialiser)
+### addresses(test): [AccountInitialiser](#accountinitialiser)
 
 Address history associated with the seed.
  The account can be initialised with locally stored address history.
@@ -43,15 +42,15 @@ Address history associated with the seed.
 | --------------- | -------- | -------- |
 | addresses | [Address[]](#address) |   |
 
-#### skipPersistence(): [AccountInitialiser](#accountinitialiser)
+### skipPersistence(): [AccountInitialiser](#accountinitialiser)
 
 Skips storing the account to the database.
 
-#### allowCreateMultipleEmptyAccounts(): [AccountInitialiser](#accountinitialiser)
+### allowCreateMultipleEmptyAccounts(): [AccountInitialiser](#accountinitialiser)
 
 Enables creating multiple accounts without history.
  The wallet disables it by default to simplify account discovery.
 
-#### initialise(): [Account](#account)
+### initialise(): [Account](#account)
 
 Initialises the account.

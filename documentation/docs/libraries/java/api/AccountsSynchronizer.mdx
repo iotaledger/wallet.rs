@@ -1,7 +1,6 @@
-### AccountsSynchronizer
 The accounts synchronizer.
 
-#### gapLimit(limit): [AccountsSynchronizer](#accountssynchronizer)
+### gapLimit(test): [AccountsSynchronizer](#accountssynchronizer)
 
 Number of address indexes that are generated.
 
@@ -9,7 +8,7 @@ Number of address indexes that are generated.
 | --------------- | -------- | -------- |
 | limit | long |  The maximum gap we cross without finding an address with balance |
 
-#### addressIndex(address_index): [AccountsSynchronizer](#accountssynchronizer)
+### addressIndex(test): [AccountsSynchronizer](#accountssynchronizer)
 
 Initial address index to start syncing.
 
@@ -17,15 +16,15 @@ Initial address index to start syncing.
 | --------------- | -------- | -------- |
 | address_index | long |  The starting index |
 
-#### skipAccountDiscovery(): [AccountsSynchronizer](#accountssynchronizer)
+### skipAccountDiscovery(): [AccountsSynchronizer](#accountssynchronizer)
 
 Skips the account discovery process.
 
-#### skipChangeAddresses(): [AccountsSynchronizer](#accountssynchronizer)
+### skipChangeAddresses(): [AccountsSynchronizer](#accountssynchronizer)
 
 Skip syncing existing change addresses.
 
-#### accountDiscoveryThreshold(account_discovery_threshold): [AccountsSynchronizer](#accountssynchronizer)
+### accountDiscoveryThreshold(test): [AccountsSynchronizer](#accountssynchronizer)
 
 Sets the minimum number of accounts to check on the discovery process.
 
@@ -33,6 +32,6 @@ Sets the minimum number of accounts to check on the discovery process.
 | --------------- | -------- | -------- |
 | account_discovery_threshold | long |  The minimum accounts number |
 
-#### execute(): [SyncedAccount[]](#syncedaccount)
+### execute(): [SyncedAccount[]](#syncedaccount)
 
 Syncs the accounts with the Tangle.

@@ -1,13 +1,12 @@
-### AccountManager
 The account manager.
  
  Used to manage multiple accounts.
 
-#### Builder(): [AccountManagerBuilder](#accountmanagerbuilder)
+### Builder(): [AccountManagerBuilder](#accountmanagerbuilder)
 
 Initialises the account manager builder.
 
-#### getMigrationData(nodes , seed , permanode , security_level , initial_address_index , gap_limit): [MigrationData](#migrationdata)
+### getMigrationData(test, test, test, test, test, test): [MigrationData](#migrationdata)
 
 Gets the legacy migration data for the seed.
 
@@ -20,7 +19,7 @@ Gets the legacy migration data for the seed.
 | initial_address_index | long |  The starting index of the seed we searc |
 | gap_limit | long |  The maximum gap we cross without finding an address with balance |
 
-#### getMigrationAddress(ledger_prompt , account_id): [MigrationAddress](#migrationaddress)
+### getMigrationAddress(test, test): [MigrationAddress](#migrationaddress)
 
 Convert the first address from the first account to a migration tryte address
 
@@ -29,7 +28,7 @@ Convert the first address from the first account to a migration tryte address
 | ledger_prompt | boolean |   |
 | account_id | String |   |
 
-#### createMigrationBundle(seed , input_address_indexes , options): [MigrationBundle](#migrationbundle)
+### createMigrationBundle(test, test, test): [MigrationBundle](#migrationbundle)
 
 Creates the bundle for migration associated with the given input indexes,
  Performs bundle mining if the address is spent and `mine` is true,
@@ -42,7 +41,7 @@ Creates the bundle for migration associated with the given input indexes,
 | input_address_indexes | long[] |   |
 | options | [MigrationBundleOptions](#migrationbundleoptions) |   |
 
-#### sendMigrationBundle(nodes , bundle_hash , mwm): void
+### sendMigrationBundle(test, test, test): void
 
 Sends the migration bundle to the given node. mwm 0 for default(14)
 
@@ -52,7 +51,7 @@ Sends the migration bundle to the given node. mwm 0 for default(14)
 | bundle_hash | String |   |
 | mwm | short |   |
 
-#### startBackgroundSync(polling_interval , automatic_output_consolidation): void
+### startBackgroundSync(test, test): void
 
 Initialises the background polling and MQTT monitoring.
 
@@ -61,11 +60,11 @@ Initialises the background polling and MQTT monitoring.
 | polling_interval | float |  Sets the polling interval in seconds |
 | automatic_output_consolidation | boolean |  If we automatically consolidate outputs |
 
-#### stopBackgroundSync(): void
+### stopBackgroundSync(): void
 
 Stops the background polling and MQTT monitoring.
 
-#### setStoragePassword(password): void
+### setStoragePassword(test): void
 
 Sets the password for the stored accounts.
 
@@ -73,7 +72,7 @@ Sets the password for the stored accounts.
 | --------------- | -------- | -------- |
 | password | String |  The Storage password |
 
-#### setStrongholdPassword(password): void
+### setStrongholdPassword(test): void
 
 Sets the stronghold password.
 
@@ -81,7 +80,7 @@ Sets the stronghold password.
 | --------------- | -------- | -------- |
 | password | String |  The Stronghold snapshot password |
 
-#### changeStrongholdPassword(current_password , new_password): void
+### changeStrongholdPassword(test, test): void
 
 Changes the stronghold password.
 
@@ -90,11 +89,11 @@ Changes the stronghold password.
 | current_password | String |  The current Stronghold password |
 | new_password | String |  The new Stronghold password |
 
-#### isLatestAddressUnused(): boolean
+### isLatestAddressUnused(): boolean
 
 Determines whether all accounts has the latest address unused.
 
-#### setClientOptions(options): void
+### setClientOptions(test): void
 
 Sets the client options for all accounts.
 
@@ -102,7 +101,7 @@ Sets the client options for all accounts.
 | --------------- | -------- | -------- |
 | options | [ClientOptions](#clientoptions) |   |
 
-#### storeMnemonic(signer_type , mnemonic): void
+### storeMnemonic(test, test): void
 
 Stores a mnemonic for the given signer type.
  If the mnemonic is not provided, we'll generate one.
@@ -112,11 +111,11 @@ Stores a mnemonic for the given signer type.
 | signer_type | [AccountSignerType](#accountsignertype) |   |
 | mnemonic | String |   |
 
-#### generateMnemonic(): String
+### generateMnemonic(): String
 
 Generates a new mnemonic.
 
-#### verifyMnemonic(mnemonic): void
+### verifyMnemonic(test): void
 
 Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
  should match the generated.
@@ -125,7 +124,7 @@ Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnem
 | --------------- | -------- | -------- |
 | mnemonic | String |   |
 
-#### createAccount(client_options): [AccountInitialiser](#accountinitialiser)
+### createAccount(test): [AccountInitialiser](#accountinitialiser)
 
 Adds a new account.
 
@@ -133,7 +132,7 @@ Adds a new account.
 | --------------- | -------- | -------- |
 | client_options | [ClientOptions](#clientoptions) |   |
 
-#### removeAccount(account_id): void
+### removeAccount(test): void
 
 Deletes an account.
 
@@ -141,11 +140,11 @@ Deletes an account.
 | --------------- | -------- | -------- |
 | account_id | String |   |
 
-#### syncAccounts(): [AccountsSynchronizer](#accountssynchronizer)
+### syncAccounts(): [AccountsSynchronizer](#accountssynchronizer)
 
 Syncs all accounts.
 
-#### internalTransfer(from_account_id , to_account_id , amount): [Message](#message)
+### internalTransfer(test, test, test): [Message](#message)
 
 Transfers an amount from an account to another.
 
@@ -155,7 +154,7 @@ Transfers an amount from an account to another.
 | to_account_id | String |   |
 | amount | long |   |
 
-#### backup(destination , stronghold_password): Path
+### backup(test, test): Path
 
 Backups the storage to the given destination
 
@@ -164,7 +163,7 @@ Backups the storage to the given destination
 | destination | String |   |
 | stronghold_password | String |   |
 
-#### importAccounts(source , stronghold_password): void
+### importAccounts(test, test): void
 
 Import backed up accounts.
 
@@ -173,7 +172,7 @@ Import backed up accounts.
 | source | String |   |
 | stronghold_password | String |   |
 
-#### getAccount(account_id): [Account](#account)
+### getAccount(test): [Account](#account)
 
 Gets the account associated with the given identifier.
 
@@ -181,11 +180,11 @@ Gets the account associated with the given identifier.
 | --------------- | -------- | -------- |
 | account_id | String |   |
 
-#### getAccounts(): [Account[]](#account)
+### getAccounts(): [Account[]](#account)
 
 Gets all accounts from storage.
 
-#### reattach(account_id , message_id): [Message](#message)
+### reattach(test, test): [Message](#message)
 
 Reattaches an unconfirmed transaction.
 
@@ -194,7 +193,7 @@ Reattaches an unconfirmed transaction.
 | account_id | String |   |
 | message_id | [MessageId](#messageid) |   |
 
-#### promote(account_id , message_id): [Message](#message)
+### promote(test, test): [Message](#message)
 
 Promotes an unconfirmed transaction.
 
@@ -203,7 +202,7 @@ Promotes an unconfirmed transaction.
 | account_id | String |   |
 | message_id | [MessageId](#messageid) |   |
 
-#### retry(account_id , message_id): [Message](#message)
+### retry(test, test): [Message](#message)
 
 Retries an unconfirmed transaction.
 
