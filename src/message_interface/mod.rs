@@ -76,13 +76,13 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        message_interface,
-        message_interface::{AccountToCreate, ManagerOptions, MessageType, ResponseType}
-    };
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    
+    use crate::{
+        message_interface,
+        message_interface::{AccountToCreate, ManagerOptions, MessageType, ResponseType},
+    };
+
     use iota_client::bee_message::{
         address::Address,
         output::{
@@ -126,7 +126,8 @@ mod tests {
 
         // create an account
         let account = AccountToCreate { alias: None };
-        let response = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let response =
+            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
             ResponseType::CreatedAccount(account) => {
                 let id = account.index();
@@ -141,13 +142,12 @@ mod tests {
     async fn events() {
         let wallet_handle = super::create_message_handler(None).await.unwrap();
 
-        wallet_handle.listen(vec![], |event| {
-            match &event.event {
+        wallet_handle
+            .listen(vec![], |event| match &event.event {
                 WalletEvent::TransferProgress(event) => println!("Received event....: {:?}", event),
                 _ => assert!(false),
-            }
-        }).await;
-
+            })
+            .await;
 
         // create an account
         let account = AccountToCreate {
@@ -174,6 +174,5 @@ mod tests {
         };
 
         let _response = message_interface::send_message(&wallet_handle, transfer).await;
-
     }
 }
