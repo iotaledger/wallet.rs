@@ -411,7 +411,7 @@ impl TransactionSignatureLockedSingleOutput {
         Self {
             address,
             amount,
-            remainder
+            remainder,
         }
     }
 }
@@ -437,10 +437,7 @@ impl TransactionSignatureLockedDustAllowanceOutput {
 
     /// Construct a new TransactionSignatureLockedDustAllowanceOutput
     pub fn from(address: AddressWrapper, amount: u64) -> Self {
-        Self {
-            address,
-            amount
-        }
+        Self { address, amount }
     }
 }
 
