@@ -131,13 +131,28 @@ pub enum AccountIdentifier {
     Index(u32),
 }
 
+// Custom deserialize because the index could also be encoded as String
 impl<'de> Deserialize<'de> for AccountIdentifier {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        Ok(AccountIdentifier::from(s))
+        use serde::de::Error;
+        use serde_json::Value;
+        let v = Value::deserialize(deserializer)?;
+        Ok(match v
+            .as_u64(){
+                Some(number) => {
+                    let index: u32 = u32::try_from(number)
+                    .or_else(|_| return Err(D::Error::custom("Account index is greater than u32::MAX")))?;
+                    AccountIdentifier::Index(index)
+                },
+                None => {
+                    let alias_or_index_str = v.as_str().ok_or_else(|| D::Error::custom("AccountIdentifier is no number or string"))?;
+                    AccountIdentifier::from(alias_or_index_str)
+                }
+            }
+        )
     }
 }
 

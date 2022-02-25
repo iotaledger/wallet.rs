@@ -1,17 +1,19 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use neon::prelude::*;
-use std::sync::Arc;
+use iota_wallet::{
+    events::types::{Event, WalletEventType},
+    message_interface::{
+        create_message_handler, ManagerOptions, Message as WalletMessage, MessageType, Response, ResponseType,
+        WalletMessageHandler,
+    },
+};
 
+use neon::prelude::*;
+use serde::Deserialize;
 use tokio::sync::mpsc::unbounded_channel;
 
-use serde::Deserialize;
-
-use iota_wallet::{
-    account_manager::AccountManager,
-    message_interface::{Message as WalletMessage, MessageType, Response, ResponseType, WalletMessageHandler},
-};
+use std::sync::Arc;
 
 #[derive(Deserialize, Clone)]
 pub(crate) struct DispatchMessage {
@@ -21,48 +23,29 @@ pub(crate) struct DispatchMessage {
 
 pub struct MessageHandler {
     channel: Channel,
-    message_handler: WalletMessageHandler,
+    wallet_message_handler: WalletMessageHandler,
 }
+
+type JsCallback = Root<JsFunction<JsObject>>;
 
 impl Finalize for MessageHandler {}
 impl MessageHandler {
     fn new(channel: Channel, options: String) -> Arc<Self> {
-        let options = match serde_json::from_str::<crate::types::ManagerOptions>(&options) {
-            Ok(options) => options,
+        let manager_options = match serde_json::from_str::<ManagerOptions>(&options) {
+            Ok(options) => Some(options),
             Err(e) => {
                 log::debug!("{:?}", e);
-                crate::types::ManagerOptions::default()
+                None
             }
         };
 
-        let manager =
-            AccountManager::builder().with_storage_folder(options.storage_path.to_str().expect("no storage_path"));
-        // if !options.automatic_output_consolidation {
-        //     manager = manager.with_automatic_output_consolidation_disabled();
-        // }
-        // if options.sync_spent_outputs {
-        //     manager = manager.with_sync_spent_outputs();
-        // }
-        // if options.allow_create_multiple_empty_accounts {
-        //     manager = manager.with_multiple_empty_accounts();
-        // }
-        // if options.skip_polling {
-        //     manager = manager.with_skip_polling();
-        // }
-        // if let Some(polling_interval) = options.polling_interval {
-        //     manager = manager.with_polling_interval(Duration::from_secs(polling_interval));
-        // }
-        // if let Some(threshold) = options.output_consolidation_threshold {
-        //     manager = manager.with_output_consolidation_threshold(threshold);
-        // }
-        let manager = crate::RUNTIME
-            .block_on(manager.finish())
+        let wallet_message_handler = crate::RUNTIME
+            .block_on(async move { create_message_handler(manager_options).await })
             .expect("error initializing account manager");
-        let message_handler = WalletMessageHandler::with_manager(manager);
 
         Arc::new(Self {
             channel,
-            message_handler,
+            wallet_message_handler,
         })
     }
 
@@ -73,7 +56,7 @@ impl MessageHandler {
                 let (response_tx, mut response_rx) = unbounded_channel();
                 let wallet_message = WalletMessage::new(message.message.clone(), response_tx);
 
-                self.message_handler.handle(wallet_message).await;
+                self.wallet_message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
                 if let Some(res) = response {
                     let mut is_err = matches!(res.response(), ResponseType::Error(_) | ResponseType::Panic(_));
@@ -97,6 +80,22 @@ impl MessageHandler {
                 (format!("Couldn't parse to message with error - {:?}", e), true)
             }
         }
+    }
+
+    fn call_event_callback(&self, event_data: Event, callback: Arc<JsCallback>) {
+        self.channel.send(move |mut cx| {
+            let cb = (*callback).to_inner(&mut cx);
+            let this = cx.undefined();
+            let args = vec![
+                cx.undefined().upcast::<JsValue>(),
+                cx.string(serde_json::to_string(&event_data).unwrap())
+                    .upcast::<JsValue>(),
+            ];
+
+            cb.call(&mut cx, this, args)?;
+
+            Ok(())
+        });
     }
 }
 
@@ -135,6 +134,32 @@ pub fn send_message(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
             Ok(())
         });
+    });
+
+    Ok(cx.undefined())
+}
+
+pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let js_arr_handle: Handle<JsArray> = cx.argument(0)?;
+    let vec: Vec<Handle<JsValue>> = js_arr_handle.to_vec(&mut cx)?;
+    let mut event_types = vec![];
+    for event_string in vec {
+        let event_type = event_string.downcast::<JsString, FunctionContext>(&mut cx).unwrap();
+        let wallet_event_type = WalletEventType::try_from(event_type.value(&mut cx).as_str()).unwrap();
+        event_types.push(wallet_event_type);
+    }
+
+    let callback = Arc::new(cx.argument::<JsFunction>(1)?.root(&mut cx));
+    let message_handler = Arc::clone(&&cx.argument::<JsBox<Arc<MessageHandler>>>(2)?);
+
+    crate::RUNTIME.spawn(async move {
+        let cloned_message_handler = message_handler.clone();
+        message_handler
+            .wallet_message_handler
+            .listen(event_types, move |event_data| {
+                cloned_message_handler.call_event_callback(event_data.clone(), callback.clone())
+            })
+            .await;
     });
 
     Ok(cx.undefined())
