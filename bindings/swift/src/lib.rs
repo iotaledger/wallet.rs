@@ -30,7 +30,6 @@ struct CallbackContext {
 }
 
 unsafe impl Send for CallbackContext {}
-unsafe impl Sync for CallbackContext {}
 
 fn runtime() -> &'static Arc<Runtime> {
     static INSTANCE: OnceCell<Arc<Runtime>> = OnceCell::new();
