@@ -39,6 +39,23 @@ pub enum WalletEventType {
     LedgerAddressGeneration,
 }
 
+impl TryFrom<&str> for WalletEventType {
+    type Error = String;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let event_type = match value {
+            "BalanceChange" => WalletEventType::BalanceChange,
+            "TransactionInclusion" => WalletEventType::TransactionInclusion,
+            "TransferProgress" => WalletEventType::TransferProgress,
+            "ConsolidationRequired" => WalletEventType::ConsolidationRequired,
+            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            "LedgerAddressGeneration" => WalletEventType::LedgerAddressGeneration,
+            _ => return Err(format!("invalid event type {}", value)),
+        };
+        Ok(event_type)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct BalanceChangeEvent {
     /// The address.
