@@ -362,9 +362,4 @@ export interface LoggerConfig {
   outputs?: LoggerOutput[];
 }
 
-export declare function addEventListener(
-  event: Event,
-  cb: (err?: any, data?: { [k: string]: any }) => void,
-): void;
-export declare function removeEventListeners(event: Event): void;
 export declare function initLogger(config: LoggerConfig): void;
