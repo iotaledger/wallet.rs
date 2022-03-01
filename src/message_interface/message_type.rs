@@ -8,6 +8,8 @@ use crate::{
     },
     ClientOptions,
 };
+#[cfg(debug_assertions)]
+use crate::events::types::WalletEvent;
 
 use super::account_method::AccountMethod;
 use iota_client::bee_message::output::Output;
@@ -80,6 +82,8 @@ pub enum MessageType {
     },
     /// Stop background syncing.
     StopBackgroundSync,
+    #[cfg(debug_assertions)]
+    EmitTestEvent(WalletEvent),
 }
 
 impl Serialize for MessageType {
@@ -94,20 +98,24 @@ impl Serialize for MessageType {
             MessageType::CallAccountMethod { .. } => {
                 serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
             }
-            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
-            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 15, "SendTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 17, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 18, "VerifyMnemonic"),
-            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 22, "DeleteStorage"),
+            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
+            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 7, "SendTransfer"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 8, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 9, "VerifyMnemonic"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 10, "DeleteStorage"),
             MessageType::SetClientOptions(_) => {
-                serializer.serialize_unit_variant("MessageType", 24, "SetClientOptions")
+                serializer.serialize_unit_variant("MessageType", 11, "SetClientOptions")
             }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 12, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 13, "StopBackgroundSync")
+            }
+            #[cfg(debug_assertions)]
+            MessageType::EmitTestEvent(_) => {
+                serializer.serialize_unit_variant("MessageType", 14, "EmitTestEvent")
             }
         }
     }

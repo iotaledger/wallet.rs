@@ -14,7 +14,8 @@
 		7904C23327BBDFB2001CB01B /* Wallet.m in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23027BBDFB2001CB01B /* Wallet.m */; };
 		7904C23827BBDFD2001CB01B /* await.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23627BBDFD2001CB01B /* await.swift */; };
 		7904C23927BBDFD2001CB01B /* callback.m in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23727BBDFD2001CB01B /* callback.m */; };
-		7904C23C27BBE08D001CB01B /* libiota_wallet.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */; };
+		79BD1BBB27CE54810043965C /* libiota_wallet.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BD1BBA27CE54810043965C /* libiota_wallet.dylib */; };
+		79C8430B27C989810042BF62 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8430A27C989810042BF62 /* SwiftExtensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -34,10 +35,10 @@
 		7904C21F27BBDF85001CB01B /* IotaWalletTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = IotaWalletTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7904C22F27BBDFB2001CB01B /* Wallet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Wallet.h; sourceTree = "<group>"; };
 		7904C23027BBDFB2001CB01B /* Wallet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Wallet.m; sourceTree = "<group>"; };
-		7904C23527BBDFD2001CB01B /* IotaWalletTests-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "IotaWalletTests-Bridging-Header.h"; sourceTree = "<group>"; };
 		7904C23627BBDFD2001CB01B /* await.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = await.swift; sourceTree = "<group>"; };
 		7904C23727BBDFD2001CB01B /* callback.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = callback.m; sourceTree = "<group>"; };
-		7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiota_wallet.dylib; path = ../../../../Shared/wallet.rs/bindings/swift/target/debug/libiota_wallet.dylib; sourceTree = "<group>"; };
+		79BD1BBA27CE54810043965C /* libiota_wallet.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiota_wallet.dylib; path = iota_wallet/libiota_wallet.dylib; sourceTree = "<group>"; };
+		79C8430A27C989810042BF62 /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,7 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7904C23C27BBE08D001CB01B /* libiota_wallet.dylib in Frameworks */,
+				79BD1BBB27CE54810043965C /* libiota_wallet.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -86,6 +87,7 @@
 				7904C22F27BBDFB2001CB01B /* Wallet.h */,
 				7904C23027BBDFB2001CB01B /* Wallet.m */,
 				7904C21927BBDF85001CB01B /* IotaWallet.docc */,
+				79C8430A27C989810042BF62 /* SwiftExtensions.swift */,
 			);
 			path = IotaWallet;
 			sourceTree = "<group>";
@@ -95,7 +97,6 @@
 			children = (
 				7904C23627BBDFD2001CB01B /* await.swift */,
 				7904C23727BBDFD2001CB01B /* callback.m */,
-				7904C23527BBDFD2001CB01B /* IotaWalletTests-Bridging-Header.h */,
 			);
 			path = IotaWalletTests;
 			sourceTree = "<group>";
@@ -103,7 +104,7 @@
 		7904C23A27BBE08D001CB01B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */,
+				79BD1BBA27CE54810043965C /* libiota_wallet.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -170,6 +171,7 @@
 				TargetAttributes = {
 					7904C21427BBDF85001CB01B = {
 						CreatedOnToolsVersion = 13.2.1;
+						LastSwiftMigration = 1320;
 					};
 					7904C21E27BBDF85001CB01B = {
 						CreatedOnToolsVersion = 13.2.1;
@@ -220,6 +222,7 @@
 			files = (
 				7904C23327BBDFB2001CB01B /* Wallet.m in Sources */,
 				7904C21A27BBDF85001CB01B /* IotaWallet.docc in Sources */,
+				79C8430B27C989810042BF62 /* SwiftExtensions.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +366,7 @@
 		7904C22A27BBDF85001CB01B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -385,12 +389,15 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
 		7904C22B27BBDF85001CB01B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
@@ -413,12 +420,14 @@
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
 		7904C22D27BBDF85001CB01B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -440,6 +449,7 @@
 		7904C22E27BBDF85001CB01B /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

@@ -165,6 +165,14 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(debug_assertions)]
+            MessageType::EmitTestEvent(event) => {
+                convert_async_panics(|| async {
+                    self.account_manager.emit_test_event(event.clone()).await?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
         };
 
         let response = match response {
