@@ -14,7 +14,7 @@
 		7904C23327BBDFB2001CB01B /* Wallet.m in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23027BBDFB2001CB01B /* Wallet.m */; };
 		7904C23827BBDFD2001CB01B /* await.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23627BBDFD2001CB01B /* await.swift */; };
 		7904C23927BBDFD2001CB01B /* callback.m in Sources */ = {isa = PBXBuildFile; fileRef = 7904C23727BBDFD2001CB01B /* callback.m */; };
-		7904C23C27BBE08D001CB01B /* libiota_wallet.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */; };
+		79BD1BBB27CE54810043965C /* libiota_wallet.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 79BD1BBA27CE54810043965C /* libiota_wallet.dylib */; };
 		79C8430B27C989810042BF62 /* SwiftExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79C8430A27C989810042BF62 /* SwiftExtensions.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,7 +37,7 @@
 		7904C23027BBDFB2001CB01B /* Wallet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Wallet.m; sourceTree = "<group>"; };
 		7904C23627BBDFD2001CB01B /* await.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = await.swift; sourceTree = "<group>"; };
 		7904C23727BBDFD2001CB01B /* callback.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = callback.m; sourceTree = "<group>"; };
-		7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiota_wallet.dylib; path = ../../../../Shared/wallet.rs/bindings/swift/target/debug/libiota_wallet.dylib; sourceTree = "<group>"; };
+		79BD1BBA27CE54810043965C /* libiota_wallet.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiota_wallet.dylib; path = iota_wallet/libiota_wallet.dylib; sourceTree = "<group>"; };
 		79C8430A27C989810042BF62 /* SwiftExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftExtensions.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -46,7 +46,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7904C23C27BBE08D001CB01B /* libiota_wallet.dylib in Frameworks */,
+				79BD1BBB27CE54810043965C /* libiota_wallet.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -104,7 +104,7 @@
 		7904C23A27BBE08D001CB01B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				7904C23B27BBE08D001CB01B /* libiota_wallet.dylib */,
+				79BD1BBA27CE54810043965C /* libiota_wallet.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";

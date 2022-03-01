@@ -67,14 +67,14 @@ class SwiftAwait: XCTestCase {
             expectation.fulfill()
         }
         
-        // TODO: Create account and do something that would trigger an event
+        let test_event = "{\"cmd\": \"EmitTestEvent\", \"payload\": { \"TransferProgress\": \"SyncingAccount\" } }"
+        try! await wallet.sendMessage(test_event)
         
         await self.waitForExpectations(timeout: 2) { error in
             if let err = error {
                 print("\(err)")
             }
         }
-        
     }
 
 }
