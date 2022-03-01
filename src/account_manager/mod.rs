@@ -19,7 +19,9 @@ use crate::{
     ClientOptions,
 };
 use builder::AccountManagerBuilder;
-use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};
+#[cfg(debug_assertions)]
+use operations::verify_integrity;
+use operations::{get_account, recover_accounts, start_background_syncing};
 
 use iota_client::{signing::SignerHandle, Client};
 #[cfg(feature = "events")]
@@ -165,11 +167,20 @@ impl AccountManager {
         Ok(())
     }
 
+    #[cfg(debug_assertions)]
     /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
     /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
     /// duplicated
     pub async fn verify_integrity(&self) -> crate::Result<()> {
         verify_integrity(self).await
+    }
+
+    #[cfg(debug_assertions)]
+    /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
+    /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
+    /// duplicated
+    pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
+        Ok(self.event_emitter.lock().await.emit(0, event))
     }
 
     // storage feature
