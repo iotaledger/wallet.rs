@@ -176,9 +176,7 @@ impl AccountManager {
     }
 
     #[cfg(debug_assertions)]
-    /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
-    /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
-    /// duplicated
+    /// Helper function to test events. Emits a provided event with account index 0.
     pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
         Ok(self.event_emitter.lock().await.emit(0, event))
     }
