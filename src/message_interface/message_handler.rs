@@ -3,15 +3,10 @@
 
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
-use crate::{
-    account::{operations::transfer::TransferOptions, types::AccountIdentifier},
-    account_manager::AccountManager,
-    Result,
-};
+use crate::{account::types::AccountIdentifier, account_manager::AccountManager, Result};
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
-use iota_client::bee_message::output::Output;
 use zeroize::Zeroize;
 
 use std::{
@@ -132,16 +127,6 @@ impl WalletMessageHandler {
                     .verify_mnemonic(mnemonic)
                     .map(|_| ResponseType::VerifiedMnemonic)
             }),
-            MessageType::SendTransfer {
-                account_id,
-                outputs,
-                options,
-            } => {
-                convert_async_panics(|| async {
-                    self.send_transfer(account_id, outputs.clone(), options.clone()).await
-                })
-                .await
-            }
             MessageType::SetClientOptions(options) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
@@ -234,6 +219,13 @@ impl WalletMessageHandler {
             AccountMethod::SyncAccount { options } => {
                 Ok(ResponseType::Balance(account_handle.sync(options.clone()).await?))
             }
+            AccountMethod::SendTransfer { outputs, options } => {
+                convert_async_panics(|| async {
+                    let message = account_handle.send(outputs.clone(), options.clone()).await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
         }
     }
 
@@ -268,16 +260,5 @@ impl WalletMessageHandler {
             accounts.push(account.clone());
         }
         Ok(ResponseType::ReadAccounts(accounts))
-    }
-
-    async fn send_transfer(
-        &self,
-        account_id: &AccountIdentifier,
-        outputs: Vec<Output>,
-        options: Option<TransferOptions>,
-    ) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id.clone()).await?;
-        let message = account.send(outputs, options).await?;
-        Ok(ResponseType::SentTransfer(message))
     }
 }
