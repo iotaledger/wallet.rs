@@ -3,6 +3,7 @@
 
 // transfer or transaction?
 
+pub(crate) mod high_level;
 mod input_selection;
 mod options;
 mod prepare_transaction;
