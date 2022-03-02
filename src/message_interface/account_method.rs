@@ -1,7 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions};
+use crate::account::operations::{
+    address_generation::AddressGenerationOptions, syncing::SyncOptions, transfer::TransferOptions,
+};
+use iota_client::bee_message::output::Output;
 
 use serde::Deserialize;
 
@@ -33,5 +36,10 @@ pub enum AccountMethod {
     SyncAccount {
         /// Sync options
         options: Option<SyncOptions>,
+    },
+    /// Send funds.
+    SendTransfer {
+        outputs: Vec<Output>,
+        options: Option<TransferOptions>,
     },
 }

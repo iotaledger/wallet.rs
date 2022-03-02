@@ -78,10 +78,7 @@ where
 mod tests {
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    use crate::{
-        message_interface,
-        message_interface::{AccountToCreate, ManagerOptions, MessageType, ResponseType},
-    };
+    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, ResponseType};
 
     use iota_client::bee_message::{
         address::Address,
@@ -167,10 +164,12 @@ mod tests {
                 .unwrap(),
         )];
 
-        let transfer = MessageType::SendTransfer {
+        let transfer = MessageType::CallAccountMethod {
             account_id: "alias".into(),
-            outputs: outputs,
-            options: None,
+            method: AccountMethod::SendTransfer {
+                outputs: outputs,
+                options: None,
+            },
         };
 
         let _response = message_interface::send_message(&wallet_handle, transfer).await;
