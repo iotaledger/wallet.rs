@@ -26,15 +26,14 @@ use std::{
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `send_nft()`
-pub struct AddressAndNftId {
-    /// Bech32 encoded address
-    pub address: String,
-    /// Nft id
-    #[serde(rename = "nftId")]
-    pub nft_id: NftId,
+pub struct NftOptions {
+    /// Bech32 encoded address. Default will use the
+    /// first address of the account
+    pub address: Option<String>,
+    /// Nft metadata
+    pub metadata: String,
 }
 
-impl AccountHandle {
 /// Function to send native tokens in basic outputs with a [StorageDepositReturnUnlockCondition] and
 /// [ExpirationUnlockCondition], so the storage deposit gets back to the sender and also that the sender gets access to
 /// the output again after a defined time (default 1 day),
@@ -46,18 +45,27 @@ impl AccountHandle {
 ///     hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
 ///         .try_into()
 ///         .unwrap();
-/// let outputs = vec![AddressAndNftId {
+/// let outputs = vec![NftOptions {
 ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-///     nft_id: NftId::new(nft_id),
+///     metadata: "some nft metadata".to_string(),
 /// }];
 ///
-/// let res = account_handle.send_nft(outputs, None).await?;
+/// let res = account_handle
+///     .send_nft(
+///         outputs,
+///         Some(TransferOptions {
+///             remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
+///             ..Default::default()
+///         }),
+///     )
+///     .await?;
 /// println!("Transaction created: {}", res.1);
 /// if let Some(message_id) = res.0 {
 ///     println!("Message sent: {}", message_id);
 /// }
 /// ```
-pub async fn send_nft(&self,
+pub async fn mint_nft(
+    account_handle: &AccountHandle,
     addresses_nft_ids: Vec<AddressAndNftId>,
     options: Option<TransferOptions>,
 ) -> crate::Result<TransferResult> {
@@ -67,6 +75,5 @@ pub async fn send_nft(&self,
         // todo get nft output from account, build new output with same fields, just updated address unlock condition
         outputs.push(nft_output);
     }
-    self.send(outputs, options).await
-}
+    account_handle.send(outputs, options).await
 }
