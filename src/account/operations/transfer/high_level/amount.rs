@@ -22,7 +22,7 @@ pub struct AddressAndAmount {
     pub amount: u64,
 }
 
-/// Function to create outputs with which we then will call
+/// Function to create basic outputs with which we then will call
 /// [AccountHandle.send()](crate::account::handle::AccountHandle.send), the options can define the
 /// RemainderValueStrategy or custom inputs.
 /// Address needs to be Bech32 encoded
