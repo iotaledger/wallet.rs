@@ -71,7 +71,7 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
         let event = match serde_json::from_str::<WalletEventType>(&event) {
             Ok(event) => event,
             Err(e) => {
-                panic!("Cannot create message handler! {:?}", e);
+                panic!("Error event to listen! {:?}", e);
             }
         };
         rust_events.push(event);
