@@ -135,9 +135,11 @@ pub(crate) async fn sync_address(
     let mut tasks = Vec::new();
     for utxo_input in address_outputs.iter() {
         let utxo_input = utxo_input.clone();
-        // if we already have the output we don't need to get the info from the node
-        if outputs.get_mut(utxo_input.output_id()).is_some() {
-            continue;
+        if let Some(existing_output) = outputs.get(utxo_input.output_id()) {
+            // If we have the output already and it got spent, then we don't need to get it again from the node
+            if existing_output.is_spent {
+                continue;
+            }
         }
 
         let client_guard = client_guard.clone();
@@ -510,7 +512,7 @@ async fn sync_addresses_and_messages(
 
                     let mut messages = vec![];
                     for utxo_input in address_outputs.iter() {
-                        let output = match address.outputs().get(utxo_input.output_id()) {
+                        let mut output = match address.outputs().get(utxo_input.output_id()) {
                             // if we already have the output we don't need to get the info from the node
                             Some(output) => output.clone(),
                             None => {
@@ -537,6 +539,10 @@ async fn sync_addresses_and_messages(
                         };
 
                         let output_message_id = *output.message_id();
+                        // If we sent the output in a transaction and it got confirmed, we set it as spent
+                        if known_confirmed_messages.contains(&output_message_id) {
+                            output.set_is_spent(true);
+                        }
                         outputs.insert(output.id()?, output);
 
                         // if we already have the message stored
