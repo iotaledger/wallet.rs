@@ -507,13 +507,12 @@ async fn sync_addresses_and_messages(
                         address_outputs.into_iter().map(|o| *o.output_id()).collect();
 
                     // if the node doesn't have this output anymore, then it got pruned and spent
-                    let pruned_outputs: Vec<(&OutputId, &AddressOutput)> = address
+                    for (output_id, pruned_output) in address
                         .outputs
                         .iter()
                         .filter(|(output_id, _)| !address_output_ids.contains(output_id))
-                        .collect();
-
-                    for (output_id, pruned_output) in pruned_outputs.into_iter() {
+                    {
+                        // Only add outputs that aren't set as spent
                         if !pruned_output.is_spent {
                             let mut spent_output = pruned_output.clone();
                             spent_output.set_is_spent(true);
@@ -530,7 +529,7 @@ async fn sync_addresses_and_messages(
 
                     let mut messages = vec![];
                     for output_id in address_output_ids.iter() {
-                        let output = match client.get_output(&(output_id.clone().into())).await {
+                        let output = match client.get_output(&((*output_id).into())).await {
                             Ok(output) => {
                                 let address_output = AddressOutput::from_output_response(
                                     output,
@@ -547,7 +546,7 @@ async fn sync_addresses_and_messages(
                                         // if the output got pruned and the node doesn't have it anymore, set it as
                                         // spent
                                         if status_code == 404 {
-                                            if let Some(output) = address.outputs().get(&(output_id.clone().into())) {
+                                            if let Some(output) = address.outputs().get(&(*output_id)) {
                                                 let mut output = output.clone();
                                                 output.set_is_spent(true);
                                                 output
