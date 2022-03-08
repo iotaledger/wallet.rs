@@ -1,17 +1,16 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-pub mod classes;
 pub mod types;
 
-use classes::event::*;
 use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
-use once_cell::sync::OnceCell;
-use pyo3::{prelude::*, wrap_pyfunction};
-use tokio::runtime::Runtime;
+use iota_wallet::message_interface::{ManagerOptions, MessageType};
 use types::*;
 
+use once_cell::sync::OnceCell;
+use pyo3::{prelude::*, wrap_pyfunction};
 use std::sync::Mutex;
+use tokio::runtime::Runtime;
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
@@ -27,43 +26,44 @@ pub fn init_logger(config: String) -> PyResult<()> {
     Ok(())
 }
 
-/// IOTA Wallet implemented in Rust and binded by Python.
+#[pyfunction]
+/// Create message handler for python-side usage
+pub fn create_message_handler(options: String) -> Result<WalletMessageHandler> {
+    let options = match serde_json::from_str::<ManagerOptions>(&options) {
+        Ok(options) => Some(options),
+        Err(e) => {
+            log::debug!("Error options input {:?}", e);
+            None
+        }
+    };
+    let message_handler =
+        crate::block_on(async { iota_wallet::message_interface::create_message_handler(options).await })?;
+
+    Ok(WalletMessageHandler {
+        wallet_message_handler: message_handler,
+    })
+}
+
+#[pyfunction]
+/// Send message through handler
+pub fn send_message(handle: &WalletMessageHandler, message_type: String) -> Result<String> {
+    let message_type = match serde_json::from_str::<MessageType>(&message_type) {
+        Ok(message_type) => message_type,
+        Err(e) => {
+            panic!("Cannot create message handler! {:?}", e);
+        }
+    };
+    let response = crate::block_on(async {
+        iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message_type).await
+    });
+    Ok(serde_json::to_string(&response)?)
+}
+
+/// IOTA Wallet implemented in Rust for Python binding.
 #[pymodule]
 fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_class::<AccountInitialiser>()?;
-    m.add_class::<AccountHandle>()?;
-    m.add_class::<SyncedAccount>()?;
-    m.add_class::<AccountSynchronizer>()?;
-    m.add_class::<Transfer>()?;
-    m.add_class::<TransferWithOutputs>()?;
-    m.add_class::<AccountManager>()?;
-    m.add_function(wrap_pyfunction!(on_balance_change, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_balance_change_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_new_transaction, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_new_transaction_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_confirmation_state_change, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(remove_confirmation_state_change_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_reattachment, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_reattachment_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_broadcast, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_broadcast_listener, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(on_error, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_error_listener, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(on_stronghold_status_change, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(remove_stronghold_status_change_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_transfer_progress, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_transfer_progress_listener, m)?)
-        .unwrap();
-    m.add_function(wrap_pyfunction!(on_migration_progress, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(remove_migration_progress_listener, m)?)
-        .unwrap();
     m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(create_message_handler, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(send_message, m)?).unwrap();
     Ok(())
 }
