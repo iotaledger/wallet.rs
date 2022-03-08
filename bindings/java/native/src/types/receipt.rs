@@ -1,10 +1,8 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::message::{
-    MessageMigratedFundsEntry as MigratedFundsEntryRust, MessageReceiptPayload as ReceiptPayloadRust,
-};
-
+use iota_wallet::message::{MessageMigratedFundsEntry as MigratedFundsEntryRust, MessageReceiptPayload as ReceiptPayloadRust};
+use std::fmt::{Display, Formatter};
 use crate::types::SignatureLockedSingleOutput;
 
 pub struct ReceiptPayload {
@@ -35,16 +33,28 @@ impl ReceiptPayload {
     }
 }
 
+impl Display for ReceiptPayload {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.payload)
+    }
+}
+
 pub struct MigratedFundsEntry {
     payload: MigratedFundsEntryRust,
 }
 
 impl MigratedFundsEntry {
-    pub fn tail_transaction_hash(&self) -> Vec<u8> {
-        self.payload.tail_transaction_hash().as_ref().to_vec()
+    pub fn tail_transaction_hash(&self) -> String {
+        self.payload.tail_transaction_hash().to_string()
     }
 
     pub fn output(&self) -> SignatureLockedSingleOutput {
         SignatureLockedSingleOutput::from_rust(self.payload.output().clone())
+    }
+}
+
+impl Display for MigratedFundsEntry {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.payload)
     }
 }

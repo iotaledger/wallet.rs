@@ -472,7 +472,6 @@ foreign_class!(
         fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
         /// ClientOptions connected to the default Network pool.
         ///
-        /// # Examples
         /// ```
         /// import org.iota.wallet.ClientOptionsBuilder;
         /// ClientOptions clientOptions = new ClientOptionsBuilder().with_network("testnet2").build();
@@ -486,6 +485,7 @@ foreign_class!(
         /// Every node will be considered healthy and ready to use.
         fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder;
         /// Sets the MQTT broker options.
+        /// @param options the MQTT options
         fn ClientOptionsBuilder::with_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
         /// Disables MQTT
         fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder;
@@ -591,30 +591,47 @@ foreign_class!(
         private constructor = empty;
         private fn NodeInfoWrapper::to_string(&self) -> String; alias to_string;
         private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
+        /// Get the URL from which this info is derived
         fn NodeInfoWrapper::url(&self) -> &str;
+        /// Get the information
         fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeInfo;
     }
 );
 
 foreign_class!(
-    #[derive(camelCaseAliases, PartialEq, Display)]
+    /// Response of GET /api/v1/info.
+    /// Returns general information about the node.
+    #[derive(PartialEq, camelCaseAliases, Display)]
     class InfoResponse {
         self_type InfoResponse;
         private constructor = empty;
         private fn InfoResponse::to_string(&self) -> String; alias to_string;
         private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
+        /// The name of the node
         fn InfoResponse::name(&self) -> &str;
+        /// The node software version
         fn InfoResponse::version(&self) -> &str;
+        /// The network id the node is connected to
         fn InfoResponse::network_id(&self) -> &str;
+        /// The bech32 HRP which is accepted by this node
         fn InfoResponse::bech32_hrp(&self) -> &str;
+        /// The messages per second this node is receiving
         fn InfoResponse::messages_per_second(&self) -> f64;
+        /// The referenced messages per second this node is receiving
         fn InfoResponse::referenced_messages_per_second(&self) -> f64;
+        /// The reference rate
         fn InfoResponse::referenced_rate(&self) -> f64;
+        /// The timestamp of the latest received milestone
         fn InfoResponse::latest_milestone_timestamp(&self) -> u64;
+        /// The minimum required PoW for a message to be accepted
         fn InfoResponse::min_pow_score(&self) -> f64;
+        /// The index of the latest seen milestone
         fn InfoResponse::latest_milestone_index(&self) -> u32;
+        /// The index of the latest confirmed milestone
         fn InfoResponse::confirmed_milestone_index(&self) -> u32;
+        /// The milestone index this node is pruning from
         fn InfoResponse::pruning_index(&self) -> u32;
+        /// List of features running on this node
         fn InfoResponse::features(&self) -> Vec<String>;
     }
 );
@@ -1397,6 +1414,7 @@ foreign_class!(
 
 // Bee types wrapping for various payloads
 foreign_class!(
+    /// Message payload wrapper
     #[derive(Display, camelCaseAliases)]
     class MessagePayload {
         self_type MessagePayload;
@@ -1423,8 +1441,12 @@ foreign_class!(
         private constructor = empty;
         private fn IndexationPayload::to_string(&self) -> String; alias to_string;
         /// Creates a new `IndexationPayload`.
+        /// @param index The index
+        /// @param data The data linked ot this index
         fn IndexationPayload::new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>; alias fromBytes;
         /// Creates a new `IndexationPayload` from strings
+        /// @param index The index
+        /// @param data The data linked ot this indexMilestoneSignature
         fn IndexationPayload::new_from_string(index: &str, data: &str) -> Result<IndexationPayload>; alias fromStrings;
         /// Returns the index of an `IndexationPayload`.
         fn IndexationPayload::index(&self) -> &[u8];
@@ -1489,7 +1511,9 @@ foreign_class!(
         self_type Signature;
         private constructor = empty;
         private fn Signature::to_string(&self) -> String; alias to_string;
+        /// Turn the signature into bytes
         fn Signature::to_bytes(&self) -> Vec<u8>;
+        /// Turns bytes into a signature
         fn Signature::from_bytes(bs: Vec<u8>) -> Signature;
     }
 );
@@ -1500,8 +1524,13 @@ foreign_class!(
         self_type PublicKey;
         private constructor = empty;
         private fn PublicKey::to_string(&self) -> String; alias to_string;
+        /// Verify the signature and bytes against this public key
+        /// @param sig The signature to verify
+        /// @param msg The bytes to verify
         fn PublicKey::verify(&self, sig: Signature, msg: Vec<u8>) -> bool;
+        /// Turns ths public key into bytes
         fn PublicKey::to_bytes(&self) -> Vec<u8>;
+        /// Attempt to create a public key from the provided bytes
         fn PublicKey::try_from_bytes(bs: Vec<u8>) -> Result<PublicKey>;
     }
 );
@@ -1602,11 +1631,11 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, Display)]
     class TransactionOutput {
         self_type TransactionOutput;
         private constructor = empty;
-        private fn TransactionOutput::to_string(&self) -> String;
+        private fn TransactionOutput::to_string(&self) -> String; alias to_string;
         fn TransactionOutput::kind(&self) -> OutputKind;
         fn TransactionOutput::as_signature_locked_single_output(&self) -> Result<SignatureLockedSingleOutput>;
         fn TransactionOutput::as_signature_locked_dust_allowance_output(&self) -> Result<SignatureLockedDustAllowanceOutput>;
@@ -1622,6 +1651,9 @@ foreign_class!(
         private constructor = empty;
         private fn SignatureLockedSingleOutput::to_string(&self) -> String; alias to_string;
         /// Creates a new `SignatureLockedSingleOutput`.
+        /// @param address The address to set
+        /// @param amount The amount to set
+        /// @param remainder if this output allows remainder
         fn SignatureLockedSingleOutput::from(address: AddressWrapper, amount: u64, remainder: bool) -> SignatureLockedSingleOutput;
         /// Returns the amount of a `SignatureLockedSingleOutput`.
         fn SignatureLockedSingleOutput::amount(&self) -> u64;
@@ -1639,6 +1671,8 @@ foreign_class!(
         private constructor = empty;
         private fn SignatureLockedDustAllowanceOutput::to_string(&self) -> String; alias to_string;
         /// Creates a new `SignatureLockedDustAllowanceOutput`.
+        /// @param address The address to set
+        /// @param amount The amount to set
         fn SignatureLockedDustAllowanceOutput::from(address: AddressWrapper, amount: u64) -> SignatureLockedDustAllowanceOutput;
         /// Returns the amount of a `SignatureLockedDustAllowanceOutput`.
         fn SignatureLockedDustAllowanceOutput::amount(&self) -> u64;
@@ -1653,6 +1687,7 @@ foreign_class!(
         self_type TreasuryOutput;
         private constructor = empty;
         private fn TreasuryOutput::to_string(&self) -> String; alias to_string;
+        /// Creates a new TreasuryOutput with the amount supplied
         fn TreasuryOutput::from(amount: u64) -> Result<TreasuryOutput>;
         /// Returns the amount of a `TreasuryOutput`.
         fn TreasuryOutput::amount(&self) -> u64;
@@ -1673,12 +1708,13 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, Display)]
     class ReferenceUnlock {
         self_type ReferenceUnlock;
         private constructor = empty;
         private fn ReferenceUnlock::to_string(&self) -> String; alias to_string;
         /// Creates a new `ReferenceUnlock`.
+        /// @param index The unlock block index we use for signature
         fn ReferenceUnlock::from(index: u16) -> Result<ReferenceUnlock>;
         /// Return the index of a `ReferenceUnlock`.
         fn ReferenceUnlock::index(&self) -> u16;
@@ -1686,9 +1722,12 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, Display)]
     class SignatureUnlock {
         self_type SignatureUnlock;
+        /// Create a new Signature inlock block
+        /// @param public_key The public ket used for this signature block
+        /// @param signature The signature created for this unlock block
         constructor SignatureUnlock::from(public_key: Vec<u8>, signature: Vec<u8>) -> SignatureUnlock;
         private fn SignatureUnlock::to_string(&self) -> String; alias to_string;
         
@@ -1696,20 +1735,28 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class ReceiptPayload {
         self_type ReceiptPayload;
         private constructor = empty;
-        fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
+        private fn ReceiptPayload::to_string(&self) -> String; alias to_string;
+        /// The milestone index at which the funds of a `ReceiptPayload` were migrated 
+        fn ReceiptPayload::migrated_at(&self) -> u32;
+        /// Whether a `ReceiptPayload` is the final one for a given migrated at index.
         fn ReceiptPayload::last(&self) -> bool;
         fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class MigratedFundsEntry {
         self_type MigratedFundsEntry;
         private constructor = empty;
-        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
+        private fn MigratedFundsEntry::to_string(&self) -> String; alias to_string;
+        /// Returns the tail transaction hash of a `MigratedFundsEntry`.
+        fn MigratedFundsEntry::tail_transaction_hash(&self) -> String;
+        /// Returns the output of a `MigratedFundsEntry`.
         fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
     }
 );
@@ -1718,6 +1765,7 @@ foreign_class!(
     class TreasuryPayload {
         self_type TreasuryPayload;
         private constructor = empty;
-        fn TreasuryPayload::output(&self) -> u64;
+        fn TreasuryPayload::output(&self) -> TreasuryOutput;
+        fn TreasuryPayload::input(&self) -> TreasuryInput;
     }
 );

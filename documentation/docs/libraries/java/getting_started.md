@@ -99,3 +99,16 @@ mvn exec:exec
 ## API Reference
 
 API Reference can be found [here](api_reference).
+
+## Limitations
+
+Due to the fact that we are linking through C from Rust, there are a couple of limiting factors.
+
+- Classic builder patterns return a `clone` after each builder call since we can only pass back to C by reference in `Rust`
+```Java
+Builder builder1 = new Builder();
+Builder builder2 = builder1.setValue(true);
+
+// These are different instances, thus builder1 wont have the value set
+assertNotEquals(builder1, builder2);
+```

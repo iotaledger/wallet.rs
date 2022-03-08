@@ -958,6 +958,12 @@ impl<'de> Deserialize<'de> for MessageTailTransactionHash {
     }
 }
 
+impl core::fmt::Display for MessageTailTransactionHash {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 impl Serialize for MessageTailTransactionHash {
     fn serialize<S: Serializer>(&self, s: S) -> std::result::Result<S::Ok, S::Error> {
         s.serialize_str(

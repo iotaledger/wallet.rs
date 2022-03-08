@@ -11,14 +11,14 @@ keywords:
 ---
 # Examples
 
-It's possible to send transactions with iota.rs, but we strongly recommend to use official `wallet.rs` library together with `stronghold.rs` enclave for value-based transfers. This combination incorporates the best security practices while dealing with seeds, related addresses and `UTXO`. See more information on [wallet docs](https://wiki.iota.org/wallet.rs/welcome).
+This section will guide you through several examples using the Java binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/java/examples/java-app` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/java/examples/java-app).
 
 ```bash
-git clone https://github.com/iotaledger/iota.rs
+git clone https://github.com/iotaledger/wallet.rs
 ```
 
 ```bash
-cd iota.rs/bindings/java
+cd wallet.rs/bindings/java
 ```
 
 Examples are all collected in a sample project. By default it runs a node info example, but there are many more.
