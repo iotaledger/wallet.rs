@@ -36,7 +36,7 @@ pub fn create_message_handler(options: String) -> Result<WalletMessageHandler> {
     let options = match serde_json::from_str::<ManagerOptions>(&options) {
         Ok(options) => Some(options),
         Err(e) => {
-            log::debug!("Error options input {:?}", e);
+            log::debug!("Wrong options input {:?}", e);
             None
         }
     };
@@ -71,7 +71,7 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
         let event = match serde_json::from_str::<WalletEventType>(&event) {
             Ok(event) => event,
             Err(e) => {
-                panic!("Error event to listen! {:?}", e);
+                panic!("Wrong event to listen! {:?}", e);
             }
         };
         rust_events.push(event);
