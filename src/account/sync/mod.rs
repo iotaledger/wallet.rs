@@ -503,46 +503,68 @@ async fn sync_addresses_and_messages(
 
                     let address_outputs =
                         get_address_outputs(address.address().to_bech32(), &client, options.sync_spent_outputs).await?;
+                    let address_output_ids: Vec<OutputId> =
+                        address_outputs.into_iter().map(|o| *o.output_id()).collect();
+
+                    // if the node doesn't have this output anymore, then it got pruned and spent
+                    let pruned_outputs: Vec<(&OutputId, &AddressOutput)> = address
+                        .outputs
+                        .iter()
+                        .filter(|(output_id, _)| !address_output_ids.contains(output_id))
+                        .collect();
+
+                    for (output_id, pruned_output) in pruned_outputs.into_iter() {
+                        if !pruned_output.is_spent {
+                            let mut spent_output = pruned_output.clone();
+                            spent_output.set_is_spent(true);
+                            outputs.insert(*output_id, spent_output);
+                            log::debug!("[SYNC] output {} got pruned, setting it as spent", output_id);
+                        }
+                    }
 
                     log::debug!(
                         "[SYNC] syncing messages and outputs for address {}, got {} outputs",
                         address.address().to_bech32(),
-                        address_outputs.len(),
+                        address_output_ids.len(),
                     );
 
                     let mut messages = vec![];
-                    for utxo_input in address_outputs.iter() {
-                        let mut output = match address.outputs().get(utxo_input.output_id()) {
-                            // if we already have the output we don't need to get the info from the node
-                            Some(output) => output.clone(),
-                            None => {
-                                match client.get_output(utxo_input).await {
-                                    Ok(output) => AddressOutput::from_output_response(
-                                        output,
-                                        address.address().bech32_hrp().to_string(),
-                                    )?,
-                                    Err(err) => {
-                                        // Don't return errors if we sync spent outputs, because they could be pruned
-                                        // already
-                                        if !options.sync_spent_outputs {
-                                            log::error!(
-                                                "[SYNC] couldn't get spent output: {}",
-                                                utxo_input.output_id().transaction_id().to_string(),
-                                            );
-                                            continue;
+                    for output_id in address_output_ids.iter() {
+                        let output = match client.get_output(&(output_id.clone().into())).await {
+                            Ok(output) => {
+                                let address_output = AddressOutput::from_output_response(
+                                    output,
+                                    address.address().bech32_hrp().to_string(),
+                                )?;
+                                address_output
+                            }
+                            Err(err) => {
+                                // Don't return errors if we sync spent outputs, because they could be pruned
+                                // already
+                                log::error!("[SYNC] couldn't get output: {}", output_id.transaction_id().to_string(),);
+                                match err {
+                                    iota_client::Error::ResponseError(status_code, _) => {
+                                        // if the output got pruned and the node doesn't have it anymore, set it as
+                                        // spent
+                                        if status_code == 404 {
+                                            if let Some(output) = address.outputs().get(&(output_id.clone().into())) {
+                                                let mut output = output.clone();
+                                                output.set_is_spent(true);
+                                                output
+                                            } else {
+                                                // output is unknown, so we can just skip it
+                                                continue;
+                                            }
                                         } else {
                                             return Err(err.into());
                                         }
                                     }
+                                    err => return Err(err.into()),
                                 }
                             }
                         };
 
                         let output_message_id = *output.message_id();
-                        // If we sent the output in a transaction and it got confirmed, we set it as spent
-                        if known_confirmed_messages.contains(&output_message_id) {
-                            output.set_is_spent(true);
-                        }
                         outputs.insert(output.id()?, output);
 
                         // if we already have the message stored
@@ -910,6 +932,7 @@ async fn perform_sync(
     addresses_to_save.sort_unstable_by_key(|a| *a.internal());
     addresses_to_save.dedup();
 
+    log::debug!("[SYNC] addresses to save: {:#?}", addresses_to_save);
     log::debug!("[SYNC] perform_sync finished");
     Ok(SyncedAccountData {
         messages: new_messages,
