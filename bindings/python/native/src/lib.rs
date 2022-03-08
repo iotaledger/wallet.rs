@@ -32,13 +32,16 @@ pub fn init_logger(config: String) -> PyResult<()> {
 
 #[pyfunction]
 /// Create message handler for python-side usage.
-pub fn create_message_handler(options: String) -> Result<WalletMessageHandler> {
-    let options = match serde_json::from_str::<ManagerOptions>(&options) {
-        Ok(options) => Some(options),
-        Err(e) => {
-            log::debug!("Wrong options input! {:?}", e);
-            None
-        }
+pub fn create_message_handler(options: Option<String>) -> Result<WalletMessageHandler> {
+    let options = match options {
+        Some(ops) => match serde_json::from_str::<ManagerOptions>(&ops) {
+            Ok(options) => Some(options),
+            Err(e) => {
+                log::debug!("Wrong options input! {:?}", e);
+                None
+            }
+        },
+        _ => None,
     };
     let message_handler =
         crate::block_on(async { iota_wallet::message_interface::create_message_handler(options).await })?;
