@@ -1,5 +1,6 @@
 import iota_wallet
 from iota_wallet.common import send_message_routine
+from iota_wallet.account import Account
 from json import dumps
 
 
@@ -34,9 +35,14 @@ class IotaWallet():
         }
         return message_type
 
-    @send_message_routine
     def get_account(self, alias_index):
-        """Get account
+        """Get the account instance
+        """
+        return Account(alias_index, self.handle)
+
+    @send_message_routine
+    def get_account_data(self, alias_index):
+        """Get account data
         """
         # Setup the message type
         message_type = {
