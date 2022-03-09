@@ -8,7 +8,6 @@ use iota_client::bee_message::output::{
     BasicOutputBuilder, Output,
 };
 use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
@@ -81,16 +80,7 @@ async fn main() -> Result<()> {
                 )
             })
             .collect();
-        match account
-            .send(
-                outputs,
-                Some(TransferOptions {
-                    remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                    ..Default::default()
-                }),
-            )
-            .await
-        {
+        match account.send(outputs, None).await {
             Ok(res) => println!(
                 "Message sent: http://localhost:14265/api/v2/messages/{}",
                 res.message_id.expect("No message created yet")

@@ -14,7 +14,6 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
@@ -112,15 +111,7 @@ async fn main() -> Result<()> {
                             )))
                             .finish()?,
                     )];
-                    let res = ping_account_
-                        .send(
-                            outputs,
-                            Some(TransferOptions {
-                                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                                ..Default::default()
-                            }),
-                        )
-                        .await?;
+                    let res = ping_account_.send(outputs, None).await?;
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,
