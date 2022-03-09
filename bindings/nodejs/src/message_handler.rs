@@ -10,16 +10,9 @@ use iota_wallet::{
 };
 
 use neon::prelude::*;
-use serde::Deserialize;
 use tokio::sync::mpsc::unbounded_channel;
 
 use std::sync::Arc;
-
-#[derive(Deserialize, Clone)]
-pub(crate) struct DispatchMessage {
-    #[serde(flatten)]
-    pub(crate) message: MessageType,
-}
 
 pub struct MessageHandler {
     channel: Channel,
@@ -51,10 +44,10 @@ impl MessageHandler {
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
         log::debug!("{}", serialized_message);
-        match serde_json::from_str::<DispatchMessage>(&serialized_message) {
+        match serde_json::from_str::<MessageType>(&serialized_message) {
             Ok(message) => {
                 let (response_tx, mut response_rx) = unbounded_channel();
-                let wallet_message = WalletMessage::new(message.message.clone(), response_tx);
+                let wallet_message = WalletMessage::new(message.clone(), response_tx);
 
                 self.wallet_message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
@@ -65,7 +58,7 @@ impl MessageHandler {
                         Ok(msg) => msg,
                         Err(e) => {
                             is_err = true;
-                            serde_json::to_string(&Response::new(message.message, ResponseType::Error(e.into())))
+                            serde_json::to_string(&Response::new(message, ResponseType::Error(e.into())))
                                 .expect("The response is generated manually, so unwrap is safe.")
                         }
                     };
