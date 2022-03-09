@@ -10,18 +10,10 @@ use crate::events::{
     EventEmitter,
 };
 use crate::{
-    account::{
-        builder::AccountBuilder,
-        handle::AccountHandle,
-        operations::syncing::SyncOptions,
-        types::{AccountBalance, AccountIdentifier},
-    },
+    account::{builder::AccountBuilder, handle::AccountHandle, types::AccountBalance},
     ClientOptions,
 };
 use builder::AccountManagerBuilder;
-#[cfg(debug_assertions)]
-use operations::verify_integrity;
-use operations::{get_account, recover_accounts, start_background_syncing};
 
 use iota_client::{signing::SignerHandle, Client};
 #[cfg(feature = "events")]
@@ -34,7 +26,6 @@ use std::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
-    time::Duration,
 };
 
 /// The account manager, used to create and get accounts. One account manager can hold many accounts, but they should
@@ -69,32 +60,10 @@ impl AccountManager {
             self.event_emitter.clone(),
         )
     }
-    /// Get an account with an AccountIdentifier
-    pub async fn get_account<I: Into<AccountIdentifier>>(&self, identifier: I) -> crate::Result<AccountHandle> {
-        get_account(self, identifier).await
-    }
+
     /// Get all accounts
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         Ok(self.accounts.read().await.clone())
-    }
-
-    // do want a function to delete an account? If so we have to change the account creation logic, otherwise multiple
-    // accounts could get the same index /// Delete an account
-    // pub async fn delete_account(&self, identifier: AccountIdentifier) -> crate::Result<()> {
-    // Ok(())
-    // }
-
-    /// Find accounts with balances
-    /// `address_gap_limit` defines how many addresses without balance will be checked in each account, if an address
-    /// has balance, the counter is reset
-    /// `account_gap_limit` defines how many accounts without balance will be
-    /// checked, if an account has balance, the counter is reset
-    pub async fn recover_accounts(
-        &self,
-        address_gap_limit: u32,
-        account_gap_limit: u32,
-    ) -> crate::Result<Vec<AccountHandle>> {
-        recover_accounts(self, address_gap_limit, account_gap_limit).await
     }
 
     /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
@@ -127,15 +96,6 @@ impl AccountManager {
         Ok(balance)
     }
 
-    /// Start the background syncing process for all accounts, default interval is 7 seconds
-    pub async fn start_background_syncing(
-        &self,
-        options: Option<SyncOptions>,
-        interval: Option<Duration>,
-    ) -> crate::Result<()> {
-        start_background_syncing(self, options, interval).await
-    }
-
     /// Stop the background syncing of the accounts
     pub fn stop_background_syncing(&self) -> crate::Result<()> {
         log::debug!("[stop_background_syncing]");
@@ -165,14 +125,6 @@ impl AccountManager {
         crypto::keys::bip39::wordlist::verify(mnemonic, &crypto::keys::bip39::wordlist::ENGLISH)
             .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
         Ok(())
-    }
-
-    #[cfg(debug_assertions)]
-    /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
-    /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
-    /// duplicated
-    pub async fn verify_integrity(&self) -> crate::Result<()> {
-        verify_integrity(self).await
     }
 
     #[cfg(debug_assertions)]
