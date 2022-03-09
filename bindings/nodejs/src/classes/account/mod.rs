@@ -526,7 +526,7 @@ pub fn sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         if let Some(gap_limit) = options.gap_limit {
             synchronizer = synchronizer.gap_limit(gap_limit);
         }
-        let _synced_account = synchronizer.execute().await;
+        let _synced_account = synchronizer.execute().await.unwrap();
 
         account_wrapper.channel.send(move |mut cx| {
             let cb = callback.into_inner(&mut cx);

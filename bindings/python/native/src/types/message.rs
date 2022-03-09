@@ -471,8 +471,8 @@ pub async fn to_rust_payload(
 
         let unlock_blocks: Result<Vec<RustUnlockBlock>> = transaction_payload[0]
             .unlock_blocks
-            .to_vec()
-            .into_iter()
+            .iter()
+            .cloned()
             .map(|u| u.try_into())
             .collect();
         transaction = transaction.with_unlock_blocks(RustUnlockBlocks::new(unlock_blocks?)?);
@@ -489,13 +489,12 @@ pub async fn to_rust_payload(
         )))
     } else {
         let indexation = RustIndexationPayload::new(
-            &(&payload
+            &payload
                 .indexation
                 .as_ref()
                 .unwrap_or_else(|| panic!("Invalid Payload: {:?}", payload))[0]
                 .index
-                .clone())
-                .to_owned(),
+                .clone(),
             &payload
                 .indexation
                 .as_ref()
