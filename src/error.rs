@@ -114,9 +114,9 @@ pub enum Error {
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, u16),
-    /// Provided input address not found
-    #[error("provided input address not found")]
-    InputAddressNotFound,
+    /// Address not found in account
+    #[error("address not found in account")]
+    AddressNotFoundInAccount,
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
@@ -135,6 +135,9 @@ pub enum Error {
     /// Error from the logger in the bee_common crate.
     #[error("{0}")]
     BeeCommonLogger(iota_client::common::logger::Error),
+    /// Local time doesn't match the time of the latest timestamp
+    #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
+    TimeNotSynced(u64, u64),
 }
 
 impl From<iota_client::Error> for Error {
@@ -192,7 +195,7 @@ impl serde::Serialize for Error {
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
             Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
-            Self::InsufficientFunds(_, _) => serialize_variant(self, serializer, "InsufficientFunds"),
+            Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
             Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
@@ -213,16 +216,17 @@ impl serde::Serialize for Error {
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
-            Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
-            Self::TooManyInputs(_, _) => serialize_variant(self, serializer, "TooManyInputs"),
-            Self::ConsolidationRequired(_, _) => serialize_variant(self, serializer, "ConsolidationRequired"),
-            Self::InputAddressNotFound => serialize_variant(self, serializer, "InputAddressNotFound"),
+            Self::TooManyOutputs(..) => serialize_variant(self, serializer, "TooManyOutputs"),
+            Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),
+            Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
+            Self::AddressNotFoundInAccount => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
             Self::BeeCommonLogger(_) => serialize_variant(self, serializer, "BeeCommonLogger"),
+            Self::TimeNotSynced(..) => serialize_variant(self, serializer, "TimeNotSynced"),
         }
     }
 }

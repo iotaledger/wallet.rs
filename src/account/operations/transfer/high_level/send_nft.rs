@@ -30,9 +30,11 @@ pub struct AddressAndNftId {
     /// Bech32 encoded address
     pub address: String,
     /// Nft id
+    #[serde(rename = "nftId")]
     pub nft_id: NftId,
 }
 
+impl AccountHandle {
 /// Function to send native tokens in basic outputs with a [StorageDepositReturnUnlockCondition] and
 /// [ExpirationUnlockCondition], so the storage deposit gets back to the sender and also that the sender gets access to
 /// the output again after a defined time (default 1 day),
@@ -49,22 +51,13 @@ pub struct AddressAndNftId {
 ///     nft_id: NftId::new(nft_id),
 /// }];
 ///
-/// let res = account_handle
-///     .send_nft(
-///         outputs,
-///         Some(TransferOptions {
-///             remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-///             ..Default::default()
-///         }),
-///     )
-///     .await?;
+/// let res = account_handle.send_nft(outputs, None).await?;
 /// println!("Transaction created: {}", res.1);
 /// if let Some(message_id) = res.0 {
 ///     println!("Message sent: {}", message_id);
 /// }
 /// ```
-pub async fn send_nft(
-    account_handle: &AccountHandle,
+pub async fn send_nft(&self,
     addresses_nft_ids: Vec<AddressAndNftId>,
     options: Option<TransferOptions>,
 ) -> crate::Result<TransferResult> {
@@ -74,5 +67,6 @@ pub async fn send_nft(
         // todo get nft output from account, build new output with same fields, just updated address unlock condition
         outputs.push(nft_output);
     }
-    account_handle.send(outputs, options).await
+    self.send(outputs, options).await
+}
 }
