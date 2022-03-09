@@ -1,17 +1,20 @@
 from iota_wallet.common import send_message_routine
-from json import dumps
 
 
-class CallAccountMethod:
+class Account:
+    def __init__(self, alias_index, handle):
+        self.alias_index = alias_index
+        self.handle = handle
+
     @send_message_routine
-    def generate_addresses(self, account_id, amount, options=None):
+    def generate_addresses(self, amount, options=None):
         """Generate new unused addresses.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'GenerateAddresses',
                     'data': {
@@ -25,14 +28,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_addresses(self, account_id):
+    def list_addresses(self):
         """List addresses.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListAddresses',
                 },
@@ -41,14 +44,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_addresses_with_balance(self, account_id):
+    def list_addresses_with_balance(self):
         """Returns only addresses of the account with balance.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListAddressesWithBalance',
                 },
@@ -57,14 +60,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_outputs(self, account_id):
+    def list_outputs(self):
         """Returns all outputs of the account.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListOutputs',
                 },
@@ -73,14 +76,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_unspent_outputs(self, account_id):
+    def list_unspent_outputs(self):
         """Returns all unspent outputs of the account.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListUnspentOutputs',
                 },
@@ -89,14 +92,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_transactions(self, account_id):
+    def list_transactions(self):
         """Returns all transaction of the account.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListTransactions',
                 },
@@ -105,14 +108,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def list_pending_transactions(self, account_id):
+    def list_pending_transactions(self):
         """Returns all pending transaction of the account.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'ListPendingTransactions',
                 },
@@ -121,14 +124,14 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def get_balance(self, account_id):
+    def get_balance(self):
         """Get account balance information.
         """
         # Setup the message type
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'GetBalance',
                 },
@@ -137,7 +140,7 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def sync_account(self, account_id, options):
+    def sync_account(self, options):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
@@ -145,7 +148,7 @@ class CallAccountMethod:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'SyncAccount',
                     'data': options,
@@ -155,7 +158,7 @@ class CallAccountMethod:
         return message_type
 
     @send_message_routine
-    def send_transfer(self, account_id, outputs, options=None):
+    def send_transfer(self, outputs, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
@@ -163,7 +166,7 @@ class CallAccountMethod:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{account_id}',
+                'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'SendTransfer',
                     'data':  {

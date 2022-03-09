@@ -1,10 +1,9 @@
 import iota_wallet
 from iota_wallet.common import send_message_routine
-from iota_wallet.account import CallAccountMethod
 from json import dumps
 
 
-class IotaWallet(CallAccountMethod):
+class IotaWallet():
     def __init__(self, storage_folder='./walletdb', client_options=None, signer=None):
         """Initialize the IOTA Wallet.
         """
@@ -20,6 +19,9 @@ class IotaWallet(CallAccountMethod):
 
         # Create the message handler
         self.handle = iota_wallet.create_message_handler(options)
+
+    def get_handle(self):
+        return self.handle
 
     @send_message_routine
     def create_account(self, alias=None):
