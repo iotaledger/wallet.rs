@@ -21,7 +21,7 @@ def get_py_version_cfgs():
 
 
 setup(
-    name="iota_wallet",
+    name="iota_wallet_core",
     version="0.2.0",
     classifiers=[
         "License :: SPDX-License-Identifier ::  Apache-2.0",
@@ -32,10 +32,10 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: MacOS :: MacOS X",
     ],
-    packages=["iota_wallet"],
+    packages=["iota_wallet_core"],
     rust_extensions=[
         RustExtension(
-            "iota_wallet.iota_wallet",
+            "iota_wallet_core.iota_wallet_core",
             rustc_flags=get_py_version_cfgs(),
             debug=False,
         ),

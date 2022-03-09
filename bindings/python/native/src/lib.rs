@@ -37,8 +37,7 @@ pub fn create_message_handler(options: Option<String>) -> Result<WalletMessageHa
         Some(ops) => match serde_json::from_str::<ManagerOptions>(&ops) {
             Ok(options) => Some(options),
             Err(e) => {
-                log::debug!("Wrong options input! {:?}", e);
-                None
+                panic!("Wrong options input! {:?}", e);
             }
         },
         _ => None,
@@ -91,7 +90,7 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
 
 /// IOTA Wallet implemented in Rust for Python binding.
 #[pymodule]
-fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
+fn iota_wallet_core(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
     m.add_function(wrap_pyfunction!(create_message_handler, m)?).unwrap();
     m.add_function(wrap_pyfunction!(send_message, m)?).unwrap();
