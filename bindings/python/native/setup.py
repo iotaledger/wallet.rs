@@ -32,10 +32,10 @@ setup(
         "Operating System :: POSIX",
         "Operating System :: MacOS :: MacOS X",
     ],
-    packages=["iota_wallet_core"],
+    packages=["iota_wallet"],
     rust_extensions=[
         RustExtension(
-            "iota_wallet_core.iota_wallet_core",
+            "iota_wallet.iota_wallet",
             rustc_flags=get_py_version_cfgs(),
             debug=False,
         ),
