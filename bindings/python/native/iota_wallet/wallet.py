@@ -1,7 +1,7 @@
 import iota_wallet
 from iota_wallet.common import send_message_routine
 from iota_wallet.account import Account
-from json import dumps
+from json import loads, dumps
 
 
 class IotaWallet():
@@ -24,7 +24,6 @@ class IotaWallet():
     def get_handle(self):
         return self.handle
 
-    @send_message_routine
     def create_account(self, alias=None):
         # Setup the message type
         message_type = {
@@ -33,7 +32,14 @@ class IotaWallet():
                 'alias': self.__return_str_or_none(alias),
             }
         }
-        return message_type
+        message_type = dumps(message_type)
+
+        # Send message to the Rust library
+        response = iota_wallet.send_message(self.handle, message_type)
+        response = loads(response)
+        account_id = response['payload']['index']
+
+        return self.get_account(account_id)
 
     def get_account(self, alias_index):
         """Get the account instance
