@@ -23,7 +23,7 @@ chrono = { version = "0.4.19", default-features = false, features = ["serde"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "981136e9118a092cd4de6735e616858140b33019", default-features = false, features = ["async", "mqtt"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "47e5f6684e2c59237c5fac88be85950a6e5eec4f", default-features = false, features = ["async", "mqtt", "tls"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
 rand = { version = "0.8.4", default-features = false }

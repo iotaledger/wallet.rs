@@ -337,21 +337,20 @@ The following should be considered when initializing an account:
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
 
-#### sync_addresses() 
+#### check_for_new_used_addresses() 
 
 Sync addresses with the Tangle. The method ensures that the wallet's local state contains all used addresses and an unused address. 
  
 The following should be considered when implementing this method:
 
 - The updated address history should not be written down in the database/persistent storage. Instead, the method should only return the updated address history (with transaction hashes).  This ensures that there are no partial writes to the database.
-- To sync addresses for an account from scratch, _index = 0_ and _gap_limit = 10_ should be sent as arguments.
-*   To sync addresses from the latest address, _index = latest address index_ and _gap_limit = 1_ should be sent as arguments. 
+- To sync addresses for an account from scratch, _gap_limit = 10_ should be sent as arguments.
+*   To sync addresses from the latest address, _gap_limit = 1_ should be sent as arguments. 
 
 ##### Parameters
 
 | *Name*    | *Required* | *Type* | *Description*                                                                                         |
 | --------- | ---------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| index     | ✔          | number | Address index. By default the length of addresses stored for this account should be used as an index. |
 | gap_limit | ✔          | number | Number of address indexes that are generated.                                                         |
 
 
@@ -372,7 +371,7 @@ The following should be considered when implementing this method:
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                                                                                                                                                                                                                       |
 | Required client library methods | [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)\| [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs) |
 
-#### sync_messages() 
+#### sync_addresses_and_messages() 
 
 Sync messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
 
@@ -530,8 +529,8 @@ Please note that it is a proposed design decision to enforce account syncing bef
 
 If you want to sync an account, you can use the following process:
 
-1. Sync addresses using [sync_addresses()](#sync_addresses).
-2. Sync messages using [sync_messages()](#sync_messages).
+1. Sync addresses using [check_for_new_used_addresses()](#check_for_new_used_addresses).
+2. Sync messages using [sync_addresses_and_messages()](#sync_messages).
 3. Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
 
 ##### Parameters

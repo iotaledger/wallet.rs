@@ -33,8 +33,8 @@
   - [Account](#account)
     - [API](#api)
       - [Initialisation](#initialisation)
-      - [sync_addresses()](#sync_addresses)
-      - [sync_messages()](#sync_messages)
+      - [check_for_new_used_addresses()](#check_for_new_used_addresses)
+      - [sync_addresses_and_messages()](#sync_messages)
       - [select_inputs()](#select_inputs)
       - [send()](#send)
       - [retry()](#retry)
@@ -1125,15 +1125,15 @@ The following should be considered when initialising an account:
   </tr>
 </table>
 
-#### sync_addresses() 
+#### check_for_new_used_addresses() 
 
 Syncs addresses with the Tangle. The method should ensure that the wallet's local state contains all used addresses and an unused address. 
  
 The following should be considered when implementing this method:
 
 *   The updated address history should not be written down in the database/persistent storage. Instead the method should only return the updated address history (with transaction hashes).  This will ensure that there are no partial writes to the database;
-*   To sync addresses for an account from scratch, index = 0 and gap_limit = 10 should be provided;
-*   To sync addresses from the latest address, index = latest address index and gap_limit = 1 should be provided. 
+*   To sync addresses for an account from scratch, gap_limit = 10 should be provided;
+*   To sync addresses from the latest address, gap_limit = 1 should be provided. 
 
 <table>
   <tr>
@@ -1144,12 +1144,6 @@ The following should be considered when implementing this method:
     <td><strong>Required</strong></td>
     <td><strong>Type</strong></td>
     <td><strong>Description</strong></td>
-  </tr>
-  <tr>
-    <td>index</td>
-    <td>&#10004;</td>
-    <td>number</td>
-    <td>Address index. By default the length of addresses stored for this account should be used as an index.</td>
   </tr>
   <tr>
     <td>gap_limit</td>
@@ -1202,7 +1196,7 @@ The following should be considered when implementing this method:
   </tr>
 </table>
 
-#### sync_messages() 
+#### sync_addresses_and_messages() 
 
 Syncs messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
 
@@ -1483,8 +1477,8 @@ Note that it is a proposed design decision to enforce account syncing before eve
 
 The process for account syncing:_
 
-*   Sync addresses using [sync_addresses()](#syncaddresses);
-*   Sync messages using [sync_messages()](#syncmessages);
+*   Sync addresses using [check_for_new_used_addresses()](#syncaddresses);
+*   Sync messages using [sync_addresses_and_messages()](#syncmessages);
 *   Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
 
 <table>

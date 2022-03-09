@@ -1221,7 +1221,9 @@ impl Account {
     /// Gets the account balance information.
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         let sent_messages = self.list_messages(0, 0, Some(MessageType::Sent)).await?;
-        Ok(self.balance_internal(&sent_messages).await)
+        let balance = self.balance_internal(&sent_messages).await;
+        log::debug!("Account balance: {:?}", balance);
+        Ok(balance)
     }
 
     /// Updates the account alias.

@@ -195,11 +195,10 @@ async fn process_output(payload: String, account_handle: AccountHandle) -> crate
                 let input_addresses: Vec<AddressWrapper> = essence
                     .inputs()
                     .iter()
-                    .map(|input| match input {
+                    .filter_map(|input| match input {
                         TransactionInput::Utxo(i) => i.metadata.as_ref().map(|m| m.address.clone()),
                         _ => unimplemented!(),
                     })
-                    .flatten()
                     .collect();
                 let mut addresses = output_addresses;
                 addresses.extend(input_addresses);

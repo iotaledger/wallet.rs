@@ -443,7 +443,7 @@ impl AccountManager {
             balance: metadata.balance,
             last_checked_address_index: metadata.last_checked_address_index,
             spent_addresses: metadata.spent_addresses,
-            inputs: metadata.inputs.into_iter().map(|(_, v)| v).flatten().collect(),
+            inputs: metadata.inputs.into_iter().flat_map(|(_, v)| v).collect(),
         })
     }
 
@@ -1574,7 +1574,7 @@ impl AccountsSynchronizer {
     }
 
     /// Sets the steps to run on the sync process.
-    /// By default it runs all steps (sync_addresses and sync_messages),
+    /// By default it runs all steps (check_for_new_used_addresses and sync_messages),
     /// but the library can pick what to run here.
     pub(crate) fn steps(mut self, steps: Vec<AccountSynchronizeStep>) -> Self {
         self.steps.replace(steps);
@@ -2042,7 +2042,7 @@ async fn discover_accounts(
             }
         }
     }
-    log::error!("[SYNC] finished discover_accounts");
+    log::debug!("[SYNC] finished discover_accounts");
     Ok(synced_accounts)
 }
 
