@@ -77,9 +77,7 @@ impl AccountBuilder {
         let index = accounts.len() as u32;
         let consolidation_threshold = match self.signer.signer_type {
             #[cfg(feature = "ledger-nano")]
-            SignerType::LedgerNano => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
-            #[cfg(feature = "ledger-nano")]
-            SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
+            SignerType::LedgerNano | SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };
         let account = Account {

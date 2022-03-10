@@ -6,7 +6,10 @@ use crate::account::{handle::AccountHandle, types::OutputData, AddressWithBalanc
 use crypto::keys::slip10::Chain;
 use iota_client::{
     api::ClientMessageBuilder,
-    bee_message::{output::OutputId, payload::transaction::TransactionId},
+    bee_message::{
+        output::{Output, OutputId},
+        payload::transaction::TransactionId,
+    },
     bee_rest_api::types::responses::OutputResponse,
 };
 
@@ -25,9 +28,9 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let bech32_hrp = self.client.get_bech32_hrp().await?;
         let mut outputs = Vec::new();
-        for output in output_responses {
-            let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output.output, None)?;
-            let transaction_id = TransactionId::from_str(&output.transaction_id)?;
+        for output_response in output_responses {
+            let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output_response.output, None)?;
+            let transaction_id = TransactionId::from_str(&output_response.transaction_id)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
             let remainder = {
@@ -47,10 +50,11 @@ impl AccountHandle {
             ]);
 
             outputs.push(OutputData {
-                output_id: OutputId::new(transaction_id, output.output_index)?,
-                output_response: output.clone(),
+                output_id: OutputId::new(transaction_id, output_response.output_index)?,
+                output_response: output_response.clone(),
+                output: Output::try_from(&output_response.output)?,
                 amount,
-                is_spent: output.is_spent,
+                is_spent: output_response.is_spent,
                 address,
                 network_id,
                 remainder,
@@ -60,20 +64,31 @@ impl AccountHandle {
         Ok(outputs)
     }
 
-    /// Get the current output ids for provided addresses
-    pub(crate) async fn get_outputs(&self, output_ids: Vec<OutputId>) -> crate::Result<Vec<OutputResponse>> {
+    /// Gets outputs by their id, already known outputs are skipped, but their accumulated balance is returned
+    pub(crate) async fn get_outputs(&self, output_ids: Vec<OutputId>) -> crate::Result<(Vec<OutputResponse>, u64)> {
         log::debug!("[SYNC] start get_outputs");
         let get_outputs_sync_start_time = Instant::now();
         let account = self.read().await;
-        // todo get outputs we already have stored locally from the account and don't request them again from the node
+        let mut unknown_outputs = Vec::new();
+        let mut balance_from_known_outputs = 0;
+        for output_id in output_ids {
+            match account.outputs.get(&output_id) {
+                Some(output_data) => balance_from_known_outputs+= output_data.amount,
+                None => unknown_outputs.push(output_id),
+            }
+        }
+        // drop account early so it's not blocking it while sending the requests
         drop(account);
 
-        let found_outputs = self.client.get_outputs(output_ids).await?;
+        let mut found_outputs = Vec::new();
+        if !unknown_outputs.is_empty() {
+            found_outputs = self.client.get_outputs(unknown_outputs).await?;
+        }
 
         log::debug!(
             "[SYNC] finished get_outputs in {:.2?}",
             get_outputs_sync_start_time.elapsed()
         );
-        Ok(found_outputs)
+        Ok((found_outputs, balance_from_known_outputs))
     }
 }

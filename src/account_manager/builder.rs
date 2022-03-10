@@ -103,7 +103,7 @@ impl AccountManagerBuilder {
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
         // todo remove later, only called now during development
-        init_logger("wallet.log", LevelFilter::Debug)?;
+        // init_logger("wallet.log", LevelFilter::Debug)?;
         #[cfg(feature = "storage")]
         {
             let storage_folder = self.storage_options.unwrap_or_default().storage_folder;

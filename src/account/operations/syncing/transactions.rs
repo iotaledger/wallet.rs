@@ -33,7 +33,7 @@ pub(crate) struct TransactionSyncResult {
 impl AccountHandle {
     /// Sync transactions and reattach them if unconfirmed. Returns the transaction with updated metadata and spent
     /// output ids that don't need to be locked anymore
-    pub(crate) async fn sync_transactions(&self) -> crate::Result<TransactionSyncResult> {
+    pub(crate) async fn sync_pending_transactions(&self) -> crate::Result<TransactionSyncResult> {
         log::debug!("[SYNC] sync pending transactions");
         let account = self.read().await;
 

@@ -12,10 +12,19 @@ use crate::account::{
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 
-use iota_client::{signing::SignerHandle, Client};
+use iota_client::{
+    bee_message::output::{ByteCost, ByteCostConfigBuilder, Output},
+    signing::SignerHandle,
+    Client,
+};
+
 use tokio::sync::{Mutex, RwLock};
 
-use std::{ops::Deref, sync::Arc};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    ops::Deref,
+    sync::Arc,
+};
 
 /// A thread guard over an account, so we can lock the account during operations.
 #[derive(Debug, Clone)]
@@ -114,18 +123,66 @@ impl AccountHandle {
         Ok(transactions)
     }
 
-    /// Get the total and available balance of an account
+    /// Get the AccountBalance
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         log::debug!("[BALANCE] get balance");
         let account = self.account.read().await;
-        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.amount()).sum();
+
+        let network_id = self.client.get_network_id().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let byte_cost_config = ByteCostConfigBuilder::new()
+            .byte_cost(rent_structure.v_byte_cost)
+            .key_factor(rent_structure.v_byte_factor_key)
+            .data_factor(rent_structure.v_byte_factor_data)
+            .finish();
+
+        let mut total_balance = 0;
+        let mut required_storage_deposit = 0;
+        let mut total_native_tokens = HashMap::new();
+        let mut aliases = Vec::new();
+        let mut foundries = Vec::new();
+        let mut nfts = Vec::new();
+
+        for output_data in account.unspent_outputs.values() {
+            if output_data.network_id == network_id {
+                // Add amount
+                total_balance += output_data.output.amount();
+                // Add storage deposit
+                required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
+                // Add native tokens
+                if let Some(native_tokens) = output_data.output.native_tokens() {
+                    for native_token in native_tokens.iter() {
+                        match total_native_tokens.entry(*native_token.token_id()) {
+                            Entry::Vacant(e) => {
+                                e.insert(*native_token.amount());
+                            }
+                            Entry::Occupied(mut e) => {
+                                *e.get_mut() += *native_token.amount();
+                            }
+                        }
+                    }
+                }
+                // add alias, foundry and nft outputs
+                match output_data.output {
+                    Output::Alias(_) => aliases.push(output_data.output_id),
+                    Output::Foundry(_) => foundries.push(output_data.output_id),
+                    Output::Nft(_) => nfts.push(output_data.output_id),
+                    _ => {}
+                }
+            }
+        }
+
+        // Balance from the outputs and addresses_with_balance should match
+        #[cfg(debug_assertions)]
+        assert_eq!(total_balance, account.addresses_with_balance.iter().map(|a| a.amount()).sum::<u64>());
+
         // for `available` get locked_outputs, sum outputs balance and subtract from total_balance
         log::debug!("[BALANCE] locked outputs: {:#?}", account.locked_outputs);
         let mut locked_balance = 0;
 
-        let network_id = self.client.get_network_id().await?;
         for locked_output in &account.locked_outputs {
             if let Some(output) = account.unspent_outputs.get(locked_output) {
+                // Only check outputs that are in this network
                 if output.network_id == network_id {
                     locked_balance += output.amount;
                 }
@@ -137,7 +194,7 @@ impl AccountHandle {
             locked_balance
         );
         if total_balance < locked_balance {
-            log::debug!("[BALANCE] total_balance is smaller than the available balance");
+            log::warn!("[BALANCE] total_balance is smaller than the available balance");
             // It can happen that the locked_balance is greater than the available blance if a transaction wasn't
             // confirmed when it got checked during syncing, but shortly after, when the outputs from the address were
             // requested, so we just overwrite the locked_balance
@@ -146,8 +203,11 @@ impl AccountHandle {
         Ok(AccountBalance {
             total: total_balance,
             available: total_balance - locked_balance,
-            // todo set other values
-            ..Default::default()
+            native_tokens: total_native_tokens,
+            required_storage_deposit,
+            aliases,
+            foundries,
+            nfts,
         })
     }
 
