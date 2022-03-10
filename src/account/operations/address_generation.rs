@@ -5,7 +5,7 @@ use crate::account::{
     handle::AccountHandle,
     types::address::{AccountAddress, AddressWrapper},
 };
-#[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
+#[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
 use crate::events::types::{AddressData, WalletEvent};
 
 use iota_client::{
@@ -81,7 +81,7 @@ impl AccountHandle {
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
 
-        #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano-simulator")))]
+        #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
         // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
         // have it visible on the computer first, so we need to generate it without the prompt first
         if !options.metadata.syncing {

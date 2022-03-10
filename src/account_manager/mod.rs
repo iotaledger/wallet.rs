@@ -43,8 +43,8 @@ pub struct AccountManager {
 
 impl AccountManager {
     /// Initialises the account manager builder.
-    pub fn builder() -> AccountManagerBuilder {
-        AccountManagerBuilder::new()
+    pub fn builder(signer: SignerHandle) -> AccountManagerBuilder {
+        AccountManagerBuilder::new(signer)
     }
 
     /// Create a new account

@@ -30,7 +30,7 @@ pub enum WalletEventType {
     TransactionInclusion,
     TransferProgress,
     ConsolidationRequired,
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     LedgerAddressGeneration,
 }
 

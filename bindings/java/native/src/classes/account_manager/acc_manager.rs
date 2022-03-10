@@ -43,11 +43,11 @@ pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
         #[cfg(feature = "ledger-nano")]
         AccountSignerType::LedgerNano => SignerType::LedgerNano,
 
-        #[cfg(feature = "ledger-nano-simulator")]
+        #[cfg(feature = "ledger-nano")]
         AccountSignerType::LedgerNanoSimulator => SignerType::LedgerNanoSimulator,
 
         // Default will only happen when we compile without any features...
-        #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano-simulator",)))]
+        #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano",)))]
         _ => panic!("No signer type found during compilation"),
     }
 }

@@ -41,14 +41,15 @@ pub(crate) async fn load_account_manager(
         match manager_storage {
             #[cfg(feature = "stronghold")]
             ManagerStorage::Stronghold => {
-                let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
-                fs::create_dir_all(&storage_folder)?;
-                let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
-                (
-                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
-                    path,
-                    true,
-                )
+                todo!()
+                // let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
+                // fs::create_dir_all(&storage_folder)?;
+                // let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
+                // (
+                //     Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
+                //     path,
+                //     true,
+                // )
             }
             ManagerStorage::Rocksdb => {
                 let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(ROCKSDB_FOLDERNAME));
@@ -171,7 +172,7 @@ impl StorageManager {
             .await
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     // used for ledger accounts to verify that the same menmonic is used for all accounts
     pub async fn save_first_ledger_address(
         &mut self,
@@ -181,7 +182,7 @@ impl StorageManager {
         Ok(())
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
         let address: iota_client::bee_message::address::Address =
             serde_json::from_str(&self.storage.get(FIRST_LEDGER_ADDRESS_KEY).await?)?;

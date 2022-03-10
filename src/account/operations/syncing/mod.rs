@@ -12,7 +12,7 @@ use crate::account::{
     types::{address::AddressWithBalance, InclusionState, OutputData},
     AccountBalance,
 };
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg(feature = "ledger-nano")]
 use crate::signing::SignerType;
 pub use options::SyncOptions;
 
@@ -69,7 +69,7 @@ impl AccountHandle {
             #[cfg(feature = "ledger-nano")]
             // don't automatically consoldiate with ledger accounts, because they require approval from the user
             SignerType::LedgerNano => {}
-            #[cfg(feature = "ledger-nano-simulator")]
+            #[cfg(feature = "ledger-nano")]
             SignerType::LedgerNanoSimulator => {}
             _ => {
                 self.consolidate_outputs().await?;
