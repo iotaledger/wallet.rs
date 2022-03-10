@@ -49,7 +49,7 @@ impl AccountHandle {
             outputs.push(Output::Basic(
                 BasicOutputBuilder::new(address_and_amount.amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        Address::try_from_bech32(&address_and_amount.address)?,
+                        Address::try_from_bech32(&address_and_amount.address)?.1,
                     )))
                     .finish()?,
             ))

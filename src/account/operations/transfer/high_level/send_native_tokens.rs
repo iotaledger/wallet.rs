@@ -95,7 +95,7 @@ impl AccountHandle {
 
         let mut outputs = Vec::new();
         for address_and_amount in addresses_native_tokens {
-            let address = Address::try_from_bech32(&address_and_amount.address)?;
+            let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_amount.address)?;
             outputs.push(Output::Basic(
                 BasicOutputBuilder::new(storage_deposit_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))

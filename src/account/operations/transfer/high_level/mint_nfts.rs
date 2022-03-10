@@ -61,7 +61,7 @@ impl AccountHandle {
         let mut outputs = Vec::new();
         for nft_options in nfts_options {
             let address = match nft_options.address {
-                Some(address) => Address::try_from_bech32(&address)?,
+                Some(address) => Address::try_from_bech32(&address)?.1,
                 // todo other error message
                 None => {
                     account_addresses

@@ -61,8 +61,6 @@ impl AccountHandle {
         }
 
         // Build transaction essence
-        let mut essence_builder = RegularTransactionEssence::builder(self.client.get_network_id().await?);
-        essence_builder = essence_builder.with_inputs(inputs_for_essence);
 
         let input_outputs = inputs_for_signing
             .iter()
@@ -72,7 +70,9 @@ impl AccountHandle {
         let inputs_commitment = Blake2b256::digest(&input_outputs)
             .try_into()
             .map_err(|_e| crate::Error::Blake2b256("Hashing outputs for inputs_commitment failed."))?;
-        essence_builder = essence_builder.with_inputs_commitment(inputs_commitment);
+        let mut essence_builder =
+            RegularTransactionEssence::builder(self.client.get_network_id().await?, inputs_commitment);
+        essence_builder = essence_builder.with_inputs(inputs_for_essence);
 
         for output in &outputs {
             let mut address = None;

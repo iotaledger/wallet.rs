@@ -80,15 +80,12 @@ impl AccountHandle {
             )
             .await?;
 
-        let transaction_payload = TransactionPayload::builder()
-            .with_essence(essence)
-            .with_unlock_blocks(UnlockBlocks::new(unlock_blocks)?)
-            .finish()?;
+        let transaction_payload = TransactionPayload::new(essence, UnlockBlocks::new(unlock_blocks)?)?;
 
         // Validate signature after signing. The hashed public key needs to match the input address
         let mut input_addresses = Vec::new();
         for input_signing_data in &transaction_inputs {
-            let address = Address::try_from_bech32(&input_signing_data.bech32_address)?;
+            let (_bech32_hrp, address) = Address::try_from_bech32(&input_signing_data.bech32_address)?;
             input_addresses.push(address);
         }
         verify_unlock_blocks(&transaction_payload, input_addresses)?;
