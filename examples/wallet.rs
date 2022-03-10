@@ -14,7 +14,7 @@ use iota_wallet::{
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
-    ClientOptions, Result,
+    AddressAndAmount, ClientOptions, Result,
 };
 use std::time::Instant;
 
@@ -66,15 +66,11 @@ async fn main() -> Result<()> {
     println!("Addresses with balance: {}", addresses_with_balance.len());
 
     // send transaction
-    let outputs = vec![Output::Basic(
-        BasicOutputBuilder::new(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?.1,
-            )))
-            .finish()?,
-    )];
-    // let res = account.send(outputs, None).await?;
-    let res = account.send(outputs, None).await?;
+    let outputs = vec![AddressAndAmount {
+        address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+        amount: 1_000_000,
+    }];
+    let res = account.send_amount(outputs, None).await?;
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,
