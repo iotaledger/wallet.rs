@@ -7,7 +7,11 @@ use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 use iota_client::{
     api::input_selection::{try_select_inputs, types::SelectedTransactionData},
-    bee_message::{address::Address, input::INPUT_COUNT_MAX, output::Output},
+    bee_message::{
+        address::Address,
+        input::INPUT_COUNT_MAX,
+        output::{ByteCostConfig, Output},
+    },
     signing::types::InputSigningData,
 };
 impl AccountHandle {
@@ -17,6 +21,7 @@ impl AccountHandle {
         outputs: Vec<Output>,
         custom_inputs: Option<Vec<InputSigningData>>,
         remainder_address: Option<Address>,
+        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSFER] select_inputs");
         // lock so the same inputs can't be selected in multiple transfers
@@ -30,7 +35,8 @@ impl AccountHandle {
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
-            let selected_transaction_data = try_select_inputs(custom_inputs, outputs, true, remainder_address).await?;
+            let selected_transaction_data =
+                try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config).await?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -50,7 +56,7 @@ impl AccountHandle {
         }
 
         let selected_transaction_data =
-            match try_select_inputs(available_outputs, outputs, false, remainder_address).await {
+            match try_select_inputs(available_outputs, outputs, false, remainder_address, byte_cost_config).await {
                 Ok(r) => r,
                 Err(iota_client::Error::ConsolidationRequired(output_count)) => {
                     #[cfg(feature = "events")]

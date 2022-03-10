@@ -109,13 +109,13 @@ impl AccountHandle {
                 let position = account
                     .internal_addresses
                     .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|e| crate::Error::InputAddressNotFound)?;
+                    .map_err(|e| crate::Error::AddressNotFoundInAccount)?;
                 account.internal_addresses[position].used = true;
             } else {
                 let position = account
                     .public_addresses
                     .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|e| crate::Error::InputAddressNotFound)?;
+                    .map_err(|e| crate::Error::AddressNotFoundInAccount)?;
                 account.public_addresses[position].used = true;
             }
         }

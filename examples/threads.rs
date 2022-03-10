@@ -69,7 +69,8 @@ async fn main() -> Result<()> {
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(
                                     "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
-                                )?,
+                                )?
+                                .1,
                             )))
                             .finish()?,
                     )];
