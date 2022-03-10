@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg(feature = "ledger-nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
@@ -10,7 +10,7 @@ use crate::{
     ClientOptions,
 };
 
-#[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+#[cfg(feature = "ledger-nano")]
 use iota_client::signing::SignerType;
 use iota_client::{constants::IOTA_COIN_TYPE, signing::SignerHandle};
 #[cfg(feature = "events")]
@@ -78,7 +78,7 @@ impl AccountBuilder {
         let consolidation_threshold = match self.signer.signer_type {
             #[cfg(feature = "ledger-nano")]
             SignerType::LedgerNano => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
-            #[cfg(feature = "ledger-nano-simulator")]
+            #[cfg(feature = "ledger-nano")]
             SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };

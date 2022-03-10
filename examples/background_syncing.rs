@@ -22,9 +22,8 @@ async fn main() -> Result<()> {
 
     let signer = MnemonicSigner::new("hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village")?;
 
-    let manager = AccountManager::builder()
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
-        .with_signer(signer)
         .finish()
         .await?;
 

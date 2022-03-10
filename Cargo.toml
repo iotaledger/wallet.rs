@@ -22,7 +22,7 @@ backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "ee0ab3e4750949ff15d42b6ff3024bd54cc7fc53", default-features = false, features = ["async", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "16b755b9a0332227584f2f4336de2ed2c0bf04b2", default-features = false, features = ["async", "tls"] }
 iota-crypto = { version = "0.9.1", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false, features = ["std"] }
@@ -35,17 +35,15 @@ zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_de
 
 # storage
 rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"], optional = true }
-# stronghold
-# iota_stronghold = { version = "0.4.1", default-features = false }
-# riker = { version = "0.4.2", default-features = false }
-# slog = { version = "2.7.0", default-features = false }
+
+[dev-dependencies]
+dotenv = { version =  "0.15.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
-default = ["mnemonic", "events", "storage"]
+default = ["mnemonic", "events", "storage", "stronghold"]
 ledger-nano = ["iota-client/ledger"]
-ledger-nano-simulator = ["iota-client/ledger"]
-# stronghold = []
+stronghold = ["iota-client/stronghold"]
 storage = ["rocksdb"]
 message_interface = []
 events = []

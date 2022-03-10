@@ -13,9 +13,8 @@ async fn main() -> Result<()> {
 
     let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
-    let manager = AccountManager::builder()
+    let manager = AccountManager::builder(signer)
         .with_storage_folder("wallet-database")
-        .with_signer(signer)
         .finish()
         .await?;
 
