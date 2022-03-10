@@ -6,26 +6,21 @@
 // Rename `.env.example` to `.env` first
 
 use dotenv::dotenv;
-use iota_wallet::{
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::stronghold::StrongholdSigner,
-    Result,
-};
 use iota_client::request_funds_from_faucet;
+use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, Result};
 
 use std::{env, path::Path};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
-
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
     // Setup Stronghold signer
-    let signer =
-        StrongholdSigner::try_new_signer_handle(&env::var("STRONGHOLD_PASSWORD").unwrap(), &Path::new("wallet.stronghold")).unwrap();
+    let signer = StrongholdSigner::try_new_signer_handle(
+        &env::var("STRONGHOLD_PASSWORD").unwrap(),
+        &Path::new("wallet.stronghold"),
+    )
+    .unwrap();
 
     // Create the account manager
     let manager = AccountManager::builder(signer).finish().await?;
@@ -35,8 +30,11 @@ async fn main() -> Result<()> {
 
     let address = account.list_addresses().await?;
 
-    let faucet_response =
-        request_funds_from_faucet("http://localhost:14265/api/plugins/faucet/v1/enqueue", &address[0].address().to_bech32()).await?;
+    let faucet_response = request_funds_from_faucet(
+        "http://localhost:14265/api/plugins/faucet/v1/enqueue",
+        &address[0].address().to_bech32(),
+    )
+    .await?;
 
     println!("{}", faucet_response);
 

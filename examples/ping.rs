@@ -13,18 +13,10 @@ use iota_client::{
     },
     request_funds_from_faucet,
 };
-use iota_wallet::{
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    init_logger("ping-wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();

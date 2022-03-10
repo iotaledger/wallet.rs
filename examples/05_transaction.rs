@@ -6,26 +6,20 @@
 // Rename `.env.example` to `.env` first
 
 use dotenv::dotenv;
-use iota_wallet::{
-    AddressAndAmount,
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::stronghold::StrongholdSigner,
-    Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, AddressAndAmount, Result};
 
 use std::{env, path::Path};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
-
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
     // Setup Stronghold signer
-    let signer =
-        StrongholdSigner::try_new_signer_handle(&env::var("STRONGHOLD_PASSWORD").unwrap(), &Path::new("wallet.stronghold")).unwrap();
+    let signer = StrongholdSigner::try_new_signer_handle(
+        &env::var("STRONGHOLD_PASSWORD").unwrap(),
+        &Path::new("wallet.stronghold"),
+    )
+    .unwrap();
 
     // Create the account manager
     let manager = AccountManager::builder(signer).finish().await?;
@@ -39,7 +33,7 @@ async fn main() -> Result<()> {
         amount: 1_000_000,
     }];
     let transfer_result = account.send_amount(outputs, None).await?;
-    
+
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         transfer_result.transaction_id,

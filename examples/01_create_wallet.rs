@@ -6,20 +6,12 @@
 // Rename `.env.example` to `.env` first
 
 use dotenv::dotenv;
-use iota_wallet::{
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::stronghold::StrongholdSigner,
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, ClientOptions, Result};
 
 use std::{env, path::Path};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    init_logger("wallet.log", LevelFilter::Debug)?;
-
     // Setup Stronghold signer
     let storage_path = Path::new("wallet.stronghold");
     // This example uses dotenv, which is not safe for use in production

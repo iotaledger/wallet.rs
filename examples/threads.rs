@@ -12,18 +12,10 @@ use iota_client::bee_message::{
         BasicOutputBuilder, Output,
     },
 };
-use iota_wallet::{
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    // init_logger("wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
