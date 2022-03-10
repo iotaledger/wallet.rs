@@ -16,7 +16,11 @@ use iota_client::{signing::SignerHandle, Client};
 
 use tokio::sync::{Mutex, RwLock};
 
-use std::{ops::Deref, sync::Arc};
+use std::{
+    collections::{hash_map::Entry, HashMap},
+    ops::Deref,
+    sync::Arc,
+};
 
 /// A thread guard over an account, so we can lock the account during operations.
 #[derive(Debug, Clone)]
