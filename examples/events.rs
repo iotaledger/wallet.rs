@@ -10,12 +10,7 @@ use iota_client::bee_message::{
         BasicOutputBuilder, Output,
     },
 };
-use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    signing::mnemonic::MnemonicSigner,
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -65,15 +60,7 @@ async fn main() -> Result<()> {
             .finish()?,
     )];
     // let res = account.send(outputs, None).await?;
-    let res = account
-        .send(
-            outputs,
-            Some(TransferOptions {
-                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                ..Default::default()
-            }),
-        )
-        .await?;
+    let res = account.send(outputs, None).await?;
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,

@@ -11,7 +11,6 @@ use iota_client::bee_message::{
     },
 };
 use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
     account_manager::AccountManager,
     logger::{init_logger, LevelFilter},
     signing::mnemonic::MnemonicSigner,
@@ -75,15 +74,7 @@ async fn main() -> Result<()> {
             .finish()?,
     )];
     // let res = account.send(outputs, None).await?;
-    let res = account
-        .send(
-            outputs,
-            Some(TransferOptions {
-                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                ..Default::default()
-            }),
-        )
-        .await?;
+    let res = account.send(outputs, None).await?;
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,
