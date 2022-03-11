@@ -62,9 +62,9 @@ fn default_gap_limit() -> usize {
     0
 }
 
-impl Default for SyncOptions{
-    fn default()-> Self{
-        Self{
+impl Default for SyncOptions {
+    fn default() -> Self {
+        Self {
             output_consolidation_threshold: 100,
             automatic_output_consolidation: true,
             address_start_index: 0,
@@ -73,7 +73,6 @@ impl Default for SyncOptions{
             sync_aliases_and_nfts: true,
             sync_all_addresses: false,
             force_syncing: false,
-
         }
     }
 }

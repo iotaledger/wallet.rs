@@ -16,9 +16,15 @@ use crate::account::{
 use crate::signing::SignerType;
 pub use options::SyncOptions;
 
-use iota_client::bee_message::output::OutputId;
+use iota_client::{
+    bee_message::{output::OutputId, payload::transaction::TransactionId},
+    bee_rest_api::types::responses::OutputResponse,
+};
 
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::{
+    str::FromStr,
+    time::{Instant, SystemTime, UNIX_EPOCH},
+};
 
 impl AccountHandle {
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
@@ -59,18 +65,16 @@ impl AccountHandle {
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
         // get outputs for addresses and add them also the the addresses_with_balance
-        let (addresses_with_output_ids, spent_outputs) = self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
+        let (addresses_with_output_ids, spent_output_ids) =
+            self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
 
-        let mut all_outputs = Vec::new();
-        let mut addresses_with_balance = Vec::new();
-        for mut address in addresses_with_output_ids {
-            let (output_responses, already_known_balance) = self.get_outputs(address.output_ids.clone()).await?;
-            let outputs = self.output_response_to_output_data(output_responses, &address).await?;
-            // Add balance from new outputs together with balance from already known outputs
-            address.amount = outputs.iter().map(|output| output.amount).sum::<u64>()+already_known_balance;
-            addresses_with_balance.push(address);
-            all_outputs.extend(outputs.into_iter());
-        }
+        // get outputs for addresses and add them also the the addresses_with_balance
+        let (addresses_with_balance_and_outputs, output_data) = self
+            .get_addresses_outputs(&options, addresses_with_output_ids.clone())
+            .await?;
+
+        // request possible spent outputs
+        let (spent_output_responses, _) = self.get_outputs(spent_output_ids.clone(), true).await?;
 
         if options.automatic_output_consolidation {
             // Only consolidates outputs for non ledger accounts, because they require approval from the user
@@ -87,8 +91,15 @@ impl AccountHandle {
         // add a field to the sync options to also sync incoming transactions?
 
         // updates account with balances, output ids, outputs
-        self.update_account(addresses_with_balance, all_outputs, transaction_sync_result, spent_outputs, &options)
-            .await?;
+        self.update_account(
+            addresses_with_balance_and_outputs,
+            output_data,
+            transaction_sync_result,
+            spent_output_ids,
+            spent_output_responses,
+            &options,
+        )
+        .await?;
 
         let account_balance = self.balance().await?;
         // update last_synced mutex
@@ -105,11 +116,15 @@ impl AccountHandle {
     async fn update_account(
         &self,
         addresses_with_balance: Vec<AddressWithBalance>,
-        outputs: Vec<OutputData>,
+        new_outputs: Vec<OutputData>,
         transaction_sync_result: Option<TransactionSyncResult>,
         spent_outputs: Vec<OutputId>,
+        spent_output_responses: Vec<OutputResponse>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
+        log::debug!("[SYNC] Update account with new synced data");
+
+        let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
         // update used field of the addresses
         for address in addresses_with_balance.iter() {
@@ -143,13 +158,30 @@ impl AccountHandle {
 
         // Update spent outputs
         for output_id in spent_outputs {
-            //todo: compare the network id before removing it
-            account.unspent_outputs.remove(&output_id);
-            //todo: also update the output in account.outputs with the spent metadata
+            if let Some(output) = account.outputs.get(&output_id) {
+                // Could also be outputs from other networks after we switched the node, so we check that first
+                if output.network_id == network_id {
+                    account.unspent_outputs.remove(&output_id);
+                    // Update spent data fields
+                    if let Some(output_data) = account.outputs.get_mut(&output_id) {
+                        output_data.output_response.is_spent = true;
+                        output_data.is_spent = true;
+                    }
+                }
+            }
         }
-        
+
+        // Update output_response if it got spent to include the new metadata
+        for output_response in spent_output_responses {
+            let transaction_id = TransactionId::from_str(&output_response.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, output_response.output_index)?;
+            if let Some(output_data) = account.outputs.get_mut(&output_id) {
+                output_data.output_response = output_response;
+            }
+        }
+
         // Add new synced outputs
-        for output in outputs {
+        for output in new_outputs {
             account.outputs.insert(output.output_id, output.clone());
             if !output.is_spent {
                 account.unspent_outputs.insert(output.output_id, output);
@@ -188,7 +220,7 @@ impl AccountHandle {
             }
         }
         #[cfg(feature = "storage")]
-        log::debug!("[SYNC] storing account {}", account.index());
+        log::debug!("[SYNC] storing account {} with new synced data", account.index());
         crate::storage::manager::get()
             .await?
             .lock()

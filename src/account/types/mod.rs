@@ -49,11 +49,13 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
+    // todo: remove OutputResponse and store metadata alone
     /// The output response
     #[serde(rename = "outputResponse")]
     pub output_response: OutputResponse,
     /// The actual Output
     pub output: Output,
+    // The output amount
     pub amount: u64,
     /// If an output is spent
     #[serde(rename = "isSpent")]
