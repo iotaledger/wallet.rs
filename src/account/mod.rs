@@ -20,6 +20,7 @@ use crate::account::types::{
     address::{AccountAddress, AddressWithBalance},
     AccountBalance, OutputData,
 };
+pub use handle::AccountHandle;
 
 use getset::{Getters, Setters};
 use iota_client::bee_message::{output::OutputId, payload::transaction::TransactionId};
