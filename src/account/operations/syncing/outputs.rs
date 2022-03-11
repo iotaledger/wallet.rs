@@ -79,13 +79,25 @@ impl AccountHandle {
             found_outputs = self.client.try_get_outputs(output_ids).await?;
         } else {
             let mut unknown_outputs = Vec::new();
-            let account = self.read().await;
+            let mut account = self.write().await;
+            let mut unspent_outputs = Vec::new();
             for output_id in output_ids {
-                match account.outputs.get(&output_id) {
-                    Some(output_data) => balance_from_known_outputs += output_data.amount,
+                match account.outputs.get_mut(&output_id) {
+                    // set unspent
+                    Some(output_data) => {
+                        output_data.is_spent = false;
+                        unspent_outputs.push((output_id, output_data.clone()));
+                        balance_from_known_outputs += output_data.amount
+                    }
                     None => unknown_outputs.push(output_id),
                 }
             }
+            // known output is unspent, so insert it to the unspent outputs again, because if it was an
+            // alias/nft/foundry output it could have been removed when syncing without `sync_aliases_and_nfts`
+            for (output_id, output_data) in unspent_outputs {
+                account.unspent_outputs.insert(output_id, output_data);
+            }
+
             if !unknown_outputs.is_empty() {
                 found_outputs = self.client.get_outputs(unknown_outputs).await?;
             }
