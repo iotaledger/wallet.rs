@@ -16,7 +16,7 @@ impl AccountHandle {
     pub(crate) async fn get_addresses_to_sync(&self, options: &SyncOptions) -> crate::Result<Vec<AddressWithBalance>> {
         log::debug!("[SYNC] get_addresses_to_sync");
         let balance_sync_start_time = Instant::now();
-        
+
         let mut addresses_before_syncing = self.list_addresses().await?;
         // Filter addresses when address_start_index is not 0 so we skip these addresses
         // If we force syncing, we want to sync all addresses
@@ -208,10 +208,6 @@ impl AccountHandle {
                 outputs_data.extend(outputs.into_iter());
             }
         }
-        log::debug!(
-            "[SYNC] spent outputs: {:?}",
-            spent_outputs
-        );
         log::debug!(
             "[SYNC] finished get_address_output_ids in {:.2?}",
             address_outputs_start_time.elapsed()
