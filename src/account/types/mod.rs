@@ -3,6 +3,7 @@
 
 /// Address types used in the account
 pub(crate) mod address;
+pub use address::{AccountAddress, AddressWithBalance};
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
 
