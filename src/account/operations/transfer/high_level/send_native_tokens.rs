@@ -3,7 +3,7 @@
 
 use crate::{
     account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
-    Error,
+    Error, Result,
 };
 
 use iota_client::bee_message::{
@@ -13,28 +13,25 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, Output, TokenId,
+        BasicOutputBuilder, ByteCost, ByteCostConfig, ByteCostConfigBuilder, NativeToken, Output, TokenId,
     },
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use std::{
-    collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 const FIVE_MINUTES_IN_SECONDS: u64 = 300;
 // One day in seconds
 const DEFAULT_EXPIRATION_TIME: u32 = 86400;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Address, amount and native tokens for `send_native_tokens()`
 pub struct AddressNativeTokens {
     /// Bech32 encoded address
     pub address: String,
     /// Native tokens
-    pub native_tokens: HashMap<TokenId, U256>,
+    pub native_tokens: Vec<(TokenId, U256)>,
     /// Bech32 encoded address return address, to which the storage deposit will be returned. Default will use the
     /// first address of the account
     pub return_address: Option<String>,
@@ -51,15 +48,13 @@ impl AccountHandle {
     /// RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
-    /// let token_id: [u8; 38] =
-    ///     hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
-    ///         .try_into()
-    ///         .unwrap();
-    /// let mut native_tokens = HashMap::new();
-    /// native_tokens.insert(TokenId::new(token_id), U256::from(50));
-    /// let outputs = vec![AddressAmountNativeTokens {
+    /// let outputs = vec![AddressNativeTokens {
     ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-    ///     native_tokens,
+    ///     native_tokens: vec![(
+    ///         TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
+    ///         U256::from(50),
+    ///     )],
+    ///     ..Default::default()
     /// }];
     ///
     /// let res = account_handle.send_native_tokens(outputs, None).await?;
@@ -73,11 +68,15 @@ impl AccountHandle {
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        let rent_structure = self.client.get_rent_structure().await?;
+        let byte_cost_config = ByteCostConfigBuilder::new()
+            .byte_cost(rent_structure.v_byte_cost)
+            .key_factor(rent_structure.v_byte_factor_key)
+            .data_factor(rent_structure.v_byte_factor_data)
+            .finish();
+
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
-
-        // todo: get minimum required amount for such an output, so we don't lock more than required
-        let storage_deposit_amount = 1_500_000;
 
         let local_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -96,8 +95,27 @@ impl AccountHandle {
         let mut outputs = Vec::new();
         for address_and_amount in addresses_native_tokens {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_amount.address)?;
+            // get minimum required amount for such an output, so we don't lock more than required
+            // We have to check it for every output individually, because different address types and amount of
+            // different native tokens require a differen storage deposit
+            let storage_deposit_amount = minimum_storage_deposit(
+                &byte_cost_config,
+                &address,
+                &return_address.address.inner,
+                &address_and_amount.native_tokens,
+            )?;
+
             outputs.push(Output::Basic(
                 BasicOutputBuilder::new(storage_deposit_amount)?
+                    .with_native_tokens(
+                        address_and_amount
+                            .native_tokens
+                            .into_iter()
+                            .map(|(id, amount)| {
+                                NativeToken::new(id, amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                            })
+                            .collect::<Result<Vec<NativeToken>>>()?,
+                    )
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the full storage_deposit_amount back to the sender, so only the native tokens are
@@ -115,4 +133,39 @@ impl AccountHandle {
         }
         self.send(outputs, options).await
     }
+}
+
+/// Computes the minimum amount that an output needs to have, when native tokens are sent with [AddressUnlockCondition],
+/// [StorageDepositReturnUnlockCondition] and [ExpirationUnlockCondition].
+fn minimum_storage_deposit(
+    config: &ByteCostConfig,
+    address: &Address,
+    return_address: &Address,
+    native_tokens: &[(TokenId, U256)],
+) -> Result<u64> {
+    let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
+    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
+    // not important, we are only interested in the storage requirements of the type.
+    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
+    let basic_output = BasicOutputBuilder::new(1_000_000_000)?
+        .with_native_tokens(
+            native_tokens
+                .iter()
+                .map(|(id, amount)| {
+                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                })
+                .collect::<Result<Vec<NativeToken>>>()?,
+        )
+        .add_unlock_condition(address_condition)
+        .add_unlock_condition(UnlockCondition::StorageDepositReturn(
+            StorageDepositReturnUnlockCondition::new(*return_address, 1_000_000_000)?,
+        ))
+        .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
+            *return_address,
+            // Both 0 would be invalid, so we just use 1
+            MilestoneIndex::new(1),
+            0,
+        )?))
+        .finish()?;
+    Ok(Output::Basic(basic_output).byte_cost(config))
 }

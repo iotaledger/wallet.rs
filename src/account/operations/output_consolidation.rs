@@ -14,8 +14,8 @@ use iota_client::bee_message::output::{
 };
 
 impl AccountHandle {
-    /// Consolidates outputs from an account by sending them to the same address again if the output amount is >= the
-    /// output_consolidation_threshold
+    /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
+    /// address again if the output amount is >= the output_consolidation_threshold
     pub(crate) async fn consolidate_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
         let account = self.read().await;
         let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
@@ -39,15 +39,20 @@ impl AccountHandle {
             for output_id in &address.output_ids {
                 if !account.locked_outputs.contains(output_id) {
                     if let Some(output) = account.outputs.get(output_id) {
-                        // todo handle other output types
-                        unspent_outputs.push(output.clone());
+                        // Only consolidate basic outputs with no address unlock condition alone
+                        if let Output::Basic(basic_output) = &output.output {
+                            // If the length is 1, then there is only [AddressUnlockCondition]
+                            if basic_output.unlock_conditions().len() == 1 {
+                                unspent_outputs.push(output.clone());
+                            }
+                        }
                     }
                 }
             }
             // only consolidate if the unlocked outputs are >= output_consolidation_threshold
             if unspent_outputs.len() >= output_consolidation_threshold {
                 log::debug!(
-                    "[OUTPUT_CONSOLIDATION] {} has {} unspent outputs",
+                    "[OUTPUT_CONSOLIDATION] {} has {} unspent basic outputs with only an AddressUnlockCondition",
                     address.address.to_bech32(),
                     unspent_outputs.len()
                 );

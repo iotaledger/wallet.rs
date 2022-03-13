@@ -51,10 +51,16 @@ impl AccountHandle {
         for (output_id, output) in account.unspent_outputs.iter() {
             // check if not in pending transaction (locked_outputs) and if from the correct network
             if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
-                available_outputs.push(output.input_signing_data()?);
+                if let Output::Basic(basic_output) = &output.output {
+                    if basic_output.unlock_conditions().len() == 1 {
+                        available_outputs.push(output.input_signing_data()?);
+                    }
+                }
+                // Todo: handle other output types in such a way, that they don't get burned by accident
+                // Maybe don't handle it here, but add another `custom_inputs` fields for the interal, use when such
+                // outputs should be added to the automatic input selection
             }
         }
-
         let selected_transaction_data =
             match try_select_inputs(available_outputs, outputs, false, remainder_address, byte_cost_config).await {
                 Ok(r) => r,
