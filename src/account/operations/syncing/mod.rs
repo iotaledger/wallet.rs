@@ -88,6 +88,18 @@ impl AccountHandle {
             }
         }
 
+        if options.try_collect_outputs {
+            // Only consolidates outputs for non ledger accounts, because they require approval from the user
+            match self.signer.signer_type {
+                #[cfg(feature = "ledger-nano")]
+                // don't automatically consolidate with ledger accounts, because they require approval from the user
+                SignerType::LedgerNano | SignerType::LedgerNanoSimulator => {}
+                _ => {
+                    self.try_collect_outputs().await?;
+                }
+            }
+        }
+
         // add a field to the sync options to also sync incoming transactions?
 
         // updates account with balances, output ids, outputs

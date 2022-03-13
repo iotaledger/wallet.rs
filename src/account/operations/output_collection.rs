@@ -11,18 +11,21 @@ use crate::{
     Result,
 };
 
-use iota_client::bee_message::output::{
-    unlock_condition::{
-        AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+use iota_client::{
+    api::input_selection::minimum_storage_deposit,
+    bee_message::output::{
+        unlock_condition::{
+            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+        },
+        BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, OutputId,
     },
-    BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, OutputId,
 };
 
 use std::collections::{hash_map::Entry, HashMap};
 
 impl AccountHandle {
     /// Try to collect basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub(crate) async fn collect_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
+    pub(crate) async fn try_collect_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
         log::debug!("[OUTPUT_COLLECTION] check if outputs can be collected");
         let account = self.read().await;
         let first_account_address = account
@@ -36,19 +39,28 @@ impl AccountHandle {
 
         // Get outputs for the collect
         let mut outputs_to_collect: Vec<OutputData> = Vec::new();
+        let mut possible_additional_inputs: Vec<OutputData> = Vec::new();
         for (output_id, output_data) in &account.unspent_outputs {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
                 if let Some(output) = account.outputs.get(output_id) {
                     // Only collect basic outputs
                     if let Output::Basic(basic_output) = &output.output {
-                        if can_output_be_unlocked_now(
-                            &account.addresses_with_balance,
-                            &output.output,
-                            local_time as u32,
-                            milestone_index,
-                        ) {
+                        // Ignore outputs with a single [UnlockCondition], because then it's an [AddressUnlockCondition]
+                        // and we own it already without further restrictions
+                        if basic_output.unlock_conditions().len() != 1
+                            && can_output_be_unlocked_now(
+                                &account.addresses_with_balance,
+                                &output.output,
+                                local_time as u32,
+                                milestone_index,
+                            )
+                        {
                             outputs_to_collect.push(output_data.clone());
+                        } else {
+                            // Store outputs with [AddressUnlockCondition] alone, because they could be used as
+                            // additional input, if required
+                            possible_additional_inputs.push(output_data.clone());
                         }
                     }
                 }
@@ -70,9 +82,12 @@ impl AccountHandle {
 
         let mut collection_results = Vec::new();
         // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <= max
-        // inputs Consideration for the ledger signer: outputs with expiration and storage deposit return unlock
-        // conditions might require more outputs, that's why I set it to 5 now, because even with duplicated
-        // output amount it will be low enough then
+        // inputs
+        //
+        // Consideration: outputs with expiration and storage deposit return unlock
+        // conditions might require more outputs or maybe more additional inputs are required for the storage deposit
+        // amount, that's why I set it to 5 now, because even with duplicated output amount it will be low
+        // enough then
         for outputs in outputs_to_collect.chunks(5) {
             let mut outputs_to_send = Vec::new();
             // Amount we get with the storage deposit subsstracted
@@ -98,16 +113,16 @@ impl AccountHandle {
                 } else {
                     // if storage deposit return, we have to subtract this amount and create the return output
                     let mut storage_deposit = false;
-                    let mut retun_amount = 0;
+                    let mut return_amount = 0;
                     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
                         if let Some(UnlockCondition::StorageDepositReturn(sdr)) =
                             unlock_conditions.get(StorageDepositReturnUnlockCondition::KIND)
                         {
                             storage_deposit = true;
-                            retun_amount = sdr.amount();
+                            return_amount = sdr.amount();
                             // create return output
                             outputs_to_send.push(Output::Basic(
-                                BasicOutputBuilder::new(retun_amount)?
+                                BasicOutputBuilder::new(sdr.amount())?
                                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                         *sdr.return_address(),
                                     )))
@@ -116,8 +131,8 @@ impl AccountHandle {
                         }
                     }
                     if storage_deposit {
-                        // for own output
-                        new_amount += output_data.output.amount() - retun_amount;
+                        // for own output subtract the return amount
+                        new_amount += output_data.output.amount()-return_amount;
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             for native_token in native_tokens.iter() {
                                 match new_native_tokens.entry(*native_token.token_id()) {
@@ -147,6 +162,51 @@ impl AccountHandle {
                     }
                 }
             }
+
+            // Check if the new amount is enough for the storage deposit, otherwise increase it to this
+            let option_native_token = if new_native_tokens.is_empty() {
+                None
+            } else {
+                Some(new_native_tokens.clone())
+            };
+            let required_storage_deposit = minimum_storage_deposit(
+                &byte_cost_config,
+                &first_account_address.address.inner,
+                &option_native_token,
+            )?;
+            let mut additional_inputs = Vec::new();
+            if new_amount < required_storage_deposit {
+                // add more inputs
+                for output_data in &possible_additional_inputs {
+                    // Recalculate every time, because new intputs can also add more native tokens, which would increase
+                    // the storage deposit cost
+                    let required_storage_deposit = minimum_storage_deposit(
+                        &byte_cost_config,
+                        &first_account_address.address.inner,
+                        &option_native_token,
+                    )?;
+                    if new_amount < required_storage_deposit {
+                        new_amount += output_data.output.amount();
+                        if let Some(native_tokens) = output_data.output.native_tokens() {
+                            for native_token in native_tokens.iter() {
+                                match new_native_tokens.entry(*native_token.token_id()) {
+                                    Entry::Vacant(e) => {
+                                        e.insert(*native_token.amount());
+                                    }
+                                    Entry::Occupied(mut e) => {
+                                        *e.get_mut() += *native_token.amount();
+                                    }
+                                }
+                            }
+                        }
+                        additional_inputs.push(output_data.output_id);
+                    } else {
+                        // Break if we have enough inputs
+                        break;
+                    }
+                }
+            }
+
             // Create output with collected values
             outputs_to_send.push(Output::Basic(
                 BasicOutputBuilder::new(new_amount)?
@@ -169,7 +229,14 @@ impl AccountHandle {
                     outputs_to_send,
                     Some(TransferOptions {
                         skip_sync: true,
-                        custom_inputs: Some(outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()),
+                        custom_inputs: Some(
+                            outputs
+                                .iter()
+                                .map(|o| o.output_id)
+                                // add additional inputs
+                                .chain(additional_inputs)
+                                .collect::<Vec<OutputId>>(),
+                        ),
                         ..Default::default()
                     }),
                     &byte_cost_config,
@@ -207,10 +274,10 @@ fn can_output_be_unlocked_now(
                     let mut ms_expired = false;
                     let mut time_expired = false;
                     // 0 gets ignored
-                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() > current_milestone {
+                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
                         ms_expired = true;
                     }
-                    if expiration.timestamp() == 0 || expiration.timestamp() > current_time {
+                    if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
                         time_expired = true;
                     }
                     // Check if the address which can unlock the output now is in the account
@@ -239,10 +306,10 @@ fn can_output_be_unlocked_now(
                     let mut ms_reached = false;
                     let mut time_reached = false;
                     // 0 gets ignored
-                    if *timelock.milestone_index() == 0 || *timelock.milestone_index() > current_milestone {
+                    if *timelock.milestone_index() == 0 || *timelock.milestone_index() < current_milestone {
                         ms_reached = true;
                     }
-                    if timelock.timestamp() == 0 || timelock.timestamp() > current_time {
+                    if timelock.timestamp() == 0 || timelock.timestamp() < current_time {
                         time_reached = true;
                     }
                     can_be_unlocked.push(ms_reached && time_reached);
@@ -263,10 +330,10 @@ fn is_expired(output: &Output, current_time: u32, current_milestone: u32) -> boo
             let mut ms_expired = false;
             let mut time_expired = false;
             // 0 gets ignored
-            if *expiration.milestone_index() == 0 || *expiration.milestone_index() > current_milestone {
+            if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
                 ms_expired = true;
             }
-            if expiration.timestamp() == 0 || expiration.timestamp() > current_time {
+            if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
                 time_expired = true;
             }
             // Check if the address which can unlock the output now is in the account

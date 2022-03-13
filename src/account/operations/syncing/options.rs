@@ -32,6 +32,10 @@ pub struct SyncOptions {
     // updated)
     #[serde(rename = "syncAllAddresses", default)]
     pub sync_all_addresses: bool,
+    // Automatically try to collect basic outputs that have additional unlock conditions to their
+    // [AddressUnlockCondition].
+    #[serde(rename = "tryCollectOutputs", default = "default_try_collect_outputs")]
+    pub try_collect_outputs: bool,
     // usually we skip syncing if it's called within a few ms, but if we change the client options we need to resync
     // this will also ignore `address_start_index` and sync all addresses
     #[serde(rename = "forceSyncing", default)]
@@ -54,6 +58,10 @@ fn default_sync_aliases_and_nfts() -> bool {
     true
 }
 
+fn default_try_collect_outputs() -> bool {
+    true
+}
+
 fn default_address_start_index() -> u32 {
     0
 }
@@ -72,6 +80,7 @@ impl Default for SyncOptions {
             sync_pending_transactions: true,
             sync_aliases_and_nfts: true,
             sync_all_addresses: false,
+            try_collect_outputs: true,
             force_syncing: false,
         }
     }
