@@ -19,9 +19,6 @@ use iota_client::bee_message::{
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use std::time::{SystemTime, UNIX_EPOCH};
-
-const FIVE_MINUTES_IN_SECONDS: u64 = 300;
 // One day in seconds
 const DEFAULT_EXPIRATION_TIME: u32 = 86400;
 
@@ -78,18 +75,7 @@ impl AccountHandle {
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
-        let local_time = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
-            .as_secs();
-        let latest_ms_timestamp = self.client.get_info().await?.nodeinfo.status.latest_milestone_timestamp;
-
-        // Check the local time is in the range of +-5 minutes of the node to prevent locking funds by accident
-        if !(latest_ms_timestamp - FIVE_MINUTES_IN_SECONDS..latest_ms_timestamp + FIVE_MINUTES_IN_SECONDS)
-            .contains(&local_time)
-        {
-            return Err(Error::TimeNotSynced(local_time, latest_ms_timestamp));
-        }
+        let (local_time, _) = self.get_time_and_milestone_checked().await?;
         let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
 
         let mut outputs = Vec::new();

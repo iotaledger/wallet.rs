@@ -35,6 +35,16 @@ impl AccountHandle {
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
+            // Check that no input got already locked
+            for input in custom_inputs.iter() {
+                if account.locked_outputs.contains(&input.output_id()?) {
+                    return Err(crate::Error::CustomInputError(format!(
+                        "Provided custom input {} is already used in another transaction",
+                        input.output_id()?
+                    )));
+                }
+            }
+
             let selected_transaction_data =
                 try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config).await?;
 

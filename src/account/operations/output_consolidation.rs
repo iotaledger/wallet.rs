@@ -32,11 +32,12 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
 
         let bech32_hrp = self.client.get_bech32_hrp().await?;
-        // Get outputs for the consoldation
+        // Get outputs for the consolidation
         let mut outputs_to_consolidate: Vec<Vec<OutputData>> = Vec::new();
         for address in addresses_that_need_consolidation {
             let mut unspent_outputs = Vec::new();
             for output_id in &address.output_ids {
+                // Don't use outputs that are locked for other transactions
                 if !account.locked_outputs.contains(output_id) {
                     if let Some(output) = account.outputs.get(output_id) {
                         // Only consolidate basic outputs with no address unlock condition alone
@@ -74,7 +75,9 @@ impl AccountHandle {
 
         let mut consolidation_results = Vec::new();
         for outputs_on_one_address in outputs_to_consolidate {
-            for outputs in outputs_on_one_address.chunks(output_consolidation_threshold) {
+            // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <=
+            // max inputs
+            for outputs in outputs_on_one_address.chunks(16) {
                 let output_sum = outputs.iter().map(|o| o.amount).sum();
                 let consolidation_output = vec![Output::Basic(
                     BasicOutputBuilder::new(output_sum)?
@@ -97,7 +100,7 @@ impl AccountHandle {
                 {
                     Ok(res) => {
                         log::debug!(
-                            "[OUTPUT_CONSOLIDATION] Consolidation transaction sent: msg_id: {:?} tx_id: {:?}",
+                            "[OUTPUT_CONSOLIDATION] Consolidation transaction created: msg_id: {:?} tx_id: {:?}",
                             res.message_id,
                             res.transaction_id
                         );
