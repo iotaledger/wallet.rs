@@ -132,7 +132,7 @@ impl AccountHandle {
                     }
                     if storage_deposit {
                         // for own output subtract the return amount
-                        new_amount += output_data.output.amount()-return_amount;
+                        new_amount += output_data.output.amount() - return_amount;
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             for native_token in native_tokens.iter() {
                                 match new_native_tokens.entry(*native_token.token_id()) {
