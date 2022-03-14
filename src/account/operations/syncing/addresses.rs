@@ -79,13 +79,7 @@ impl AccountHandle {
                         let client = client;
                         // Get basic outputs
                         let mut output_ids = client
-                            .output_ids(vec![
-                                QueryParameter::Address(address.address.to_bech32()),
-                                // todo: handle the following unlock conditions
-                                QueryParameter::HasExpirationCondition(false),
-                                QueryParameter::HasTimelockCondition(false),
-                                QueryParameter::HasStorageDepositReturnCondition(false),
-                            ])
+                            .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                             .await?;
 
                         if sync_options.sync_aliases_and_nfts {
@@ -94,6 +88,7 @@ impl AccountHandle {
                                 client
                                     .nfts_output_ids(vec![
                                         QueryParameter::Address(address.address.to_bech32()),
+                                        // todo: handle the following unlock conditions
                                         QueryParameter::HasExpirationCondition(false),
                                         QueryParameter::HasTimelockCondition(false),
                                         QueryParameter::HasStorageDepositReturnCondition(false),

@@ -49,3 +49,4 @@ pub use error::Error;
 pub type Result<T> = std::result::Result<T, Error>;
 
 pub use iota_client::{self, signing};
+pub use primitive_types::U256;

@@ -35,6 +35,16 @@ impl AccountHandle {
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
+            // Check that no input got already locked
+            for input in custom_inputs.iter() {
+                if account.locked_outputs.contains(&input.output_id()?) {
+                    return Err(crate::Error::CustomInputError(format!(
+                        "Provided custom input {} is already used in another transaction",
+                        input.output_id()?
+                    )));
+                }
+            }
+
             let selected_transaction_data =
                 try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config).await?;
 
@@ -51,10 +61,17 @@ impl AccountHandle {
         for (output_id, output) in account.unspent_outputs.iter() {
             // check if not in pending transaction (locked_outputs) and if from the correct network
             if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
-                available_outputs.push(output.input_signing_data()?);
+                if let Output::Basic(basic_output) = &output.output {
+                    // Only use outputs with a single unlock conditions, which is the [AddressUnlockCondition]
+                    if basic_output.unlock_conditions().len() == 1 {
+                        available_outputs.push(output.input_signing_data()?);
+                    }
+                }
+                // Todo: handle other output types in such a way, that they don't get burned by accident
+                // Maybe don't handle it here, but add another `custom_inputs` fields for the internal use when such
+                // outputs should be added to the automatic input selection
             }
         }
-
         let selected_transaction_data =
             match try_select_inputs(available_outputs, outputs, false, remainder_address, byte_cost_config).await {
                 Ok(r) => r,

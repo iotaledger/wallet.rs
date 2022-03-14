@@ -73,7 +73,11 @@ impl AccountHandle {
                 // from the client Doesn't work for offline creating, should we use the network from the
                 // GenerateAddressMetadata instead to use `iota` or `atoi`?
                 None => {
-                    let bech32_hrp = self.client.get_bech32_hrp().await?;
+                    let bech32_hrp = self
+                        .client
+                        .get_bech32_hrp()
+                        .await
+                        .unwrap_or_else(|_| "iota".to_string());
                     bech32_hrp
                 }
             }
