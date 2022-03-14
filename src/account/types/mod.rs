@@ -3,16 +3,23 @@
 
 /// Address types used in the account
 pub(crate) mod address;
+pub use address::{AccountAddress, AddressWithBalance};
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    bee_message::{address::Address, output::OutputId, payload::transaction::TransactionPayload, MessageId},
+    bee_message::{
+        address::Address,
+        output::{Output, OutputId, TokenId},
+        payload::transaction::TransactionPayload,
+        MessageId,
+    },
     bee_rest_api::types::responses::OutputResponse,
     signing::types::InputSigningData,
 };
 
+use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use std::{collections::HashMap, str::FromStr};
@@ -21,18 +28,20 @@ use std::{collections::HashMap, str::FromStr};
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
+    // Total amount
     pub(crate) total: u64,
     // balance that can currently spend
     pub(crate) available: u64,
-    // currently required amount for the byte cost
-    pub(crate) byte_cost_deposit: u64,
-    pub(crate) native_tokens: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) nfts: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) foundrys: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) alias_outputs: HashMap<String, u128>,
+    // currently required storage deposit amount
+    pub(crate) required_storage_deposit: u64,
+    // Native tokens
+    pub(crate) native_tokens: HashMap<TokenId, U256>,
+    // Output ids of owned nfts // would the nft id/address be better?
+    pub(crate) nfts: Vec<OutputId>,
+    // Output ids of alias nfts // would the alias id/address be better?
+    pub(crate) aliases: Vec<OutputId>,
+    // Foundry outputs
+    pub(crate) foundries: Vec<OutputId>,
 }
 
 /// An output with metadata
@@ -41,9 +50,13 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
+    // todo: remove OutputResponse and store metadata alone
     /// The output response
     #[serde(rename = "outputResponse")]
     pub output_response: OutputResponse,
+    /// The actual Output
+    pub output: Output,
+    // The output amount
     pub amount: u64,
     /// If an output is spent
     #[serde(rename = "isSpent")]

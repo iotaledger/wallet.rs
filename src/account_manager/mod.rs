@@ -10,7 +10,9 @@ use crate::events::{
     EventEmitter,
 };
 use crate::{
-    account::{builder::AccountBuilder, handle::AccountHandle, types::AccountBalance},
+    account::{
+        builder::AccountBuilder, handle::AccountHandle, operations::syncing::SyncOptions, types::AccountBalance,
+    },
     ClientOptions,
 };
 use builder::AccountManagerBuilder;
@@ -21,6 +23,7 @@ use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
 use std::{
+    collections::hash_map::Entry,
     path::Path,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -66,6 +69,11 @@ impl AccountManager {
         Ok(self.accounts.read().await.clone())
     }
 
+    /// Get the [SignerHandle]
+    pub fn get_signer(&self) -> SignerHandle {
+        self.signer.clone()
+    }
+
     /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
     pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
         log::debug!("[set_client_options]");
@@ -92,6 +100,32 @@ impl AccountManager {
             let account_balance = account.balance().await?;
             balance.total += account_balance.total;
             balance.available += account_balance.available;
+        }
+        Ok(balance)
+    }
+
+    /// Sync all accounts
+    pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
+        let mut balance = AccountBalance { ..Default::default() };
+        let accounts = self.accounts.read().await;
+        for account in accounts.iter() {
+            let account_balance = account.sync(options.clone()).await?;
+            balance.total += account_balance.total;
+            balance.available += account_balance.available;
+            balance.required_storage_deposit += account_balance.required_storage_deposit;
+            balance.nfts.extend(account_balance.nfts.into_iter());
+            balance.aliases.extend(account_balance.aliases.into_iter());
+            balance.foundries.extend(account_balance.foundries.into_iter());
+            for (token_id, amount) in account_balance.native_tokens {
+                match balance.native_tokens.entry(token_id) {
+                    Entry::Vacant(e) => {
+                        e.insert(amount);
+                    }
+                    Entry::Occupied(mut e) => {
+                        *e.get_mut() += amount;
+                    }
+                }
+            }
         }
         Ok(balance)
     }

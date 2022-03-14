@@ -5,7 +5,7 @@ use crate::account::{
     operations::syncing::SyncOptions,
     types::{
         address::{AccountAddress, AddressWithBalance},
-        AccountBalance, OutputData, Transaction,
+        OutputData, Transaction,
     },
     Account,
 };
@@ -13,6 +13,7 @@ use crate::account::{
 use crate::events::EventEmitter;
 
 use iota_client::{signing::SignerHandle, Client};
+
 use tokio::sync::{Mutex, RwLock};
 
 use std::{ops::Deref, sync::Arc};
@@ -112,43 +113,6 @@ impl AccountHandle {
             }
         }
         Ok(transactions)
-    }
-
-    /// Get the total and available balance of an account
-    pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        log::debug!("[BALANCE] get balance");
-        let account = self.account.read().await;
-        let total_balance: u64 = account.addresses_with_balance.iter().map(|a| a.amount()).sum();
-        // for `available` get locked_outputs, sum outputs balance and subtract from total_balance
-        log::debug!("[BALANCE] locked outputs: {:#?}", account.locked_outputs);
-        let mut locked_balance = 0;
-
-        let network_id = self.client.get_network_id().await?;
-        for locked_output in &account.locked_outputs {
-            if let Some(output) = account.unspent_outputs.get(locked_output) {
-                if output.network_id == network_id {
-                    locked_balance += output.amount;
-                }
-            }
-        }
-        log::debug!(
-            "[BALANCE] total_balance: {}, lockedbalance: {}",
-            total_balance,
-            locked_balance
-        );
-        if total_balance < locked_balance {
-            log::debug!("[BALANCE] total_balance is smaller than the available balance");
-            // It can happen that the locked_balance is greater than the available blance if a transaction wasn't
-            // confirmed when it got checked during syncing, but shortly after, when the outputs from the address were
-            // requested, so we just overwrite the locked_balance
-            locked_balance = total_balance;
-        };
-        Ok(AccountBalance {
-            total: total_balance,
-            available: total_balance - locked_balance,
-            // todo set other values
-            ..Default::default()
-        })
     }
 
     // Should only be called from the AccountManager so all accounts are on the same state
