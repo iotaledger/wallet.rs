@@ -69,7 +69,7 @@ async fn get_address_outputs(
                 .outputs(
                     &address,
                     AddressOutputsOptions {
-                        include_spent: false,
+                        include_spent: true,
                         ..Default::default()
                     },
                 )
@@ -81,7 +81,7 @@ async fn get_address_outputs(
                 .outputs(
                     &address,
                     AddressOutputsOptions {
-                        include_spent: fetch_spent_outputs,
+                        include_spent: false,
                         ..Default::default()
                     },
                 )
@@ -447,6 +447,7 @@ async fn sync_addresses_and_messages(
     address_start_index: usize,
 ) -> crate::Result<(Vec<Address>, Vec<SyncedMessage>)> {
     log::debug!("[SYNC] sync_addresses_and_messages");
+    let syc_start_time = std::time::Instant::now();
     let mut messages = vec![];
 
     let account = account_handle.read().await.clone();
@@ -474,8 +475,9 @@ async fn sync_addresses_and_messages(
         .cloned()
         .collect();
     log::debug!(
-        "[SYNC] sync_addresses_and_messages for {} addresses",
-        account_addresses.len()
+        "[SYNC] sync_addresses_and_messages for {} addresses with spent_outputs: {}",
+        account_addresses.len(),
+        options.sync_spent_outputs
     );
     drop(account);
     for addresses_chunk in account_addresses
@@ -485,6 +487,8 @@ async fn sync_addresses_and_messages(
     {
         let mut tasks = Vec::new();
         for address in addresses_chunk {
+            // Track if any data of the address changed, so we only return addresses that really changed
+            let mut address_or_message_data_changed = false;
             let mut address = address.clone();
             if skip_addresses.contains(&address)
                 || (*address.internal()
@@ -518,6 +522,7 @@ async fn sync_addresses_and_messages(
                             spent_output.set_is_spent(true);
                             outputs.insert(*output_id, spent_output);
                             log::debug!("[SYNC] output {} got pruned, setting it as spent", output_id);
+                            address_or_message_data_changed = true;
                         }
                     }
 
@@ -529,42 +534,78 @@ async fn sync_addresses_and_messages(
 
                     let mut messages = vec![];
                     for output_id in address_output_ids.iter() {
-                        let output = match client.get_output(&((*output_id).into())).await {
-                            Ok(output) => {
-                                let address_output = AddressOutput::from_output_response(
-                                    output,
-                                    address.address().bech32_hrp().to_string(),
-                                )?;
-                                address_output
-                            }
-                            Err(err) => {
-                                // Don't return errors if we sync spent outputs, because they could be pruned
-                                // already
-                                log::error!("[SYNC] couldn't get output: {}", output_id.transaction_id().to_string(),);
-                                match err {
-                                    iota_client::Error::ResponseError(status_code, _) => {
-                                        // if the output got pruned and the node doesn't have it anymore, set it as
-                                        // spent
-                                        if status_code == 404 {
-                                            if let Some(output) = address.outputs().get(&(*output_id)) {
-                                                let mut output = output.clone();
-                                                output.set_is_spent(true);
-                                                output
-                                            } else {
-                                                // output is unknown, so we can just skip it
-                                                continue;
-                                            }
-                                        } else {
-                                            return Err(err.into());
-                                        }
-                                    }
-                                    err => return Err(err.into()),
+                        let mut address_output = None;
+                        // If we also get spent output ids, but we already have the output and it's spent, then don't
+                        // request it again
+                        if let Some(output) = address.outputs.get(output_id) {
+                            if *output.is_spent() {
+                                // Only skip if we also sync spent outputs, otherwise if it's stored locally as spent,
+                                // but the node has it as unspent, the local state is wrong, which could happen if a
+                                // node returned 404 for an output request before
+                                if options.sync_spent_outputs {
+                                    log::debug!("[SYNC] skip requesting spent output {}", output_id);
+                                    address_output.replace(output);
                                 }
+                            } else {
+                                log::debug!(
+                                    "[SYNC] skip requesting output {}, because we have it already",
+                                    output_id
+                                );
+                                // If we have the output and it's still unspent, then we also don't need to request it
+                                // again, because nothing changed
+                                address_output.replace(output);
                             }
-                        };
+                        }
 
-                        let output_message_id = *output.message_id();
-                        outputs.insert(output.id()?, output);
+                        // Get the message id from the output
+                        let output_message_id = if let Some(address_output) = address_output {
+                            *address_output.message_id()
+                        } else {
+                            // if the output isn't known already, request it first
+                            let output = match client.get_output(&((*output_id).into())).await {
+                                Ok(output) => {
+                                    let address_output = AddressOutput::from_output_response(
+                                        output,
+                                        address.address().bech32_hrp().to_string(),
+                                    )?;
+                                    address_or_message_data_changed = true;
+                                    let output_message_id = *address_output.message_id();
+                                    outputs.insert(*output_id, address_output);
+                                    output_message_id
+                                }
+                                Err(err) => {
+                                    // Don't return errors if we sync spent outputs, because they could be pruned
+                                    // already
+                                    log::error!(
+                                        "[SYNC] couldn't get output: {}",
+                                        output_id.transaction_id().to_string(),
+                                    );
+                                    match err {
+                                        iota_client::Error::ResponseError(status_code, _) => {
+                                            // if the output got pruned and the node doesn't have it anymore, set it as
+                                            // spent
+                                            if status_code == 404 {
+                                                if let Some(output) = address.outputs().get(&(*output_id)) {
+                                                    let mut output = output.clone();
+                                                    output.set_is_spent(true);
+                                                    address_or_message_data_changed = true;
+                                                    let output_message_id = *output.message_id();
+                                                    outputs.insert(output.id()?, output);
+                                                    output_message_id
+                                                } else {
+                                                    // output is unknown, so we can just skip it
+                                                    continue;
+                                                }
+                                            } else {
+                                                return Err(err.into());
+                                            }
+                                        }
+                                        err => return Err(err.into()),
+                                    }
+                                }
+                            };
+                            output
+                        };
 
                         // if we already have the message stored
                         // and the confirmation state is confirmed
@@ -574,6 +615,7 @@ async fn sync_addresses_and_messages(
                         }
 
                         if let Some(message) = get_message(&client, &output_message_id).await? {
+                            address_or_message_data_changed = true;
                             messages.push(SyncedMessage {
                                 id: output_message_id,
                                 inner: message,
@@ -583,20 +625,26 @@ async fn sync_addresses_and_messages(
 
                     address.set_outputs(outputs);
 
-                    crate::Result::Ok((address, messages))
+                    crate::Result::Ok((address, messages, address_or_message_data_changed))
                 })
                 .await
             });
         }
         for res in futures::future::try_join_all(tasks).await? {
-            let (address, found_messages) = res?;
-            if !address.outputs().is_empty() {
-                addresses.push(address);
+            let (address, found_messages, address_or_message_data_changed) = res?;
+            if address_or_message_data_changed {
+                if !address.outputs().is_empty() {
+                    addresses.push(address);
+                }
+                messages.extend(found_messages);
             }
-            messages.extend(found_messages);
         }
     }
 
+    log::debug!(
+        "[SYNC] sync_addresses_and_messages took: {:.2?}",
+        syc_start_time.elapsed()
+    );
     Ok((addresses, messages))
 }
 
@@ -903,7 +951,7 @@ async fn perform_sync(
         if let Ok(iota_address) = crate::address::get_iota_address(
             &account,
             latest_index + 1,
-            false,
+            true,
             bech32_hrp.clone(),
             GenerateAddressMetadata {
                 syncing: true,
@@ -920,7 +968,7 @@ async fn perform_sync(
             let address = Address {
                 address: iota_address,
                 key_index: latest_index + 1,
-                internal: false,
+                internal: true,
                 outputs: Default::default(),
             };
             addresses_to_save.push(address);
