@@ -1,5 +1,11 @@
 # Changelog
 
+## \[1.0.14]
+
+- Reduce output requests. Skip processing unchanged addresses.
+  Fix unused internal address generation.
+  - [625dd65a](https://github.com/iotaledger/wallet.rs/commit/625dd65a103fcbc544d004ff0a0cf2a9331747cb) Reduce output requests. Skip processing unchanged addresses. ([#925](https://github.com/iotaledger/wallet.rs/pull/925)) on 2022-03-15
+
 ## \[1.0.13]
 
 - Improve syncing speed and return possible syncing errors that got previously ignored.
