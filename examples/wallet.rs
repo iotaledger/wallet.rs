@@ -3,13 +3,6 @@
 
 //! cargo run --example wallet --release
 
-use iota_client::bee_message::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, Output,
-    },
-};
 use iota_wallet::{
     account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressAndAmount, ClientOptions, Result,
 };
