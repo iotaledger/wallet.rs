@@ -1,5 +1,19 @@
 # Changelog
 
+## \[1.0.14]
+
+- Reduce output requests. Skip processing unchanged addresses.
+  Fix unused internal address generation.
+  - [3b51dd95](https://github.com/iotaledger/wallet.rs/commit/3b51dd95998968867655fe2c4ec44d41aa252178) Improve syncing ([#633](https://github.com/iotaledger/wallet.rs/pull/633)) on 2021-05-27
+  - [c39362f3](https://github.com/iotaledger/wallet.rs/commit/c39362f3f2ea2975754a623884d8d7a7ae09ce6c) apply version updates ([#628](https://github.com/iotaledger/wallet.rs/pull/628)) on 2021-05-27
+  - [e09167ae](https://github.com/iotaledger/wallet.rs/commit/e09167ae97493961980d5ab9f8d448ae46c53799) improve syncing speed and add logger example ([#638](https://github.com/iotaledger/wallet.rs/pull/638)) on 2021-06-02
+  - [29ce49c5](https://github.com/iotaledger/wallet.rs/commit/29ce49c57e93498398f2403f8c25540dd0586cdf) apply version updates ([#641](https://github.com/iotaledger/wallet.rs/pull/641)) on 2021-06-04
+  - [492eb4f6](https://github.com/iotaledger/wallet.rs/commit/492eb4f66a27cf97ee6dc8de337d70e587ba7820) Start syncing from address index 0 by default ([#848](https://github.com/iotaledger/wallet.rs/pull/848)) on 2021-12-30
+  - [c79da39d](https://github.com/iotaledger/wallet.rs/commit/c79da39d39064053a18896a4ce7436a31bd437d4) apply version updates ([#849](https://github.com/iotaledger/wallet.rs/pull/849)) on 2021-12-30
+  - [392a021f](https://github.com/iotaledger/wallet.rs/commit/392a021ffdcea8be7c42ed1b0baa55b5d4004a00) Improve syncing ([#906](https://github.com/iotaledger/wallet.rs/pull/906)) on 2022-03-09
+  - [af8b7121](https://github.com/iotaledger/wallet.rs/commit/af8b712148a8f33227a29aad7735c9ed7ac2ac84) apply version updates ([#907](https://github.com/iotaledger/wallet.rs/pull/907)) on 2022-03-09
+  - [625dd65a](https://github.com/iotaledger/wallet.rs/commit/625dd65a103fcbc544d004ff0a0cf2a9331747cb) Reduce output requests. Skip processing unchanged addresses. ([#925](https://github.com/iotaledger/wallet.rs/pull/925)) on 2022-03-15
+
 ## \[1.0.13]
 
 - Improve syncing speed and return possible syncing errors that got previously ignored.
