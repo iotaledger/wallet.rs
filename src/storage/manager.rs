@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use std::{
-    collections::HashSet,
     fs,
     path::{Path, PathBuf},
     sync::Arc,
@@ -88,7 +87,7 @@ pub(crate) async fn set<P: AsRef<Path>>(
     };
     let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await {
         Ok(account_indexes) => serde_json::from_str(&account_indexes)?,
-        Err(_) => HashSet::new(),
+        Err(_) => Vec::new(),
     };
     let storage_manager = StorageManager {
         storage,
@@ -112,7 +111,7 @@ pub(crate) async fn get() -> crate::Result<Arc<tokio::sync::Mutex<StorageManager
 pub(crate) struct StorageManager {
     storage: Storage,
     // account indexes for accounts in the database
-    account_indexes: HashSet<u32>,
+    account_indexes: Vec<u32>,
 }
 
 impl StorageManager {
@@ -153,7 +152,7 @@ impl StorageManager {
     }
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
-        self.account_indexes.insert(*account.index());
+        self.account_indexes.push(*account.index());
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await?;
@@ -166,7 +165,7 @@ impl StorageManager {
         self.storage
             .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
             .await?;
-        self.account_indexes.remove(&account_index);
+        self.account_indexes.retain(|a| a == &account_index);
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
