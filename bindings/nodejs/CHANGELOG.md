@@ -1,5 +1,13 @@
 # Changelog
 
+## \[1.0.15]
+
+- Fix reading messages from db.
+  - [9e07c9e0](https://github.com/iotaledger/wallet.rs/commit/9e07c9e0984636474bd897fa492261fb14286b8e) Update workflows and syncing with sync_spent_outputs enabled ([#933](https://github.com/iotaledger/wallet.rs/pull/933)) on 2022-03-16
+- Sync outputs again, when syncing spent outputs is enabled.
+  Update windows workflows so binaries are built again.
+  - [9e07c9e0](https://github.com/iotaledger/wallet.rs/commit/9e07c9e0984636474bd897fa492261fb14286b8e) Update workflows and syncing with sync_spent_outputs enabled ([#933](https://github.com/iotaledger/wallet.rs/pull/933)) on 2022-03-16
+
 ## \[1.0.14]
 
 - Reduce output requests. Skip processing unchanged addresses.
