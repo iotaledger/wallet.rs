@@ -7,7 +7,7 @@ use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 use crate::events::EventEmitter;
 use crate::{
     account::{constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions},
-    ClientOptions,
+    ClientOptions, Error,
 };
 
 #[cfg(feature = "ledger-nano")]
@@ -74,16 +74,26 @@ impl AccountBuilder {
     // Build the Account
     pub async fn finish(&self) -> crate::Result<AccountHandle> {
         let mut accounts = self.accounts.write().await;
-        let index = accounts.len() as u32;
+        let account_index = accounts.len() as u32;
+        // If no alias is provided, the account index will be set as alias
+        let account_alias = self.alias.clone().unwrap_or_else(|| account_index.to_string());
+
+        // Check that the alias isn't already used for another account
+        for account_handle in accounts.iter() {
+            if account_handle.read().await.alias().to_lowercase() == account_alias.to_lowercase() {
+                return Err(Error::AccountAliasAlreadyExists);
+            }
+        }
+
         let consolidation_threshold = match self.signer.signer_type {
             #[cfg(feature = "ledger-nano")]
             SignerType::LedgerNano | SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };
         let account = Account {
-            index,
+            index: account_index,
             coin_type: IOTA_COIN_TYPE,
-            alias: self.alias.clone().unwrap_or_else(|| index.to_string()),
+            alias: account_alias,
             public_addresses: Vec::new(),
             internal_addresses: Vec::new(),
             addresses_with_balance: Vec::new(),
