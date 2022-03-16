@@ -11,7 +11,7 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_message::{
         address::Address,
-        output::{Output, OutputId, TokenId},
+        output::{AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::TransactionPayload,
         MessageId,
     },
@@ -29,19 +29,33 @@ use std::{collections::HashMap, str::FromStr};
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
     // Total amount
-    pub(crate) total: u64,
-    // balance that can currently spend
-    pub(crate) available: u64,
-    // currently required storage deposit amount
-    pub(crate) required_storage_deposit: u64,
+    pub total: u64,
+    // Amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedAmount")]
+    pub locked_amount: u64,
+    // Balance that can currently be spend
+    pub available: u64,
+    // Current required storage deposit amount
+    #[serde(rename = "requiredStorageDeposit")]
+    pub required_storage_deposit: u64,
+    // Current required storage deposit amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedRequiredStorageDeposit")]
+    pub locked_required_storage_deposit: u64,
     // Native tokens
-    pub(crate) native_tokens: HashMap<TokenId, U256>,
-    // Output ids of owned nfts // would the nft id/address be better?
-    pub(crate) nfts: Vec<OutputId>,
-    // Output ids of alias nfts // would the alias id/address be better?
-    pub(crate) aliases: Vec<OutputId>,
-    // Foundry outputs
-    pub(crate) foundries: Vec<OutputId>,
+    #[serde(rename = "nativeTokens")]
+    pub native_tokens: HashMap<TokenId, U256>,
+    // Native tokens of outputs with additional unlock conditions
+    #[serde(rename = "lockedNativeTokens")]
+    pub locked_native_tokens: HashMap<TokenId, U256>,
+    // Nfts
+    pub nfts: Vec<NftId>,
+    // Nfts with additional unlock conditions
+    #[serde(rename = "lockedNfts")]
+    pub locked_nfts: Vec<NftId>,
+    // Aliases
+    pub aliases: Vec<AliasId>,
+    // Foundries
+    pub foundries: Vec<FoundryId>,
 }
 
 /// An output with metadata

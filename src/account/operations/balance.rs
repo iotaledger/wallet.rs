@@ -20,39 +20,81 @@ impl AccountHandle {
             .key_factor(rent_structure.v_byte_factor_key)
             .data_factor(rent_structure.v_byte_factor_data)
             .finish();
+        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         let mut total_balance = 0;
+        let mut locked_amount = 0;
         let mut required_storage_deposit = 0;
+        let mut locked_required_storage_deposit = 0;
         let mut total_native_tokens = HashMap::new();
+        let mut locked_native_tokens = HashMap::new();
         let mut aliases = Vec::new();
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
+        let mut locked_nfts = Vec::new();
 
         for output_data in account.unspent_outputs.values() {
             if output_data.network_id == network_id {
-                // Add amount
-                total_balance += output_data.output.amount();
-                // Add storage deposit
-                required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
-                // Add native tokens
-                if let Some(native_tokens) = output_data.output.native_tokens() {
-                    for native_token in native_tokens.iter() {
-                        match total_native_tokens.entry(*native_token.token_id()) {
-                            Entry::Vacant(e) => {
-                                e.insert(*native_token.amount());
-                            }
-                            Entry::Occupied(mut e) => {
-                                *e.get_mut() += *native_token.amount();
+                // If there is only an [AddressUnlockCondition] or [ImmutableAliasAddressUnlockCondition], then we can
+                // control the balance
+                if output_data
+                    .output
+                    .unlock_conditions()
+                    .expect("no unlock_conditions")
+                    .len()
+                    == 1
+                {
+                    // Add amount
+                    total_balance += output_data.output.amount();
+                    // Add storage deposit
+                    required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        for native_token in native_tokens.iter() {
+                            match total_native_tokens.entry(*native_token.token_id()) {
+                                Entry::Vacant(e) => {
+                                    e.insert(*native_token.amount());
+                                }
+                                Entry::Occupied(mut e) => {
+                                    *e.get_mut() += *native_token.amount();
+                                }
                             }
                         }
                     }
-                }
-                // add alias, foundry and nft outputs
-                match output_data.output {
-                    Output::Alias(_) => aliases.push(output_data.output_id),
-                    Output::Foundry(_) => foundries.push(output_data.output_id),
-                    Output::Nft(_) => nfts.push(output_data.output_id),
-                    _ => {}
+                    // add alias, foundry and nft outputs
+                    match &output_data.output {
+                        Output::Foundry(output) => foundries.push(output.id()),
+                        Output::Nft(output) => nfts.push(*output.nft_id()),
+                        // Alias outputs are ignored here, because they always need two unlock conditions
+                        _ => {}
+                    }
+                } else {
+                    // if we have other unlock conditions added for basic or nft outputs, then we might can't spend the
+                    // balance at the moment or in the future, because it expired
+                    // Add amount
+                    locked_amount += output_data.output.amount();
+                    // Add storage deposit
+                    locked_required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        for native_token in native_tokens.iter() {
+                            match locked_native_tokens.entry(*native_token.token_id()) {
+                                Entry::Vacant(e) => {
+                                    e.insert(*native_token.amount());
+                                }
+                                Entry::Occupied(mut e) => {
+                                    *e.get_mut() += *native_token.amount();
+                                }
+                            }
+                        }
+                    }
+                    // add alias, foundry and nft outputs
+                    match &output_data.output {
+                        Output::Alias(output) => aliases.push(*output.alias_id()),
+                        Output::Foundry(output) => foundries.push(output.id()),
+                        Output::Nft(output) => locked_nfts.push(*output.nft_id()),
+                        _ => {}
+                    }
                 }
             }
         }
@@ -90,12 +132,16 @@ impl AccountHandle {
         };
         Ok(AccountBalance {
             total: total_balance,
+            locked_amount,
             available: total_balance - locked_balance,
             native_tokens: total_native_tokens,
+            locked_native_tokens,
             required_storage_deposit,
+            locked_required_storage_deposit,
             aliases,
             foundries,
             nfts,
+            locked_nfts,
         })
     }
 }

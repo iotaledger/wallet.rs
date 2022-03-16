@@ -4,8 +4,11 @@
 use crate::{
     account::{
         handle::AccountHandle,
-        operations::transfer::TransferResult,
-        types::{address::AddressWithBalance, OutputData},
+        operations::{
+            helpers::time::{can_output_be_unlocked_now, is_expired},
+            transfer::TransferResult,
+        },
+        types::OutputData,
         TransferOptions,
     },
     Result,
@@ -14,9 +17,7 @@ use crate::{
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_message::output::{
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
-        },
+        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
         BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, OutputId,
     },
 };
@@ -49,12 +50,7 @@ impl AccountHandle {
                         // Ignore outputs with a single [UnlockCondition], because then it's an [AddressUnlockCondition]
                         // and we own it already without further restrictions
                         if basic_output.unlock_conditions().len() != 1
-                            && can_output_be_unlocked_now(
-                                &account.addresses_with_balance,
-                                &output.output,
-                                local_time as u32,
-                                milestone_index,
-                            )
+                            && can_output_be_unlocked_now(output, local_time as u32, milestone_index)
                         {
                             outputs_to_collect.push(output_data.clone());
                         } else {
@@ -256,92 +252,5 @@ impl AccountHandle {
         }
 
         Ok(collection_results)
-    }
-}
-
-// Check if an output can be unlocked by one of the account addresses at the current time/milestone index
-fn can_output_be_unlocked_now(
-    account_addresses: &[AddressWithBalance],
-    output: &Output,
-    current_time: u32,
-    current_milestone: u32,
-) -> bool {
-    let mut can_be_unlocked = Vec::new();
-    if let Some(unlock_conditions) = output.unlock_conditions() {
-        for unlock_condition in unlock_conditions.iter() {
-            match unlock_condition {
-                UnlockCondition::Expiration(expiration) => {
-                    let mut ms_expired = false;
-                    let mut time_expired = false;
-                    // 0 gets ignored
-                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
-                        ms_expired = true;
-                    }
-                    if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
-                        time_expired = true;
-                    }
-                    // Check if the address which can unlock the output now is in the account
-                    if ms_expired && time_expired {
-                        // check return address
-                        can_be_unlocked.push(
-                            account_addresses
-                                .iter()
-                                .any(|a| a.address.inner == *expiration.return_address()),
-                        );
-                    } else {
-                        // check address unlock condition
-                        let can_unlocked = if let Some(UnlockCondition::Address(address_unlock_condition)) =
-                            unlock_conditions.get(AddressUnlockCondition::KIND)
-                        {
-                            account_addresses
-                                .iter()
-                                .any(|a| a.address.inner == *address_unlock_condition.address())
-                        } else {
-                            false
-                        };
-                        can_be_unlocked.push(can_unlocked);
-                    }
-                }
-                UnlockCondition::Timelock(timelock) => {
-                    let mut ms_reached = false;
-                    let mut time_reached = false;
-                    // 0 gets ignored
-                    if *timelock.milestone_index() == 0 || *timelock.milestone_index() < current_milestone {
-                        ms_reached = true;
-                    }
-                    if timelock.timestamp() == 0 || timelock.timestamp() < current_time {
-                        time_reached = true;
-                    }
-                    can_be_unlocked.push(ms_reached && time_reached);
-                }
-                _ => {}
-            }
-        }
-        // If one of the unlock conditions is not met, then we can't unlock it
-        !can_be_unlocked.contains(&false)
-    } else {
-        false
-    }
-}
-
-fn is_expired(output: &Output, current_time: u32, current_milestone: u32) -> bool {
-    if let Some(unlock_conditions) = output.unlock_conditions() {
-        if let Some(UnlockCondition::Expiration(expiration)) = unlock_conditions.get(ExpirationUnlockCondition::KIND) {
-            let mut ms_expired = false;
-            let mut time_expired = false;
-            // 0 gets ignored
-            if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
-                ms_expired = true;
-            }
-            if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
-                time_expired = true;
-            }
-            // Check if the address which can unlock the output now is in the account
-            ms_expired && time_expired
-        } else {
-            false
-        }
-    } else {
-        false
     }
 }
