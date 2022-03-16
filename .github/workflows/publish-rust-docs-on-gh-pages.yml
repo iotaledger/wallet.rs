@@ -14,10 +14,14 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
+          # Build Docs
           DOCFLAGS="--cfg docsrs" cargo +stable doc --all-features --document-private-items --no-deps --release
+          # The doc root folder doesn't contain an index file.  This line creates one that redirects to the iota_wallet folder
           echo "<meta http-equiv=\"refresh\" content=\"0; url=iota_wallet\">" > target/doc/index.html
       - name: Publish Rust Docs On GitHub Pages
         uses: iotaledger/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./target/doc/
+          # Once devops has set up the publishing URL, please uncomment and update the next line
+          # cname: wallet-lib.docs.iota.org
