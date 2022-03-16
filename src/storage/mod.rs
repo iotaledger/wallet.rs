@@ -454,16 +454,16 @@ impl StorageManager {
         } else {
             iter.take(count).collect::<Vec<&MessageIndexation>>()
         } {
-            let mut message: Message = serde_json::from_str(&self.get(&index.key.to_string()).await?)?;
+            if let Ok(mut message) = serde_json::from_str::<Message>(&self.get(&index.key.to_string()).await?) {
+                // we update the `incoming` prop because we store only one copy of the message on the db
+                // so on internal transactions the `incoming` prop is wrong without this
+                if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
+                    let TransactionEssence::Regular(essence) = tx.essence_mut();
+                    essence.incoming = index.incoming.unwrap_or_default();
+                }
 
-            // we update the `incoming` prop because we store only one copy of the message on the db
-            // so on internal transactions the `incoming` prop is wrong without this
-            if let Some(MessagePayload::Transaction(tx)) = message.payload.as_mut() {
-                let TransactionEssence::Regular(essence) = tx.essence_mut();
-                essence.incoming = index.incoming.unwrap_or_default();
+                messages.push(message);
             }
-
-            messages.push(message);
         }
 
         Ok(messages)

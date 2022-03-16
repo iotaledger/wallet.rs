@@ -546,13 +546,13 @@ async fn sync_addresses_and_messages(
                                     log::debug!("[SYNC] skip requesting spent output {}", output_id);
                                     address_output.replace(output);
                                 }
-                            } else {
+                            } else if !options.sync_spent_outputs {
                                 log::debug!(
                                     "[SYNC] skip requesting output {}, because we have it already",
                                     output_id
                                 );
-                                // If we have the output and it's still unspent, then we also don't need to request it
-                                // again, because nothing changed
+                                // If we have the output and it's still unspent, then we also don't need to request
+                                // it again, because nothing changed
                                 address_output.replace(output);
                             }
                         }
