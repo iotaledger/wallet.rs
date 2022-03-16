@@ -5,12 +5,7 @@
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{
-    account::handle::AccountHandle,
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    ClientOptions,
-};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 
 use iota_client::signing::SignerHandle;
 use serde::{Deserialize, Serialize};
@@ -102,8 +97,6 @@ impl AccountManagerBuilder {
     /// Builds the account manager
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
-        // todo remove later, only called now during development
-        // init_logger("wallet.log", LevelFilter::Debug)?;
         #[cfg(feature = "storage")]
         {
             let storage_folder = self.storage_options.unwrap_or_default().storage_folder;
