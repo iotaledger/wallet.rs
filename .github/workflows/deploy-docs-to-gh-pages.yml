@@ -13,6 +13,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
           DOCFLAGS="--cfg docsrs" cargo +stable doc --all-features --document-private-items --no-deps --release
+          rm -rf ./docs
+          echo "<meta http-equiv=\"refresh\" content=\"0; url=iota_wallet\">" > target/doc/index.html
       - name: Release to GitHub Pages
         uses: iotaledger/actions-gh-pages@v3
         with:
