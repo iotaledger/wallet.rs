@@ -70,7 +70,8 @@ impl AccountHandle {
                     }
                 } else {
                     // if we have other unlock conditions added for basic or nft outputs, then we might can't spend the
-                    // balance and it could be expired in the future Add amount
+                    // balance at the moment or in the future, because it expired
+                    // Add amount
                     locked_amount += output_data.output.amount();
                     // Add storage deposit
                     locked_required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
