@@ -3,8 +3,6 @@
 
 use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
-#[ignore]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
     let client_options = ClientOptions::new()
@@ -14,19 +12,20 @@ async fn account_recovery_empty() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder()
-        .with_signer(signer)
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
+        .with_storage_folder("test-storage/account_recovery_empty")
         .finish()
         .await?;
 
     let accounts = manager.recover_accounts(2, 2).await?;
+
+    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     // accounts should be empty if no account was created before and no account was found with balance
     assert_eq!(0, accounts.len());
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
@@ -37,8 +36,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder()
-        .with_signer(signer)
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -58,7 +56,6 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance() -> Result<()> {
@@ -70,8 +67,7 @@ async fn account_recovery_with_balance() -> Result<()> {
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
     let signer = MnemonicSigner::new("merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time")?;
 
-    let manager = AccountManager::builder()
-        .with_signer(signer)
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -94,7 +90,6 @@ async fn account_recovery_with_balance() -> Result<()> {
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
@@ -106,8 +101,7 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
     let signer = MnemonicSigner::new("merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time")?;
 
-    let manager = AccountManager::builder()
-        .with_signer(signer)
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
         .finish()
         .await?;

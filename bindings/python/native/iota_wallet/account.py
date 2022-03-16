@@ -7,6 +7,7 @@ class Account:
         self.handle = handle
 
     @send_message_routine
+<<<<<<< HEAD
     def __str__(self):
         message_type = {
             'cmd': 'GetAccount',
@@ -15,6 +16,8 @@ class Account:
         return message_type
 
     @send_message_routine
+=======
+>>>>>>> shimmer-develop
     def generate_addresses(self, amount, options=None):
         """Generate new unused addresses.
         """
@@ -27,8 +30,13 @@ class Account:
                     'name': 'GenerateAddresses',
                     'data': {
                         'amount': amount,
+<<<<<<< HEAD
                         'options': options
                     },
+=======
+                    },
+                    'options': options
+>>>>>>> shimmer-develop
                 }
             }
         }
@@ -148,7 +156,11 @@ class Account:
         return message_type
 
     @send_message_routine
+<<<<<<< HEAD
     def sync_account(self, options=None):
+=======
+    def sync_account(self, options):
+>>>>>>> shimmer-develop
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
@@ -159,9 +171,13 @@ class Account:
                 'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'SyncAccount',
+<<<<<<< HEAD
                     'data': {
                         'options': options,
                     }
+=======
+                    'data': options,
+>>>>>>> shimmer-develop
                 },
             }
         }

@@ -5,9 +5,14 @@
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
+use crate::{
+    account::handle::AccountHandle,
+    account_manager::AccountManager,
+    logger::{init_logger, LevelFilter},
+    ClientOptions,
+};
 
-use iota_client::signing::{mnemonic::MnemonicSigner, SignerHandle};
+use iota_client::signing::SignerHandle;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -23,12 +28,8 @@ pub struct AccountManagerBuilder {
     #[cfg(feature = "storage")]
     storage_options: Option<StorageOptions>,
     client_options: ClientOptions,
-    #[serde(default = "default_signer", skip_serializing, skip_deserializing)]
-    signer: SignerHandle,
-}
-pub fn default_signer() -> SignerHandle {
-    // todo remove
-    MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap()
+    #[serde(default, skip_serializing, skip_deserializing)]
+    signer: Option<SignerHandle>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -64,17 +65,21 @@ impl Default for AccountManagerBuilder {
                 // .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")
                 // .unwrap()
                 // .with_node("https://chrysalis-nodes.iota.org/")?
-                .with_node("http://localhost:14265").unwrap()
+                .with_node("http://localhost:14265")
+                .unwrap()
                 .with_node_sync_disabled(),
-            signer: MnemonicSigner::new("endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river").unwrap(),
+            signer: None,
         }
     }
 }
 
 impl AccountManagerBuilder {
     /// Initialises a new instance of the account manager builder with the default storage adapter.
-    pub fn new() -> Self {
-        Default::default()
+    pub fn new(signer: SignerHandle) -> Self {
+        Self {
+            signer: Some(signer),
+            ..Default::default()
+        }
     }
     /// Set the IOTA client options.
     pub fn with_client_options(mut self, options: ClientOptions) -> Self {
@@ -83,7 +88,7 @@ impl AccountManagerBuilder {
     }
     /// Set the signer to be used.
     pub fn with_signer(mut self, signer: SignerHandle) -> Self {
-        self.signer = signer;
+        self.signer.replace(signer);
         self
     }
     /// Set the signer type to be used.
@@ -97,6 +102,8 @@ impl AccountManagerBuilder {
     /// Builds the account manager
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
+        // todo remove later, only called now during development
+        // init_logger("wallet.log", LevelFilter::Debug)?;
         #[cfg(feature = "storage")]
         {
             let storage_folder = self.storage_options.unwrap_or_default().storage_folder;
@@ -121,8 +128,8 @@ impl AccountManagerBuilder {
             )
             .await?;
             let (client_options, signer) = match data.0 {
-                Some(data) => (data.client_options, data.signer),
-                None => (self.client_options, self.signer),
+                Some(data) => (data.client_options, data.signer.expect("Missing signer")),
+                None => (self.client_options, self.signer.expect("Missing signer")),
             };
             let client = client_options.clone().finish().await?;
             #[cfg(feature = "events")]
@@ -148,7 +155,7 @@ impl AccountManagerBuilder {
             accounts: Arc::new(RwLock::new(Vec::new())),
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
             client_options: Arc::new(RwLock::new(self.client_options)),
-            signer: self.signer,
+            signer: self.signer.expect("Missing signer"),
             #[cfg(feature = "events")]
             event_emitter: Arc::new(Mutex::new(EventEmitter::new())),
         })

@@ -12,7 +12,6 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
 use std::{
-    collections::HashSet,
     fs,
     path::{Path, PathBuf},
     sync::Arc,
@@ -41,14 +40,15 @@ pub(crate) async fn load_account_manager(
         match manager_storage {
             #[cfg(feature = "stronghold")]
             ManagerStorage::Stronghold => {
-                let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
-                fs::create_dir_all(&storage_folder)?;
-                let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
-                (
-                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
-                    path,
-                    true,
-                )
+                todo!()
+                // let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
+                // fs::create_dir_all(&storage_folder)?;
+                // let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
+                // (
+                //     Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
+                //     path,
+                //     true,
+                // )
             }
             ManagerStorage::Rocksdb => {
                 let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(ROCKSDB_FOLDERNAME));
@@ -87,7 +87,7 @@ pub(crate) async fn set<P: AsRef<Path>>(
     };
     let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await {
         Ok(account_indexes) => serde_json::from_str(&account_indexes)?,
-        Err(_) => HashSet::new(),
+        Err(_) => Vec::new(),
     };
     let storage_manager = StorageManager {
         storage,
@@ -111,7 +111,7 @@ pub(crate) async fn get() -> crate::Result<Arc<tokio::sync::Mutex<StorageManager
 pub(crate) struct StorageManager {
     storage: Storage,
     // account indexes for accounts in the database
-    account_indexes: HashSet<u32>,
+    account_indexes: Vec<u32>,
 }
 
 impl StorageManager {
@@ -152,7 +152,7 @@ impl StorageManager {
     }
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
-        self.account_indexes.insert(*account.index());
+        self.account_indexes.push(*account.index());
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await?;
@@ -165,13 +165,13 @@ impl StorageManager {
         self.storage
             .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
             .await?;
-        self.account_indexes.remove(&account_index);
+        self.account_indexes.retain(|a| a == &account_index);
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     // used for ledger accounts to verify that the same menmonic is used for all accounts
     pub async fn save_first_ledger_address(
         &mut self,
@@ -181,7 +181,7 @@ impl StorageManager {
         Ok(())
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
         let address: iota_client::bee_message::address::Address =
             serde_json::from_str(&self.storage.get(FIRST_LEDGER_ADDRESS_KEY).await?)?;

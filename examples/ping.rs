@@ -13,29 +13,19 @@ use iota_client::{
     },
     request_funds_from_faucet,
 };
-use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    init_logger("ping-wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
     let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
-    let manager = AccountManager::builder()
+    let manager = AccountManager::builder(signer)
         .with_client_options(client_options)
         .with_storage_folder("pingdb")
-        .with_signer(signer)
         .finish()
         .await?;
 
@@ -112,15 +102,7 @@ async fn main() -> Result<()> {
                             )))
                             .finish()?,
                     )];
-                    let res = ping_account_
-                        .send(
-                            outputs,
-                            Some(TransferOptions {
-                                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                                ..Default::default()
-                            }),
-                        )
-                        .await?;
+                    let res = ping_account_.send(outputs, None).await?;
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,

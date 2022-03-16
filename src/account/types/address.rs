@@ -82,6 +82,6 @@ pub fn parse_bech32_address<A: AsRef<str>>(address: A) -> crate::Result<AddressW
     let address = address.as_ref();
     let mut tokens = address.split('1');
     let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
-    let address = iota_client::bee_message::address::Address::try_from_bech32(address)?;
+    let (_bech32_hrp, address) = iota_client::bee_message::address::Address::try_from_bech32(address)?;
     Ok(AddressWrapper::new(address, hrp.to_string()))
 }
