@@ -3401,13 +3401,13 @@
                                     <span class="macro">log::debug!</span>(<span class="string">&quot;[SYNC] skip requesting spent output {}&quot;</span>, <span class="ident">output_id</span>);
                                     <span class="ident">address_output</span>.<span class="ident">replace</span>(<span class="ident">output</span>);
                                 }
-                            } <span class="kw">else</span> {
+                            } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">options</span>.<span class="ident">sync_spent_outputs</span> {
                                 <span class="macro">log::debug!</span>(
                                     <span class="string">&quot;[SYNC] skip requesting output {}, because we have it already&quot;</span>,
                                     <span class="ident">output_id</span>
                                 );
-                                <span class="comment">// If we have the output and it&#39;s still unspent, then we also don&#39;t need to request it</span>
-                                <span class="comment">// again, because nothing changed</span>
+                                <span class="comment">// If we have the output and it&#39;s still unspent, then we also don&#39;t need to request</span>
+                                <span class="comment">// it again, because nothing changed</span>
                                 <span class="ident">address_output</span>.<span class="ident">replace</span>(<span class="ident">output</span>);
                             }
                         }
