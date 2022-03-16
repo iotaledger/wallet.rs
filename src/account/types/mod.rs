@@ -11,7 +11,7 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_message::{
         address::Address,
-        output::{Output, OutputId, TokenId},
+        output::{AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::TransactionPayload,
         MessageId,
     },
@@ -30,29 +30,32 @@ use std::{collections::HashMap, str::FromStr};
 pub struct AccountBalance {
     // Total amount
     pub total: u64,
-    // From additional unlock conditions restricted amount
-    #[serde(rename = "restrictedAmount")]
-    pub restricted_amount: u64,
-    // balance that can currently be spend
+    // Amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedAmount")]
+    pub locked_amount: u64,
+    // Balance that can currently be spend
     pub available: u64,
-    // From additional unlock conditions restricted current required storage deposit amount
+    // Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
-    // currently required storage deposit amount
-    #[serde(rename = "restrictedRequiredStorageDeposit")]
-    pub restricted_required_storage_deposit: u64,
+    // Current required storage deposit amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedRequiredStorageDeposit")]
+    pub locked_required_storage_deposit: u64,
     // Native tokens
     #[serde(rename = "nativeTokens")]
     pub native_tokens: HashMap<TokenId, U256>,
-    // From additional unlock conditions native tokens
-    #[serde(rename = "restrictedNativeTokens")]
-    pub restricted_native_tokens: HashMap<TokenId, U256>,
-    // Output ids of owned nfts // would the nft id/address be better?
-    pub nfts: Vec<OutputId>,
-    // Output ids of alias nfts // would the alias id/address be better?
-    pub aliases: Vec<OutputId>,
-    // Foundry outputs
-    pub foundries: Vec<OutputId>,
+    // Native tokens of outputs with additional unlock conditions
+    #[serde(rename = "lockedNativeTokens")]
+    pub locked_native_tokens: HashMap<TokenId, U256>,
+    // Nfts
+    pub nfts: Vec<NftId>,
+    // Nfts with additional unlock conditions
+    #[serde(rename = "lockedNfts")]
+    pub locked_nfts: Vec<NftId>,
+    // Aliases
+    pub aliases: Vec<AliasId>,
+    // Foundries
+    pub foundries: Vec<FoundryId>,
 }
 
 /// An output with metadata
