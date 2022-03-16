@@ -7,6 +7,14 @@ class Account:
         self.handle = handle
 
     @send_message_routine
+    def __str__(self):
+        message_type = {
+            'cmd': 'GetAccount',
+            'payload': self.alias_index,
+        }
+        return message_type
+
+    @send_message_routine
     def generate_addresses(self, amount, options=None):
         """Generate new unused addresses.
         """
@@ -19,8 +27,8 @@ class Account:
                     'name': 'GenerateAddresses',
                     'data': {
                         'amount': amount,
+                        'options': options
                     },
-                    'options': options
                 }
             }
         }
@@ -140,7 +148,7 @@ class Account:
         return message_type
 
     @send_message_routine
-    def sync_account(self, options):
+    def sync_account(self, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
@@ -151,7 +159,9 @@ class Account:
                 'account_id': f'{self.alias_index}',
                 'method': {
                     'name': 'SyncAccount',
-                    'data': options,
+                    'data': {
+                        'options': options,
+                    }
                 },
             }
         }
