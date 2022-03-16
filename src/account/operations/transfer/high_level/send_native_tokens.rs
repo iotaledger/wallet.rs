@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    account::{
+        constants::DEFAULT_EXPIRATION_TIME, handle::AccountHandle, operations::transfer::TransferResult,
+        TransferOptions,
+    },
     Error, Result,
 };
 
@@ -18,9 +21,6 @@ use iota_client::bee_message::{
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
-
-// One day in seconds
-const DEFAULT_EXPIRATION_TIME: u32 = 86400;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Address, amount and native tokens for `send_native_tokens()`

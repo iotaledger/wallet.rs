@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{types::OutputData, AccountHandle},
+    account::{constants::FIVE_MINUTES_IN_SECONDS, types::OutputData, AccountHandle},
     Error, Result,
 };
 
@@ -12,9 +12,6 @@ use iota_client::bee_message::output::{
 };
 
 use std::time::{SystemTime, UNIX_EPOCH};
-
-/// Max allowed difference between the local time and latest milestone time, 5 minutes in seconds
-const FIVE_MINUTES_IN_SECONDS: u64 = 300;
 
 impl AccountHandle {
     /// Get the local time, but compare it to the time from the nodeinfo, if it's off more than 5 minutes, an error will
