@@ -20,29 +20,61 @@ impl AccountHandle {
             .key_factor(rent_structure.v_byte_factor_key)
             .data_factor(rent_structure.v_byte_factor_data)
             .finish();
+        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         let mut total_balance = 0;
+        let mut restricted_amount = 0;
         let mut required_storage_deposit = 0;
+        let mut restricted_required_storage_deposit = 0;
         let mut total_native_tokens = HashMap::new();
+        let mut restricted_native_tokens = HashMap::new();
         let mut aliases = Vec::new();
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
 
         for output_data in account.unspent_outputs.values() {
             if output_data.network_id == network_id {
-                // Add amount
-                total_balance += output_data.output.amount();
-                // Add storage deposit
-                required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
-                // Add native tokens
-                if let Some(native_tokens) = output_data.output.native_tokens() {
-                    for native_token in native_tokens.iter() {
-                        match total_native_tokens.entry(*native_token.token_id()) {
-                            Entry::Vacant(e) => {
-                                e.insert(*native_token.amount());
+                // If there is only an [AddressUnlockCondition], then we can controll the balance
+                if output_data
+                    .output
+                    .unlock_conditions()
+                    .expect("no unlock_conditions")
+                    .len()
+                    == 1
+                {
+                    // Add amount
+                    total_balance += output_data.output.amount();
+                    // Add storage deposit
+                    required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        for native_token in native_tokens.iter() {
+                            match total_native_tokens.entry(*native_token.token_id()) {
+                                Entry::Vacant(e) => {
+                                    e.insert(*native_token.amount());
+                                }
+                                Entry::Occupied(mut e) => {
+                                    *e.get_mut() += *native_token.amount();
+                                }
                             }
-                            Entry::Occupied(mut e) => {
-                                *e.get_mut() += *native_token.amount();
+                        }
+                    }
+                } else {
+                    // if we have other unlock conditions added, then we might can't spend the balance and it could be
+                    // expired in the future Add amount
+                    restricted_amount += output_data.output.amount();
+                    // Add storage deposit
+                    restricted_required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        for native_token in native_tokens.iter() {
+                            match restricted_native_tokens.entry(*native_token.token_id()) {
+                                Entry::Vacant(e) => {
+                                    e.insert(*native_token.amount());
+                                }
+                                Entry::Occupied(mut e) => {
+                                    *e.get_mut() += *native_token.amount();
+                                }
                             }
                         }
                     }
@@ -90,9 +122,12 @@ impl AccountHandle {
         };
         Ok(AccountBalance {
             total: total_balance,
+            restricted_amount,
             available: total_balance - locked_balance,
             native_tokens: total_native_tokens,
+            restricted_native_tokens,
             required_storage_deposit,
+            restricted_required_storage_deposit,
             aliases,
             foundries,
             nfts,
