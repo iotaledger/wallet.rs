@@ -50,7 +50,12 @@ impl AccountHandle {
                         // Ignore outputs with a single [UnlockCondition], because then it's an [AddressUnlockCondition]
                         // and we own it already without further restrictions
                         if basic_output.unlock_conditions().len() != 1
-                            && can_output_be_unlocked_now(output, local_time as u32, milestone_index)
+                            && can_output_be_unlocked_now(
+                                &account.addresses_with_balance,
+                                output,
+                                local_time as u32,
+                                milestone_index,
+                            )
                         {
                             outputs_to_collect.push(output_data.clone());
                         } else {

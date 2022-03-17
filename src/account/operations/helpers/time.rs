@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{constants::FIVE_MINUTES_IN_SECONDS, types::OutputData, AccountHandle},
+    account::{
+        constants::FIVE_MINUTES_IN_SECONDS,
+        types::{AddressWithBalance, OutputData},
+        AccountHandle,
+    },
     Error, Result,
 };
 
@@ -57,7 +61,12 @@ pub(crate) fn is_expired(output: &Output, current_time: u32, current_milestone: 
 }
 
 // Check if an output can be unlocked by one of the account addresses at the current time/milestone index
-pub(crate) fn can_output_be_unlocked_now(output_data: &OutputData, current_time: u32, current_milestone: u32) -> bool {
+pub(crate) fn can_output_be_unlocked_now(
+    account_addresses: &[AddressWithBalance],
+    output_data: &OutputData,
+    current_time: u32,
+    current_milestone: u32,
+) -> bool {
     let mut can_be_unlocked = Vec::new();
     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
         for unlock_condition in unlock_conditions.iter() {
@@ -74,14 +83,30 @@ pub(crate) fn can_output_be_unlocked_now(output_data: &OutputData, current_time:
                     }
                     // Check if the address which can unlock the output now is in the account
                     if ms_expired && time_expired {
-                        // check return address
-                        can_be_unlocked.push(output_data.address == *expiration.return_address());
+                        // compare return address with associated address first, but if that doesn't match we also need
+                        // to check all account addresses, because the associated address
+                        // can only be the unlock address or the storage deposit address and not both (unless they're
+                        // the same, which would mean transaction to oneself)
+                        can_be_unlocked.push(
+                            output_data.address == *expiration.return_address()
+                                || account_addresses
+                                    .iter()
+                                    .any(|a| a.address.inner == *expiration.return_address()),
+                        );
                     } else {
                         // check address unlock condition
                         let can_unlocked = if let Some(UnlockCondition::Address(address_unlock_condition)) =
                             unlock_conditions.get(AddressUnlockCondition::KIND)
                         {
+                            // compare address_unlock_condition address with associated address first, but if that
+                            // doesn't match we also need to check all account addresses,
+                            // because the associated address can only be the unlock address
+                            // or the storage deposit address and not both (unless they're
+                            // the same, which would mean transaction to oneself)
                             output_data.address == *address_unlock_condition.address()
+                                || account_addresses
+                                    .iter()
+                                    .any(|a| a.address.inner == *address_unlock_condition.address())
                         } else {
                             false
                         };
