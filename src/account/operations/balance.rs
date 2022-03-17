@@ -66,7 +66,8 @@ impl AccountHandle {
                         Output::Foundry(output) => foundries.push(output.id()),
                         Output::Nft(output) => {
                             // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
-                            // output id todo: replace with `.or_from_output_id(o.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
                             let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
                                 NftId::from(&output_data.output_id)
                             } else {
@@ -101,7 +102,8 @@ impl AccountHandle {
                     match &output_data.output {
                         Output::Alias(output) => {
                             // When the nft is minted, the alias_id contains only `0` bytes and we need to calculate the
-                            // output id todo: replace with `.or_from_output_id(o.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
                             let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
                                 AliasId::from(&output_data.output_id)
                             } else {
@@ -112,7 +114,8 @@ impl AccountHandle {
                         Output::Foundry(output) => foundries.push(output.id()),
                         Output::Nft(output) => {
                             // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
-                            // output id todo: replace with `.or_from_output_id(o.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
                             let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
                                 NftId::from(&output_data.output_id)
                             } else {
