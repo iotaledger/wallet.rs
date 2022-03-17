@@ -1,16 +1,19 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    operations::syncing::SyncOptions,
-    types::{
-        address::{AccountAddress, AddressWithBalance},
-        OutputData, Transaction,
-    },
-    Account,
-};
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
+use crate::{
+    account::{
+        operations::syncing::SyncOptions,
+        types::{
+            address::{AccountAddress, AddressWithBalance},
+            OutputData, Transaction,
+        },
+        Account,
+    },
+    Result,
+};
 
 use iota_client::{signing::SignerHandle, Client};
 
@@ -59,8 +62,12 @@ impl AccountHandle {
         }
     }
 
+    pub async fn alias(&self) -> String {
+        self.read().await.alias.clone()
+    }
+
     /// Returns all addresses of the account
-    pub async fn list_addresses(&self) -> crate::Result<Vec<AccountAddress>> {
+    pub async fn list_addresses(&self) -> Result<Vec<AccountAddress>> {
         let account = self.read().await;
         let mut all_addresses = account.public_addresses().clone();
         all_addresses.extend(account.internal_addresses().clone());
@@ -68,13 +75,13 @@ impl AccountHandle {
     }
 
     /// Returns only addresses of the account with balance
-    pub async fn list_addresses_with_balance(&self) -> crate::Result<Vec<AddressWithBalance>> {
+    pub async fn list_addresses_with_balance(&self) -> Result<Vec<AddressWithBalance>> {
         let account = self.read().await;
         Ok(account.addresses_with_balance().to_vec())
     }
 
     /// Returns all outputs of the account
-    pub async fn list_outputs(&self) -> crate::Result<Vec<OutputData>> {
+    pub async fn list_outputs(&self) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.outputs.values() {
@@ -84,7 +91,7 @@ impl AccountHandle {
     }
 
     /// Returns all unspent outputs of the account
-    pub async fn list_unspent_outputs(&self) -> crate::Result<Vec<OutputData>> {
+    pub async fn list_unspent_outputs(&self) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.unspent_outputs.values() {
@@ -94,7 +101,7 @@ impl AccountHandle {
     }
 
     /// Returns all transaction of the account
-    pub async fn list_transactions(&self) -> crate::Result<Vec<Transaction>> {
+    pub async fn list_transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();
         for transaction in account.transactions.values() {
@@ -104,7 +111,7 @@ impl AccountHandle {
     }
 
     /// Returns all pending transaction of the account
-    pub async fn list_pending_transactions(&self) -> crate::Result<Vec<Transaction>> {
+    pub async fn list_pending_transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();
         for transaction_id in &account.pending_transactions {
@@ -115,8 +122,42 @@ impl AccountHandle {
         Ok(transactions)
     }
 
+    #[cfg(feature = "storage")]
+    /// Save the account to the database, accepts the updated_account as option so we don't need to drop it before
+    /// saving
+    pub(crate) async fn save(&self, updated_account: Option<&Account>) -> Result<()> {
+        log::debug!("[save] saving account to database");
+        match updated_account {
+            Some(account) => {
+                crate::storage::manager::get()
+                    .await?
+                    .lock()
+                    .await
+                    .save_account(account)
+                    .await
+            }
+            None => {
+                let account = self.read().await;
+                crate::storage::manager::get()
+                    .await?
+                    .lock()
+                    .await
+                    .save_account(&account)
+                    .await
+            }
+        }
+    }
+
+    // Set the alias for the account
+    pub async fn set_alias(&self, alias: &str) -> Result<()> {
+        let mut account = self.write().await;
+        account.alias = alias.to_string();
+        self.save(Some(&account)).await?;
+        Ok(())
+    }
+
     // Should only be called from the AccountManager so all accounts are on the same state
-    pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> crate::Result<()> {
+    pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> Result<()> {
         self.client = client;
         let bech32_hrp = self.client.get_bech32_hrp().await?;
         log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);

@@ -260,13 +260,10 @@ impl AccountHandle {
         );
         account.pending_transactions.insert(transaction_id);
         #[cfg(feature = "storage")]
-        log::debug!("[TRANSFER] storing account {}", account.index());
-        crate::storage::manager::get()
-            .await?
-            .lock()
-            .await
-            .save_account(&account)
-            .await?;
+        {
+            log::debug!("[TRANSFER] storing account {}", account.index());
+            self.save(Some(&account)).await?;
+        }
         Ok(TransferResult {
             transaction_id,
             message_id,

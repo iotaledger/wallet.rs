@@ -140,13 +140,10 @@ impl AccountHandle {
         };
 
         #[cfg(feature = "storage")]
-        log::debug!("[ADDRESS GENERATION] storing account {}", account.index());
-        crate::storage::manager::get()
-            .await?
-            .lock()
-            .await
-            .save_account(&account)
-            .await?;
+        {
+            log::debug!("[ADDRESS GENERATION] storing account {}", account.index());
+            self.save(Some(&account)).await?;
+        }
         Ok(generate_addresses)
     }
 }

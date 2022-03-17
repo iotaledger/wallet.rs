@@ -232,13 +232,10 @@ impl AccountHandle {
             }
         }
         #[cfg(feature = "storage")]
-        log::debug!("[SYNC] storing account {} with new synced data", account.index());
-        crate::storage::manager::get()
-            .await?
-            .lock()
-            .await
-            .save_account(&account)
-            .await?;
+        {
+            log::debug!("[SYNC] storing account {} with new synced data", account.alias());
+            self.save(Some(&account)).await?;
+        }
         // println!("{:#?}", account);
         Ok(())
     }
