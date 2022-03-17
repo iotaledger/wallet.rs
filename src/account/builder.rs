@@ -108,14 +108,6 @@ impl AccountBuilder {
                 automatic_output_consolidation: true,
             },
         };
-        #[cfg(feature = "storage")]
-        log::debug!("[TRANSFER] storing account {}", account.index());
-        crate::storage::manager::get()
-            .await?
-            .lock()
-            .await
-            .save_account(&account)
-            .await?;
         #[cfg(not(feature = "events"))]
         let account_handle = AccountHandle::new(account);
         #[cfg(feature = "events")]
@@ -125,6 +117,8 @@ impl AccountBuilder {
             self.signer.clone(),
             self.event_emitter.clone(),
         );
+        #[cfg(feature = "storage")]
+        account_handle.save(None).await?;
         accounts.push(account_handle.clone());
         Ok(account_handle)
     }
