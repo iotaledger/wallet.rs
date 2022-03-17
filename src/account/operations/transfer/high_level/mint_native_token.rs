@@ -2,11 +2,31 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    account::{
+        handle::AccountHandle,
+        operations::transfer::{
+            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
+            TransferResult,
+        },
+        TransferOptions,
+    },
     Error,
 };
 
-use iota_client::bee_message::address::Address;
+use iota_client::{
+    api::input_selection::minimum_storage_deposit,
+    bee_message::{
+        address::{Address, AliasAddress},
+        output::{
+            unlock_condition::{
+                AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
+                StateControllerAddressUnlockCondition, UnlockCondition,
+            },
+            AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCostConfigBuilder, FoundryId, FoundryOutputBuilder,
+            NativeToken, Output, TokenId, TokenScheme, TokenTag,
+        },
+    },
+};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +39,7 @@ pub struct NativeTokenOptions {
     pub account_address: Option<String>,
     /// Token tag
     #[serde(rename = "tokenTag")]
-    pub token_tag: String,
+    pub token_tag: TokenTag,
     /// Circulating supply
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256,
@@ -29,21 +49,22 @@ pub struct NativeTokenOptions {
 }
 
 impl AccountHandle {
-    /// Function to send native tokens in basic outputs with a [StorageDepositReturnUnlockCondition] and
-    /// [ExpirationUnlockCondition], so the storage deposit gets back to the sender and also that the sender gets access
-    /// to the output again after a defined time (default 1 day),
+    /// Function to mint native tokens
+    /// This happens in a two step process:
+    /// 1. Create or get an existing alias output
+    /// 2. Create a new foundry output with native tokens minted to the account address
     /// Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
     /// RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
-    /// let outputs = NativeTokenOptions {
-    ///     account_address: Some("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string()),
-    ///     token_tag: "some_token_tag".to_string(),
+    /// let native_token_options = NativeTokenOptions {
+    ///     account_address: None,
+    ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
     ///     maxium_supply: U256::from(100),
     /// };
     ///
-    /// let res = account_handle.mint_native_token(outputs, None,).await?;
+    /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
     /// println!("Transaction created: {}", res.1);
     /// if let Some(message_id) = res.0 {
     ///     println!("Message sent: {}", message_id);
@@ -54,9 +75,17 @@ impl AccountHandle {
         native_token_options: NativeTokenOptions,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] mint_native_token");
+        let rent_structure = self.client.get_rent_structure().await?;
+        let byte_cost_config = ByteCostConfigBuilder::new()
+            .byte_cost(rent_structure.v_byte_cost)
+            .key_factor(rent_structure.v_byte_factor_key)
+            .data_factor(rent_structure.v_byte_factor_data)
+            .finish();
+
         let account_addresses = self.list_addresses().await?;
         // the address needs to be from the account, because for the minting we need to sign transactions from it
-        let controller_address = match native_token_options.account_address {
+        let controller_address = match &native_token_options.account_address {
             Some(address) => {
                 let (_bech32_hrp, address) = Address::try_from_bech32(&address)?;
                 if account_addresses
@@ -76,14 +105,166 @@ impl AccountHandle {
                     .inner
             }
         };
-        // todo check if an alias output already exists
-        // otherwise create an alias output first
-        // create foundry output with minted native tokens
-        // mint native tokens to basic output of the provided address?
 
-        // let mut outputs = Vec::new();
-        //     outputs.push(nft_output);
-        // self.send(outputs, options).await
-        todo!()
+        let alias_id = self
+            .get_or_create_alias_output(controller_address, options.clone())
+            .await?;
+
+        // create foundry output with minted native tokens
+        let foundry_id = FoundryId::build(alias_id, 1, TokenScheme::Simple);
+        let token_id = TokenId::build(foundry_id, native_token_options.token_tag);
+
+        let account = self.read().await;
+        let exiting_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
+            if let Output::Alias(output) = &output_data.output {
+                // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate the
+                // output id
+                // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                let output_alias_id = if output.alias_id().iter().all(|&b| b == 0) {
+                    AliasId::from(&output_data.output_id)
+                } else {
+                    *output.alias_id()
+                };
+                output_alias_id == alias_id
+            } else {
+                false
+            }
+        });
+        let exiting_alias_output = exiting_alias_output
+            .ok_or_else(|| Error::MintingFailed("No alias output available".to_string()))?
+            .clone();
+        drop(account);
+
+        if let Output::Alias(alias_output) = &exiting_alias_output.output {
+            // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
+            let mut new_alias_output_builder = AliasOutputBuilder::new(exiting_alias_output.amount, alias_id)?
+                .with_state_index(alias_output.state_index() + 1)
+                .with_foundry_counter(alias_output.foundry_counter() + 1)
+                .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                    StateControllerAddressUnlockCondition::new(controller_address),
+                ))
+                .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
+                    controller_address,
+                )));
+            for feature_block in alias_output.feature_blocks().iter() {
+                new_alias_output_builder = new_alias_output_builder.add_feature_block(feature_block.clone());
+            }
+            for immutable_feature_block in alias_output.immutable_feature_blocks().iter() {
+                new_alias_output_builder =
+                    new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
+            }
+
+            // todo: clean this up
+            let mut native_tokens_for_storage_deposit = std::collections::HashMap::new();
+            native_tokens_for_storage_deposit.insert(token_id, native_token_options.circulating_supply);
+
+            let outputs = vec![
+                Output::Alias(new_alias_output_builder.finish()?),
+                Output::Foundry(
+                    FoundryOutputBuilder::new(
+                        minimum_storage_deposit_foundry(&byte_cost_config)?,
+                        alias_output.foundry_counter() + 1,
+                        native_token_options.token_tag,
+                        native_token_options.circulating_supply,
+                        native_token_options.maxium_supply,
+                        TokenScheme::Simple,
+                    )?
+                    .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
+                        ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
+                    ))
+                    .finish()?,
+                ),
+                Output::Basic(
+                    BasicOutputBuilder::new(minimum_storage_deposit(
+                        &byte_cost_config,
+                        &controller_address,
+                        &Some(native_tokens_for_storage_deposit),
+                    )?)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        controller_address,
+                    )))
+                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
+                    .finish()?,
+                ),
+            ];
+            self.send(outputs, options).await
+        } else {
+            unreachable!("We checked if it's an alias output before")
+        }
+    }
+
+    // Get an existing alias output or create a new one
+    pub(crate) async fn get_or_create_alias_output(
+        &self,
+        controller_address: Address,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<AliasId> {
+        log::debug!("[TRANSFER] get_or_create_alias_output");
+        let rent_structure = self.client.get_rent_structure().await?;
+        let byte_cost_config = ByteCostConfigBuilder::new()
+            .byte_cost(rent_structure.v_byte_cost)
+            .key_factor(rent_structure.v_byte_factor_key)
+            .data_factor(rent_structure.v_byte_factor_data)
+            .finish();
+
+        let account = self.read().await;
+        let exiting_alias_output = account
+            .unspent_outputs()
+            .values()
+            .into_iter()
+            .find(|output_data| matches!(&output_data.output, Output::Alias(output)));
+        match exiting_alias_output {
+            Some(output_data) => {
+                if let Output::Alias(output) = &output_data.output {
+                    // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate the
+                    // output id
+                    // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                    let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
+                        AliasId::from(&output_data.output_id)
+                    } else {
+                        *output.alias_id()
+                    };
+                    Ok(alias_id)
+                } else {
+                    unreachable!("We checked if it's an alias output before")
+                }
+            }
+            // Create a new alias output
+            None => {
+                drop(account);
+                let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
+                let outputs = vec![Output::Alias(
+                    // todo minimum amount
+                    AliasOutputBuilder::new(2_000_000, AliasId::from([0; 20]))?
+                        .with_state_index(0)
+                        .with_foundry_counter(0)
+                        .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                            StateControllerAddressUnlockCondition::new(controller_address),
+                        ))
+                        .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
+                            controller_address,
+                        )))
+                        .finish()?,
+                )];
+                let transfer_result = self.send(outputs, options).await?;
+                log::debug!("[TRANSFER] sent alias output");
+                if let Some(message_id) = transfer_result.message_id {
+                    self.client.retry_until_included(&message_id, None, None).await?;
+                } else {
+                    self.sync_pending_transactions().await?;
+                }
+
+                for i in 0..10 {
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                    self.sync_pending_transactions().await?;
+                    let balance = self.sync(None).await?;
+                    if !balance.aliases.is_empty() {
+                        return Ok(balance.aliases[0]);
+                    }
+                }
+
+                Err(Error::MintingFailed("Alias output creation took too long".to_string()))
+            }
+        }
     }
 }

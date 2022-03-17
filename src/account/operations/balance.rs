@@ -101,8 +101,8 @@ impl AccountHandle {
                     // add alias, foundry and nft outputs
                     match &output_data.output {
                         Output::Alias(output) => {
-                            // When the nft is minted, the alias_id contains only `0` bytes and we need to calculate the
-                            // output id
+                            // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate
+                            // the output id
                             // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
                             let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
                                 AliasId::from(&output_data.output_id)
@@ -130,11 +130,12 @@ impl AccountHandle {
         }
 
         // Balance from the outputs and addresses_with_balance should match
-        #[cfg(debug_assertions)]
-        assert_eq!(
-            total_balance,
-            account.addresses_with_balance.iter().map(|a| a.amount()).sum::<u64>()
-        );
+        // todo: update check, since we now have locked outputs they don't match anymore
+        // #[cfg(debug_assertions)]
+        // assert_eq!(
+        //     total_balance,
+        //     account.addresses_with_balance.iter().map(|a| a.amount()).sum::<u64>()
+        // );
 
         // for `available` get locked_outputs, sum outputs balance and subtract from total_balance
         log::debug!("[BALANCE] locked outputs: {:#?}", account.locked_outputs);

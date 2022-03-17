@@ -10,7 +10,7 @@ use iota_client::{
     bee_message::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{ByteCostConfig, Output},
+        output::{AliasId, ByteCostConfig, NftId, Output},
     },
     signing::types::InputSigningData,
 };
@@ -58,18 +58,73 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
 
         let mut available_outputs = Vec::new();
-        for (output_id, output) in account.unspent_outputs.iter() {
+        for (output_id, output_data) in account.unspent_outputs.iter() {
             // check if not in pending transaction (locked_outputs) and if from the correct network
-            if !output.is_spent && !account.locked_outputs.contains(output_id) && output.network_id == network_id {
-                if let Output::Basic(basic_output) = &output.output {
-                    // Only use outputs with a single unlock conditions, which is the [AddressUnlockCondition]
-                    if basic_output.unlock_conditions().len() == 1 {
-                        available_outputs.push(output.input_signing_data()?);
+            if !account.locked_outputs.contains(output_id) && output_data.network_id == network_id {
+                match &output_data.output {
+                    Output::Basic(basic_output) => {
+                        // Only use outputs with a single unlock conditions, which is the [AddressUnlockCondition]
+                        if basic_output.unlock_conditions().len() == 1 {
+                            available_outputs.push(output_data.input_signing_data()?);
+                        }
                     }
+                    Output::Nft(nft_input) => {
+                        // Only use outputs with a single unlock conditions, which is the [AddressUnlockCondition]
+                        if nft_input.unlock_conditions().len() == 1 {
+                            // only add if output contains same NftId
+                            if let Some(nft_output) = outputs.iter().find(|output| {
+                                if let Output::Nft(nft_output) = output {
+                                    // When the nft is minted, the alias_id contains only `0` bytes and we need to
+                                    // calculate the output id
+                                    // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                                    let input_nft_id = if nft_input.nft_id().iter().all(|&b| b == 0) {
+                                        NftId::from(&output_data.output_id)
+                                    } else {
+                                        *nft_input.nft_id()
+                                    };
+                                    input_nft_id == *nft_output.nft_id()
+                                } else {
+                                    false
+                                }
+                            }) {
+                                available_outputs.push(output_data.input_signing_data()?);
+                            }
+                        }
+                    }
+                    Output::Alias(alias_input) => {
+                        // only add if output contains same AliasId
+                        if let Some(alias_output) = outputs.iter().find(|output| {
+                            if let Output::Alias(alias_output) = output {
+                                // When the nft is minted, the alias_id contains only `0` bytes and we need to
+                                // calculate the output id
+                                // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                                let input_alias_id = if alias_input.alias_id().iter().all(|&b| b == 0) {
+                                    AliasId::from(&output_data.output_id)
+                                } else {
+                                    *alias_input.alias_id()
+                                };
+                                input_alias_id == *alias_output.alias_id()
+                            } else {
+                                false
+                            }
+                        }) {
+                            available_outputs.push(output_data.input_signing_data()?);
+                        }
+                    }
+                    Output::Foundry(foundry_input) => {
+                        // only add if output contains same FoundryId
+                        if let Some(foundry_output) = outputs.iter().find(|output| {
+                            if let Output::Foundry(foundry_output) = output {
+                                foundry_input.id() == foundry_output.id()
+                            } else {
+                                false
+                            }
+                        }) {
+                            available_outputs.push(output_data.input_signing_data()?);
+                        }
+                    }
+                    _ => {}
                 }
-                // Todo: handle other output types in such a way, that they don't get burned by accident
-                // Maybe don't handle it here, but add another `custom_inputs` fields for the internal use when such
-                // outputs should be added to the automatic input selection
             }
         }
         let selected_transaction_data =

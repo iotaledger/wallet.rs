@@ -3,7 +3,11 @@
 
 use crate::{
     account::{
-        constants::DEFAULT_EXPIRATION_TIME, handle::AccountHandle, operations::transfer::TransferResult,
+        constants::DEFAULT_EXPIRATION_TIME,
+        handle::AccountHandle,
+        operations::transfer::{
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransferResult,
+        },
         TransferOptions,
     },
     Error, Result,
@@ -16,7 +20,7 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCost, ByteCostConfig, ByteCostConfigBuilder, NativeToken, Output, TokenId,
+        BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, TokenId,
     },
 };
 use primitive_types::U256;
@@ -84,7 +88,7 @@ impl AccountHandle {
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
             // different native tokens require a differen storage deposit
-            let storage_deposit_amount = minimum_storage_deposit(
+            let storage_deposit_amount = minimum_storage_deposit_basic_native_tokens(
                 &byte_cost_config,
                 &address,
                 &return_address.address.inner,
@@ -119,39 +123,4 @@ impl AccountHandle {
         }
         self.send(outputs, options).await
     }
-}
-
-/// Computes the minimum amount that an output needs to have, when native tokens are sent with [AddressUnlockCondition],
-/// [StorageDepositReturnUnlockCondition] and [ExpirationUnlockCondition].
-fn minimum_storage_deposit(
-    config: &ByteCostConfig,
-    address: &Address,
-    return_address: &Address,
-    native_tokens: &[(TokenId, U256)],
-) -> Result<u64> {
-    let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
-    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
-    // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let basic_output = BasicOutputBuilder::new(1_000_000_000)?
-        .with_native_tokens(
-            native_tokens
-                .iter()
-                .map(|(id, amount)| {
-                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
-                })
-                .collect::<Result<Vec<NativeToken>>>()?,
-        )
-        .add_unlock_condition(address_condition)
-        .add_unlock_condition(UnlockCondition::StorageDepositReturn(
-            StorageDepositReturnUnlockCondition::new(*return_address, 1_000_000_000)?,
-        ))
-        .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
-            *return_address,
-            // Both 0 would be invalid, so we just use 1
-            MilestoneIndex::new(1),
-            0,
-        )?))
-        .finish()?;
-    Ok(Output::Basic(basic_output).byte_cost(config))
 }
