@@ -278,3 +278,12 @@ def test_accounts_synchronizer():
         accounts_synchronizer.execute()
     except ValueError as e:
         assert 'Failed to find seed vault' in str(e)
+
+
+"""
+Test address derivation from Mnemonic
+"""
+
+
+def test_mnemonic_address_generation():
+    assert general_tv['MNEMNONIC_ADDRESS'] == address_to_verify['address']['inner']
