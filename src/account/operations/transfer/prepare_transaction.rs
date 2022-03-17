@@ -83,14 +83,14 @@ impl AccountHandle {
                         break;
                     }
                 }
+                outputs_for_event.push(TransactionIO {
+                    address: address
+                        .expect("todo: update transaction events to new outputs")
+                        .to_bech32("iota"),
+                    amount: output.amount(),
+                    remainder: None,
+                })
             }
-            outputs_for_event.push(TransactionIO {
-                address: address
-                    .expect("todo: update transaction events to new outputs")
-                    .to_bech32("iota"),
-                amount: output.amount(),
-                remainder: None,
-            })
         }
         essence_builder = essence_builder.with_outputs(outputs);
 

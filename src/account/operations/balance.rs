@@ -3,7 +3,7 @@
 
 use crate::account::{handle::AccountHandle, types::AccountBalance};
 
-use iota_client::bee_message::output::{ByteCost, ByteCostConfigBuilder, Output};
+use iota_client::bee_message::output::{AliasId, ByteCost, ByteCostConfigBuilder, NftId, Output};
 
 use std::collections::{hash_map::Entry, HashMap};
 
@@ -61,10 +61,20 @@ impl AccountHandle {
                             }
                         }
                     }
-                    // add alias, foundry and nft outputs
+                    // add foundry and nft outputs
                     match &output_data.output {
                         Output::Foundry(output) => foundries.push(output.id()),
-                        Output::Nft(output) => nfts.push(*output.nft_id()),
+                        Output::Nft(output) => {
+                            // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
+                                NftId::from(&output_data.output_id)
+                            } else {
+                                *output.nft_id()
+                            };
+                            nfts.push(nft_id);
+                        }
                         // Alias outputs are ignored here, because they always need two unlock conditions
                         _ => {}
                     }
@@ -90,9 +100,29 @@ impl AccountHandle {
                     }
                     // add alias, foundry and nft outputs
                     match &output_data.output {
-                        Output::Alias(output) => aliases.push(*output.alias_id()),
+                        Output::Alias(output) => {
+                            // When the nft is minted, the alias_id contains only `0` bytes and we need to calculate the
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
+                                AliasId::from(&output_data.output_id)
+                            } else {
+                                *output.alias_id()
+                            };
+                            aliases.push(alias_id);
+                        }
                         Output::Foundry(output) => foundries.push(output.id()),
-                        Output::Nft(output) => locked_nfts.push(*output.nft_id()),
+                        Output::Nft(output) => {
+                            // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
+                            // output id
+                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
+                            let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
+                                NftId::from(&output_data.output_id)
+                            } else {
+                                *output.nft_id()
+                            };
+                            locked_nfts.push(nft_id);
+                        }
                         _ => {}
                     }
                 }
