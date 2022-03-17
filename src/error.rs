@@ -112,6 +112,9 @@ pub enum Error {
     /// Address not found in account
     #[error("address not found in account")]
     AddressNotFoundInAccount,
+    /// Nft not found in unspent outputs
+    #[error("nft not found in unspent outputs")]
+    NftNotFoundInUnspentOutputs,
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
@@ -203,6 +206,7 @@ impl serde::Serialize for Error {
             Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),
             Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
             Self::AddressNotFoundInAccount => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
+            Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
