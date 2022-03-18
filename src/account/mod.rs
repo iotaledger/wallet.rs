@@ -1019,23 +1019,33 @@ impl AccountHandle {
         let client = client.read().await;
         let node = client.get_node().await?;
 
-        let mut available_outputs: Vec<AddressOutput> = Vec::new();
+        let mut spent_outputs: Vec<AddressOutput> = Vec::new();
+        let mut unspent_outputs: Vec<AddressOutput> = Vec::new();
         for address in account.addresses() {
-            available_outputs.extend(
-                address
-                    .outputs()
-                    .iter()
-                    .map(|output| output.1)
-                    .cloned()
-                    .collect::<Vec<AddressOutput>>(),
-            );
+            for output in address.outputs().values() {
+                if output.is_spent {
+                    spent_outputs.push(output.clone())
+                } else {
+                    unspent_outputs.push(output.clone())
+                }
+            }
         }
 
-        let (shimmer_staked_funds, assembly_staked_funds, tracked_participations): (
+        let (_, _, mut tracked_participations): (
             u64,
             u64,
             HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
-        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone(), assembly_event_id).await?;
+        ) = crate::participation::account_helpers::get_outputs_participation(spent_outputs, node.clone(), assembly_event_id).await?;
+
+        // Get unspent outputs separated, to know the correct staked funds
+        let (shimmer_staked_funds, assembly_staked_funds, unspent_tracked_participations): (
+            u64,
+            u64,
+            HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
+        ) = crate::participation::account_helpers::get_outputs_participation(unspent_outputs, node.clone()).await?;
+
+        // Add the unspent tracked_participations to we have all together
+        tracked_participations.extend(unspent_tracked_participations);
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
