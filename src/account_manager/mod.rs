@@ -112,6 +112,11 @@ impl AccountManager {
         }
     }
 
+    /// Get the used client options
+    pub async fn get_client_options(&self) -> ClientOptions {
+        self.client_options.read().await.clone()
+    }
+
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         let mut balance = AccountBalance {
