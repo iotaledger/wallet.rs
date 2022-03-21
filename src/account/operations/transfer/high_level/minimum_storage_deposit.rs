@@ -64,6 +64,7 @@ pub(crate) fn minimum_storage_deposit_foundry(config: &ByteCostConfig) -> Result
         1,
         TokenTag::new([0u8; 12]),
         U256::from(0),
+        U256::from(0),
         U256::from(1),
         TokenScheme::Simple,
     )?

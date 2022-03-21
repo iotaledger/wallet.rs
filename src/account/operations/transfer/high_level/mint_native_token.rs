@@ -166,6 +166,7 @@ impl AccountHandle {
                         alias_output.foundry_counter() + 1,
                         native_token_options.token_tag,
                         native_token_options.circulating_supply,
+                        U256::from(0),
                         native_token_options.maxium_supply,
                         TokenScheme::Simple,
                     )?
