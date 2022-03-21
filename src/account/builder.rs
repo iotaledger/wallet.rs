@@ -5,6 +5,8 @@
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
+#[cfg(feature = "storage")]
+use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle, Account, AccountOptions},
     ClientOptions, Error,
@@ -30,38 +32,28 @@ pub struct AccountBuilder {
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
     event_emitter: Arc<Mutex<EventEmitter>>,
+    #[cfg(feature = "storage")]
+    storage_manager: StorageManagerHandle,
 }
 
 impl AccountBuilder {
-    #[cfg(not(feature = "events"))]
-    /// Create an IOTA client builder
-    pub fn new(
-        accounts: Arc<RwLock<Vec<AccountHandle>>>,
-        client: Arc<RwLock<ClientOptions>>,
-        signer: SignerHandle,
-    ) -> Self {
-        Self {
-            client,
-            alias: None,
-            signer,
-            accounts,
-        }
-    }
-
-    #[cfg(feature = "events")]
     /// Create an IOTA client builder
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
         client_options: Arc<RwLock<ClientOptions>>,
         signer: SignerHandle,
-        event_emitter: Arc<Mutex<EventEmitter>>,
+        #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
+        #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
         Self {
             client_options,
             alias: None,
             signer,
             accounts,
+            #[cfg(feature = "events")]
             event_emitter,
+            #[cfg(feature = "storage")]
+            storage_manager,
         }
     }
 
@@ -108,14 +100,14 @@ impl AccountBuilder {
                 automatic_output_consolidation: true,
             },
         };
-        #[cfg(not(feature = "events"))]
-        let account_handle = AccountHandle::new(account);
-        #[cfg(feature = "events")]
         let account_handle = AccountHandle::new(
             account,
             self.client_options.read().await.clone().finish().await?,
             self.signer.clone(),
+            #[cfg(feature = "events")]
             self.event_emitter.clone(),
+            #[cfg(feature = "storage")]
+            self.storage_manager.clone(),
         );
         #[cfg(feature = "storage")]
         account_handle.save(None).await?;

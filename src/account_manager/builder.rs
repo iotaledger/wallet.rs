@@ -1,11 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "storage")]
+use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
+use crate::{account_manager::AccountManager, ClientOptions};
 
 use iota_client::signing::SignerHandle;
 use serde::{Deserialize, Serialize};
@@ -36,6 +38,8 @@ pub struct StorageOptions {
     pub(crate) storage_encryption_key: Option<[u8; 32]>,
     pub(crate) manager_store: ManagerStorage,
 }
+
+#[cfg(feature = "storage")]
 impl Default for StorageOptions {
     fn default() -> Self {
         StorageOptions {
@@ -82,26 +86,22 @@ impl AccountManagerBuilder {
     #[allow(unreachable_code)]
     pub async fn finish(self) -> crate::Result<AccountManager> {
         #[cfg(feature = "storage")]
+        let storage_options = self.storage_options.clone().unwrap_or_default();
+        #[cfg(feature = "storage")]
+        let storage =
+            crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_folder.clone())?;
+        #[cfg(feature = "storage")]
+        let storage_manager = crate::storage::manager::new_storage_manager(
+            storage_options.storage_folder.as_path(),
+            None,
+            Box::new(storage) as Box<dyn crate::storage::adapter::StorageAdapter + Send + Sync>,
+        )
+        .await?;
+        #[cfg(feature = "storage")]
         {
-            let storage_options = self.storage_options.clone().unwrap_or_default();
+            let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
 
-            let storage =
-                crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_folder.clone())?;
-            crate::storage::manager::set(
-                storage_options.storage_folder.as_path(),
-                None,
-                Box::new(storage) as Box<dyn crate::storage::adapter::StorageAdapter + Send + Sync>,
-            )
-            .await?;
-
-            let data = crate::storage::manager::load_account_manager(
-                storage_options.manager_store.clone(),
-                storage_options.storage_folder.clone(),
-                storage_options.storage_file_name.clone(),
-            )
-            .await?;
-
-            let (client_options, signer) = match data.0 {
+            let (client_options, signer) = match manager_builder {
                 Some(data) => (
                     data.client_options
                         .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
@@ -111,12 +111,7 @@ impl AccountManagerBuilder {
                 // If no account manager data exist, we will set it
                 None => {
                     // Store account manager data in storage
-                    crate::storage::manager::get()
-                        .await?
-                        .lock()
-                        .await
-                        .save_account_manager_data(&self)
-                        .await?;
+                    storage_manager.lock().await.save_account_manager_data(&self).await?;
                     (
                         self.client_options
                             .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
@@ -126,17 +121,32 @@ impl AccountManagerBuilder {
             };
             let client = client_options.clone().finish().await?;
 
+            let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
+
             #[cfg(feature = "events")]
             let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
 
             return Ok(AccountManager {
                 #[cfg(not(feature = "events"))]
-                accounts: Arc::new(RwLock::new(data.1.into_iter().map(AccountHandle::new).collect())),
+                accounts: Arc::new(RwLock::new(
+                    accounts
+                        .into_iter()
+                        .map(|a| AccountHandle::new(a, client.clone(), signer.clone(), storage_manager.clone()))
+                        .collect(),
+                )),
                 #[cfg(feature = "events")]
                 accounts: Arc::new(RwLock::new(
-                    data.1
+                    accounts
                         .into_iter()
-                        .map(|a| AccountHandle::new(a, client.clone(), signer.clone(), event_emitter.clone()))
+                        .map(|a| {
+                            AccountHandle::new(
+                                a,
+                                client.clone(),
+                                signer.clone(),
+                                event_emitter.clone(),
+                                storage_manager.clone(),
+                            )
+                        })
                         .collect(),
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
@@ -145,8 +155,10 @@ impl AccountManagerBuilder {
                 #[cfg(feature = "events")]
                 event_emitter,
                 storage_options,
+                storage_manager,
             });
         }
+
         Ok(AccountManager {
             accounts: Arc::new(RwLock::new(Vec::new())),
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
@@ -159,6 +171,8 @@ impl AccountManagerBuilder {
             event_emitter: Arc::new(Mutex::new(EventEmitter::new())),
             #[cfg(feature = "storage")]
             storage_options: StorageOptions { ..Default::default() },
+            #[cfg(feature = "storage")]
+            storage_manager,
         })
     }
 }

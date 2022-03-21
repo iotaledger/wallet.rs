@@ -161,7 +161,6 @@ impl AccountHandle {
     /// Get outputs from addresses
     pub(crate) async fn get_addresses_outputs(
         &self,
-        options: &SyncOptions,
         addresses_with_balance: Vec<AddressWithBalance>,
     ) -> crate::Result<(Vec<AddressWithBalance>, Vec<OutputData>)> {
         log::debug!("[SYNC] start get_addresses_outputs");
@@ -177,12 +176,9 @@ impl AccountHandle {
         {
             let mut tasks = Vec::new();
             for mut address in addresses_chunk {
-                let client = self.client.clone();
-                let sync_options = options.clone();
                 let account_handle = self.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
-                        let client = client;
                         let (output_responses, already_known_balance) =
                             account_handle.get_outputs(address.output_ids.clone(), false).await?;
                         let outputs = account_handle

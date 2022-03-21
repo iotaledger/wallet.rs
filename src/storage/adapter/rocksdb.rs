@@ -10,6 +10,7 @@ use tokio::sync::Mutex;
 pub const STORAGE_ID: &str = "RocksDB";
 
 /// Key value storage adapter.
+#[derive(Debug)]
 pub struct RocksdbStorageAdapter {
     db: Arc<Mutex<DB>>,
 }

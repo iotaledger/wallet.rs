@@ -3,6 +3,8 @@
 
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
+#[cfg(feature = "storage")]
+use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
         operations::syncing::SyncOptions,
@@ -33,32 +35,28 @@ pub struct AccountHandle {
     pub(crate) last_synced: Arc<Mutex<u128>>,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
+    #[cfg(feature = "storage")]
+    pub(crate) storage_manager: StorageManagerHandle,
 }
 
 impl AccountHandle {
     /// Create a new AccountHandle with an Account
-    #[cfg(not(feature = "events"))]
-    pub(crate) fn new(account: Account, client: Client, signer: SignerHandle) -> Self {
-        Self {
-            signer,
-            client,
-            account: Arc::new(RwLock::new(account)),
-            last_synced: Default::default(),
-        }
-    }
-    #[cfg(feature = "events")]
     pub(crate) fn new(
         account: Account,
         client: Client,
         signer: SignerHandle,
-        event_emitter: Arc<Mutex<EventEmitter>>,
+        #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
+        #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
         Self {
             account: Arc::new(RwLock::new(account)),
             client,
             signer,
             last_synced: Default::default(),
+            #[cfg(feature = "events")]
             event_emitter,
+            #[cfg(feature = "storage")]
+            storage_manager,
         }
     }
 
@@ -128,22 +126,10 @@ impl AccountHandle {
     pub(crate) async fn save(&self, updated_account: Option<&Account>) -> Result<()> {
         log::debug!("[save] saving account to database");
         match updated_account {
-            Some(account) => {
-                crate::storage::manager::get()
-                    .await?
-                    .lock()
-                    .await
-                    .save_account(account)
-                    .await
-            }
+            Some(account) => self.storage_manager.lock().await.save_account(account).await,
             None => {
                 let account = self.read().await;
-                crate::storage::manager::get()
-                    .await?
-                    .lock()
-                    .await
-                    .save_account(&account)
-                    .await
+                self.storage_manager.lock().await.save_account(&account).await
             }
         }
     }
@@ -152,6 +138,7 @@ impl AccountHandle {
     pub async fn set_alias(&self, alias: &str) -> Result<()> {
         let mut account = self.write().await;
         account.alias = alias.to_string();
+        #[cfg(feature = "storage")]
         self.save(Some(&account)).await?;
         Ok(())
     }

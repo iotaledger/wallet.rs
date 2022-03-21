@@ -35,20 +35,15 @@ impl AccountHandle {
         log::debug!("[TRANSFER] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
 
-        let mut total_input_amount = 0;
         let mut inputs_for_essence: Vec<Input> = Vec::new();
         let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
         #[cfg(feature = "events")]
         let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
         #[cfg(feature = "events")]
         let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
-        let coin_type = { self.read().await.coin_type };
-        let account_index = { self.read().await.index };
-        let addresses = self.list_addresses_with_balance().await?;
 
         for utxo in &inputs {
             let output = Output::try_from(&utxo.output_response.output)?;
-            total_input_amount += output.amount();
             let input = Input::Utxo(UtxoInput::from(utxo.output_id()?));
             inputs_for_essence.push(input.clone());
             inputs_for_signing.push(utxo.clone());
@@ -83,6 +78,7 @@ impl AccountHandle {
                         break;
                     }
                 }
+                #[cfg(feature = "events")]
                 outputs_for_event.push(TransactionIO {
                     address: address
                         .expect("todo: update transaction events to new outputs")

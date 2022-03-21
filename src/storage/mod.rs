@@ -17,6 +17,7 @@ use serde::Serialize;
 
 use std::{collections::HashMap, path::PathBuf};
 
+#[derive(Debug)]
 struct Storage {
     storage_path: PathBuf,
     inner: Box<dyn StorageAdapter + Sync + Send>,

@@ -26,7 +26,6 @@ impl AccountHandle {
         // store outputs with network_id
         let account = self.read().await;
         let network_id = self.client.get_network_id().await?;
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
         let mut outputs = Vec::new();
         for output_response in output_responses {
             let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output_response.output, None)?;

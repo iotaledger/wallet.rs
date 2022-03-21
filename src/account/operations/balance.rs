@@ -20,7 +20,8 @@ impl AccountHandle {
             .key_factor(rent_structure.v_byte_factor_key)
             .data_factor(rent_structure.v_byte_factor_data)
             .finish();
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
+        // todo: use this to determine which outputs can be spent now
+        // let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         let mut total_balance = 0;
         let mut locked_amount = 0;

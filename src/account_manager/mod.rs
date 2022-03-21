@@ -11,6 +11,8 @@ use crate::events::{
     types::{Event, WalletEventType},
     EventEmitter,
 };
+#[cfg(feature = "storage")]
+use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
         builder::AccountBuilder, handle::AccountHandle, operations::syncing::SyncOptions, types::AccountBalance,
@@ -24,9 +26,10 @@ use iota_client::{signing::SignerHandle, Client};
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
+#[cfg(feature = "storage")]
+use std::path::Path;
 use std::{
     collections::hash_map::Entry,
-    path::Path,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -46,6 +49,8 @@ pub struct AccountManager {
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
     #[cfg(feature = "storage")]
     pub(crate) storage_options: StorageOptions,
+    #[cfg(feature = "storage")]
+    pub(crate) storage_manager: StorageManagerHandle,
 }
 
 impl AccountManager {
@@ -57,14 +62,14 @@ impl AccountManager {
     /// Create a new account
     pub fn create_account(&self) -> AccountBuilder {
         log::debug!("creating account");
-        #[cfg(not(feature = "events"))]
-        return AccountBuilder::new(self.accounts.clone(), self.signer_type.clone());
-        #[cfg(feature = "events")]
         AccountBuilder::new(
             self.accounts.clone(),
             self.client_options.clone(),
             self.signer.clone(),
+            #[cfg(feature = "events")]
             self.event_emitter.clone(),
+            #[cfg(feature = "storage")]
+            self.storage_manager.clone(),
         )
     }
 
@@ -103,13 +108,13 @@ impl AccountManager {
                 )
                 .with_client_options(options);
 
-            crate::storage::manager::get()
-                .await?
+            self.storage_manager
                 .lock()
                 .await
                 .save_account_manager_data(&account_manager_builder)
-                .await
+                .await?;
         }
+        Ok(())
     }
 
     /// Get the used client options
@@ -191,6 +196,7 @@ impl AccountManager {
         Ok(())
     }
 
+    #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     /// Helper function to test events. Emits a provided event with account index 0.
     pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {

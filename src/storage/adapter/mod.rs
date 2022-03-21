@@ -8,7 +8,7 @@ use std::collections::HashMap;
 
 /// The storage adapter.
 #[async_trait::async_trait]
-pub trait StorageAdapter {
+pub trait StorageAdapter: std::fmt::Debug {
     /// Gets the storage identifier (used internally on the default storage adapters)
     fn id(&self) -> &'static str {
         "custom-adapter"

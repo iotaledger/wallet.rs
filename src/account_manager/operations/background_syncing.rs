@@ -30,7 +30,7 @@ impl AccountManager {
 
         background_syncing_status.store(1, Ordering::Relaxed);
         let accounts = self.accounts.clone();
-        let background_syncing = std::thread::spawn(move || {
+        let _background_syncing = std::thread::spawn(move || {
             let runtime = tokio::runtime::Builder::new_multi_thread()
                 .enable_all()
                 .build()
@@ -52,7 +52,7 @@ impl AccountManager {
                     }
                     // split interval syncing to seconds so stopping the process doesn't have to wait long
                     let seconds = interval.unwrap_or(DEFAUTL_BACKGROUNDSYNCING_INTERVAL).as_secs();
-                    for second in 0..seconds {
+                    for _ in 0..seconds {
                         if background_syncing_status.load(Ordering::Relaxed) == 2 {
                             log::debug!("[background_syncing]: stopping");
                             break 'outer;

@@ -48,7 +48,6 @@ impl AccountManager {
         // with balance
         let mut got_account_with_balance = false;
         for (account_handle, account_balance) in generated_accounts.iter().rev() {
-            let account = account_handle.read().await;
             if got_account_with_balance || account_balance.total != 0 {
                 got_account_with_balance = true;
                 account_indexes_to_keep.insert(*account_handle.read().await.index());
@@ -65,16 +64,13 @@ impl AccountManager {
             } else {
                 // accounts are stored during syncing, delete the empty accounts again
                 #[cfg(feature = "storage")]
-                log::debug!("[recover_accounts] delete emtpy account {}", account_index);
-                crate::storage::manager::get()
-                    .await?
-                    .lock()
-                    .await
-                    .remove_account(account_index)
-                    .await?;
+                {
+                    log::debug!("[recover_accounts] delete emtpy account {}", account_index);
+                    self.storage_manager.lock().await.remove_account(account_index).await?;
+                }
             }
         }
-        new_accounts.sort_by_key(|(index, acc)| *index);
+        new_accounts.sort_by_key(|(index, _acc)| *index);
         *accounts = new_accounts.into_iter().map(|(_, acc)| acc).collect();
         drop(accounts);
 

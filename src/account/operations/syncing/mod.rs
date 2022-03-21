@@ -69,9 +69,8 @@ impl AccountHandle {
             self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
 
         // get outputs for addresses and add them also the the addresses_with_balance
-        let (addresses_with_balance_and_outputs, output_data) = self
-            .get_addresses_outputs(&options, addresses_with_output_ids.clone())
-            .await?;
+        let (addresses_with_balance_and_outputs, output_data) =
+            self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
         let (spent_output_responses, _) = self.get_outputs(spent_output_ids.clone(), true).await?;
@@ -144,13 +143,13 @@ impl AccountHandle {
                 let position = account
                     .internal_addresses
                     .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|e| crate::Error::AddressNotFoundInAccount)?;
+                    .map_err(|_| crate::Error::AddressNotFoundInAccount)?;
                 account.internal_addresses[position].used = true;
             } else {
                 let position = account
                     .public_addresses
                     .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|e| crate::Error::AddressNotFoundInAccount)?;
+                    .map_err(|_| crate::Error::AddressNotFoundInAccount)?;
                 account.public_addresses[position].used = true;
             }
         }
