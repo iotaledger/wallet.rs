@@ -10,7 +10,7 @@ use crate::{
         },
         TransferOptions,
     },
-    Error, Result,
+    Error,
 };
 
 use iota_client::bee_message::{
@@ -20,19 +20,19 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, TokenId,
+        BasicOutputBuilder, ByteCostConfigBuilder, Output,
     },
 };
-use primitive_types::U256;
+
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-/// Address, amount and native tokens for `send_native_tokens()`
-pub struct AddressNativeTokens {
+#[derive(Debug, Clone, Serialize, Deserialize)]
+/// Address and amount for `send_micro_transaction()`
+pub struct AddressMicroAmount {
     /// Bech32 encoded address
     pub address: String,
-    /// Native tokens
-    pub native_tokens: Vec<(TokenId, U256)>,
+    /// Amount below the minimum storage deposit
+    pub amount: u64,
     /// Bech32 encoded address return address, to which the storage deposit will be returned. Default will use the
     /// first address of the account
     pub return_address: Option<String>,
@@ -42,31 +42,29 @@ pub struct AddressNativeTokens {
 }
 
 impl AccountHandle {
-    /// Function to send native tokens in basic outputs with a [StorageDepositReturnUnlockCondition] and
-    /// [ExpirationUnlockCondition], so the storage deposit gets back to the sender and also that the sender gets access
-    /// to the output again after a defined time (default 1 day),
-    /// Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
-    /// RemainderValueStrategy or custom inputs.
+    /// Function to send micro transactions by using the [StorageDepositReturnUnlockCondition] with an
+    /// [ExpirationUnlockCondition]. Will call [AccountHandle.send()](crate::account::handle::AccountHandle.send),
+    /// the options can define the RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
-    /// let outputs = vec![AddressNativeTokens {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-    ///     native_tokens: vec![(
-    ///         TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
-    ///         U256::from(50),
-    ///     )],
-    ///     ..Default::default()
+    /// let outputs = vec![AddressMicroAmount{
+    ///    address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///    amount: 1,
+    ///    return_address: None,
+    ///    expiration: None,
     /// }];
     ///
-    /// let res = account_handle.send_native_tokens(outputs, None).await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(message_id) = res.0 {
-    ///     println!("Message sent: {}", message_id);
-    /// }
+    /// let transfer_result = account_handle.send_micro_transaction(outputs, None ).await?;
+    ///
+    /// println!(
+    ///    "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+    ///    transfer_result.transaction_id,
+    ///    transfer_result.message_id.expect("No message created yet")
+    /// );
     /// ```
-    pub async fn send_native_tokens(
+    pub async fn send_micro_transaction(
         &self,
-        addresses_native_tokens: Vec<AddressNativeTokens>,
+        addresses_with_micro_amount: Vec<AddressMicroAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
         let rent_structure = self.client.get_rent_structure().await?;
@@ -83,7 +81,7 @@ impl AccountHandle {
         let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
 
         let mut outputs = Vec::new();
-        for address_and_amount in addresses_native_tokens {
+        for address_and_amount in addresses_with_micro_amount {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_amount.address)?;
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
@@ -92,20 +90,12 @@ impl AccountHandle {
                 &byte_cost_config,
                 &address,
                 &return_address.address.inner,
-                Some(address_and_amount.native_tokens.clone()),
+                None,
             )?;
 
             outputs.push(Output::Basic(
-                BasicOutputBuilder::new(storage_deposit_amount)?
-                    .with_native_tokens(
-                        address_and_amount
-                            .native_tokens
-                            .into_iter()
-                            .map(|(id, amount)| {
-                                NativeToken::new(id, amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
-                            })
-                            .collect::<Result<Vec<NativeToken>>>()?,
-                    )
+                // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount
+                BasicOutputBuilder::new(address_and_amount.amount + storage_deposit_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the full storage_deposit_amount back to the sender, so only the native tokens are
