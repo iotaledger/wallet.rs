@@ -74,27 +74,19 @@ pub(crate) fn minimum_storage_deposit_foundry(config: &ByteCostConfig) -> Result
     Ok(Output::Foundry(foundry_output).byte_cost(config))
 }
 
-/// Computes the minimum amount that an output needs to have, when native tokens are sent with [AddressUnlockCondition],
+/// Computes the minimum amount that an output needs to have, when sent with [AddressUnlockCondition],
 /// [StorageDepositReturnUnlockCondition] and [ExpirationUnlockCondition].
 pub(crate) fn minimum_storage_deposit_basic_native_tokens(
     config: &ByteCostConfig,
     address: &Address,
     return_address: &Address,
-    native_tokens: &[(TokenId, U256)],
+    native_tokens: Option<Vec<(TokenId, U256)>>,
 ) -> Result<u64> {
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
     // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let basic_output = BasicOutputBuilder::new(1_000_000_000)?
-        .with_native_tokens(
-            native_tokens
-                .iter()
-                .map(|(id, amount)| {
-                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
-                })
-                .collect::<Result<Vec<NativeToken>>>()?,
-        )
+    let mut basic_output_builder = BasicOutputBuilder::new(1_000_000_000)?
         .add_unlock_condition(address_condition)
         .add_unlock_condition(UnlockCondition::StorageDepositReturn(
             StorageDepositReturnUnlockCondition::new(*return_address, 1_000_000_000)?,
@@ -104,9 +96,18 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
             // Both 0 would be invalid, so we just use 1
             MilestoneIndex::new(1),
             0,
-        )?))
-        .finish()?;
-    Ok(Output::Basic(basic_output).byte_cost(config))
+        )?));
+    if let Some(native_tokens) = native_tokens {
+        basic_output_builder = basic_output_builder.with_native_tokens(
+            native_tokens
+                .iter()
+                .map(|(id, amount)| {
+                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                })
+                .collect::<Result<Vec<NativeToken>>>()?,
+        );
+    }
+    Ok(Output::Basic(basic_output_builder.finish()?).byte_cost(config))
 }
 
 /// Computes the minimum amount that an nft output needs to have.

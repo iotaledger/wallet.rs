@@ -1,15 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 07_send_nft --release
-// In this example we will send an nft
+//! cargo run --example 07_send_native_tokens --release
+// In this example we will send native tokens
 // Rename `.env.example` to `.env` first
 
 use dotenv::dotenv;
 use iota_wallet::{
-    account_manager::AccountManager, iota_client::bee_message::output::NftId, signing::stronghold::StrongholdSigner,
-    AddressAndNftId, Result,
+    account_manager::AccountManager, iota_client::bee_message::output::TokenId, signing::stronghold::StrongholdSigner,
+    AddressNativeTokens, Result,
 };
+use primitive_types::U256;
 
 use std::{env, path::Path, str::FromStr};
 
@@ -30,12 +31,16 @@ async fn main() -> Result<()> {
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
 
-    let outputs = vec![AddressAndNftId {
-        address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-        nft_id: NftId::from_str("04f9b54d488d2e83a6c90db08ae4b39651bbba8a")?,
+    let outputs = vec![AddressNativeTokens {
+        address: "atoi1qqv5avetndkxzgr3jtrswdtz5ze6mag20s0jdqvzk4fwezve8q9vk92ryhu".to_string(),
+        native_tokens: vec![(
+            TokenId::from_str("089292bbb5129efe5e9bd767aa0a789d475b37047d0100000000000000000000000000000000")?,
+            U256::from(10),
+        )],
+        ..Default::default()
     }];
 
-    let transfer_result = account.send_nft(outputs, None).await?;
+    let transfer_result = account.send_native_tokens(outputs, None).await?;
 
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",

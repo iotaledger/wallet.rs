@@ -1,6 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "events")]
 #[cfg(debug_assertions)]
 use crate::events::types::WalletEvent;
 use crate::{
@@ -71,6 +72,7 @@ pub enum MessageType {
     },
     /// Stop background syncing.
     StopBackgroundSync,
+    #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
 }
@@ -101,6 +103,7 @@ impl Serialize for MessageType {
             MessageType::StopBackgroundSync => {
                 serializer.serialize_unit_variant("MessageType", 12, "StopBackgroundSync")
             }
+            #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
             MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 13, "EmitTestEvent"),
         }
