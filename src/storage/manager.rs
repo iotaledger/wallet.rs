@@ -128,7 +128,18 @@ impl StorageManager {
         self.storage.get(key).await
     }
 
+    pub async fn save_account_manager_data(
+        &mut self,
+        account_manager_builder: &AccountManagerBuilder,
+    ) -> crate::Result<()> {
+        log::debug!("save_account_manager_data");
+        self.storage
+            .set(ACCOUNT_MANAGER_INDEXATION_KEY, account_manager_builder)
+            .await
+    }
+
     pub async fn get_account_manager_data(&mut self) -> crate::Result<AccountManagerBuilder> {
+        log::debug!("get_account_manager_data");
         let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
         let builder: AccountManagerBuilder = serde_json::from_str(&data)?;
         Ok(builder)

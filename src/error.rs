@@ -17,27 +17,15 @@ pub enum Error {
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(Box<iota_client::Error>),
-    /// Message not found.
-    #[error("message not found")]
-    MessageNotFound,
-    /// Message id length response invalid.
-    #[error("unexpected message_id length")]
-    InvalidMessageIdLength,
     /// failed to parse address.
     #[error("invalid address")]
     InvalidAddress,
-    /// Address length response invalid.
-    #[error("invalid address length")]
-    InvalidAddressLength,
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
     #[error("insufficient funds {0}/{1} available")]
     InsufficientFunds(u64, u64),
-    /// Account isn't empty (has history or balance) - can't delete account.
-    #[error("can't delete account: account has history or balance")]
-    AccountNotEmpty,
     /// Latest account is empty (doesn't have history and balance) - can't create account.
     #[error("can't create accounts when the latest account doesn't have message history and balance")]
     LatestAccountIsEmpty,
@@ -47,10 +35,6 @@ pub enum Error {
     /// Record not found
     #[error("Record not found")]
     RecordNotFound,
-    /// invalid remainder value target address defined on `RemainderValueStrategy`.
-    /// the address must belong to the account.
-    #[error("the remainder value address doesn't belong to the account")]
-    InvalidRemainderValueAddress,
     /// Storage access error.
     #[error("error accessing storage: {0}")]
     Storage(String),
@@ -97,6 +81,9 @@ pub enum Error {
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
+    /// Missing parameter.
+    #[error("missing parameter: {0}")]
+    MissingParameter(&'static str),
     /// Failed to get remainder
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
@@ -176,17 +163,12 @@ impl serde::Serialize for Error {
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
-            Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
-            Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
-            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
             Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
-            Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
             Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
-            Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
@@ -201,6 +183,7 @@ impl serde::Serialize for Error {
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
+            Self::MissingParameter(_) => serialize_variant(self, serializer, "MissingParameter"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
             Self::TooManyOutputs(..) => serialize_variant(self, serializer, "TooManyOutputs"),
             Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),

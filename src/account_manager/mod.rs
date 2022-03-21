@@ -4,6 +4,8 @@
 pub(crate) mod builder;
 pub(crate) mod operations;
 
+#[cfg(feature = "storage")]
+use crate::account_manager::builder::StorageOptions;
 #[cfg(feature = "events")]
 use crate::events::{
     types::{Event, WalletEventType},
@@ -42,6 +44,8 @@ pub struct AccountManager {
     pub(crate) signer: SignerHandle,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
+    #[cfg(feature = "storage")]
+    pub(crate) storage_options: StorageOptions,
 }
 
 impl AccountManager {
@@ -79,12 +83,38 @@ impl AccountManager {
         log::debug!("[set_client_options]");
         let mut client_options = self.client_options.write().await;
         *client_options = options.clone();
-        let new_client = options.finish().await?;
+        let new_client = options.clone().finish().await?;
         let mut accounts = self.accounts.write().await;
         for account in accounts.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
-        Ok(())
+        #[cfg(feature = "storage")]
+        {
+            // Update account manager data with new client options
+            let account_manager_builder = AccountManagerBuilder::new(self.signer.clone())
+                .with_storage_folder(
+                    &self
+                        .storage_options
+                        .storage_folder
+                        .clone()
+                        .into_os_string()
+                        .into_string()
+                        .expect("Can't convert os string"),
+                )
+                .with_client_options(options);
+
+            crate::storage::manager::get()
+                .await?
+                .lock()
+                .await
+                .save_account_manager_data(&account_manager_builder)
+                .await
+        }
+    }
+
+    /// Get the used client options
+    pub async fn get_client_options(&self) -> ClientOptions {
+        self.client_options.read().await.clone()
     }
 
     /// Get the balance of all accounts added together
