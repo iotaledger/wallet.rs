@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    account::{
+        handle::AccountHandle,
+        operations::transfer::{high_level::minimum_storage_deposit::minimum_storage_deposit_nft, TransferResult},
+        TransferOptions,
+    },
     Error,
 };
 
@@ -11,7 +15,7 @@ use iota_client::bee_message::{
     output::{
         feature_block::{FeatureBlock, MetadataFeatureBlock},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        ByteCost, ByteCostConfig, ByteCostConfigBuilder, NftId, NftOutputBuilder, Output,
+        ByteCostConfigBuilder, NftId, NftOutputBuilder, Output,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -111,27 +115,4 @@ impl AccountHandle {
         }
         self.send(outputs, options).await
     }
-}
-
-// todo: move into minimum_storage_deposit.rs
-/// Computes the minimum amount that an nft output needs to have.
-pub(crate) fn minimum_storage_deposit_nft(
-    config: &ByteCostConfig,
-    address: &Address,
-    immutable_metadata: Option<FeatureBlock>,
-    metadata: Option<FeatureBlock>,
-) -> crate::Result<u64> {
-    let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
-    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
-    // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let mut nft_builder =
-        NftOutputBuilder::new(1_000_000_000, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
-    if let Some(immutable_metadata) = immutable_metadata {
-        nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
-    }
-    if let Some(metadata) = metadata {
-        nft_builder = nft_builder.add_feature_block(metadata);
-    }
-    Ok(Output::Nft(nft_builder.finish()?).byte_cost(config))
 }

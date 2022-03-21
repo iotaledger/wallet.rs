@@ -99,6 +99,9 @@ pub enum Error {
     /// Address not found in account
     #[error("address not found in account")]
     AddressNotFoundInAccount,
+    /// Minting failed
+    #[error("minting failed {0}")]
+    MintingFailed(String),
     /// Nft not found in unspent outputs
     #[error("nft not found in unspent outputs")]
     NftNotFoundInUnspentOutputs,
@@ -189,6 +192,7 @@ impl serde::Serialize for Error {
             Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),
             Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
             Self::AddressNotFoundInAccount => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
+            Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
