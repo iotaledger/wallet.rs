@@ -47,3 +47,7 @@ storage = ["rocksdb"]
 message_interface = []
 events = []
 mnemonic = []
+
+[[example]]
+name = "events"
+required-features = ["events"]

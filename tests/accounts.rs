@@ -28,10 +28,15 @@ async fn account_ordering() -> Result<()> {
 
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
     let manager = AccountManager::builder(signer)
+        .with_client_options(client_options)
         .with_storage_folder("test-storage/account_alias_already_exists")
         .finish()
         .await?;
@@ -73,10 +78,14 @@ async fn account_alias_already_exists() -> Result<()> {
 
 #[tokio::test]
 async fn account_rename_alias() -> Result<()> {
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
     let manager = AccountManager::builder(signer)
+        .with_client_options(client_options)
         .with_storage_folder("test-storage/account_rename_alias")
         .finish()
         .await?;

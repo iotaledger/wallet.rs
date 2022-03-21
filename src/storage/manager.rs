@@ -24,47 +24,6 @@ pub(crate) enum ManagerStorage {
 
 pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;
 
-// // todo get other manager data like client options and signertype
-// pub(crate) async fn load_account_manager(
-//     manager_storage: ManagerStorage,
-//     storage_path: PathBuf,
-// ) -> crate::Result<(Option<AccountManagerBuilder>, Vec<Account>)> {
-//     let (storage, storage_file_path, is_stronghold): (Option<Box<dyn StorageAdapter + Send + Sync>>, PathBuf, bool) =
-//         match manager_storage {
-//             #[cfg(feature = "stronghold")]
-//             ManagerStorage::Stronghold => {
-//                 todo!()
-//                 // let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
-//                 // fs::create_dir_all(&storage_folder)?;
-//                 // let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
-//                 // (
-//                 //     Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
-//                 //     path,
-//                 //     true,
-//                 // )
-//             }
-//             ManagerStorage::Rocksdb => {
-//                 // let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(ROCKSDB_FOLDERNAME));
-//                 fs::create_dir_all(&storage_path)?;
-//                 // rocksdb storage already exists; no need to create a new instance
-//                 let storage = if crate::storage::manager::get().await.is_ok() {
-//                     None
-//                 } else {
-//                     let storage = crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(&storage_path)?;
-//                     Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>)
-//                 };
-//                 (storage, storage_path, false)
-//             }
-//         };
-
-//     let manager = crate::storage::manager::get().await?;
-//     let mut storage_manager = manager.lock().await;
-//     let manager_builder = storage_manager.get_account_manager_data().await.ok();
-//     let accounts = storage_manager.get_accounts().await.unwrap_or_default();
-
-//     Ok((manager_builder, accounts))
-// }
-
 /// Sets the storage adapter.
 pub(crate) async fn new_storage_manager<P: AsRef<Path>>(
     storage_path: P,
