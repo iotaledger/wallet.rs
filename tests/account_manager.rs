@@ -17,13 +17,12 @@ async fn stored_account_manager_data() -> Result<()> {
         .finish()
         .await?;
 
-    // todo: enable when https://github.com/iotaledger/wallet.rs/issues/942 is done
-    // drop(manager);
-    // // Recreate AccountManager without providing client options
-    // let manager = AccountManager::builder(signer)
-    //     .with_storage_folder("test-storage/stored_account_manager_data")
-    //     .finish()
-    //     .await?;
+    drop(manager);
+    // Recreate AccountManager without providing client options
+    let manager = AccountManager::builder(signer)
+        .with_storage_folder("test-storage/stored_account_manager_data")
+        .finish()
+        .await?;
     let client_options = manager.get_client_options().await;
 
     let node_dto = NodeDto::Node(Node::from(Url::parse("http://some-not-default-node:14265").unwrap()));

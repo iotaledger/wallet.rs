@@ -26,7 +26,6 @@ iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "e932f42ee5
 # iota-client = { path = "../iota.rs", default-features = false, features = ["async", "tls"] }
 iota-crypto = { version = "0.9.1", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
-once_cell = { version = "1.8.0", default-features = false, features = ["std"] }
 primitive-types = { version = "0.10.1", default-features = false }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
@@ -42,10 +41,14 @@ dotenv = { version =  "0.15.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
-default = ["mnemonic", "events", "storage", "stronghold"]
+default = ["mnemonic", "storage", "stronghold"]
 ledger-nano = ["iota-client/ledger"]
 stronghold = ["iota-client/stronghold"]
 storage = ["rocksdb"]
 message_interface = []
 events = []
 mnemonic = []
+
+[[example]]
+name = "events"
+required-features = ["events"]

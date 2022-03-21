@@ -31,7 +31,6 @@ impl AccountHandle {
         }
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
 
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
         // Get outputs for the consolidation
         let mut outputs_to_consolidate: Vec<Vec<OutputData>> = Vec::new();
         for address in addresses_that_need_consolidation {

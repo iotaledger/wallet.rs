@@ -34,8 +34,6 @@ impl AccountHandle {
             .first()
             .ok_or(crate::Error::FailedToGetRemainder)?
             .clone();
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
-        let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         // Get outputs for the collect

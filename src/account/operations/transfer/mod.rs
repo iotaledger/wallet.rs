@@ -10,15 +10,14 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::syncing::SyncOptions,
-        types::{address::AccountAddress, InclusionState, Transaction},
-        AddressGenerationOptions,
-    },
-    events::types::{AddressData, TransferProgressEvent, WalletEvent},
+use crate::account::{
+    handle::AccountHandle,
+    operations::syncing::SyncOptions,
+    types::{address::AccountAddress, InclusionState, Transaction},
+    AddressGenerationOptions,
 };
+#[cfg(feature = "events")]
+use events::types::{AddressData, TransferProgressEvent, WalletEvent};
 
 use iota_client::{
     bee_message::{
