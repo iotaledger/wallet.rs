@@ -251,7 +251,7 @@ foreign_class!(
         /// @param password The storage password
         fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>;
         /// Sets the polling interval.
-        /// @param Sets the polling interval in seconds
+        /// @param polling_interval Sets the polling interval in seconds
         fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder;
         /// Skip polling
         fn AccountManagerBuilder::with_skip_polling(&mut self) -> AccountManagerBuilder;
@@ -468,7 +468,7 @@ foreign_class!(
         /// @param nodes The list of node URLs
         fn ClientOptionsBuilder::with_nodes(&mut self, nodes: Vec<String>) -> ClientOptionsBuilder;
         /// Get node list from the node_pool_urls
-        /// @param nodes node_pool_urls list of node URLs for the node pool
+        /// @param node_pool_urls list of node URLs for the node pool
         fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
         /// ClientOptions connected to the default Network pool.
         ///

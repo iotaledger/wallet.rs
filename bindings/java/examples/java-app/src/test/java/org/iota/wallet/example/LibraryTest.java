@@ -20,8 +20,6 @@ public class LibraryTest {
         }
     }
 
-    /*
-    @Test
     public void testMigration() {
         try {
             Migration exampleMigration = new Migration();
@@ -57,12 +55,12 @@ public class LibraryTest {
             TransferOutput[] outputs = new TransferOutput[]{
                 output
             };
-            Transfer t = new TransferBuilder(outputs).withSkipSync().finish();
+            Transfer t = TransferBuilder.newFromOutputs(outputs).withSkipSync().finish();
             System.out.println(t);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     @Test
     public void testActorSystem() {

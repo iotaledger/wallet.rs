@@ -51,7 +51,7 @@ Generated binaries can then be found at `wallet.rs/bindings/java/target/release`
 
 :::info
 Compiling for Android requires additional compilation instructions.
-Specific instructions can be found in [Android development](android_development.md)
+Specific instructions can be found in [Android development](android_development)
 :::
 
 ### Step 2: Creating the Java archive
