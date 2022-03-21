@@ -81,7 +81,7 @@ impl AccountHandle {
                         nft_builder = nft_builder.add_feature_block(feature_block.clone());
                     }
                     for immutable_feature_block in nft_output.immutable_feature_blocks().iter() {
-                        nft_builder = nft_builder.add_feature_block(immutable_feature_block.clone());
+                        nft_builder = nft_builder.add_immutable_feature_block(immutable_feature_block.clone());
                     }
                     outputs.push(Output::Nft(nft_builder.finish()?));
                     // Add custom input
