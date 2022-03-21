@@ -141,7 +141,7 @@ ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-a
 ```
 
 #### Generating the binaries
-Now we needd  to generate binaries for all the enabled targets inside your `build.gradle` `archTriplets`.
+Now we need to generate binaries for all the enabled targets inside your `build.gradle` `archTriplets`.
 The easiest way is to use the gradle build system. Using the `build.gradle` inside `examples/android-app`, we automatically build all enabled targets after running the following:
 ```
 cd wallet.rs/bindings/java
@@ -158,6 +158,8 @@ Example: `cargo build --target aarch64-linux-android --release`
 2. Adding shared library
 
 > Copy `$ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/$ARCH/libc++_shared.so` to `src/main/libs/$ARCH/`
+
+Example: `cp $ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a/libc++_shared.so examples/android-app/src/main/libs/arm64-v8a`
 
 #### Building your app
 
