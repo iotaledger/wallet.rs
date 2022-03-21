@@ -11,7 +11,7 @@ use iota_client::bee_message::{
     output::{
         feature_block::{FeatureBlock, MetadataFeatureBlock},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        NftId, NftOutputBuilder, Output,
+        ByteCost, ByteCostConfig, ByteCostConfigBuilder, NftId, NftOutputBuilder, Output,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -19,7 +19,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `send_nft()`
 pub struct NftOptions {
-    /// Bech32 encoded address. Default will use the
+    /// Bech32 encoded address to which the Nft will be minted. Default will use the
     /// first address of the account
     pub address: Option<String>,
     /// Immutable nft metadata
@@ -39,23 +39,32 @@ impl AccountHandle {
     ///     hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
     ///         .try_into()
     ///         .unwrap();
-    /// let outputs = vec![NftOptions {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
-    ///     immutable_metadata: b"some immutable nft metadata",
-    ///     metadata: b"some nft metadata",
+    /// let nft_options = vec![NftOptions {
+    ///     address: Some("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string()),
+    ///     immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
+    ///     metadata: Some(b"some nft metadata".to_vec()),
     /// }];
     ///
-    /// let res = account_handle.mint_nfts(outputs, None).await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(message_id) = res.0 {
-    ///     println!("Message sent: {}", message_id);
-    /// }
+    /// let transfer_result = account.mint_nfts(nft_options, None).await?;
+    /// println!(
+    ///     "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+    ///     transfer_result.transaction_id,
+    ///     transfer_result.message_id.expect("No message created yet")
+    /// );
     /// ```
     pub async fn mint_nfts(
         &self,
         nfts_options: Vec<NftOptions>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] mint_nfts");
+        let rent_structure = self.client.get_rent_structure().await?;
+        let byte_cost_config = ByteCostConfigBuilder::new()
+            .byte_cost(rent_structure.v_byte_cost)
+            .key_factor(rent_structure.v_byte_factor_key)
+            .data_factor(rent_structure.v_byte_factor_data)
+            .finish();
+
         let account_addresses = self.list_addresses().await?;
 
         let mut outputs = Vec::new();
@@ -71,22 +80,58 @@ impl AccountHandle {
                         .inner
                 }
             };
-            // todo get minimum required amount for this nft output with the feature blocks
+            let immutable_metadata = if let Some(immutable_metadata) = nft_options.immutable_metadata {
+                Some(FeatureBlock::Metadata(MetadataFeatureBlock::new(immutable_metadata)?))
+            } else {
+                None
+            };
+            let metadata = if let Some(metadata) = nft_options.metadata {
+                Some(FeatureBlock::Metadata(MetadataFeatureBlock::new(metadata)?))
+            } else {
+                None
+            };
+
+            let minimum_storage_deposit = minimum_storage_deposit_nft(
+                &byte_cost_config,
+                &address,
+                immutable_metadata.clone(),
+                metadata.clone(),
+            )?;
             // NftId needs to be set to 0 for the creation
             let mut nft_builder = NftOutputBuilder::new(1_000_000, NftId::from([0; 20]))?
                 // Address which will own the nft
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
-            if let Some(metadata) = nft_options.metadata {
-                nft_builder =
-                    nft_builder.add_feature_block(FeatureBlock::Metadata(MetadataFeatureBlock::new(metadata)?));
+            if let Some(immutable_metadata) = immutable_metadata {
+                nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
             }
-            if let Some(immutable_metadata) = nft_options.immutable_metadata {
-                nft_builder = nft_builder.add_immutable_feature_block(FeatureBlock::Metadata(
-                    MetadataFeatureBlock::new(immutable_metadata)?,
-                ));
+            if let Some(metadata) = metadata {
+                nft_builder = nft_builder.add_feature_block(metadata);
             }
             outputs.push(Output::Nft(nft_builder.finish()?));
         }
         self.send(outputs, options).await
     }
+}
+
+// todo: move into minimum_storage_deposit.rs
+/// Computes the minimum amount that an nft output needs to have.
+pub(crate) fn minimum_storage_deposit_nft(
+    config: &ByteCostConfig,
+    address: &Address,
+    immutable_metadata: Option<FeatureBlock>,
+    metadata: Option<FeatureBlock>,
+) -> crate::Result<u64> {
+    let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
+    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
+    // not important, we are only interested in the storage requirements of the type.
+    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
+    let mut nft_builder =
+        NftOutputBuilder::new(1_000_000_000, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
+    if let Some(immutable_metadata) = immutable_metadata {
+        nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
+    }
+    if let Some(metadata) = metadata {
+        nft_builder = nft_builder.add_feature_block(metadata);
+    }
+    Ok(Output::Nft(nft_builder.finish()?).byte_cost(config))
 }
