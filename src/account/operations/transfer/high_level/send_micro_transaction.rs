@@ -98,8 +98,7 @@ impl AccountHandle {
                 BasicOutputBuilder::new(address_and_amount.amount + storage_deposit_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
-                        // We send the full storage_deposit_amount back to the sender, so only the native tokens are
-                        // sent
+                        // We send the storage_deposit_amount back to the sender, so only the additional amount is sent
                         StorageDepositReturnUnlockCondition::new(return_address.address.inner, storage_deposit_amount)?,
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
