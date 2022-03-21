@@ -12,8 +12,8 @@ use iota_client::bee_message::{
             ImmutableAliasAddressUnlockCondition, StateControllerAddressUnlockCondition,
             StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCost, ByteCostConfig, FoundryOutputBuilder, NativeToken,
-        Output, TokenId, TokenScheme, TokenTag,
+        AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCost, ByteCostConfig, FeatureBlock, FoundryOutputBuilder,
+        NativeToken, NftId, NftOutputBuilder, Output, TokenId, TokenScheme, TokenTag,
     },
 };
 use primitive_types::U256;
@@ -107,4 +107,26 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
         )?))
         .finish()?;
     Ok(Output::Basic(basic_output).byte_cost(config))
+}
+
+/// Computes the minimum amount that an nft output needs to have.
+pub(crate) fn minimum_storage_deposit_nft(
+    config: &ByteCostConfig,
+    address: &Address,
+    immutable_metadata: Option<FeatureBlock>,
+    metadata: Option<FeatureBlock>,
+) -> crate::Result<u64> {
+    let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
+    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
+    // not important, we are only interested in the storage requirements of the type.
+    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
+    let mut nft_builder =
+        NftOutputBuilder::new(1_000_000_000, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
+    if let Some(immutable_metadata) = immutable_metadata {
+        nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
+    }
+    if let Some(metadata) = metadata {
+        nft_builder = nft_builder.add_feature_block(metadata);
+    }
+    Ok(Output::Nft(nft_builder.finish()?).byte_cost(config))
 }
