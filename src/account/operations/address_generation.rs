@@ -8,10 +8,7 @@ use crate::account::{
 #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
 use crate::events::types::{AddressData, WalletEvent};
 
-use iota_client::{
-    constants::IOTA_COIN_TYPE,
-    signing::{GenerateAddressMetadata, Network},
-};
+use iota_client::signing::{GenerateAddressMetadata, Network};
 use serde::{Deserialize, Serialize};
 
 /// Options for address generation
@@ -113,7 +110,7 @@ impl AccountHandle {
 
         let addresses = signer
             .generate_addresses(
-                IOTA_COIN_TYPE,
+                account.coin_type,
                 account.index,
                 address_range,
                 options.internal,
