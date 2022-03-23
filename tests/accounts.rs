@@ -131,7 +131,7 @@ async fn account_first_address_exists() -> Result<()> {
         .finish()
         .await?;
 
-    // When the address is generate the first public address also gets generated and added to it
+    // When the account is generated, the first public address also gets generated and added to it
     assert_eq!(account.list_addresses().await?.len(), 1);
     // First address is a public address
     assert_eq!(account.list_addresses().await?.first().unwrap().internal(), &false);
