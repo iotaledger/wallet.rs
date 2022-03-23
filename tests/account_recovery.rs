@@ -3,8 +3,10 @@
 
 use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
+#[ignore]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
@@ -20,9 +22,9 @@ async fn account_recovery_empty() -> Result<()> {
 
     let accounts = manager.recover_accounts(2, 2).await?;
 
-    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     // accounts should be empty if no account was created before and no account was found with balance
     assert_eq!(0, accounts.len());
+    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     Ok(())
 }
 
