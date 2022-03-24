@@ -64,7 +64,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         System.out.println("id: " + account.id());
         System.out.println("alias: " + account.alias());
         System.out.println("balance available: " + account.balance().getAvailable());
-        System.out.println("address: " + account.generateAddress().getReadable());
+        System.out.println("address: " + account.generateAddress().readable());
         
         Message[] messages = account.listMessages(5, 0, MessageType.FAILED);
         System.out.println("Messages: " + messages.length);

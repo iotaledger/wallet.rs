@@ -1,4 +1,5 @@
 # Ignore Gradle project-specific cache directory
 my-db/
+database/
 migration-database/
 iota.rs-api.lb-0.h.chrysalis-devnet.iota.cafe-80/

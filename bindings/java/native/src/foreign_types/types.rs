@@ -212,3 +212,12 @@ foreign_typemap!(
     ($p:f_type, option = "NoNullAnnotations") <= "AddressOutput[]";
     ($p:f_type, option = "NullAnnotations") <= "@NonNull AddressOutput[]";
 );
+
+
+foreign_typemap!(
+    ($p:r_type) Vec<TransferOutput> <= internal_aliases::JForeignObjectsArray<TransferOutput> {
+        $out = jobject_array_to_vec_of_objects(env, $p);
+    };
+    ($p:f_type, option = "NoNullAnnotations") <= "TransferOutput[]";
+    ($p:f_type, option = "NullAnnotations") <= "@NonNull TransferOutput[]";
+);

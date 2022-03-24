@@ -4,14 +4,17 @@
 use std::{cell::RefCell, rc::Rc};
 
 use iota_wallet::{
-    address::{AddressWrapper, OutputKind},
+    address::AddressWrapper,
     message::{
         Message as MessageRust, MessageId, RemainderValueStrategy as RemainderValueStrategyRust,
-        Transfer as TransferRust, TransferBuilder as TransferBuilderRust,
+        Transfer as TransferRust, TransferBuilder as TransferBuilderRust, TransferOutput as TransferOutputRust,
     },
 };
 
-use crate::types::{IndexationPayload, MessagePayload};
+use crate::{
+    types::{output_kind_enum_to_type, IndexationPayload, MessagePayload, OutputKind},
+    Result,
+};
 
 use chrono::prelude::{DateTime, Utc};
 use std::num::NonZeroU64;
@@ -28,17 +31,57 @@ pub fn remainder_type_enum_to_type(strategy: RemainderValueStrategy) -> Remainde
     }
 }
 
-pub struct Transfer {
-    transfer: TransferRust,
-}
+#[derive(Debug, Clone)]
+pub struct Transfer(TransferRust);
 
 impl Transfer {
     pub fn to_inner(self) -> TransferRust {
-        self.transfer
+        self.0
     }
 
-    pub fn builder(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder {
+    pub fn builder(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferBuilder {
         TransferBuilder::new(address, amount, output_kind)
+    }
+}
+
+impl core::fmt::Display for Transfer {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.0)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct TransferOutput(TransferOutputRust);
+
+impl TransferOutput {
+    pub fn new(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferOutput {
+        Self(TransferOutputRust::new(
+            address,
+            NonZeroU64::new(amount).unwrap(),
+            output_kind_enum_to_type(output_kind),
+        ))
+    }
+
+    pub fn get_amount(&mut self) -> u64 {
+        self.0.amount.into()
+    }
+
+    pub fn get_address(&mut self) -> AddressWrapper {
+        self.0.address.clone()
+    }
+
+    pub fn get_output_kind(&mut self) -> OutputKind {
+        self.0.output_kind.clone().into()
+    }
+
+    pub fn to_inner(self) -> TransferOutputRust {
+        self.0
+    }
+}
+
+impl core::fmt::Display for TransferOutput {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "({:?})", self.0)
     }
 }
 
@@ -47,13 +90,20 @@ pub struct TransferBuilder {
 }
 
 impl TransferBuilder {
-    pub fn new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> Self {
+    pub fn new(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> Self {
         Self {
             builder: Rc::new(RefCell::new(Option::from(TransferBuilderRust::new(
                 address,
                 NonZeroU64::new(amount).unwrap(),
-                output_kind,
+                output_kind_enum_to_type(output_kind),
             )))),
+        }
+    }
+
+    pub fn new_from_outputs(outputs: Vec<TransferOutput>) -> Result<Self> {
+        match TransferBuilderRust::with_outputs(outputs.iter().map(|o| o.clone().0).collect()) {
+            Ok(b) => Ok(TransferBuilder::new_with_builder(b)),
+            Err(e) => Err(anyhow::anyhow!(e.to_string())),
         }
     }
 
@@ -100,13 +150,11 @@ impl TransferBuilder {
 
     /// Builds the transfer.
     pub fn finish(&self) -> Transfer {
-        Transfer {
-            transfer: self.builder.borrow_mut().take().unwrap().finish(),
-        }
+        Transfer(self.builder.borrow_mut().take().unwrap().finish())
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Message {
     message: MessageRust,
 }
@@ -114,6 +162,12 @@ pub struct Message {
 impl From<MessageRust> for Message {
     fn from(message: MessageRust) -> Self {
         Self { message }
+    }
+}
+
+impl core::fmt::Display for Message {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        write!(f, "{:?}", self.message)
     }
 }
 

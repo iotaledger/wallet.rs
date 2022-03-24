@@ -1,3 +1,6 @@
+// Copyright 2020 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 pub use iota_wallet::{
     account_manager::{AccountManager, DEFAULT_STORAGE_FOLDER},
     actor::{Message as WalletMessage, MessageType as WalletMessageType, Response, ResponseType, WalletMessageHandler},

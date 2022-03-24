@@ -10,16 +10,19 @@ use std::{
 use iota_wallet::{
     address::{
         Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust,
-        AddressWrapper, OutputKind,
+        AddressWrapper, OutputKind as RustOutputKind,
     },
     iota_client::bee_message::{payload::transaction::TransactionId, prelude::OutputId},
     message::MessageId,
 };
 
-use crate::Result;
+use crate::{
+    types::{output_kind_enum_to_type, OutputKind},
+    Result,
+};
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct Address(AddressRust);
+pub struct Address(pub AddressRust);
 
 impl Display for Address {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
@@ -155,7 +158,7 @@ impl From<AddressOutputRust> for AddressOutput {
             amount: ouput.amount().clone(),
             is_spent: ouput.is_spent().clone(),
             address: ouput.address().clone(),
-            kind: ouput.kind().clone(),
+            kind: ouput.kind().clone().into(),
         }
     }
 }
@@ -204,7 +207,7 @@ impl AddressOutput {
             amount: self.amount,
             is_spent: self.is_spent,
             address: self.address,
-            kind: self.kind.into(),
+            kind: output_kind_enum_to_type(self.kind).unwrap_or(RustOutputKind::SignatureLockedSingle),
         }
     }
 }

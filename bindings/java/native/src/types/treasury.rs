@@ -2,23 +2,36 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    iota_client::bee_message::output::Output, message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
+    iota_client::bee_message::{
+        output::Output,
+        input::Input,
+    },
+    message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
 };
 
-pub struct TreasuryTransactionPayload {
+use crate::{TreasuryOutput, TreasuryInput};
+
+pub struct TreasuryPayload {
     payload: TreasuryTransactionPayloadRust,
 }
 
-impl From<TreasuryTransactionPayloadRust> for TreasuryTransactionPayload {
+impl From<TreasuryTransactionPayloadRust> for TreasuryPayload {
     fn from(payload: TreasuryTransactionPayloadRust) -> Self {
         Self { payload }
     }
 }
 
-impl TreasuryTransactionPayload {
-    pub fn output(&self) -> u64 {
+impl TreasuryPayload {
+    pub fn output(&self) -> TreasuryOutput {
         if let Output::Treasury(payload) = self.payload.output() {
-            return payload.amount();
+            return payload.clone().into();
+        }
+        unreachable!()
+    }
+
+    pub fn input(&self) -> TreasuryInput {
+        if let Input::Treasury(payload) = self.payload.input() {
+            return (*payload).into();
         }
         unreachable!()
     }

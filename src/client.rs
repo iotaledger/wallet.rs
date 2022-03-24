@@ -336,7 +336,7 @@ impl ClientOptionsBuilder {
         self
     }
 
-    /// Sets the MQTT broker options.
+    /// Disables MQTT
     pub fn with_mqtt_disabled(mut self) -> Self {
         self.mqtt_enabled = false;
         self

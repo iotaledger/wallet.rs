@@ -318,7 +318,7 @@ impl Transfer {
 }
 
 /// Possible Value units.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub enum ValueUnit {
     /// i
     I,
@@ -348,7 +348,7 @@ impl fmt::Display for ValueUnit {
 }
 
 /// The transaction Value struct.
-#[derive(Debug, Getters, Serialize, Deserialize, Clone)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone, PartialEq)]
 #[getset(get = "pub")]
 pub struct Value {
     /// The value.
@@ -405,6 +405,15 @@ impl TransactionSignatureLockedSingleOutput {
             remainder,
         }
     }
+
+    /// Construct a new TransactionSignatureLockedSingleOutput
+    pub fn from(address: AddressWrapper, amount: u64, remainder: bool) -> Self {
+        Self {
+            address,
+            amount,
+            remainder,
+        }
+    }
 }
 
 /// Dust allowance output.
@@ -424,6 +433,11 @@ impl TransactionSignatureLockedDustAllowanceOutput {
             address: AddressWrapper::new(*output.address(), bech32_hrp),
             amount: output.amount(),
         }
+    }
+
+    /// Construct a new TransactionSignatureLockedDustAllowanceOutput
+    pub fn from(address: AddressWrapper, amount: u64) -> Self {
+        Self { address, amount }
     }
 }
 
@@ -941,6 +955,12 @@ impl<'de> Deserialize<'de> for MessageTailTransactionHash {
             }
         };
         Ok(hash)
+    }
+}
+
+impl core::fmt::Display for MessageTailTransactionHash {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
     }
 }
 

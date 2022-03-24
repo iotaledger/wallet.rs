@@ -28,10 +28,10 @@ use anyhow::{
 
 use iota_wallet::{
     message::{
-        MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
+        MessageType, Value, ValueUnit, MessageId
     },
     address::{
-        OutputKind, AddressWrapper, IotaAddress,
+        AddressWrapper, IotaAddress, parse as parseAddress
     },
     client::Api,
     iota_client::{
@@ -43,11 +43,11 @@ use iota_wallet::{
     event::{
         EventId, BalanceChange,
         TransactionEvent as WalletTransactionEvent,
-        TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
-        AddressConsolidationNeeded as WalletAddressConsolidationNeeded,
+        TransactionConfirmationChangeEvent,
+        AddressConsolidationNeeded,
         TransferProgress as WalletTransferProgress,
         BalanceEvent as WalletBalanceEvent,
-        TransactionReattachmentEvent as WalletTransactionReattachmentEvent
+        TransactionReattachmentEvent
     },
 };
 
@@ -74,9 +74,13 @@ foreign_enum!(
 
 foreign_enum!(
     enum Api {
+        /// `get_tips` API
         GET_TIPS = Api::GetTips,
+        /// `post_message` API
         POST_MESSAGE = Api::PostMessage,
+        /// `get_output` API
         GET_OUTPUT = Api::GetOutput,
+        /// `get_balance` API
         GET_BALANCE = Api::GetBalance,
     }
 );
@@ -115,6 +119,7 @@ foreign_enum!(
 
 foreign_enum!(
     enum OutputKind {
+        NONE = OutputKind::None,
         SIGNATURE_LOCKED_SINGLE = OutputKind::SignatureLockedSingle,
         SIGNATURE_LOCKED_DUST_ALLOWANCE = OutputKind::SignatureLockedDustAllowance,
         TREASURY = OutputKind::Treasury,
@@ -146,6 +151,7 @@ foreign_class!(class RustHex {
 });
 
 foreign_class!( 
+    /// Migration data.
     #[derive(camelCaseAliases, Display)]
     class MigrationData {
         self_type MigrationData;
@@ -164,6 +170,7 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Migration bundle.
     #[derive(camelCaseAliases, Display)]
     class MigrationBundle {
         self_type MigrationBundle;
@@ -177,6 +184,7 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Migration address
     #[derive(camelCaseAliases, Display)]
     class MigrationAddress {
         self_type MigrationAddress;
@@ -205,7 +213,7 @@ foreign_class!(
         fn MigrationBundleOptions::set_offset(&mut self, offset: Option<i64>);
         fn MigrationBundleOptions::offset(&self) -> Option<i64>;
         fn MigrationBundleOptions::set_log_file_name(&mut self, log_file_name: &str);
-        fn MigrationBundleOptions::log_file_name(&self) -> Option<String>; alias logFileName;
+        fn MigrationBundleOptions::log_file_name(&self) -> Option<String>;
     }
 );
 
@@ -231,46 +239,57 @@ foreign_class!(
     }
 );
 
-foreign_class!(class AccountManagerBuilder {
-    self_type AccountManagerBuilder;
-    constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
-    fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>; alias withStorage;
-    fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder; alias withPollingInterval;
-    fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder; alias withOutputConsolidationThreshold;
-    fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder; alias withAutomaticOutputConsolidationDisabled;
-    fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder; alias withSyncSpentOutputs;
-    fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder; alias withEventPersistence;
-    fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder; alias withMultipleEmptyAccounts;
-    fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
-});
+foreign_class!(
+    /// Account manager builder.
+    #[derive(camelCaseAliases)]
+    class AccountManagerBuilder {
+        self_type AccountManagerBuilder;
+        /// Initialises a new instance of the account manager builder with the default storage adapter.
+        constructor AccountManagerBuilder::new() -> AccountManagerBuilder;
+        /// Sets the storage config to be used.
+        /// @param storage_path The path where the database file will be saved
+        /// @param password The storage password
+        fn AccountManagerBuilder::with_storage(&mut self, storage_path: PathBuf, password: Option<&str>) -> Result<AccountManagerBuilder>;
+        /// Sets the polling interval.
+        /// @param polling_interval Sets the polling interval in seconds
+        fn AccountManagerBuilder::with_polling_interval(&mut self, polling_interval: Duration) -> AccountManagerBuilder;
+        /// Skip polling
+        fn AccountManagerBuilder::with_skip_polling(&mut self) -> AccountManagerBuilder;
+        /// Sets the number of outputs an address must have to trigger the automatic consolidation process.
+        /// @param threshold The number of outputs an address must have to trigger the automatic consolidation process
+        fn AccountManagerBuilder::with_output_consolidation_threshold(&mut self, threshold: usize) -> AccountManagerBuilder;
+        /// Disables the automatic output consolidation process.
+        fn AccountManagerBuilder::with_automatic_output_consolidation_disabled(&mut self) -> AccountManagerBuilder;
+        /// Enables fetching spent output history on sync.
+        fn AccountManagerBuilder::with_sync_spent_outputs(&mut self) -> AccountManagerBuilder;
+        /// Enables event persistence.
+        fn AccountManagerBuilder::with_event_persistence(&mut self) -> AccountManagerBuilder;
+        /// Enables creating multiple accounts without history.
+        /// The wallet disables it by default to simplify account discovery.
+        fn AccountManagerBuilder::with_multiple_empty_accounts(&mut self) -> AccountManagerBuilder;
+        /// Builds the manager.
+        fn AccountManagerBuilder::finish(&mut self) -> Result<AccountManager>;
+    }
+);
 
 foreign_class!(
+    /// The account manager.
+    ///
+    /// Used to manage multiple accounts.
     #[derive(camelCaseAliases)]
     class AccountManager {
         self_type AccountManager;
         private constructor = empty;
+        /// Initialises the account manager builder.
         fn AccountManagerBuilder::new() -> AccountManagerBuilder; alias Builder;
-        fn AccountManager::start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()>; alias startBackgroundSync;
-        fn AccountManager::stop_background_sync(&mut self,) -> Result<()>; alias stopBackgroundSync;
-        fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>; alias setStoragePassword;
-        fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
-        fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
-        fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
-        fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
-        fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
-        fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
-        fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
-        fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
-        fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
-        fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-        fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-        fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-        fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
-        fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
-        fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
-        fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>; alias syncAccounts;
 
         /// Gets the legacy migration data for the seed.
+        /// @param nodes List of legacy nodes to connect to
+        /// @param seed The seed we want to get data for
+        /// @param permanode The legacy permanode URL
+        /// @param security_level The seed security level
+        /// @param initial_address_index The starting index of the seed we searc
+        /// @param gap_limit The maximum gap we cross without finding an address with balance
         fn AccountManager::get_migration_data(&self, nodes: Vec<String>, seed: &str, permanode: Option<&str>, security_level: i8, initial_address_index: i64, gap_limit: i64) -> Result<MigrationData>;
         /// Convert the first address from the first account to a migration tryte address
         fn AccountManager::get_migration_address(&self, ledger_prompt: bool, account_id: String) -> Result<MigrationAddress>;
@@ -281,6 +300,58 @@ foreign_class!(
         fn AccountManager::create_migration_bundle(&self, seed: String, input_address_indexes: Vec<u64>, options: MigrationBundleOptions) -> Result<MigrationBundle>;
         /// Sends the migration bundle to the given node. mwm 0 for default(14)
         fn AccountManager::send_migration_bundle(&self, nodes: Vec<String>, bundle_hash: String, mwm: u8) -> Result<()>;
+        /// Initialises the background polling and MQTT monitoring.
+        /// @param polling_interval Sets the polling interval in seconds
+        /// @param automatic_output_consolidation If we automatically consolidate outputs
+        fn AccountManager::start_background_sync(&mut self, polling_interval: Duration, automatic_output_consolidation: bool) -> Result<()>;
+        /// Stops the background polling and MQTT monitoring.
+        fn AccountManager::stop_background_sync(&mut self,) -> Result<()>;
+        /// Sets the password for the stored accounts.
+        /// @param password The Storage password
+        fn AccountManager::set_storage_password(&mut self, password: &str) -> Result<()>;
+        /// Sets the stronghold password.
+        /// @param password The Stronghold snapshot password
+        fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>;
+        /// Changes the stronghold password.
+        /// @param current_password The current Stronghold password
+        /// @param new_password The new Stronghold password
+        fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>;
+        /// Determines whether all accounts has the latest address unused.
+        fn AccountManager::is_latest_address_unused(&mut self) -> Result<bool>;
+        /// Sets the client options for all accounts.
+        fn AccountManager::set_client_options(&mut self, options: ClientOptions) -> Result<()>;
+        /// Stores a mnemonic for the given signer type.
+        /// If the mnemonic is not provided, we'll generate one.
+        fn AccountManager::store_mnemonic(&mut self, signer_type: AccountSignerType, mnemonic: String) -> Result<()>;
+        /// Generates a new mnemonic.
+        fn AccountManager::generate_mnemonic(&mut self) -> Result<String>;
+        /// Checks is the mnemonic is valid. If a mnemonic was generated with `generate_mnemonic()`, the mnemonic here
+        /// should match the generated.
+        fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>;
+        /// Adds a new account.
+        fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>;
+        /// Deletes an account.
+        fn AccountManager::remove_account(&self, account_id: String) -> Result<()>;
+        /// Syncs all accounts.
+        fn AccountManager::sync_accounts(&self) -> Result<AccountsSynchronizer>;
+        /// Transfers an amount from an account to another.
+        fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>;
+        /// Backups the storage to the given destination
+        fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
+        /// Import backed up accounts.
+        fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>;
+        /// Gets the account associated with the given identifier.
+        fn AccountManager::get_account(&self, account_id: String) -> Result<Account>;
+        /// Gets all accounts from storage.
+        fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>;
+        /// Reattaches an unconfirmed transaction.
+        fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        /// Promotes an unconfirmed transaction.
+        fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        /// Retries an unconfirmed transaction.
+        fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        
+        
     }
 );
 
@@ -291,6 +362,7 @@ foreign_class!(
         self_type AccountSynchronizer;
         private constructor = empty;
         /// Number of address indexes that are generated.
+        /// @param limit The maximum gap we cross without finding an address with balance
         fn AccountSynchronizer::gap_limit(&mut self, limit: usize) -> AccountSynchronizer;
         /// Skip saving new messages and addresses on the account object.
         /// The found data is returned on the `execute` call but won't be persisted on the database.
@@ -298,6 +370,7 @@ foreign_class!(
         /// Skip syncing existing change addresses.
         fn AccountSynchronizer::skip_change_addresses(&mut self) -> AccountSynchronizer;
         /// Initial address index to start syncing.
+        /// @param address_index The starting index
         fn AccountSynchronizer::address_index(&mut self, address_index: usize) -> AccountSynchronizer;
         /// Syncs account with the tangle.
         /// The account syncing process ensures that the latest metadata (balance, transactions)
@@ -313,14 +386,17 @@ foreign_class!(
         self_type AccountsSynchronizer;
         private constructor = empty;
         /// Number of address indexes that are generated.
+        /// @param limit The maximum gap we cross without finding an address with balance
         fn AccountsSynchronizer::gap_limit(&mut self, limit: usize) -> AccountsSynchronizer;
         /// Initial address index to start syncing.
+        /// @param address_index The starting index
         fn AccountsSynchronizer::address_index(&mut self, address_index: usize) -> AccountsSynchronizer;
         /// Skips the account discovery process.
         fn AccountsSynchronizer::skip_account_discovery(&mut self) -> AccountsSynchronizer;
         /// Skip syncing existing change addresses.
         fn AccountsSynchronizer::skip_change_addresses(&mut self) -> AccountsSynchronizer;
         /// Sets the minimum number of accounts to check on the discovery process.
+        /// @param account_discovery_threshold The minimum accounts number
         fn AccountsSynchronizer::account_discovery_threshold(&mut self, account_discovery_threshold: usize) -> AccountsSynchronizer;
         /// Syncs the accounts with the Tangle.
         fn AccountsSynchronizer::execute(&mut self) -> Result<Vec<SyncedAccount>>;
@@ -331,40 +407,105 @@ foreign_class!(
     class SyncedAccount {
         self_type SyncedAccount;
         private constructor = empty;
-
+        /// Get a deposit address guaranteed to be valid after having synced
         fn SyncedAccount::deposit_address(&mut self) -> Address;
     }
 );
 
-foreign_class!(class BrokerOptions {
-    self_type BrokerOptions;
-    constructor BrokerOptions::new() -> BrokerOptions;
-    fn BrokerOptions::automatic_disconnect(&self, disconnect: bool) -> BrokerOptions; alias automaticDisconnect;
-    fn BrokerOptions::timeout(&self, timeout: Duration) -> BrokerOptions;
-    fn BrokerOptions::use_ws(&self, use_ws: bool) -> BrokerOptions; alias useWs;
-    fn BrokerOptions::port(&self, port: u16) -> BrokerOptions;
-    fn BrokerOptions::max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions; alias maxReconnectionAttempts;
-});
-
-foreign_class!(class ClientOptionsBuilder {
-    self_type ClientOptionsBuilder;
-    constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
-    fn ClientOptionsBuilder::with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryNode;
-    fn ClientOptionsBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withPrimaryPoWNode;
-    fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder; alias withNode;
-    fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder; alias withNodePoolUrls;
-    fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder; alias withNetwork;
-    fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder; alias withNodeSyncInterval;
-    fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder; alias withNodeSyncDisabled;
-    fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder; alias withMqttDisabled;
-    fn ClientOptionsBuilder::with_mqtt_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder; alias withMqttBrokerOptions;
-    fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder; alias withLocalPow;
-    fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder; alias withRequestTimeout;
-    fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder; alias withApiTimeout;
-    fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
-});
+foreign_class!(
+    /// The MQTT broker options.
+    #[derive(camelCaseAliases)]
+    class BrokerOptions {
+        self_type BrokerOptions;
+        constructor BrokerOptions::new() -> BrokerOptions;
+        /// Whether the MQTT broker should be automatically disconnected when all topics are unsubscribed or not.
+        /// @param disconnect
+        fn BrokerOptions::automatic_disconnect(&self, disconnect: bool) -> BrokerOptions;
+        /// timeout of the mqtt broker.
+        /// @param timeout The timeout in seconds
+        fn BrokerOptions::timeout(&self, timeout: Duration) -> BrokerOptions;
+        /// Defines if websockets should be used (true) or TCP (false)
+        /// @param use_ws If we use web sockets or not
+        fn BrokerOptions::use_ws(&self, use_ws: bool) -> BrokerOptions;
+        /// Defines the port to be used for the MQTT connection
+        /// @param port The port we use to conenct
+        fn BrokerOptions::port(&self, port: u16) -> BrokerOptions;
+        /// Defines the maximum reconnection attempts before it returns an error
+        /// @param max_reconnection_attempts The maximum attempts
+        fn BrokerOptions::max_reconnection_attempts(&self, max_reconnection_attempts: usize) -> BrokerOptions;
+    }
+);
 
 foreign_class!(
+    /// The options builder for a client connected to multiple nodes.
+    #[derive(camelCaseAliases)]
+    class ClientOptionsBuilder {
+        self_type ClientOptionsBuilder;
+        /// Initialises a new instance of the builder.
+        constructor ClientOptionsBuilder::new() -> ClientOptionsBuilder;
+        /// Sets the primary node.
+        /// @param node The node URL
+        fn ClientOptionsBuilder::with_primary_node(&mut self, node: &str) -> ClientOptionsBuilder;
+        /// Adds an IOTA node by its URL to be used as primary node, with optional jwt and or basic authentication
+        /// @param node The node URL
+        /// @param jwt The JWT, can be `null`
+        /// @param username The username, can be `null`
+        /// @param password The password, can be `null`. Only checked if username is not `null`
+        fn ClientOptionsBuilder::with_primary_node_auth(&mut self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> ClientOptionsBuilder;
+        /// Sets the primary PoW node.
+        fn ClientOptionsBuilder::with_primary_pow_node(&mut self, node: &str) -> ClientOptionsBuilder;
+        /// Adds an IOTA node by its URL to be used as primary PoW node (for remote PoW), with optional jwt and or basic
+        /// authentication
+        /// @param node The node URL
+        /// @param jwt The JWT, can be `null`
+        /// @param username The username, can be `null`
+        /// @param password The password, can be `null`. Only checked if username is not `null`
+        fn ClientOptionsBuilder::with_primary_pow_node_auth(&mut self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> ClientOptionsBuilder;
+        /// Adds a node to the node list.
+        /// @param node The node URL
+        fn ClientOptionsBuilder::with_node(&mut self, node: &str) -> ClientOptionsBuilder;
+        /// ClientOptions connected to a list of nodes.
+        /// @param nodes The list of node URLs
+        fn ClientOptionsBuilder::with_nodes(&mut self, nodes: Vec<String>) -> ClientOptionsBuilder;
+        /// Get node list from the node_pool_urls
+        /// @param node_pool_urls list of node URLs for the node pool
+        fn ClientOptionsBuilder::with_node_pool_urls(&mut self, node_pool_urls: Vec<String>) -> ClientOptionsBuilder;
+        /// ClientOptions connected to the default Network pool.
+        ///
+        /// ```
+        /// import org.iota.wallet.ClientOptionsBuilder;
+        /// ClientOptions clientOptions = new ClientOptionsBuilder().with_network("testnet2").build();
+        /// ```
+        /// @param network The network we connect to
+        fn ClientOptionsBuilder::with_network(&mut self, network: String) -> ClientOptionsBuilder;
+        /// Set the node sync interval
+        /// @param node_sync_interval The interval in seconds
+        fn ClientOptionsBuilder::with_node_sync_interval(&mut self, node_sync_interval: Duration) -> ClientOptionsBuilder;
+        /// Disables the node syncing process.
+        /// Every node will be considered healthy and ready to use.
+        fn ClientOptionsBuilder::with_node_sync_disabled(&mut self) -> ClientOptionsBuilder;
+        /// Sets the MQTT broker options.
+        /// @param options the MQTT options
+        fn ClientOptionsBuilder::with_mqtt_broker_options(&mut self, options: BrokerOptions) -> ClientOptionsBuilder;
+        /// Disables MQTT
+        fn ClientOptionsBuilder::with_mqtt_disabled(&mut self) -> ClientOptionsBuilder;
+        /// Sets whether the PoW should be done locally or remotely.
+        /// @param local Enables or disables local PoW
+        fn ClientOptionsBuilder::with_local_pow(&mut self, local: bool) -> ClientOptionsBuilder;
+        /// Sets the request timeout.
+        /// @param timeout The request timeout in seconds
+        fn ClientOptionsBuilder::with_request_timeout(&mut self, timeout: Duration) -> ClientOptionsBuilder;
+        /// Sets the request timeout for a specific API usage.
+        /// @param api The API we set the timeout for
+        /// @param timeout The request timeout in seconds
+        fn ClientOptionsBuilder::with_api_timeout(&mut self, api: Api, timeout: Duration) -> ClientOptionsBuilder;
+        /// Builds the options.
+        fn ClientOptionsBuilder::build(&mut self) -> Result<ClientOptions>;
+    }
+);
+
+foreign_class!(
+    /// The client options type.
     #[derive(camelCaseAliases, Display)]
     class ClientOptions {
         self_type ClientOptions;
@@ -374,22 +515,24 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class Value {
         self_type Value;
         constructor Value::new(value: u64, unit: ValueUnit) -> Value;
+        private fn Value::eq(&self, o: &Value) -> bool; alias rustEq;
         private fn Value::with_denomination(&self) -> String; alias to_string;
-        fn Value::with_denomination(&self) -> String; alias withDenomination;
-        fn Value::without_denomination(&self) -> u64; alias withoutDenomination;
+        fn Value::with_denomination(&self) -> String;
+        fn Value::without_denomination(&self) -> u64;
         fn Value::value(&self) -> &u64;
     }
 );
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class MessageId {
         self_type MessageId;
         constructor MessageId::null() -> MessageId;
-        private fn MessageId::to_string(&self) -> String;
+        private fn MessageId::to_string(&self) -> String; alias to_string;
+        private fn MessageId::eq(&self, o: &MessageId) -> bool; alias rustEq;
         fn MessageId::fromString(str_rep: &str) -> MessageId {
             MessageId::from_str(str_rep).unwrap()
         }
@@ -397,11 +540,12 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class TransactionId {
         self_type TransactionId;
         private constructor = empty;
         private fn TransactionId::to_string(&self) -> String; alias to_string;
+        private fn TransactionId::eq(&self, o: &TransactionId) -> bool; alias rustEq;
         fn TransactionId::fromString(str_rep: &str) -> TransactionId {
             TransactionId::from_str(str_rep).unwrap()
         }
@@ -409,11 +553,12 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class MilestoneId {
         self_type MilestoneId;
         private constructor = empty;
         private fn MilestoneId::to_string(&self) -> String; alias to_string;
+        private fn MilestoneId::eq(&self, o: &MilestoneId) -> bool; alias rustEq;
         fn MilestoneId::fromString(str_rep: &str) -> MilestoneId {
             MilestoneId::from_str(str_rep).unwrap()
         }
@@ -421,15 +566,16 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(PartialEq)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class Message {
         self_type Message;
         private constructor = empty;
+        private fn Message::to_string(&self) -> String; alias to_string;
         private fn Message::eq(&self, o: &Message) -> bool; alias rustEq;
         fn Message::id(&self) -> MessageId;
         fn Message::version(&self) -> u64;
         fn Message::parents(&self) -> Vec<MessageId>;
-        fn Message::payload_length(&self) -> usize; alias payloadLength;
+        fn Message::payload_length(&self) -> usize;
         fn Message::payload(&self) -> Option<MessagePayload>;
         fn Message::timestamp(&self) -> DateTime<Utc>;
         fn Message::nonce(&self) -> u64;
@@ -439,48 +585,72 @@ foreign_class!(
 );
 
 foreign_class!(
-    #[derive(PartialEq)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class NodeInfoWrapper {
         self_type NodeInfoWrapper;
         private constructor = empty;
+        private fn NodeInfoWrapper::to_string(&self) -> String; alias to_string;
         private fn NodeInfoWrapper::eq(&self, o: &NodeInfoWrapper) -> bool; alias rustEq;
+        /// Get the URL from which this info is derived
         fn NodeInfoWrapper::url(&self) -> &str;
+        /// Get the information
         fn NodeInfoWrapper::nodeinfo(&self) -> InfoResponse; alias nodeInfo;
     }
 );
 
 foreign_class!(
-    #[derive(PartialEq)]
+    /// Response of GET /api/v1/info.
+    /// Returns general information about the node.
+    #[derive(PartialEq, camelCaseAliases, Display)]
     class InfoResponse {
         self_type InfoResponse;
         private constructor = empty;
+        private fn InfoResponse::to_string(&self) -> String; alias to_string;
         private fn InfoResponse::eq(&self, o: &InfoResponse) -> bool; alias rustEq;
+        /// The name of the node
         fn InfoResponse::name(&self) -> &str;
+        /// The node software version
         fn InfoResponse::version(&self) -> &str;
-        fn InfoResponse::network_id(&self) -> &str; alias networkId;
-        fn InfoResponse::bech32_hrp(&self) -> &str; alias bech32HRP;
-        fn InfoResponse::messages_per_second(&self) -> f64; alias messagesPerSecond;
-        fn InfoResponse::referenced_messages_per_second(&self) -> f64; alias referencedMessagesPerSecond;
-        fn InfoResponse::referenced_rate(&self) -> f64; alias referencedRate;
-        fn InfoResponse::latest_milestone_timestamp(&self) -> u64; alias latestMilestoneTimestamp;
-        fn InfoResponse::min_pow_score(&self) -> f64; alias minPoWScore;
-        fn InfoResponse::latest_milestone_index(&self) -> u32; alias latestMilestoneIndex;
-        fn InfoResponse::confirmed_milestone_index(&self) -> u32; alias confirmedMilestoneIndex;
-        fn InfoResponse::pruning_index(&self) -> u32; alias pruningIndex;
+        /// The network id the node is connected to
+        fn InfoResponse::network_id(&self) -> &str;
+        /// The bech32 HRP which is accepted by this node
+        fn InfoResponse::bech32_hrp(&self) -> &str;
+        /// The messages per second this node is receiving
+        fn InfoResponse::messages_per_second(&self) -> f64;
+        /// The referenced messages per second this node is receiving
+        fn InfoResponse::referenced_messages_per_second(&self) -> f64;
+        /// The reference rate
+        fn InfoResponse::referenced_rate(&self) -> f64;
+        /// The timestamp of the latest received milestone
+        fn InfoResponse::latest_milestone_timestamp(&self) -> u64;
+        /// The minimum required PoW for a message to be accepted
+        fn InfoResponse::min_pow_score(&self) -> f64;
+        /// The index of the latest seen milestone
+        fn InfoResponse::latest_milestone_index(&self) -> u32;
+        /// The index of the latest confirmed milestone
+        fn InfoResponse::confirmed_milestone_index(&self) -> u32;
+        /// The milestone index this node is pruning from
+        fn InfoResponse::pruning_index(&self) -> u32;
+        /// List of features running on this node
         fn InfoResponse::features(&self) -> Vec<String>;
     }
 );
 
 foreign_class!(
-    #[derive(PartialEq, Display)]
+    /// An address.
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class Address {
         self_type Address;
         private constructor = empty;
+        /// Gets a new instance of the address builder.
         fn Address::builder() -> AddressBuilder;
+        private fn Address::to_string(&self) -> String; alias to_string;
         private fn Address::eq(&self, o: &Address) -> bool; alias rustEq;
-        private fn Address::to_string(&self) -> String;
-        fn Address::balance(&self) -> u64; alias getBalance;
-        fn Address::readable(&self) -> String; alias getReadable;
+        /// Address total balance
+        fn Address::balance(&self) -> u64;
+        /// the Bech32 human readable part.
+        fn Address::readable(&self) -> String;
+        /// The address.
         fn Address::address(&self) -> AddressWrapper;
     }
 );
@@ -536,42 +706,80 @@ foreign_class!(
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases)]
     class AddressWrapper {
         self_type AddressWrapper;
         private constructor = empty;
+        fn AddressWrapper::to_string(&self) -> String {
+            format!("{:?}", this)
+        }
+        /// Create an Address based on its address and Bech segments
+        /// @param address The Address segment
+        /// @param bech32_hrp the bech segment
         fn AddressWrapper::from(address: &str, bech32_hrp: String) -> Result<AddressWrapper> {
             match IotaAddress::try_from_bech32(address) {
                 Ok(addr) => Ok(AddressWrapper::new(addr, bech32_hrp)),
                 Err(e) => Err(anyhow!(e)),
             }
         }
-        fn AddressWrapper::to_bech32(&self) -> String; alias toBech32;
+        /// parse a fully functional address string into an AddressWrapper
+        /// @param address The address we will parse
+        fn AddressWrapper::parse(address: &str,) -> Result<AddressWrapper> {
+            match parseAddress(address){
+                Ok(addr) => Ok(addr),
+                Err(e) => Err(anyhow!(e)),
+            }
+        }
+        /// Get the bech segment of the address
+        fn AddressWrapper::to_bech32(&self) -> String;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases)]
     class AccountInitialiser{
         self_type AccountInitialiser;
         private constructor = empty;
-        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser; alias signerType;
+        /// Sets the account type.
+        fn AccountInitialiser::signer_type(&mut self, signer_type: AccountSignerType) -> AccountInitialiser;
+        /// Defines the account alias. If not defined, we'll generate one.
         fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
-        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
+        /// Time of account creation.
+        fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser;
+        /// Messages associated with the seed.
+        /// The account can be initialised with locally stored messages.
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;
+        /// Address history associated with the seed.
+        /// The account can be initialised with locally stored address history.
         fn AccountInitialiser::addresses(&mut self, addresses: Vec<Address>) -> AccountInitialiser;
-        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser; alias skipPersistence;
+        /// Skips storing the account to the database.
+        fn AccountInitialiser::skip_persistence(&mut self) -> AccountInitialiser;
+        /// Enables creating multiple accounts without history.
+        /// The wallet disables it by default to simplify account discovery.
+        fn AccountInitialiser::allow_create_multiple_empty_accounts(&mut self) -> AccountInitialiser;
+        /// Initialises the account.
         fn AccountInitialiser::initialise(&mut self) -> Result<Account>;
     }
 );
 
 foreign_class!(
+    /// Account balance information.
     #[derive(camelCaseAliases, Display)]
     class AccountBalance {
         self_type AccountBalance;
         private constructor = empty;
         private fn AccountBalance::to_string(&self) -> String; alias to_string;
+        /// Account's total balance.
         fn AccountBalance::get_total(&self) -> u64;
+        // The available balance is the balance users are allowed to spend.
+        /// For example, if a user with 50i total account balance has made a message spending 20i,
+        /// the available balance should be (50i-30i) = 20i.
         fn AccountBalance::get_available(&self) -> u64;
+        /// Balances from message with `incoming: true`.
+        /// Note that this may not be accurate since the node prunes the messags.
         fn AccountBalance::get_incoming(&self) -> u64;
+        /// Balances from message with `incoming: false`.
+        /// Note that this may not be accurate since the node prunes the messags.
         fn AccountBalance::get_outgoing(&self) -> u64;
     }
 );
@@ -582,46 +790,159 @@ foreign_class!(
         self_type Account;
         private constructor = empty;
         private fn Account::to_string(&self) -> String; alias to_string;
-
+        /// Consolidate account outputs.
+        /// @param include_dust_allowance_outputs Wether we include dust outputs or not
+        fn Account::consolidate_outputs(&self, include_dust_allowance_outputs: bool) -> Result<Vec<Message>>;
+        /// Send messages.
+        /// @param transfer A transfer object, can be made using Transfer.builder
         fn Account::transfer(&mut self, transfer: Transfer) -> Result<Message>;
+        /// Retry message.
+        /// @param message_id The id of the message we want to retry
+        fn Account::retry(&self, message_id: MessageId) -> Result<Message>;
+        /// Promote message.
+        /// @param message_id The id of the message we want to promote
+        fn Account::promote(&self, message_id: &MessageId) -> Result<Message>;
+        /// Reattach message.
+        /// @param message_id The id of the message we want to reattach
+        fn Account::reattach(&self, message_id: &MessageId) -> Result<Message>;
+        /// Gets a new unused address and links it to this account.
         fn Account::generate_address(&self) -> Result<Address>;
+        /// Gets amount new unused addresses and links them to this account.
+        /// @param amount The amount of addresses we generate
         fn Account::generate_addresses(&self, amount: usize) -> Result<Vec<Address>>;
+        /// Synchronizes the account addresses with the Tangle and returns the latest address in the account,
+        /// which is an address without balance.
         fn Account::get_unused_address(&self) -> Result<Address>;
+        /// Syncs the latest address with the Tangle and determines whether it's unused or not.
+        /// An unused address is an address without balance and associated message history.
+        /// Note that such address might have been used in the past, because the message history might have been pruned by
+        /// the node.
         fn Account::is_latest_address_unused(&self) -> Result<bool>;
+        /// Returns the most recent address of the account.
         fn Account::latest_address(&self) -> Address;
-        fn Account::set_alias(&self, alias: String) -> Result<()>;
-        fn Account::client_options(&self) -> ClientOptions;
-        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
-        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
-        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
-        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
-        fn Account::alias(&self) -> String;
+        /// Gets the account balance information.
         fn Account::balance(&self) -> Result<AccountBalance>;
-
+        /// Updates the account alias.
+        /// @param alias The new alias
+        fn Account::set_alias(&self, alias: String) -> Result<()>;
+        /// Updates the account's client options.
+        /// @param options The new options
+        fn Account::set_client_options(&self, options: ClientOptions) -> Result<()>;
+        /// Gets a list of transactions on this account.
+        /// It's fetched from the storage. To ensure the database is updated with the latest transactions,
+        /// `sync` should be called first.
+        ///
+        /// ```
+        /// // gets 10 received messages, skipping the first 5 most recent messages.
+        /// ClientOptions clientOptions = ClientOptionsBuilder::new()
+        ///     .withNode("https://api.lb-0.h.chrysalis-devnet.iota.cafe")
+        ///     .build();
+        /// 
+        /// AccountManager manager = AccountManager.builder()
+        ///     .withStorage("./test-storage", null)
+        ///     .finish();
+        /// manager.setStrongholdPassword("password");
+        /// manager.storeMnemonic(SignerType.STRONGHOLD, null);
+        ///
+        /// Account account = manager
+        ///     .createAccount(clientOptions)
+        ///     .unwrap()
+        ///     .initialise();
+        /// account.listMessages(10, 5, MessageType.RECEIVED));
+        /// ```
+        /// @param count Number of (most recent) messages to fetch.
+        /// @param from Starting point of the subset to fetch.
+        /// @param message_type Optional message type filter., can be null
+        fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
+        /// Gets the spent addresses.
+        fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
+        /// Gets the unspent addresses.
+        fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
+        /// Gets a message with the given id associated with this account.
+        /// @param message_id The id of the message we want to get
+        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
+        /// Gets the node info from /api/v1/info endpoint
+        /// TODO: Add auth and url in one NodeInfoOptions struct.
+        /// @param node The node URL
+        /// @param jwt The JWT, can be `null`
+        /// @param username The username, can be `null`
+        /// @param password The password, can be `null`. Only checked if username is not `null`
+        fn Account::get_node_info(&self, node: &str, jwt: Option<&str>, username: Option<&str>, password: Option<&str>) -> Result<NodeInfoWrapper>;
+        /// The account alias.
+        fn Account::alias(&self) -> String;
+        /// Returns the address bech32 human readable part.
+        fn Account::bech32_hrp(&self) -> String;
+        /// The account identifier.
         fn Account::id(&self) -> String;
+        /// Time of account creation.
         fn Account::created_at(&self) -> DateTime<Local>;
+        /// Returns the builder to setup the process to synchronize this account with the Tangle.
         fn Account::sync(&self) -> AccountSynchronizer;
+        /// Time the account was last synced with the Tangle.
         fn Account::last_synced_at(&self) -> Option<DateTime<Local>>;
+        /// The current client options.
+        fn Account::client_options(&self) -> ClientOptions;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class Transfer {
         self_type Transfer;
         private constructor = empty;
-        fn Transfer::builder(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
+        private fn Transfer::to_string(&self) -> String; alias to_string;
+        /// Creates a new Builder for making a Transfer object
+        /// @param address The addres we want to send to
+        /// @param amount The amount we want to send
+        /// @param output_kind The kind of output we wish to use, can be OutputKind.NONE
+        fn Transfer::builder(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferBuilder;
     }
 );
 
 foreign_class!(
+    /// Transfer output.
+    #[derive(camelCaseAliases, Display)]
+    class TransferOutput {
+        self_type TransferOutput;
+        /// Transfer output
+        /// @param address The addres we want to send to
+        /// @param amount The amount we want to send
+        /// @param output_kind The kind of output we wish to use. Default used is SIGNATURE_LOCKED_SINGLE
+        constructor TransferOutput::new(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferOutput;
+        private fn TransferOutput::to_string(&self) -> String; alias to_string;
+        /// The output value.
+        fn TransferOutput::get_amount(&mut self) -> u64;
+        /// The output address.
+        fn TransferOutput::get_address(&mut self) -> AddressWrapper;
+        /// The output type
+        fn TransferOutput::get_output_kind(&mut self) -> OutputKind;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases)]
     class TransferBuilder {
         self_type TransferBuilder;
-        constructor TransferBuilder::new(address: AddressWrapper, amount: u64, output_kind: Option<OutputKind>) -> TransferBuilder;
-        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder; alias withRemainderValueStrategy;
-        fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; alias withRemainderToAccountWithAddress;
-        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder; alias withIndexation;
-        fn TransferBuilder::with_skip_sync(&mut self) -> TransferBuilder; alias withSkipSync;
+        /// Initialises a new transfer to the given address.
+        /// @param address The addres we want to send to
+        /// @param amount The amount we want to send
+        /// @param output_kind The kind of output we wish to use
+        constructor TransferBuilder::new(address: AddressWrapper, amount: u64, output_kind: OutputKind) -> TransferBuilder;
+        /// Creates a transfer with multiple outputs.
+        /// @param outputs List of outputs
+        fn TransferBuilder::new_from_outputs(outputs: Vec<TransferOutput>) -> Result<TransferBuilder>;
+        /// Sets the remainder value strategy for the transfer.
+        /// @param strategy The type of strategy we use to handle the remainder
+        fn TransferBuilder::with_remainder_value_strategy(&mut self, strategy: RemainderValueStrategy) -> TransferBuilder;
+        /// Move the remainder value to an address that must belong to the source account.
+        /// @param address The address we send the remainder t o
+        fn TransferBuilder::with_remainder_to_account_with_address(&mut self, address: AddressWrapper) -> TransferBuilder; 
+        /// (Optional) message indexation.
+        /// @param indexation Build a transfer with this specific payload
+        fn TransferBuilder::with_indexation(&mut self, indexation: IndexationPayload) -> TransferBuilder;
+        /// Skip account syncing before transferring.
+        fn TransferBuilder::with_skip_sync(&mut self) -> TransferBuilder;
+        /// Builds the transfer.
         fn TransferBuilder::finish(&self) -> Transfer;
     }
 );
@@ -643,23 +964,37 @@ foreign_enum!(
 );
 
 foreign_enum!(
+    /// Transfer event data.
     enum TransferProgressType {
+        /// Syncing account.
         SYNCING_ACCOUNT = TransferProgressType::SyncingAccount,
+        /// Performing input selection.
         SELECTING_INPUTS = TransferProgressType::SelectingInputs,
+        /// Generating remainder value deposit address.
         GENERATING_REMAINDER_DEPOST_ADDRESS = TransferProgressType::GeneratingRemainderDepositAddress,
+        /// Prepared transaction.
         PREPARED_TRANSACTION = TransferProgressType::PreparedTransaction,
+        /// Signing the transaction.
         SIGNING_TRANSACTION = TransferProgressType::SigningTransaction,
+        /// Performing PoW.
         PERFORMING_POW = TransferProgressType::PerformingPoW,
+        /// Broadcasting.
         BROADCASTING = TransferProgressType::Broadcasting,
     }
 );
 
 foreign_enum!(
+    /// Migration event type.
     enum MigrationProgressType {
+        /// Fetching migration data on the given address range.
         FETCHING_MIGRATION_DATA = MigrationProgressType::FetchingMigrationData,
+        /// Mining the bundle with the given spent address.
         MINING_BUNDLE = MigrationProgressType::MiningBundle,
+        /// Signing the bundle.
         SIGNING_BUNDLE = MigrationProgressType::SigningBundle,
+        /// Broadcasting the given bundle hash.
         BROADCASTING_BUNDLE = MigrationProgressType::BroadcastingBundle,
+        /// Transaction confirmation event.
         TRANSACTION_CONFIRMED = MigrationProgressType::TransactionConfirmed,
     }
 );
@@ -730,22 +1065,29 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// The `address consolidation needed` data.
     class AddressConsolidationNeededEvent {
-        self_type WalletAddressConsolidationNeeded;
+        self_type AddressConsolidationNeeded;
         private constructor = empty;
-        fn WalletAddressConsolidationNeeded::account_id(&self) -> &str; alias accountId;
-        fn WalletAddressConsolidationNeeded::address(&self) -> AddressWrapper {
+        /// The associated account identifier.
+        fn AddressConsolidationNeeded::account_id(&self) -> &str; alias accountId;
+        /// The associated address.
+        fn AddressConsolidationNeeded::address(&self) -> AddressWrapper {
             this.address().clone()
         }
     }
 );
 
 foreign_class!(
+    /// A transaction-related event data.
     class TransactionEvent {
         self_type WalletTransactionEvent;
         private constructor = empty;
+        /// Event unique identifier.
         fn WalletTransactionEvent::indexation_id(&self) -> &str; alias indexationId;
+         /// The associated account identifier.
         fn WalletTransactionEvent::account_id(&self) -> &str; alias accountId;
+        /// The event message.
         fn WalletTransactionEvent::message(&self) -> Message {
             this.message().clone().into()
         }
@@ -753,25 +1095,34 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// A transaction confirmation state change event data.
+    #[derive(camelCaseAliases)]
     class TransactionConfirmationChangeEvent {
-        self_type WalletTransactionConfirmationChangeEvent;
+        self_type TransactionConfirmationChangeEvent;
         private constructor = empty;
-        fn WalletTransactionConfirmationChangeEvent::indexation_id(&self) -> &str; alias indexationId;
-        fn WalletTransactionConfirmationChangeEvent::account_id(&self) -> &str; alias accountId;
-        fn WalletTransactionConfirmationChangeEvent::message(&self) -> Message {
+        /// Event unique identifier.
+        fn TransactionConfirmationChangeEvent::indexation_id(&self) -> &str;
+        /// The associated account identifier.
+        fn TransactionConfirmationChangeEvent::account_id(&self) -> &str;
+        /// The event message.
+        fn TransactionConfirmationChangeEvent::message(&self) -> Message {
             this.message().clone().into()
         }
-        fn WalletTransactionConfirmationChangeEvent::confirmed(&self) -> bool {
+        /// The confirmed state of the transaction.
+        fn TransactionConfirmationChangeEvent::confirmed(&self) -> bool {
             *this.confirmed()
         }
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases)]
     class WalletTransferProgress {
         self_type WalletTransferProgress;
         private constructor = empty;
-        fn WalletTransferProgress::account_id(&self) -> &str; alias accountId;
+        /// The associated account identifier.
+        fn WalletTransferProgress::account_id(&self) -> &str;
+        /// Get the event linked to this progress
         fn WalletTransferProgress::event(&self) -> TransferProgress {
             this.event().clone().into()
         }
@@ -779,6 +1130,7 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Type container for handling the different TransferProgress events.
     #[derive(camelCaseAliases, Display)]
     class TransferProgress {
         self_type TransferProgress;
@@ -791,7 +1143,7 @@ foreign_class!(
 );
 
 foreign_class!(
-    /// Address event data.
+    /// Address data for TransferProgressType.GeneratingRemainderDepositAddress and LedgerAddressGeneration.
     #[derive(camelCaseAliases, Display)]
     class AddressData {
         self_type AddressData;
@@ -835,30 +1187,35 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Type container for handling the different Migration events.
     #[derive(camelCaseAliases, Display)]
     class MigrationProgressEvent {
         self_type MigrationProgressEvent;
         private constructor = empty;
         private fn MigrationProgressEvent::to_string(&self) -> String; alias to_string;
-        fn MigrationProgressEvent::get_type(&self) -> MigrationProgressType; alias getType;
-        fn MigrationProgressEvent::as_fetching_migration_data(&self) -> Result<FetchingMigrationData>; alias asFetchingMigrationData;
-        fn MigrationProgressEvent::as_mining_bundle(&self) -> Result<MiningBundle>; alias asMiningBundle;
-        fn MigrationProgressEvent::as_signing_bundle(&self) -> Result<SigningBundle>; alias asSigningBundle;
-        fn MigrationProgressEvent::as_broadcasting_bundle(&self) -> Result<BroadcastingBundle>; alias asBroadcastingBundle;
-        fn MigrationProgressEvent::as_transaction_confirmed(&self) -> Result<TransactionConfirmed>; alias asTransactionConfirmed;
+        fn MigrationProgressEvent::get_type(&self) -> MigrationProgressType;
+        fn MigrationProgressEvent::as_fetching_migration_data(&self) -> Result<FetchingMigrationData>;
+        fn MigrationProgressEvent::as_mining_bundle(&self) -> Result<MiningBundle>;
+        fn MigrationProgressEvent::as_signing_bundle(&self) -> Result<SigningBundle>;
+        fn MigrationProgressEvent::as_broadcasting_bundle(&self) -> Result<BroadcastingBundle>;
+        fn MigrationProgressEvent::as_transaction_confirmed(&self) -> Result<TransactionConfirmed>;
     }
 );
 
 foreign_class!(
+    /// The balance change event payload.
     class BalanceChange {
         self_type BalanceChange;
         private constructor = empty;
+        /// Checks if spent was more than 0
         fn BalanceChange::isSpent(&self) -> bool {
             this.spent != 0
         }
+        /// The change amount if it was a spent event.
         fn BalanceChange::spent(&self) -> u64 {
             this.spent
         }
+        /// The change amount if it was a receive event.
         fn BalanceChange::received(&self) -> u64 {
             this.received
         }
@@ -866,20 +1223,31 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// The balance change event data.
+    #[derive(camelCaseAliases)]
     class BalanceEvent {
         self_type WalletBalanceEvent;
         private constructor = empty;
-        fn WalletBalanceEvent::indexation_id(&self) -> &str; alias indexationId;
-        fn WalletBalanceEvent::account_id(&self) -> &str; alias accountId;
+        /// Event unique identifier.
+        fn WalletBalanceEvent::indexation_id(&self) -> &str;
+        /// The associated account identifier.
+        fn WalletBalanceEvent::account_id(&self) -> &str;
+        /// The message id associated with the balance change.
+        /// Note that this might be empty without
+        /// AccountManagerBuilder#withSyncSpentOutputs
         fn WalletBalanceEvent::messageId(&self) -> Option<MessageId> {
             this.message_id().clone()
         }
+        /// The associated address.
         fn WalletBalanceEvent::address(&self) -> AddressWrapper {
             this.address().clone()
         }
+        /// Whether the event is associated with a remainder output or not.
+        /// Note that this might be empty if we couldn't get the message object from the node.
         fn WalletBalanceEvent::remainder(&self) -> Option<bool> {
             this.remainder().clone()
         }
+        /// The balance change data.
         fn WalletBalanceEvent::balanceChange(&self) -> BalanceChange {
             this.balance_change().clone()
         }
@@ -887,21 +1255,28 @@ foreign_class!(
 );
 
 foreign_class!(
+    /// Transaction reattachment event data.
+    #[derive(camelCaseAliases)]
     class TransactionReattachmentEvent {
-        self_type WalletTransactionReattachmentEvent;
+        self_type TransactionReattachmentEvent;
         private constructor = empty;
-        fn WalletTransactionReattachmentEvent::indexation_id(&self) -> &str; alias indexationId;
-        fn WalletTransactionReattachmentEvent::account_id(&self) -> &str; alias accountId;
-        fn WalletTransactionReattachmentEvent::message(&self) -> Message {
+        /// Event unique identifier.
+        fn TransactionReattachmentEvent::indexation_id(&self) -> &str;
+        /// The associated account identifier.
+        fn TransactionReattachmentEvent::account_id(&self) -> &str;
+        /// The event message.
+        fn TransactionReattachmentEvent::message(&self) -> Message {
             this.message().clone().into()
         }
-        fn WalletTransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
+        /// The id of the message that was reattached.
+        fn TransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
             this.reattached_message_id().clone()
         }
     }
 );
 
 foreign_class!(
+    /// The event identifier type.
     class EventId {
         self_type EventId;
         private constructor = empty;
@@ -920,7 +1295,7 @@ foreign_callback!(callback NewTransactionListener {
 
 foreign_callback!(callback ReattachTransactionListener {
     self_type ReattachTransactionListener + Send + 'static;
-    onReattachTransaction = ReattachTransactionListener::on_reattachment(&self, event: WalletTransactionReattachmentEvent);
+    onReattachTransaction = ReattachTransactionListener::on_reattachment(&self, event: TransactionReattachmentEvent);
 });
 
 foreign_callback!(callback BroadcastTransactionListener {
@@ -940,7 +1315,7 @@ foreign_callback!(callback MigrationProgressListener {
 
 foreign_callback!(callback TransactionConfirmationChangeListener {
     self_type TransactionConfirmationChangeListener + Send + 'static;
-    onConfirmationStateChange = TransactionConfirmationChangeListener::on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
+    onConfirmationStateChange = TransactionConfirmationChangeListener::on_confirmation_state_change(&self, event: TransactionConfirmationChangeEvent);
 });
 
 foreign_callback!(callback BalanceChangeListener {
@@ -955,34 +1330,65 @@ foreign_callback!(callback StrongholdStatusListener {
 
 foreign_callback!(callback AddressConsolidationNeededListener {
     self_type AddressConsolidationNeededListener + Send + 'static;
-    onAddressConsolidationNeeded = AddressConsolidationNeededListener::on_address_consolidation_needed(&self, event: WalletAddressConsolidationNeeded);
+    onAddressConsolidationNeeded = AddressConsolidationNeededListener::on_address_consolidation_needed(&self, event: AddressConsolidationNeeded);
 });
 
 foreign_class!(
+    #[derive(camelCaseAliases)]
     class EventManager {
         self_type EventManager;
         private constructor = empty;
-        fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId; alias subscribeErrors;
-        fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId; alias subscribeNewTransaction;
-        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId; alias subscribeConfirmationStateChange;
-        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
-        fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
-        fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId; alias subscribeTransferProgress;
-        fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId; alias subscribeMigrationProgress;
-        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId; alias subscribeBalanceChange;
-        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>; alias subscribeStrongholdStatusChange;
-        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>; alias subscribeAddressConsolidationNeeded;
+        /// Listen to errors.
+        fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId;
+        /// Listen to new messages.
+        fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId;
+        /// Listen to transaction confirmation state change.
+        fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId;
+        /// Listen to transaction reattachment change.
+        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId;
+        /// Listen to transaction broadcast.
+        fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId;
+        /// Listen to a transfer event.
+        fn EventManager::subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId;
+        /// Listen to a migration event.
+        fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId;
+        /// Listen to balance changes.
+        fn EventManager::subscribe_balance_change(cb: Box<dyn BalanceChangeListener + Send + 'static>) -> EventId;
+        /// Listen to stronghold status change events.
+        fn EventManager::subscribe_stronghold_status_change(cb: Box<dyn StrongholdStatusListener + Send + 'static>) -> Result<EventId>;
+        /// Listen to `address consolidation needed` events.
+        fn EventManager::subscribe_address_consolidation_needed(cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>) -> Result<EventId>;
 
-        fn EventManager::remove_error_listener(event: EventId); alias removeErrorListener;
-        fn EventManager::remove_new_transaction_listener(event: EventId); alias removeNewTransactionListener;
-        fn EventManager::remove_confirmation_state_change_listener(event: EventId); alias removeConfirmationStateChangeListener;
-        fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
-        fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
-        fn EventManager::remove_transfer_progress_listener(event: EventId); alias removeTransferProgressListener;
-        fn EventManager::remove_migration_progress_listener(event: EventId); alias removeMigrationProgressListener;
-        fn EventManager::remove_balance_change_listener(event: EventId); alias removeBalanceChangeListener;
-        fn EventManager::remove_stronghold_status_change_listener(event: EventId); alias removeStrongholdStatusChangeListener;
-        fn EventManager::remove_address_consolidation_needed_listener(event: EventId); alias removeAddressConsolidationNeededListener;
+        /// Removes the error listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_error_listener(event: EventId);
+        /// Removes the new transaction listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_new_transaction_listener(event: EventId);
+        /// Removes the new confirmation state change listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_confirmation_state_change_listener(event: EventId);
+        /// Removes the reattachment listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_reattachment_listener(event: EventId);
+        /// Removes the broadcast listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_broadcast_listener(event: EventId);
+        /// Remove a transfer event listener.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_transfer_progress_listener(event: EventId);
+        /// @param event The ID of the listener we want to remove
+        /// Remove a migration event listener.
+        fn EventManager::remove_migration_progress_listener(event: EventId);
+        /// Removes the balance change listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_balance_change_listener(event: EventId);
+        /// Removes the stronghold status change listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_stronghold_status_change_listener(event: EventId);
+        /// Removes the balance change listener associated with the given identifier.
+        /// @param event The ID of the listener we want to remove
+        fn EventManager::remove_address_consolidation_needed_listener(event: EventId);
     }
 );
 
@@ -1006,28 +1412,45 @@ foreign_class!(
     }
 );
 
-// Bee types wrapping
+// Bee types wrapping for various payloads
 foreign_class!(
-    #[derive(Display)]
+    /// Message payload wrapper
+    #[derive(Display, camelCaseAliases)]
     class MessagePayload {
         self_type MessagePayload;
         private constructor = empty;
-        private fn MessagePayload::to_string(&self) -> String;
-        fn MessagePayload::payload_type(&self) -> MessagePayloadType; alias payloadType;
-        fn MessagePayload::get_as_indexation(&self) -> Option<IndexationPayload>; alias getAsIndexation;
-        fn MessagePayload::get_as_milestone(&self) -> Option<MilestonePayload>; alias getAsMilestone;
-        fn MessagePayload::get_as_transaction(&self) -> Option<MessageTransactionPayload>; alias getAsTransaction;
-        fn MessagePayload::get_as_receipt(&self) -> Option<ReceiptPayload>; alias getAsReceipt;
-        fn MessagePayload::get_as_treasury(&self) -> Option<TreasuryTransactionPayload>; alias getAsTreasury;
+        private fn MessagePayload::to_string(&self) -> String; alias to_string;
+        /// Turns a serialized message payload string back into its class 
+        fn MessagePayload::deserialize(serialised_data: &str) -> Result<MessagePayload>;
+        /// Get the type of message this contains (used to select the correct getter)
+        fn MessagePayload::payload_type(&self) -> MessagePayloadType;
+        fn MessagePayload::as_indexation(&self) -> Result<IndexationPayload>;
+        fn MessagePayload::as_milestone(&self) -> Result<MilestonePayload>;
+        fn MessagePayload::as_transaction(&self) -> Result<TransactionPayload>;
+        fn MessagePayload::as_receipt(&self) -> Result<ReceiptPayload>;
+        fn MessagePayload::as_treasury(&self) -> Result<TreasuryPayload>;
+        /// Serializes the message payload into a json string
+        fn MessagePayload::serialize(&self) -> Result<String>;
     }
 );
 
 foreign_class!(
+    #[derive(Display, camelCaseAliases)]
     class IndexationPayload {
         self_type IndexationPayload;
         private constructor = empty;
-        fn IndexationPayload::new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>; alias new_with;
+        private fn IndexationPayload::to_string(&self) -> String; alias to_string;
+        /// Creates a new `IndexationPayload`.
+        /// @param index The index
+        /// @param data The data linked ot this index
+        fn IndexationPayload::new(index: &[u8], data: &[u8]) -> Result<IndexationPayload>; alias fromBytes;
+        /// Creates a new `IndexationPayload` from strings
+        /// @param index The index
+        /// @param data The data linked ot this indexMilestoneSignature
+        fn IndexationPayload::new_from_string(index: &str, data: &str) -> Result<IndexationPayload>; alias fromStrings;
+        /// Returns the index of an `IndexationPayload`.
         fn IndexationPayload::index(&self) -> &[u8];
+        /// Returns the data of an `IndexationPayload`.
         fn IndexationPayload::data(&self) -> &[u8];
     }
 );
@@ -1052,6 +1475,7 @@ foreign_class!(
         self_type MilestoneSignature;
         private constructor = empty;
         private fn MilestoneSignature::to_string(&self) -> String; alias to_string;
+        /// Gets the signature of the milestone
         fn MilestoneSignature::get_signature(&self) -> Vec<u8>;
     }
 );
@@ -1087,7 +1511,9 @@ foreign_class!(
         self_type Signature;
         private constructor = empty;
         private fn Signature::to_string(&self) -> String; alias to_string;
+        /// Turn the signature into bytes
         fn Signature::to_bytes(&self) -> Vec<u8>;
+        /// Turns bytes into a signature
         fn Signature::from_bytes(bs: Vec<u8>) -> Signature;
     }
 );
@@ -1098,8 +1524,13 @@ foreign_class!(
         self_type PublicKey;
         private constructor = empty;
         private fn PublicKey::to_string(&self) -> String; alias to_string;
+        /// Verify the signature and bytes against this public key
+        /// @param sig The signature to verify
+        /// @param msg The bytes to verify
         fn PublicKey::verify(&self, sig: Signature, msg: Vec<u8>) -> bool;
+        /// Turns ths public key into bytes
         fn PublicKey::to_bytes(&self) -> Vec<u8>;
+        /// Attempt to create a public key from the provided bytes
         fn PublicKey::try_from_bytes(bs: Vec<u8>) -> Result<PublicKey>;
     }
 );
@@ -1107,101 +1538,234 @@ foreign_class!(
 // TransactionEssence
 
 foreign_class!(
-    class MessageTransactionPayload {
-        self_type MessageTransactionPayload;
+    #[derive(camelCaseAliases, Display)]
+    class TransactionPayload {
+        self_type TransactionPayload;
         private constructor = empty;
-        fn MessageTransactionPayload::essence(&self) -> Essence;
-        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
+        private fn TransactionPayload::to_string(&self) -> String; alias to_string;
+        /// Return the essence of a `TransactionPayload`.
+        fn TransactionPayload::essence(&self) -> Essence;
+        /// Return unlock blocks of a `TransactionPayload`.
+        fn TransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class Essence {
         self_type Essence;
         private constructor = empty;
-        fn Essence::get_as_regular(&self) -> Option<RegularEssence>; alias getAsRegular;
+        private fn Essence::to_string(&self) -> String; alias to_string;
+        fn Essence::as_regular(&self) -> Result<RegularEssence>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class RegularEssence {
         self_type RegularEssence;
         private constructor = empty;
+        private fn RegularEssence::to_string(&self) -> String; alias to_string;
+        /// Gets the transaction inputs.
         fn RegularEssence::inputs(&self) -> Vec<TransactionInput>;
+        /// Gets the transaction outputs.
         fn RegularEssence::outputs(&self) -> Vec<TransactionOutput>;
+        // Gets the transaction chained payload.
+        fn RegularEssence::payload(&self) -> Result<Option<IndexationPayload>>;
+        /// Whether the transaction is between the mnemonic accounts or not.
         fn RegularEssence::internal(&self) -> bool;
-
+        /// Whether the transaction is incoming or outgoing.
         fn RegularEssence::incoming(&self) -> bool;
-
         /// The transactions's value.
         fn RegularEssence::value(&self) -> u64;
-
         /// The transactions's remainder value sum.
-        fn RegularEssence::remainder_value(&self) -> u64; alias remainderValue;
+        fn RegularEssence::remainder_value(&self) -> u64;
     }
 );
 
 foreign_class!(
-    #[derive(Display)]
+    #[derive(camelCaseAliases, PartialEq, Display)]
     class TransactionInput {
         self_type TransactionInput;
         private constructor = empty;
-        private fn TransactionInput::to_string(&self) -> String;
+        private fn TransactionInput::to_string(&self) -> String; alias to_string;
+        private fn TransactionInput::eq(&self, o: &TransactionInput) -> bool; alias rustEq;
         fn TransactionInput::kind(&self) -> InputKind;
+        fn TransactionInput::as_utxo(&self) -> Result<UtxoInput>;
+        fn TransactionInput::as_treasury(&self) -> Result<TreasuryInput>;
     }
 );
 
 foreign_class!(
-    #[derive(Display)]
+    /// `TreasuryInput` is an input which references a milestone which generated a `TreasuryOutput`.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class TreasuryInput {
+        self_type TreasuryInput;
+        /// Create a new TreasuryInput
+        /// @param id The MilestoneId which Generated a `TreasuryOutput`
+        constructor TreasuryInput::new(id: MilestoneId) -> TreasuryInput;
+        private fn TreasuryInput::to_string(&self) -> String; alias to_string;
+        private fn TreasuryInput::eq(&self, o: &TreasuryInput) -> bool; alias rustEq;
+        /// Returns the milestones id of a `TreasuryInput`.
+        fn TreasuryInput::milestone_id(&self) -> MilestoneId;
+    }
+);
+
+foreign_class!(
+    /// Represents an input referencing an output.
+    #[derive(camelCaseAliases, PartialEq, Display)]
+    class UtxoInput {
+        self_type UtxoInput;
+        private constructor = empty;
+        private fn UtxoInput::to_string(&self) -> String; alias to_string;
+        private fn UtxoInput::eq(&self, o: &UtxoInput) -> bool; alias rustEq;
+        /// Create a new `UtxoInput`
+        /// @param id The ouput Id
+        /// @param index The output Index
+        fn UtxoInput::from(id: TransactionId, index: u16) -> Result<UtxoInput>;
+        /// Returns the `TransactionId` of the Output.
+        fn UtxoInput::transaction_id(&self) -> TransactionId;
+        /// Returns the index of the Output.
+        fn UtxoInput::index(&self) -> u16;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class TransactionOutput {
         self_type TransactionOutput;
         private constructor = empty;
-        private fn TransactionOutput::to_string(&self) -> String;
+        private fn TransactionOutput::to_string(&self) -> String; alias to_string;
         fn TransactionOutput::kind(&self) -> OutputKind;
+        fn TransactionOutput::as_signature_locked_single_output(&self) -> Result<SignatureLockedSingleOutput>;
+        fn TransactionOutput::as_signature_locked_dust_allowance_output(&self) -> Result<SignatureLockedDustAllowanceOutput>;
+        fn TransactionOutput::as_treasury_output(&self) -> Result<TreasuryOutput>;
     }
 );
 
 foreign_class!(
-    #[derive(Display)]
+    /// Describes a deposit to a single address which is unlocked via a signature.
+    #[derive(camelCaseAliases, Display)]
+    class SignatureLockedSingleOutput {
+        self_type SignatureLockedSingleOutput;
+        private constructor = empty;
+        private fn SignatureLockedSingleOutput::to_string(&self) -> String; alias to_string;
+        /// Creates a new `SignatureLockedSingleOutput`.
+        /// @param address The address to set
+        /// @param amount The amount to set
+        /// @param remainder if this output allows remainder
+        fn SignatureLockedSingleOutput::from(address: AddressWrapper, amount: u64, remainder: bool) -> SignatureLockedSingleOutput;
+        /// Returns the amount of a `SignatureLockedSingleOutput`.
+        fn SignatureLockedSingleOutput::amount(&self) -> u64;
+        /// Returns the address of a `SignatureLockedSingleOutput`.
+        fn SignatureLockedSingleOutput::address(&self) -> AddressWrapper;
+    }
+);
+
+foreign_class!(
+    /// Output type for deposits that enables an address to receive dust outputs. It can be consumed as an input like a
+    /// regular SigLockedSingleOutput.
+    #[derive(camelCaseAliases, Display)]
+    class SignatureLockedDustAllowanceOutput {
+        self_type SignatureLockedDustAllowanceOutput;
+        private constructor = empty;
+        private fn SignatureLockedDustAllowanceOutput::to_string(&self) -> String; alias to_string;
+        /// Creates a new `SignatureLockedDustAllowanceOutput`.
+        /// @param address The address to set
+        /// @param amount The amount to set
+        fn SignatureLockedDustAllowanceOutput::from(address: AddressWrapper, amount: u64) -> SignatureLockedDustAllowanceOutput;
+        /// Returns the amount of a `SignatureLockedDustAllowanceOutput`.
+        fn SignatureLockedDustAllowanceOutput::amount(&self) -> u64;
+        /// Returns the address of a `SignatureLockedDustAllowanceOutput`.
+        fn SignatureLockedDustAllowanceOutput::address(&self) -> AddressWrapper;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class TreasuryOutput {
+        self_type TreasuryOutput;
+        private constructor = empty;
+        private fn TreasuryOutput::to_string(&self) -> String; alias to_string;
+        /// Creates a new TreasuryOutput with the amount supplied
+        fn TreasuryOutput::from(amount: u64) -> Result<TreasuryOutput>;
+        /// Returns the amount of a `TreasuryOutput`.
+        fn TreasuryOutput::amount(&self) -> u64;
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class UnlockBlock {
         self_type UnlockBlock;
         private constructor = empty;
-        private fn UnlockBlock::to_string(&self) -> String;
+        private fn UnlockBlock::to_string(&self) -> String; alias to_string;
         fn UnlockBlock::kind(&self) -> UnlockBlockKind;
+        
+        fn UnlockBlock::as_reference(&self) -> Result<ReferenceUnlock>;
+        fn UnlockBlock::as_signature(&self) -> Result<SignatureUnlock>;
     }
 );
 
 foreign_class!(
-    class TransactionSignatureLockedSingleOutput {
-        self_type TransactionSignatureLockedSingleOutput;
+    #[derive(camelCaseAliases, Display)]
+    class ReferenceUnlock {
+        self_type ReferenceUnlock;
         private constructor = empty;
-        fn TransactionSignatureLockedSingleOutput::amount(&self) -> u64;
+        private fn ReferenceUnlock::to_string(&self) -> String; alias to_string;
+        /// Creates a new `ReferenceUnlock`.
+        /// @param index The unlock block index we use for signature
+        fn ReferenceUnlock::from(index: u16) -> Result<ReferenceUnlock>;
+        /// Return the index of a `ReferenceUnlock`.
+        fn ReferenceUnlock::index(&self) -> u16;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
+    class SignatureUnlock {
+        self_type SignatureUnlock;
+        /// Create a new Signature inlock block
+        /// @param public_key The public ket used for this signature block
+        /// @param signature The signature created for this unlock block
+        constructor SignatureUnlock::from(public_key: Vec<u8>, signature: Vec<u8>) -> SignatureUnlock;
+        private fn SignatureUnlock::to_string(&self) -> String; alias to_string;
+        
+    }
+);
+
+foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class ReceiptPayload {
         self_type ReceiptPayload;
         private constructor = empty;
-        fn ReceiptPayload::migrated_at(&self) -> u32; alias migratedAt;
+        private fn ReceiptPayload::to_string(&self) -> String; alias to_string;
+        /// The milestone index at which the funds of a `ReceiptPayload` were migrated 
+        fn ReceiptPayload::migrated_at(&self) -> u32;
+        /// Whether a `ReceiptPayload` is the final one for a given migrated at index.
         fn ReceiptPayload::last(&self) -> bool;
         fn ReceiptPayload::funds(&self) -> Vec<MigratedFundsEntry>;
     }
 );
 
 foreign_class!(
+    #[derive(camelCaseAliases, Display)]
     class MigratedFundsEntry {
         self_type MigratedFundsEntry;
         private constructor = empty;
-        fn MigratedFundsEntry::tail_transaction_hash(&self) -> Vec<u8>; alias tailTransactionHash;
-        fn MigratedFundsEntry::output(&self) -> TransactionSignatureLockedSingleOutput;
+        private fn MigratedFundsEntry::to_string(&self) -> String; alias to_string;
+        /// Returns the tail transaction hash of a `MigratedFundsEntry`.
+        fn MigratedFundsEntry::tail_transaction_hash(&self) -> String;
+        /// Returns the output of a `MigratedFundsEntry`.
+        fn MigratedFundsEntry::output(&self) -> SignatureLockedSingleOutput;
     }
 );
 
 foreign_class!(
-    class TreasuryTransactionPayload {
-        self_type TreasuryTransactionPayload;
+    class TreasuryPayload {
+        self_type TreasuryPayload;
         private constructor = empty;
-        fn TreasuryTransactionPayload::output(&self) -> u64;
+        fn TreasuryPayload::output(&self) -> TreasuryOutput;
+        fn TreasuryPayload::input(&self) -> TreasuryInput;
     }
 );
