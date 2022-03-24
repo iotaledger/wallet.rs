@@ -1415,6 +1415,26 @@
 <span id="1413">1413</span>
 <span id="1414">1414</span>
 <span id="1415">1415</span>
+<span id="1416">1416</span>
+<span id="1417">1417</span>
+<span id="1418">1418</span>
+<span id="1419">1419</span>
+<span id="1420">1420</span>
+<span id="1421">1421</span>
+<span id="1422">1422</span>
+<span id="1423">1423</span>
+<span id="1424">1424</span>
+<span id="1425">1425</span>
+<span id="1426">1426</span>
+<span id="1427">1427</span>
+<span id="1428">1428</span>
+<span id="1429">1429</span>
+<span id="1430">1430</span>
+<span id="1431">1431</span>
+<span id="1432">1432</span>
+<span id="1433">1433</span>
+<span id="1434">1434</span>
+<span id="1435">1435</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -1735,7 +1755,7 @@
 }
 
 <span class="doccomment">/// Possible Value units.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValueUnit</span> {
     <span class="doccomment">/// i</span>
     <span class="ident">I</span>,
@@ -1765,7 +1785,7 @@
 }
 
 <span class="doccomment">/// The transaction Value struct.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Getters</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">getset</span>(<span class="ident">get</span> <span class="op">=</span> <span class="string">&quot;pub&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Value</span> {
     <span class="doccomment">/// The value.</span>
@@ -1822,6 +1842,15 @@
             <span class="ident">remainder</span>,
         }
     }
+
+    <span class="doccomment">/// Construct a new TransactionSignatureLockedSingleOutput</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">u64</span>, <span class="ident">remainder</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">address</span>,
+            <span class="ident">amount</span>,
+            <span class="ident">remainder</span>,
+        }
+    }
 }
 
 <span class="doccomment">/// Dust allowance output.</span>
@@ -1841,6 +1870,11 @@
             <span class="ident">address</span>: <span class="ident">AddressWrapper::new</span>(<span class="kw-2">*</span><span class="ident">output</span>.<span class="ident">address</span>(), <span class="ident">bech32_hrp</span>),
             <span class="ident">amount</span>: <span class="ident">output</span>.<span class="ident">amount</span>(),
         }
+    }
+
+    <span class="doccomment">/// Construct a new TransactionSignatureLockedDustAllowanceOutput</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">address</span>: <span class="ident">AddressWrapper</span>, <span class="ident">amount</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> { <span class="ident">address</span>, <span class="ident">amount</span> }
     }
 }
 
@@ -2358,6 +2392,12 @@
             }
         };
         <span class="prelude-val">Ok</span>(<span class="ident">hash</span>)
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">core::fmt::Display</span> <span class="kw">for</span> <span class="ident">MessageTailTransactionHash</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
 

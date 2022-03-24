@@ -2050,7 +2050,7 @@
         <span class="self">self</span>
     }
 
-    <span class="comment">// Address history associated with the seed.</span>
+    <span class="doccomment">/// Address history associated with the seed.</span>
     <span class="doccomment">/// The account can be initialised with locally stored address history.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addresses</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Address</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">self</span>.<span class="ident">addresses</span> <span class="op">=</span> <span class="ident">addresses</span>;
@@ -3203,7 +3203,7 @@
         <span class="prelude-val">Ok</span>(<span class="ident">spent_addresses</span>)
     }
 
-    <span class="doccomment">/// Gets the spent addresses.</span>
+    <span class="doccomment">/// Gets the unspent addresses.</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">list_unspent_addresses</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Address</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sent_messages</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">list_messages</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="ident">MessageType::Sent</span>)).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">unspent_addresses</span> <span class="op">=</span> <span class="self">self</span>
