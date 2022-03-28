@@ -2853,6 +2853,8 @@
 <span id="2851">2851</span>
 <span id="2852">2852</span>
 <span id="2853">2853</span>
+<span id="2854">2854</span>
+<span id="2855">2855</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -3382,7 +3384,9 @@
                     }
 
                     <span class="macro">log::debug!</span>(
-                        <span class="string">&quot;[SYNC] syncing messages and outputs for address {}, got {} outputs&quot;</span>,
+                        <span class="string">&quot;[SYNC] syncing messages and outputs for address internal: {} index:{} {}, got {} outputs&quot;</span>,
+                        <span class="ident">address</span>.<span class="ident">internal</span>(),
+                        <span class="ident">address</span>.<span class="ident">key_index</span>(),
                         <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
                         <span class="ident">address_output_ids</span>.<span class="ident">len</span>(),
                     );
