@@ -527,7 +527,9 @@ async fn sync_addresses_and_messages(
                     }
 
                     log::debug!(
-                        "[SYNC] syncing messages and outputs for address {}, got {} outputs",
+                        "[SYNC] syncing messages and outputs for address internal: {} index:{} {}, got {} outputs",
+                        address.internal(),
+                        address.key_index(),
                         address.address().to_bech32(),
                         address_output_ids.len(),
                     );
