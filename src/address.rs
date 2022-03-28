@@ -404,6 +404,11 @@ pub(crate) async fn get_new_address(account: &Account, metadata: GenerateAddress
         }
     };
     let iota_address = get_iota_address(account, new_address_key_index, false, bech32_hrp, metadata).await?;
+    log::debug!(
+        "[get_new_address]: Generated new public address {} at index {}",
+        iota_address.to_bech32(),
+        new_address_key_index
+    );
     let address = Address {
         address: iota_address,
         key_index: new_address_key_index,
