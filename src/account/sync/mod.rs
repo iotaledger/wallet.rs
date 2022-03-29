@@ -781,18 +781,18 @@ async fn perform_sync(
         .max_by_key(|a| a.key_index())
         .map(|a| *a.key_index())
         .unwrap_or(0);
-    // if the latest index+1 is not the same as the address length, then one or more addresses are missing in the
-    // account and we start from 0
-    if public_addresses.clone().count() != latest_public_address_index + 1 {
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if public_addresses.clone().count() < latest_public_address_index + 1 {
         log::debug!(
-            "[SYNC] check addresses from index 0, because public_addresses len != latest_public_address_index+1 {}/{}",
+            "[SYNC] check addresses from index 0, because public_addresses count < latest_public_address_index+1 {}/{}",
             public_addresses.clone().count(),
             latest_public_address_index + 1
         );
-        latest_public_address_index = 0;
         if max_new_public_index < latest_public_address_index + 1 {
             max_new_public_index = latest_public_address_index + 1;
         }
+        latest_public_address_index = 0;
     }
 
     let mut latest_internal_address_index = internal_addresses
@@ -800,17 +800,17 @@ async fn perform_sync(
         .max_by_key(|a| a.key_index())
         .map(|a| *a.key_index())
         .unwrap_or(0);
-    // if the latest index+1 is not the same as the address length, then one or more addresses are missing in the
-    // account and we start from 0
-    if internal_addresses.clone().count() != latest_internal_address_index + 1 {
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if internal_addresses.clone().count() < latest_internal_address_index + 1 {
         log::debug!(
-            "[SYNC] check addresses from index 0, because internal_addresses len != latest_internal_address_index+1 {}/{}", 
+            "[SYNC] check addresses from index 0, because internal_addresses count < latest_internal_address_index+1 {}/{}", 
             internal_addresses.clone().count() , latest_internal_address_index + 1
         );
-        latest_internal_address_index = 0;
         if max_new_internal_index < latest_internal_address_index + 1 {
             max_new_internal_index = latest_internal_address_index + 1;
         }
+        latest_internal_address_index = 0;
     }
 
     let bech32_hrp = match account.addresses().first() {
@@ -828,7 +828,6 @@ async fn perform_sync(
 
     // generate missing public addresses
     for key_index in latest_public_address_index..max_new_public_index {
-        log::debug!("Checking public index {}", key_index);
         if !account
             .addresses()
             .iter()
