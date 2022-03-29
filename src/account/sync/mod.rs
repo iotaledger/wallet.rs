@@ -789,6 +789,7 @@ async fn perform_sync(
             public_addresses.clone().count(),
             latest_public_address_index + 1
         );
+        // Use the highest index, so we don't miss addresses
         if max_new_public_index < latest_public_address_index + 1 {
             max_new_public_index = latest_public_address_index + 1;
         }
@@ -807,6 +808,7 @@ async fn perform_sync(
             "[SYNC] check addresses from index 0, because internal_addresses count < latest_internal_address_index+1 {}/{}", 
             internal_addresses.clone().count() , latest_internal_address_index + 1
         );
+        // Use the highest index, so we don't miss addresses
         if max_new_internal_index < latest_internal_address_index + 1 {
             max_new_internal_index = latest_internal_address_index + 1;
         }
