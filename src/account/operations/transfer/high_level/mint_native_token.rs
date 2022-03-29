@@ -22,8 +22,8 @@ use iota_client::{
                 AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
                 StateControllerAddressUnlockCondition, UnlockCondition,
             },
-            AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCostConfigBuilder, FoundryId, FoundryOutputBuilder,
-            NativeToken, Output, TokenId, TokenScheme, TokenTag,
+            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
+            SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
         },
     },
 };
@@ -76,12 +76,7 @@ impl AccountHandle {
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] mint_native_token");
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
         // the address needs to be from the account, because for the minting we need to sign transactions from it
@@ -111,21 +106,18 @@ impl AccountHandle {
             .await?;
 
         // create foundry output with minted native tokens
-        let foundry_id = FoundryId::build(alias_id, 1, TokenScheme::Simple);
-        let token_id = TokenId::build(foundry_id, native_token_options.token_tag);
+
+        let foundry_id = FoundryId::build(
+            &AliasAddress::new(alias_id),
+            1,
+            &TokenScheme::Simple(SimpleTokenScheme::new(U256::from(0), U256::from(0), U256::from(0))?),
+        );
+        let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
 
         let account = self.read().await;
         let exiting_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
             if let Output::Alias(output) = &output_data.output {
-                // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate the
-                // output id
-                // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                let output_alias_id = if output.alias_id().iter().all(|&b| b == 0) {
-                    AliasId::from(&output_data.output_id)
-                } else {
-                    *output.alias_id()
-                };
-                output_alias_id == alias_id
+                output.alias_id().or_from_output_id(output_data.output_id) == alias_id
             } else {
                 false
             }
@@ -154,7 +146,7 @@ impl AccountHandle {
                     new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
             }
 
-            // todo: clean this up
+            // todo: clean this up because it's only required for the stroage deposit calculation
             let mut native_tokens_for_storage_deposit = std::collections::HashMap::new();
             native_tokens_for_storage_deposit.insert(token_id, native_token_options.circulating_supply);
 
@@ -165,10 +157,11 @@ impl AccountHandle {
                         minimum_storage_deposit_foundry(&byte_cost_config)?,
                         alias_output.foundry_counter() + 1,
                         native_token_options.token_tag,
-                        native_token_options.circulating_supply,
-                        U256::from(0),
-                        native_token_options.maxium_supply,
-                        TokenScheme::Simple,
+                        TokenScheme::Simple(SimpleTokenScheme::new(
+                            native_token_options.circulating_supply,
+                            U256::from(0),
+                            native_token_options.maxium_supply,
+                        )?),
                     )?
                     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
                         ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
@@ -201,12 +194,7 @@ impl AccountHandle {
         options: Option<TransferOptions>,
     ) -> crate::Result<AliasId> {
         log::debug!("[TRANSFER] get_or_create_alias_output");
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account = self.read().await;
         let exiting_alias_output = account
@@ -216,15 +204,8 @@ impl AccountHandle {
             .find(|output_data| matches!(&output_data.output, Output::Alias(output)));
         match exiting_alias_output {
             Some(output_data) => {
-                if let Output::Alias(output) = &output_data.output {
-                    // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate the
-                    // output id
-                    // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                    let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
-                        AliasId::from(&output_data.output_id)
-                    } else {
-                        *output.alias_id()
-                    };
+                if let Output::Alias(alias_output) = &output_data.output {
+                    let alias_id = alias_output.alias_id().or_from_output_id(output_data.output_id);
                     Ok(alias_id)
                 } else {
                     unreachable!("We checked if it's an alias output before")
@@ -235,8 +216,7 @@ impl AccountHandle {
                 drop(account);
                 let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
                 let outputs = vec![Output::Alias(
-                    // todo minimum amount
-                    AliasOutputBuilder::new(2_000_000, AliasId::from([0; 20]))?
+                    AliasOutputBuilder::new(amount, AliasId::from([0; 20]))?
                         .with_state_index(0)
                         .with_foundry_counter(0)
                         .add_unlock_condition(UnlockCondition::StateControllerAddress(

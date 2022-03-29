@@ -18,7 +18,7 @@ use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_message::output::{
         unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, OutputId,
+        BasicOutputBuilder, NativeToken, Output, OutputId,
     },
 };
 
@@ -72,12 +72,7 @@ impl AccountHandle {
             return Ok(Vec::new());
         }
 
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let mut collection_results = Vec::new();
         // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <= max

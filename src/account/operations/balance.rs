@@ -3,7 +3,7 @@
 
 use crate::account::{handle::AccountHandle, types::AccountBalance};
 
-use iota_client::bee_message::output::{AliasId, ByteCost, ByteCostConfigBuilder, NftId, Output};
+use iota_client::bee_message::output::{ByteCost, Output};
 
 use std::collections::{hash_map::Entry, HashMap};
 
@@ -14,12 +14,7 @@ impl AccountHandle {
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
         // todo: use this to determine which outputs can be spent now
         // let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
@@ -66,14 +61,7 @@ impl AccountHandle {
                     match &output_data.output {
                         Output::Foundry(output) => foundries.push(output.id()),
                         Output::Nft(output) => {
-                            // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
-                            // output id
-                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                            let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
-                                NftId::from(&output_data.output_id)
-                            } else {
-                                *output.nft_id()
-                            };
+                            let nft_id = output.nft_id().or_from_output_id(output_data.output_id);
                             nfts.push(nft_id);
                         }
                         // Alias outputs are ignored here, because they always need two unlock conditions
@@ -102,26 +90,12 @@ impl AccountHandle {
                     // add alias, foundry and nft outputs
                     match &output_data.output {
                         Output::Alias(output) => {
-                            // When the alias is minted, the alias_id contains only `0` bytes and we need to calculate
-                            // the output id
-                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                            let alias_id = if output.alias_id().iter().all(|&b| b == 0) {
-                                AliasId::from(&output_data.output_id)
-                            } else {
-                                *output.alias_id()
-                            };
+                            let alias_id = output.alias_id().or_from_output_id(output_data.output_id);
                             aliases.push(alias_id);
                         }
                         Output::Foundry(output) => foundries.push(output.id()),
                         Output::Nft(output) => {
-                            // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the
-                            // output id
-                            // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                            let nft_id = if output.nft_id().iter().all(|&b| b == 0) {
-                                NftId::from(&output_data.output_id)
-                            } else {
-                                *output.nft_id()
-                            };
+                            let nft_id = output.nft_id().or_from_output_id(output_data.output_id);
                             locked_nfts.push(nft_id);
                         }
                         _ => {}

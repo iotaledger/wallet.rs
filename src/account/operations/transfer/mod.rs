@@ -17,12 +17,12 @@ use crate::account::{
     AddressGenerationOptions,
 };
 #[cfg(feature = "events")]
-use events::types::{AddressData, TransferProgressEvent, WalletEvent};
+use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
 
 use iota_client::{
     bee_message::{
         input::INPUT_COUNT_RANGE,
-        output::{ByteCostConfig, ByteCostConfigBuilder, Output, OUTPUT_COUNT_RANGE},
+        output::{ByteCostConfig, Output, OUTPUT_COUNT_RANGE},
         payload::transaction::{TransactionId, TransactionPayload},
         MessageId,
     },
@@ -74,12 +74,7 @@ impl AccountHandle {
     /// ```
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
         // here to check before syncing, how to prevent duplicated verification (also in send_transfer())?
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {

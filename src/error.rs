@@ -44,6 +44,9 @@ pub enum Error {
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota_client::bee_message::Error),
+    /// Message dtos error
+    #[error("{0}")]
+    BeeMessageDtoError(#[from] iota_client::bee_message::DtoError),
     /// Bee rest api error
     #[error("{0}")]
     BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
@@ -175,6 +178,7 @@ impl serde::Serialize for Error {
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
+            Self::BeeMessageDtoError(_) => serialize_variant(self, serializer, "BeeMessageDtoError"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),

@@ -10,7 +10,7 @@ use iota_client::{
     bee_message::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{AliasId, ByteCostConfig, NftId, Output},
+        output::{ByteCostConfig, Output},
     },
     signing::types::InputSigningData,
 };
@@ -74,15 +74,7 @@ impl AccountHandle {
                             // only add if output contains same NftId
                             if let Some(nft_output) = outputs.iter().find(|output| {
                                 if let Output::Nft(nft_output) = output {
-                                    // When the nft is minted, the alias_id contains only `0` bytes and we need to
-                                    // calculate the output id
-                                    // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                                    let input_nft_id = if nft_input.nft_id().iter().all(|&b| b == 0) {
-                                        NftId::from(&output_data.output_id)
-                                    } else {
-                                        *nft_input.nft_id()
-                                    };
-                                    input_nft_id == *nft_output.nft_id()
+                                    nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
                                 } else {
                                     false
                                 }
@@ -95,15 +87,8 @@ impl AccountHandle {
                         // only add if output contains same AliasId
                         if let Some(alias_output) = outputs.iter().find(|output| {
                             if let Output::Alias(alias_output) = output {
-                                // When the nft is minted, the alias_id contains only `0` bytes and we need to
-                                // calculate the output id
-                                // todo: replace with `.or_from_output_id(output_data.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                                let input_alias_id = if alias_input.alias_id().iter().all(|&b| b == 0) {
-                                    AliasId::from(&output_data.output_id)
-                                } else {
-                                    *alias_input.alias_id()
-                                };
-                                input_alias_id == *alias_output.alias_id()
+                                alias_input.alias_id().or_from_output_id(output_data.output_id)
+                                    == *alias_output.alias_id()
                             } else {
                                 false
                             }
