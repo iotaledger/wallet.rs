@@ -283,15 +283,10 @@ async fn sync_address_list(
             });
         }
         let results = futures::future::try_join_all(tasks).await?;
-        let mut inserted_remainder_address = false;
         for res in results {
             let (messages, address) = res?;
             if !address.outputs().is_empty() || return_all_addresses {
                 found_addresses.push(address);
-            } else if !inserted_remainder_address {
-                // We want to insert one unused address to have an unused remainder address
-                found_addresses.push(address);
-                inserted_remainder_address = true;
             }
             found_messages.extend(messages);
         }
@@ -326,22 +321,20 @@ async fn check_for_new_used_addresses(
     // get the latest address index +1 for public or internal addresses
     let mut address_index_to_start_from = if internal {
         let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
-        let latest_internal_address_index = internal_addresses
+        internal_addresses
             .clone()
             .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .cloned()
-            .unwrap_or(0);
-        latest_internal_address_index + 1
+            // + 1 because we don't want to sync the existing address
+            .map(|a| a.key_index() + 1)
+            .unwrap_or(0)
     } else {
         let public_addresses = account.addresses.iter().filter(|a| !a.internal());
-        let latest_public_address_index = public_addresses
+        public_addresses
             .clone()
             .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .cloned()
-            .unwrap_or(0);
-        latest_public_address_index + 1
+            // + 1 because we don't want to sync the existing address
+            .map(|a| a.key_index() + 1)
+            .unwrap_or(0)
     };
 
     let mut generated_addresses = vec![];
@@ -662,10 +655,11 @@ async fn perform_sync(
     return_all_addresses: bool,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
-        "[SYNC] perform_sync: syncing account {} with address_index = {}, gap_limit = {}",
+        "[SYNC] perform_sync: syncing account {} with address_index = {}, gap_limit = {}, return_all_addresses = {}",
         account_handle.read().await.index(),
         address_index,
-        gap_limit
+        gap_limit,
+        return_all_addresses
     );
     let (mut found_addresses, found_messages) = if let Some(index) = steps
         .iter()
@@ -763,32 +757,63 @@ async fn perform_sync(
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
 
+    // generate all missing addresses
+    log::debug!("[SYNC] check for missing addresses");
+
     let new_addresses = addresses_to_save.clone();
-    let max_new_public_index = new_addresses
+    let mut max_new_public_index = new_addresses
         .iter()
         .filter(|a| !a.internal())
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
-    let max_new_internal_index = new_addresses
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    let mut max_new_internal_index = new_addresses
         .iter()
         .filter(|a| *a.internal())
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
 
     let public_addresses = account.addresses.iter().filter(|a| !a.internal());
     let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
-    let latest_public_address_index = public_addresses
+    let mut latest_public_address_index = public_addresses
         .clone()
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
-    let latest_internal_address_index = internal_addresses
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if public_addresses.clone().count() < latest_public_address_index + 1 {
+        log::debug!(
+            "[SYNC] check addresses from index 0, because public_addresses count < latest_public_address_index+1 {}/{}",
+            public_addresses.clone().count(),
+            latest_public_address_index + 1
+        );
+        // Use the highest index, so we don't miss addresses
+        if max_new_public_index < latest_public_address_index + 1 {
+            max_new_public_index = latest_public_address_index + 1;
+        }
+        latest_public_address_index = 0;
+    }
+
+    let mut latest_internal_address_index = internal_addresses
         .clone()
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if internal_addresses.clone().count() < latest_internal_address_index + 1 {
+        log::debug!(
+            "[SYNC] check addresses from index 0, because internal_addresses count < latest_internal_address_index+1 {}/{}", 
+            internal_addresses.clone().count() , latest_internal_address_index + 1
+        );
+        // Use the highest index, so we don't miss addresses
+        if max_new_internal_index < latest_internal_address_index + 1 {
+            max_new_internal_index = latest_internal_address_index + 1;
+        }
+        latest_internal_address_index = 0;
+    }
 
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
@@ -802,89 +827,85 @@ async fn perform_sync(
                 .bech32_hrp
         }
     };
-    // generate all missing addresses
-    if !addresses_to_save.is_empty() {
-        log::debug!("[SYNC] check for missing addresses");
 
-        // generate missing public addresses
-        for key_index in *latest_public_address_index..*max_new_public_index {
-            if !account
-                .addresses()
+    // generate missing public addresses
+    for key_index in latest_public_address_index..max_new_public_index {
+        if !account
+            .addresses()
+            .iter()
+            .any(|a| a.key_index() == &key_index && !a.internal())
+            && !addresses_to_save
+                .clone()
                 .iter()
                 .any(|a| a.key_index() == &key_index && !a.internal())
-                && !addresses_to_save
-                    .clone()
-                    .iter()
-                    .any(|a| a.key_index() == &key_index && !a.internal())
+        {
+            // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+            // don't want to require an unlock for syncing
+            if let Ok(iota_address) = crate::address::get_iota_address(
+                &account,
+                key_index,
+                false,
+                bech32_hrp.clone(),
+                GenerateAddressMetadata {
+                    syncing: true,
+                    network: account.network(),
+                },
+            )
+            .await
             {
-                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
-                // don't want to require an unlock for syncing
-                if let Ok(iota_address) = crate::address::get_iota_address(
-                    &account,
+                log::debug!(
+                    "[SYNC] generated missing public address {} at index {}",
+                    iota_address.to_bech32(),
+                    key_index
+                );
+                let address = Address {
+                    address: iota_address,
                     key_index,
-                    false,
-                    bech32_hrp.clone(),
-                    GenerateAddressMetadata {
-                        syncing: true,
-                        network: account.network(),
-                    },
-                )
-                .await
-                {
-                    log::debug!(
-                        "[SYNC] generated missing public address {} at index {}",
-                        iota_address.to_bech32(),
-                        key_index
-                    );
-                    let address = Address {
-                        address: iota_address,
-                        key_index,
-                        internal: false,
-                        outputs: Default::default(),
-                    };
-                    addresses_to_save.push(address);
+                    internal: false,
+                    outputs: Default::default(),
                 };
-            }
+                addresses_to_save.push(address);
+            };
         }
-        // generate missing internal addresses
-        for key_index in *latest_internal_address_index..*max_new_internal_index {
-            if !account
-                .addresses()
+    }
+    // generate missing internal addresses
+    for key_index in latest_internal_address_index..max_new_internal_index {
+        if !account
+            .addresses()
+            .iter()
+            .any(|a| a.key_index() == &key_index && *a.internal())
+            && !addresses_to_save
+                .clone()
                 .iter()
                 .any(|a| a.key_index() == &key_index && *a.internal())
-                && !addresses_to_save
-                    .clone()
-                    .iter()
-                    .any(|a| a.key_index() == &key_index && *a.internal())
+        {
+            // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+            // don't want to require an unlock for syncing
+            if let Ok(iota_address) = crate::address::get_iota_address(
+                &account,
+                key_index,
+                true,
+                bech32_hrp.clone(),
+                GenerateAddressMetadata {
+                    syncing: true,
+                    network: account.network(),
+                },
+            )
+            .await
             {
-                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
-                // don't want to require an unlock for syncing
-                if let Ok(iota_address) = crate::address::get_iota_address(
-                    &account,
+                log::debug!(
+                    "[SYNC] generated missing internal address {} at index {}",
+                    iota_address.to_bech32(),
+                    key_index
+                );
+                let address = Address {
+                    address: iota_address,
                     key_index,
-                    true,
-                    bech32_hrp.clone(),
-                    GenerateAddressMetadata {
-                        syncing: true,
-                        network: account.network(),
-                    },
-                )
-                .await
-                {
-                    log::debug!(
-                        "[SYNC] generated missing internal address {} at index {}",
-                        iota_address.to_bech32(),
-                        key_index
-                    );
-                    let address = Address {
-                        address: iota_address,
-                        key_index,
-                        internal: true,
-                        outputs: Default::default(),
-                    };
-                    addresses_to_save.push(address);
+                    internal: true,
+                    outputs: Default::default(),
                 };
-            }
+                addresses_to_save.push(address);
+            };
         }
     }
 
@@ -977,8 +998,9 @@ async fn perform_sync(
         };
     }
 
-    addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
+    // First sort by internal and then by key index, otherwise dedup could fail
     addresses_to_save.sort_unstable_by_key(|a| *a.internal());
+    addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
     addresses_to_save.dedup();
 
     log::debug!("[SYNC] addresses to save: {:#?}", addresses_to_save);
