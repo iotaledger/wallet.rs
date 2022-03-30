@@ -15,175 +15,98 @@ class Account:
         return message
 
     @send_message_routine
-    def generate_addresses(self, amount, options=None):
-        """Generate new unused addresses.
-        """
-        # Setup the message
+    def _call_account_method(self, method, data=None):
         message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
                 'method': {
-                    'name': 'GenerateAddresses',
-                    'data': {
-                        'amount': amount,
-                        'options': options
-                    },
+                    'name': method,
                 }
             }
         }
+        if data:
+            message['payload']['method']['data'] = data
 
         return message
 
-    @send_message_routine
+    def generate_addresses(self, amount, options=None):
+        """Generate new unused addresses.
+        """
+        return self._call_account_method(
+            'GenerateAddresses', {
+                'amount': amount,
+                'options': options
+            }
+        )
+
     def list_addresses(self):
         """List addresses.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListAddresses',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListAddresses'
+        )
 
-    @send_message_routine
     def list_addresses_with_balance(self):
         """Returns only addresses of the account with balance.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListAddressesWithBalance',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListAddressesWithBalance'
+        )
 
-    @send_message_routine
     def list_outputs(self):
         """Returns all outputs of the account.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListOutputs',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListOutputs'
+        )
 
-    @send_message_routine
     def list_unspent_outputs(self):
         """Returns all unspent outputs of the account.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListUnspentOutputs',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListUnspentOutputs'
+        )
 
-    @send_message_routine
     def list_transactions(self):
         """Returns all transaction of the account.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListTransactions',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListTransactions'
+        )
 
-    @send_message_routine
     def list_pending_transactions(self):
         """Returns all pending transaction of the account.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'ListPendingTransactions',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'ListPendingTransactions'
+        )
 
-    @send_message_routine
     def get_balance(self):
         """Get account balance information.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'GetBalance',
-                },
-            }
-        }
-        return message
+        return self._call_account_method(
+            'GetBalance'
+        )
 
-    @send_message_routine
     def sync_account(self, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'SyncAccount',
-                    'data': {
-                        'options': options,
-                    }
-                },
+        return self._call_account_method(
+            'SyncAccount', {
+                'options': options,
             }
-        }
-        return message
+        )
 
-    @send_message_routine
+    @ send_message_routine
     def send_transfer(self, outputs, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
-        # Setup the message
-        message = {
-            'cmd': 'CallAccountMethod',
-            'payload': {
-                'account_id': self.alias_index,
-                'method': {
-                    'name': 'SendTransfer',
-                    'data':  {
-                        'outputs': outputs,
-                        'options': options,
-                    }
-                }
+        return self._call_account_method(
+            'SendTransfer', {
+                'outputs': outputs,
+                'options': options,
             }
-        }
-        return message
+        )
