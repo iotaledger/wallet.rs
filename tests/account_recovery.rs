@@ -14,7 +14,8 @@ async fn account_recovery_empty() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/account_recovery_empty")
         .finish()
@@ -38,7 +39,8 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -69,7 +71,8 @@ async fn account_recovery_with_balance() -> Result<()> {
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
     let signer = MnemonicSigner::new("merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -103,7 +106,8 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
     let signer = MnemonicSigner::new("merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .finish()
         .await?;

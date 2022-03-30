@@ -13,7 +13,8 @@ async fn account_ordering() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/account_ordering")
         .finish()
@@ -37,7 +38,8 @@ async fn account_alias_already_exists() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/account_alias_already_exists")
         .finish()
@@ -87,7 +89,8 @@ async fn account_rename_alias() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/account_rename_alias")
         .finish()
@@ -119,7 +122,8 @@ async fn account_first_address_exists() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/account_first_address_exists")
         .finish()

@@ -12,7 +12,8 @@ async fn stored_account_manager_data() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer.clone())
+    let manager = AccountManager::builder()
+        .with_signer(signer.clone())
         .with_client_options(client_options)
         .with_storage_folder("test-storage/stored_account_manager_data")
         .finish()
@@ -20,7 +21,8 @@ async fn stored_account_manager_data() -> Result<()> {
 
     drop(manager);
     // Recreate AccountManager without providing client options
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_storage_folder("test-storage/stored_account_manager_data")
         .finish()
         .await?;
@@ -43,7 +45,8 @@ async fn different_seed() -> Result<()> {
     // mnemonic without balance
     let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
 
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .with_storage_folder("test-storage/different_seed")
         .finish()
@@ -60,7 +63,8 @@ async fn different_seed() -> Result<()> {
 
     // Recreate AccountManager with a diferent mnemonic
     let signer2 = MnemonicSigner::new("route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy")?;
-    let manager = AccountManager::builder(signer2)
+    let manager = AccountManager::builder()
+        .with_signer(signer2)
         .with_storage_folder("test-storage/different_seed")
         .finish()
         .await?;
