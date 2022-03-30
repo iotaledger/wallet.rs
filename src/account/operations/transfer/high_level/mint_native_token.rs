@@ -107,11 +107,7 @@ impl AccountHandle {
 
         // create foundry output with minted native tokens
 
-        let foundry_id = FoundryId::build(
-            &AliasAddress::new(alias_id),
-            1,
-            &TokenScheme::Simple(SimpleTokenScheme::new(U256::from(0), U256::from(0), U256::from(0))?),
-        );
+        let foundry_id = FoundryId::build(&AliasAddress::new(alias_id), 1, SimpleTokenScheme::KIND);
         let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
 
         let account = self.read().await;
