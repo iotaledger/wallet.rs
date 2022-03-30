@@ -8,18 +8,18 @@ class Account:
 
     @send_message_routine
     def __str__(self):
-        message_type = {
+        message = {
             'cmd': 'GetAccount',
             'payload': self.alias_index,
         }
-        return message_type
+        return message
 
     @send_message_routine
     def generate_addresses(self, amount, options=None):
         """Generate new unused addresses.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -33,14 +33,14 @@ class Account:
             }
         }
 
-        return message_type
+        return message
 
     @send_message_routine
     def list_addresses(self):
         """List addresses.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -49,14 +49,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def list_addresses_with_balance(self):
         """Returns only addresses of the account with balance.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -65,14 +65,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def list_outputs(self):
         """Returns all outputs of the account.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -81,14 +81,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def list_unspent_outputs(self):
         """Returns all unspent outputs of the account.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -97,14 +97,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def list_transactions(self):
         """Returns all transaction of the account.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -113,14 +113,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def list_pending_transactions(self):
         """Returns all pending transaction of the account.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -129,14 +129,14 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def get_balance(self):
         """Get account balance information.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -145,15 +145,15 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def sync_account(self, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -165,15 +165,15 @@ class Account:
                 },
             }
         }
-        return message_type
+        return message
 
     @send_message_routine
     def send_transfer(self, outputs, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CallAccountMethod',
             'payload': {
                 'account_id': self.alias_index,
@@ -186,4 +186,4 @@ class Account:
                 }
             }
         }
-        return message_type
+        return message
