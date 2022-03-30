@@ -286,4 +286,4 @@ Test address derivation from Mnemonic
 
 
 def test_mnemonic_address_generation():
-    assert general_tv['MNEMNONIC_ADDRESS'] == address_to_verify['address']['inner']
+    assert general_tv['MNEMNONIC_ADDRESS_INDEX_1'] == address_to_verify['address']['inner']

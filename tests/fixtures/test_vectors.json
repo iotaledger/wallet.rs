@@ -2,7 +2,7 @@
     "general": {
         "SIGNER_TYPE": "Stronghold",
         "MNEMNONIC": "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast",
-        "MNEMNONIC_ADDRESS": "iota1qpswqe4v8z2cdtgc7sfj0hfneqh37lhmjgnth36mfndwcxkjrakcvpmm727"
+        "MNEMNONIC_ADDRESS_INDEX_1": "iota1qpswqe4v8z2cdtgc7sfj0hfneqh37lhmjgnth36mfndwcxkjrakcvpmm727"
     },
     "python": {
         "account_manager": {
