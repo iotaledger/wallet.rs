@@ -31,7 +31,7 @@ class Account:
         return message
 
     def generate_addresses(self, amount, options=None):
-        """Generate new unused addresses.
+        """Generate new addresses.
         """
         return self._call_account_method(
             'GenerateAddresses', {
