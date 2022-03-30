@@ -25,17 +25,17 @@ class IotaWallet():
         return self.handle
 
     def create_account(self, alias=None):
-        # Setup the message type
-        message_type = {
+        # Setup the message
+        message = {
             'cmd': 'CreateAccount',
             'payload': {
                 'alias': self.__return_str_or_none(alias),
             }
         }
-        message_type = dumps(message_type)
+        message = dumps(message)
 
         # Send message to the Rust library
-        response = iota_wallet.send_message(self.handle, message_type)
+        response = iota_wallet.send_message(self.handle, message)
         response = loads(response)
         account_id = response['payload']['index']
 
@@ -47,110 +47,89 @@ class IotaWallet():
         return Account(alias_index, self.handle)
 
     @send_message_routine
+    def _send_cmd_routine(self, cmd, payload=None):
+        message = {
+            'cmd': cmd
+        }
+        if payload:
+            message['payload'] = payload
+        return message
+
     def get_account_data(self, alias_index):
         """Get account data
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'GetAccount',
-            'payload': f'{alias_index}',
-        }
+        return self._send_cmd_routine(
+            'GetAccount',
+            alias_index
+        )
 
-        return message_type
-
-    @send_message_routine
     def get_accounts(self):
         """Get accounts
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'GetAccounts',
-        }
-        return message_type
+        return self._send_cmd_routine(
+            'GetAccounts',
+        )
 
-    @send_message_routine
     def backup(self, destination, password):
         """Backup storage.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'Backup',
-            'payload': {
+        return self._send_cmd_routine(
+            'Backup', {
                 'destination': destination,
-                'password': password,
+                'password': password
             }
-        }
-        return message_type
+        )
 
-    @send_message_routine
     def restore_back(self, source, password):
         """Import accounts from storage.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'RestoreBackup',
-            'payload': {
+        return self._send_cmd_routine(
+            'RestoreBackup', {
                 'source': source,
-                'password': password,
+                'password': password
             }
-        }
-        return message_type
+        )
 
-    @send_message_routine
     def delete_storage(self):
         """Deletes the storage.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'DeleteStorage',
-        }
-        return message_type
+        return self._send_cmd_routine(
+            'DeleteStorage'
+        )
 
-    @send_message_routine
     def generate_mnemonic(self):
         """Generates a new mnemonic.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'GenerateMnemonic',
-        }
-        return message_type
+        return self._send_cmd_routine(
+            'GenerateMnemonic'
+        )
 
-    @send_message_routine
     def verify_mnemonic(self, mnemonic):
         """Checks if the given mnemonic is valid.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'VerifyMnemonic',
-            'payload': mnemonic,
-        }
-        return message_type
+        return self._send_cmd_routine(
+            'VerifyMnemonic',
+            mnemonic
+        )
 
-    @send_message_routine
     def set_client_options(self, client_options):
         """Updates the client options for all accounts.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'SetClientOptions',
-        }
-        message_type['payload'] = client_options
-        return message_type
+        return self._send_cmd_routine(
+            'SetClientOptions',
+            client_options
+        )
 
-    @send_message_routine
     def stop_background_sync(self):
         """Stop background syncing.
         """
-        # Setup the message type
-        message_type = {
-            'cmd': 'StopBackgroundSync',
-        }
-        return message_type
+        return self._send_cmd_routine(
+            'StopBackgroundSync',
+        )
 
     @staticmethod
     def __return_str_or_none(str):
         if str:
-            return f'{str}'
+            return str
         else:
             return None
