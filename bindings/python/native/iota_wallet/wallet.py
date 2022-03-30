@@ -47,106 +47,85 @@ class IotaWallet():
         return Account(alias_index, self.handle)
 
     @send_message_routine
+    def _send_cmd_routine(self, cmd, payload=None):
+        message = {
+            'cmd': cmd
+        }
+        if payload:
+            message['payload'] = payload
+        return message
+
     def get_account_data(self, alias_index):
         """Get account data
         """
-        # Setup the message
-        message = {
-            'cmd': 'GetAccount',
-            'payload': alias_index,
-        }
+        return self._send_cmd_routine(
+            'GetAccount',
+            alias_index
+        )
 
-        return message
-
-    @send_message_routine
     def get_accounts(self):
         """Get accounts
         """
-        # Setup the message
-        message = {
-            'cmd': 'GetAccounts',
-        }
-        return message
+        return self._send_cmd_routine(
+            'GetAccounts',
+        )
 
-    @send_message_routine
     def backup(self, destination, password):
         """Backup storage.
         """
-        # Setup the message
-        message = {
-            'cmd': 'Backup',
-            'payload': {
+        return self._send_cmd_routine(
+            'Backup', {
                 'destination': destination,
-                'password': password,
+                'password': password
             }
-        }
-        return message
+        )
 
-    @send_message_routine
     def restore_back(self, source, password):
         """Import accounts from storage.
         """
-        # Setup the message
-        message = {
-            'cmd': 'RestoreBackup',
-            'payload': {
+        return self._send_cmd_routine(
+            'RestoreBackup', {
                 'source': source,
-                'password': password,
+                'password': password
             }
-        }
-        return message
+        )
 
-    @send_message_routine
     def delete_storage(self):
         """Deletes the storage.
         """
-        # Setup the message
-        message = {
-            'cmd': 'DeleteStorage',
-        }
-        return message
+        return self._send_cmd_routine(
+            'DeleteStorage'
+        )
 
-    @send_message_routine
     def generate_mnemonic(self):
         """Generates a new mnemonic.
         """
-        # Setup the message
-        message = {
-            'cmd': 'GenerateMnemonic',
-        }
-        return message
+        return self._send_cmd_routine(
+            'GenerateMnemonic'
+        )
 
-    @send_message_routine
     def verify_mnemonic(self, mnemonic):
         """Checks if the given mnemonic is valid.
         """
-        # Setup the message
-        message = {
-            'cmd': 'VerifyMnemonic',
-            'payload': mnemonic,
-        }
-        return message
+        return self._send_cmd_routine(
+            'VerifyMnemonic',
+            mnemonic
+        )
 
-    @send_message_routine
     def set_client_options(self, client_options):
         """Updates the client options for all accounts.
         """
-        # Setup the message
-        message = {
-            'cmd': 'SetClientOptions',
-        }
-        message['payload'] = client_options
-        return message
+        return self._send_cmd_routine(
+            'SetClientOptions',
+            client_options
+        )
 
-    @send_message_routine
     def stop_background_sync(self):
         """Stop background syncing.
         """
-        # Setup the message
-        message = {
-            'cmd': 'StopBackgroundSync',
-        }
-        return message
+        return self._send_cmd_routine(
+            'StopBackgroundSync',
+        )
 
     @staticmethod
     def __return_str_or_none(str):
