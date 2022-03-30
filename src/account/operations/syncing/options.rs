@@ -1,6 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use crate::account::operations::output_collection::OutputsToCollect;
+
 use serde::{Deserialize, Serialize};
 
 /// The synchronization options
@@ -35,7 +37,7 @@ pub struct SyncOptions {
     // Automatically try to collect basic outputs that have additional unlock conditions to their
     // [AddressUnlockCondition].
     #[serde(rename = "tryCollectOutputs", default = "default_try_collect_outputs")]
-    pub try_collect_outputs: bool,
+    pub try_collect_outputs: OutputsToCollect,
     // usually we skip syncing if it's called within a few ms, but if we change the client options we need to resync
     // this will also ignore `address_start_index` and sync all addresses
     #[serde(rename = "forceSyncing", default)]
@@ -58,8 +60,8 @@ fn default_sync_aliases_and_nfts() -> bool {
     true
 }
 
-fn default_try_collect_outputs() -> bool {
-    true
+fn default_try_collect_outputs() -> OutputsToCollect {
+    OutputsToCollect::All
 }
 
 fn default_address_start_index() -> u32 {
@@ -80,7 +82,7 @@ impl Default for SyncOptions {
             sync_pending_transactions: true,
             sync_aliases_and_nfts: true,
             sync_all_addresses: false,
-            try_collect_outputs: true,
+            try_collect_outputs: OutputsToCollect::All,
             force_syncing: false,
         }
     }

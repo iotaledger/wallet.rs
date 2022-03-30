@@ -87,15 +87,13 @@ impl AccountHandle {
             }
         }
 
-        if options.try_collect_outputs {
-            // Only consolidates outputs for non ledger accounts, because they require approval from the user
-            match self.signer.signer_type {
-                #[cfg(feature = "ledger-nano")]
-                // don't automatically consolidate with ledger accounts, because they require approval from the user
-                SignerType::LedgerNano | SignerType::LedgerNanoSimulator => {}
-                _ => {
-                    self.try_collect_outputs().await?;
-                }
+        // Only consolidates outputs for non ledger accounts, because they require approval from the user
+        match self.signer.signer_type {
+            #[cfg(feature = "ledger-nano")]
+            // don't automatically consolidate with ledger accounts, because they require approval from the user
+            SignerType::LedgerNano | SignerType::LedgerNanoSimulator => {}
+            _ => {
+                self.try_collect_outputs(options.try_collect_outputs).await?;
             }
         }
 
