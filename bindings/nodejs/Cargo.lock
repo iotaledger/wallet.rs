@@ -127,7 +127,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.7.0"
-source = "git+https://github.com/iotaledger/bee?rev=6d916175eea71ed82ba3f6ebc3d99c4e87385925#6d916175eea71ed82ba3f6ebc3d99c4e87385925"
+source = "git+https://github.com/iotaledger/bee?rev=94261b7fb4db2edab20f3b7c16c9e87b48de547b#94261b7fb4db2edab20f3b7c16c9e87b48de547b"
 dependencies = [
  "bee-message",
  "packable",
@@ -138,7 +138,7 @@ dependencies = [
 [[package]]
 name = "bee-message"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/bee?rev=6d916175eea71ed82ba3f6ebc3d99c4e87385925#6d916175eea71ed82ba3f6ebc3d99c4e87385925"
+source = "git+https://github.com/iotaledger/bee?rev=94261b7fb4db2edab20f3b7c16c9e87b48de547b#94261b7fb4db2edab20f3b7c16c9e87b48de547b"
 dependencies = [
  "bech32 0.8.1",
  "bee-pow",
@@ -148,20 +148,21 @@ dependencies = [
  "derive_more",
  "digest",
  "hashbrown 0.12.0",
- "hex",
  "iota-crypto",
  "iterator-sorted",
  "packable",
+ "prefix-hex",
  "primitive-types",
  "serde",
  "serde-big-array",
+ "serde_json",
  "thiserror",
 ]
 
 [[package]]
 name = "bee-pow"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/bee?rev=6d916175eea71ed82ba3f6ebc3d99c4e87385925#6d916175eea71ed82ba3f6ebc3d99c4e87385925"
+source = "git+https://github.com/iotaledger/bee?rev=94261b7fb4db2edab20f3b7c16c9e87b48de547b#94261b7fb4db2edab20f3b7c16c9e87b48de547b"
 dependencies = [
  "bee-ternary",
  "iota-crypto",
@@ -170,15 +171,15 @@ dependencies = [
 
 [[package]]
 name = "bee-rest-api"
-version = "0.2.0"
-source = "git+https://github.com/iotaledger/bee?rev=6d916175eea71ed82ba3f6ebc3d99c4e87385925#6d916175eea71ed82ba3f6ebc3d99c4e87385925"
+version = "0.2.2"
+source = "git+https://github.com/iotaledger/bee?rev=94261b7fb4db2edab20f3b7c16c9e87b48de547b#94261b7fb4db2edab20f3b7c16c9e87b48de547b"
 dependencies = [
  "bee-ledger",
  "bee-message",
  "bee-pow",
- "hex",
  "multiaddr",
  "packable",
+ "prefix-hex",
  "primitive-types",
  "serde",
  "serde_json",
@@ -273,9 +274,9 @@ checksum = "87c5fdd0166095e1d463fc6cc01aa8ce547ad77a4e84d42eb6762b084e28067e"
 
 [[package]]
 name = "bytemuck"
-version = "1.7.3"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "439989e6b8c38d1b6570a384ef1e49c8848128f5a97f3914baef02920842712f"
+checksum = "ee1e0e2125faccb856bf10b0a9dfa89c4c718d05ef85580dfefbdf1c422ef801"
 
 [[package]]
 name = "byteorder"
@@ -354,6 +355,12 @@ dependencies = [
  "poly1305",
  "zeroize",
 ]
+
+[[package]]
+name = "chunked_transfer"
+version = "1.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fff857943da45f546682664a79488be82e69e43c1a7a2307679ab9afb3a66d2e"
 
 [[package]]
 name = "cipher"
@@ -601,6 +608,7 @@ dependencies = [
  "futures-core",
  "futures-task",
  "futures-util",
+ "num_cpus",
 ]
 
 [[package]]
@@ -901,8 +909,8 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "1.1.0"
-source = "git+https://github.com/iotaledger/iota.rs?rev=fb2ce784d901317314efbaea60a0036e87411fb3#fb2ce784d901317314efbaea60a0036e87411fb3"
+version = "1.1.1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=2ff846d6328cb98c7c6cc02812f1efb74f055ac7#2ff846d6328cb98c7c6cc02812f1efb74f055ac7"
 dependencies = [
  "async-trait",
  "bee-common",
@@ -923,6 +931,7 @@ dependencies = [
  "serde_json",
  "thiserror",
  "tokio",
+ "ureq",
  "url",
  "zeroize",
 ]
@@ -980,8 +989,8 @@ dependencies = [
  "iota-client",
  "iota-crypto",
  "log",
- "once_cell",
  "packable",
+ "primitive-types",
  "rocksdb",
  "serde",
  "serde_json",
@@ -1481,6 +1490,17 @@ name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
+
+[[package]]
+name = "prefix-hex"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f120947380f07a50dd8d9985d3591f6632d688b8060321c3783aac91fa902c7"
+dependencies = [
+ "hex",
+ "primitive-types",
+ "uint",
+]
 
 [[package]]
 name = "primitive-types"
@@ -2101,6 +2121,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a156c684c91ea7d62626509bce3cb4e1d9ed5c4d978f7b4352658f96a4c26b4a"
 
 [[package]]
+name = "ureq"
+version = "2.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9399fa2f927a3d327187cbd201480cee55bee6ac5d3c77dd27f0c6814cff16d5"
+dependencies = [
+ "base64",
+ "chunked_transfer",
+ "log",
+ "once_cell",
+ "rustls",
+ "serde",
+ "serde_json",
+ "url",
+ "webpki",
+ "webpki-roots",
+]
+
+[[package]]
 name = "url"
 version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2302,9 +2340,9 @@ checksum = "85e60b0d1b5f99db2556934e21937020776a5d31520bf169e851ac44e6420214"
 
 [[package]]
 name = "zeroize"
-version = "1.5.2"
+version = "1.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7c88870063c39ee00ec285a2f8d6a966e5b6fb2becc4e8dac77ed0d370ed6006"
+checksum = "7eb5728b8afd3f280a869ce1d4c554ffaed35f45c231fc41bfbd0381bef50317"
 dependencies = [
  "zeroize_derive",
 ]
