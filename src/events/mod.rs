@@ -139,7 +139,7 @@ mod tests {
             0,
             WalletEvent::TransactionInclusion(TransactionInclusionEvent {
                 transaction_id: TransactionId::from_str(
-                    "2289d9981fb23cc5f4f6c2742685eeb480f8476089888aa886a18232bad81989",
+                    "0x2289d9981fb23cc5f4f6c2742685eeb480f8476089888aa886a18232bad81989",
                 )
                 .expect("Invalid tx id"),
                 inclusion_state: InclusionState::Confirmed,

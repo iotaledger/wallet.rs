@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     .unwrap();
 
     // Create the account manager
-    let manager = AccountManager::builder(signer).finish().await?;
+    let manager = AccountManager::builder().with_signer(signer).finish().await?;
 
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;

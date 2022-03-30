@@ -53,9 +53,9 @@ impl Default for StorageOptions {
 
 impl AccountManagerBuilder {
     /// Initialises a new instance of the account manager builder with the default storage adapter.
-    pub fn new(signer: SignerHandle) -> Self {
+    pub fn new() -> Self {
         Self {
-            signer: Some(signer),
+            signer: None,
             ..Default::default()
         }
     }

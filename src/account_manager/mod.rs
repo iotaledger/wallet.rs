@@ -55,8 +55,8 @@ pub struct AccountManager {
 
 impl AccountManager {
     /// Initialises the account manager builder.
-    pub fn builder(signer: SignerHandle) -> AccountManagerBuilder {
-        AccountManagerBuilder::new(signer)
+    pub fn builder() -> AccountManagerBuilder {
+        AccountManagerBuilder::new()
     }
 
     /// Create a new account
@@ -96,7 +96,8 @@ impl AccountManager {
         #[cfg(feature = "storage")]
         {
             // Update account manager data with new client options
-            let account_manager_builder = AccountManagerBuilder::new(self.signer.clone())
+            let account_manager_builder = AccountManagerBuilder::new()
+                .with_signer(self.signer.clone())
                 .with_storage_folder(
                     &self
                         .storage_options

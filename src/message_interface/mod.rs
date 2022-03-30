@@ -89,7 +89,8 @@ mod tests {
     };
 
     #[tokio::test]
-    async fn create_account() {
+    async fn message_interface_create_account() {
+        std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
         let signer = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
         let client_options = r#"{
             "nodes":[
@@ -114,7 +115,7 @@ mod tests {
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
-            storage_folder: Some("teststorage".to_string()),
+            storage_folder: Some("test-storage/message_interface_create_account".to_string()),
             client_options: Some(client_options),
             signer: Some(signer),
         };
@@ -132,12 +133,33 @@ mod tests {
             }
             _ => panic!("unexpected response {:?}", response),
         }
+        std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
     }
 
     #[cfg(feature = "events")]
     #[tokio::test]
-    async fn events() {
-        let wallet_handle = super::create_message_handler(None).await.unwrap();
+    async fn message_interface_events() {
+        std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
+        let signer = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let client_options = r#"{
+            "nodes":[
+               {
+                  "url":"http://localhost:14265/",
+                  "auth":null,
+                  "disabled":false
+               }
+            ]
+         }"#
+        .to_string();
+
+        let options = ManagerOptions {
+            #[cfg(feature = "storage")]
+            storage_folder: Some("test-storage/message_interface_events".to_string()),
+            client_options: Some(client_options),
+            signer: Some(signer),
+        };
+
+        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         wallet_handle
             .listen(vec![], |event| match &event.event {
@@ -158,7 +180,8 @@ mod tests {
                 .unwrap()
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                     Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")
-                        .unwrap(),
+                        .unwrap()
+                        .1,
                 )))
                 .finish()
                 .unwrap(),
@@ -173,5 +196,6 @@ mod tests {
         };
 
         let _response = message_interface::send_message(&wallet_handle, transfer).await;
+        std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }
 }

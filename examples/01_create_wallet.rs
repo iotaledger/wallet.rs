@@ -28,7 +28,8 @@ async fn main() -> Result<()> {
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
-    let manager = AccountManager::builder(signer)
+    let manager = AccountManager::builder()
+        .with_signer(signer)
         .with_client_options(client_options)
         .finish()
         .await?;
