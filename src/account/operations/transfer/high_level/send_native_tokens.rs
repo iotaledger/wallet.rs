@@ -20,7 +20,7 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCostConfigBuilder, NativeToken, Output, TokenId,
+        BasicOutputBuilder, NativeToken, Output, TokenId,
     },
 };
 use primitive_types::U256;
@@ -69,12 +69,7 @@ impl AccountHandle {
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;

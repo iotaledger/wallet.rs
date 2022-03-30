@@ -10,7 +10,7 @@ use crate::account::{
 
 use iota_client::bee_message::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, ByteCostConfigBuilder, Output, OutputId,
+    BasicOutputBuilder, Output, OutputId,
 };
 
 impl AccountHandle {
@@ -65,12 +65,7 @@ impl AccountHandle {
             log::debug!("[OUTPUT_CONSOLIDATION] no consolidation needed");
         }
 
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let mut consolidation_results = Vec::new();
         for outputs_on_one_address in outputs_to_consolidate {

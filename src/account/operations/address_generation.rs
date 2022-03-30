@@ -90,7 +90,7 @@ impl AccountHandle {
             changed_metadata.syncing = true;
             let addresses = signer
                 .generate_addresses(
-                    IOTA_COIN_TYPE,
+                    account.coin_type,
                     account.index,
                     address_range.clone(),
                     options.internal,

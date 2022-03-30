@@ -124,17 +124,13 @@ impl AccountManager {
 
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance {
-            total: 0,
-            available: 0,
-            // todo set other values
-            ..Default::default()
-        };
+        let mut balance = AccountBalance { ..Default::default() };
         let accounts = self.accounts.read().await;
         for account in accounts.iter() {
             let account_balance = account.balance().await?;
             balance.total += account_balance.total;
             balance.available += account_balance.available;
+            // todo set other values
         }
         Ok(balance)
     }

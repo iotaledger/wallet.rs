@@ -57,14 +57,7 @@ impl AccountHandle {
             // Find nft output from the inputs
             if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
                 if let Output::Nft(nft_output) = &o.output {
-                    // When the nft is minted, the nft_id contains only `0` bytes and we need to calculate the output id
-                    // todo: replace with `.or_from_output_id(o.output_id)` when available in bee: https://github.com/iotaledger/bee/pull/977
-                    let nft_id = if nft_output.nft_id().iter().all(|&b| b == 0) {
-                        NftId::from(&o.output_id)
-                    } else {
-                        *nft_output.nft_id()
-                    };
-                    address_and_nft_id.nft_id == nft_id
+                    address_and_nft_id.nft_id == nft_output.nft_id().or_from_output_id(o.output_id)
                 } else {
                     false
                 }

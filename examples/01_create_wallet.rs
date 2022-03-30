@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     let mnemonic = env::var("NONSECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
 
     // The mnemonic only needs to be stored the first time
-    signer.lock().await.store_mnemonic(&storage_path, mnemonic).await?;
+    signer.lock().await.store_mnemonic(mnemonic).await?;
 
     // Create the account manager with the signer and client options
     let client_options = ClientOptions::new()

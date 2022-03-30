@@ -13,7 +13,7 @@ use iota_client::bee_message::{
             StorageDepositReturnUnlockCondition, UnlockCondition,
         },
         AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCost, ByteCostConfig, FeatureBlock, FoundryOutputBuilder,
-        NativeToken, NftId, NftOutputBuilder, Output, TokenId, TokenScheme, TokenTag,
+        NativeToken, NftId, NftOutputBuilder, Output, OutputAmount, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
     },
 };
 use primitive_types::U256;
@@ -26,8 +26,7 @@ pub(crate) fn minimum_storage_deposit_basic(config: &ByteCostConfig, address: &A
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let basic_output = BasicOutputBuilder::new(1_000_000_000)
+    let basic_output = BasicOutputBuilder::new(OutputAmount::MIN)
         .unwrap()
         .add_unlock_condition(address_condition)
         .finish()
@@ -40,8 +39,7 @@ pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &A
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let alias_output = AliasOutputBuilder::new(1_000_000_000, AliasId::from([0; 20]))?
+    let alias_output = AliasOutputBuilder::new(OutputAmount::MIN, AliasId::from([0; 20]))?
         .with_state_index(0)
         .with_foundry_counter(0)
         .add_unlock_condition(UnlockCondition::StateControllerAddress(
@@ -58,15 +56,11 @@ pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &A
 pub(crate) fn minimum_storage_deposit_foundry(config: &ByteCostConfig) -> Result<u64> {
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
     let foundry_output = FoundryOutputBuilder::new(
-        1_000_000_000,
+        OutputAmount::MIN,
         1,
         TokenTag::new([0u8; 12]),
-        U256::from(0),
-        U256::from(0),
-        U256::from(1),
-        TokenScheme::Simple,
+        TokenScheme::Simple(SimpleTokenScheme::new(U256::from(0), U256::from(0), U256::from(1))?),
     )?
     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
         ImmutableAliasAddressUnlockCondition::new(AliasAddress::new(AliasId::new([0u8; 20]))),
@@ -86,11 +80,10 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
-    let mut basic_output_builder = BasicOutputBuilder::new(1_000_000_000)?
+    let mut basic_output_builder = BasicOutputBuilder::new(OutputAmount::MIN)?
         .add_unlock_condition(address_condition)
         .add_unlock_condition(UnlockCondition::StorageDepositReturn(
-            StorageDepositReturnUnlockCondition::new(*return_address, 1_000_000_000)?,
+            StorageDepositReturnUnlockCondition::new(*return_address, OutputAmount::MIN)?,
         ))
         .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
             *return_address,
@@ -121,9 +114,8 @@ pub(crate) fn minimum_storage_deposit_nft(
     let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    // todo: use `OutputAmount::MIN` when public, see https://github.com/iotaledger/bee/issues/1238
     let mut nft_builder =
-        NftOutputBuilder::new(1_000_000_000, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
+        NftOutputBuilder::new(OutputAmount::MIN, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
     if let Some(immutable_metadata) = immutable_metadata {
         nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
     }

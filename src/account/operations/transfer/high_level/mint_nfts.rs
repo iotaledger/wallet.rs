@@ -15,7 +15,7 @@ use iota_client::bee_message::{
     output::{
         feature_block::{FeatureBlock, MetadataFeatureBlock},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        ByteCostConfigBuilder, NftId, NftOutputBuilder, Output,
+        NftId, NftOutputBuilder, Output,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -62,12 +62,7 @@ impl AccountHandle {
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] mint_nfts");
-        let rent_structure = self.client.get_rent_structure().await?;
-        let byte_cost_config = ByteCostConfigBuilder::new()
-            .byte_cost(rent_structure.v_byte_cost)
-            .key_factor(rent_structure.v_byte_factor_key)
-            .data_factor(rent_structure.v_byte_factor_data)
-            .finish();
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
 
