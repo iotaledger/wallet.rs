@@ -53,7 +53,7 @@ class IotaWallet():
         # Setup the message type
         message_type = {
             'cmd': 'GetAccount',
-            'payload': f'{alias_index}',
+            'payload': alias_index,
         }
 
         return message_type
@@ -151,6 +151,6 @@ class IotaWallet():
     @staticmethod
     def __return_str_or_none(str):
         if str:
-            return f'{str}'
+            return str
         else:
             return None

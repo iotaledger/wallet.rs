@@ -22,7 +22,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'GenerateAddresses',
                     'data': {
@@ -43,7 +43,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListAddresses',
                 },
@@ -59,7 +59,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListAddressesWithBalance',
                 },
@@ -75,7 +75,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListOutputs',
                 },
@@ -91,7 +91,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListUnspentOutputs',
                 },
@@ -107,7 +107,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListTransactions',
                 },
@@ -123,7 +123,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'ListPendingTransactions',
                 },
@@ -139,7 +139,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'GetBalance',
                 },
@@ -156,7 +156,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'SyncAccount',
                     'data': {
@@ -176,7 +176,7 @@ class Account:
         message_type = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': f'{self.alias_index}',
+                'account_id': self.alias_index,
                 'method': {
                     'name': 'SendTransfer',
                     'data':  {
