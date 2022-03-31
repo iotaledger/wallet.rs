@@ -90,9 +90,7 @@ impl AccountHandle {
                             // Get nft outputs
                             output_ids.extend(
                                 client
-                                    .nfts_output_ids(vec![
-                                        QueryParameter::Address(address.address.to_bech32()),
-                                    ])
+                                    .nfts_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                                     .await?
                                     .into_iter(),
                             );

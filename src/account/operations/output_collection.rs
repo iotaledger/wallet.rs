@@ -224,6 +224,7 @@ impl AccountHandle {
             .first()
             .ok_or(crate::Error::FailedToGetRemainder)?
             .clone();
+        drop(account);
 
         let mut collection_results = Vec::new();
         // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <= max
