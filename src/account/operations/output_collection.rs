@@ -8,7 +8,7 @@ use crate::{
             helpers::time::{can_output_be_unlocked_now, is_expired},
             transfer::TransferResult,
         },
-        TransferOptions,
+        OutputData, TransferOptions,
     },
     Result,
 };
@@ -36,12 +36,12 @@ pub enum OutputsToCollect {
 }
 
 impl AccountHandle {
-    /// Get basic and nft outputs that have more than the [`AddressUnlockCondition`] and also get basic outputs only
-    /// with that, for additional inputs
-    pub(crate) async fn get_outputs_with_additional_unlock_conditions(
+    /// Get basic and nft outputs that have more than the [`AddressUnlockCondition`] and also get basic outputs with
+    /// only this unlock condition, for additional inputs
+    pub async fn get_outputs_with_additional_unlock_conditions(
         &self,
         outputs_to_collect: OutputsToCollect,
-    ) -> crate::Result<(Vec<OutputId>, Vec<OutputId>)> {
+    ) -> crate::Result<Vec<OutputId>> {
         log::debug!("[OUTPUT_COLLECTION] get_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
@@ -49,7 +49,6 @@ impl AccountHandle {
 
         // Get outputs for the collect
         let mut output_ids_to_collect: HashSet<OutputId> = HashSet::new();
-        let mut possible_additional_inputs: Vec<OutputId> = Vec::new();
         for (output_id, output_data) in &account.unspent_outputs {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
@@ -89,10 +88,6 @@ impl AccountHandle {
                                     }
                                     _ => {}
                                 }
-                            } else if basic_output.unlock_conditions().len() == 1 {
-                                // Store outputs with [AddressUnlockCondition] alone, because they could be used as
-                                // additional input, if required
-                                possible_additional_inputs.push(output_data.output_id);
                             }
                         }
                         Output::Nft(nft_output) => {
@@ -142,7 +137,7 @@ impl AccountHandle {
             "[OUTPUT_COLLECTION] available outputs to collect: {}",
             output_ids_to_collect.len()
         );
-        Ok((output_ids_to_collect.into_iter().collect(), possible_additional_inputs))
+        Ok(output_ids_to_collect.into_iter().collect())
     }
 
     /// Try to collect basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
@@ -152,24 +147,24 @@ impl AccountHandle {
     ) -> crate::Result<Vec<TransferResult>> {
         log::debug!("[OUTPUT_COLLECTION] try_collect_outputs");
 
-        let (output_ids_to_collect, possible_additional_input_ids) = self
+        let output_ids_to_collect = self
             .get_outputs_with_additional_unlock_conditions(outputs_to_collect)
             .await?;
-
-        self.collect_outputs_internal(output_ids_to_collect, possible_additional_input_ids)
+        let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
+        self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
             .await
     }
 
-    /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
-    /// from [`get_outputs_with_additional_unlock_conditions()`].
-    pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransferResult>> {
-        log::debug!("[OUTPUT_COLLECTION] collect_outputs");
+    /// Get basic outputs that have only one unlock condition which is [AddressUnlockCondition], so they can be used as
+    /// additional inputs
+    pub async fn get_basic_outputs_for_additional_inputs(&self) -> crate::Result<Vec<OutputData>> {
+        log::debug!("[OUTPUT_COLLECTION] get_basic_outputs_for_additional_inputs");
         let account = self.read().await;
 
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         // Get basic outputs only with AddressUnlockCondition and no other unlock condition
-        let mut basic_outputs: Vec<OutputId> = Vec::new();
+        let mut basic_outputs: Vec<OutputData> = Vec::new();
         for (output_id, output_data) in &account.unspent_outputs {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
@@ -178,14 +173,21 @@ impl AccountHandle {
                         if basic_output.unlock_conditions().len() == 1 {
                             // Store outputs with [AddressUnlockCondition] alone, because they could be used as
                             // additional input, if required
-                            basic_outputs.push(output_data.output_id);
+                            basic_outputs.push(output_data.clone());
                         }
                     }
                 }
             }
         }
         log::debug!("[OUTPUT_COLLECTION] available basic outputs: {}", basic_outputs.len());
-        drop(account);
+        Ok(basic_outputs)
+    }
+
+    /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
+    /// from [`get_outputs_with_additional_unlock_conditions()`].
+    pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransferResult>> {
+        log::debug!("[OUTPUT_COLLECTION] collect_outputs");
+        let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
         self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
             .await
     }
@@ -194,23 +196,17 @@ impl AccountHandle {
     pub(crate) async fn collect_outputs_internal(
         &self,
         output_ids_to_collect: Vec<OutputId>,
-        possible_additional_input_ids: Vec<OutputId>,
+        possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<TransferResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs_internal");
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let mut outputs_to_collect = Vec::new();
-        let mut possible_additional_inputs = Vec::new();
         let account = self.read().await;
         for output_id in output_ids_to_collect {
             if let Some(output_data) = account.unspent_outputs.get(&output_id) {
                 outputs_to_collect.push(output_data.clone());
-            }
-        }
-        for output_id in possible_additional_input_ids {
-            if let Some(output_data) = account.unspent_outputs.get(&output_id) {
-                possible_additional_inputs.push(output_data.clone());
             }
         }
 
