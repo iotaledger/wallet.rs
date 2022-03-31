@@ -49,7 +49,7 @@ fn default_output_consolidation_threshold() -> usize {
 }
 
 fn default_automatic_output_consolidation() -> bool {
-    true
+    false
 }
 
 fn default_sync_pending_transactions() -> bool {
@@ -61,7 +61,7 @@ fn default_sync_aliases_and_nfts() -> bool {
 }
 
 fn default_try_collect_outputs() -> OutputsToCollect {
-    OutputsToCollect::All
+    OutputsToCollect::None
 }
 
 fn default_address_start_index() -> u32 {
