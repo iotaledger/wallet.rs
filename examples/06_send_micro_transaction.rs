@@ -8,21 +8,20 @@
 use dotenv::dotenv;
 use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, AddressMicroAmount, Result};
 
-use std::{env, path::Path};
+use std::{env, path::PathBuf};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
     // Setup Stronghold signer
-    let signer = StrongholdSigner::try_new_signer_handle(
-        &env::var("STRONGHOLD_PASSWORD").unwrap(),
-        &Path::new("wallet.stronghold"),
-    )
-    .unwrap();
+    let signer = StrongholdSigner::builder()
+        .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
+        .snapshot_path(PathBuf::from("wallet.stronghold"))
+        .build();
 
     // Create the account manager
-    let manager = AccountManager::builder().with_signer(signer).finish().await?;
+    let manager = AccountManager::builder().with_signer(signer.into()).finish().await?;
 
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
