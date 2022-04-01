@@ -961,7 +961,10 @@ impl AccountHandle {
         let account = self.read().await;
         let storage = crate::storage::get(&account.storage_path).await?;
         let mut storage = storage.lock().await;
+        let mut old_participations = Vec::new();
         if let Ok(mut participations) = storage.get_participations(*account.index()).await {
+            // Copy old events in case the transaction fails
+            old_participations = participations.clone();
             // remove provided events
             participations = participations
                 .into_iter()
@@ -973,7 +976,21 @@ impl AccountHandle {
         drop(account);
         // by using the participate function with en empty vec we will just send transactions only with the remaining or
         // no events
-        self.participate(Vec::new()).await
+        match self.participate(Vec::new()).await {
+            Ok(messages) => Ok(messages),
+            Err(e) => self.restore_participations(old_participations).await,
+        }
+    }
+
+    #[cfg(feature = "participation")]
+    async fn restore_participations(
+        &self,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<()> {
+        let account = self.read().await;
+        let storage = crate::storage::get(&account.storage_path).await?;
+        let mut storage = storage.lock().await;
+        storage.save_participations(*account.index(), participations).await
     }
 
     #[cfg(feature = "participation")]
