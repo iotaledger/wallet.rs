@@ -76,13 +76,13 @@ impl Default for SyncOptions {
     fn default() -> Self {
         Self {
             output_consolidation_threshold: 100,
-            automatic_output_consolidation: true,
+            automatic_output_consolidation: false,
             address_start_index: 0,
             gap_limit: 0,
             sync_pending_transactions: true,
             sync_aliases_and_nfts: true,
             sync_all_addresses: false,
-            try_collect_outputs: OutputsToCollect::All,
+            try_collect_outputs: OutputsToCollect::None,
             force_syncing: false,
         }
     }
