@@ -13,6 +13,8 @@ use crate::{
     Error,
 };
 
+use iota_client::bee_message::output::OutputId;
+
 use serde::Serialize;
 
 /// The response message.
@@ -29,6 +31,8 @@ pub enum ResponseType {
     Addresses(Vec<AccountAddress>),
     /// ListAddressesWithBalance.
     AddressesWithBalance(Vec<AddressWithBalance>),
+    /// GetOutputsWithAdditionalUnlockConditions.
+    OutputIds(Vec<OutputId>),
     /// ListOutputs/ListUnspentOutputs.
     Outputs(Vec<OutputData>),
     /// ListTransactions/ListPendingTransactions.
@@ -45,6 +49,8 @@ pub enum ResponseType {
     BackupRestored,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(TransferResult),
+    /// TryCollectOutputs and CollectOutputs response.
+    SentTransfers(Vec<TransferResult>),
     /// An error occurred.
     Error(Error),
     /// A panic occurred.

@@ -13,6 +13,8 @@ pub(crate) mod operations;
 pub mod types;
 pub use operations::{
     address_generation::AddressGenerationOptions,
+    output_collection::OutputsToCollect,
+    syncing::SyncOptions,
     transfer::{RemainderValueStrategy, TransferOptions},
 };
 

@@ -192,6 +192,12 @@ impl WalletMessageHandler {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
+            AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_collect } => {
+                let output_ids = account_handle
+                    .get_outputs_with_additional_unlock_conditions(*outputs_to_collect)
+                    .await?;
+                Ok(ResponseType::OutputIds(output_ids))
+            }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
@@ -291,6 +297,20 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let message = account_handle.send(outputs.clone(), options.clone()).await?;
                     Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::TryCollectOutputs { outputs_to_collect } => {
+                convert_async_panics(|| async {
+                    let transfer_results = account_handle.try_collect_outputs(*outputs_to_collect).await?;
+                    Ok(ResponseType::SentTransfers(transfer_results))
+                })
+                .await
+            }
+            AccountMethod::CollectOutputs { output_ids_to_collect } => {
+                convert_async_panics(|| async {
+                    let transfer_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
+                    Ok(ResponseType::SentTransfers(transfer_results))
                 })
                 .await
             }

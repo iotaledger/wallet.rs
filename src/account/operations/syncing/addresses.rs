@@ -12,7 +12,9 @@ use iota_client::{bee_message::output::OutputId, node_api::indexer_api::query_pa
 
 use std::time::Instant;
 impl AccountHandle {
-    /// Get the balance and return only addresses with a positive balance
+    /// Get the addresses that should be synced with the current known unspent output ids
+    /// Also adds alias and nft addresses from unspent alias or nft outputs that have no Timelock, Expiration or
+    /// StorageDepositReturn [`UnlockCondition`]
     pub(crate) async fn get_addresses_to_sync(&self, options: &SyncOptions) -> crate::Result<Vec<AddressWithBalance>> {
         log::debug!("[SYNC] get_addresses_to_sync");
         let balance_sync_start_time = Instant::now();
@@ -31,6 +33,8 @@ impl AccountHandle {
         let mut addresses_with_old_output_ids = Vec::new();
         for address in addresses_before_syncing {
             let mut output_ids = Vec::new();
+            // Add currently known unspent output ids, so we can later compare them with the new output ids and see if
+            // one got spent (is missing in the new returned output ids)
             if let Some(address_with_balance) = addresses_with_balance.iter().find(|a| a.address == address.address) {
                 output_ids = address_with_balance.output_ids.to_vec();
             }
@@ -86,13 +90,7 @@ impl AccountHandle {
                             // Get nft outputs
                             output_ids.extend(
                                 client
-                                    .nfts_output_ids(vec![
-                                        QueryParameter::Address(address.address.to_bech32()),
-                                        // todo: handle the following unlock conditions
-                                        QueryParameter::HasExpirationCondition(false),
-                                        QueryParameter::HasTimelockCondition(false),
-                                        QueryParameter::HasStorageDepositReturnCondition(false),
-                                    ])
+                                    .nfts_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                                     .await?
                                     .into_iter(),
                             );

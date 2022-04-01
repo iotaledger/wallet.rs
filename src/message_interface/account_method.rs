@@ -3,12 +3,13 @@
 
 use crate::{
     account::operations::{
-        address_generation::AddressGenerationOptions, syncing::SyncOptions, transfer::TransferOptions,
+        address_generation::AddressGenerationOptions, output_collection::OutputsToCollect, syncing::SyncOptions,
+        transfer::TransferOptions,
     },
     AddressAndAmount, AddressAndNftId, AddressMicroAmount, AddressNativeTokens, NativeTokenOptions, NftOptions,
 };
 
-use iota_client::bee_message::output::Output;
+use iota_client::bee_message::output::{Output, OutputId};
 
 use serde::Deserialize;
 
@@ -21,6 +22,8 @@ pub enum AccountMethod {
         amount: u32,
         options: Option<AddressGenerationOptions>,
     },
+    /// Get outputs with additional unlock conditions
+    GetOutputsWithAdditionalUnlockConditions { outputs_to_collect: OutputsToCollect },
     /// List addresses.
     ListAddresses,
     /// Returns only addresses of the account with balance
@@ -76,4 +79,8 @@ pub enum AccountMethod {
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
     },
+    /// Try to collect outputs.
+    TryCollectOutputs { outputs_to_collect: OutputsToCollect },
+    /// Collect outputs.
+    CollectOutputs { output_ids_to_collect: Vec<OutputId> },
 }
