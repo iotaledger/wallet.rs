@@ -105,27 +105,30 @@ impl AccountHandle {
             .get_or_create_alias_output(controller_address, options.clone())
             .await?;
 
-        // create foundry output with minted native tokens
-
-        let foundry_id = FoundryId::build(&AliasAddress::new(alias_id), 1, SimpleTokenScheme::KIND);
-        let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
-
         let account = self.read().await;
-        let exiting_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
+        let existing_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
             if let Output::Alias(output) = &output_data.output {
                 output.alias_id().or_from_output_id(output_data.output_id) == alias_id
             } else {
                 false
             }
         });
-        let exiting_alias_output = exiting_alias_output
+        let existing_alias_output = existing_alias_output
             .ok_or_else(|| Error::MintingFailed("No alias output available".to_string()))?
             .clone();
         drop(account);
 
-        if let Output::Alias(alias_output) = &exiting_alias_output.output {
+        if let Output::Alias(alias_output) = &existing_alias_output.output {
+            // create foundry output with minted native tokens
+            let foundry_id = FoundryId::build(
+                &AliasAddress::new(alias_id),
+                alias_output.foundry_counter() + 1,
+                SimpleTokenScheme::KIND,
+            );
+            let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
+
             // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
-            let mut new_alias_output_builder = AliasOutputBuilder::new(exiting_alias_output.amount, alias_id)?
+            let mut new_alias_output_builder = AliasOutputBuilder::new(existing_alias_output.amount, alias_id)?
                 .with_state_index(alias_output.state_index() + 1)
                 .with_foundry_counter(alias_output.foundry_counter() + 1)
                 .add_unlock_condition(UnlockCondition::StateControllerAddress(
@@ -193,12 +196,12 @@ impl AccountHandle {
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account = self.read().await;
-        let exiting_alias_output = account
+        let existing_alias_output = account
             .unspent_outputs()
             .values()
             .into_iter()
             .find(|output_data| matches!(&output_data.output, Output::Alias(output)));
-        match exiting_alias_output {
+        match existing_alias_output {
             Some(output_data) => {
                 if let Output::Alias(alias_output) = &output_data.output {
                     let alias_id = alias_output.alias_id().or_from_output_id(output_data.output_id);
