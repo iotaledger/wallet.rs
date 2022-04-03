@@ -172,3 +172,14 @@ mod tests {
         assert_eq!(participations, deserialized_participations);
     }
 }
+
+/// OutputStatusResponses to keep track of the data after outputs got spent
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OutputStatusResponses {
+    /// Spent outputs data
+    pub spent:
+        HashMap<iota_client::bee_message::output::OutputId, crate::participation::response_types::OutputStatusResponse>,
+    /// Unpent outputs data
+    pub unspent:
+        HashMap<iota_client::bee_message::output::OutputId, crate::participation::response_types::OutputStatusResponse>,
+}
