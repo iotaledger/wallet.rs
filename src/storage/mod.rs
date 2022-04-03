@@ -333,6 +333,35 @@ impl StorageManager {
         Ok(participation_address)
     }
 
+    #[cfg(feature = "participation")]
+    pub async fn get_participation_outputs(
+        &self,
+        account_index: usize,
+    ) -> crate::Result<crate::participation::types::OutputStatusResponses> {
+        let participation_outputs: crate::participation::types::OutputStatusResponses = serde_json::from_str(
+            &self
+                .storage
+                .get(&format!("ACCOUNT-{}-PARTICIPATION-OUTPUTS", account_index))
+                .await?,
+        )?;
+        Ok(participation_outputs)
+    }
+
+    #[cfg(feature = "participation")]
+    pub async fn save_participation_outputs(
+        &mut self,
+        account_index: usize,
+        participation_outputs: crate::participation::types::OutputStatusResponses,
+    ) -> crate::Result<()> {
+        self.storage
+            .set(
+                &format!("ACCOUNT-{}-PARTICIPATION-OUTPUTS", account_index),
+                participation_outputs,
+            )
+            .await?;
+        Ok(())
+    }
+
     pub async fn remove_account(&mut self, key: &str) -> crate::Result<()> {
         let index = AccountIndexation { key: key.to_string() };
         if let Some(index) = self.account_indexation.iter().position(|i| i == &index) {
