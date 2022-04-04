@@ -8,40 +8,42 @@ use serde::{Deserialize, Serialize};
 /// The synchronization options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncOptions {
-    #[serde(
-        rename = "outputConsolidationThreshold",
-        default = "default_output_consolidation_threshold"
-    )]
-    pub output_consolidation_threshold: usize,
+    /// Specific Bech32 encoded addresses of the account to sync, if addresses are provided, then `address_start_index`
+    /// will be ignored
+    #[serde(rename = "addresses", default)]
+    pub addresses: Vec<String>,
+    /// Address index from which to start syncing addresses. 0 by default, using a higher index will be faster because
+    /// addresses with a lower index will be skipped, but could result in a wrong balance for that reason
+    #[serde(rename = "addressStartIndex", default = "default_address_start_index")]
+    pub address_start_index: u32,
     #[serde(
         rename = "automaticOutputConsolidation",
         default = "default_automatic_output_consolidation"
     )]
     pub automatic_output_consolidation: bool,
-    // 0 by default, using a higher value will be faster, but could result in a wrong balance, since addresses with a
-    // lower index aren't synced
-    #[serde(rename = "addressStartIndex", default = "default_address_start_index")]
-    pub address_start_index: u32,
-    // 0 by default, no new address should be generated during syncing
-    #[serde(rename = "gapLimit", default = "default_gap_limit")]
-    pub gap_limit: usize,
+    /// Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 10
+    /// seconds. But if we change the client options, we need to resync, because the new node could be from a nother
+    /// network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
+    /// addresses.
+    #[serde(rename = "forceSyncing", default)]
+    pub force_syncing: bool,
+    /// Checks pending transactions and promotes/reattaches them if necessary.
     #[serde(rename = "syncTransactions", default = "default_sync_pending_transactions")]
     pub sync_pending_transactions: bool,
+    /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
     pub sync_aliases_and_nfts: bool,
-    // Syncs all addresses of the account and not only the ones with balance (required when syncing the account in a
-    // new network, because addresses that had balance in the old network, but not in the new one, wouldn't get
-    // updated)
-    #[serde(rename = "syncAllAddresses", default)]
-    pub sync_all_addresses: bool,
     // Automatically try to collect basic outputs that have additional unlock conditions to their
     // [AddressUnlockCondition].
     #[serde(rename = "tryCollectOutputs", default = "default_try_collect_outputs")]
     pub try_collect_outputs: OutputsToCollect,
-    // usually we skip syncing if it's called within a few ms, but if we change the client options we need to resync
-    // this will also ignore `address_start_index` and sync all addresses
-    #[serde(rename = "forceSyncing", default)]
-    pub force_syncing: bool,
+    /// Amount of unspent outputs, only with a [`AddressUnlockCondition`], before they get consolidated (merged with a
+    /// transaction to a single output).
+    #[serde(
+        rename = "outputConsolidationThreshold",
+        default = "default_output_consolidation_threshold"
+    )]
+    pub output_consolidation_threshold: usize,
 }
 
 fn default_output_consolidation_threshold() -> usize {
@@ -68,20 +70,15 @@ fn default_address_start_index() -> u32 {
     0
 }
 
-fn default_gap_limit() -> usize {
-    0
-}
-
 impl Default for SyncOptions {
     fn default() -> Self {
         Self {
+            addresses: Vec::new(),
             output_consolidation_threshold: 100,
             automatic_output_consolidation: false,
             address_start_index: 0,
-            gap_limit: 0,
             sync_pending_transactions: true,
             sync_aliases_and_nfts: true,
-            sync_all_addresses: false,
             try_collect_outputs: OutputsToCollect::None,
             force_syncing: false,
         }

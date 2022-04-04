@@ -8,9 +8,13 @@ use crate::account::{
 #[cfg(feature = "events")]
 use crate::events::types::WalletEvent;
 
-use iota_client::{bee_message::output::OutputId, node_api::indexer_api::query_parameters::QueryParameter};
+use iota_client::{
+    bee_message::{address::Address, output::OutputId},
+    node_api::indexer_api::query_parameters::QueryParameter,
+};
 
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
+
 impl AccountHandle {
     /// Get the addresses that should be synced with the current known unspent output ids
     /// Also adds alias and nft addresses from unspent alias or nft outputs that have no Timelock, Expiration or
@@ -20,15 +24,32 @@ impl AccountHandle {
         let balance_sync_start_time = Instant::now();
 
         let mut addresses_before_syncing = self.list_addresses().await?;
+
+        // If custom addresses are provided check if they are in the account and only use them
+        if !options.addresses.is_empty() {
+            let mut specific_addresses_to_sync = HashSet::new();
+            for bech32_address in &options.addresses {
+                let (_bech32_hrp, address) = Address::try_from_bech32(bech32_address)?;
+                match addresses_before_syncing.iter().find(|a| a.address.inner == address) {
+                    Some(address) => {
+                        specific_addresses_to_sync.insert(address.clone());
+                    }
+                    None => return Err(crate::Error::AddressNotFoundInAccount(bech32_address.to_string())),
+                }
+            }
+            addresses_before_syncing = specific_addresses_to_sync.into_iter().collect();
+        }
+
         // Filter addresses when address_start_index is not 0 so we skip these addresses
         // If we force syncing, we want to sync all addresses
-        if options.address_start_index != 0 && !options.force_syncing {
+        if options.addresses.is_empty() && options.address_start_index != 0 && !options.force_syncing {
             addresses_before_syncing = addresses_before_syncing
                 .into_iter()
                 .filter(|a| a.key_index >= options.address_start_index)
                 .collect();
         }
 
+        // Check if selected addresses contains addresses with balance so we can correctly update them
         let addresses_with_balance = self.list_addresses_with_balance().await?;
         let mut addresses_with_old_output_ids = Vec::new();
         for address in addresses_before_syncing {
