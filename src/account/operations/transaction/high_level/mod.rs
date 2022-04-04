@@ -1,6 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+pub(crate) mod burn_native_token;
 pub(crate) mod minimum_storage_deposit;
 pub(crate) mod mint_native_token;
 pub(crate) mod mint_nfts;
