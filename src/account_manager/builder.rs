@@ -102,12 +102,19 @@ impl AccountManagerBuilder {
             let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
 
             let (client_options, signer) = match manager_builder {
-                Some(data) => (
-                    data.client_options
-                        .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
-                    // todo: can we get this from the read data? Maybe just with type and path for Stronghold?
-                    self.signer.ok_or(crate::Error::MissingParameter("Signer"))?,
-                ),
+                Some(data) => {
+                    let client_options = match data.client_options {
+                        Some(options) => options,
+                        None => self
+                            .client_options
+                            .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
+                    };
+                    (
+                        client_options,
+                        // todo: can we get this from the read data? Maybe just with type and path for Stronghold?
+                        self.signer.ok_or(crate::Error::MissingParameter("Signer"))?,
+                    )
+                }
                 // If no account manager data exist, we will set it
                 None => {
                     // Store account manager data in storage

@@ -81,13 +81,13 @@ impl AccountHandle {
         let account_addresses = self.list_addresses().await?;
         // the address needs to be from the account, because for the minting we need to sign transactions from it
         let controller_address = match &native_token_options.account_address {
-            Some(address) => {
-                let (_bech32_hrp, address) = Address::try_from_bech32(&address)?;
+            Some(bech32_address) => {
+                let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
                 if account_addresses
                     .binary_search_by_key(&address, |address| address.address.inner)
                     .is_err()
                 {
-                    return Err(Error::AddressNotFoundInAccount);
+                    return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
                 }
                 address
             }

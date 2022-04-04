@@ -164,7 +164,6 @@ impl AccountHandle {
         // we sync with all addresses, because otherwise the balance wouldn't get updated if an address doesn't has
         // balance also in the new network
         self.sync(Some(SyncOptions {
-            sync_all_addresses: true,
             force_syncing: true,
             ..Default::default()
         }))

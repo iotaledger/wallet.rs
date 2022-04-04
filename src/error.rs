@@ -100,8 +100,8 @@ pub enum Error {
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, u16),
     /// Address not found in account
-    #[error("address not found in account")]
-    AddressNotFoundInAccount,
+    #[error("address {0} not found in account")]
+    AddressNotFoundInAccount(String),
     /// Minting failed
     #[error("minting failed {0}")]
     MintingFailed(String),
@@ -195,7 +195,7 @@ impl serde::Serialize for Error {
             Self::TooManyOutputs(..) => serialize_variant(self, serializer, "TooManyOutputs"),
             Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),
             Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
-            Self::AddressNotFoundInAccount => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
+            Self::AddressNotFoundInAccount(_) => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
             Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),

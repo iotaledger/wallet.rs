@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
 /// An account address.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[getset(get = "pub")]
 pub struct AccountAddress {
     /// The address.

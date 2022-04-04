@@ -93,7 +93,6 @@ impl AccountHandle {
             .await;
 
         self.sync(Some(SyncOptions {
-            sync_all_addresses: true,
             force_syncing: true,
             ..Default::default()
         }))

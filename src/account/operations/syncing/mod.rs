@@ -136,18 +136,22 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
         // update used field of the addresses
-        for address in addresses_with_balance.iter() {
-            if address.internal {
+        for address_with_balance in addresses_with_balance.iter() {
+            if address_with_balance.internal {
                 let position = account
                     .internal_addresses
-                    .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|_| crate::Error::AddressNotFoundInAccount)?;
+                    .binary_search_by_key(&(address_with_balance.key_index, address_with_balance.internal), |a| {
+                        (a.key_index, a.internal)
+                    })
+                    .map_err(|_| crate::Error::AddressNotFoundInAccount(address_with_balance.address.to_bech32()))?;
                 account.internal_addresses[position].used = true;
             } else {
                 let position = account
                     .public_addresses
-                    .binary_search_by_key(&(address.key_index, address.internal), |a| (a.key_index, a.internal))
-                    .map_err(|_| crate::Error::AddressNotFoundInAccount)?;
+                    .binary_search_by_key(&(address_with_balance.key_index, address_with_balance.internal), |a| {
+                        (a.key_index, a.internal)
+                    })
+                    .map_err(|_| crate::Error::AddressNotFoundInAccount(address_with_balance.address.to_bech32()))?;
                 account.public_addresses[position].used = true;
             }
         }
