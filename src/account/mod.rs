@@ -978,7 +978,10 @@ impl AccountHandle {
         // no events
         match self.participate(Vec::new()).await {
             Ok(messages) => Ok(messages),
-            Err(e) => self.restore_participations(old_participations).await,
+            Err(e) => {
+                self.restore_participations(old_participations).await?;
+                Err(e)
+            }
         }
     }
 
@@ -990,7 +993,8 @@ impl AccountHandle {
         let account = self.read().await;
         let storage = crate::storage::get(&account.storage_path).await?;
         let mut storage = storage.lock().await;
-        storage.save_participations(*account.index(), participations).await
+        storage.save_participations(*account.index(), participations).await?;
+        Ok(())
     }
 
     #[cfg(feature = "participation")]
