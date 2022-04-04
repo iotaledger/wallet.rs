@@ -1858,6 +1858,27 @@
 <span id="1856">1856</span>
 <span id="1857">1857</span>
 <span id="1858">1858</span>
+<span id="1859">1859</span>
+<span id="1860">1860</span>
+<span id="1861">1861</span>
+<span id="1862">1862</span>
+<span id="1863">1863</span>
+<span id="1864">1864</span>
+<span id="1865">1865</span>
+<span id="1866">1866</span>
+<span id="1867">1867</span>
+<span id="1868">1868</span>
+<span id="1869">1869</span>
+<span id="1870">1870</span>
+<span id="1871">1871</span>
+<span id="1872">1872</span>
+<span id="1873">1873</span>
+<span id="1874">1874</span>
+<span id="1875">1875</span>
+<span id="1876">1876</span>
+<span id="1877">1877</span>
+<span id="1878">1878</span>
+<span id="1879">1879</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -2821,7 +2842,10 @@
         <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>().<span class="kw">await</span>;
         <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">storage_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_participations</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">participations</span>) <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get_participations</span>(<span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>()).<span class="kw">await</span> {
+            <span class="comment">// Copy old events in case the transaction fails</span>
+            <span class="ident">old_participations</span> <span class="op">=</span> <span class="ident">participations</span>.<span class="ident">clone</span>();
             <span class="comment">// remove provided events</span>
             <span class="ident">participations</span> <span class="op">=</span> <span class="ident">participations</span>
                 .<span class="ident">into_iter</span>()
@@ -2833,7 +2857,25 @@
         <span class="ident">drop</span>(<span class="ident">account</span>);
         <span class="comment">// by using the participate function with en empty vec we will just send transactions only with the remaining or</span>
         <span class="comment">// no events</span>
-        <span class="self">self</span>.<span class="ident">participate</span>(<span class="ident">Vec::new</span>()).<span class="kw">await</span>
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">participate</span>(<span class="ident">Vec::new</span>()).<span class="kw">await</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">messages</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">messages</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
+                <span class="self">self</span>.<span class="ident">restore_participations</span>(<span class="ident">old_participations</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>)
+            }
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">restore_participations</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">participations</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::Participation</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">account</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">read</span>().<span class="kw">await</span>;
+        <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::storage::get</span>(<span class="kw-2">&amp;</span><span class="ident">account</span>.<span class="ident">storage_path</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">lock</span>().<span class="kw">await</span>;
+        <span class="ident">storage</span>.<span class="ident">save_participations</span>(<span class="kw-2">*</span><span class="ident">account</span>.<span class="ident">index</span>(), <span class="ident">participations</span>).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
