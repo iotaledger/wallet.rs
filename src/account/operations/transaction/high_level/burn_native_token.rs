@@ -5,19 +5,15 @@ use crate::{
     account::{
         handle::AccountHandle,
         operations::transfer::TransferResult,
-        types::AccountAddress,
         TransferOptions,
     },
     Error,
 };
 
 use iota_client::bee_message::{
-    address::{Address, AliasAddress},
+    address::AliasAddress,
     output::{
-        unlock_condition::{
-            GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
-            StateControllerAddressUnlockCondition, UnlockCondition,
-        },
+        unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
         AliasOutputBuilder, FoundryOutputBuilder, NativeToken, Output, SimpleTokenScheme, TokenId, TokenScheme,
     },
 };
@@ -28,25 +24,11 @@ use serde::{Deserialize, Serialize};
 /// Address, token ID and amount for `burn_native_token()`
 #[serde(rename_all = "camelCase")]
 pub struct BurnNativeTokenOptions {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the
-    /// first address of the account
-    pub account_address: Option<String>,
     /// Native token
     pub native_token: (TokenId, U256),
 }
 
 impl AccountHandle {
-    fn contains_bech32_address(address: &str, account_addresses: &[AccountAddress]) -> crate::Result<Address> {
-        let (_bech32_hrp, address) = Address::try_from_bech32(address)?;
-        if account_addresses
-            .binary_search_by_key(&address, |address| address.address.inner)
-            .is_err()
-        {
-            return Err(Error::AddressNotFoundInAccount);
-        }
-        Ok(address)
-    }
-
     /// Function to burn native tokens with foundry
     pub async fn burn_native_token(
         &self,
@@ -55,20 +37,6 @@ impl AccountHandle {
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] burn_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
-
-        let account_addresses = self.list_addresses().await?;
-        // the address needs to be from the account, because for the minting we need to sign transactions from it
-        let controller_address = match &burn_native_token_options.account_address {
-            Some(address) => AccountHandle::contains_bech32_address(address, &account_addresses)?,
-            None => {
-                account_addresses
-                    .first()
-                    // todo other error message
-                    .ok_or(Error::FailedToGetRemainder)?
-                    .address
-                    .inner
-            }
-        };
 
         let token_id = burn_native_token_options.native_token.0;
         let burn_token_amount = burn_native_token_options.native_token.1;
@@ -109,13 +77,12 @@ impl AccountHandle {
             // Create the new alias output with the same feature blocks, just updated state_index
             let mut new_alias_output_builder = AliasOutputBuilder::new_with_amount(existing_alias_output_data.amount, alias_id)?
                 .with_state_index(alias_output.state_index() + 1)
-                .with_foundry_counter(alias_output.foundry_counter())
-                .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                    StateControllerAddressUnlockCondition::new(controller_address),
-                ))
-                .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                    controller_address,
-                )));
+                .with_foundry_counter(alias_output.foundry_counter());
+
+            for unlock_condition in alias_output.unlock_conditions().clone().into_iter() {
+                new_alias_output_builder = new_alias_output_builder.add_unlock_condition(unlock_condition);
+            }
+
             for feature_block in alias_output.feature_blocks().iter() {
                 new_alias_output_builder = new_alias_output_builder.add_feature_block(feature_block.clone());
             }
