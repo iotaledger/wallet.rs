@@ -1435,6 +1435,21 @@
 <span id="1433">1433</span>
 <span id="1434">1434</span>
 <span id="1435">1435</span>
+<span id="1436">1436</span>
+<span id="1437">1437</span>
+<span id="1438">1438</span>
+<span id="1439">1439</span>
+<span id="1440">1440</span>
+<span id="1441">1441</span>
+<span id="1442">1442</span>
+<span id="1443">1443</span>
+<span id="1444">1444</span>
+<span id="1445">1445</span>
+<span id="1446">1446</span>
+<span id="1447">1447</span>
+<span id="1448">1448</span>
+<span id="1449">1449</span>
+<span id="1450">1450</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -2199,7 +2214,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Serialize</span>, <span class="ident">Deserialize</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageTransactionPayload</span> {
     <span class="ident">essence</span>: <span class="ident">TransactionEssence</span>,
-    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;unlockBlocks&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span>(<span class="ident">serialize</span> <span class="op">=</span> <span class="string">&quot;unlockBlocks&quot;</span>), <span class="ident">alias</span> <span class="op">=</span> <span class="string">&quot;unlockBlocks&quot;</span>)]</span>
     <span class="ident">unlock_blocks</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">UnlockBlock</span>]<span class="op">&gt;</span>,
 }
 
@@ -2869,6 +2884,21 @@
     <span class="ident">Value</span> <span class="op">=</span> <span class="number">5</span>,
     <span class="doccomment">/// Message confirmed.</span>
     <span class="ident">Confirmed</span> <span class="op">=</span> <span class="number">6</span>,
+}
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+<span class="kw">mod</span> <span class="ident">tests</span> {
+    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Message</span>;
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">message_parsing</span>() {
+        <span class="kw">let</span> <span class="ident">serialized_message_1</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;id&quot;:&quot;263a908e9af5f76052d01e1196c645a0b3b68326c0cf6c83ceda9f284f81eb3f&quot;,&quot;version&quot;:1,&quot;parents&quot;:[&quot;0e6bafd31ddd6ea5ab9ef86e3b93497a0af069ed979c3e46b44b7ed80f191a4f&quot;,&quot;27020fdf43e72693cfa4e2d5f29efac6e4f7b2f2d7e3442348e7a904f695372c&quot;,&quot;60e495f804e622d7342753d2017c85c15d98d869bf8c809404c17c6178e8047d&quot;,&quot;e1e9bac26cf0ede7092e7bdebf7274c0eb5cedb642ea24df13f06b2e3af121dd&quot;],&quot;payloadLength&quot;:233,&quot;payload&quot;:{&quot;type&quot;:&quot;Transaction&quot;,&quot;data&quot;:{&quot;essence&quot;:{&quot;type&quot;:&quot;Regular&quot;,&quot;data&quot;:{&quot;inputs&quot;:[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:{&quot;input&quot;:&quot;1ac3a0d8d2aa4b945bc18e5439d7a064bd15c45c6436ef3ed3e0933018a1b6ca0000&quot;,&quot;metadata&quot;:{&quot;transactionId&quot;:&quot;1ac3a0d8d2aa4b945bc18e5439d7a064bd15c45c6436ef3ed3e0933018a1b6ca&quot;,&quot;messageId&quot;:&quot;72c54ded382cabf4c96fe39be7ed8712c090d019b813a1edb24e0e05fc2cd796&quot;,&quot;index&quot;:0,&quot;amount&quot;:100000000,&quot;isSpent&quot;:false,&quot;address&quot;:&quot;atoi1qql3gq76fg66v5w4ymrfgmncxg9q53w2tamzrxe5423gpcvxml2ak2w6w52&quot;,&quot;kind&quot;:&quot;SignatureLockedSingle&quot;}}}],&quot;outputs&quot;:[{&quot;type&quot;:&quot;SignatureLockedSingle&quot;,&quot;data&quot;:{&quot;address&quot;:&quot;atoi1qzjvshnp0ef2kxqnrm9gn0wh46sp5avmpmpf5cdv9wwj4qjxjc99zu92z8d&quot;,&quot;amount&quot;:90000000,&quot;remainder&quot;:true}},{&quot;type&quot;:&quot;SignatureLockedDustAllowance&quot;,&quot;data&quot;:{&quot;address&quot;:&quot;atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r&quot;,&quot;amount&quot;:10000000}}],&quot;payload&quot;:null,&quot;internal&quot;:false,&quot;incoming&quot;:false,&quot;value&quot;:10000000,&quot;remainderValue&quot;:90000000}},&quot;unlockBlocks&quot;:[{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[82,103,140,222,67,242,235,58,45,172,133,44,251,146,12,105,89,164,74,214,105,11,159,248,250,182,55,27,117,246,222,101],&quot;signature&quot;:[191,164,179,252,155,49,105,77,206,234,68,48,33,231,122,138,15,136,231,31,64,112,164,160,78,161,39,38,15,222,251,232,176,114,213,14,41,4,95,28,115,231,212,238,73,136,232,124,105,42,212,192,170,151,158,206,182,237,216,114,144,114,123,9]}}}]}},&quot;timestamp&quot;:&quot;2022-04-05T12:34:29.024451798Z&quot;,&quot;nonce&quot;:5764607523034346247,&quot;broadcasted&quot;:true,&quot;reattachmentMessageId&quot;:null}&quot;#</span>;
+        <span class="kw">let</span> <span class="ident">message_1</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>(<span class="ident">serialized_message_1</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// extra test with `unlock_blocks` because of a breaking change</span>
+        <span class="kw">let</span> <span class="ident">serialized_message_2</span> <span class="op">=</span> <span class="string">r#&quot;{&quot;id&quot;:&quot;263a908e9af5f76052d01e1196c645a0b3b68326c0cf6c83ceda9f284f81eb3f&quot;,&quot;version&quot;:1,&quot;parents&quot;:[&quot;0e6bafd31ddd6ea5ab9ef86e3b93497a0af069ed979c3e46b44b7ed80f191a4f&quot;,&quot;27020fdf43e72693cfa4e2d5f29efac6e4f7b2f2d7e3442348e7a904f695372c&quot;,&quot;60e495f804e622d7342753d2017c85c15d98d869bf8c809404c17c6178e8047d&quot;,&quot;e1e9bac26cf0ede7092e7bdebf7274c0eb5cedb642ea24df13f06b2e3af121dd&quot;],&quot;payloadLength&quot;:233,&quot;payload&quot;:{&quot;type&quot;:&quot;Transaction&quot;,&quot;data&quot;:{&quot;essence&quot;:{&quot;type&quot;:&quot;Regular&quot;,&quot;data&quot;:{&quot;inputs&quot;:[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:{&quot;input&quot;:&quot;1ac3a0d8d2aa4b945bc18e5439d7a064bd15c45c6436ef3ed3e0933018a1b6ca0000&quot;,&quot;metadata&quot;:{&quot;transactionId&quot;:&quot;1ac3a0d8d2aa4b945bc18e5439d7a064bd15c45c6436ef3ed3e0933018a1b6ca&quot;,&quot;messageId&quot;:&quot;72c54ded382cabf4c96fe39be7ed8712c090d019b813a1edb24e0e05fc2cd796&quot;,&quot;index&quot;:0,&quot;amount&quot;:100000000,&quot;isSpent&quot;:false,&quot;address&quot;:&quot;atoi1qql3gq76fg66v5w4ymrfgmncxg9q53w2tamzrxe5423gpcvxml2ak2w6w52&quot;,&quot;kind&quot;:&quot;SignatureLockedSingle&quot;}}}],&quot;outputs&quot;:[{&quot;type&quot;:&quot;SignatureLockedSingle&quot;,&quot;data&quot;:{&quot;address&quot;:&quot;atoi1qzjvshnp0ef2kxqnrm9gn0wh46sp5avmpmpf5cdv9wwj4qjxjc99zu92z8d&quot;,&quot;amount&quot;:90000000,&quot;remainder&quot;:true}},{&quot;type&quot;:&quot;SignatureLockedDustAllowance&quot;,&quot;data&quot;:{&quot;address&quot;:&quot;atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r&quot;,&quot;amount&quot;:10000000}}],&quot;payload&quot;:null,&quot;internal&quot;:false,&quot;incoming&quot;:false,&quot;value&quot;:10000000,&quot;remainderValue&quot;:90000000}},&quot;unlock_blocks&quot;:[{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[82,103,140,222,67,242,235,58,45,172,133,44,251,146,12,105,89,164,74,214,105,11,159,248,250,182,55,27,117,246,222,101],&quot;signature&quot;:[191,164,179,252,155,49,105,77,206,234,68,48,33,231,122,138,15,136,231,31,64,112,164,160,78,161,39,38,15,222,251,232,176,114,213,14,41,4,95,28,115,231,212,238,73,136,232,124,105,42,212,192,170,151,158,206,182,237,216,114,144,114,123,9]}}}]}},&quot;timestamp&quot;:&quot;2022-04-05T12:34:29.024451798Z&quot;,&quot;nonce&quot;:5764607523034346247,&quot;broadcasted&quot;:true,&quot;reattachmentMessageId&quot;:null}&quot;#</span>;
+        <span class="kw">let</span> <span class="ident">message_2</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>::<span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>(<span class="ident">serialized_message_2</span>).<span class="ident">unwrap</span>();
+        <span class="macro">assert_eq!</span>(<span class="ident">message_1</span>, <span class="ident">message_2</span>);
+    }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="iota_wallet" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0 (9d1b2106e 2022-02-23)" ></div>
