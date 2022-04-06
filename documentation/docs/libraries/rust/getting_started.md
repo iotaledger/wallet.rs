@@ -77,9 +77,9 @@ use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let storage_folder: PathBuf = "./my-db".into();
+    let storage_path: PathBuf = "./my-db".into();
     let manager = AccountManager::builder()
-        .with_storage(&storage_folder, None)?
+        .with_storage(&storage_path, None)?
         .finish()
         .await?;
     manager.set_stronghold_password("password").await?;

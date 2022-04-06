@@ -1,8 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// The default storage folder.
-pub const DEFAULT_STORAGE_FOLDER: &str = "./storage";
+/// The default storage path.
+pub const DEFAULT_STORAGE_PATH: &str = "./storage";
 
 /// The default stronghold storage file name.
 #[cfg(feature = "stronghold")]

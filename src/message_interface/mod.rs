@@ -14,32 +14,44 @@ pub use message_handler::WalletMessageHandler;
 pub use message_type::{AccountToCreate, MessageType};
 pub use response::Response;
 pub use response_type::ResponseType;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize, Serializer};
 
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
-use crate::{account_manager::AccountManager, ClientOptions, Result};
+use crate::{account_manager::AccountManager, ClientOptions};
 
 use iota_client::signing::SignerHandle;
 use tokio::sync::mpsc::unbounded_channel;
 
-#[derive(Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ManagerOptions {
-    #[cfg(feature = "storage")]
-    #[serde(rename = "storageFolder")]
-    storage_folder: Option<String>,
+    #[serde(rename = "storagePath")]
+    storage_path: Option<String>,
     #[serde(rename = "clientOptions")]
     client_options: Option<String>,
+    #[serde(serialize_with = "signer_serialize")]
     signer: Option<String>,
 }
 
-pub async fn create_message_handler(options: Option<ManagerOptions>) -> Result<WalletMessageHandler> {
+// Don't serialize the signer, because we don't want to log the mnemonic or password
+fn signer_serialize<S>(x: &Option<String>, s: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    s.serialize_str(&format!("is_some: {}", x.is_some()))
+}
+
+pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::Result<WalletMessageHandler> {
+    log::debug!(
+        "create_message_handler with options: {}",
+        serde_json::to_string(&options)?,
+    );
     let manager = if let Some(options) = options {
         let mut builder = AccountManager::builder();
 
         #[cfg(feature = "storage")]
-        if let Some(storage_folder) = options.storage_folder {
-            builder = builder.with_storage_folder(&storage_folder);
+        if let Some(storage_path) = options.storage_path {
+            builder = builder.with_storage_path(&storage_path);
         }
 
         if let Some(signer) = options.signer {
@@ -115,7 +127,7 @@ mod tests {
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
-            storage_folder: Some("test-storage/message_interface_create_account".to_string()),
+            storage_path: Some("test-storage/message_interface_create_account".to_string()),
             client_options: Some(client_options),
             signer: Some(signer),
         };
@@ -154,7 +166,7 @@ mod tests {
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
-            storage_folder: Some("test-storage/message_interface_events".to_string()),
+            storage_path: Some("test-storage/message_interface_events".to_string()),
             client_options: Some(client_options),
             signer: Some(signer),
         };

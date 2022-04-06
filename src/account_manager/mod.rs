@@ -98,10 +98,10 @@ impl AccountManager {
             // Update account manager data with new client options
             let account_manager_builder = AccountManagerBuilder::new()
                 .with_signer(self.signer.clone())
-                .with_storage_folder(
+                .with_storage_path(
                     &self
                         .storage_options
-                        .storage_folder
+                        .storage_path
                         .clone()
                         .into_os_string()
                         .into_string()

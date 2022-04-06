@@ -5,12 +5,12 @@ from json import loads, dumps
 
 
 class IotaWallet():
-    def __init__(self, storage_folder='./walletdb', client_options=None, signer=None):
+    def __init__(self, storage_path='./walletdb', client_options=None, signer=None):
         """Initialize the IOTA Wallet.
         """
 
         # Setup the options
-        options = {'storageFolder': storage_folder}
+        options = {'storagePath': storage_path}
         if client_options:
             options['clientOptions'] = dumps(client_options)
         if signer:

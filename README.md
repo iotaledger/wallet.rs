@@ -78,10 +78,10 @@ use std::path::PathBuf;
 
 #[tokio::main]
 async fn main() -> iota_wallet::Result<()> {
-    let storage_folder: PathBuf = "./my-db".into();
+    let storage_path: PathBuf = "./my-db".into();
     let manager =
         AccountManager::builder()
-            .with_storage(&storage_folder, None)
+            .with_storage(&storage_path, None)
             .finish()
             .await?;
     let client_options = ClientOptions::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();

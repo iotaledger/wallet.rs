@@ -32,7 +32,7 @@ pub struct AccountManagerBuilder {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg(feature = "storage")]
 pub struct StorageOptions {
-    pub(crate) storage_folder: PathBuf,
+    pub(crate) storage_path: PathBuf,
     pub(crate) storage_file_name: Option<String>,
     // storage: ManagerStorage,
     pub(crate) storage_encryption_key: Option<[u8; 32]>,
@@ -43,7 +43,7 @@ pub struct StorageOptions {
 impl Default for StorageOptions {
     fn default() -> Self {
         StorageOptions {
-            storage_folder: "walletdb".into(),
+            storage_path: "walletdb".into(),
             storage_file_name: None,
             storage_encryption_key: None,
             manager_store: ManagerStorage::Rocksdb,
@@ -73,10 +73,10 @@ impl AccountManagerBuilder {
     }
 
     #[cfg(feature = "storage")]
-    /// Set the storage folder to be used.
-    pub fn with_storage_folder(mut self, folder: &str) -> Self {
+    /// Set the storage path to be used.
+    pub fn with_storage_path(mut self, path: &str) -> Self {
         self.storage_options = Some(StorageOptions {
-            storage_folder: folder.into(),
+            storage_path: path.into(),
             ..Default::default()
         });
         self
@@ -89,10 +89,10 @@ impl AccountManagerBuilder {
         let storage_options = self.storage_options.clone().unwrap_or_default();
         #[cfg(feature = "storage")]
         let storage =
-            crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_folder.clone())?;
+            crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_path.clone())?;
         #[cfg(feature = "storage")]
         let storage_manager = crate::storage::manager::new_storage_manager(
-            storage_options.storage_folder.as_path(),
+            storage_options.storage_path.as_path(),
             None,
             Box::new(storage) as Box<dyn crate::storage::adapter::StorageAdapter + Send + Sync>,
         )

@@ -4,15 +4,16 @@
 const addon = require('../../index.node');
 const utils = require('../utils.js');
 
-let { sendMessage, messageHandlerNew, listen, test } = addon;
+let { sendMessage, messageHandlerNew, listen, } = addon;
 
 const sendMessageAsync = utils.promisify(sendMessage);
 const listenAsync = utils.promisify(listen);
-const testAsync = utils.promisify(test);
 
 class MessageHandler {
     constructor(options) {
-        this.messageHandler = messageHandlerNew(JSON.stringify(options));
+        // each field is stringified before
+        let final_options = {storagePath: options.storagePath, clientOptions: JSON.stringify(options.clientOptions), signer: JSON.stringify(options.signer)}
+        this.messageHandler = messageHandlerNew(JSON.stringify(final_options));
     }
 
     async sendMessage(message) {

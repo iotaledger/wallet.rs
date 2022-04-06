@@ -16,7 +16,7 @@ async fn account_ordering() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/account_ordering")
+        .with_storage_path("test-storage/account_ordering")
         .finish()
         .await?;
 
@@ -41,7 +41,7 @@ async fn account_alias_already_exists() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/account_alias_already_exists")
+        .with_storage_path("test-storage/account_alias_already_exists")
         .finish()
         .await?;
 
@@ -92,7 +92,7 @@ async fn account_rename_alias() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/account_rename_alias")
+        .with_storage_path("test-storage/account_rename_alias")
         .finish()
         .await?;
 
@@ -125,7 +125,7 @@ async fn account_first_address_exists() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/account_first_address_exists")
+        .with_storage_path("test-storage/account_first_address_exists")
         .finish()
         .await?;
 

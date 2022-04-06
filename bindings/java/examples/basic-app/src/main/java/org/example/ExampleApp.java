@@ -23,7 +23,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         EventManager.subscribeErrors(this);
         EventManager.subscribeStrongholdStatusChange(this);
 
-        Path storageFolder = Paths.get("./my-db");
+        Path storagePath = Paths.get("./my-db");
 
         // Beware: All builder patterns return NEW instances on each method call.
         // Mutating the old builder after a builder call will not result in a change on
@@ -32,12 +32,12 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         // in rust
         // Examble that doesnt work:
         // AccountManagerBuilder builder = AccountManager.Builder();
-        // builder.withStorage(storageFolder.toString(), null);
+        // builder.withStorage(storagePath.toString(), null);
         // AccountManager manager = builder.finish();
         //
         // Explanation: builder.withStorage returns a new builder instance, and .finish
         // is called on the old one
-        AccountManagerBuilder builder = AccountManager.Builder().withStorage(storageFolder.toString(), null);
+        AccountManagerBuilder builder = AccountManager.Builder().withStorage(storagePath.toString(), null);
 
         AccountManager manager = builder.finish();
         manager.setStrongholdPassword("YepThisISSecure");

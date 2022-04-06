@@ -9,7 +9,7 @@ import XCTest
 class SwiftAwait: XCTestCase {
     
     struct ManagerOptions: Codable {
-        var storageFolder: String?
+        var storagePath: String?
         var clientOptions: String?
         var signer: String?
     }
@@ -50,7 +50,7 @@ class SwiftAwait: XCTestCase {
         }
         """
         
-        let manager_options = ManagerOptions(storageFolder: "teststorage", clientOptions: client_options, signer: signer)
+        let manager_options = ManagerOptions(storagePath: "teststorage", clientOptions: client_options, signer: signer)
         
         let json = try JSONEncoder().encode(manager_options)
         let manager_options_json = String(data: json, encoding: .utf8)!

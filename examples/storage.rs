@@ -12,7 +12,7 @@ async fn main() -> Result<()> {
 
     let manager = AccountManager::builder()
         .with_signer(signer)
-        .with_storage_folder("wallet-database")
+        .with_storage_path("wallet-database")
         .finish()
         .await?;
 

@@ -17,7 +17,7 @@ async fn account_recovery_empty() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/account_recovery_empty")
+        .with_storage_path("test-storage/account_recovery_empty")
         .finish()
         .await?;
 

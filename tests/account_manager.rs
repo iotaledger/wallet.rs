@@ -15,7 +15,7 @@ async fn stored_account_manager_data() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer.clone())
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/stored_account_manager_data")
+        .with_storage_path("test-storage/stored_account_manager_data")
         .finish()
         .await?;
 
@@ -23,7 +23,7 @@ async fn stored_account_manager_data() -> Result<()> {
     // Recreate AccountManager without providing client options
     let manager = AccountManager::builder()
         .with_signer(signer)
-        .with_storage_folder("test-storage/stored_account_manager_data")
+        .with_storage_path("test-storage/stored_account_manager_data")
         .finish()
         .await?;
     let client_options = manager.get_client_options().await;
@@ -48,7 +48,7 @@ async fn different_seed() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("test-storage/different_seed")
+        .with_storage_path("test-storage/different_seed")
         .finish()
         .await?;
 
@@ -65,7 +65,7 @@ async fn different_seed() -> Result<()> {
     let signer2 = MnemonicSigner::new("route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy")?;
     let manager = AccountManager::builder()
         .with_signer(signer2)
-        .with_storage_folder("test-storage/different_seed")
+        .with_storage_path("test-storage/different_seed")
         .finish()
         .await?;
 

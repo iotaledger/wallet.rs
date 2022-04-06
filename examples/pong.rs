@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_folder("pongdb")
+        .with_storage_path("pongdb")
         .finish()
         .await?;
 
