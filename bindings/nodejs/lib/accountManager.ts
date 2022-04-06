@@ -1,17 +1,21 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const mh = require('./messageHandler.js');
-const acc = require('./account.js');
-let { MessageHandler } = mh;
-let { AccountForMessages } = acc;
+import MessageHandler from './messageHandler';
+import AccountForMessages from './account';
+import EventListener from './eventListener';
 
-class AccountManagerForMessages {
-    constructor(options) {
+import type { IAccountManagerOptions } from './types'
+
+export default class AccountManagerForMessages {
+    messageHandler: MessageHandler;
+    eventListener: EventListener | null;
+
+    constructor(options: IAccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);
     }
 
-    async getAccount(accountId) {
+    async getAccount(accountId: string) {
         return this.messageHandler
             .sendMessage({
                 cmd: 'GetAccount',
@@ -32,7 +36,7 @@ class AccountManagerForMessages {
         });
     }
 
-    async createAccount(account) {
+    async createAccount(account: any) {
         return this.messageHandler
             .sendMessage({
                 cmd: 'CreateAccount',
@@ -47,14 +51,14 @@ class AccountManagerForMessages {
             );
     }
 
-    async setStrongholdPassword(password) {
+    async setStrongholdPassword(password: string) {
         return this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
             payload: password,
         });
     }
 
-    async storeMnemonic(mnemonic) {
+    async storeMnemonic(mnemonic: string) {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: {
@@ -66,7 +70,7 @@ class AccountManagerForMessages {
         });
     }
 
-    async backup(destination, password) {
+    async backup(destination: string, password: string) {
         return this.messageHandler.sendMessage({
             cmd: 'Backup',
             payload: {
@@ -76,7 +80,7 @@ class AccountManagerForMessages {
         });
     }
 
-    async importAccounts(backupPath, password) {
+    async importAccounts(backupPath: string, password: string) {
         return this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
@@ -90,5 +94,3 @@ class AccountManagerForMessages {
         return this.messageHandler.listen(eventTypes, callback);
     }
 }
-
-module.exports.AccountManagerForMessages = AccountManagerForMessages;

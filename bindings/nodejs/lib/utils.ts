@@ -1,7 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-function promisify(fn) {
+// @ts-nocheck
+export function promisify(fn) {
   return function () {
     return new Promise((resolve, reject) =>
       fn.apply(this, [
@@ -41,7 +42,7 @@ class RemainderValueStrategy {
   }
 }
 
-class OutputKind {
+export class OutputKind {
   constructor() {}
 
   static signatureLockedSingle() {
@@ -53,6 +54,7 @@ class OutputKind {
   }
 }
 
-module.exports.promisify = promisify;
-module.exports.RemainderValueStrategy = new RemainderValueStrategy();
-module.exports.OutputKind = OutputKind;
+export const remainderValueStrategy =  new RemainderValueStrategy();
+
+
+

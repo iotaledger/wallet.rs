@@ -1,8 +1,14 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-class AccountForMessages {
-    constructor(accountData, messageHandler) {
+import type MessageHandler from './messageHandler';
+
+
+export default class AccountForMessages {
+    accountData: any;
+    messageHandler: MessageHandler
+
+    constructor(accountData: any, messageHandler: MessageHandler) {
         this.accountData = accountData;
         this.messageHandler = messageHandler;
     }
@@ -11,7 +17,7 @@ class AccountForMessages {
         return this.accountData.alias;
     }
 
-    async sync(options) {
+    async sync(options: any) {
         console.log({
             account_id: this.accountData.index,
             method: {
@@ -33,7 +39,7 @@ class AccountForMessages {
         );
     }
 
-    async getNodeInfo(url) {
+    async getNodeInfo(url: string) {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
@@ -99,7 +105,7 @@ class AccountForMessages {
         );
     }
 
-    async send(transfer) {
+    async send(transfer: any) {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'SendTransfer',
@@ -111,7 +117,7 @@ class AccountForMessages {
         );
     }
 
-    async setClientOptions(options) {
+    async setClientOptions(options: any) {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'SetClientOptions',
@@ -121,4 +127,3 @@ class AccountForMessages {
     }
 }
 
-module.exports.AccountForMessages = AccountForMessages;

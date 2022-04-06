@@ -6,3 +6,4 @@ npm-debug.log*
 wallet.log
 build/
 prebuilds/
+out/
