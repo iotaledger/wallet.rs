@@ -1,21 +1,20 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-const addon = require('../index.node');
-const { listen, eventListenerNew, removeEventListeners } = addon;
+import { listen, eventListenerNew, removeEventListeners } from './bindings';
 
-class EventListener {
-  constructor(options) {
+export default class EventListener {
+  eventListener: any
+
+  constructor(options: any) {
     this.eventListener = eventListenerNew(JSON.stringify(options));
   }
 
-  listen(eventName, callback) {
+  listen(eventName: string, callback: any) {
     return listen(eventName, this.eventListener, callback);
   }
 
-  removeEventListeners(eventName) {
+  removeEventListeners(eventName: string) {
     return removeEventListeners(eventName, this.eventListener);
   }
 }
-
-module.exports.EventListener = EventListener;
