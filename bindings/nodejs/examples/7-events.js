@@ -12,7 +12,7 @@ async function run() {
     });
 
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
+        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
@@ -22,8 +22,8 @@ async function run() {
         console.log('Syncing... - ', synced);
 
         // You can also get the latest unused address:
-        const addressObject = await account.latestAddress();
-        console.log('Address:', addressObject);
+        // const addressObject = await account.latestAddress();
+        // console.log('Address:', addressObject);
 
         // Use the Chrysalis Faucet to send testnet tokens to your address:
         console.log(
@@ -31,9 +31,19 @@ async function run() {
         );
 
         const callback = function (err, data) {
-            console.log('data:', data);
+            console.log('all event data:', JSON.parse(data));
         };
-        manager.listen('BalanceChange', callback);
+        // empty array listens to all event types
+        manager.listen([], callback);
+
+        const callback2 = function (err, data) {
+            console.log('data:', JSON.parse(data));
+        };
+        // provide event type to filter only for events with this type
+        manager.listen(['BalanceChange'], callback2);
+
+        const address = await account.generateAddresses();
+        console.log('New address:', address);
 
         setTimeout(() => {
             manager.removeEventListeners('BalanceChange');
@@ -45,12 +55,11 @@ async function run() {
 
     // Possible Event Types:
     //
-    // ErrorThrown
     // BalanceChange
-    // NewTransaction
-    // ConfirmationStateChange
-    // Reattachment
-    // Broadcast
+    // TransactionInclusion
+    // TransferProgress
+    // ConsolidationRequired
+    // LedgerAddressGeneration
 }
 
 run();

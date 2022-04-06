@@ -1,16 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "events")]
+#[cfg(debug_assertions)]
+use crate::events::types::WalletEvent;
 use crate::{
-    account::{
-        operations::{syncing::SyncOptions, transfer::TransferOptions},
-        types::AccountIdentifier,
-    },
-    client::ClientOptions,
+    account::{operations::syncing::SyncOptions, types::AccountIdentifier},
+    ClientOptions,
 };
 
 use super::account_method::AccountMethod;
-use iota_client::bee_message::output::Output;
 use serde::{ser::Serializer, Deserialize, Serialize};
 use std::{path::PathBuf, time::Duration};
 
@@ -58,13 +57,6 @@ pub enum MessageType {
     #[cfg(feature = "storage")]
     /// Deletes the storage.
     DeleteStorage,
-    /// Send funds.
-    SendTransfer {
-        /// The account identifier.
-        account_id: AccountIdentifier,
-        outputs: Vec<Output>,
-        options: Option<TransferOptions>,
-    },
     /// Generates a new mnemonic.
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
@@ -80,6 +72,9 @@ pub enum MessageType {
     },
     /// Stop background syncing.
     StopBackgroundSync,
+    #[cfg(feature = "events")]
+    #[cfg(debug_assertions)]
+    EmitTestEvent(WalletEvent),
 }
 
 impl Serialize for MessageType {
@@ -94,21 +89,23 @@ impl Serialize for MessageType {
             MessageType::CallAccountMethod { .. } => {
                 serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
             }
-            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 7, "Backup"),
-            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 8, "RestoreBackup"),
-            MessageType::SendTransfer { .. } => serializer.serialize_unit_variant("MessageType", 15, "SendTransfer"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 17, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 18, "VerifyMnemonic"),
-            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 22, "DeleteStorage"),
+            MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 7, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 8, "VerifyMnemonic"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 9, "DeleteStorage"),
             MessageType::SetClientOptions(_) => {
-                serializer.serialize_unit_variant("MessageType", 24, "SetClientOptions")
+                serializer.serialize_unit_variant("MessageType", 10, "SetClientOptions")
             }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 34, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 11, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 35, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 12, "StopBackgroundSync")
             }
+            #[cfg(feature = "events")]
+            #[cfg(debug_assertions)]
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 13, "EmitTestEvent"),
         }
     }
 }

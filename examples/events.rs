@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example events --release
+//! cargo run --example events --features=events --release
 
 use iota_client::bee_message::{
     address::Address,
@@ -10,13 +10,7 @@ use iota_client::bee_message::{
         BasicOutputBuilder, Output,
     },
 };
-use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    client::ClientOptions,
-    signing::mnemonic::MnemonicSigner,
-    Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,11 +18,11 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
-        .with_client_options(client_options)
         .with_signer(signer)
+        .with_client_options(client_options)
         .finish()
         .await?;
 
@@ -61,20 +55,12 @@ async fn main() -> Result<()> {
     let outputs = vec![Output::Basic(
         BasicOutputBuilder::new(1_000_000)?
             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?,
+                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?.1,
             )))
             .finish()?,
     )];
     // let res = account.send(outputs, None).await?;
-    let res = account
-        .send(
-            outputs,
-            Some(TransferOptions {
-                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                ..Default::default()
-            }),
-        )
-        .await?;
+    let res = account.send(outputs, None).await?;
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,

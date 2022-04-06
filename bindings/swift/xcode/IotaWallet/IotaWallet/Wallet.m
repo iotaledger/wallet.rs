@@ -4,31 +4,31 @@
 #import "Wallet.h"
 #import "iota_wallet_ffi.h"
 
+#include <stddef.h>
+
 @interface Wallet () {
     iota_wallet_handle_t* wallet_handle;
 }
-
-- (nullable instancetype) initWalletHandle:(const char *) path;
 
 @end
 
 
 @implementation Wallet
 
-- (nullable instancetype) initWalletHandle:(const char *) path {
-    wallet_handle = iota_initialize(NULL);
+
+- (nullable instancetype) initWithManagerOptions:(nullable NSString*) options error:(NSError**) error {
+    char errorMessage[1024] = { 0 };
+    
+    wallet_handle = iota_initialize(options.UTF8String, errorMessage, sizeof(errorMessage));
     if (!wallet_handle) {
+        if (error) {
+            NSDictionary *userInfo = @{ NSLocalizedDescriptionKey : [NSString stringWithUTF8String:errorMessage] };
+            *error = [NSError errorWithDomain:@"org.iota" code:-1 userInfo:userInfo];
+        }
         self = nil;
     }
+    
     return self;
-}
-
-- (nullable instancetype) init {
-    return [self initWalletHandle: NULL];
-}
-
-- (nullable instancetype) initWithStoragePath:(NSString*) path {
-    return [self initWalletHandle: path.UTF8String];
 }
 
 - (void) dealloc {
@@ -37,6 +37,20 @@
 
 - (void) sendMessage:(NSString *) message completion: (WalletHandler) completion {
     iota_send_message(wallet_handle, message.UTF8String, callback, (void*)CFBridgingRetain(completion));
+}
+
+- (BOOL) listen:(NSArray<NSString*>*) event_types handler: (WalletHandler) handler error:(NSError**) error {
+    NSData* data = [NSJSONSerialization dataWithJSONObject:event_types options:NSJSONWritingPrettyPrinted error:nil];
+    NSString* message = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    char errorMessage[1024] = { 0 };
+    
+    int8_t ret = iota_listen(wallet_handle, message.UTF8String, callback, (void*)CFBridgingRetain(handler), errorMessage, sizeof(errorMessage));
+    
+    if (ret && error) {
+        NSDictionary *userInfo = @{ NSLocalizedDescriptionKey : [NSString stringWithUTF8String:errorMessage] };
+        *error = [NSError errorWithDomain:@"org.iota" code:-1 userInfo:userInfo];;
+    }
+    return ret == 0 ? YES : NO;
 }
 
 static void callback(const char* response, const char* error, void* context)
@@ -51,7 +65,6 @@ static void callback(const char* response, const char* error, void* context)
     } else if (response) {
         message = [NSString stringWithUTF8String:response];
     }
-    
     
     handler(message, returnError);
 }

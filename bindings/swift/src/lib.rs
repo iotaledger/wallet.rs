@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    message_interface,
+    events::types::{Event, WalletEventType},
+    message_interface::{self, ManagerOptions},
     message_interface::{MessageType, WalletMessageHandler},
 };
 
@@ -20,6 +21,8 @@ use tokio::runtime::Runtime;
 
 type Callback = extern "C" fn(message: *const c_char, error: *const c_char, context: *mut c_void);
 type IotaWalletHandle = WalletMessageHandler;
+
+const INVALID_HANDLE_ERR: &str = "Invalid handle";
 
 #[derive(Debug)]
 struct CallbackContext {
@@ -43,20 +46,48 @@ fn runtime() -> &'static Arc<Runtime> {
     })
 }
 
+fn copy_error_message(dest: *mut c_char, src: Box<dyn std::fmt::Debug>, size: usize) {
+    if dest.is_null() {
+        return;
+    }
+
+    let error_message = CString::new(format!("{:?}", src)).unwrap();
+    unsafe {
+        error_message.as_ptr().copy_to(dest, size - 1);
+    }
+}
+
+fn null_with_error_message(dest: *mut c_char, src: Box<dyn std::fmt::Debug>, size: usize) -> *mut IotaWalletHandle {
+    copy_error_message(dest, src, size);
+    std::ptr::null_mut()
+}
+
 #[no_mangle]
-pub extern "C" fn iota_initialize(storage_path: *const c_char) -> *mut IotaWalletHandle {
-    let path = if storage_path.is_null() {
+pub extern "C" fn iota_initialize(
+    manager_options: *const c_char,
+    error_buffer: *mut c_char,
+    error_buffer_size: usize,
+) -> *mut IotaWalletHandle {
+    let manager_options = if manager_options.is_null() {
         None
     } else {
-        let c_storage_path = unsafe { CStr::from_ptr(storage_path) };
-        Some(c_storage_path.to_str().unwrap().to_string())
+        let manager_options = unsafe { CStr::from_ptr(manager_options) };
+        let manager_options = match manager_options.to_str() {
+            Ok(manager_options) => manager_options,
+            Err(e) => return null_with_error_message(error_buffer, Box::new(e), error_buffer_size),
+        };
+        let manager_options: ManagerOptions = match serde_json::from_str(manager_options) {
+            Ok(manager_options) => manager_options,
+            Err(e) => return null_with_error_message(error_buffer, Box::new(e), error_buffer_size),
+        };
+        Some(manager_options)
     };
 
-    let handle = runtime().block_on(message_interface::create_message_handler(path));
+    let handle = runtime().block_on(message_interface::create_message_handler(manager_options));
 
     match handle {
         Ok(handle) => Box::into_raw(Box::new(handle)),
-        _ => std::ptr::null_mut(),
+        Err(e) => null_with_error_message(error_buffer, Box::new(e), error_buffer_size),
     }
 }
 
@@ -79,15 +110,16 @@ pub extern "C" fn iota_send_message(
 ) {
     let (handle, c_message) = unsafe {
         if handle.is_null() || message.is_null() {
-            let error = CString::new("Null error; either wallet handle or message is invalid").unwrap();
+            let error = CString::new("Null error; either wallet handle or message is null").unwrap();
             return callback(std::ptr::null(), error.as_ptr(), context);
         }
 
-        let handle = if let Some(handle) = handle.as_ref() {
-            handle
-        } else {
-            let error = CString::new("Invalid handle").unwrap();
-            return callback(std::ptr::null(), error.as_ptr(), context);
+        let handle = match handle.as_ref() {
+            Some(handle) => handle,
+            None => {
+                let error = CString::new(INVALID_HANDLE_ERR).unwrap();
+                return callback(std::ptr::null(), error.as_ptr(), context);
+            }
         };
 
         (handle, CStr::from_ptr(message))
@@ -113,29 +145,58 @@ pub extern "C" fn iota_send_message(
     });
 }
 
-// #[no_mangle]
-// pub extern "C" fn iota_listen(actor_id: *const c_char, id: *const c_char, event_name: *const c_char) {
-//     let c_actor_id = unsafe {
-//         assert!(!actor_id.is_null());
-//         CStr::from_ptr(actor_id)
-//     };
-//     let actor_id = c_actor_id.to_str().unwrap();
+#[no_mangle]
+pub extern "C" fn iota_listen(
+    handle: *mut IotaWalletHandle,
+    event_types: *const c_char,
+    callback: Callback,
+    context: *mut c_void,
+    error_buffer: *mut c_char,
+    error_buffer_size: usize,
+) -> i8 {
+    let (handle, event_types) = unsafe {
+        if handle.is_null() || event_types.is_null() {
+            return -1;
+        }
 
-//     let c_id = unsafe {
-//         assert!(!id.is_null());
-//         CStr::from_ptr(id)
-//     };
-//     let id = c_id.to_str().unwrap();
+        let handle = match handle.as_ref() {
+            Some(handle) => handle,
+            None => {
+                copy_error_message(error_buffer, Box::new(INVALID_HANDLE_ERR), error_buffer_size);
+                return -1;
+            }
+        };
 
-//     let c_event_name = unsafe {
-//         assert!(!event_name.is_null());
-//         CStr::from_ptr(event_name)
-//     };
-//     let event_name = c_event_name.to_str().unwrap();
+        let event_types = match CStr::from_ptr(event_types).to_str() {
+            Ok(event_types) => event_types,
+            Err(e) => {
+                copy_error_message(error_buffer, Box::new(e), error_buffer_size);
+                return -1;
+            }
+        };
 
-//     let event_type: EventType = event_name.try_into().expect("unknown event name");
-//     // block_on(add_event_listener(actor_id, id, event_type));
-// }
+        (handle, event_types)
+    };
+
+    let event_types: Vec<WalletEventType> = match serde_json::from_str(event_types) {
+        Ok(event_types) => event_types,
+        Err(e) => {
+            copy_error_message(error_buffer, Box::new(e), error_buffer_size);
+            return -1;
+        }
+    };
+
+    let context = context as usize;
+
+    runtime().spawn(handle.listen(event_types, move |event: &Event| {
+        let message = serde_json::to_string(&event).unwrap();
+        let message = CString::new(message).unwrap();
+        let context = context as *mut c_void;
+        callback(message.as_ptr(), std::ptr::null(), context);
+    }));
+
+    0
+}
 
 // #[no_mangle]
 // pub extern "C" fn iota_init_logger(file_name: *const c_char) {

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use std::hash::Hash;
 
 /// An account address.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 #[getset(get = "pub")]
 pub struct AccountAddress {
     /// The address.
@@ -40,8 +40,8 @@ pub struct AddressWithBalance {
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
     pub(crate) internal: bool,
-    /// Balance
-    pub(crate) balance: u64,
+    /// Amount
+    pub(crate) amount: u64,
     /// Output ids
     pub(crate) output_ids: Vec<OutputId>,
 }
@@ -82,6 +82,6 @@ pub fn parse_bech32_address<A: AsRef<str>>(address: A) -> crate::Result<AddressW
     let address = address.as_ref();
     let mut tokens = address.split('1');
     let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
-    let address = iota_client::bee_message::address::Address::try_from_bech32(address)?;
+    let (_bech32_hrp, address) = iota_client::bee_message::address::Address::try_from_bech32(address)?;
     Ok(AddressWrapper::new(address, hrp.to_string()))
 }

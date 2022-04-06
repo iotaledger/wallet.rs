@@ -9,9 +9,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 typedef void (^WalletHandler) (NSString * _Nullable message, NSError * _Nullable error);
 
-- (nullable instancetype) init;
-- (nullable instancetype) initWithStoragePath:(NSString *) path;
-- (void) sendMessage:(NSString *) message completion: (WalletHandler) completion;
+- (nullable instancetype) initWithManagerOptions:(nullable NSString*) options error:(NSError**) error;
+- (void) sendMessage:(NSString*) message completion:(WalletHandler) completion;
+- (BOOL) listen:(NSArray<NSString*>*) event_types handler:(WalletHandler) handler error:(NSError**) error;
 
 NS_ASSUME_NONNULL_END
 

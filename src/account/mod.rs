@@ -13,6 +13,8 @@ pub(crate) mod operations;
 pub mod types;
 pub use operations::{
     address_generation::AddressGenerationOptions,
+    output_collection::OutputsToCollect,
+    syncing::SyncOptions,
     transfer::{RemainderValueStrategy, TransferOptions},
 };
 
@@ -20,6 +22,7 @@ use crate::account::types::{
     address::{AccountAddress, AddressWithBalance},
     AccountBalance, OutputData,
 };
+pub use handle::AccountHandle;
 
 use getset::{Getters, Setters};
 use iota_client::bee_message::{output::OutputId, payload::transaction::TransactionId};
@@ -31,9 +34,6 @@ use std::collections::{HashMap, HashSet};
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
 pub struct Account {
-    /// The account identifier.
-    #[getset(set = "pub(crate)")]
-    id: String,
     /// The account index
     index: u32,
     /// The coin type

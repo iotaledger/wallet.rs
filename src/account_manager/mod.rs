@@ -4,35 +4,36 @@
 pub(crate) mod builder;
 pub(crate) mod operations;
 
+#[cfg(feature = "storage")]
+use crate::account_manager::builder::StorageOptions;
 #[cfg(feature = "events")]
 use crate::events::{
     types::{Event, WalletEventType},
     EventEmitter,
 };
+#[cfg(feature = "storage")]
+use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
-        builder::AccountBuilder,
-        handle::AccountHandle,
-        operations::syncing::SyncOptions,
-        types::{AccountBalance, AccountIdentifier},
+        builder::AccountBuilder, handle::AccountHandle, operations::syncing::SyncOptions, types::AccountBalance,
     },
-    client::ClientOptions,
+    ClientOptions,
 };
 use builder::AccountManagerBuilder;
-use operations::{get_account, recover_accounts, start_background_syncing, verify_integrity};
 
 use iota_client::{signing::SignerHandle, Client};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
+#[cfg(feature = "storage")]
+use std::path::Path;
 use std::{
-    path::Path,
+    collections::hash_map::Entry,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
-    time::Duration,
 };
 
 /// The account manager, used to create and get accounts. One account manager can hold many accounts, but they should
@@ -46,6 +47,10 @@ pub struct AccountManager {
     pub(crate) signer: SignerHandle,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
+    #[cfg(feature = "storage")]
+    pub(crate) storage_options: StorageOptions,
+    #[cfg(feature = "storage")]
+    pub(crate) storage_manager: StorageManagerHandle,
 }
 
 impl AccountManager {
@@ -57,37 +62,25 @@ impl AccountManager {
     /// Create a new account
     pub fn create_account(&self) -> AccountBuilder {
         log::debug!("creating account");
-        #[cfg(not(feature = "events"))]
-        return AccountBuilder::new(self.accounts.clone(), self.signer_type.clone());
-        #[cfg(feature = "events")]
-        AccountBuilder::new(self.accounts.clone(), self.signer.clone(), self.event_emitter.clone())
+        AccountBuilder::new(
+            self.accounts.clone(),
+            self.client_options.clone(),
+            self.signer.clone(),
+            #[cfg(feature = "events")]
+            self.event_emitter.clone(),
+            #[cfg(feature = "storage")]
+            self.storage_manager.clone(),
+        )
     }
-    /// Get an account with an AccountIdentifier
-    pub async fn get_account<I: Into<AccountIdentifier>>(&self, identifier: I) -> crate::Result<AccountHandle> {
-        get_account(self, identifier).await
-    }
+
     /// Get all accounts
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         Ok(self.accounts.read().await.clone())
     }
 
-    // do want a function to delete an account? If so we have to change the account creation logic, otherwise multiple
-    // accounts could get the same index /// Delete an account
-    // pub async fn delete_account(&self, identifier: AccountIdentifier) -> crate::Result<()> {
-    // Ok(())
-    // }
-
-    /// Find accounts with balances
-    /// `address_gap_limit` defines how many addresses without balance will be checked in each account, if an address
-    /// has balance, the counter is reset
-    /// `account_gap_limit` defines how many accounts without balance will be
-    /// checked, if an account has balance, the counter is reset
-    pub async fn recover_accounts(
-        &self,
-        address_gap_limit: u32,
-        account_gap_limit: u32,
-    ) -> crate::Result<Vec<AccountHandle>> {
-        recover_accounts(self, address_gap_limit, account_gap_limit).await
+    /// Get the [SignerHandle]
+    pub fn get_signer(&self) -> SignerHandle {
+        self.signer.clone()
     }
 
     /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
@@ -95,38 +88,78 @@ impl AccountManager {
         log::debug!("[set_client_options]");
         let mut client_options = self.client_options.write().await;
         *client_options = options.clone();
-        crate::client::set_client(options).await?;
-        let accounts = self.accounts.read().await;
-        for account in accounts.iter() {
-            account.update_account_with_new_client().await?;
+        let new_client = options.clone().finish().await?;
+        let mut accounts = self.accounts.write().await;
+        for account in accounts.iter_mut() {
+            account.update_account_with_new_client(new_client.clone()).await?;
+        }
+        #[cfg(feature = "storage")]
+        {
+            // Update account manager data with new client options
+            let account_manager_builder = AccountManagerBuilder::new()
+                .with_signer(self.signer.clone())
+                .with_storage_path(
+                    &self
+                        .storage_options
+                        .storage_path
+                        .clone()
+                        .into_os_string()
+                        .into_string()
+                        .expect("Can't convert os string"),
+                )
+                .with_client_options(options);
+
+            self.storage_manager
+                .lock()
+                .await
+                .save_account_manager_data(&account_manager_builder)
+                .await?;
         }
         Ok(())
     }
 
+    /// Get the used client options
+    pub async fn get_client_options(&self) -> ClientOptions {
+        self.client_options.read().await.clone()
+    }
+
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance {
-            total: 0,
-            available: 0,
-            // todo set other values
-            ..Default::default()
-        };
+        let mut balance = AccountBalance { ..Default::default() };
         let accounts = self.accounts.read().await;
         for account in accounts.iter() {
             let account_balance = account.balance().await?;
             balance.total += account_balance.total;
             balance.available += account_balance.available;
+            // todo set other values
         }
         Ok(balance)
     }
 
-    /// Start the background syncing process for all accounts, default interval is 7 seconds
-    pub async fn start_background_syncing(
-        &self,
-        options: Option<SyncOptions>,
-        interval: Option<Duration>,
-    ) -> crate::Result<()> {
-        start_background_syncing(self, options, interval).await
+    /// Sync all accounts
+    pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
+        let mut balance = AccountBalance { ..Default::default() };
+        let accounts = self.accounts.read().await;
+        for account in accounts.iter() {
+            let account_balance = account.sync(options.clone()).await?;
+            balance.total += account_balance.total;
+            balance.available += account_balance.available;
+            balance.required_storage_deposit += account_balance.required_storage_deposit;
+            balance.nfts.extend(account_balance.nfts.into_iter());
+            balance.aliases.extend(account_balance.aliases.into_iter());
+            balance.foundries.extend(account_balance.foundries.into_iter());
+            for (token_id, amount) in account_balance.native_tokens {
+                match balance.native_tokens.entry(token_id) {
+                    Entry::Vacant(e) => {
+                        e.insert(amount);
+                    }
+                    Entry::Occupied(mut e) => {
+                        *e.get_mut() += amount;
+                    }
+                }
+            }
+        }
+        Ok(balance)
     }
 
     /// Stop the background syncing of the accounts
@@ -160,11 +193,12 @@ impl AccountManager {
         Ok(())
     }
 
-    /// Checks if there is no missing account for example indexes [0, 1, 3] should panic (for now, later return error,
-    /// automatically fix?) Also checks for each account if there is a gap in an address list and no address is
-    /// duplicated
-    pub async fn verify_integrity(&self) -> crate::Result<()> {
-        verify_integrity(self).await
+    #[cfg(feature = "events")]
+    #[cfg(debug_assertions)]
+    /// Helper function to test events. Emits a provided event with account index 0.
+    pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
+        self.event_emitter.lock().await.emit(0, event);
+        Ok(())
     }
 
     // storage feature

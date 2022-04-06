@@ -5,10 +5,31 @@
 require('dotenv').config();
 
 async function run() {
-    const { AccountManagerForMessages } = require('@iota/wallet');
+    const { AccountManagerForMessages, initLogger } = require('@iota/wallet');
 
+    initLogger({
+        color_enabled: true,
+        outputs: [{
+            name: './wallet.log',
+            level_filter: 'debug'
+        }]
+    })
+    
     const manager = new AccountManagerForMessages({
         storagePath: './alice-database',
+        clientOptions: {
+            "nodes":[
+               {
+                  "url":"http://localhost:14265/",
+                  "auth":null,
+                  "disabled":false
+               }
+            ],
+            "localPow":true,
+         },
+        signer:{
+            "Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"
+        }
     });
 
     try {
@@ -16,11 +37,6 @@ async function run() {
         // await manager.storeMnemonic();
 
         const account = await manager.createAccount({
-            // todo replace with https://api.lb-0.h.chrysalis-devnet.iota.cafe when the new faucet is working
-            ClientOptions: {
-                node: { url: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe' },
-                localPow: true,
-            },
             alias: 'Alice',
         });
         console.log('Account created:', account);

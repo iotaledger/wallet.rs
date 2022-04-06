@@ -13,6 +13,7 @@
     "prebuild:node": "prebuild --prepack scripts/node-neon-build.js --strip",
     "prebuild:electron": "node scripts/electron-prebuild.js",
     "rebuild": "npm run build:neon && node scripts/strip.js",
+    "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run rebuild",
     "test": "cargo test"
   },
   "author": "Antoni Dikov <antoni.dikov@iota.org>",

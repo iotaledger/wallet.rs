@@ -1,12 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account_manager::AccountManager, client::ClientOptions, signing::mnemonic::MnemonicSigner, Result};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
@@ -17,16 +17,18 @@ async fn account_recovery_empty() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
+        .with_storage_path("test-storage/account_recovery_empty")
         .finish()
         .await?;
 
     let accounts = manager.recover_accounts(2, 2).await?;
+
     // accounts should be empty if no account was created before and no account was found with balance
     assert_eq!(0, accounts.len());
+    std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
@@ -58,7 +60,6 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance() -> Result<()> {
@@ -94,7 +95,6 @@ async fn account_recovery_with_balance() -> Result<()> {
     Ok(())
 }
 
-// can't be run together with all other tests because there can be only one mnemonic at a time
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {

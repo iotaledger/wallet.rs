@@ -12,29 +12,19 @@ use iota_client::bee_message::{
         BasicOutputBuilder, Output,
     },
 };
-use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    client::ClientOptions,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    // init_logger("wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
-        .with_client_options(client_options)
         .with_signer(signer)
+        .with_client_options(client_options)
         .finish()
         .await?;
 
@@ -71,19 +61,12 @@ async fn main() -> Result<()> {
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(
                                     "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
-                                )?,
+                                )?
+                                .1,
                             )))
                             .finish()?,
                     )];
-                    let res = account_
-                        .send(
-                            outputs,
-                            Some(TransferOptions {
-                                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                                ..Default::default()
-                            }),
-                        )
-                        .await?;
+                    let res = account_.send(outputs, None).await?;
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,

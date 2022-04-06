@@ -2,3 +2,5 @@
 /build
 /dist
 /iota_wallet.egg-info
+/iota_wallet/__*
+/iota_wallet/*.so

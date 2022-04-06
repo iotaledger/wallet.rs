@@ -1,15 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{operations::transfer::TransferOptions, types::AccountIdentifier},
-    account_manager::AccountManager,
-    Result,
-};
+#[cfg(feature = "events")]
+use crate::events::types::{Event, WalletEventType};
+use crate::{account::types::AccountIdentifier, account_manager::AccountManager, Result};
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
-use iota_client::bee_message::output::Output;
 use zeroize::Zeroize;
 
 use std::{
@@ -74,6 +71,15 @@ impl WalletMessageHandler {
         Self { account_manager }
     }
 
+    #[cfg(feature = "events")]
+    /// Listen to wallet events, empty vec will listen to all events
+    pub async fn listen<F>(&self, events: Vec<WalletEventType>, handler: F)
+    where
+        F: Fn(&Event) + 'static + Clone + Send + Sync,
+    {
+        self.account_manager.listen(events, handler).await;
+    }
+
     /// Handles a message.
     pub async fn handle(&self, mut message: Message) {
         let response: Result<ResponseType> = match message.message_type_mut() {
@@ -121,16 +127,6 @@ impl WalletMessageHandler {
                     .verify_mnemonic(mnemonic)
                     .map(|_| ResponseType::VerifiedMnemonic)
             }),
-            MessageType::SendTransfer {
-                account_id,
-                outputs,
-                options,
-            } => {
-                convert_async_panics(|| async {
-                    self.send_transfer(account_id, outputs.clone(), options.clone()).await
-                })
-                .await
-            }
             MessageType::SetClientOptions(options) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
@@ -150,6 +146,15 @@ impl WalletMessageHandler {
             MessageType::StopBackgroundSync => {
                 convert_async_panics(|| async {
                     self.account_manager.stop_background_syncing()?;
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "events")]
+            #[cfg(debug_assertions)]
+            MessageType::EmitTestEvent(event) => {
+                convert_async_panics(|| async {
+                    self.account_manager.emit_test_event(event.clone()).await?;
                     Ok(ResponseType::Ok(()))
                 })
                 .await
@@ -187,6 +192,12 @@ impl WalletMessageHandler {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(ResponseType::GeneratedAddress(address))
             }
+            AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_collect } => {
+                let output_ids = account_handle
+                    .get_outputs_with_additional_unlock_conditions(*outputs_to_collect)
+                    .await?;
+                Ok(ResponseType::OutputIds(output_ids))
+            }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
@@ -211,9 +222,97 @@ impl WalletMessageHandler {
                 let transactions = account_handle.list_pending_transactions().await?;
                 Ok(ResponseType::Transactions(transactions))
             }
+            AccountMethod::MintNativeToken {
+                native_token_options,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let message = account_handle
+                        .mint_native_token(native_token_options.clone(), options.clone())
+                        .await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::MintNfts { nfts_options, options } => {
+                convert_async_panics(|| async {
+                    let message = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
             AccountMethod::GetBalance => Ok(ResponseType::Balance(account_handle.balance().await?)),
             AccountMethod::SyncAccount { options } => {
                 Ok(ResponseType::Balance(account_handle.sync(options.clone()).await?))
+            }
+            AccountMethod::SendAmount {
+                addresses_with_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let message = account_handle
+                        .send_amount(addresses_with_amount.clone(), options.clone())
+                        .await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::SendMicroTransaction {
+                addresses_with_micro_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let message = account_handle
+                        .send_micro_transaction(addresses_with_micro_amount.clone(), options.clone())
+                        .await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::SendNativeTokens {
+                addresses_native_tokens,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let message = account_handle
+                        .send_native_tokens(addresses_native_tokens.clone(), options.clone())
+                        .await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::SendNft {
+                addresses_nft_ids,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let message = account_handle
+                        .send_nft(addresses_nft_ids.clone(), options.clone())
+                        .await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::SendTransfer { outputs, options } => {
+                convert_async_panics(|| async {
+                    let message = account_handle.send(outputs.clone(), options.clone()).await?;
+                    Ok(ResponseType::SentTransfer(message))
+                })
+                .await
+            }
+            AccountMethod::TryCollectOutputs { outputs_to_collect } => {
+                convert_async_panics(|| async {
+                    let transfer_results = account_handle.try_collect_outputs(*outputs_to_collect).await?;
+                    Ok(ResponseType::SentTransfers(transfer_results))
+                })
+                .await
+            }
+            AccountMethod::CollectOutputs { output_ids_to_collect } => {
+                convert_async_panics(|| async {
+                    let transfer_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
+                    Ok(ResponseType::SentTransfers(transfer_results))
+                })
+                .await
             }
         }
     }
@@ -249,16 +348,5 @@ impl WalletMessageHandler {
             accounts.push(account.clone());
         }
         Ok(ResponseType::ReadAccounts(accounts))
-    }
-
-    async fn send_transfer(
-        &self,
-        account_id: &AccountIdentifier,
-        outputs: Vec<Output>,
-        options: Option<TransferOptions>,
-    ) -> Result<ResponseType> {
-        let account = self.account_manager.get_account(account_id.clone()).await?;
-        let message = account.send(outputs, options).await?;
-        Ok(ResponseType::SentTransfer(message))
     }
 }

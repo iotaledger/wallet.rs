@@ -38,7 +38,7 @@ impl EventEmitter {
                 WalletEventType::TransactionInclusion,
                 WalletEventType::TransferProgress,
                 WalletEventType::ConsolidationRequired,
-                #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+                #[cfg(feature = "ledger-nano")]
                 WalletEventType::LedgerAddressGeneration,
             ] {
                 let event_handlers = self.handlers.entry(event_type).or_insert_with(Vec::new);
@@ -59,7 +59,7 @@ impl EventEmitter {
             WalletEvent::TransactionInclusion(_) => WalletEventType::TransactionInclusion,
             WalletEvent::TransferProgress(_) => WalletEventType::TransferProgress,
             WalletEvent::ConsolidationRequired => WalletEventType::ConsolidationRequired,
-            #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+            #[cfg(feature = "ledger-nano")]
             WalletEvent::LedgerAddressGeneration(_) => WalletEventType::LedgerAddressGeneration,
         };
         let event = Event { account_index, event };
@@ -139,7 +139,7 @@ mod tests {
             0,
             WalletEvent::TransactionInclusion(TransactionInclusionEvent {
                 transaction_id: TransactionId::from_str(
-                    "2289d9981fb23cc5f4f6c2742685eeb480f8476089888aa886a18232bad81989",
+                    "0x2289d9981fb23cc5f4f6c2742685eeb480f8476089888aa886a18232bad81989",
                 )
                 .expect("Invalid tx id"),
                 inclusion_state: InclusionState::Confirmed,

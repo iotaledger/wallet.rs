@@ -3,33 +3,18 @@
 
 //! cargo run --example wallet --release
 
-use iota_client::bee_message::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, Output,
-    },
-};
 use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    client::ClientOptions,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    Result,
+    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressAndAmount, ClientOptions, Result,
 };
 use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    // init_logger("wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -68,23 +53,11 @@ async fn main() -> Result<()> {
     println!("Addresses with balance: {}", addresses_with_balance.len());
 
     // send transaction
-    let outputs = vec![Output::Basic(
-        BasicOutputBuilder::new(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?,
-            )))
-            .finish()?,
-    )];
-    // let res = account.send(outputs, None).await?;
-    let res = account
-        .send(
-            outputs,
-            Some(TransferOptions {
-                remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                ..Default::default()
-            }),
-        )
-        .await?;
+    let outputs = vec![AddressAndAmount {
+        address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+        amount: 1_000_000,
+    }];
+    let res = account.send_amount(outputs, None).await?;
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,
@@ -98,10 +71,7 @@ async fn main() -> Result<()> {
     // // switch to mainnet
     // let client_options = ClientOptions::new()
     //     .with_node("https://chrysalis-nodes.iota.org/")?
-    //     .with_node("https://chrysalis-nodes.iota.cafe/")?
-    //     .with_node_sync_disabled()
-    //     .finish()
-    //     .unwrap();
+    //     .with_node_sync_disabled();
     // let now = Instant::now();
     // manager.set_client_options(client_options).await?;
     // println!("Syncing took: {:.2?}", now.elapsed());
@@ -109,12 +79,8 @@ async fn main() -> Result<()> {
 
     // // switch back to testnet
     // let client_options = ClientOptions::new()
-    //     .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node("https://api.thin-hornet-0.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node("https://api.thin-hornet-1.h.chrysalis-devnet.iota.cafe")?
-    //     .with_node_sync_disabled()
-    //     .finish()
-    //     .unwrap();
+    //     .with_node("http://localhost:14265")?
+    //     .with_node_sync_disabled();
     // let now = Instant::now();
     // manager.set_client_options(client_options).await?;
     // println!("Syncing took: {:.2?}", now.elapsed());

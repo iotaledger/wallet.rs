@@ -19,7 +19,7 @@ export default class AccountForMessages {
 
     async sync(options: any) {
         console.log({
-            account_id: this.accountData.id,
+            account_id: this.accountData.index,
             method: {
                 name: 'SyncAccount',
                 data: options || {},
@@ -29,7 +29,7 @@ export default class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     method: {
                         name: 'SyncAccount',
                         data: options || {},
@@ -44,7 +44,7 @@ export default class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     method: {
                         name: 'GetNodeInfo',
                         data: [url],
@@ -54,14 +54,23 @@ export default class AccountForMessages {
         );
     }
 
-    async generateAddress() {
+    async generateAddresses() {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     method: {
-                        name: 'GenerateAddress',
+                        name: 'GenerateAddresses',
+                        data: {
+                            amount: 1,
+                            // options: {
+                            //     internal: false, metadata: {
+                            //         syncing: false,
+                            //         network: "Network::Testnet",
+                            //     }
+                            // }
+                        }
                     },
                 },
             }),
@@ -73,7 +82,7 @@ export default class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     method: {
                         name: 'GetLatestAddress',
                     },
@@ -87,7 +96,7 @@ export default class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     method: {
                         name: 'GetBalance',
                     },
@@ -101,7 +110,7 @@ export default class AccountForMessages {
             await this.messageHandler.sendMessage({
                 cmd: 'SendTransfer',
                 payload: {
-                    account_id: this.accountData.id,
+                    account_id: this.accountData.index,
                     transfer,
                 },
             }),

@@ -3,17 +3,23 @@
 
 /// Address types used in the account
 pub(crate) mod address;
+pub use address::{AccountAddress, AddressWithBalance};
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
-use crate::account::constants::ACCOUNT_ID_PREFIX;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    bee_message::{address::Address, output::OutputId, payload::transaction::TransactionPayload, MessageId},
+    bee_message::{
+        address::Address,
+        output::{AliasId, FoundryId, NftId, Output, OutputId, TokenId},
+        payload::transaction::TransactionPayload,
+        MessageId,
+    },
     bee_rest_api::types::responses::OutputResponse,
     signing::types::InputSigningData,
 };
 
+use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use std::{collections::HashMap, str::FromStr};
@@ -22,18 +28,34 @@ use std::{collections::HashMap, str::FromStr};
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
-    pub(crate) total: u64,
-    // balance that can currently spend
-    pub(crate) available: u64,
-    // currently required amount for the byte cost
-    pub(crate) byte_cost_deposit: u64,
-    pub(crate) native_tokens: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) nfts: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) foundrys: HashMap<String, u128>,
-    // todo: should it look like this?
-    pub(crate) alias_outputs: HashMap<String, u128>,
+    // Total amount
+    pub total: u64,
+    // Amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedAmount")]
+    pub locked_amount: u64,
+    // Balance that can currently be spend
+    pub available: u64,
+    // Current required storage deposit amount
+    #[serde(rename = "requiredStorageDeposit")]
+    pub required_storage_deposit: u64,
+    // Current required storage deposit amount of outputs with additional unlock conditions
+    #[serde(rename = "lockedRequiredStorageDeposit")]
+    pub locked_required_storage_deposit: u64,
+    // Native tokens
+    #[serde(rename = "nativeTokens")]
+    pub native_tokens: HashMap<TokenId, U256>,
+    // Native tokens of outputs with additional unlock conditions
+    #[serde(rename = "lockedNativeTokens")]
+    pub locked_native_tokens: HashMap<TokenId, U256>,
+    // Nfts
+    pub nfts: Vec<NftId>,
+    // Nfts with additional unlock conditions
+    #[serde(rename = "lockedNfts")]
+    pub locked_nfts: Vec<NftId>,
+    // Aliases
+    pub aliases: Vec<AliasId>,
+    // Foundries
+    pub foundries: Vec<FoundryId>,
 }
 
 /// An output with metadata
@@ -42,14 +64,18 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
+    // todo: remove OutputResponse and store metadata alone
     /// The output response
     #[serde(rename = "outputResponse")]
     pub output_response: OutputResponse,
+    /// The actual Output
+    pub output: Output,
+    // The output amount
     pub amount: u64,
     /// If an output is spent
     #[serde(rename = "isSpent")]
     pub is_spent: bool,
-    /// Associated address.
+    /// Associated account address.
     pub address: Address,
     /// Network ID
     #[serde(rename = "networkId")]
@@ -126,36 +152,43 @@ impl FromStr for OutputKind {
 #[derive(Debug, Clone, Serialize)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
-    // SHA-256 hash of the first address on the seed (m/44'/0'/0'/0'/0'). Required for referencing a seed in
-    // Stronghold. The id should be provided by Stronghold. can we do the hashing only during interaction with
-    // Stronghold? Then we could use the first address instead which could be useful
-    Id(String),
     /// Account alias as identifier.
     Alias(String),
     /// An index identifier.
     Index(u32),
 }
 
+// Custom deserialize because the index could also be encoded as String
 impl<'de> Deserialize<'de> for AccountIdentifier {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        Ok(AccountIdentifier::from(s))
+        use serde::de::Error;
+        use serde_json::Value;
+        let v = Value::deserialize(deserializer)?;
+        Ok(match v.as_u64() {
+            Some(number) => {
+                let index: u32 =
+                    u32::try_from(number).map_err(|_| D::Error::custom("Account index is greater than u32::MAX"))?;
+                AccountIdentifier::Index(index)
+            }
+            None => {
+                let alias_or_index_str = v
+                    .as_str()
+                    .ok_or_else(|| D::Error::custom("AccountIdentifier is no number or string"))?;
+                AccountIdentifier::from(alias_or_index_str)
+            }
+        })
     }
 }
 
-// When the identifier is a string id.
+// When the identifier is a string.
 impl From<&str> for AccountIdentifier {
     fn from(value: &str) -> Self {
-        if value.starts_with(ACCOUNT_ID_PREFIX) {
-            Self::Id(value.to_string())
-        } else {
-            match u32::from_str(value) {
-                Ok(index) => Self::Index(index),
-                Err(_) => Self::Alias(value.to_string()),
-            }
+        match u32::from_str(value) {
+            Ok(index) => Self::Index(index),
+            Err(_) => Self::Alias(value.to_string()),
         }
     }
 }

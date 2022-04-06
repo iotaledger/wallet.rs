@@ -14,35 +14,18 @@ pub enum Error {
     /// serde_json error.
     #[error("`{0}`")]
     JsonError(#[from] serde_json::error::Error),
-    /// stronghold client error.
-    #[cfg(feature = "stronghold")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-    #[error("`{0}`")]
-    StrongholdError(crate::stronghold::Error),
     /// iota.rs error.
     #[error("`{0}`")]
     ClientError(Box<iota_client::Error>),
-    /// Message not found.
-    #[error("message not found")]
-    MessageNotFound,
-    /// Message id length response invalid.
-    #[error("unexpected message_id length")]
-    InvalidMessageIdLength,
     /// failed to parse address.
     #[error("invalid address")]
     InvalidAddress,
-    /// Address length response invalid.
-    #[error("invalid address length")]
-    InvalidAddressLength,
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
     /// Insufficient funds to send transfer.
     #[error("insufficient funds {0}/{1} available")]
     InsufficientFunds(u64, u64),
-    /// Account isn't empty (has history or balance) - can't delete account.
-    #[error("can't delete account: account has history or balance")]
-    AccountNotEmpty,
     /// Latest account is empty (doesn't have history and balance) - can't create account.
     #[error("can't create accounts when the latest account doesn't have message history and balance")]
     LatestAccountIsEmpty,
@@ -52,10 +35,6 @@ pub enum Error {
     /// Record not found
     #[error("Record not found")]
     RecordNotFound,
-    /// invalid remainder value target address defined on `RemainderValueStrategy`.
-    /// the address must belong to the account.
-    #[error("the remainder value address doesn't belong to the account")]
-    InvalidRemainderValueAddress,
     /// Storage access error.
     #[error("error accessing storage: {0}")]
     Storage(String),
@@ -65,6 +44,9 @@ pub enum Error {
     /// Error from bee_message crate.
     #[error("{0}")]
     BeeMessage(iota_client::bee_message::Error),
+    /// Message dtos error
+    #[error("{0}")]
+    BeeMessageDtoError(#[from] iota_client::bee_message::DtoError),
     /// Bee rest api error
     #[error("{0}")]
     BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
@@ -102,6 +84,9 @@ pub enum Error {
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
+    /// Missing parameter.
+    #[error("missing parameter: {0}")]
+    MissingParameter(&'static str),
     /// Failed to get remainder
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
@@ -114,9 +99,15 @@ pub enum Error {
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, u16),
-    /// Provided input address not found
-    #[error("provided input address not found")]
-    InputAddressNotFound,
+    /// Address not found in account
+    #[error("address {0} not found in account")]
+    AddressNotFoundInAccount(String),
+    /// Minting failed
+    #[error("minting failed {0}")]
+    MintingFailed(String),
+    /// Nft not found in unspent outputs
+    #[error("nft not found in unspent outputs")]
+    NftNotFoundInUnspentOutputs,
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
@@ -135,6 +126,9 @@ pub enum Error {
     /// Error from the logger in the bee_common crate.
     #[error("{0}")]
     BeeCommonLogger(iota_client::common::logger::Error),
+    /// Local time doesn't match the time of the latest timestamp
+    #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
+    TimeNotSynced(u64, u64),
 }
 
 impl From<iota_client::Error> for Error {
@@ -152,16 +146,6 @@ impl From<iota_client::bee_message::Error> for Error {
 impl From<iota_client::common::logger::Error> for Error {
     fn from(error: iota_client::common::logger::Error) -> Self {
         Self::BeeCommonLogger(error)
-    }
-}
-
-#[cfg(feature = "stronghold")]
-impl From<crate::stronghold::Error> for Error {
-    fn from(error: crate::stronghold::Error) -> Self {
-        match error {
-            crate::stronghold::Error::RecordNotFound => Self::RecordNotFound,
-            _ => Self::StrongholdError(error),
-        }
     }
 }
 
@@ -184,23 +168,17 @@ impl serde::Serialize for Error {
         match self {
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
-            #[cfg(feature = "stronghold")]
-            Self::StrongholdError(_) => serialize_variant(self, serializer, "StrongholdError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
-            Self::MessageNotFound => serialize_variant(self, serializer, "MessageNotFound"),
-            Self::InvalidMessageIdLength => serialize_variant(self, serializer, "InvalidMessageIdLength"),
             Self::InvalidAddress => serialize_variant(self, serializer, "InvalidAddress"),
-            Self::InvalidAddressLength => serialize_variant(self, serializer, "InvalidAddressLength"),
             Self::StorageDoesntExist => serialize_variant(self, serializer, "StorageDoesntExist"),
-            Self::InsufficientFunds(_, _) => serialize_variant(self, serializer, "InsufficientFunds"),
-            Self::AccountNotEmpty => serialize_variant(self, serializer, "AccountNotEmpty"),
+            Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::LatestAccountIsEmpty => serialize_variant(self, serializer, "LatestAccountIsEmpty"),
             Self::AccountNotFound => serialize_variant(self, serializer, "AccountNotFound"),
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
-            Self::InvalidRemainderValueAddress => serialize_variant(self, serializer, "InvalidRemainderValueAddress"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
             Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
+            Self::BeeMessageDtoError(_) => serialize_variant(self, serializer, "BeeMessageDtoError"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
@@ -212,17 +190,21 @@ impl serde::Serialize for Error {
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::AccountAliasAlreadyExists => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
+            Self::MissingParameter(_) => serialize_variant(self, serializer, "MissingParameter"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
-            Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
-            Self::TooManyInputs(_, _) => serialize_variant(self, serializer, "TooManyInputs"),
-            Self::ConsolidationRequired(_, _) => serialize_variant(self, serializer, "ConsolidationRequired"),
-            Self::InputAddressNotFound => serialize_variant(self, serializer, "InputAddressNotFound"),
+            Self::TooManyOutputs(..) => serialize_variant(self, serializer, "TooManyOutputs"),
+            Self::TooManyInputs(..) => serialize_variant(self, serializer, "TooManyInputs"),
+            Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
+            Self::AddressNotFoundInAccount(_) => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
+            Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
+            Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
             Self::BeeCommonLogger(_) => serialize_variant(self, serializer, "BeeCommonLogger"),
+            Self::TimeNotSynced(..) => serialize_variant(self, serializer, "TimeNotSynced"),
         }
     }
 }

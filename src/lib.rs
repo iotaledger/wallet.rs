@@ -16,8 +16,9 @@ pub mod account_manager;
 #[cfg(feature = "message_interface")]
 pub mod message_interface;
 
-/// The client module to use iota_client for interactions with the IOTA Tangle.
-pub mod client;
+/// The ClientOptions to build the iota_client for interactions with the IOTA Tangle.
+pub use iota_client::ClientBuilder as ClientOptions;
+
 /// The error module.
 pub mod error;
 #[cfg(feature = "events")]
@@ -37,8 +38,15 @@ pub mod logger;
 // #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
 // pub(crate) mod stronghold;
 
-pub use iota_client::{self, signing};
+// Expose for high level functions
+pub use account::operations::transfer::high_level::{
+    mint_native_token::NativeTokenOptions, mint_nfts::NftOptions, send_amount::AddressAndAmount,
+    send_micro_transaction::AddressMicroAmount, send_native_tokens::AddressNativeTokens, send_nft::AddressAndNftId,
+};
 
 pub use error::Error;
 /// The wallet Result type.
 pub type Result<T> = std::result::Result<T, Error>;
+
+pub use iota_client::{self, signing};
+pub use primitive_types::U256;

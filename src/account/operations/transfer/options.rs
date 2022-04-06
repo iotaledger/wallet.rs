@@ -33,7 +33,6 @@ pub enum RemainderValueStrategy {
 
 impl Default for RemainderValueStrategy {
     fn default() -> Self {
-        // ChangeAddress is the default because it's better for privacy than reusing an address.
-        Self::ChangeAddress
+        Self::ReuseAddress
     }
 }

@@ -6,39 +6,30 @@ use crate::{
     account_manager::AccountManager,
 };
 
-/// Get an account with an AccountIdentifier
-pub async fn get_account<I: Into<AccountIdentifier>>(
-    account_manager: &AccountManager,
-    identifier: I,
-) -> crate::Result<AccountHandle> {
-    let account_id = identifier.into();
-    let accounts = account_manager.accounts.read().await;
+impl AccountManager {
+    /// Get an account with an AccountIdentifier
+    pub async fn get_account<I: Into<AccountIdentifier>>(&self, identifier: I) -> crate::Result<AccountHandle> {
+        let account_id = identifier.into();
+        let accounts = self.accounts.read().await;
 
-    match account_id {
-        AccountIdentifier::Id(id) => {
-            for account_handle in accounts.iter() {
-                let account = account_handle.read().await;
-                if account.id() == &id {
-                    return Ok(account_handle.clone());
+        match account_id {
+            AccountIdentifier::Index(index) => {
+                for account_handle in accounts.iter() {
+                    let account = account_handle.read().await;
+                    if account.index() == &index {
+                        return Ok(account_handle.clone());
+                    }
                 }
             }
-        }
-        AccountIdentifier::Index(index) => {
-            for account_handle in accounts.iter() {
-                let account = account_handle.read().await;
-                if account.index() == &index {
-                    return Ok(account_handle.clone());
+            AccountIdentifier::Alias(alias) => {
+                for account_handle in accounts.iter() {
+                    let account = account_handle.read().await;
+                    if account.alias() == &alias {
+                        return Ok(account_handle.clone());
+                    }
                 }
             }
-        }
-        AccountIdentifier::Alias(alias) => {
-            for account_handle in accounts.iter() {
-                let account = account_handle.read().await;
-                if account.alias() == &alias {
-                    return Ok(account_handle.clone());
-                }
-            }
-        }
-    };
-    Err(crate::Error::AccountNotFound)
+        };
+        Err(crate::Error::AccountNotFound)
+    }
 }

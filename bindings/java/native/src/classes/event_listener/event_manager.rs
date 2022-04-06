@@ -506,7 +506,7 @@ impl EventManager {
     pub fn subscribe_address_consolidation_needed(
         _cb: Box<dyn AddressConsolidationNeededListener + Send + 'static>,
     ) -> Result<EventId> {
-        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        #[cfg(feature = "ledger-nano")]
         {
             let id: EventId = crate::block_on(async move {
                 iota_wallet::event::on_address_consolidation_needed(move |event| {
@@ -521,7 +521,7 @@ impl EventManager {
     }
 
     pub fn remove_address_consolidation_needed_listener(_event: EventId) {
-        #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+        #[cfg(feature = "ledger-nano")]
         {
             crate::block_on(
                 async move { iota_wallet::event::remove_address_consolidation_needed_listener(&_event).await },

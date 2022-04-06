@@ -7,16 +7,10 @@ use crate::{
     storage::{constants::*, decrypt_record, Storage, StorageAdapter},
 };
 
-use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
-use std::{
-    collections::HashSet,
-    fs,
-    path::{Path, PathBuf},
-    sync::Arc,
-};
+use std::{path::Path, sync::Arc};
 
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,58 +22,14 @@ pub(crate) enum ManagerStorage {
     Rocksdb,
 }
 
-type StorageManagerHandle = Arc<Mutex<StorageManager>>;
-static STORAGE_INSTANCE: OnceCell<StorageManagerHandle> = OnceCell::new();
-
-// todo get other manager data like client options and signertype
-pub(crate) async fn load_account_manager(
-    manager_storage: ManagerStorage,
-    storage_folder: PathBuf,
-    storage_file_name: Option<String>,
-) -> crate::Result<(Option<AccountManagerBuilder>, Vec<Account>)> {
-    let (storage, storage_file_path, is_stronghold): (Option<Box<dyn StorageAdapter + Send + Sync>>, PathBuf, bool) =
-        match manager_storage {
-            #[cfg(feature = "stronghold")]
-            ManagerStorage::Stronghold => {
-                let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(STRONGHOLD_FILENAME));
-                fs::create_dir_all(&storage_folder)?;
-                let storage = crate::storage::adapter::stronghold::StrongholdStorageAdapter::new(&path)?;
-                (
-                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>),
-                    path,
-                    true,
-                )
-            }
-            ManagerStorage::Rocksdb => {
-                let path = storage_folder.join(storage_file_name.as_deref().unwrap_or(ROCKSDB_FOLDERNAME));
-                fs::create_dir_all(&storage_folder)?;
-                // rocksdb storage already exists; no need to create a new instance
-                let storage = if crate::storage::manager::get().await.is_ok() {
-                    None
-                } else {
-                    let storage = crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(&path)?;
-                    Some(Box::new(storage) as Box<dyn StorageAdapter + Send + Sync>)
-                };
-                (storage, path, false)
-            }
-        };
-
-    let manager = crate::storage::manager::get().await?;
-    let mut storage_manager = manager.lock().await;
-    let manager_builder = storage_manager.get_account_manager_data().await.ok();
-    let accounts = storage_manager.get_accounts().await.unwrap_or_default();
-
-    Ok((manager_builder, accounts))
-}
+pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;
 
 /// Sets the storage adapter.
-pub(crate) async fn set<P: AsRef<Path>>(
+pub(crate) async fn new_storage_manager<P: AsRef<Path>>(
     storage_path: P,
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
-) -> crate::Result<()> {
-    #[allow(unused_variables)]
-    let storage_id = storage.id();
+) -> crate::Result<StorageManagerHandle> {
     let storage = Storage {
         storage_path: storage_path.as_ref().to_path_buf(),
         inner: storage,
@@ -87,31 +37,22 @@ pub(crate) async fn set<P: AsRef<Path>>(
     };
     let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await {
         Ok(account_indexes) => serde_json::from_str(&account_indexes)?,
-        Err(_) => HashSet::new(),
+        Err(_) => Vec::new(),
     };
     let storage_manager = StorageManager {
         storage,
         account_indexes,
     };
 
-    STORAGE_INSTANCE.get_or_init(|| Arc::new(Mutex::new(storage_manager)));
-    Ok(())
+    Ok(Arc::new(Mutex::new(storage_manager)))
 }
 
-/// gets the storage adapter
-pub(crate) async fn get() -> crate::Result<Arc<tokio::sync::Mutex<StorageManager>>> {
-    if let Some(instance) = STORAGE_INSTANCE.get() {
-        Ok(instance.clone())
-    } else {
-        // todo return other error
-        Err(crate::Error::StorageAdapterNotSet("".into()))
-    }
-}
-
-pub(crate) struct StorageManager {
+#[derive(Debug)]
+/// Storage manager
+pub struct StorageManager {
     storage: Storage,
     // account indexes for accounts in the database
-    account_indexes: HashSet<u32>,
+    account_indexes: Vec<u32>,
 }
 
 impl StorageManager {
@@ -128,7 +69,18 @@ impl StorageManager {
         self.storage.get(key).await
     }
 
-    pub async fn get_account_manager_data(&mut self) -> crate::Result<AccountManagerBuilder> {
+    pub async fn save_account_manager_data(
+        &mut self,
+        account_manager_builder: &AccountManagerBuilder,
+    ) -> crate::Result<()> {
+        log::debug!("save_account_manager_data");
+        self.storage
+            .set(ACCOUNT_MANAGER_INDEXATION_KEY, account_manager_builder)
+            .await
+    }
+
+    pub async fn get_account_manager_data(&self) -> crate::Result<AccountManagerBuilder> {
+        log::debug!("get_account_manager_data");
         let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
         let builder: AccountManagerBuilder = serde_json::from_str(&data)?;
         Ok(builder)
@@ -152,7 +104,7 @@ impl StorageManager {
     }
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
-        self.account_indexes.insert(*account.index());
+        self.account_indexes.push(*account.index());
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await?;
@@ -165,13 +117,13 @@ impl StorageManager {
         self.storage
             .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
             .await?;
-        self.account_indexes.remove(&account_index);
+        self.account_indexes.retain(|a| a == &account_index);
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     // used for ledger accounts to verify that the same menmonic is used for all accounts
     pub async fn save_first_ledger_address(
         &mut self,
@@ -181,7 +133,7 @@ impl StorageManager {
         Ok(())
     }
 
-    #[cfg(any(feature = "ledger-nano", feature = "ledger-nano-simulator"))]
+    #[cfg(feature = "ledger-nano")]
     pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
         let address: iota_client::bee_message::address::Address =
             serde_json::from_str(&self.storage.get(FIRST_LEDGER_ADDRESS_KEY).await?)?;

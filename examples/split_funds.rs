@@ -7,30 +7,20 @@ use iota_client::bee_message::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder, Output,
 };
-use iota_wallet::{
-    account::{RemainderValueStrategy, TransferOptions},
-    account_manager::AccountManager,
-    client::ClientOptions,
-    logger::{init_logger, LevelFilter},
-    signing::mnemonic::MnemonicSigner,
-    Result,
-};
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
 use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
-    // init_logger("wallet.log", LevelFilter::Debug)?;
-
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("giant dynamic museum toddler six deny defense ostrich bomb access mercy blood explain muscle shoot shallow glad autumn author calm heavy hawk abuse rally")?;
+    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
 
     let manager = AccountManager::builder()
-        .with_client_options(client_options)
         .with_signer(signer)
+        .with_client_options(client_options)
         .finish()
         .await?;
 
@@ -82,16 +72,7 @@ async fn main() -> Result<()> {
                 )
             })
             .collect();
-        match account
-            .send(
-                outputs,
-                Some(TransferOptions {
-                    remainder_value_strategy: RemainderValueStrategy::ReuseAddress,
-                    ..Default::default()
-                }),
-            )
-            .await
-        {
+        match account.send(outputs, None).await {
             Ok(res) => println!(
                 "Message sent: http://localhost:14265/api/v2/messages/{}",
                 res.message_id.expect("No message created yet")
