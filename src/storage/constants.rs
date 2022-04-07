@@ -4,11 +4,6 @@
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./storage";
 
-/// The default stronghold storage file name.
-#[cfg(feature = "stronghold")]
-#[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-pub(crate) const STRONGHOLD_FILENAME: &str = "wallet.stronghold";
-
 /// The default RocksDB storage path.
 pub(crate) const ROCKSDB_FOLDERNAME: &str = "walletdb";
 

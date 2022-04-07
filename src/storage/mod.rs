@@ -15,11 +15,10 @@ use encryption::{decrypt_record, encrypt_record};
 
 use serde::Serialize;
 
-use std::{collections::HashMap, path::PathBuf};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 struct Storage {
-    storage_path: PathBuf,
     inner: Box<dyn StorageAdapter + Sync + Send>,
     encryption_key: Option<[u8; 32]>,
 }
@@ -59,6 +58,7 @@ impl Storage {
             .await
     }
 
+    #[allow(dead_code)]
     async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
         self.inner
             .batch_set(if let Some(key) = &self.encryption_key {

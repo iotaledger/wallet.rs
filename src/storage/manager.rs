@@ -10,7 +10,7 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -25,13 +25,11 @@ pub(crate) enum ManagerStorage {
 pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;
 
 /// Sets the storage adapter.
-pub(crate) async fn new_storage_manager<P: AsRef<Path>>(
-    storage_path: P,
+pub(crate) async fn new_storage_manager(
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
 ) -> crate::Result<StorageManagerHandle> {
     let storage = Storage {
-        storage_path: storage_path.as_ref().to_path_buf(),
         inner: storage,
         encryption_key,
     };

@@ -2,9 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! The IOTA Wallet Library
-// todo remove
-#![allow(dead_code)]
-#![allow(unused_variables)]
 
 /// [`AccountHandle`]: crate::account::handle::AccountHandle
 /// The account module. Interaction with an Account happens via an [`AccountHandle`].
@@ -33,10 +30,6 @@ pub mod storage;
 
 /// Module for debug logs.
 pub mod logger;
-
-// #[cfg(feature = "stronghold")]
-// #[cfg_attr(docsrs, doc(cfg(feature = "stronghold")))]
-// pub(crate) mod stronghold;
 
 // Expose for high level functions
 pub use account::operations::transfer::high_level::{

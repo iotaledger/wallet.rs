@@ -43,7 +43,6 @@ impl AccountHandle {
         let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
 
         for utxo in &inputs {
-            let output = Output::try_from(&utxo.output_response.output)?;
             let input = Input::Utxo(UtxoInput::from(utxo.output_id()?));
             inputs_for_essence.push(input.clone());
             inputs_for_signing.push(utxo.clone());

@@ -72,7 +72,7 @@ impl AccountHandle {
                         // Only use outputs with a single unlock conditions, which is the [AddressUnlockCondition]
                         if nft_input.unlock_conditions().len() == 1 {
                             // only add if output contains same NftId
-                            if let Some(nft_output) = outputs.iter().find(|output| {
+                            if outputs.iter().any(|output| {
                                 if let Output::Nft(nft_output) = output {
                                     nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
                                 } else {
@@ -85,7 +85,7 @@ impl AccountHandle {
                     }
                     Output::Alias(alias_input) => {
                         // only add if output contains same AliasId
-                        if let Some(alias_output) = outputs.iter().find(|output| {
+                        if outputs.iter().any(|output| {
                             if let Output::Alias(alias_output) = output {
                                 alias_input.alias_id().or_from_output_id(output_data.output_id)
                                     == *alias_output.alias_id()
@@ -98,7 +98,7 @@ impl AccountHandle {
                     }
                     Output::Foundry(foundry_input) => {
                         // only add if output contains same FoundryId
-                        if let Some(foundry_output) = outputs.iter().find(|output| {
+                        if outputs.iter().any(|output| {
                             if let Output::Foundry(foundry_output) = output {
                                 foundry_input.id() == foundry_output.id()
                             } else {
