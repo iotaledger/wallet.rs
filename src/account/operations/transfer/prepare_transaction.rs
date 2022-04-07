@@ -47,11 +47,14 @@ impl AccountHandle {
             inputs_for_essence.push(input.clone());
             inputs_for_signing.push(utxo.clone());
             #[cfg(feature = "events")]
-            inputs_for_event.push(TransactionIO {
-                address: utxo.bech32_address.clone(),
-                amount: output.amount(),
-                remainder: None,
-            })
+            {
+                let output = Output::try_from(&utxo.output_response.output)?;
+                inputs_for_event.push(TransactionIO {
+                    address: utxo.bech32_address.clone(),
+                    amount: output.amount(),
+                    remainder: None,
+                })
+            }
         }
 
         // Build transaction essence
