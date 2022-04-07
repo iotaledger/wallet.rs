@@ -200,7 +200,7 @@ impl AccountHandle {
             .unspent_outputs()
             .values()
             .into_iter()
-            .find(|output_data| matches!(&output_data.output, Output::Alias(output)));
+            .find(|output_data| matches!(&output_data.output, Output::Alias(_output)));
         match existing_alias_output {
             Some(output_data) => {
                 if let Output::Alias(alias_output) = &output_data.output {
@@ -234,7 +234,8 @@ impl AccountHandle {
                     self.sync_pending_transactions().await?;
                 }
 
-                for i in 0..10 {
+                // Try to get the transaction confirmed
+                for _ in 0..10 {
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                     self.sync_pending_transactions().await?;
                     let balance = self.sync(None).await?;

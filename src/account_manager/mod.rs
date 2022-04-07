@@ -202,14 +202,17 @@ impl AccountManager {
     }
 
     // storage feature
+    #[allow(dead_code, unused_variables)]
     #[cfg(feature = "storage")]
     pub async fn backup<P: AsRef<Path>>(&self, destination: P, stronghold_password: String) -> crate::Result<()> {
         Ok(())
     }
+    #[allow(dead_code, unused_variables)]
     #[cfg(feature = "storage")]
     pub async fn restore_backup<S: AsRef<Path>>(&self, source: S, stronghold_password: String) -> crate::Result<()> {
         Ok(())
     }
+    #[allow(dead_code)]
     #[cfg(feature = "storage")]
     pub async fn delete_storage(&self) -> crate::Result<()> {
         Ok(())

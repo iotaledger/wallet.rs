@@ -161,8 +161,6 @@ impl AccountHandle {
         log::debug!("[OUTPUT_COLLECTION] get_basic_outputs_for_additional_inputs");
         let account = self.read().await;
 
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
-
         // Get basic outputs only with AddressUnlockCondition and no other unlock condition
         let mut basic_outputs: Vec<OutputData> = Vec::new();
         for (output_id, output_data) in &account.unspent_outputs {

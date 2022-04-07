@@ -30,7 +30,7 @@ impl AccountHandle {
             account.index,
             WalletEvent::TransferProgress(TransferProgressEvent::SigningTransaction),
         );
-        let (remainder_deposit_address, remainder_value) = match remainder {
+        let (_remainder_deposit_address, remainder_value) = match remainder {
             Some(remainder) => {
                 let mut remainder_address = None;
                 if let Some(unlock_conditions) = remainder.unlock_conditions() {

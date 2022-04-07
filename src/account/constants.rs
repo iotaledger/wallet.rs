@@ -3,6 +3,7 @@
 
 /// Amount at which outputs on a single addresses will get consolidated by default if consolidatioin is enabled
 pub(crate) const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
+#[cfg(feature = "ledger-nano")]
 /// Amount at which outputs on a single addresses will get consolidated by default with a ledger signer if
 /// consolidatioin is enabled, needs to be smaller because the memory of the ledger nano s is limited
 pub(crate) const DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 16;

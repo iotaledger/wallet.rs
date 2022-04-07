@@ -13,7 +13,7 @@ pub(crate) mod submit_transaction;
 use crate::account::{
     handle::AccountHandle,
     operations::syncing::SyncOptions,
-    types::{address::AccountAddress, InclusionState, Transaction},
+    types::{InclusionState, Transaction},
     AddressGenerationOptions,
 };
 #[cfg(feature = "events")]
@@ -40,12 +40,6 @@ use std::time::{SystemTime, UNIX_EPOCH};
 pub struct TransferResult {
     pub transaction_id: TransactionId,
     pub message_id: Option<MessageId>,
-}
-
-// Data for signing metadata (used for ledger signer)
-pub(crate) struct Remainder {
-    address: AccountAddress,
-    amount: u64,
 }
 
 impl AccountHandle {

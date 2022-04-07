@@ -20,23 +20,8 @@ use primitive_types::U256;
 
 // todo: move to bee-message/iota.rs
 
-/// Computes the minimum amount that a storage deposit has to match to allow creating a return [`Output`] back to the
-/// sender [`Address`].
-pub(crate) fn minimum_storage_deposit_basic(config: &ByteCostConfig, address: &Address) -> u64 {
-    let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
-    // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
-    // not important, we are only interested in the storage requirements of the type.
-    let basic_output = BasicOutputBuilder::new(OutputAmount::MIN)
-        .unwrap()
-        .add_unlock_condition(address_condition)
-        .finish()
-        .unwrap();
-    Output::Basic(basic_output).byte_cost(config)
-}
-
 /// Computes the minimum amount that an alias output needs to have.
 pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &Address) -> Result<u64> {
-    let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
     let alias_output = AliasOutputBuilder::new(OutputAmount::MIN, AliasId::from([0; 20]))?

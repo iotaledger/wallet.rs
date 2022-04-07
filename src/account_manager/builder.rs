@@ -6,6 +6,8 @@ use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
+use crate::storage::constants::ROCKSDB_FOLDERNAME;
+#[cfg(feature = "storage")]
 use crate::storage::manager::ManagerStorage;
 use crate::{account_manager::AccountManager, ClientOptions};
 
@@ -43,7 +45,7 @@ pub struct StorageOptions {
 impl Default for StorageOptions {
     fn default() -> Self {
         StorageOptions {
-            storage_path: "walletdb".into(),
+            storage_path: ROCKSDB_FOLDERNAME.into(),
             storage_file_name: None,
             storage_encryption_key: None,
             manager_store: ManagerStorage::Rocksdb,
@@ -92,7 +94,6 @@ impl AccountManagerBuilder {
             crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_path.clone())?;
         #[cfg(feature = "storage")]
         let storage_manager = crate::storage::manager::new_storage_manager(
-            storage_options.storage_path.as_path(),
             None,
             Box::new(storage) as Box<dyn crate::storage::adapter::StorageAdapter + Send + Sync>,
         )

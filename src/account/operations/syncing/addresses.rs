@@ -21,7 +21,6 @@ impl AccountHandle {
     /// StorageDepositReturn [`UnlockCondition`]
     pub(crate) async fn get_addresses_to_sync(&self, options: &SyncOptions) -> crate::Result<Vec<AddressWithBalance>> {
         log::debug!("[SYNC] get_addresses_to_sync");
-        let balance_sync_start_time = Instant::now();
 
         let mut addresses_before_syncing = self.list_addresses().await?;
 
