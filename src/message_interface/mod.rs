@@ -174,9 +174,10 @@ mod tests {
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         wallet_handle
-            .listen(vec![], |event| match &event.event {
-                WalletEvent::TransferProgress(event) => println!("Received event....: {:?}", event),
-                _ => {}
+            .listen(vec![], |event| {
+                if let WalletEvent::TransferProgress(event) = &event.event {
+                    println!("Received event....: {:?}", event);
+                }
             })
             .await;
 
