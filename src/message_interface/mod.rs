@@ -176,7 +176,7 @@ mod tests {
         wallet_handle
             .listen(vec![], |event| match &event.event {
                 WalletEvent::TransferProgress(event) => println!("Received event....: {:?}", event),
-                _ => assert!(false),
+                _ => {}
             })
             .await;
 
