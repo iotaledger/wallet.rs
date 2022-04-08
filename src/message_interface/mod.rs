@@ -202,10 +202,7 @@ mod tests {
 
         let transfer = MessageType::CallAccountMethod {
             account_id: "alias".into(),
-            method: AccountMethod::SendTransfer {
-                outputs: outputs,
-                options: None,
-            },
+            method: AccountMethod::SendTransfer { outputs, options: None },
         };
 
         let _response = message_interface::send_message(&wallet_handle, transfer).await;
