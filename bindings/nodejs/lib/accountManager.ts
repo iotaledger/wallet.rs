@@ -7,7 +7,7 @@ import EventListener from './eventListener';
 
 import type { IAccountManagerOptions } from './types'
 
-export default class AccountManagerForMessages {
+export class AccountManagerForMessages {
     messageHandler: MessageHandler;
     eventListener: EventListener | null;
 

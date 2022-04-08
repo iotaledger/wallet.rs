@@ -4,7 +4,7 @@
 // @ts-ignore
 const addon = require('../build/Release/index.node');
 
-import AccountManagerForMessages from './accountManager';
+import { AccountManagerForMessages } from './accountManager';
 import MessageHandler from './messageHandler';
 import { remainderValueStrategy, OutputKind } from './utils'
 
