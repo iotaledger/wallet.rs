@@ -18,7 +18,6 @@ exclude = ["index.node"]
 crate-type = ["cdylib"]
 
 [dependencies]
-backtrace = { version = "0.3.62", default-features = false }
 bee-common = { version = "0.6.0", default-features = false }
 iota-wallet = { path = "../../", version = "0.2.0", default-features = false, features = ["mnemonic", "events", "storage", "message_interface", "ledger-nano"] }
 log = { version = "0.4.14", default-features = false }
