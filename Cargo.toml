@@ -52,3 +52,7 @@ mnemonic = []
 [[example]]
 name = "events"
 required-features = ["events"]
+
+# udeps returns a false positive for this, so we add it here
+[package.metadata.cargo-udeps.ignore]
+normal = ["backtrace"]

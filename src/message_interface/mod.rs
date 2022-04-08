@@ -174,9 +174,10 @@ mod tests {
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         wallet_handle
-            .listen(vec![], |event| match &event.event {
-                WalletEvent::TransferProgress(event) => println!("Received event....: {:?}", event),
-                _ => assert!(false),
+            .listen(vec![], |event| {
+                if let WalletEvent::TransferProgress(event) = &event.event {
+                    println!("Received event....: {:?}", event);
+                }
             })
             .await;
 
@@ -201,10 +202,7 @@ mod tests {
 
         let transfer = MessageType::CallAccountMethod {
             account_id: "alias".into(),
-            method: AccountMethod::SendTransfer {
-                outputs: outputs,
-                options: None,
-            },
+            method: AccountMethod::SendTransfer { outputs, options: None },
         };
 
         let _response = message_interface::send_message(&wallet_handle, transfer).await;

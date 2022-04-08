@@ -43,6 +43,7 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
+    #[cfg(debug_assertions)]
     manager.verify_integrity().await?;
     Ok(())
 }

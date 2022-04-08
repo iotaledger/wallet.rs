@@ -9,7 +9,10 @@ use crate::account::{
 use crate::events::types::WalletEvent;
 
 use iota_client::{
-    bee_message::{address::Address, output::OutputId},
+    bee_message::{
+        address::{Address, AliasAddress},
+        output::{Output, OutputId},
+    },
     node_api::indexer_api::query_parameters::QueryParameter,
 };
 
@@ -97,6 +100,7 @@ impl AccountHandle {
             let mut tasks = Vec::new();
             for address in addresses_chunk {
                 let client = self.client.clone();
+                let account_handle = self.clone();
                 let sync_options = options.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
@@ -115,18 +119,33 @@ impl AccountHandle {
                                     .into_iter(),
                             );
                             // Get alias outputs
-                            output_ids.extend(
-                                client
-                                    .aliases_output_ids(vec![
-                                        QueryParameter::StateController(address.address.to_bech32()),
-                                        QueryParameter::Governor(address.address.to_bech32()),
-                                    ])
-                                    .await?
-                                    .into_iter(),
-                            );
-                            // todo for alias check if there are foundries (here or later after we fetched the outputs?)
-                            // Maybe the cleanest way is to do it only when syncing again, when we get the addresses for
-                            // syncing we could add alias addresses
+                            let alias_output_ids = client
+                                .aliases_output_ids(vec![
+                                    QueryParameter::StateController(address.address.to_bech32()),
+                                    QueryParameter::Governor(address.address.to_bech32()),
+                                ])
+                                .await?;
+                            output_ids.extend(alias_output_ids.clone().into_iter());
+
+                            // get possible foundries of the alias outputs
+                            let (alias_output_responses, _already_known_balance) =
+                                account_handle.get_outputs(alias_output_ids, false).await?;
+                            let mut foundry_output_ids = Vec::new();
+                            for alias_output_response in alias_output_responses {
+                                let output = Output::try_from(&alias_output_response.output)?;
+                                if let Output::Alias(alias_output) = output {
+                                    let alias_address = Address::Alias(AliasAddress::from(*alias_output.alias_id()));
+                                    foundry_output_ids.extend(
+                                        client
+                                            .foundries_output_ids(vec![QueryParameter::Address(
+                                                alias_address.to_bech32(address.address.bech32_hrp.clone()),
+                                            )])
+                                            .await?
+                                            .into_iter(),
+                                    );
+                                }
+                            }
+                            output_ids.extend(foundry_output_ids.into_iter());
                         }
                         crate::Result::Ok((address, output_ids))
                     })

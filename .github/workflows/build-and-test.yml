@@ -5,9 +5,11 @@ on:
     branches:
       - main
       - dev
+      - develop
   pull_request:
     branches:
       - dev
+      - develop
     paths-ignore:
       - 'specs/**'
       - 'docs/**'
@@ -270,6 +272,8 @@ jobs:
       working-directory: bindings/python/native
 
   java-bindings:
+    # Temporarily disabled until the binding is updated
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

@@ -110,7 +110,7 @@ mod tests {
         let event_counter = Arc::new(AtomicUsize::new(0));
 
         // single event
-        emitter.on(vec![WalletEventType::ConsolidationRequired], |name| {
+        emitter.on(vec![WalletEventType::ConsolidationRequired], |_name| {
             // println!("ConsolidationRequired: {:?}", name);
         });
 
@@ -120,14 +120,14 @@ mod tests {
                 WalletEventType::TransferProgress,
                 WalletEventType::ConsolidationRequired,
             ],
-            move |name| {
+            move |_name| {
                 // println!("TransferProgress or ConsolidationRequired: {:?}", name);
             },
         );
 
         // listen to all events
         let event_counter_clone = Arc::clone(&event_counter);
-        emitter.on(vec![], move |name| {
+        emitter.on(vec![], move |_name| {
             // println!("Any event: {:?}", name);
             event_counter_clone.fetch_add(1, Ordering::SeqCst);
         });

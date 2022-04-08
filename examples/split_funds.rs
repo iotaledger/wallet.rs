@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
     println!("Addresses with balance: {}", addresses_with_balance.len());
 
     // send transaction
-    for chunk in addresses.chunks(100).map(|x| x.to_vec()).into_iter() {
+    for chunk in addresses.chunks(100).map(|x| x.to_vec()) {
         let outputs = chunk
             .into_iter()
             .map(|a| {
