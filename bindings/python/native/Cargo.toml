@@ -19,7 +19,7 @@ crate-type = ["cdylib"]
 futures = { version = "0.3.17", default-features = false }
 iota-client = { version = "1.1.0", default-features = false, features = ["async", "mqtt"] }
 log = { version = "0.4.14", default-features = false }
-iota-wallet = { path = "../../../", version = "0.2.0", features = ["message_interface"] }
+iota-wallet = { path = "../../../", version = "0.2.0", features = ["message_interface", "events"] }
 once_cell = { version = "1.8.0", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 tokio = { version = "1.12.0", default-features = false }
