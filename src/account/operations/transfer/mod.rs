@@ -222,13 +222,16 @@ impl AccountHandle {
             }
         };
 
+        // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
         let message_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
             Ok(message_id) => Some(message_id),
-            Err(_) => None,
+            Err(err) => {
+                log::error!("Failed to submit_transaction_payload {}", err);
+                None
+            }
         };
 
-        // store transaction payload to account (with db feature also store the account to the db) here before sending
-
+        // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
         let transaction_id = transaction_payload.id();
         let mut account = self.write().await;
