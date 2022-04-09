@@ -18,4 +18,3 @@ export {
   OutputKind,
   initLogger,
 };
-
