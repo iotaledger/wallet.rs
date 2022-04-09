@@ -6,7 +6,7 @@
             "es2015.promise"
         ],
         "target": "es2019",
-        "module": "es2020",
+        "module": "commonjs",
         "sourceMap": true,    
         "strict": true,
         "moduleResolution": "node",
