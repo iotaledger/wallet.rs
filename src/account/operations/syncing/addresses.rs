@@ -2,21 +2,26 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::syncing::SyncOptions,
-    types::address::AddressWithBalance, OutputData,
+    constants::PARALLEL_REQUESTS_AMOUNT,
+    handle::AccountHandle,
+    operations::syncing::{OutputResponse, SyncOptions},
+    types::address::AddressWithBalance,
+    OutputData,
 };
 #[cfg(feature = "events")]
 use crate::events::types::WalletEvent;
 
 use iota_client::{
     bee_message::{
-        address::{Address, AliasAddress},
+        address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
+        payload::transaction::TransactionId,
     },
     node_api::indexer_api::query_parameters::QueryParameter,
+    Client,
 };
 
-use std::{collections::HashSet, time::Instant};
+use std::{collections::HashSet, str::FromStr, time::Instant};
 
 impl AccountHandle {
     /// Get the addresses that should be synced with the current known unspent output ids
@@ -73,8 +78,8 @@ impl AccountHandle {
         Ok(addresses_with_old_output_ids)
     }
 
-    /// Get the current output ids for provided addresses and only returns addresses that have outputs now and return
-    /// spent outputs separated
+    /// Get the current output ids for provided addresses and only returns addresses that have unspent outputs and
+    /// return spent outputs separated
     pub(crate) async fn get_address_output_ids(
         &self,
         options: &SyncOptions,
@@ -105,49 +110,9 @@ impl AccountHandle {
                 tasks.push(async move {
                     tokio::spawn(async move {
                         let client = client;
-                        // Get basic outputs
-                        let mut output_ids = client
-                            .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
-                            .await?;
-
-                        if sync_options.sync_aliases_and_nfts {
-                            // Get nft outputs
-                            output_ids.extend(
-                                client
-                                    .nfts_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
-                                    .await?
-                                    .into_iter(),
-                            );
-                            // Get alias outputs
-                            let alias_output_ids = client
-                                .aliases_output_ids(vec![
-                                    QueryParameter::StateController(address.address.to_bech32()),
-                                    QueryParameter::Governor(address.address.to_bech32()),
-                                ])
-                                .await?;
-                            output_ids.extend(alias_output_ids.clone().into_iter());
-
-                            // get possible foundries of the alias outputs
-                            let (alias_output_responses, _already_known_balance) =
-                                account_handle.get_outputs(alias_output_ids, false).await?;
-                            let mut foundry_output_ids = Vec::new();
-                            for alias_output_response in alias_output_responses {
-                                let output = Output::try_from(&alias_output_response.output)?;
-                                if let Output::Alias(alias_output) = output {
-                                    let alias_address = Address::Alias(AliasAddress::from(*alias_output.alias_id()));
-                                    foundry_output_ids.extend(
-                                        client
-                                            .foundries_output_ids(vec![QueryParameter::Address(
-                                                alias_address.to_bech32(address.address.bech32_hrp.clone()),
-                                            )])
-                                            .await?
-                                            .into_iter(),
-                                    );
-                                }
-                            }
-                            output_ids.extend(foundry_output_ids.into_iter());
-                        }
-                        crate::Result::Ok((address, output_ids))
+                        account_handle
+                            .request_address_output_ids(&client, address, &sync_options)
+                            .await
                     })
                     .await
                 });
@@ -242,4 +207,113 @@ impl AccountHandle {
         );
         Ok((addresses_with_outputs, outputs_data))
     }
+
+    pub(crate) async fn request_address_output_ids(
+        &self,
+        client: &Client,
+        address: AddressWithBalance,
+        sync_options: &SyncOptions,
+    ) -> crate::Result<(AddressWithBalance, Vec<OutputId>)> {
+        // Get basic outputs
+        let mut output_ids = client
+            .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
+            .await?;
+
+        if sync_options.sync_aliases_and_nfts {
+            // Get nft outputs
+            let nft_output_ids = client
+                .nfts_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
+                .await?;
+            output_ids.extend(nft_output_ids.clone().into_iter());
+
+            // get basic outputs that can be controlled by an nft output
+            let (nft_output_responses, _already_known_balance) = self.get_outputs(nft_output_ids, false).await?;
+            let nft_basic_output_ids =
+                get_basic_outputs_for_nft_outputs(client, nft_output_responses, address.address.bech32_hrp.clone())
+                    .await?;
+            output_ids.extend(nft_basic_output_ids.into_iter());
+
+            // Get alias outputs
+            let alias_output_ids = client
+                .aliases_output_ids(vec![
+                    QueryParameter::StateController(address.address.to_bech32()),
+                    QueryParameter::Governor(address.address.to_bech32()),
+                ])
+                .await?;
+            output_ids.extend(alias_output_ids.clone().into_iter());
+
+            // get possible foundries and basic outputs that can be controlled by an alias outputs
+            let (alias_output_responses, _already_known_balance) = self.get_outputs(alias_output_ids, false).await?;
+            let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
+                client,
+                alias_output_responses,
+                address.address.bech32_hrp.clone(),
+            )
+            .await?;
+            output_ids.extend(alias_foundry_and_basic_output_ids.into_iter());
+        }
+        Ok((address, output_ids))
+    }
+}
+
+// Get basic outputs that have the [`NftAddress`] from nft outputs in their [`AddressUnlockCondition`]
+async fn get_basic_outputs_for_nft_outputs(
+    client: &Client,
+    nft_output_responses: Vec<OutputResponse>,
+    bech32_hrp: String,
+) -> crate::Result<Vec<OutputId>> {
+    let mut nft_basic_output_ids = Vec::new();
+    for nft_output_response in nft_output_responses {
+        let output = Output::try_from(&nft_output_response.output)?;
+        if let Output::Nft(nft_output) = output {
+            let transaction_id = TransactionId::from_str(&nft_output_response.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, nft_output_response.output_index)?;
+            let nft_address = Address::Nft(NftAddress::new(nft_output.nft_id().or_from_output_id(output_id)));
+            nft_basic_output_ids.extend(
+                client
+                    .output_ids(vec![QueryParameter::Address(nft_address.to_bech32(bech32_hrp.clone()))])
+                    .await?
+                    .into_iter(),
+            );
+        }
+    }
+    Ok(nft_basic_output_ids)
+}
+
+// Get basic outputs that have the [`AliasAddress`] from alias outputs in their [`AddressUnlockCondition`]
+async fn get_foundry_and_basic_outputs_for_alias_outputs(
+    client: &Client,
+    alias_output_responses: Vec<OutputResponse>,
+    bech32_hrp: String,
+) -> crate::Result<Vec<OutputId>> {
+    let mut foundry_output_ids = Vec::new();
+    let mut alias_basic_output_ids = Vec::new();
+    for alias_output_response in alias_output_responses {
+        let output = Output::try_from(&alias_output_response.output)?;
+        if let Output::Alias(alias_output) = output {
+            let transaction_id = TransactionId::from_str(&alias_output_response.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, alias_output_response.output_index)?;
+            let alias_address =
+                Address::Alias(AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id)));
+            foundry_output_ids.extend(
+                client
+                    .foundries_output_ids(vec![QueryParameter::Address(
+                        alias_address.to_bech32(bech32_hrp.clone()),
+                    )])
+                    .await?
+                    .into_iter(),
+            );
+            alias_basic_output_ids.extend(
+                client
+                    .output_ids(vec![QueryParameter::Address(
+                        alias_address.to_bech32(bech32_hrp.clone()),
+                    )])
+                    .await?
+                    .into_iter(),
+            );
+        }
+    }
+    // Add output ids together
+    foundry_output_ids.extend(alias_basic_output_ids.into_iter());
+    Ok(foundry_output_ids)
 }
