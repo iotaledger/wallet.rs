@@ -123,9 +123,9 @@ pub enum Error {
     /// Client not set error
     #[error("client not set")]
     ClientNotSet,
-    /// Error from the logger in the bee_common crate.
+    /// Error from the logger.
     #[error("{0}")]
-    BeeCommonLogger(iota_client::common::logger::Error),
+    Logger(iota_client::logger::Error),
     /// Local time doesn't match the time of the latest timestamp
     #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
     TimeNotSynced(u64, u64),
@@ -143,9 +143,9 @@ impl From<iota_client::bee_message::Error> for Error {
     }
 }
 
-impl From<iota_client::common::logger::Error> for Error {
-    fn from(error: iota_client::common::logger::Error) -> Self {
-        Self::BeeCommonLogger(error)
+impl From<iota_client::logger::Error> for Error {
+    fn from(error: iota_client::logger::Error) -> Self {
+        Self::Logger(error)
     }
 }
 
@@ -203,7 +203,7 @@ impl serde::Serialize for Error {
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
-            Self::BeeCommonLogger(_) => serialize_variant(self, serializer, "BeeCommonLogger"),
+            Self::Logger(_) => serialize_variant(self, serializer, "Logger"),
             Self::TimeNotSynced(..) => serialize_variant(self, serializer, "TimeNotSynced"),
         }
     }

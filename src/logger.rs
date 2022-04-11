@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::common::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
+use iota_client::logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 pub use log::LevelFilter;
 
 /// creates a file in which logs will be written in

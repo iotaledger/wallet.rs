@@ -97,7 +97,7 @@ async fn main() -> Result<()> {
                     // send transaction
                     let outputs = vec![Output::Basic(
                         // send one or two Mi for more different transactions
-                        BasicOutputBuilder::new(n * 1_000_000)?
+                        BasicOutputBuilder::new_with_amount(n * 1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 *pong_addresses_[address_index % amount_addresses].address().as_ref(),
                             )))

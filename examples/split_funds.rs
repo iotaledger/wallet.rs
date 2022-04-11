@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
             .into_iter()
             .map(|a| {
                 Output::Basic(
-                    BasicOutputBuilder::new(1_000_000)
+                    BasicOutputBuilder::new_with_amount(1_000_000)
                         .unwrap()
                         .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                             *a.address().as_ref(),

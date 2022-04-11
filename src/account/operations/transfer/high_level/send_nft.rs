@@ -65,7 +65,7 @@ impl AccountHandle {
                 if let Output::Nft(nft_output) = &nft_output_data.output {
                     // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
                     // updated address unlock conditions
-                    let mut nft_builder = NftOutputBuilder::new(nft_output.amount(), address_and_nft_id.nft_id)?
+                    let mut nft_builder = NftOutputBuilder::new_with_amount(nft_output.amount(), address_and_nft_id.nft_id)?
                         .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
                     for native_token in nft_output.native_tokens().iter() {
                         nft_builder = nft_builder.add_native_token(native_token.clone());
