@@ -3,6 +3,7 @@
 
 import AccountManager from './AccountManager';
 import MessageHandler from './MessageHandler';
+import * as Types from './types';
 
 // @ts-ignore
 const addon = require('../build/Release/index.node');
@@ -14,4 +15,5 @@ export {
   AccountManager,
   // EventListener,
   initLogger,
+  Types
 };

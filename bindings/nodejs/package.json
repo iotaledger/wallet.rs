@@ -3,7 +3,6 @@
   "version": "1.0.4",
   "description": "Node.js binding to the wallet library",
   "main": "out/index.js",
-  "types": "lib/types.ts",
   "scripts": {
     "lint": "eslint .",
     "format": "prettier -w {,*/**/}*.{js,json}",
