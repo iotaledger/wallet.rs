@@ -240,7 +240,7 @@ impl AccountHandle {
                     // updated address unlock conditions
 
                     // todo: use minimum storage deposit amount for amount
-                    let mut nft_builder = NftOutputBuilder::new(
+                    let mut nft_builder = NftOutputBuilder::new_with_amount(
                         nft_output.amount(),
                         nft_output.nft_id().or_from_output_id(output_data.output_id),
                     )?
@@ -284,7 +284,7 @@ impl AccountHandle {
                             return_amount = sdr.amount();
                             // create return output
                             outputs_to_send.push(Output::Basic(
-                                BasicOutputBuilder::new(sdr.amount())?
+                                BasicOutputBuilder::new_with_amount(sdr.amount())?
                                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                         *sdr.return_address(),
                                     )))
@@ -372,7 +372,7 @@ impl AccountHandle {
 
             // Create output with collected values
             outputs_to_send.push(Output::Basic(
-                BasicOutputBuilder::new(new_amount)?
+                BasicOutputBuilder::new_with_amount(new_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         first_account_address.address.inner,
                     )))

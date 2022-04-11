@@ -24,7 +24,7 @@ use primitive_types::U256;
 pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &Address) -> Result<u64> {
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let alias_output = AliasOutputBuilder::new(OutputAmount::MIN, AliasId::from([0; 20]))?
+    let alias_output = AliasOutputBuilder::new_with_amount(OutputAmount::MIN, AliasId::from([0; 20]))?
         .with_state_index(0)
         .with_foundry_counter(0)
         .add_unlock_condition(UnlockCondition::StateControllerAddress(
@@ -41,7 +41,7 @@ pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &A
 pub(crate) fn minimum_storage_deposit_foundry(config: &ByteCostConfig) -> Result<u64> {
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let foundry_output = FoundryOutputBuilder::new(
+    let foundry_output = FoundryOutputBuilder::new_with_amount(
         OutputAmount::MIN,
         1,
         TokenTag::new([0u8; 12]),
@@ -65,7 +65,7 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let mut basic_output_builder = BasicOutputBuilder::new(OutputAmount::MIN)?
+    let mut basic_output_builder = BasicOutputBuilder::new_with_amount(OutputAmount::MIN)?
         .add_unlock_condition(address_condition)
         .add_unlock_condition(UnlockCondition::StorageDepositReturn(
             StorageDepositReturnUnlockCondition::new(*return_address, OutputAmount::MIN)?,
@@ -99,8 +99,8 @@ pub(crate) fn minimum_storage_deposit_nft(
     let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let mut nft_builder =
-        NftOutputBuilder::new(OutputAmount::MIN, NftId::from([0; 20]))?.add_unlock_condition(address_unlock_condition);
+    let mut nft_builder = NftOutputBuilder::new_with_amount(OutputAmount::MIN, NftId::from([0; 20]))?
+        .add_unlock_condition(address_unlock_condition);
     if let Some(immutable_metadata) = immutable_metadata {
         nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
     }

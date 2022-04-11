@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
                 tokio::spawn(async move {
                     // send transaction
                     let outputs = vec![Output::Basic(
-                        BasicOutputBuilder::new(1_000_000)?
+                        BasicOutputBuilder::new_with_amount(1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(
                                     "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",

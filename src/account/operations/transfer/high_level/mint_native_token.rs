@@ -128,15 +128,16 @@ impl AccountHandle {
             let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
 
             // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
-            let mut new_alias_output_builder = AliasOutputBuilder::new(existing_alias_output.amount, alias_id)?
-                .with_state_index(alias_output.state_index() + 1)
-                .with_foundry_counter(alias_output.foundry_counter() + 1)
-                .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                    StateControllerAddressUnlockCondition::new(controller_address),
-                ))
-                .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                    controller_address,
-                )));
+            let mut new_alias_output_builder =
+                AliasOutputBuilder::new_with_amount(existing_alias_output.amount, alias_id)?
+                    .with_state_index(alias_output.state_index() + 1)
+                    .with_foundry_counter(alias_output.foundry_counter() + 1)
+                    .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                        StateControllerAddressUnlockCondition::new(controller_address),
+                    ))
+                    .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
+                        controller_address,
+                    )));
             for feature_block in alias_output.feature_blocks().iter() {
                 new_alias_output_builder = new_alias_output_builder.add_feature_block(feature_block.clone());
             }
@@ -152,7 +153,7 @@ impl AccountHandle {
             let outputs = vec![
                 Output::Alias(new_alias_output_builder.finish()?),
                 Output::Foundry(
-                    FoundryOutputBuilder::new(
+                    FoundryOutputBuilder::new_with_amount(
                         minimum_storage_deposit_foundry(&byte_cost_config)?,
                         alias_output.foundry_counter() + 1,
                         native_token_options.token_tag,
@@ -168,7 +169,7 @@ impl AccountHandle {
                     .finish()?,
                 ),
                 Output::Basic(
-                    BasicOutputBuilder::new(minimum_storage_deposit(
+                    BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
                         &byte_cost_config,
                         &controller_address,
                         &Some(native_tokens_for_storage_deposit),
@@ -215,7 +216,7 @@ impl AccountHandle {
                 drop(account);
                 let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
                 let outputs = vec![Output::Alias(
-                    AliasOutputBuilder::new(amount, AliasId::from([0; 20]))?
+                    AliasOutputBuilder::new_with_amount(amount, AliasId::from([0; 20]))?
                         .with_state_index(0)
                         .with_foundry_counter(0)
                         .add_unlock_condition(UnlockCondition::StateControllerAddress(

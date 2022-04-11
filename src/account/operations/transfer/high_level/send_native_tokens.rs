@@ -91,7 +91,7 @@ impl AccountHandle {
             )?;
 
             outputs.push(Output::Basic(
-                BasicOutputBuilder::new(storage_deposit_amount)?
+                BasicOutputBuilder::new_with_amount(storage_deposit_amount)?
                     .with_native_tokens(
                         address_and_amount
                             .native_tokens

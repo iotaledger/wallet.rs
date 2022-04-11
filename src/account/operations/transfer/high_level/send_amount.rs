@@ -47,7 +47,7 @@ impl AccountHandle {
         let mut outputs = Vec::new();
         for address_and_amount in addresses_with_amount {
             outputs.push(Output::Basic(
-                BasicOutputBuilder::new(address_and_amount.amount)?
+                BasicOutputBuilder::new_with_amount(address_and_amount.amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         Address::try_from_bech32(&address_and_amount.address)?.1,
                     )))

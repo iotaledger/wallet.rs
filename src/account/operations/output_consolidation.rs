@@ -74,7 +74,7 @@ impl AccountHandle {
             for outputs in outputs_on_one_address.chunks(16) {
                 let output_sum = outputs.iter().map(|o| o.amount).sum();
                 let consolidation_output = vec![Output::Basic(
-                    BasicOutputBuilder::new(output_sum)?
+                    BasicOutputBuilder::new_with_amount(output_sum)?
                         .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                             outputs[0].address,
                         )))
