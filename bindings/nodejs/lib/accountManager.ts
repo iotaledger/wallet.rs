@@ -1,66 +1,111 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import MessageHandler from './MessageHandler';
+import Account from './Account';
 
-import MessageHandler from './messageHandler';
-import AccountForMessages from './account';
-import EventListener from './eventListener';
+import type {
+    EventType,
+    AccountManagerOptions,
+    CreateAccountPayload
+} from './types'
 
-import type { IAccountManagerOptions } from './types'
-
-export class AccountManagerForMessages {
+/**
+ * Account Manager class
+ */
+export default class AccountManager {
     messageHandler: MessageHandler;
-    eventListener: EventListener | null;
 
-    constructor(options: IAccountManagerOptions) {
+    /**
+     * Creates a new instance of Account Manager
+     * 
+     * @param {AccountManagerOptions} options 
+     */
+    constructor(options: AccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);
-        this.eventListener = null;
     }
 
-    async getAccount(accountId: string) {
-        return this.messageHandler
+    /**
+     * Get account object for provided id
+     * 
+     * @param {string} accountId 
+     * 
+     * @returns {Promise<Account>}
+     */
+    async getAccount(accountId: string): Promise<Account> {
+        const response = await this.messageHandler
             .sendMessage({
                 cmd: 'GetAccount',
                 payload: accountId,
-            })
-            .then(
-                (acc) =>
-                    new AccountForMessages(
-                        JSON.parse(acc).payload,
-                        this.messageHandler,
-                    ),
-            );
+            });
+
+        const account = new Account(
+            JSON.parse(response).payload,
+            this.messageHandler,
+        );
+
+        return account;
     }
 
-    async getAccounts() {
+    /**
+     * TODO: Replace any with proper type
+     * 
+     * Gets account associated with manager
+     * 
+     * @returns {Promise<any>}
+     */
+    async getAccounts(): Promise<any> {
         return this.messageHandler.sendMessage({
             cmd: 'GetAccounts',
         });
     }
 
-    async createAccount(account: any) {
-        return this.messageHandler
+    /**
+     * Creates a new account
+     * 
+     * @param {Account} account
+     *  
+     * @returns {Promise<Account>}
+     */
+    async createAccount(account: CreateAccountPayload): Promise<Account> {
+        const response = await this.messageHandler
             .sendMessage({
                 cmd: 'CreateAccount',
                 payload: account,
-            })
-            .then(
-                (acc) =>
-                    new AccountForMessages(
-                        JSON.parse(acc).payload,
-                        this.messageHandler,
-                    ),
-            );
+            });
+
+        return new Account(
+            JSON.parse(response).payload,
+            this.messageHandler,
+        );
     }
 
-    async setStrongholdPassword(password: string) {
+    /**
+     * TODO: Replace string type with proper type
+     * 
+     * Sets stronghold password
+     * 
+     * @param {string} password
+     *  
+     * @returns {Promise<string>} 
+     */
+    async setStrongholdPassword(password: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
             payload: password,
         });
     }
 
-    async storeMnemonic(mnemonic: string) {
+    /**
+     * TODO: Replace string type with proper type
+     * 
+     * Stores mnemonic
+     * 
+     * @param {string} mnemonic
+     *  
+     * @returns {Promise<string>} 
+     */
+    async storeMnemonic(mnemonic: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: {
@@ -72,7 +117,17 @@ export class AccountManagerForMessages {
         });
     }
 
-    async backup(destination: string, password: string) {
+    /**
+     * TODO: Replace string type with proper type
+     * 
+     * Backs up stronghold file
+     * 
+     * @param {string} destination
+     * @param {string} password
+     *  
+     * @returns {Promise<string>} 
+     */
+    async backup(destination: string, password: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'Backup',
             payload: {
@@ -82,7 +137,17 @@ export class AccountManagerForMessages {
         });
     }
 
-    async importAccounts(backupPath: string, password: string) {
+    /**
+     * TODO: Replace string type with proper type
+     * 
+     * Imports from stronghold file
+     * 
+     * @param {string} backupPath
+     * @param {string} password
+     *  
+     * @returns {Promise<string>} 
+     */
+    async importAccounts(backupPath: string, password: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
@@ -92,25 +157,15 @@ export class AccountManagerForMessages {
         });
     }
 
-    listen(eventName: string, callback: any) {
-        if (this.eventListener == null) {
-            this.eventListener = new EventListener({});
-        }
-        return this.eventListener.listen(eventName, callback);
-    }
-
-    removeEventListeners(eventName: string) {
-        if (this.eventListener == null) {
-            return;
-        }
-
-        if (
-            this.eventListener.removeEventListeners(
-                eventName,
-            ) <= 0
-        ) {
-            this.eventListener = null;
-            return;
-        }
+    /**
+     * Listen to events
+     * 
+     * @param {EventType[]} eventTypes 
+     * @param {Function} callback 
+     * 
+     * @returns {void}
+     */
+    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
+        return this.messageHandler.listen(eventTypes, callback);
     }
 }

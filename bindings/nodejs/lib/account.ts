@@ -1,50 +1,83 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type MessageHandler from './messageHandler';
+import type MessageHandler from './MessageHandler';
+import type {
+    AccountBalance,
+    Address,
+    AccountSyncOptions,
+    AccountMeta,
+    NodeInfo,
+    Transfer,
+    ClientOptions
+} from './types';
 
-
-export default class AccountForMessages {
-    accountData: any;
+/**
+ * Account class
+ */
+export default class Account {
+    meta: AccountMeta;
     messageHandler: MessageHandler
 
-    constructor(accountData: any, messageHandler: MessageHandler) {
-        this.accountData = accountData;
+    /**
+    * Creates a new instance of Account
+    * 
+    * @param {AccountMeta} accountMeta
+    * @param {MessageHandler} messageHandler 
+    */
+    constructor(
+        accountMeta: AccountMeta,
+        messageHandler: MessageHandler
+    ) {
+        this.meta = accountMeta;
         this.messageHandler = messageHandler;
     }
 
-    alias() {
-        return this.accountData.alias;
+    /**
+     * Returns account alias
+     * 
+     * @returns {string}
+     */
+    alias(): string {
+        return this.meta.alias;
     }
 
-    async sync(options: any) {
-        console.log({
-            account_id: this.accountData.index,
-            method: {
-                name: 'SyncAccount',
-                data: options || {},
+    /**
+     * Sync an account
+     * 
+     * @param {AccountSyncOptions} options
+     * 
+     * @returns {Promise<void>} 
+     */
+    async sync(options: AccountSyncOptions): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'SyncAccount',
+                    data: options || {},
+                },
             },
         })
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'CallAccountMethod',
-                payload: {
-                    account_id: this.accountData.index,
-                    method: {
-                        name: 'SyncAccount',
-                        data: options || {},
-                    },
-                },
-            }),
-        );
     }
 
-    async getNodeInfo(url: string) {
+    /**
+     * TODO: Test this method through example and see if the interface is correct
+     * 
+     * Gets node info for the node set against this account
+     * 
+     * @param {string} url
+     *  
+     * @returns {Promise<NodeInfo>}
+     */
+    async getNodeInfo(url: string): Promise<NodeInfo> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'CallAccountMethod',
                 payload: {
-                    account_id: this.accountData.index,
+                    account_id: this.meta.index,
                     method: {
                         name: 'GetNodeInfo',
                         data: [url],
@@ -54,76 +87,101 @@ export default class AccountForMessages {
         );
     }
 
-    async generateAddresses() {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'CallAccountMethod',
-                payload: {
-                    account_id: this.accountData.index,
-                    method: {
-                        name: 'GenerateAddresses',
-                        data: {
-                            amount: 1,
-                            // options: {
-                            //     internal: false, metadata: {
-                            //         syncing: false,
-                            //         network: "Network::Testnet",
-                            //     }
-                            // }
-                        }
-                    },
+    /**
+     * Generates addresses for the account
+     * 
+     * @returns {Promise<Address[]>}
+     */
+    async generateAddresses(): Promise<Address[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                account_id: this.meta.index,
+                method: {
+                    name: 'GenerateAddresses',
+                    data: {
+                        // TODO: Why is the amount set to 1 here?
+                        amount: 1,
+                    }
                 },
-            }),
-        );
+            },
+        });
+
+        return JSON.parse(response).payload;
     }
 
-    async latestAddress() {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'CallAccountMethod',
-                payload: {
-                    account_id: this.accountData.index,
-                    method: {
-                        name: 'GetLatestAddress',
-                    },
+    /**
+     * Returns the latest address for the account
+     * 
+     * @returns {Promise<Address>}
+     */
+    async latestAddress(): Promise<Address> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                account_id: this.meta.index,
+                method: {
+                    name: 'GetLatestAddress',
                 },
-            }),
-        );
+            },
+        });
+
+        return JSON.parse(response).payload;
     }
 
-    async balance() {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'CallAccountMethod',
-                payload: {
-                    account_id: this.accountData.index,
-                    method: {
-                        name: 'GetBalance',
-                    },
+    /**
+     * Returns account balance
+     * 
+     * @returns {Promise<AccountBalance>}
+     */
+    async balance(): Promise<AccountBalance> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                account_id: this.meta.index,
+                method: {
+                    name: 'GetBalance',
                 },
-            }),
-        );
+            },
+        });
+
+        return JSON.parse(response).payload;
     }
 
-    async send(transfer: any) {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'SendTransfer',
-                payload: {
-                    account_id: this.accountData.index,
-                    transfer,
-                },
-            }),
-        );
+    /**
+     * TODO: Replace any with sent message
+     * 
+     * Make a transaction
+     * 
+     * @param {Transfer} transfer 
+     * 
+     * @returns {Promise<any>}
+     */
+    async send(transfer: Transfer): Promise<any> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'SendTransfer',
+            payload: {
+                account_id: this.meta.index,
+                transfer,
+            },
+        });
+
+        return JSON.parse(response).payload;
     }
 
-    async setClientOptions(options: any) {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'SetClientOptions',
-                payload: options,
-            }),
-        );
+    /**
+     * TODO: Replace any with proper response type
+     * 
+     * @param {ClientOptions} options 
+     * 
+     * @returns {Promise<any>}
+     */
+    async setClientOptions(options: ClientOptions): Promise<any> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'SetClientOptions',
+            payload: options,
+        });
+
+        return JSON.parse(response).payload;
     }
 }
-
