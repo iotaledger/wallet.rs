@@ -181,7 +181,7 @@ impl AccountHandle {
                 let account_handle = self.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
-                        let (output_responses, already_known_balance) =
+                        let (output_responses, already_known_balance, _loaded_output_responses) =
                             account_handle.get_outputs(address.output_ids.clone(), false).await?;
                         let outputs = account_handle
                             .output_response_to_output_data(output_responses, &address)
@@ -208,6 +208,9 @@ impl AccountHandle {
         Ok((addresses_with_outputs, outputs_data))
     }
 
+    /// Returns output ids for outputs that are directly (Ed25519 address in AddressUnlockCondition) or indirectly
+    /// (alias/nft address in AddressUnlockCondition and the alias/nft output is controlled with the Ed25519 address)
+    /// connected to
     pub(crate) async fn request_address_output_ids(
         &self,
         client: &Client,
@@ -227,7 +230,9 @@ impl AccountHandle {
             output_ids.extend(nft_output_ids.clone().into_iter());
 
             // get basic outputs that can be controlled by an nft output
-            let (nft_output_responses, _already_known_balance) = self.get_outputs(nft_output_ids, false).await?;
+            let (mut nft_output_responses, _already_known_balance, loaded_output_responses) =
+                self.get_outputs(nft_output_ids, false).await?;
+            nft_output_responses.extend(loaded_output_responses.into_iter());
             let nft_basic_output_ids =
                 get_basic_outputs_for_nft_outputs(client, nft_output_responses, address.address.bech32_hrp.clone())
                     .await?;
@@ -243,7 +248,9 @@ impl AccountHandle {
             output_ids.extend(alias_output_ids.clone().into_iter());
 
             // get possible foundries and basic outputs that can be controlled by an alias outputs
-            let (alias_output_responses, _already_known_balance) = self.get_outputs(alias_output_ids, false).await?;
+            let (mut alias_output_responses, _already_known_balance, loaded_output_responses) =
+                self.get_outputs(alias_output_ids, false).await?;
+            alias_output_responses.extend(loaded_output_responses.into_iter());
             let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
                 client,
                 alias_output_responses,
