@@ -128,15 +128,16 @@ impl AccountHandle {
             let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
 
             // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
-            let mut new_alias_output_builder = AliasOutputBuilder::new_with_amount(existing_alias_output.amount, alias_id)?
-                .with_state_index(alias_output.state_index() + 1)
-                .with_foundry_counter(alias_output.foundry_counter() + 1)
-                .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                    StateControllerAddressUnlockCondition::new(controller_address),
-                ))
-                .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                    controller_address,
-                )));
+            let mut new_alias_output_builder =
+                AliasOutputBuilder::new_with_amount(existing_alias_output.amount, alias_id)?
+                    .with_state_index(alias_output.state_index() + 1)
+                    .with_foundry_counter(alias_output.foundry_counter() + 1)
+                    .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                        StateControllerAddressUnlockCondition::new(controller_address),
+                    ))
+                    .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
+                        controller_address,
+                    )));
             for feature_block in alias_output.feature_blocks().iter() {
                 new_alias_output_builder = new_alias_output_builder.add_feature_block(feature_block.clone());
             }
