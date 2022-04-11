@@ -73,7 +73,8 @@ impl AccountHandle {
             self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
-        let (spent_output_responses, _) = self.get_outputs(spent_output_ids.clone(), true).await?;
+        let (spent_output_responses, _already_known_balance, _loaded_output_responses) =
+            self.get_outputs(spent_output_ids.clone(), true).await?;
 
         if options.automatic_output_consolidation {
             // Only consolidates outputs for non ledger accounts, because they require approval from the user
