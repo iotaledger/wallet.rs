@@ -181,6 +181,11 @@ export type Auth = {
     password?: string;
 }
 
+export interface AddressWithAmount {
+    address: string;
+    amount: number;
+}
+
 export interface MqttBrokerOptions {
     automaticDisconnect?: boolean;
     // timeout in seconds
@@ -421,6 +426,19 @@ type __MintNftsPayload__ = {
         }
     };
 }
+type __SendAmountPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'SendAmount',
+            data: {
+                addresses_with_amount: AddressWithAmount[];
+                options: TransferOptions
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -447,3 +465,4 @@ export type __SendMessagePayload__ =
     | __ListUnspentOutputsPayload__
     | __MintNativeTokenPayload__
     | __MintNftsPayload__
+    | __SendAmountPayload__
