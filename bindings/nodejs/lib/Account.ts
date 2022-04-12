@@ -29,7 +29,7 @@ export class Account {
     }
 
     async collectOutputs(outputIds: string[]): Promise<void> {
-        const res = await this.messageHandler.sendMessage({
+        await this.messageHandler.sendMessage({
             cmd: 'CallAccountMethod',
             payload: {
                 // TODO: Change to camelCase
@@ -42,8 +42,6 @@ export class Account {
                 },
             },
         })
-
-        console.log('Res', res)
     }
 
     async sync(options: AccountSyncOptions): Promise<void> {
