@@ -1,3 +1,4 @@
+
 export enum Network {
     Mainnet,
     Testnet,
@@ -9,6 +10,18 @@ export enum OutputsToCollect {
     NativeTokens = 'NativeTokens',
     Nfts = 'Nfts',
     All = 'All',
+}
+
+// TODO: Update Transaction interface
+export interface Transaction {
+    // TODO: Change to camelCase
+    message_id: string;
+    // TODO: Add other inclusion states
+    inclusion_state: 'Confirmed';
+    timestamp: number;
+    // TODO: Change to camelCase
+    network_id: number;
+    incoming: boolean;
 }
 
 export interface OutputResponse {
@@ -150,6 +163,7 @@ export type Node = {
     auth?: Auth;
     disabled?: boolean;
 }
+
 export interface ClientOptions {
     primaryNode?: string | Node;
     primaryPoWNode?: string | Node;
@@ -322,6 +336,25 @@ type __ListOutputsPayload__ = {
         }
     };
 }
+type __ListPendingTransactionsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'ListPendingTransactions'
+        }
+    };
+}
+type __ListTransactionsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'ListTransactions'
+        }
+    };
+}
+
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -343,3 +376,5 @@ export type __SendMessagePayload__ =
     | __ListAddressesPayload__
     | __ListAddressesWithBalancePayload__
     | __ListOutputsPayload__
+    | __ListPendingTransactionsPayload__
+    | __ListTransactionsPayload__
