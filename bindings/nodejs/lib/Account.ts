@@ -108,6 +108,21 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async listUnspentOutputs(): Promise<OutputData[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'ListUnspentOutputs'
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'CallAccountMethod',

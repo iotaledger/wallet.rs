@@ -354,6 +354,15 @@ type __ListTransactionsPayload__ = {
         }
     };
 }
+type __ListUnspentOutputsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'ListUnspentOutputs'
+        }
+    };
+}
 
 
 export type __SendMessagePayload__ =
@@ -378,3 +387,4 @@ export type __SendMessagePayload__ =
     | __ListOutputsPayload__
     | __ListPendingTransactionsPayload__
     | __ListTransactionsPayload__
+    | __ListUnspentOutputsPayload__
