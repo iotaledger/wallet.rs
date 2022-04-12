@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type MessageHandler from './MessageHandler';
+import type { MessageHandler } from './MessageHandler';
 // @ts-ignore
 const addon = require('../build/Release/index.node');
 

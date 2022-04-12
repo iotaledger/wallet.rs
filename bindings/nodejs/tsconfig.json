@@ -5,6 +5,7 @@
             "dom",
             "es2015.promise"
         ],
+        "declaration": true,
         "target": "es2019",
         "module": "commonjs",
         "sourceMap": true,    
