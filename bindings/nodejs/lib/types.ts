@@ -274,6 +274,15 @@ type __ListAddressesPayload__ = {
         }
     };
 }
+type __ListAddressesWithBalancePayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'ListAddressesWithBalance'
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -293,3 +302,4 @@ export type __SendMessagePayload__ =
     | __SetCollectOutputsPayload__
     | __GetOutputsWithAdditionalUnlockConditionsPayload__
     | __ListAddressesPayload__
+    | __ListAddressesWithBalancePayload__
