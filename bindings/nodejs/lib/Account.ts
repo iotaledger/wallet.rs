@@ -76,6 +76,21 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async listAddressesWithBalance(): Promise<Address[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'ListAddressesWithBalance'
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
     async sync(options: AccountSyncOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'CallAccountMethod',
