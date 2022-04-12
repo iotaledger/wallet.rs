@@ -69,6 +69,29 @@ export type RemainderValueStrategy = {
     },
 }
 
+export interface NativeTokenOptions {
+    // TODO: Change to camelCase
+    account_address: string;
+    // TOOD: Change to proper type
+    token_tag: any;
+    // TOOD: Change to camelCase
+    circulating_supply: number;
+    // TOOD: Change to camelCase
+    maximum_supply: number;
+}
+
+// TODO: Transfer & TransferOptions should probably be merged
+export interface TransferOptions {
+    // TODO: Change to camelCase
+    remainder_value_strategy: RemainderValueStrategy;
+    // TODO: Change to proper type
+    tagged_data_payload: any;
+    // TODO: Change to camelCase
+    skip_sync: boolean;
+    // TODO: Change to camelCase
+    custom_inputs: string[];
+}
+
 export interface Transfer {
     address: string;
     amount: number;
@@ -363,7 +386,19 @@ type __ListUnspentOutputsPayload__ = {
         }
     };
 }
-
+type __MintNativeTokenPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'MintNativeToken',
+            data: {
+                native_token_options: NativeTokenOptions;
+                options: TransferOptions
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -388,3 +423,4 @@ export type __SendMessagePayload__ =
     | __ListPendingTransactionsPayload__
     | __ListTransactionsPayload__
     | __ListUnspentOutputsPayload__
+    | __MintNativeTokenPayload__

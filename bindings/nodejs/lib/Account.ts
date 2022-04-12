@@ -12,7 +12,9 @@ import type {
     ClientOptions,
     OutputsToCollect,
     OutputData,
-    Transaction
+    Transaction,
+    NativeTokenOptions,
+    TransferOptions
 } from './types';
 
 export class Account {
@@ -242,6 +244,25 @@ export class Account {
                 transfer,
             },
         });
+
+        return JSON.parse(response).payload;
+    }
+
+    async mintNativeToken(nativeTokenOptions: NativeTokenOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'MintNativeToken',
+                    data: {
+                        native_token_options: nativeTokenOptions,
+                        options: transferOptions
+                    }
+                },
+            },
+        })
 
         return JSON.parse(response).payload;
     }
