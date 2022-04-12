@@ -37,7 +37,8 @@ pub struct SyncOptions {
     // [AddressUnlockCondition](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition).
     #[serde(rename = "tryCollectOutputs", default = "default_try_collect_outputs")]
     pub try_collect_outputs: OutputsToCollect,
-    /// Amount of unspent outputs, only with a [`AddressUnlockCondition`](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition),
+    /// Amount of unspent outputs, only with a
+    /// [`AddressUnlockCondition`](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition),
     /// before they get consolidated (merged with a transaction to a single output).
     #[serde(
         rename = "outputConsolidationThreshold",
