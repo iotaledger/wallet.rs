@@ -3,7 +3,7 @@
 
 /// Address types used in the account
 pub(crate) mod address;
-pub use address::{AccountAddress, AddressWithBalance};
+pub use address::{AccountAddress, AddressWithUnspentOutputs};
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
 
@@ -29,32 +29,24 @@ use serde::{Deserialize, Deserializer, Serialize};
 pub struct AccountBalance {
     // Total amount
     pub total: u64,
-    // Amount of outputs with additional unlock conditions
-    #[serde(rename = "lockedAmount")]
-    pub locked_amount: u64,
     // Balance that can currently be spend
     pub available: u64,
     // Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
-    // Current required storage deposit amount of outputs with additional unlock conditions
-    #[serde(rename = "lockedRequiredStorageDeposit")]
-    pub locked_required_storage_deposit: u64,
     // Native tokens
     #[serde(rename = "nativeTokens")]
     pub native_tokens: HashMap<TokenId, U256>,
-    // Native tokens of outputs with additional unlock conditions
-    #[serde(rename = "lockedNativeTokens")]
-    pub locked_native_tokens: HashMap<TokenId, U256>,
     // Nfts
     pub nfts: Vec<NftId>,
-    // Nfts with additional unlock conditions
-    #[serde(rename = "lockedNfts")]
-    pub locked_nfts: Vec<NftId>,
     // Aliases
     pub aliases: Vec<AliasId>,
     // Foundries
     pub foundries: Vec<FoundryId>,
+    // Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+    // [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
+    #[serde(rename = "potentialLockedOutputs")]
+    pub potential_locked_outputs: HashMap<OutputId, bool>,
 }
 
 /// An output with metadata

@@ -9,7 +9,7 @@ use iota_client::bee_message::output::{
 use crate::account::{
     handle::AccountHandle,
     operations::transfer::TransferResult,
-    types::{address::AddressWithBalance, OutputData},
+    types::{address::AddressWithUnspentOutputs, OutputData},
     TransferOptions,
 };
 
@@ -19,8 +19,8 @@ impl AccountHandle {
     pub(crate) async fn consolidate_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
         let account = self.read().await;
         let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
-        let addresses_that_need_consolidation: Vec<&AddressWithBalance> = account
-            .addresses_with_balance
+        let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
+            .addresses_with_unspent_outputs
             .iter()
             .filter(|a| a.output_ids.len() >= output_consolidation_threshold)
             .collect();

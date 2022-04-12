@@ -197,7 +197,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_collect } => {
                 let output_ids = account_handle
-                    .get_outputs_with_additional_unlock_conditions(*outputs_to_collect)
+                    .get_unlockable_outputs_with_additional_unlock_conditions(*outputs_to_collect)
                     .await?;
                 Ok(ResponseType::OutputIds(output_ids))
             }
@@ -205,8 +205,8 @@ impl WalletMessageHandler {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::ListAddressesWithBalance => {
-                let addresses = account_handle.list_addresses_with_balance().await?;
+            AccountMethod::ListAddressesWithUnspentOutputs => {
+                let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
                 Ok(ResponseType::AddressesWithBalance(addresses))
             }
             AccountMethod::ListOutputs => {

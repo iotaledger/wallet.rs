@@ -47,11 +47,11 @@ class Account:
             'ListAddresses'
         )
 
-    def list_addresses_with_balance(self):
-        """Returns only addresses of the account with balance.
+    def list_addresses_with_unspent_outputs(self):
+        """Returns only addresses of the account with unspent outputs.
         """
         return self._call_account_method(
-            'ListAddressesWithBalance'
+            'ListAddressesWithUnspentOutputs'
         )
 
     def list_outputs(self):

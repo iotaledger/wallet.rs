@@ -26,10 +26,10 @@ pub struct AccountAddress {
     pub(crate) used: bool,
 }
 
-/// An account address with balance and output_ids.
+/// An account address with unspent output_ids for unspent outputs.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub")]
-pub struct AddressWithBalance {
+pub struct AddressWithUnspentOutputs {
     /// The address.
     #[serde(with = "crate::account::types::address_serde")]
     pub(crate) address: AddressWrapper,

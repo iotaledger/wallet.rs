@@ -13,14 +13,14 @@ use iota_client::{
     bee_rest_api::types::responses::OutputResponse,
 };
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithBalance};
+use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
 
 impl AccountHandle {
     /// Convert OutputResponse to OutputData with the network_id added
     pub(crate) async fn output_response_to_output_data(
         &self,
         output_responses: Vec<OutputResponse>,
-        associated_address: &AddressWithBalance,
+        associated_address: &AddressWithUnspentOutputs,
     ) -> crate::Result<Vec<OutputData>> {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id

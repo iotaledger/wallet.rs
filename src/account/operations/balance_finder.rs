@@ -107,15 +107,18 @@ impl AccountHandle {
         old_highest_internal_address_index: u32,
     ) -> AccountHandle {
         let mut account = self.write().await;
-        let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.amount != 0);
-        let highest_public_index_with_balance = addresses_with_balance
+        let addresses_with_unspent_outputs = account
+            .addresses_with_unspent_outputs()
+            .iter()
+            .filter(|a| a.amount != 0);
+        let highest_public_index_with_balance = addresses_with_unspent_outputs
             .clone()
             .filter(|a| !a.internal)
             .map(|a| a.key_index)
             .max()
             // We want to have at least one address
             .unwrap_or(0);
-        let highest_internal_index_with_balance = addresses_with_balance
+        let highest_internal_index_with_balance = addresses_with_unspent_outputs
             .filter(|a| a.internal)
             .map(|a| a.key_index)
             .max()

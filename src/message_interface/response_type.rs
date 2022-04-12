@@ -8,7 +8,7 @@ use crate::{
     account::{
         operations::transfer::TransferResult,
         types::{
-            address::{AccountAddress, AddressWithBalance},
+            address::{AccountAddress, AddressWithUnspentOutputs},
             AccountBalance, OutputData, Transaction,
         },
         Account,
@@ -28,8 +28,8 @@ pub enum ResponseType {
     ReadAccounts(Vec<Account>),
     /// ListAddresses
     Addresses(Vec<AccountAddress>),
-    /// ListAddressesWithBalance.
-    AddressesWithBalance(Vec<AddressWithBalance>),
+    /// ListAddressesWithUnspentOutputs.
+    AddressesWithBalance(Vec<AddressWithUnspentOutputs>),
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
     /// ListOutputs/ListUnspentOutputs.
