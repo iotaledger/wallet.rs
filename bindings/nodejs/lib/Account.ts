@@ -15,7 +15,8 @@ import type {
     Transaction,
     NativeTokenOptions,
     TransferOptions,
-    NftOptions
+    NftOptions,
+    AddressWithAmount
 } from './types';
 
 export class Account {
@@ -278,6 +279,25 @@ export class Account {
                     name: 'MintNfts',
                     data: {
                         nfts_options: nftOptions,
+                        options: transferOptions
+                    }
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+    async sendAmount(addressesWithAmount: AddressWithAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'SendAmount',
+                    data: {
+                        addresses_with_amount: addressesWithAmount,
                         options: transferOptions
                     }
                 },
