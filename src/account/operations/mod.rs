@@ -9,7 +9,8 @@ pub(crate) mod balance;
 pub(crate) mod balance_finder;
 /// Helper functions
 pub(crate) mod helpers;
-/// The module for the collection of outputs with [UnlockCondition]s, that aren't only [AddressUnlockCondition]
+/// The module for the collection of outputs with [`UnlockCondition`](iota_client::bee_message::output::UnlockCondition)s
+/// that aren't only [`AddressUnlockCondition`](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition)
 pub(crate) mod output_collection;
 /// The module for the output consolidation
 pub(crate) mod output_consolidation;

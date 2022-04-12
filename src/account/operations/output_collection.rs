@@ -169,7 +169,7 @@ impl AccountHandle {
                 if let Some(output) = account.outputs.get(output_id) {
                     if let Output::Basic(basic_output) = &output.output {
                         if basic_output.unlock_conditions().len() == 1 {
-                            // Store outputs with [AddressUnlockCondition] alone, because they could be used as
+                            // Store outputs with [`AddressUnlockCondition`] alone, because they could be used as
                             // additional input, if required
                             basic_outputs.push(output_data.clone());
                         }
@@ -182,7 +182,7 @@ impl AccountHandle {
     }
 
     /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
-    /// from [`get_outputs_with_additional_unlock_conditions()`].
+    /// from [`AccountHandle::get_outputs_with_additional_unlock_conditions()`].
     pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransferResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
