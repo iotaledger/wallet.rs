@@ -1,3 +1,8 @@
+export enum Network {
+    Mainnet,
+    Testnet,
+}
+
 export type RemainderValueStrategy = {
     ChangeAddress: {
         strategy: 'ChangeAddress';
@@ -228,6 +233,18 @@ type __SetClientOptionsPayload__ = {
     cmd: 'SetClientOptions'
     payload: ClientOptions;
 }
+type __SetCollectOutputsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'CollectOutputs',
+            data: {
+                output_ids_to_collect: string[]
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -244,3 +261,4 @@ export type __SendMessagePayload__ =
     | __BalancePayload__
     | __SendPayload__
     | __SetClientOptionsPayload__
+    | __SetCollectOutputsPayload__
