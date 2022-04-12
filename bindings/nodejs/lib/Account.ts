@@ -10,7 +10,8 @@ import type {
     NodeInfo,
     Transfer,
     ClientOptions,
-    OutputsToCollect
+    OutputsToCollect,
+    OutputData
 } from './types';
 
 export class Account {
@@ -84,6 +85,21 @@ export class Account {
                 account_id: this.meta.index,
                 method: {
                     name: 'ListAddressesWithBalance'
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+    async listOutputs(): Promise<OutputData[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'ListOutputs'
                 },
             },
         })
