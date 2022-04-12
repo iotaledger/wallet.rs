@@ -265,6 +265,15 @@ type __GetOutputsWithAdditionalUnlockConditionsPayload__ = {
         }
     };
 }
+type __ListAddressesPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'ListAddresses'
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -283,3 +292,4 @@ export type __SendMessagePayload__ =
     | __SetClientOptionsPayload__
     | __SetCollectOutputsPayload__
     | __GetOutputsWithAdditionalUnlockConditionsPayload__
+    | __ListAddressesPayload__
