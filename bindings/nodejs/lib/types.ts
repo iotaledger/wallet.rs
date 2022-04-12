@@ -71,6 +71,7 @@ export type RemainderValueStrategy = {
 
 export interface NativeTokenOptions {
     // TODO: Change to camelCase
+    // TOOD: Should this be just "address"?
     account_address: string;
     // TOOD: Change to proper type
     token_tag: any;
@@ -78,6 +79,14 @@ export interface NativeTokenOptions {
     circulating_supply: number;
     // TOOD: Change to camelCase
     maximum_supply: number;
+}
+
+export interface NftOptions {
+    address: string;
+    // TOOD: Change to proper type
+    immutable_metadata: any;
+    // TOOD: Change to proper type
+    metadata: any;
 }
 
 // TODO: Transfer & TransferOptions should probably be merged
@@ -399,6 +408,19 @@ type __MintNativeTokenPayload__ = {
         }
     };
 }
+type __MintNftsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'MintNfts',
+            data: {
+                nfts_options: NftOptions;
+                options: TransferOptions
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -424,3 +446,4 @@ export type __SendMessagePayload__ =
     | __ListTransactionsPayload__
     | __ListUnspentOutputsPayload__
     | __MintNativeTokenPayload__
+    | __MintNftsPayload__
