@@ -186,6 +186,14 @@ export interface AddressWithAmount {
     amount: number;
 }
 
+export interface AddressMicroAmount {
+    address: string;
+    amount: number;
+    // TODO: Change to camelCase
+    return_address: string;
+    expiration: number
+}
+
 export interface MqttBrokerOptions {
     automaticDisconnect?: boolean;
     // timeout in seconds
@@ -439,6 +447,19 @@ type __SendAmountPayload__ = {
         }
     };
 }
+type __SendMicroTransactionPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'SendMicroTransaction',
+            data: {
+                addresses_with_micro_amount: AddressMicroAmount[];
+                options: TransferOptions
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -466,3 +487,4 @@ export type __SendMessagePayload__ =
     | __MintNativeTokenPayload__
     | __MintNftsPayload__
     | __SendAmountPayload__
+    | __SendMicroTransactionPayload__
