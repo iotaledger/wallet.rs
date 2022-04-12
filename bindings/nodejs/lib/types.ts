@@ -3,6 +3,14 @@ export enum Network {
     Testnet,
 }
 
+export enum OutputsToCollect {
+    None = 'None',
+    MicroTransactions = 'MicroTransactions',
+    NativeTokens = 'NativeTokens',
+    Nfts = 'Nfts',
+    All = 'All',
+}
+
 export type RemainderValueStrategy = {
     ChangeAddress: {
         strategy: 'ChangeAddress';
@@ -245,6 +253,18 @@ type __SetCollectOutputsPayload__ = {
         }
     };
 }
+type __GetOutputsWithAdditionalUnlockConditionsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'GetOutputsWithAdditionalUnlockConditions',
+            data: {
+                outputs_to_collect: OutputsToCollect
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -262,3 +282,4 @@ export type __SendMessagePayload__ =
     | __SendPayload__
     | __SetClientOptionsPayload__
     | __SetCollectOutputsPayload__
+    | __GetOutputsWithAdditionalUnlockConditionsPayload__

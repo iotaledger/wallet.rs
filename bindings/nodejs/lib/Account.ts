@@ -9,7 +9,8 @@ import type {
     AccountMeta,
     NodeInfo,
     Transfer,
-    ClientOptions
+    ClientOptions,
+    OutputsToCollect
 } from './types';
 
 export class Account {
@@ -38,6 +39,22 @@ export class Account {
                     name: 'CollectOutputs',
                     data: {
                         output_ids_to_collect: outputIds
+                    },
+                },
+            },
+        })
+    }
+
+    async getOutputsWithAdditionalUnlockConditions(outputs: OutputsToCollect): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'GetOutputsWithAdditionalUnlockConditions',
+                    data: {
+                        outputs_to_collect: outputs
                     },
                 },
             },
