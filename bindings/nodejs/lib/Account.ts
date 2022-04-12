@@ -17,7 +17,8 @@ import type {
     TransferOptions,
     NftOptions,
     AddressWithAmount,
-    AddressMicroAmount
+    AddressMicroAmount,
+    AddressNativeTokens
 } from './types';
 
 export class Account {
@@ -318,6 +319,25 @@ export class Account {
                     name: 'SendMicroTransaction',
                     data: {
                         addresses_with_micro_amount: addressesWithMicroAmount,
+                        options: transferOptions
+                    }
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+    async sendNativeTokens(addressNativeTokens: AddressNativeTokens[], transferOptions: TransferOptions): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'SendNativeTokens',
+                    data: {
+                        addresses_native_tokens: addressNativeTokens,
                         options: transferOptions
                     }
                 },
