@@ -4,17 +4,10 @@
 import { sendMessageAsync, messageHandlerNew, listen } from './bindings';
 import type { EventType, AccountManagerOptions, __SendMessagePayload__ } from './types';
 
-/**
- * Message Handler class
- */
-export default class MessageHandler {
+// The MessageHandler class interacts with messages with the rust bindings.
+export class MessageHandler {
     messageHandler: any
 
-    /**
-    * Creates a new instance of Account Manager
-    * 
-    * @param {AccountManagerOptions} options 
-    */
     constructor(options: AccountManagerOptions) {
         const messageOptions = {
             storagePath: options?.storagePath,
@@ -25,25 +18,10 @@ export default class MessageHandler {
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
     }
 
-    /**
-     * Sends a message to bindings
-     * 
-     * @param {Mess} message 
-     * 
-     * @returns {Promise<string>}
-     */
     async sendMessage(message: __SendMessagePayload__): Promise<string> {
         return sendMessageAsync(JSON.stringify(message), this.messageHandler);
     }
 
-    /**
-     * Listen to events supported by bindings
-     * 
-     * @param {EventType[]} eventTypes 
-     * @param {Function} callback 
-     * 
-     * @returns {void}
-     */
     listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
         return listen(eventTypes, callback, this.messageHandler);
     }
