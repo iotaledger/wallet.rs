@@ -28,6 +28,24 @@ export class Account {
         return this.meta.alias;
     }
 
+    async collectOutputs(outputIds: string[]): Promise<void> {
+        const res = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'CollectOutputs',
+                    data: {
+                        output_ids_to_collect: outputIds
+                    },
+                },
+            },
+        })
+
+        console.log('Res', res)
+    }
+
     async sync(options: AccountSyncOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'CallAccountMethod',
