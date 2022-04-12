@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type MessageHandler from './MessageHandler';
+import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     Address,
@@ -12,7 +12,7 @@ import type {
     ClientOptions
 } from './types';
 
-export default class Account {
+export class Account {
     meta: AccountMeta;
     messageHandler: MessageHandler
 

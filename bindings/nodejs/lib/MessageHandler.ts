@@ -4,8 +4,8 @@
 import { sendMessageAsync, messageHandlerNew, listen } from './bindings';
 import type { EventType, AccountManagerOptions, __SendMessagePayload__ } from './types';
 
-// The MessageHandler class is used to send and receive messages to and from the rust bindings.
-export default class MessageHandler {
+// The MessageHandler class interacts with messages with the rust bindings.
+export class MessageHandler {
     messageHandler: any
 
     constructor(options: AccountManagerOptions) {

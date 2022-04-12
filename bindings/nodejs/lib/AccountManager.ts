@@ -1,8 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import MessageHandler from './MessageHandler';
-import Account from './Account';
+import { MessageHandler } from './MessageHandler';
+import { Account } from './Account';
 
 import type {
     EventType,
@@ -10,7 +10,7 @@ import type {
     CreateAccountPayload
 } from './types'
 
-export default class AccountManager {
+export class AccountManager {
     messageHandler: MessageHandler;
 
     constructor(options: AccountManagerOptions) {
