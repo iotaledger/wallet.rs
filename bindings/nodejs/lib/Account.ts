@@ -11,7 +11,8 @@ import type {
     Transfer,
     ClientOptions,
     OutputsToCollect,
-    OutputData
+    OutputData,
+    Transaction
 } from './types';
 
 export class Account {
@@ -100,6 +101,36 @@ export class Account {
                 account_id: this.meta.index,
                 method: {
                     name: 'ListOutputs'
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+    async listPendingTransactions(): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'ListPendingTransactions'
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+    async listTransactions(): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'ListTransactions'
                 },
             },
         })
