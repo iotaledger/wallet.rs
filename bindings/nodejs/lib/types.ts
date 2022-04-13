@@ -101,12 +101,6 @@ export interface TransferOptions {
     custom_inputs: string[];
 }
 
-export interface Transfer {
-    address: string;
-    amount: number;
-    remainder_value_strategy: RemainderValueStrategy;
-}
-
 export interface AccountBalance {
     total: number;
     available: number;
@@ -332,13 +326,6 @@ type __BalancePayload__ = {
         method: {
             name: 'GetBalance'
         }
-    };
-}
-type __SendPayload__ = {
-    cmd: 'SendTransfer'
-    payload: {
-        account_id: number;
-        transfer: Transfer
     };
 }
 type __SetClientOptionsPayload__ = {
