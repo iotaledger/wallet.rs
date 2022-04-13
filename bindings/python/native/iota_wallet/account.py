@@ -19,7 +19,7 @@ class Account:
         message = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': self.alias_index,
+                'accountId': self.alias_index,
                 'method': {
                     'name': method,
                 }
