@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Address and amount for `send_amount()`
-pub struct AddressAndAmount {
+/// address with amount for `send_amount()`
+pub struct AddressWithAmount {
     /// Bech32 encoded address
     pub address: String,
     /// Amount
@@ -27,7 +27,7 @@ impl AccountHandle {
     /// RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
-    /// let outputs = vec![AddressAndAmount{
+    /// let outputs = vec![AddressWithAmount{
     ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
     ///     amount: 1_000_000,
     /// }];
@@ -40,15 +40,15 @@ impl AccountHandle {
     /// ```
     pub async fn send_amount(
         &self,
-        addresses_with_amount: Vec<AddressAndAmount>,
+        addresses_with_amount: Vec<AddressWithAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
         let mut outputs = Vec::new();
-        for address_and_amount in addresses_with_amount {
+        for address_with_amount in addresses_with_amount {
             outputs.push(Output::Basic(
                 BasicOutputBuilder::new_with_amount(address_and_amount.amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        Address::try_from_bech32(&address_and_amount.address)?.1,
+                        Address::try_from_bech32(&address_with_amount.address)?.1,
                     )))
                     .finish()?,
             ))

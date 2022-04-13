@@ -78,8 +78,8 @@ impl AccountHandle {
         let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
 
         let mut outputs = Vec::new();
-        for address_and_amount in addresses_native_tokens {
-            let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_amount.address)?;
+        for address_with_amount in addresses_native_tokens {
+            let (_bech32_hrp, address) = Address::try_from_bech32(&address_with_amount.address)?;
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
             // different native tokens require a differen storage deposit
@@ -87,13 +87,13 @@ impl AccountHandle {
                 &byte_cost_config,
                 &address,
                 &return_address.address.inner,
-                Some(address_and_amount.native_tokens.clone()),
+                Some(address_with_amount.native_tokens.clone()),
             )?;
 
             outputs.push(Output::Basic(
                 BasicOutputBuilder::new_with_amount(storage_deposit_amount)?
                     .with_native_tokens(
-                        address_and_amount
+                        address_with_amount
                             .native_tokens
                             .into_iter()
                             .map(|(id, amount)| {

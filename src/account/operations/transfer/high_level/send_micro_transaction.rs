@@ -26,8 +26,8 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-/// Address and amount for `send_micro_transaction()`
-pub struct AddressMicroAmount {
+/// address with amount for `send_micro_transaction()`
+pub struct AddressWithMicroAmount {
     /// Bech32 encoded address
     pub address: String,
     /// Amount below the minimum storage deposit
@@ -46,7 +46,7 @@ impl AccountHandle {
     /// the options can define the RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
-    /// let outputs = vec![AddressMicroAmount{
+    /// let outputs = vec![AddressWithMicroAmount{
     ///    address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
     ///    amount: 1,
     ///    return_address: None,
@@ -63,7 +63,7 @@ impl AccountHandle {
     /// ```
     pub async fn send_micro_transaction(
         &self,
-        addresses_with_micro_amount: Vec<AddressMicroAmount>,
+        addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
         let byte_cost_config = self.client.get_byte_cost_config().await?;
@@ -75,8 +75,8 @@ impl AccountHandle {
         let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
 
         let mut outputs = Vec::new();
-        for address_and_amount in addresses_with_micro_amount {
-            let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_amount.address)?;
+        for address_with_amount in addresses_with_micro_amount {
+            let (_bech32_hrp, address) = Address::try_from_bech32(&address_with_amount.address)?;
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
             // different native tokens require a differen storage deposit

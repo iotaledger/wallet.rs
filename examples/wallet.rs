@@ -6,7 +6,7 @@
 use std::time::Instant;
 
 use iota_wallet::{
-    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressAndAmount, ClientOptions, Result,
+    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressWithAmount, ClientOptions, Result,
 };
 
 #[tokio::main]
@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
     println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
     // send transaction
-    let outputs = vec![AddressAndAmount {
+    let outputs = vec![AddressWithAmount {
         address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
         amount: 1_000_000,
     }];

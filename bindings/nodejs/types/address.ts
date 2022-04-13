@@ -10,7 +10,7 @@ export interface AddressWithAmount {
     amount: number;
 }
 
-export interface AddressMicroAmount {
+export interface AddressWithMicroAmount {
     address: string;
     amount: number;
     returnAddress: string;

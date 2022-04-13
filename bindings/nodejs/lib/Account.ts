@@ -16,7 +16,7 @@ import type {
     TransferOptions,
     NftOptions,
     AddressWithAmount,
-    AddressMicroAmount,
+    AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId
 } from '../types';
@@ -282,7 +282,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async sendMicroTransaction(addressesWithMicroAmount: AddressMicroAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
+    async sendMicroTransaction(addressesWithMicroAmount: AddressWithMicroAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'callAccountMethod',
             payload: {

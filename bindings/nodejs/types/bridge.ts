@@ -1,6 +1,6 @@
 
 import type { AccountSyncOptions, CreateAccountPayload } from './account';
-import type { AddressWithAmount, AddressMicroAmount, AddressNativeTokens, AddressNftId } from './address';
+import type { AddressWithAmount, AddressWithMicroAmount, AddressNativeTokens, AddressNftId } from './address';
 import type { ClientOptions } from './network';
 import type { OutputsToCollect, OutputData } from './output';
 import type { NativeTokenOptions, TransferOptions, NftOptions } from './transfer';
@@ -245,7 +245,7 @@ type __SendMicroTransactionPayload__ = {
         method: {
             name: 'sendMicroTransaction',
             data: {
-                addressesWithMicroAmount: AddressMicroAmount[];
+                addressesWithMicroAmount: AddressWithMicroAmount[];
                 options: TransferOptions
             }
         }
