@@ -13,25 +13,24 @@ export interface AccountSyncOptions {
     gapLimit?: number;
 }
 
-// TODO: Change snakecase to camelCase
 export interface AccountMeta {
     index: number;
     // TODO: Should this be an enum?
-    coin_type: number;
+    coinType: number;
     alias: string;
-    public_addresses: Address[];
-    internal_addresses: Address[];
-    addresses_with_balance: Address[];
+    publicAddresses: Address[];
+    internalAddresses: Address[];
+    addressesWithBalance: Address[];
     // TODO: Define type for outputs
     outputs: any;
-    locked_outputs: any;
-    unspent_outputs: any;
+    lockedOutputs: any;
+    unspentOutputs: any;
     // TODO: Define type for outputs
     transactions: any;
-    pending_transactions: any;
-    account_options: {
-        output_consolidation_threshold: number;
-        automatic_output_consolidation: boolean;
+    pendingTransactions: any;
+    accountOptions: {
+        outputConsolidationThreshold: number;
+        automaticOutputConsolidation: boolean;
     }
 }
 

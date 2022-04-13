@@ -39,14 +39,13 @@ export class Account {
 
     async collectOutputs(outputIds: string[]): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'CollectOutputs',
+                    name: 'collectOutputs',
                     data: {
-                        output_ids_to_collect: outputIds
+                        outputIdsToCollect: outputIds
                     },
                 },
             },
@@ -55,14 +54,13 @@ export class Account {
 
     async getOutputsWithAdditionalUnlockConditions(outputs: OutputsToCollect): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'GetOutputsWithAdditionalUnlockConditions',
+                    name: 'getOutputsWithAdditionalUnlockConditions',
                     data: {
-                        outputs_to_collect: outputs
+                        outputsToCollect: outputs
                     },
                 },
             },
@@ -71,12 +69,11 @@ export class Account {
 
     async listAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListAddresses'
+                    name: 'listAddresses'
                 },
             },
         })
@@ -86,12 +83,11 @@ export class Account {
 
     async listAddressesWithBalance(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListAddressesWithBalance'
+                    name: 'listAddressesWithBalance'
                 },
             },
         })
@@ -101,12 +97,11 @@ export class Account {
 
     async listOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListOutputs'
+                    name: 'listOutputs'
                 },
             },
         })
@@ -116,12 +111,11 @@ export class Account {
 
     async listUnspentOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListUnspentOutputs'
+                    name: 'listUnspentOutputs'
                 },
             },
         })
@@ -131,12 +125,11 @@ export class Account {
 
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListPendingTransactions'
+                    name: 'listPendingTransactions'
                 },
             },
         })
@@ -146,12 +139,11 @@ export class Account {
 
     async listTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'ListTransactions'
+                    name: 'listTransactions'
                 },
             },
         })
@@ -161,12 +153,11 @@ export class Account {
 
     async sync(options: AccountSyncOptions): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SyncAccount',
+                    name: 'syncAccount',
                     data: options || {},
                 },
             },
@@ -179,11 +170,11 @@ export class Account {
     async getNodeInfo(url: string): Promise<NodeInfo> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
-                cmd: 'CallAccountMethod',
+                cmd: 'callAccountMethod',
                 payload: {
-                    account_id: this.meta.index,
+                    accountId: this.meta.index,
                     method: {
-                        name: 'GetNodeInfo',
+                        name: 'getNodeInfo',
                         data: [url],
                     },
                 },
@@ -193,11 +184,11 @@ export class Account {
 
     async generateAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'GenerateAddresses',
+                    name: 'generateAddresses',
                     data: {
                         // TODO: Why is the amount set to 1 here?
                         amount: 1,
@@ -211,11 +202,11 @@ export class Account {
 
     async latestAddress(): Promise<Address> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'GetLatestAddress',
+                    name: 'getLatestAddress',
                 },
             },
         });
@@ -225,11 +216,11 @@ export class Account {
 
     async balance(): Promise<AccountBalance> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'GetBalance',
+                    name: 'getBalance',
                 },
             },
         });
@@ -239,14 +230,13 @@ export class Account {
 
     async mintNativeToken(nativeTokenOptions: NativeTokenOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'MintNativeToken',
+                    name: 'mintNativeToken',
                     data: {
-                        native_token_options: nativeTokenOptions,
+                        nativeTokenOptions: nativeTokenOptions,
                         options: transferOptions
                     }
                 },
@@ -258,14 +248,13 @@ export class Account {
 
     async mintNfts(nftOptions: NftOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'MintNfts',
+                    name: 'mintNfts',
                     data: {
-                        nfts_options: nftOptions,
+                        nftsOptions: nftOptions,
                         options: transferOptions
                     }
                 },
@@ -277,14 +266,13 @@ export class Account {
 
     async sendAmount(addressesWithAmount: AddressWithAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SendAmount',
+                    name: 'sendAmount',
                     data: {
-                        addresses_with_amount: addressesWithAmount,
+                        addressesWithAmount,
                         options: transferOptions
                     }
                 },
@@ -296,14 +284,13 @@ export class Account {
 
     async sendMicroTransaction(addressesWithMicroAmount: AddressMicroAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SendMicroTransaction',
+                    name: 'sendMicroTransaction',
                     data: {
-                        addresses_with_micro_amount: addressesWithMicroAmount,
+                        addressesWithMicroAmount: addressesWithMicroAmount,
                         options: transferOptions
                     }
                 },
@@ -315,14 +302,13 @@ export class Account {
 
     async sendNativeTokens(addressNativeTokens: AddressNativeTokens[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SendNativeTokens',
+                    name: 'sendNativeTokens',
                     data: {
-                        addresses_native_tokens: addressNativeTokens,
+                        addressesNativeTokens: addressNativeTokens,
                         options: transferOptions
                     }
                 },
@@ -334,14 +320,13 @@ export class Account {
 
     async sendNft(addressesAndNftIds: AddressNftId[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SendNft',
+                    name: 'sendNft',
                     data: {
-                        addresses_nft_ids: addressesAndNftIds,
+                        addressesNftIds: addressesAndNftIds,
                         options: transferOptions
                     }
                 },
@@ -353,12 +338,11 @@ export class Account {
 
     async sendTransfer(outputs: OutputData[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'SendTransfer',
+                    name: 'sendTransfer',
                     data: {
                         outputs,
                         options: transferOptions
@@ -372,14 +356,13 @@ export class Account {
 
     async tryCollectOutputs(outputsToCollect: OutputsToCollect): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
-                // TODO: Change to camelCase
-                account_id: this.meta.index,
+                accountId: this.meta.index,
                 method: {
-                    name: 'TryCollectOutputs',
+                    name: 'tryCollectOutputs',
                     data: {
-                        outputs_to_collect: outputsToCollect
+                        outputsToCollect
                     }
                 },
             },
@@ -394,7 +377,7 @@ export class Account {
      */
     async setClientOptions(options: ClientOptions): Promise<any> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'SetClientOptions',
+            cmd: 'setClientOptions',
             payload: options,
         });
 
