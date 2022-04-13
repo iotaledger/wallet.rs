@@ -19,7 +19,7 @@ import type {
     AddressMicroAmount,
     AddressNativeTokens,
     AddressNftId
-} from './types';
+} from '../types';
 
 export class Account {
     meta: AccountMeta;

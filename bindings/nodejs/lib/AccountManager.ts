@@ -8,7 +8,7 @@ import type {
     EventType,
     AccountManagerOptions,
     CreateAccountPayload
-} from './types'
+} from '../types'
 
 export class AccountManager {
     private messageHandler: MessageHandler;
