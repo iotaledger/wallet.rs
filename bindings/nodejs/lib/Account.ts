@@ -8,7 +8,6 @@ import type {
     AccountSyncOptions,
     AccountMeta,
     NodeInfo,
-    Transfer,
     ClientOptions,
     OutputsToCollect,
     OutputData,
