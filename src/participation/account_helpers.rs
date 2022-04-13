@@ -8,6 +8,7 @@ use iota_client::node_manager::Node;
 pub(crate) async fn get_outputs_participation(
     address_outputs: Vec<AddressOutput>,
     node: Node,
+    assembly_event_id: &str,
 ) -> crate::Result<(
     u64,
     u64,
@@ -42,7 +43,7 @@ pub(crate) async fn get_outputs_participation(
                     if event_id == crate::participation::types::SHIMMER_EVENT_ID {
                         shimmer_staked_funds += output.amount;
                     }
-                    if event_id == crate::participation::types::ASSEMBLY_EVENT_ID {
+                    if event_id == assembly_event_id {
                         assembly_staked_funds += output.amount;
                     }
                     // total_output_participation
@@ -61,6 +62,7 @@ pub(crate) async fn get_outputs_participation(
 pub(crate) async fn get_addresses_staking_rewards(
     addresses: Vec<Address>,
     node: Node,
+    assembly_event_id: &str,
 ) -> crate::Result<(u64, u64, u64, u64)> {
     let mut shimmer_rewards = 0;
     let mut assembly_rewards = 0;
@@ -87,22 +89,19 @@ pub(crate) async fn get_addresses_staking_rewards(
         for res in results {
             let staking_status = res?;
             for (event_id, status) in staking_status.rewards {
-                match event_id.as_ref() {
-                    crate::participation::types::SHIMMER_EVENT_ID => {
-                        if status.minimum_reached {
-                            shimmer_rewards += status.amount
-                        } else {
-                            shimmer_rewards_below_minimum += status.amount
-                        }
+                if event_id == assembly_event_id {
+                    if status.minimum_reached {
+                        assembly_rewards += status.amount
+                    } else {
+                        assembly_rewards_below_minimum += status.amount
                     }
-                    crate::participation::types::ASSEMBLY_EVENT_ID => {
-                        if status.minimum_reached {
-                            assembly_rewards += status.amount
-                        } else {
-                            assembly_rewards_below_minimum += status.amount
-                        }
+                }
+                if event_id == crate::participation::types::SHIMMER_EVENT_ID {
+                    if status.minimum_reached {
+                        shimmer_rewards += status.amount
+                    } else {
+                        shimmer_rewards_below_minimum += status.amount
                     }
-                    _ => {}
                 }
             }
         }
