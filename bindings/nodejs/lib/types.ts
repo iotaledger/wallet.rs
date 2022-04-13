@@ -501,6 +501,18 @@ type __SendTransferPayload__ = {
         }
     };
 }
+type __TryCollectOutputsPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'TryCollectOutputs',
+            data: {
+                outputs_to_collect: OutputsToCollect;
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -515,7 +527,6 @@ export type __SendMessagePayload__ =
     | __GenerateAddressesPayload__
     | __LatestAddressPayload__
     | __BalancePayload__
-    | __SendPayload__
     | __SetClientOptionsPayload__
     | __SetCollectOutputsPayload__
     | __GetOutputsWithAdditionalUnlockConditionsPayload__
@@ -531,4 +542,5 @@ export type __SendMessagePayload__ =
     | __SendMicroTransactionPayload__
     | __SendNativeTokensPayload__
     | __SendNftPayload__
-    | __SendTransferPayload__;
+    | __SendTransferPayload__
+    | __TryCollectOutputsPayload__;

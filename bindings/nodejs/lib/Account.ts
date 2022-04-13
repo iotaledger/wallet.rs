@@ -370,6 +370,25 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async tryCollectOutputs(outputsToCollect: OutputsToCollect): Promise<Transaction[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CallAccountMethod',
+            payload: {
+                // TODO: Change to camelCase
+                account_id: this.meta.index,
+                method: {
+                    name: 'TryCollectOutputs',
+                    data: {
+                        outputs_to_collect: outputsToCollect
+                    }
+                },
+            },
+        })
+
+        return JSON.parse(response).payload;
+    }
+
+
     /**
      * TODO: Replace any with proper response type
      */
