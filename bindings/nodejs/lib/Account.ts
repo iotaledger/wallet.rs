@@ -310,7 +310,7 @@ export class Account {
      */
     async setClientOptions(options: ClientOptions): Promise<any> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'SetClientOptions',
+            cmd: 'setClientOptions',
             payload: options,
         });
 
