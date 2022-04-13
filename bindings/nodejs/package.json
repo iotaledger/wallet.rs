@@ -2,8 +2,8 @@
   "name": "@iota/wallet",
   "version": "1.0.4",
   "description": "Node.js binding to the wallet library",
-  "main": "out/index.js",
-  "types": "out/index.d.ts",
+  "main": "out/lib/index.js",
+  "types": "out/lib/index.d.ts",
   "scripts": {
     "lint": "eslint .",
     "format": "prettier -w {,*/**/}*.{js,json}",
