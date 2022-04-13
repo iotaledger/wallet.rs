@@ -238,21 +238,6 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    /**
-     * TODO: Replace any with sent message
-     */
-    async send(transfer: Transfer): Promise<any> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'SendTransfer',
-            payload: {
-                account_id: this.meta.index,
-                transfer,
-            },
-        });
-
-        return JSON.parse(response).payload;
-    }
-
     async mintNativeToken(nativeTokenOptions: NativeTokenOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'CallAccountMethod',
