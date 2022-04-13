@@ -9,8 +9,6 @@ use std::{convert::TryInto, io::Read};
 
 /// Particiapation index
 pub(crate) const PARTICIPATE: &str = "PARTICIPATE";
-/// Event id for the shimmer staking
-pub(crate) const SHIMMER_EVENT_ID: &str = "24a2e624d3416a323a542b0c5c715783dd125b0f3fd51f6cceda0707806726ae";
 
 /// Possible participation event types
 pub enum ParticipationEventType {
