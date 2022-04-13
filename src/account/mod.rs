@@ -35,6 +35,7 @@ pub use self::{
 /// An Account.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     /// The account index
     index: u32,
@@ -65,6 +66,7 @@ pub struct Account {
 
 /// Account options
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,
     pub(crate) automatic_output_consolidation: bool,
