@@ -203,6 +203,12 @@ export interface AddressNativeTokens {
     expiration: number;
 }
 
+export interface AddressNftId {
+    address: string;
+    // TODO: Change to camelCase
+    nft_id: string;
+}
+
 export interface MqttBrokerOptions {
     automaticDisconnect?: boolean;
     // timeout in seconds
@@ -482,6 +488,32 @@ type __SendNativeTokensPayload__ = {
         }
     };
 }
+type __SendNftPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'SendNft',
+            data: {
+                addresses_nft_ids: AddressNftId[];
+                options: TransferOptions
+            }
+        }
+    };
+}
+type __SendTransferPayload__ = {
+    cmd: 'CallAccountMethod'
+    payload: {
+        account_id: number;
+        method: {
+            name: 'SendTransfer',
+            data: {
+                outputs: OutputData[];
+                options: TransferOptions
+            }
+        }
+    };
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
@@ -511,3 +543,5 @@ export type __SendMessagePayload__ =
     | __SendAmountPayload__
     | __SendMicroTransactionPayload__
     | __SendNativeTokensPayload__
+    | __SendNftPayload__
+    | __SendTransferPayload__;
