@@ -11,7 +11,7 @@ import type {
 } from './types'
 
 export class AccountManager {
-    messageHandler: MessageHandler;
+    private messageHandler: MessageHandler;
 
     constructor(options: AccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);

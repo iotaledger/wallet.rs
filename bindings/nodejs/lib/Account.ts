@@ -23,7 +23,7 @@ import type {
 
 export class Account {
     meta: AccountMeta;
-    messageHandler: MessageHandler
+    private messageHandler: MessageHandler
 
     constructor(
         accountMeta: AccountMeta,
