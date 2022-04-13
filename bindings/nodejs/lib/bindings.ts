@@ -3,7 +3,7 @@
 
 import type { MessageHandler } from './MessageHandler';
 // @ts-ignore
-const addon = require('../build/Release/index.node');
+const addon = require('../../build/Release/index.node');
 
 const {
     initLogger,

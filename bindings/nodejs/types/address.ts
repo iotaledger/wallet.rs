@@ -13,22 +13,18 @@ export interface AddressWithAmount {
 export interface AddressMicroAmount {
     address: string;
     amount: number;
-    // TODO: Change to camelCase
-    return_address: string;
+    returnAddress: string;
     expiration: number
 }
 
 export interface AddressNativeTokens {
     address: string;
-    // TODO: Change to camelCase
-    native_tokens: string[];
-    // TODO: Change to camelCase
-    return_address: string;
+    nativeTokens: string[];
+    returnAddress: string;
     expiration: number;
 }
 
 export interface AddressNftId {
     address: string;
-    // TODO: Change to camelCase
-    nft_id: string;
+    nftId: string;
 }

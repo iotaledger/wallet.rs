@@ -38,12 +38,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "arc-swap"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c5d78ce20460b82d3fa150275ed9d55e21064fc7951177baacf86a145c4a4b1f"
-
-[[package]]
 name = "arrayref"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1002,7 +996,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=c974147357bc38fca6327409d6a959291de97b8b#c974147357bc38fca6327409d6a959291de97b8b"
+source = "git+https://github.com/iotaledger/iota.rs?rev=091de32edf41300b49161cab8a52cd0366132cfd#091de32edf41300b49161cab8a52cd0366132cfd"
 dependencies = [
  "async-trait",
  "bee-message",
@@ -1022,7 +1016,6 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
- "slog-stdlog",
  "thiserror",
  "tokio",
  "ureq",
@@ -1074,7 +1067,6 @@ dependencies = [
 [[package]]
 name = "iota-wallet"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/wallet.rs?branch=shimmer-develop#b7db45051a20c95a846fd715aed8825c375a0f11"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1930,34 +1922,6 @@ name = "slab"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9def91fd1e018fe007022791f865d0ccc9b3a0d5001e01aabb8b40e46000afb5"
-
-[[package]]
-name = "slog"
-version = "2.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8347046d4ebd943127157b94d63abb990fcf729dc4e9978927fdf4ac3c998d06"
-
-[[package]]
-name = "slog-scope"
-version = "4.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f95a4b4c3274cd2869549da82b57ccc930859bdbf5bcea0424bc5f140b3c786"
-dependencies = [
- "arc-swap",
- "lazy_static",
- "slog",
-]
-
-[[package]]
-name = "slog-stdlog"
-version = "4.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6706b2ace5bbae7291d3f8d2473e2bfab073ccd7d03670946197aec98471fa3e"
-dependencies = [
- "log",
- "slog",
- "slog-scope",
-]
 
 [[package]]
 name = "slog"

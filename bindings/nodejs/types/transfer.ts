@@ -14,33 +14,27 @@ export type RemainderValueStrategy = {
 }
 
 export interface NativeTokenOptions {
-    // TODO: Change to camelCase
     // TOOD: Should this be just "address"?
-    account_address: string;
+    accountAddress: string;
     // TOOD: Change to proper type
-    token_tag: any;
-    // TOOD: Change to camelCase
-    circulating_supply: number;
-    // TOOD: Change to camelCase
-    maximum_supply: number;
+    tokenTag: any;
+    circulatingSupply: number;
+    maximumSupply: number;
 }
 
 export interface NftOptions {
     address: string;
     // TOOD: Change to proper type
-    immutable_metadata: any;
+    immutableMetadata: any;
     // TOOD: Change to proper type
     metadata: any;
 }
 
 // TODO: Transfer & TransferOptions should probably be merged
 export interface TransferOptions {
-    // TODO: Change to camelCase
-    remainder_value_strategy: RemainderValueStrategy;
+    remainderValueStrategy: RemainderValueStrategy;
     // TODO: Change to proper type
-    tagged_data_payload: any;
-    // TODO: Change to camelCase
-    skip_sync: boolean;
-    // TODO: Change to camelCase
-    custom_inputs: string[];
+    taggedDataPayload: any;
+    skipSync: boolean;
+    customInputs: string[];
 }

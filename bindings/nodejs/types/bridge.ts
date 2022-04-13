@@ -6,24 +6,26 @@ import type { OutputsToCollect, OutputData } from './output';
 import type { NativeTokenOptions, TransferOptions, NftOptions } from './transfer';
 
 type __GetAccountsMessagePayload__ = {
-    cmd: 'GetAccounts'
+    cmd: 'getAccounts'
 }
 
 type __GetAccountMessagePayload__ = {
-    cmd: 'GetAccount'
+    cmd: 'getAccount'
     payload: string
 }
 
 type __CreateAccountMessagePayload__ = {
-    cmd: 'CreateAccount'
+    cmd: 'createAccount'
     payload: CreateAccountPayload
 }
+
 type __SetStrongholdPasswordPayload__ = {
-    cmd: 'SetStrongholdPassword'
+    cmd: 'setStrongholdPassword'
     payload: string;
 }
+
 type __StoreMnemonicPayload__ = {
-    cmd: 'StoreMnemonic'
+    cmd: 'storeMnemonic'
     payload: {
         signerType: {
             type: 'Stronghold'
@@ -31,236 +33,259 @@ type __StoreMnemonicPayload__ = {
         mnemonic: string
     };
 }
+
 type __BackupPayload__ = {
-    cmd: 'Backup'
+    cmd: 'backup'
     payload: {
         destination: string
         password: string
     };
 }
+
 type __ImportAccountsPayload__ = {
-    cmd: 'RestoreBackup'
+    cmd: 'restoreBackup'
     payload: {
         backupPath: string
         password: string
     };
 }
+
 type __SyncAccountPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SyncAccount',
+            name: 'syncAccount',
             data?: AccountSyncOptions
         }
     };
 }
+
 type __GetNodeInfoPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'GetNodeInfo',
+            name: 'getNodeInfo',
             data: string[]
         }
     };
 }
+
 type __GenerateAddressesPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'GenerateAddresses',
+            name: 'generateAddresses',
             data: {
                 amount: number
             }
         }
     };
 }
+
 type __LatestAddressPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'GetLatestAddress'
+            name: 'getLatestAddress'
         }
     };
 }
+
 type __BalancePayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'GetBalance'
+            name: 'getBalance'
         }
     };
 }
+
 type __SetClientOptionsPayload__ = {
-    cmd: 'SetClientOptions'
+    cmd: 'setClientOptions'
     payload: ClientOptions;
 }
+
 type __SetCollectOutputsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'CollectOutputs',
+            name: 'collectOutputs',
             data: {
-                output_ids_to_collect: string[]
+                outputIdsToCollect: string[]
             }
         }
     };
 }
+
 type __GetOutputsWithAdditionalUnlockConditionsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'GetOutputsWithAdditionalUnlockConditions',
+            name: 'getOutputsWithAdditionalUnlockConditions',
             data: {
-                outputs_to_collect: OutputsToCollect
+                outputsToCollect: OutputsToCollect
             }
         }
     };
 }
+
 type __ListAddressesPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListAddresses'
+            name: 'listAddresses'
         }
     };
 }
+
 type __ListAddressesWithBalancePayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListAddressesWithBalance'
+            name: 'listAddressesWithBalance'
         }
     };
 }
+
 type __ListOutputsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListOutputs'
+            name: 'listOutputs'
         }
     };
 }
+
 type __ListPendingTransactionsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListPendingTransactions'
+            name: 'listPendingTransactions'
         }
     };
 }
+
 type __ListTransactionsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListTransactions'
+            name: 'listTransactions'
         }
     };
 }
+
 type __ListUnspentOutputsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'ListUnspentOutputs'
+            name: 'listUnspentOutputs'
         }
     };
 }
+
 type __MintNativeTokenPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'MintNativeToken',
+            name: 'mintNativeToken',
             data: {
-                native_token_options: NativeTokenOptions;
+                nativeTokenOptions: NativeTokenOptions;
                 options: TransferOptions
             }
         }
     };
 }
+
 type __MintNftsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'MintNfts',
+            name: 'mintNfts',
             data: {
-                nfts_options: NftOptions;
+                nftsOptions: NftOptions;
                 options: TransferOptions
             }
         }
     };
 }
+
 type __SendAmountPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SendAmount',
+            name: 'sendAmount',
             data: {
-                addresses_with_amount: AddressWithAmount[];
+                addressesWithAmount: AddressWithAmount[];
                 options: TransferOptions
             }
         }
     };
 }
+
 type __SendMicroTransactionPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SendMicroTransaction',
+            name: 'sendMicroTransaction',
             data: {
-                addresses_with_micro_amount: AddressMicroAmount[];
+                addressesWithMicroAmount: AddressMicroAmount[];
                 options: TransferOptions
             }
         }
     };
 }
+
 type __SendNativeTokensPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SendNativeTokens',
+            name: 'sendNativeTokens',
             data: {
-                addresses_native_tokens: AddressNativeTokens[];
+                addressesNativeTokens: AddressNativeTokens[];
                 options: TransferOptions
             }
         }
     };
 }
+
 type __SendNftPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SendNft',
+            name: 'sendNft',
             data: {
-                addresses_nft_ids: AddressNftId[];
+                addressesNftIds: AddressNftId[];
                 options: TransferOptions
             }
         }
     };
 }
+
 type __SendTransferPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'SendTransfer',
+            name: 'sendTransfer',
             data: {
                 outputs: OutputData[];
                 options: TransferOptions
@@ -268,14 +293,15 @@ type __SendTransferPayload__ = {
         }
     };
 }
+
 type __TryCollectOutputsPayload__ = {
-    cmd: 'CallAccountMethod'
+    cmd: 'callAccountMethod'
     payload: {
-        account_id: number;
+        accountId: number;
         method: {
-            name: 'TryCollectOutputs',
+            name: 'tryCollectOutputs',
             data: {
-                outputs_to_collect: OutputsToCollect;
+                outputsToCollect: OutputsToCollect;
             }
         }
     };
