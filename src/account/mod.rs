@@ -999,7 +999,10 @@ impl AccountHandle {
 
     #[cfg(feature = "participation")]
     /// Get an overview of the participations with the staked funds and the accumulated rewards.
-    pub async fn get_participation_overview(&self) -> crate::Result<crate::participation::types::ParticipatingAccount> {
+    pub async fn get_participation_overview(
+        &self,
+        assembly_event_id: &str,
+    ) -> crate::Result<crate::participation::types::ParticipatingAccount> {
         let account_balance = self.balance().await?;
         let account = self.read().await;
         let read_participations = match crate::storage::get(&account.storage_path)
@@ -1027,12 +1030,18 @@ impl AccountHandle {
             u64,
             u64,
             // HashMap<String, crate::participation::response_types::TrackedParticipation>,
-        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone()).await?;
+        ) = crate::participation::account_helpers::get_outputs_participation(
+            available_outputs,
+            node.clone(),
+            assembly_event_id,
+        )
+        .await?;
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
                 account.addresses().clone(),
                 node.clone(),
+                assembly_event_id,
             )
             .await?;
 
