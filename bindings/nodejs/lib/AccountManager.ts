@@ -32,13 +32,19 @@ export class AccountManager {
         return account;
     }
 
-    /**
-     * TODO: Replace any with proper type
-     */
-    async getAccounts(): Promise<any> {
-        return this.messageHandler.sendMessage({
+    async getAccounts(): Promise<Account[]> {
+        const response = await this.messageHandler.sendMessage({
             cmd: 'getAccounts',
         });
+
+        const { payload } = JSON.parse(response);
+
+        let accounts: Account[] = [];
+        
+        for (const account of payload) {
+            accounts.push(new Account(account, this.messageHandler));
+        }
+        return accounts;
     }
 
     async createAccount(account: CreateAccountPayload): Promise<Account> {
