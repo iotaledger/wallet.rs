@@ -230,10 +230,22 @@ export interface ClientOptions {
     localPow?: boolean;
 }
 
+export interface MnemonicSigner {
+    Mnemonic: string;
+}
+
+export interface StrongholdSigner {
+    Stronghold: {
+        password: string;
+        snapshotPath: string;
+    }
+}
+export type Signer = MnemonicSigner | StrongholdSigner;
+
 export interface AccountManagerOptions {
     storagePath?: string;
-    clientOptions?: ClientOptions;
-    signer?: string;
+    clientOptions: ClientOptions;
+    signer: Signer;
 }
 
 export interface CreateAccountPayload {
