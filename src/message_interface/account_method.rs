@@ -15,7 +15,7 @@ use serde::Deserialize;
 
 /// Each public account method.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "name", content = "data")]
+#[serde(tag = "name", content = "data", rename_all = "camelCase")]
 pub enum AccountMethod {
     /// Generate a new unused address.
     GenerateAddresses {

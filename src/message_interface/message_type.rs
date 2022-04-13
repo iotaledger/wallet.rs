@@ -23,7 +23,7 @@ pub struct AccountToCreate {
 
 /// The messages that can be sent to the actor.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "cmd", content = "payload")]
+#[serde(tag = "cmd", content = "payload", rename_all = "camelCase")]
 pub enum MessageType {
     /// Creates an account.
     CreateAccount(Box<AccountToCreate>),
