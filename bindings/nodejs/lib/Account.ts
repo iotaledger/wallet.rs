@@ -39,11 +39,11 @@ export class Account {
 
     async collectOutputs(outputIds: string[]): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'collectOutputs',
+                    name: 'CollectOutputs',
                     data: {
                         outputIdsToCollect: outputIds
                     },
@@ -54,11 +54,11 @@ export class Account {
 
     async getOutputsWithAdditionalUnlockConditions(outputs: OutputsToCollect): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'getOutputsWithAdditionalUnlockConditions',
+                    name: 'GetOutputsWithAdditionalUnlockConditions',
                     data: {
                         outputsToCollect: outputs
                     },
@@ -69,11 +69,11 @@ export class Account {
 
     async listAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listAddresses'
+                    name: 'ListAddresses'
                 },
             },
         })
@@ -83,11 +83,11 @@ export class Account {
 
     async listAddressesWithBalance(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listAddressesWithBalance'
+                    name: 'ListAddressesWithBalance'
                 },
             },
         })
@@ -97,11 +97,11 @@ export class Account {
 
     async listOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listOutputs'
+                    name: 'ListOutputs'
                 },
             },
         })
@@ -111,11 +111,11 @@ export class Account {
 
     async listUnspentOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listUnspentOutputs'
+                    name: 'ListUnspentOutputs'
                 },
             },
         })
@@ -125,11 +125,11 @@ export class Account {
 
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listPendingTransactions'
+                    name: 'ListPendingTransactions'
                 },
             },
         })
@@ -139,11 +139,11 @@ export class Account {
 
     async listTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'listTransactions'
+                    name: 'ListTransactions'
                 },
             },
         })
@@ -153,11 +153,11 @@ export class Account {
 
     async sync(options: AccountSyncOptions): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'syncAccount',
+                    name: 'SyncAccount',
                     data: options || {},
                 },
             },
@@ -170,11 +170,11 @@ export class Account {
     async getNodeInfo(url: string): Promise<NodeInfo> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
-                cmd: 'callAccountMethod',
+                cmd: 'CallAccountMethod',
                 payload: {
                     accountId: this.meta.index,
                     method: {
-                        name: 'getNodeInfo',
+                        name: 'GetNodeInfo',
                         data: [url],
                     },
                 },
@@ -184,11 +184,11 @@ export class Account {
 
     async generateAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'generateAddresses',
+                    name: 'GenerateAddresses',
                     data: {
                         // TODO: Why is the amount set to 1 here?
                         amount: 1,
@@ -202,11 +202,11 @@ export class Account {
 
     async latestAddress(): Promise<Address> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'getLatestAddress',
+                    name: 'GetLatestAddress',
                 },
             },
         });
@@ -216,11 +216,11 @@ export class Account {
 
     async balance(): Promise<AccountBalance> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'getBalance',
+                    name: 'GetBalance',
                 },
             },
         });
@@ -230,11 +230,11 @@ export class Account {
 
     async mintNativeToken(nativeTokenOptions: NativeTokenOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'mintNativeToken',
+                    name: 'MintNativeToken',
                     data: {
                         nativeTokenOptions: nativeTokenOptions,
                         options: transferOptions
@@ -248,11 +248,11 @@ export class Account {
 
     async mintNfts(nftOptions: NftOptions, transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'mintNfts',
+                    name: 'MintNfts',
                     data: {
                         nftsOptions: nftOptions,
                         options: transferOptions
@@ -266,11 +266,11 @@ export class Account {
 
     async sendAmount(addressesWithAmount: AddressWithAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'sendAmount',
+                    name: 'SendAmount',
                     data: {
                         addressesWithAmount,
                         options: transferOptions
@@ -284,11 +284,11 @@ export class Account {
 
     async sendMicroTransaction(addressesWithMicroAmount: AddressWithMicroAmount[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'sendMicroTransaction',
+                    name: 'SendMicroTransaction',
                     data: {
                         addressesWithMicroAmount: addressesWithMicroAmount,
                         options: transferOptions
@@ -302,11 +302,11 @@ export class Account {
 
     async sendNativeTokens(addressNativeTokens: AddressNativeTokens[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'sendNativeTokens',
+                    name: 'SendNativeTokens',
                     data: {
                         addressesNativeTokens: addressNativeTokens,
                         options: transferOptions
@@ -320,11 +320,11 @@ export class Account {
 
     async sendNft(addressesAndNftIds: AddressNftId[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'sendNft',
+                    name: 'SendNft',
                     data: {
                         addressesNftIds: addressesAndNftIds,
                         options: transferOptions
@@ -338,11 +338,11 @@ export class Account {
 
     async sendTransfer(outputs: OutputData[], transferOptions: TransferOptions): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'sendTransfer',
+                    name: 'SendTransfer',
                     data: {
                         outputs,
                         options: transferOptions
@@ -356,11 +356,11 @@ export class Account {
 
     async tryCollectOutputs(outputsToCollect: OutputsToCollect): Promise<Transaction[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'callAccountMethod',
+            cmd: 'CallAccountMethod',
             payload: {
                 accountId: this.meta.index,
                 method: {
-                    name: 'tryCollectOutputs',
+                    name: 'TryCollectOutputs',
                     data: {
                         outputsToCollect
                     }
@@ -377,7 +377,7 @@ export class Account {
      */
     async setClientOptions(options: ClientOptions): Promise<any> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'setClientOptions',
+            cmd: 'SetClientOptions',
             payload: options,
         });
 

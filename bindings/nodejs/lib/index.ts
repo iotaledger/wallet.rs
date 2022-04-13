@@ -7,7 +7,7 @@ export * from './Account';
 export * from '../types';
 
 // @ts-ignore
-const addon = require('../../build/Release/index.node');
+const addon = require('../../index.node');
 
 const initLogger = (config: any) => addon.initLogger(JSON.stringify(config));
 

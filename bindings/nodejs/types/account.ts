@@ -1,6 +1,12 @@
 
 import type { Address } from './address';
 
+/**
+ * Account identifier
+ * Could be the account index (number) or account alias (string)
+ */
+export type AccountId = number | string;
+
 export interface AccountBalance {
     total: number;
     available: number;

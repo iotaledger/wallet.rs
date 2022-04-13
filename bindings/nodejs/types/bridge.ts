@@ -1,31 +1,31 @@
 
-import type { AccountSyncOptions, CreateAccountPayload } from './account';
+import type { AccountId, AccountSyncOptions, CreateAccountPayload } from './account';
 import type { AddressWithAmount, AddressWithMicroAmount, AddressNativeTokens, AddressNftId } from './address';
 import type { ClientOptions } from './network';
 import type { OutputsToCollect, OutputData } from './output';
 import type { NativeTokenOptions, TransferOptions, NftOptions } from './transfer';
 
 type __GetAccountsMessagePayload__ = {
-    cmd: 'getAccounts'
+    cmd: 'GetAccounts'
 }
 
 type __GetAccountMessagePayload__ = {
-    cmd: 'getAccount'
-    payload: string
+    cmd: 'GetAccount'
+    payload: AccountId
 }
 
 type __CreateAccountMessagePayload__ = {
-    cmd: 'createAccount'
+    cmd: 'CreateAccount'
     payload: CreateAccountPayload
 }
 
 type __SetStrongholdPasswordPayload__ = {
-    cmd: 'setStrongholdPassword'
+    cmd: 'SetStrongholdPassword'
     payload: string;
 }
 
 type __StoreMnemonicPayload__ = {
-    cmd: 'storeMnemonic'
+    cmd: 'StoreMnemonic'
     payload: {
         signerType: {
             type: 'Stronghold'
@@ -35,7 +35,7 @@ type __StoreMnemonicPayload__ = {
 }
 
 type __BackupPayload__ = {
-    cmd: 'backup'
+    cmd: 'Backup'
     payload: {
         destination: string
         password: string
@@ -43,7 +43,7 @@ type __BackupPayload__ = {
 }
 
 type __ImportAccountsPayload__ = {
-    cmd: 'restoreBackup'
+    cmd: 'RestoreBackup'
     payload: {
         backupPath: string
         password: string
@@ -51,33 +51,33 @@ type __ImportAccountsPayload__ = {
 }
 
 type __SyncAccountPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'syncAccount',
+            name: 'SyncAccount',
             data?: AccountSyncOptions
         }
     };
 }
 
 type __GetNodeInfoPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'getNodeInfo',
+            name: 'GetNodeInfo',
             data: string[]
         }
     };
 }
 
 type __GenerateAddressesPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'generateAddresses',
+            name: 'GenerateAddresses',
             data: {
                 amount: number
             }
@@ -86,36 +86,36 @@ type __GenerateAddressesPayload__ = {
 }
 
 type __LatestAddressPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'getLatestAddress'
+            name: 'GetLatestAddress'
         }
     };
 }
 
 type __BalancePayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'getBalance'
+            name: 'GetBalance'
         }
     };
 }
 
 type __SetClientOptionsPayload__ = {
-    cmd: 'setClientOptions'
+    cmd: 'SetClientOptions'
     payload: ClientOptions;
 }
 
 type __SetCollectOutputsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'collectOutputs',
+            name: 'CollectOutputs',
             data: {
                 outputIdsToCollect: string[]
             }
@@ -124,11 +124,11 @@ type __SetCollectOutputsPayload__ = {
 }
 
 type __GetOutputsWithAdditionalUnlockConditionsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'getOutputsWithAdditionalUnlockConditions',
+            name: 'GetOutputsWithAdditionalUnlockConditions',
             data: {
                 outputsToCollect: OutputsToCollect
             }
@@ -137,71 +137,71 @@ type __GetOutputsWithAdditionalUnlockConditionsPayload__ = {
 }
 
 type __ListAddressesPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listAddresses'
+            name: 'ListAddresses'
         }
     };
 }
 
 type __ListAddressesWithBalancePayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listAddressesWithBalance'
+            name: 'ListAddressesWithBalance'
         }
     };
 }
 
 type __ListOutputsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listOutputs'
+            name: 'ListOutputs'
         }
     };
 }
 
 type __ListPendingTransactionsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listPendingTransactions'
+            name: 'ListPendingTransactions'
         }
     };
 }
 
 type __ListTransactionsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listTransactions'
+            name: 'ListTransactions'
         }
     };
 }
 
 type __ListUnspentOutputsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'listUnspentOutputs'
+            name: 'ListUnspentOutputs'
         }
     };
 }
 
 type __MintNativeTokenPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'mintNativeToken',
+            name: 'MintNativeToken',
             data: {
                 nativeTokenOptions: NativeTokenOptions;
                 options: TransferOptions
@@ -211,11 +211,11 @@ type __MintNativeTokenPayload__ = {
 }
 
 type __MintNftsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'mintNfts',
+            name: 'MintNfts',
             data: {
                 nftsOptions: NftOptions;
                 options: TransferOptions
@@ -225,11 +225,11 @@ type __MintNftsPayload__ = {
 }
 
 type __SendAmountPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'sendAmount',
+            name: 'SendAmount',
             data: {
                 addressesWithAmount: AddressWithAmount[];
                 options: TransferOptions
@@ -239,11 +239,11 @@ type __SendAmountPayload__ = {
 }
 
 type __SendMicroTransactionPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'sendMicroTransaction',
+            name: 'SendMicroTransaction',
             data: {
                 addressesWithMicroAmount: AddressWithMicroAmount[];
                 options: TransferOptions
@@ -253,11 +253,11 @@ type __SendMicroTransactionPayload__ = {
 }
 
 type __SendNativeTokensPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'sendNativeTokens',
+            name: 'SendNativeTokens',
             data: {
                 addressesNativeTokens: AddressNativeTokens[];
                 options: TransferOptions
@@ -267,11 +267,11 @@ type __SendNativeTokensPayload__ = {
 }
 
 type __SendNftPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'sendNft',
+            name: 'SendNft',
             data: {
                 addressesNftIds: AddressNftId[];
                 options: TransferOptions
@@ -281,11 +281,11 @@ type __SendNftPayload__ = {
 }
 
 type __SendTransferPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'sendTransfer',
+            name: 'SendTransfer',
             data: {
                 outputs: OutputData[];
                 options: TransferOptions
@@ -295,11 +295,11 @@ type __SendTransferPayload__ = {
 }
 
 type __TryCollectOutputsPayload__ = {
-    cmd: 'callAccountMethod'
+    cmd: 'CallAccountMethod'
     payload: {
-        accountId: number;
+        accountId: AccountId;
         method: {
-            name: 'tryCollectOutputs',
+            name: 'TryCollectOutputs',
             data: {
                 outputsToCollect: OutputsToCollect;
             }

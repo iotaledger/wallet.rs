@@ -5,6 +5,7 @@ import { MessageHandler } from './MessageHandler';
 import { Account } from './Account';
 
 import type {
+    AccountId,
     EventType,
     AccountManagerOptions,
     CreateAccountPayload
@@ -17,10 +18,10 @@ export class AccountManager {
         this.messageHandler = new MessageHandler(options);
     }
 
-    async getAccount(accountId: string): Promise<Account> {
+    async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler
             .sendMessage({
-                cmd: 'getAccount',
+                cmd: 'GetAccount',
                 payload: accountId,
             });
 
@@ -34,7 +35,7 @@ export class AccountManager {
 
     async getAccounts(): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'getAccounts',
+            cmd: 'GetAccounts',
         });
 
         const { payload } = JSON.parse(response);
@@ -50,7 +51,7 @@ export class AccountManager {
     async createAccount(account: CreateAccountPayload): Promise<Account> {
         const response = await this.messageHandler
             .sendMessage({
-                cmd: 'createAccount',
+                cmd: 'CreateAccount',
                 payload: account,
             });
 
@@ -65,7 +66,7 @@ export class AccountManager {
      */
     async setStrongholdPassword(password: string): Promise<string> {
         return this.messageHandler.sendMessage({
-            cmd: 'setStrongholdPassword',
+            cmd: 'SetStrongholdPassword',
             payload: password,
         });
     }
@@ -75,7 +76,7 @@ export class AccountManager {
      */
     async storeMnemonic(mnemonic: string): Promise<string> {
         return this.messageHandler.sendMessage({
-            cmd: 'storeMnemonic',
+            cmd: 'StoreMnemonic',
             payload: {
                 signerType: {
                     type: 'Stronghold',
@@ -90,7 +91,7 @@ export class AccountManager {
      */
     async backup(destination: string, password: string): Promise<string> {
         return this.messageHandler.sendMessage({
-            cmd: 'backup',
+            cmd: 'Backup',
             payload: {
                 destination,
                 password,
@@ -103,7 +104,7 @@ export class AccountManager {
      */
     async importAccounts(backupPath: string, password: string): Promise<string> {
         return this.messageHandler.sendMessage({
-            cmd: 'restoreBackup',
+            cmd: 'RestoreBackup',
             payload: {
                 backupPath,
                 password,
