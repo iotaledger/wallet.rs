@@ -4,10 +4,10 @@
 export * from './AccountManager';
 export * from './MessageHandler';
 export * from './Account';
-export * from './types';
+export * from '../types';
 
 // @ts-ignore
-const addon = require('../build/Release/index.node');
+const addon = require('../../build/Release/index.node');
 
 const initLogger = (config: any) => addon.initLogger(JSON.stringify(config));
 

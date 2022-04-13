@@ -50,6 +50,7 @@ pub struct AddressWithBalance {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AddressWrapper {
     pub(crate) inner: Address,
+    #[serde(rename = "bech32Hrp")]
     pub(crate) bech32_hrp: String,
 }
 

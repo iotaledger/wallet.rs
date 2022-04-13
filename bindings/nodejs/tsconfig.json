@@ -8,7 +8,7 @@
         "declaration": true,
         "target": "es2019",
         "module": "commonjs",
-        "sourceMap": true,    
+        "sourceMap": true,
         "strict": true,
         "moduleResolution": "node",
         "importsNotUsedAsValues": "error",
@@ -18,6 +18,7 @@
         "outDir": "out"
     },
     "include": [
-        "lib/**/*"
+        "lib/**/*",
+        "types/**/*",
     ]
 }

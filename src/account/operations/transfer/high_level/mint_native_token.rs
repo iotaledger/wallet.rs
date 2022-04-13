@@ -44,8 +44,8 @@ pub struct NativeTokenOptions {
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256,
     /// Maximum supply
-    #[serde(rename = "maxiumSupply")]
-    pub maxium_supply: U256,
+    #[serde(rename = "maximumSupply")]
+    pub maximum_supply: U256,
 }
 
 impl AccountHandle {
@@ -61,7 +61,7 @@ impl AccountHandle {
     ///     account_address: None,
     ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
-    ///     maxium_supply: U256::from(100),
+    ///     maximum_supply: U256::from(100),
     /// };
     ///
     /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
@@ -159,7 +159,7 @@ impl AccountHandle {
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             native_token_options.circulating_supply,
                             U256::from(0),
-                            native_token_options.maxium_supply,
+                            native_token_options.maximum_supply,
                         )?),
                     )?
                     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
