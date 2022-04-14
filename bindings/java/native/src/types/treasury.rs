@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
-    iota_client::bee_message::output::Output,
+    iota_client::bee_message::output::Output, message::TreasuryTransactionPayload as TreasuryTransactionPayloadRust,
 };
 
 pub struct TreasuryTransactionPayload {

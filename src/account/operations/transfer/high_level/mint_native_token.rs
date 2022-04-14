@@ -1,18 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
-            TransferResult,
-        },
-        TransferOptions,
-    },
-    Error,
-};
-
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_message::{
@@ -29,6 +17,18 @@ use iota_client::{
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::transfer::{
+            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
+            TransferResult,
+        },
+        TransferOptions,
+    },
+    Error,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `mint_native_token()`

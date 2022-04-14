@@ -1,26 +1,29 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "events")]
-use crate::events::types::{Event, WalletEventType};
-use crate::{account::types::AccountIdentifier, account_manager::AccountManager, Result};
-
-use backtrace::Backtrace;
-use futures::{Future, FutureExt};
-use zeroize::Zeroize;
-
 use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
     path::Path,
 };
 
-use crate::message_interface::{
-    account_method::AccountMethod,
-    message::Message,
-    message_type::{AccountToCreate, MessageType},
-    response::Response,
-    response_type::ResponseType,
+use backtrace::Backtrace;
+use futures::{Future, FutureExt};
+use zeroize::Zeroize;
+
+#[cfg(feature = "events")]
+use crate::events::types::{Event, WalletEventType};
+use crate::{
+    account::types::AccountIdentifier,
+    account_manager::AccountManager,
+    message_interface::{
+        account_method::AccountMethod,
+        message::Message,
+        message_type::{AccountToCreate, MessageType},
+        response::Response,
+        response_type::ResponseType,
+    },
+    Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {

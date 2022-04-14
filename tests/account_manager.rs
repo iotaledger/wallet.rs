@@ -10,7 +10,9 @@ async fn stored_account_manager_data() -> Result<()> {
     let client_options = ClientOptions::new().with_node("http://some-not-default-node:14265")?;
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer.clone())
@@ -43,7 +45,9 @@ async fn different_seed() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -62,7 +66,9 @@ async fn different_seed() -> Result<()> {
     drop(manager);
 
     // Recreate AccountManager with a diferent mnemonic
-    let signer2 = MnemonicSigner::new("route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy")?;
+    let signer2 = MnemonicSigner::new(
+        "route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy",
+    )?;
     let manager = AccountManager::builder()
         .with_signer(signer2)
         .with_storage_path("test-storage/different_seed")
@@ -70,12 +76,14 @@ async fn different_seed() -> Result<()> {
         .await?;
 
     // Generating a new account needs to return an error, because the seed from the signer is different
-    assert!(manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
 
     std::fs::remove_dir_all("test-storage/different_seed").unwrap_or(());
     Ok(())

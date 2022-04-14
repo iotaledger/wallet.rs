@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithBalance};
+use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
@@ -13,7 +13,7 @@ use iota_client::{
     bee_rest_api::types::responses::OutputResponse,
 };
 
-use std::{str::FromStr, time::Instant};
+use crate::account::{handle::AccountHandle, types::OutputData, AddressWithBalance};
 
 impl AccountHandle {
     /// Convert OutputResponse to OutputData with the network_id added

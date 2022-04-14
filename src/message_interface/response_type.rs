@@ -1,6 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::bee_message::output::OutputId;
+use serde::Serialize;
+
 use crate::{
     account::{
         operations::transfer::TransferResult,
@@ -12,10 +15,6 @@ use crate::{
     },
     Error,
 };
-
-use iota_client::bee_message::output::OutputId;
-
-use serde::Serialize;
 
 /// The response message.
 #[derive(Serialize, Debug)]

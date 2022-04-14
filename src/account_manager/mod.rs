@@ -5,7 +5,23 @@ pub(crate) mod builder;
 pub(crate) mod operations;
 
 #[cfg(feature = "storage")]
-use crate::account_manager::builder::StorageOptions;
+use std::path::Path;
+use std::{
+    collections::hash_map::Entry,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
+};
+
+use iota_client::{signing::SignerHandle, Client};
+#[cfg(feature = "events")]
+use tokio::sync::Mutex;
+use tokio::sync::RwLock;
+
+use self::builder::AccountManagerBuilder;
+#[cfg(feature = "storage")]
+use self::builder::StorageOptions;
 #[cfg(feature = "events")]
 use crate::events::{
     types::{Event, WalletEventType},
@@ -18,22 +34,6 @@ use crate::{
         builder::AccountBuilder, handle::AccountHandle, operations::syncing::SyncOptions, types::AccountBalance,
     },
     ClientOptions,
-};
-use builder::AccountManagerBuilder;
-
-use iota_client::{signing::SignerHandle, Client};
-#[cfg(feature = "events")]
-use tokio::sync::Mutex;
-use tokio::sync::RwLock;
-
-#[cfg(feature = "storage")]
-use std::path::Path;
-use std::{
-    collections::hash_map::Entry,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
 };
 
 /// The account manager, used to create and get accounts. One account manager can hold many accounts, but they should

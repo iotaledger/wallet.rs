@@ -1,9 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    handle::AccountHandle,
-    types::{InclusionState, Transaction},
+use std::{
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
 };
 
 use iota_client::{
@@ -11,9 +11,9 @@ use iota_client::{
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 
-use std::{
-    str::FromStr,
-    time::{SystemTime, UNIX_EPOCH},
+use crate::account::{
+    handle::AccountHandle,
+    types::{InclusionState, Transaction},
 };
 
 // ignore outputs and transactions from other networks

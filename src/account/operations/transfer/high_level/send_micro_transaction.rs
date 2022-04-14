@@ -1,6 +1,18 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::bee_message::{
+    address::Address,
+    milestone::MilestoneIndex,
+    output::{
+        unlock_condition::{
+            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+        },
+        BasicOutputBuilder, Output,
+    },
+};
+use serde::{Deserialize, Serialize};
+
 use crate::{
     account::{
         constants::DEFAULT_EXPIRATION_TIME,
@@ -12,19 +24,6 @@ use crate::{
     },
     Error,
 };
-
-use iota_client::bee_message::{
-    address::Address,
-    milestone::MilestoneIndex,
-    output::{
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
-        },
-        BasicOutputBuilder, Output,
-    },
-};
-
-use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and amount for `send_micro_transaction()`

@@ -7,6 +7,8 @@ pub use address::{AccountAddress, AddressWithBalance};
 /// Custom de/serialization for [`address::AddressWrapper`]
 pub(crate) mod address_serde;
 
+use std::{collections::HashMap, str::FromStr};
+
 use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_message::{
@@ -18,11 +20,8 @@ use iota_client::{
     bee_rest_api::types::responses::OutputResponse,
     signing::types::InputSigningData,
 };
-
 use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
-
-use std::{collections::HashMap, str::FromStr};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].

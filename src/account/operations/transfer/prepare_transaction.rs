@@ -1,12 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "events")]
-use crate::events::types::{PreparedTransactionEventData, TransactionIO, TransferProgressEvent, WalletEvent};
-use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferOptions},
-    Result,
-};
+use std::time::Instant;
 
 use crypto::hashes::{blake2b::Blake2b256, Digest};
 use iota_client::{
@@ -23,7 +18,12 @@ use iota_client::{
     signing::types::InputSigningData,
 };
 
-use std::time::Instant;
+#[cfg(feature = "events")]
+use crate::events::types::{PreparedTransactionEventData, TransactionIO, TransferProgressEvent, WalletEvent};
+use crate::{
+    account::{handle::AccountHandle, operations::transfer::TransferOptions},
+    Result,
+};
 impl AccountHandle {
     /// Function to build the transaction essence
     pub(crate) async fn prepare_transaction(

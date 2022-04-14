@@ -3,10 +3,7 @@
 
 use std::{cell::RefCell, rc::Rc, time::Duration};
 
-use iota_wallet::client::{
-    Api, BrokerOptions as BrokerOptionsRust, ClientOptions as ClientOptionsRust,
-    ClientOptions as ClientOptionsRust,
-};
+use iota_wallet::client::{Api, BrokerOptions as BrokerOptionsRust, ClientOptions as ClientOptionsRust};
 
 use crate::Result;
 
@@ -65,22 +62,15 @@ pub struct ClientOptions {
     options: ClientOptionsRust,
 }
 
-
 impl core::fmt::Display for ClientOptions {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "{:?}", 
-            self.options
-        )
+        write!(f, "{:?}", self.options)
     }
 }
 
 impl From<ClientOptionsRust> for ClientOptions {
     fn from(options: ClientOptionsRust) -> Self {
-        Self {
-            options
-        }
+        Self { options }
     }
 }
 

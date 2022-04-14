@@ -1,15 +1,15 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::signing::{GenerateAddressMetadata, Network};
+use serde::{Deserialize, Serialize};
+
 use crate::account::{
     handle::AccountHandle,
     types::address::{AccountAddress, AddressWrapper},
 };
 #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
 use crate::events::types::{AddressData, WalletEvent};
-
-use iota_client::signing::{GenerateAddressMetadata, Network};
-use serde::{Deserialize, Serialize};
 
 /// Options for address generation
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,11 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::operations::syncing::SyncOptions, account_manager::AccountManager};
+use std::{sync::atomic::Ordering, time::Duration};
 
 use tokio::time::sleep;
 
-use std::{sync::atomic::Ordering, time::Duration};
+use crate::{account::operations::syncing::SyncOptions, account_manager::AccountManager};
 
 /// The default interval for background syncing
 pub(crate) const DEFAUTL_BACKGROUNDSYNCING_INTERVAL: Duration = Duration::from_secs(7);

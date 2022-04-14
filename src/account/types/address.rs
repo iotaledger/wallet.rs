@@ -1,11 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::hash::Hash;
+
 use getset::{Getters, Setters};
 use iota_client::bee_message::{address::Address, output::OutputId};
 use serde::{Deserialize, Serialize};
-
-use std::hash::Hash;
 
 /// An account address.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]

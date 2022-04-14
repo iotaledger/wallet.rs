@@ -1,16 +1,16 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
+use serde::{Deserialize, Serialize};
+use tokio::sync::Mutex;
+
 use crate::{
     account::Account,
     account_manager::builder::AccountManagerBuilder,
     storage::{constants::*, decrypt_record, Storage, StorageAdapter},
 };
-
-use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
-
-use std::sync::Arc;
 
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]

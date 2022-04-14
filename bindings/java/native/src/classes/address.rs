@@ -1,19 +1,19 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
-use getset::{Getters, CopyGetters, Setters};
+use getset::{CopyGetters, Getters, Setters};
 use std::{
     cell::RefCell,
-    rc::Rc,
     fmt::{Display, Formatter},
+    rc::Rc,
 };
 
 use iota_wallet::{
-    message::MessageId,
-    address::{OutputKind, Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust, AddressWrapper},
-    iota_client::bee_message::{
-        prelude::OutputId,
-        payload::transaction::TransactionId,
+    address::{
+        Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust,
+        AddressWrapper, OutputKind,
     },
+    iota_client::bee_message::{payload::transaction::TransactionId, prelude::OutputId},
+    message::MessageId,
 };
 
 use crate::Result;
@@ -43,7 +43,7 @@ impl Address {
     pub fn builder() -> AddressBuilder {
         AddressBuilder::new()
     }
-    
+
     pub fn readable(&self) -> String {
         self.0.address().to_bech32()
     }
@@ -79,22 +79,12 @@ impl AddressBuilder {
     }
 
     pub fn address(&self, address: AddressWrapper) -> Self {
-        let new_builder = self
-            .builder
-            .borrow_mut()
-            .take()
-            .unwrap()
-            .address(address);
+        let new_builder = self.builder.borrow_mut().take().unwrap().address(address);
         AddressBuilder::new_with_builder(new_builder)
     }
 
     pub fn key_index(&self, key_index: usize) -> Self {
-        let new_builder = self
-            .builder
-            .borrow_mut()
-            .take()
-            .unwrap()
-            .key_index(key_index);
+        let new_builder = self.builder.borrow_mut().take().unwrap().key_index(key_index);
         AddressBuilder::new_with_builder(new_builder)
     }
 
@@ -109,12 +99,7 @@ impl AddressBuilder {
     }
 
     pub fn internal(&self, internal: bool) -> Self {
-        let new_builder = self
-            .builder
-            .borrow_mut()
-            .take()
-            .unwrap()
-            .internal(internal);
+        let new_builder = self.builder.borrow_mut().take().unwrap().internal(internal);
         AddressBuilder::new_with_builder(new_builder)
     }
 
@@ -152,9 +137,12 @@ pub struct AddressOutput {
 
 impl Display for AddressOutput {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
-        write!(f, "(transaction_id={}, message_id={}, index={}, amount={}, 
-            is_spent={}, address={:?}, kind={:?})", self.transaction_id, self.message_id, 
-            self.index, self.amount, self.is_spent, self.address, self.kind) 
+        write!(
+            f,
+            "(transaction_id={}, message_id={}, index={}, amount={}, 
+            is_spent={}, address={:?}, kind={:?})",
+            self.transaction_id, self.message_id, self.index, self.amount, self.is_spent, self.address, self.kind
+        )
     }
 }
 

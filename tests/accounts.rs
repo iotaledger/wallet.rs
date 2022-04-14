@@ -11,7 +11,9 @@ async fn account_ordering() -> Result<()> {
         .with_node_sync_disabled();
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -37,7 +39,9 @@ async fn account_alias_already_exists() -> Result<()> {
         .with_node_sync_disabled();
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -51,31 +55,39 @@ async fn account_alias_already_exists() -> Result<()> {
         .with_alias("Alice".to_string())
         .finish()
         .await?;
-    assert!(&manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("ALICE".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("ALICE".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
     // Other alias works
-    assert!(&manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_ok());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_ok()
+    );
 
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
     Ok(())
@@ -88,7 +100,9 @@ async fn account_rename_alias() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -121,7 +135,9 @@ async fn account_first_address_exists() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
     // mnemonic without balance
-    let signer = MnemonicSigner::new("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak")?;
+    let signer = MnemonicSigner::new(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)

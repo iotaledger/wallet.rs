@@ -1,10 +1,6 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
-#[cfg(feature = "events")]
-use crate::events::types::{TransferProgressEvent, WalletEvent};
-
 use iota_client::{
     bee_message::{
         address::Address,
@@ -14,6 +10,10 @@ use iota_client::{
     },
     signing::{types::InputSigningData, verify_unlock_blocks, Network, SignMessageMetadata},
 };
+
+use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
+#[cfg(feature = "events")]
+use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to sign a transaction essence

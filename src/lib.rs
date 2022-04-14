@@ -32,14 +32,16 @@ pub mod storage;
 pub mod logger;
 
 // Expose for high level functions
-pub use account::operations::transfer::high_level::{
-    mint_native_token::NativeTokenOptions, mint_nfts::NftOptions, send_amount::AddressAndAmount,
-    send_micro_transaction::AddressMicroAmount, send_native_tokens::AddressNativeTokens, send_nft::AddressAndNftId,
-};
-
-pub use error::Error;
-/// The wallet Result type.
-pub type Result<T> = std::result::Result<T, Error>;
-
 pub use iota_client::{self, signing};
 pub use primitive_types::U256;
+
+pub use self::{
+    account::operations::transfer::high_level::{
+        mint_native_token::NativeTokenOptions, mint_nfts::NftOptions, send_amount::AddressAndAmount,
+        send_micro_transaction::AddressMicroAmount, send_native_tokens::AddressNativeTokens, send_nft::AddressAndNftId,
+    },
+    error::Error,
+};
+
+/// The wallet Result type.
+pub type Result<T> = std::result::Result<T, Error>;

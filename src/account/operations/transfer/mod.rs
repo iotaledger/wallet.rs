@@ -10,14 +10,7 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use crate::account::{
-    handle::AccountHandle,
-    operations::syncing::SyncOptions,
-    types::{InclusionState, Transaction},
-    AddressGenerationOptions,
-};
-#[cfg(feature = "events")]
-use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     bee_message::{
@@ -28,12 +21,18 @@ use iota_client::{
     },
     signing::types::InputSigningData,
 };
-
-pub use options::{RemainderValueStrategy, TransferOptions};
 use packable::bounded::TryIntoBoundedU16Error;
 use serde::Serialize;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+pub use self::options::{RemainderValueStrategy, TransferOptions};
+use crate::account::{
+    handle::AccountHandle,
+    operations::syncing::SyncOptions,
+    types::{InclusionState, Transaction},
+    AddressGenerationOptions,
+};
+#[cfg(feature = "events")]
+use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
 
 /// The result of a transfer, message_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
@@ -134,7 +133,7 @@ impl AccountHandle {
                                 return Err(crate::Error::CustomInputError(format!(
                                     "Custom input {} not found in unspent outputs",
                                     output_id
-                                )))
+                                )));
                             }
                         }
                     }

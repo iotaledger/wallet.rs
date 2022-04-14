@@ -5,6 +5,18 @@ pub(crate) mod addresses;
 pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
+
+use std::{
+    str::FromStr,
+    time::{Instant, SystemTime, UNIX_EPOCH},
+};
+
+use iota_client::{
+    bee_message::{output::OutputId, payload::transaction::TransactionId},
+    bee_rest_api::types::responses::OutputResponse,
+};
+
+pub use self::options::SyncOptions;
 use crate::account::{
     constants::MIN_SYNC_INTERVAL,
     handle::AccountHandle,
@@ -14,17 +26,6 @@ use crate::account::{
 };
 #[cfg(feature = "ledger-nano")]
 use crate::signing::SignerType;
-pub use options::SyncOptions;
-
-use iota_client::{
-    bee_message::{output::OutputId, payload::transaction::TransactionId},
-    bee_rest_api::types::responses::OutputResponse,
-};
-
-use std::{
-    str::FromStr,
-    time::{Instant, SystemTime, UNIX_EPOCH},
-};
 
 impl AccountHandle {
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and

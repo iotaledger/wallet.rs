@@ -1,6 +1,17 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::{hash_map::Entry, HashMap, HashSet};
+
+use iota_client::{
+    api::input_selection::minimum_storage_deposit,
+    bee_message::output::{
+        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+        BasicOutputBuilder, NativeToken, NftOutputBuilder, Output, OutputId,
+    },
+};
+use serde::{Deserialize, Serialize};
+
 use crate::{
     account::{
         handle::AccountHandle,
@@ -12,18 +23,6 @@ use crate::{
     },
     Result,
 };
-
-use iota_client::{
-    api::input_selection::minimum_storage_deposit,
-    bee_message::output::{
-        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeToken, NftOutputBuilder, Output, OutputId,
-    },
-};
-
-use serde::{Deserialize, Serialize};
-
-use std::collections::{hash_map::Entry, HashMap, HashSet};
 
 /// Enum to specify which outputs should be collected
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
