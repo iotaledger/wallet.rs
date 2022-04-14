@@ -2426,7 +2426,11 @@ async fn perform_transfer(
         .emit_event_if_needed(account_.id().to_string(), TransferProgressType::Broadcasting)
         .await;
 
-    let message_id = client.post_message(&message).await?;
+    let message_id = match client.post_message(&message).await {
+        Ok(message_id) => message_id,
+        // Ignore errors from posting the message, the wallet will try to submit the message later during syncing again
+        Err(_) => message.id().0,
+    };
 
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
     // value, we generate a new one to keep the latest address unused
