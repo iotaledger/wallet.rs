@@ -11,12 +11,14 @@ use iota_client::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder, Output,
     },
-    request_funds_from_faucet,
+    init_logger, request_funds_from_faucet,
 };
 use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
+use log::LevelFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_logger("pong.log", LevelFilter::Debug)?;
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();

@@ -19,7 +19,7 @@ use iota_client::bee_message::{output::OutputId, payload::transaction::Transacti
 use serde::{Deserialize, Serialize};
 
 use self::types::{
-    address::{AccountAddress, AddressWithBalance},
+    address::{AccountAddress, AddressWithUnspentOutputs},
     AccountBalance, OutputData,
 };
 pub use self::{
@@ -45,11 +45,11 @@ pub struct Account {
     pub(crate) public_addresses: Vec<AccountAddress>,
     pub(crate) internal_addresses: Vec<AccountAddress>,
     // used to improve performance for syncing and getbalance because it's in most cases only a subset of all addresses
-    addresses_with_balance: Vec<AddressWithBalance>,
+    addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
     // stored separated from the account for performance?
     outputs: HashMap<OutputId, OutputData>,
-    // outputs used in transactions should be locked here so they don't get used again, resulting in conflicting
-    // transactions
+    // outputs used in transactions should be locked here so they don't get used again, which would result in a
+    // conflicting transaction
     locked_outputs: HashSet<OutputId>,
     // have unspent outputs in a separated hashmap so we don't need to iterate over all outputs we have
     unspent_outputs: HashMap<OutputId, OutputData>,

@@ -153,7 +153,7 @@ impl AccountBuilder {
             alias: account_alias,
             public_addresses: vec![first_public_account_address],
             internal_addresses: Vec::new(),
-            addresses_with_balance: Vec::new(),
+            addresses_with_unspent_outputs: Vec::new(),
             outputs: HashMap::new(),
             locked_outputs: HashSet::new(),
             unspent_outputs: HashMap::new(),

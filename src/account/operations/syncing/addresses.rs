@@ -17,7 +17,7 @@ use crate::account::{
     constants::PARALLEL_REQUESTS_AMOUNT,
     handle::AccountHandle,
     operations::syncing::{OutputResponse, SyncOptions},
-    types::address::AddressWithBalance,
+    types::address::AddressWithUnspentOutputs,
     OutputData,
 };
 #[cfg(feature = "events")]
@@ -27,7 +27,10 @@ impl AccountHandle {
     /// Get the addresses that should be synced with the current known unspent output ids
     /// Also adds alias and nft addresses from unspent alias or nft outputs that have no Timelock, Expiration or
     /// StorageDepositReturn [`UnlockCondition`]
-    pub(crate) async fn get_addresses_to_sync(&self, options: &SyncOptions) -> crate::Result<Vec<AddressWithBalance>> {
+    pub(crate) async fn get_addresses_to_sync(
+        &self,
+        options: &SyncOptions,
+    ) -> crate::Result<Vec<AddressWithUnspentOutputs>> {
         log::debug!("[SYNC] get_addresses_to_sync");
 
         let mut addresses_before_syncing = self.list_addresses().await?;
@@ -57,16 +60,19 @@ impl AccountHandle {
         }
 
         // Check if selected addresses contains addresses with balance so we can correctly update them
-        let addresses_with_balance = self.list_addresses_with_balance().await?;
+        let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
         let mut addresses_with_old_output_ids = Vec::new();
         for address in addresses_before_syncing {
             let mut output_ids = Vec::new();
             // Add currently known unspent output ids, so we can later compare them with the new output ids and see if
             // one got spent (is missing in the new returned output ids)
-            if let Some(address_with_balance) = addresses_with_balance.iter().find(|a| a.address == address.address) {
-                output_ids = address_with_balance.output_ids.to_vec();
+            if let Some(address_with_unpsnet_outputs) = addresses_with_unspent_outputs
+                .iter()
+                .find(|a| a.address == address.address)
+            {
+                output_ids = address_with_unpsnet_outputs.output_ids.to_vec();
             }
-            addresses_with_old_output_ids.push(AddressWithBalance {
+            addresses_with_old_output_ids.push(AddressWithUnspentOutputs {
                 address: address.address,
                 key_index: address.key_index,
                 internal: address.internal,
@@ -83,8 +89,8 @@ impl AccountHandle {
     pub(crate) async fn get_address_output_ids(
         &self,
         options: &SyncOptions,
-        addresses_with_balance: Vec<AddressWithBalance>,
-    ) -> crate::Result<(Vec<AddressWithBalance>, Vec<OutputId>)> {
+        addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
+    ) -> crate::Result<(Vec<AddressWithUnspentOutputs>, Vec<OutputId>)> {
         log::debug!("[SYNC] start get_address_output_ids");
         let address_output_ids_start_time = Instant::now();
         let account = self.read().await;
@@ -98,9 +104,9 @@ impl AccountHandle {
         // spent outputs or alias/nft/foundries that don't get synced anymore, because of other sync options
         let mut spent_or_not_anymore_synced_outputs = Vec::new();
         // We split the addresses into chunks so we don't get timeouts if we have thousands
-        for addresses_chunk in &mut addresses_with_balance
+        for addresses_chunk in &mut addresses_with_unspent_outputs
             .chunks(PARALLEL_REQUESTS_AMOUNT)
-            .map(|x: &[AddressWithBalance]| x.to_vec())
+            .map(|x: &[AddressWithUnspentOutputs]| x.to_vec())
         {
             let mut tasks = Vec::new();
             for address in addresses_chunk {
@@ -119,7 +125,7 @@ impl AccountHandle {
             }
             let results = futures::future::try_join_all(tasks).await?;
             for res in results {
-                let (mut address, output_ids): (AddressWithBalance, Vec<OutputId>) = res?;
+                let (mut address, output_ids): (AddressWithUnspentOutputs, Vec<OutputId>) = res?;
                 #[cfg(feature = "events")]
                 if output_ids.len() > consolidation_threshold {
                     self.event_emitter
@@ -163,8 +169,8 @@ impl AccountHandle {
     /// Get outputs from addresses
     pub(crate) async fn get_addresses_outputs(
         &self,
-        addresses_with_balance: Vec<AddressWithBalance>,
-    ) -> crate::Result<(Vec<AddressWithBalance>, Vec<OutputData>)> {
+        addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
+    ) -> crate::Result<(Vec<AddressWithUnspentOutputs>, Vec<OutputData>)> {
         log::debug!("[SYNC] start get_addresses_outputs");
         let address_outputs_start_time = Instant::now();
 
@@ -172,9 +178,9 @@ impl AccountHandle {
         let mut outputs_data = Vec::new();
 
         // We split the addresses into chunks so we don't get timeouts if we have thousands
-        for addresses_chunk in &mut addresses_with_balance
+        for addresses_chunk in &mut addresses_with_unspent_outputs
             .chunks(PARALLEL_REQUESTS_AMOUNT)
-            .map(|x: &[AddressWithBalance]| x.to_vec())
+            .map(|x: &[AddressWithUnspentOutputs]| x.to_vec())
         {
             let mut tasks = Vec::new();
             for mut address in addresses_chunk {
@@ -196,7 +202,7 @@ impl AccountHandle {
             }
             let results = futures::future::try_join_all(tasks).await?;
             for res in results {
-                let (address, outputs): (AddressWithBalance, Vec<OutputData>) = res?;
+                let (address, outputs): (AddressWithUnspentOutputs, Vec<OutputData>) = res?;
                 addresses_with_outputs.push(address);
                 outputs_data.extend(outputs.into_iter());
             }
@@ -214,9 +220,9 @@ impl AccountHandle {
     pub(crate) async fn request_address_output_ids(
         &self,
         client: &Client,
-        address: AddressWithBalance,
+        address: AddressWithUnspentOutputs,
         sync_options: &SyncOptions,
-    ) -> crate::Result<(AddressWithBalance, Vec<OutputId>)> {
+    ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
         // Get basic outputs
         let mut output_ids = client
             .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])

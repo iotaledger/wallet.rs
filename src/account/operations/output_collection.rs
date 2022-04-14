@@ -35,13 +35,14 @@ pub enum OutputsToCollect {
 }
 
 impl AccountHandle {
-    /// Get basic and nft outputs that have more than the [`AddressUnlockCondition`] and also get basic outputs with
-    /// only this unlock condition, for additional inputs
-    pub async fn get_outputs_with_additional_unlock_conditions(
+    /// Get basic and nft outputs that have [`ExpirationUnlockCondition`], [`StorageDepositReturnUnlockCondition`] or
+    /// [`TimelockUnlockCondition`] and can be unlocked now and also get basic outputs with only an
+    /// [`AddressUnlockCondition`] unlock condition, for additional inputs
+    pub async fn get_unlockable_outputs_with_additional_unlock_conditions(
         &self,
         outputs_to_collect: OutputsToCollect,
     ) -> crate::Result<Vec<OutputId>> {
-        log::debug!("[OUTPUT_COLLECTION] get_outputs_with_additional_unlock_conditions");
+        log::debug!("[OUTPUT_COLLECTION] get_unlockable_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
@@ -59,7 +60,9 @@ impl AccountHandle {
                             // further restrictions
                             if basic_output.unlock_conditions().len() != 1
                                 && can_output_be_unlocked_now(
-                                    &account.addresses_with_balance,
+                                    // We use the addresses with unspent outputs, because other addresses of the
+                                    // account without unspent outputs can't be related to this output
+                                    &account.addresses_with_unspent_outputs,
                                     output,
                                     local_time as u32,
                                     milestone_index,
@@ -95,7 +98,9 @@ impl AccountHandle {
                             // further restrictions
                             if nft_output.unlock_conditions().len() != 1
                                 && can_output_be_unlocked_now(
-                                    &account.addresses_with_balance,
+                                    // We use the addresses with unspent outputs, because other addresses of the
+                                    // account without unspent outputs can't be related to this output
+                                    &account.addresses_with_unspent_outputs,
                                     output,
                                     local_time as u32,
                                     milestone_index,
@@ -147,7 +152,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_COLLECTION] try_collect_outputs");
 
         let output_ids_to_collect = self
-            .get_outputs_with_additional_unlock_conditions(outputs_to_collect)
+            .get_unlockable_outputs_with_additional_unlock_conditions(outputs_to_collect)
             .await?;
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
         self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
@@ -181,7 +186,7 @@ impl AccountHandle {
     }
 
     /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
-    /// from [`get_outputs_with_additional_unlock_conditions()`].
+    /// from [`get_unlockable_outputs_with_additional_unlock_conditions()`].
     pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransferResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
@@ -257,6 +262,7 @@ impl AccountHandle {
                 }
 
                 // if expired, we can send everything to us
+                // todo: check again if the expired address is in the account
                 if is_expired(&output_data.output, local_time as u32, milestone_index) {
                     new_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {

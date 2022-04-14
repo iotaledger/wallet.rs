@@ -52,8 +52,8 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
-    let addresses_with_balance = account.list_addresses_with_balance().await?;
-    println!("Addresses with balance: {}", addresses_with_balance.len());
+    let addresses_with_unspent_outputs = account.list_addresses_with_unspent_outputs().await?;
+    println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
     // send transaction
     let outputs = vec![AddressAndAmount {

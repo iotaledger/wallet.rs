@@ -25,8 +25,8 @@ pub enum AccountMethod {
     GetOutputsWithAdditionalUnlockConditions { outputs_to_collect: OutputsToCollect },
     /// List addresses.
     ListAddresses,
-    /// Returns only addresses of the account with balance
-    ListAddressesWithBalance,
+    /// Returns only addresses of the account with unspent outputs
+    ListAddressesWithUnspentOutputs,
     /// Returns all outputs of the account
     ListOutputs,
     /// Returns all unspent outputs of the account
