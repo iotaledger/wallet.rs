@@ -27,7 +27,7 @@ impl AccountHandle {
         let mut total_amount = 0;
         let mut required_storage_deposit = 0;
         let mut total_native_tokens = HashMap::new();
-        let mut potential_locked_outputs = HashMap::new();
+        let mut potentially_locked_outputs = HashMap::new();
         let mut aliases = Vec::new();
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
@@ -85,7 +85,7 @@ impl AccountHandle {
                     let output_can_be_unlocked_now =
                         unlockable_outputs_with_multiple_unlock_conditions.contains(&output_data.output_id);
                     if !output_can_be_unlocked_now {
-                        potential_locked_outputs.insert(output_data.output_id, false);
+                        potentially_locked_outputs.insert(output_data.output_id, false);
                     }
 
                     // For outputs that are expired or have a timelock unlock condition, but no expiration unlock
@@ -138,10 +138,10 @@ impl AccountHandle {
                             }
                         } else {
                             // only add outputs that can't be locked now and at any point in the future
-                            potential_locked_outputs.insert(output_data.output_id, true);
+                            potentially_locked_outputs.insert(output_data.output_id, true);
                         }
                     } else {
-                        potential_locked_outputs.insert(output_data.output_id, false);
+                        potentially_locked_outputs.insert(output_data.output_id, false);
                     }
                 }
             }
@@ -179,7 +179,7 @@ impl AccountHandle {
             aliases,
             foundries,
             nfts,
-            potential_locked_outputs,
+            potentially_locked_outputs,
         })
     }
 }

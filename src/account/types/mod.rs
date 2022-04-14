@@ -45,8 +45,8 @@ pub struct AccountBalance {
     pub foundries: Vec<FoundryId>,
     // Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
     // [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
-    #[serde(rename = "potentialLockedOutputs")]
-    pub potential_locked_outputs: HashMap<OutputId, bool>,
+    #[serde(rename = "potentiallyLockedOutputs")]
+    pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }
 
 /// An output with metadata

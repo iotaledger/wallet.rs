@@ -138,19 +138,19 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
         // update used field of the addresses
-        for address_with_unpsnet_outputs in addresses_with_unspent_outputs.iter() {
-            if address_with_unpsnet_outputs.internal {
+        for address_with_unspent_outputs in addresses_with_unspent_outputs.iter() {
+            if address_with_unspent_outputs.internal {
                 let position = account
                     .internal_addresses
                     .binary_search_by_key(
                         &(
-                            address_with_unpsnet_outputs.key_index,
-                            address_with_unpsnet_outputs.internal,
+                            address_with_unspent_outputs.key_index,
+                            address_with_unspent_outputs.internal,
                         ),
                         |a| (a.key_index, a.internal),
                     )
                     .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unpsnet_outputs.address.to_bech32())
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
                     })?;
                 account.internal_addresses[position].used = true;
             } else {
@@ -158,13 +158,13 @@ impl AccountHandle {
                     .public_addresses
                     .binary_search_by_key(
                         &(
-                            address_with_unpsnet_outputs.key_index,
-                            address_with_unpsnet_outputs.internal,
+                            address_with_unspent_outputs.key_index,
+                            address_with_unspent_outputs.internal,
                         ),
                         |a| (a.key_index, a.internal),
                     )
                     .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unpsnet_outputs.address.to_bech32())
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
                     })?;
                 account.public_addresses[position].used = true;
             }

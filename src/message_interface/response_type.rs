@@ -29,7 +29,7 @@ pub enum ResponseType {
     /// ListAddresses
     Addresses(Vec<AccountAddress>),
     /// ListAddressesWithUnspentOutputs.
-    AddressesWithBalance(Vec<AddressWithUnspentOutputs>),
+    AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputs>),
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
     /// ListOutputs/ListUnspentOutputs.

@@ -147,7 +147,6 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
     current_time: u32,
     current_milestone: u32,
 ) -> bool {
-    let mut can_be_unlocked_forever = Vec::new();
     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
         for unlock_condition in unlock_conditions.iter() {
             match unlock_condition {
@@ -167,14 +166,15 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                         // to check all account addresses, because the associated address
                         // can only be the unlock address or the storage deposit address and not both (unless they're
                         // the same, which would mean transaction to oneself)
-                        can_be_unlocked_forever.push(
-                            output_data.address == *expiration.return_address()
-                                || account_addresses
-                                    .iter()
-                                    .any(|a| a.address.inner == *expiration.return_address()),
-                        );
+                        if output_data.address != *expiration.return_address()
+                            || !account_addresses
+                                .iter()
+                                .any(|a| a.address.inner == *expiration.return_address())
+                        {
+                            return false;
+                        };
                     } else {
-                        can_be_unlocked_forever.push(false);
+                        return false;
                     }
                 }
                 UnlockCondition::Timelock(timelock) => {
@@ -187,13 +187,14 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                     if timelock.timestamp() == 0 || timelock.timestamp() < current_time {
                         time_reached = true;
                     }
-                    can_be_unlocked_forever.push(ms_reached && time_reached);
+                    if !(ms_reached && time_reached) {
+                        return false;
+                    }
                 }
                 _ => {}
             }
         }
-        // If one of the unlock conditions is not met, then we can't unlock it
-        !can_be_unlocked_forever.contains(&false)
+        true
     } else {
         false
     }
