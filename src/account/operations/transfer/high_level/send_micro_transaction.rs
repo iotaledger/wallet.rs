@@ -89,7 +89,7 @@ impl AccountHandle {
 
             outputs.push(Output::Basic(
                 // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount
-                BasicOutputBuilder::new_with_amount(address_and_amount.amount + storage_deposit_amount)?
+                BasicOutputBuilder::new_with_amount(address_with_amount.amount + storage_deposit_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the storage_deposit_amount back to the sender, so only the additional amount is sent
