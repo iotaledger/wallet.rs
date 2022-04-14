@@ -1,8 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::types::address::AddressWrapper;
 use serde::{de::Visitor, Deserializer, Serializer};
+
+use crate::account::types::address::AddressWrapper;
 
 /// custom AddressWrapperserialization to use the bech32 representation
 pub fn serialize<S: Serializer>(address: &AddressWrapper, s: S) -> std::result::Result<S::Ok, S::Error> {

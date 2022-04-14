@@ -1,15 +1,15 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::cmp;
+
+use iota_client::signing::{GenerateAddressMetadata, Network};
+
 use crate::account::{
     handle::AccountHandle,
     operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
     types::AccountBalance,
 };
-
-use iota_client::signing::{GenerateAddressMetadata, Network};
-
-use std::cmp;
 
 impl AccountHandle {
     /// Search addresses with funds

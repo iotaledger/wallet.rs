@@ -1,18 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{
-        constants::DEFAULT_EXPIRATION_TIME,
-        handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransferResult,
-        },
-        TransferOptions,
-    },
-    Error, Result,
-};
-
 use iota_client::bee_message::{
     address::Address,
     milestone::MilestoneIndex,
@@ -25,6 +13,18 @@ use iota_client::bee_message::{
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    account::{
+        constants::DEFAULT_EXPIRATION_TIME,
+        handle::AccountHandle,
+        operations::transfer::{
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransferResult,
+        },
+        TransferOptions,
+    },
+    Error, Result,
+};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Address, amount and native tokens for `send_native_tokens()`

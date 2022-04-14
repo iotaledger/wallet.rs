@@ -12,7 +12,9 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village")?;
+    let signer = MnemonicSigner::new(
+        "hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)

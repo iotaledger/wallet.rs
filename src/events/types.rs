@@ -1,11 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::types::{address::AddressWrapper, InclusionState};
-
 use getset::Getters;
 use iota_client::bee_message::payload::transaction::TransactionId;
 use serde::{Deserialize, Serialize};
+
+use crate::account::types::{address::AddressWrapper, InclusionState};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Event {

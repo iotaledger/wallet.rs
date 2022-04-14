@@ -3,12 +3,13 @@
 
 //! cargo run --example split_funds --release
 
+use std::time::Instant;
+
 use iota_client::bee_message::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder, Output,
 };
 use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
-use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -16,7 +17,9 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
+    let signer = MnemonicSigner::new(
+        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)

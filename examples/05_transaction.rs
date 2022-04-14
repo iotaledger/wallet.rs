@@ -5,10 +5,10 @@
 // In this example we will send a transaction
 // Rename `.env.example` to `.env` first
 
+use std::{env, path::PathBuf};
+
 use dotenv::dotenv;
 use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, AddressAndAmount, Result};
-
-use std::{env, path::PathBuf};
 
 #[tokio::main]
 async fn main() -> Result<()> {

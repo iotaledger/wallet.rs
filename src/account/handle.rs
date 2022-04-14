@@ -1,6 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{ops::Deref, sync::Arc};
+
+use iota_client::{signing::SignerHandle, Client};
+use tokio::sync::{Mutex, RwLock};
+
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
@@ -16,12 +21,6 @@ use crate::{
     },
     Result,
 };
-
-use iota_client::{signing::SignerHandle, Client};
-
-use tokio::sync::{Mutex, RwLock};
-
-use std::{ops::Deref, sync::Arc};
 
 /// A thread guard over an account, so we can lock the account during operations.
 #[derive(Debug, Clone)]

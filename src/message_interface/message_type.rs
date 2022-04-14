@@ -1,6 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{path::PathBuf, time::Duration};
+
+use serde::{ser::Serializer, Deserialize, Serialize};
+
+use super::account_method::AccountMethod;
 #[cfg(feature = "events")]
 #[cfg(debug_assertions)]
 use crate::events::types::WalletEvent;
@@ -8,10 +13,6 @@ use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
     ClientOptions,
 };
-
-use super::account_method::AccountMethod;
-use serde::{ser::Serializer, Deserialize, Serialize};
-use std::{path::PathBuf, time::Duration};
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize)]

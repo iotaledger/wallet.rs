@@ -1,11 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, types::AccountBalance};
+use std::collections::{hash_map::Entry, HashMap};
 
 use iota_client::bee_message::output::{ByteCost, Output};
 
-use std::collections::{hash_map::Entry, HashMap};
+use crate::account::{handle::AccountHandle, types::AccountBalance};
 
 impl AccountHandle {
     /// Get the AccountBalance

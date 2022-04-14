@@ -1,16 +1,16 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::bee_message::output::{
+    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+    BasicOutputBuilder, Output, OutputId,
+};
+
 use crate::account::{
     handle::AccountHandle,
     operations::transfer::TransferResult,
     types::{address::AddressWithBalance, OutputData},
     TransferOptions,
-};
-
-use iota_client::bee_message::output::{
-    unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, Output, OutputId,
 };
 
 impl AccountHandle {

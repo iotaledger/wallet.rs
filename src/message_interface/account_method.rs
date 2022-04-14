@@ -1,6 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::bee_message::output::{Output, OutputId};
+use serde::Deserialize;
+
 use crate::{
     account::operations::{
         address_generation::AddressGenerationOptions, output_collection::OutputsToCollect, syncing::SyncOptions,
@@ -8,10 +11,6 @@ use crate::{
     },
     AddressAndAmount, AddressAndNftId, AddressMicroAmount, AddressNativeTokens, NativeTokenOptions, NftOptions,
 };
-
-use iota_client::bee_message::output::{Output, OutputId};
-
-use serde::Deserialize;
 
 /// Each public account method.
 #[derive(Clone, Debug, Deserialize)]

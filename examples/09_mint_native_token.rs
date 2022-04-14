@@ -5,13 +5,13 @@
 // In this example we will mint a native token
 // Rename `.env.example` to `.env` first
 
+use std::{env, path::PathBuf};
+
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager, iota_client::bee_message::output::TokenTag, signing::stronghold::StrongholdSigner,
     NativeTokenOptions, Result, U256,
 };
-
-use std::{env, path::PathBuf};
 
 #[tokio::main]
 async fn main() -> Result<()> {

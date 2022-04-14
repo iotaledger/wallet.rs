@@ -11,24 +11,26 @@ pub(crate) mod handle;
 pub(crate) mod operations;
 /// Types used in an account and returned from methods.
 pub mod types;
-pub use operations::{
-    address_generation::AddressGenerationOptions,
-    output_collection::OutputsToCollect,
-    syncing::SyncOptions,
-    transfer::{RemainderValueStrategy, TransferOptions},
-};
 
-use crate::account::types::{
-    address::{AccountAddress, AddressWithBalance},
-    AccountBalance, OutputData,
-};
-pub use handle::AccountHandle;
+use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
 use iota_client::bee_message::{output::OutputId, payload::transaction::TransactionId};
 use serde::{Deserialize, Serialize};
 
-use std::collections::{HashMap, HashSet};
+use self::types::{
+    address::{AccountAddress, AddressWithBalance},
+    AccountBalance, OutputData,
+};
+pub use self::{
+    handle::AccountHandle,
+    operations::{
+        address_generation::AddressGenerationOptions,
+        output_collection::OutputsToCollect,
+        syncing::SyncOptions,
+        transfer::{RemainderValueStrategy, TransferOptions},
+    },
+};
 
 /// An Account.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]

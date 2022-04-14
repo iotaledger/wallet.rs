@@ -1,15 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT,
-    handle::AccountHandle,
-    operations::syncing::{OutputResponse, SyncOptions},
-    types::address::AddressWithBalance,
-    OutputData,
-};
-#[cfg(feature = "events")]
-use crate::events::types::WalletEvent;
+use std::{collections::HashSet, str::FromStr, time::Instant};
 
 use iota_client::{
     bee_message::{
@@ -21,7 +13,15 @@ use iota_client::{
     Client,
 };
 
-use std::{collections::HashSet, str::FromStr, time::Instant};
+use crate::account::{
+    constants::PARALLEL_REQUESTS_AMOUNT,
+    handle::AccountHandle,
+    operations::syncing::{OutputResponse, SyncOptions},
+    types::address::AddressWithBalance,
+    OutputData,
+};
+#[cfg(feature = "events")]
+use crate::events::types::WalletEvent;
 
 impl AccountHandle {
     /// Get the addresses that should be synced with the current known unspent output ids

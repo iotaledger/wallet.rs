@@ -1,10 +1,12 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use super::StorageAdapter;
-use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use std::{collections::HashMap, path::Path, sync::Arc};
+
+use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use tokio::sync::Mutex;
+
+use super::StorageAdapter;
 
 /// The storage id.
 pub const STORAGE_ID: &str = "RocksDB";

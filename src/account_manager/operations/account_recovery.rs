@@ -1,9 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{account::handle::AccountHandle, account_manager::AccountManager};
-
 use std::collections::HashSet;
+
+use crate::{account::handle::AccountHandle, account_manager::AccountManager};
 
 impl AccountManager {
     /// Find accounts with balances

@@ -5,13 +5,13 @@
 // In this example we will send an nft
 // Rename `.env.example` to `.env` first
 
+use std::{env, path::PathBuf, str::FromStr};
+
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager, iota_client::bee_message::output::NftId, signing::stronghold::StrongholdSigner,
     AddressAndNftId, Result,
 };
-
-use std::{env, path::PathBuf, str::FromStr};
 
 #[tokio::main]
 async fn main() -> Result<()> {

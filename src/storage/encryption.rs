@@ -1,12 +1,12 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crypto::ciphers::{chacha::XChaCha20Poly1305, traits::Aead};
-
 use std::{
     convert::TryInto,
     io::{Read, Write},
 };
+
+use crypto::ciphers::{chacha::XChaCha20Poly1305, traits::Aead};
 
 pub(crate) fn encrypt_record<O: Write>(record: &[u8], encryption_key: &[u8; 32], output: &mut O) -> crate::Result<()> {
     let mut nonce = [0; XChaCha20Poly1305::NONCE_LENGTH];

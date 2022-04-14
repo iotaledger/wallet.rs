@@ -1,8 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
-
 use iota_client::bee_message::{
     address::Address,
     output::{
@@ -10,8 +8,9 @@ use iota_client::bee_message::{
         BasicOutputBuilder, Output,
     },
 };
-
 use serde::{Deserialize, Serialize};
+
+use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and amount for `send_amount()`

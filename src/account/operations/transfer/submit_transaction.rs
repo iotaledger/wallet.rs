@@ -1,14 +1,14 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
-#[cfg(feature = "events")]
-use crate::events::types::{TransferProgressEvent, WalletEvent};
-
 use iota_client::{
     api::finish_pow,
     bee_message::{payload::Payload, MessageId},
 };
+
+use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
+#[cfg(feature = "events")]
+use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Submits a payload in a message

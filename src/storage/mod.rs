@@ -10,12 +10,14 @@ pub mod encryption;
 /// Storage manager.
 pub mod manager;
 
-use adapter::StorageAdapter;
-use encryption::{decrypt_record, encrypt_record};
+use std::collections::HashMap;
 
 use serde::Serialize;
 
-use std::collections::HashMap;
+use self::{
+    adapter::StorageAdapter,
+    encryption::{decrypt_record, encrypt_record},
+};
 
 #[derive(Debug)]
 struct Storage {

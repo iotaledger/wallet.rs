@@ -5,14 +5,14 @@
 // In this example we will send native tokens
 // Rename `.env.example` to `.env` first
 
+use std::{env, path::PathBuf, str::FromStr};
+
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager, iota_client::bee_message::output::TokenId, signing::stronghold::StrongholdSigner,
     AddressNativeTokens, Result,
 };
 use primitive_types::U256;
-
-use std::{env, path::PathBuf, str::FromStr};
 
 #[tokio::main]
 async fn main() -> Result<()> {

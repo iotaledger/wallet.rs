@@ -1,6 +1,13 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::time::{SystemTime, UNIX_EPOCH};
+
+use iota_client::bee_message::output::{
+    unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
+    Output, UnlockCondition,
+};
+
 use crate::{
     account::{
         constants::FIVE_MINUTES_IN_SECONDS,
@@ -9,13 +16,6 @@ use crate::{
     },
     Error, Result,
 };
-
-use iota_client::bee_message::output::{
-    unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
-    Output, UnlockCondition,
-};
-
-use std::time::{SystemTime, UNIX_EPOCH};
 
 impl AccountHandle {
     /// Get the local time, but compare it to the time from the nodeinfo, if it's off more than 5 minutes, an error will
