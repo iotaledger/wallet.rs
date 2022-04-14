@@ -4,9 +4,8 @@
 #![allow(clippy::needless_borrow)]
 
 pub mod message_handler;
-pub use message_handler::*;
-
 use bee_common::logger::{logger_init, LoggerConfigBuilder};
+pub use message_handler::*;
 use neon::prelude::*;
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;

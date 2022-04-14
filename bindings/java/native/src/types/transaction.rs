@@ -3,12 +3,12 @@
 
 use iota_wallet::{
     address::OutputKind as RustOutputKind,
+    iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
     message::{
-        MessageTransactionPayload as MessageTransactionPayloadRust, TransactionEssence as TransactionEssenceRust,
-        InputSigningData as RustWalletInput, TransactionOutput as RustWalletOutput,
+        InputSigningData as RustWalletInput, MessageTransactionPayload as MessageTransactionPayloadRust,
+        TransactionEssence as TransactionEssenceRust, TransactionOutput as RustWalletOutput,
         TransactionRegularEssence as TransactionRegularEssenceRust,
     },
-    iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
 };
 
 pub enum InputKind {
