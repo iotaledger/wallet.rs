@@ -36,6 +36,7 @@ pub enum MessageType {
     /// Consume an account method.
     CallAccountMethod {
         /// The account identifier.
+        #[serde(rename = "accountId")]
         account_id: AccountIdentifier,
         /// The account method to call.
         method: AccountMethod,

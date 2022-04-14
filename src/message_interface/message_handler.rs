@@ -207,7 +207,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListAddressesWithUnspentOutputs => {
                 let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
-                Ok(ResponseType::AddressesWithBalance(addresses))
+                Ok(ResponseType::AddressesWithUnspentOutputs(addresses))
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;

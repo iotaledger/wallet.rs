@@ -8,7 +8,9 @@
 use std::{env, path::PathBuf};
 
 use dotenv::dotenv;
-use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, AddressMicroAmount, Result};
+use iota_wallet::{
+    account_manager::AccountManager, signing::stronghold::StrongholdSigner, AddressWithMicroAmount, Result,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -26,7 +28,7 @@ async fn main() -> Result<()> {
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
 
-    let outputs = vec![AddressMicroAmount {
+    let outputs = vec![AddressWithMicroAmount {
         address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
         amount: 1,
         return_address: None,
