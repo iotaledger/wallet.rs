@@ -2848,6 +2848,7 @@
 <span id="2843">2843</span>
 <span id="2844">2844</span>
 <span id="2845">2845</span>
+<span id="2846">2846</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -4284,13 +4285,14 @@
     <span class="doccomment">/// Get a participating overview of the accounts by looking at the messages</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">get_participation_overview</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">assembly_event_id</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     ) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::participation::types::ParticipatingAccounts</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">participation_information</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::participation::types::ParticipatingAccounts</span> { <span class="ident">accounts</span>: <span class="ident">Vec::new</span>() };
         <span class="kw">let</span> <span class="ident">accounts</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_accounts</span>().<span class="kw">await</span><span class="question-mark">?</span>;
         <span class="kw">for</span> <span class="ident">account</span> <span class="kw">in</span> <span class="ident">accounts</span> {
             <span class="ident">participation_information</span>
                 .<span class="ident">accounts</span>
-                .<span class="ident">push</span>(<span class="ident">account</span>.<span class="ident">get_participation_overview</span>().<span class="kw">await</span><span class="question-mark">?</span>);
+                .<span class="ident">push</span>(<span class="ident">account</span>.<span class="ident">get_participation_overview</span>(<span class="ident">assembly_event_id</span>).<span class="kw">await</span><span class="question-mark">?</span>);
         }
         <span class="prelude-val">Ok</span>(<span class="ident">participation_information</span>)
     }

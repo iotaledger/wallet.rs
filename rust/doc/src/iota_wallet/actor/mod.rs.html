@@ -859,6 +859,9 @@
 <span id="854">854</span>
 <span id="855">855</span>
 <span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -1312,9 +1315,12 @@
                 .<span class="kw">await</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
-            <span class="ident">MessageType::GetParticipationOverview</span> =&gt; {
+            <span class="ident">MessageType::GetParticipationOverview</span> { <span class="ident">assembly_event_id</span> } =&gt; {
                 <span class="ident">convert_async_panics</span>(<span class="op">|</span><span class="op">|</span> <span class="kw">async</span> {
-                    <span class="kw">let</span> <span class="ident">overview</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">account_manager</span>.<span class="ident">get_participation_overview</span>().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">overview</span> <span class="op">=</span> <span class="self">self</span>
+                        .<span class="ident">account_manager</span>
+                        .<span class="ident">get_participation_overview</span>(<span class="ident">assembly_event_id</span>)
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="prelude-val">Ok</span>(<span class="ident">ResponseType::ParticipationOverview</span>(<span class="ident">overview</span>))
                 })
                 .<span class="kw">await</span>

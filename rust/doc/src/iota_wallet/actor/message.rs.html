@@ -711,6 +711,10 @@
 <span id="706">706</span>
 <span id="707">707</span>
 <span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
+<span id="712">712</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -1073,7 +1077,11 @@
     },
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
     <span class="doccomment">/// Get participating overview</span>
-    <span class="ident">GetParticipationOverview</span>,
+    <span class="ident">GetParticipationOverview</span> {
+        <span class="attribute">#[<span class="ident">serde</span>(<span class="ident">rename</span> <span class="op">=</span> <span class="string">&quot;assemblyEventId&quot;</span>)]</span>
+        <span class="doccomment">/// Event id for assembly</span>
+        <span class="ident">assembly_event_id</span>: <span class="ident">String</span>,
+    },
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
     <span class="doccomment">/// Get participation events</span>
     <span class="ident">GetParticipationEvents</span>,
@@ -1172,7 +1180,7 @@
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">37</span>, <span class="string">&quot;StopParticipating&quot;</span>)
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
-            <span class="ident">MessageType::GetParticipationOverview</span> =&gt; {
+            <span class="ident">MessageType::GetParticipationOverview</span> { .. } =&gt; {
                 <span class="ident">serializer</span>.<span class="ident">serialize_unit_variant</span>(<span class="string">&quot;MessageType&quot;</span>, <span class="number">38</span>, <span class="string">&quot;GetParticipationOverview&quot;</span>)
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;participation&quot;</span>)]</span>
