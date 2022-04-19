@@ -911,6 +911,7 @@ async fn perform_sync(
 
     let is_latest_public_address_empty = if latest_public_address_index > max_new_public_index {
         public_addresses
+            .clone()
             .max_by_key(|a| a.key_index())
             .map(|a| a.outputs().is_empty())
             .unwrap_or(false)
@@ -996,6 +997,19 @@ async fn perform_sync(
             };
             addresses_to_save.push(address);
         };
+    }
+
+    // If we discover the account and the first public address isn't added, we will do it here
+    if return_all_addresses && !addresses_to_save.iter().any(|a| *a.key_index() == 0 && !a.internal()) {
+        log::debug!("[SYNC] adding first public address because we're discovering this account");
+        addresses_to_save.push(
+            (*public_addresses
+                .collect::<Vec<&Address>>()
+                .first()
+                // Save to unwrap because we generate the first address during account creation
+                .expect("No first address"))
+            .clone(),
+        );
     }
 
     // First sort by internal and then by key index, otherwise dedup could fail
