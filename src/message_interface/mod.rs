@@ -8,20 +8,21 @@ mod message_type;
 mod response;
 mod response_type;
 
-pub use account_method::AccountMethod;
-pub use message::Message;
-pub use message_handler::WalletMessageHandler;
-pub use message_type::{AccountToCreate, MessageType};
-pub use response::Response;
-pub use response_type::ResponseType;
+use iota_client::signing::SignerHandle;
 use serde::{Deserialize, Serialize, Serializer};
+use tokio::sync::mpsc::unbounded_channel;
 
+pub use self::{
+    account_method::AccountMethod,
+    message::Message,
+    message_handler::WalletMessageHandler,
+    message_type::{AccountToCreate, MessageType},
+    response::Response,
+    response_type::ResponseType,
+};
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{account_manager::AccountManager, ClientOptions};
-
-use iota_client::signing::SignerHandle;
-use tokio::sync::mpsc::unbounded_channel;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManagerOptions {
@@ -88,10 +89,6 @@ where
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "events")]
-    use crate::events::types::WalletEvent;
-    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, ResponseType};
-
     use iota_client::bee_message::{
         address::Address,
         output::{
@@ -99,6 +96,10 @@ mod tests {
             BasicOutputBuilder, Output,
         },
     };
+
+    #[cfg(feature = "events")]
+    use crate::events::types::WalletEvent;
+    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, ResponseType};
 
     #[tokio::test]
     async fn message_interface_create_account() {

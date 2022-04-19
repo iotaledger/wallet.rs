@@ -3,12 +3,15 @@
 
 //! cargo run --example storage --release
 
-use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, Result};
 use std::time::Instant;
+
+use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
+    let signer = MnemonicSigner::new(
+        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)

@@ -5,7 +5,7 @@
 require('dotenv').config();
 
 async function run() {
-    const { AccountManagerForMessages, initLogger } = require('@iota/wallet');
+    const { AccountManager, initLogger } = require('@iota/wallet');
 
     initLogger({
         color_enabled: true,
@@ -15,7 +15,7 @@ async function run() {
         }]
     })
     
-    const manager = new AccountManagerForMessages({
+    const manager = new AccountManager({
         storagePath: './alice-database',
         clientOptions: {
             "nodes":[

@@ -5,26 +5,27 @@ pub(crate) mod addresses;
 pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
-use crate::account::{
-    constants::MIN_SYNC_INTERVAL,
-    handle::AccountHandle,
-    operations::syncing::transactions::TransactionSyncResult,
-    types::{address::AddressWithBalance, InclusionState, OutputData},
-    AccountBalance,
+
+use std::{
+    str::FromStr,
+    time::{Instant, SystemTime, UNIX_EPOCH},
 };
-#[cfg(feature = "ledger-nano")]
-use crate::signing::SignerType;
-pub use options::SyncOptions;
 
 use iota_client::{
     bee_message::{output::OutputId, payload::transaction::TransactionId},
     bee_rest_api::types::responses::OutputResponse,
 };
 
-use std::{
-    str::FromStr,
-    time::{Instant, SystemTime, UNIX_EPOCH},
+pub use self::options::SyncOptions;
+use crate::account::{
+    constants::MIN_SYNC_INTERVAL,
+    handle::AccountHandle,
+    operations::syncing::transactions::TransactionSyncResult,
+    types::{address::AddressWithUnspentOutputs, InclusionState, OutputData},
+    AccountBalance,
 };
+#[cfg(feature = "ledger-nano")]
+use crate::signing::SignerType;
 
 impl AccountHandle {
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
@@ -64,12 +65,12 @@ impl AccountHandle {
         let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
-        // get outputs for addresses and add them also the the addresses_with_balance
+        // get outputs for addresses and add them also the the addresses_with_unspent_outputs
         let (addresses_with_output_ids, spent_output_ids) =
             self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
 
-        // get outputs for addresses and add them also the the addresses_with_balance
-        let (addresses_with_balance_and_outputs, output_data) =
+        // get outputs for addresses and add them also the the addresses_with_unspent_outputs
+        let (addresses_with_unspent_outputs_and_outputs, output_data) =
             self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
@@ -102,7 +103,7 @@ impl AccountHandle {
 
         // updates account with balances, output ids, outputs
         self.update_account(
-            addresses_with_balance_and_outputs,
+            addresses_with_unspent_outputs_and_outputs,
             output_data,
             transaction_sync_result,
             spent_output_ids,
@@ -125,7 +126,7 @@ impl AccountHandle {
     /// Update account with newly synced data
     async fn update_account(
         &self,
-        addresses_with_balance: Vec<AddressWithBalance>,
+        addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         new_outputs: Vec<OutputData>,
         transaction_sync_result: Option<TransactionSyncResult>,
         spent_outputs: Vec<OutputId>,
@@ -137,38 +138,52 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
         // update used field of the addresses
-        for address_with_balance in addresses_with_balance.iter() {
-            if address_with_balance.internal {
+        for address_with_unspent_outputs in addresses_with_unspent_outputs.iter() {
+            if address_with_unspent_outputs.internal {
                 let position = account
                     .internal_addresses
-                    .binary_search_by_key(&(address_with_balance.key_index, address_with_balance.internal), |a| {
-                        (a.key_index, a.internal)
-                    })
-                    .map_err(|_| crate::Error::AddressNotFoundInAccount(address_with_balance.address.to_bech32()))?;
+                    .binary_search_by_key(
+                        &(
+                            address_with_unspent_outputs.key_index,
+                            address_with_unspent_outputs.internal,
+                        ),
+                        |a| (a.key_index, a.internal),
+                    )
+                    .map_err(|_| {
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
+                    })?;
                 account.internal_addresses[position].used = true;
             } else {
                 let position = account
                     .public_addresses
-                    .binary_search_by_key(&(address_with_balance.key_index, address_with_balance.internal), |a| {
-                        (a.key_index, a.internal)
-                    })
-                    .map_err(|_| crate::Error::AddressNotFoundInAccount(address_with_balance.address.to_bech32()))?;
+                    .binary_search_by_key(
+                        &(
+                            address_with_unspent_outputs.key_index,
+                            address_with_unspent_outputs.internal,
+                        ),
+                        |a| (a.key_index, a.internal),
+                    )
+                    .map_err(|_| {
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
+                    })?;
                 account.public_addresses[position].used = true;
             }
         }
 
-        // Update addresses_with_balance
+        // Update addresses_with_unspent_outputs
         // get all addresses with balance that we didn't sync because their index is below the address_start_index of
         // the options
-        account.addresses_with_balance = account
-            .addresses_with_balance
+        account.addresses_with_unspent_outputs = account
+            .addresses_with_unspent_outputs
             .iter()
             .filter(|a| a.key_index < options.address_start_index)
             .cloned()
             .collect();
         // then add all synced addresses with balance, all other addresses that had balance before will then be removed
         // from this list
-        account.addresses_with_balance.extend(addresses_with_balance);
+        account
+            .addresses_with_unspent_outputs
+            .extend(addresses_with_unspent_outputs);
 
         // Update spent outputs
         for output_id in spent_outputs {

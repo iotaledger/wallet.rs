@@ -1,6 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::sync::Arc;
+
 use iota_wallet::{
     events::types::{Event, WalletEventType},
     message_interface::{
@@ -8,11 +10,8 @@ use iota_wallet::{
         WalletMessageHandler,
     },
 };
-
 use neon::prelude::*;
 use tokio::sync::mpsc::unbounded_channel;
-
-use std::sync::Arc;
 
 pub struct MessageHandler {
     channel: Channel,

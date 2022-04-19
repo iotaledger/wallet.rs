@@ -3,12 +3,12 @@
 
 pub mod types;
 
-use types::{Event, WalletEvent, WalletEventType};
-
 use std::{
     collections::HashMap,
     fmt::{Debug, Formatter, Result},
 };
+
+use self::types::{Event, WalletEvent, WalletEventType};
 
 type Handler<T> = Box<dyn Fn(&T) + Send + Sync + 'static>;
 
@@ -89,20 +89,21 @@ impl Debug for EventEmitter {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
+    use std::{
+        str::FromStr,
+        sync::{
+            atomic::{AtomicUsize, Ordering},
+            Arc,
+        },
+    };
+
+    use iota_client::bee_message::payload::transaction::TransactionId;
 
     use super::{
         types::{TransactionInclusionEvent, TransferProgressEvent, WalletEvent, WalletEventType},
         EventEmitter,
     };
     use crate::account::types::InclusionState;
-
-    use iota_client::bee_message::payload::transaction::TransactionId;
-
-    use std::sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    };
 
     #[test]
     fn events() {

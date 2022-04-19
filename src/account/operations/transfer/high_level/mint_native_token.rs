@@ -1,18 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
-            TransferResult,
-        },
-        TransferOptions,
-    },
-    Error,
-};
-
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_message::{
@@ -30,6 +18,18 @@ use iota_client::{
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::transfer::{
+            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
+            TransferResult,
+        },
+        TransferOptions,
+    },
+    Error,
+};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `mint_native_token()`
 pub struct NativeTokenOptions {
@@ -44,8 +44,8 @@ pub struct NativeTokenOptions {
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256,
     /// Maximum supply
-    #[serde(rename = "maxiumSupply")]
-    pub maxium_supply: U256,
+    #[serde(rename = "maximumSupply")]
+    pub maximum_supply: U256,
 }
 
 impl AccountHandle {
@@ -61,7 +61,7 @@ impl AccountHandle {
     ///     account_address: None,
     ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
-    ///     maxium_supply: U256::from(100),
+    ///     maximum_supply: U256::from(100),
     /// };
     ///
     /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
@@ -160,7 +160,7 @@ impl AccountHandle {
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             native_token_options.circulating_supply,
                             U256::from(0),
-                            native_token_options.maxium_supply,
+                            native_token_options.maximum_supply,
                         )?),
                     )?
                     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(

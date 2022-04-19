@@ -134,7 +134,12 @@ impl AccountsSynchronizer {
 
     /// Sets the minimum number of accounts to check on the discovery process.
     pub fn account_discovery_threshold(&mut self, account_discovery_threshold: usize) -> Self {
-        let new_synchroniser = self.synchroniser.borrow_mut().take().unwrap().account_discovery_threshold(account_discovery_threshold);
+        let new_synchroniser = self
+            .synchroniser
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .account_discovery_threshold(account_discovery_threshold);
         AccountsSynchronizer::new_with_instance(new_synchroniser)
     }
 

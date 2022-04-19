@@ -1,9 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::ser::{SerializeStruct, Serializer};
-
 use std::path::PathBuf;
+
+use serde::ser::{SerializeStruct, Serializer};
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error)]

@@ -1,6 +1,22 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
+
+#[cfg(feature = "ledger-nano")]
+use iota_client::signing::SignerType;
+use iota_client::{
+    bee_message::address::Address,
+    constants::IOTA_COIN_TYPE,
+    signing::{GenerateAddressMetadata, Network, SignerHandle},
+};
+#[cfg(feature = "events")]
+use tokio::sync::Mutex;
+use tokio::sync::RwLock;
+
 #[cfg(feature = "ledger-nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
@@ -15,22 +31,6 @@ use crate::{
         Account, AccountOptions,
     },
     ClientOptions, Error,
-};
-
-#[cfg(feature = "ledger-nano")]
-use iota_client::signing::SignerType;
-use iota_client::{
-    bee_message::address::Address,
-    constants::IOTA_COIN_TYPE,
-    signing::{GenerateAddressMetadata, Network, SignerHandle},
-};
-#[cfg(feature = "events")]
-use tokio::sync::Mutex;
-use tokio::sync::RwLock;
-
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
 };
 
 /// The AccountBuilder
@@ -153,7 +153,7 @@ impl AccountBuilder {
             alias: account_alias,
             public_addresses: vec![first_public_account_address],
             internal_addresses: Vec::new(),
-            addresses_with_balance: Vec::new(),
+            addresses_with_unspent_outputs: Vec::new(),
             outputs: HashMap::new(),
             locked_outputs: HashSet::new(),
             unspent_outputs: HashMap::new(),

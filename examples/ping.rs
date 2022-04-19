@@ -11,17 +11,21 @@ use iota_client::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder, Output,
     },
-    request_funds_from_faucet,
+    init_logger, request_funds_from_faucet,
 };
 use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
+use log::LevelFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    init_logger("ping.log", LevelFilter::Debug)?;
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
+    let signer = MnemonicSigner::new(
+        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)

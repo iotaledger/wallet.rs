@@ -1,6 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::{ops::Deref, sync::Arc};
+
+use iota_client::{signing::SignerHandle, Client};
+use tokio::sync::{Mutex, RwLock};
+
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
@@ -9,19 +14,13 @@ use crate::{
     account::{
         operations::syncing::SyncOptions,
         types::{
-            address::{AccountAddress, AddressWithBalance},
+            address::{AccountAddress, AddressWithUnspentOutputs},
             OutputData, Transaction,
         },
         Account,
     },
     Result,
 };
-
-use iota_client::{signing::SignerHandle, Client};
-
-use tokio::sync::{Mutex, RwLock};
-
-use std::{ops::Deref, sync::Arc};
 
 /// A thread guard over an account, so we can lock the account during operations.
 #[derive(Debug, Clone)]
@@ -73,9 +72,9 @@ impl AccountHandle {
     }
 
     /// Returns only addresses of the account with balance
-    pub async fn list_addresses_with_balance(&self) -> Result<Vec<AddressWithBalance>> {
+    pub async fn list_addresses_with_unspent_outputs(&self) -> Result<Vec<AddressWithUnspentOutputs>> {
         let account = self.read().await;
-        Ok(account.addresses_with_balance().to_vec())
+        Ok(account.addresses_with_unspent_outputs().to_vec())
     }
 
     /// Returns all outputs of the account
@@ -149,7 +148,7 @@ impl AccountHandle {
         let bech32_hrp = self.client.get_bech32_hrp().await?;
         log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);
         let mut account = self.account.write().await;
-        for address in &mut account.addresses_with_balance {
+        for address in &mut account.addresses_with_unspent_outputs {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
         for address in &mut account.public_addresses {

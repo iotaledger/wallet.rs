@@ -1,11 +1,11 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::hash::Hash;
+
 use getset::{Getters, Setters};
 use iota_client::bee_message::{address::Address, output::OutputId};
 use serde::{Deserialize, Serialize};
-
-use std::hash::Hash;
 
 /// An account address.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -26,10 +26,10 @@ pub struct AccountAddress {
     pub(crate) used: bool,
 }
 
-/// An account address with balance and output_ids.
+/// An account address with unspent output_ids for unspent outputs.
 #[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
 #[getset(get = "pub")]
-pub struct AddressWithBalance {
+pub struct AddressWithUnspentOutputs {
     /// The address.
     #[serde(with = "crate::account::types::address_serde")]
     pub(crate) address: AddressWrapper,
@@ -50,6 +50,7 @@ pub struct AddressWithBalance {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AddressWrapper {
     pub(crate) inner: Address,
+    #[serde(rename = "bech32Hrp")]
     pub(crate) bech32_hrp: String,
 }
 

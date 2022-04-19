@@ -19,7 +19,7 @@ class Account:
         message = {
             'cmd': 'CallAccountMethod',
             'payload': {
-                'account_id': self.alias_index,
+                'accountId': self.alias_index,
                 'method': {
                     'name': method,
                 }
@@ -47,11 +47,11 @@ class Account:
             'ListAddresses'
         )
 
-    def list_addresses_with_balance(self):
-        """Returns only addresses of the account with balance.
+    def list_addresses_with_unspent_outputs(self):
+        """Returns only addresses of the account with unspent outputs.
         """
         return self._call_account_method(
-            'ListAddressesWithBalance'
+            'ListAddressesWithUnspentOutputs'
         )
 
     def list_outputs(self):

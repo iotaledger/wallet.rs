@@ -1,9 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::operations::output_collection::OutputsToCollect;
-
 use serde::{Deserialize, Serialize};
+
+use crate::account::operations::output_collection::OutputsToCollect;
 
 /// The synchronization options
 #[derive(Debug, Clone, Serialize, Deserialize)]

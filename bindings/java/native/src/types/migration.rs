@@ -4,16 +4,11 @@
 use getset::{CopyGetters, Getters, Setters};
 use iota_wallet::{
     account_manager::{
-        MigrationBundle as RustMigrationBundle, 
-        MigrationData as RustMigrationData, 
-        MigrationAddress as RustMigrationAddress
+        MigrationAddress as RustMigrationAddress, MigrationBundle as RustMigrationBundle,
+        MigrationData as RustMigrationData,
     },
     iota_migration::{
-        client::{
-            response::InputData as RustInputData, 
-        },
-        ternary::T3B1Buf, 
-        transaction::bundled::BundledTransactionField,
+        client::response::InputData as RustInputData, ternary::T3B1Buf, transaction::bundled::BundledTransactionField,
     },
 };
 
@@ -66,7 +61,7 @@ impl core::fmt::Display for InputData {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "address={}, security_lvl={}, balance={}, index={}, spent={}, spent_bundlehashes=({:?})", 
+            "address={}, security_lvl={}, balance={}, index={}, spent={}, spent_bundlehashes=({:?})",
             self.address, self.security_lvl, self.balance, self.index, self.spent, self.spent_bundlehashes
         )
     }
@@ -104,7 +99,7 @@ impl core::fmt::Display for MigrationData {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "balance={}, last_checked_address_index={}, spent_addresses={}, inputs=({:?})", 
+            "balance={}, last_checked_address_index={}, spent_addresses={}, inputs=({:?})",
             self.balance, self.last_checked_address_index, self.spent_addresses, self.inputs
         )
     }
@@ -131,7 +126,7 @@ impl core::fmt::Display for MigrationBundle {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "crackability={}, bundle_hash={}", 
+            "crackability={}, bundle_hash={}",
             self.crackability, self.bundle_hash
         )
     }
@@ -156,11 +151,7 @@ impl From<RustMigrationAddress> for MigrationAddress {
 
 impl core::fmt::Display for MigrationAddress {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
-        write!(
-            f,
-            "trytes={}, bech32={}", 
-            self.trytes, self.bech32
-        )
+        write!(f, "trytes={}, bech32={}", self.trytes, self.bech32)
     }
 }
 
@@ -206,7 +197,7 @@ impl core::fmt::Display for MigrationBundleOptions {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> std::fmt::Result {
         write!(
             f,
-            "mine={}, timeout_secs={:?}, offset={:?}, log_file_name={:?}", 
+            "mine={}, timeout_secs={:?}, offset={:?}, log_file_name={:?}",
             self.mine, self.timeout_secs, self.offset, self.log_file_name
         )
     }

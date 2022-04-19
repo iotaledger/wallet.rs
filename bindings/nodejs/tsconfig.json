@@ -1,11 +1,24 @@
 {
     "compilerOptions": {
-        "module": "system",
+        "lib": [
+            "es5",
+            "dom",
+            "es2015.promise"
+        ],
+        "declaration": true,
+        "target": "es2019",
+        "module": "commonjs",
+        "sourceMap": true,
+        "strict": true,
+        "moduleResolution": "node",
+        "importsNotUsedAsValues": "error",
         "noImplicitAny": true,
         "removeComments": true,
         "preserveConstEnums": true,
-        "sourceMap": true,
-        "outFile": "lib/index.js"
+        "outDir": "out"
     },
-    "include": ["lib/**/*"]
+    "include": [
+        "lib/**/*",
+        "types/**/*",
+    ]
 }

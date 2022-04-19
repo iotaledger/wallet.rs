@@ -1,19 +1,20 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
-#[cfg(feature = "events")]
-use crate::events::types::{TransferProgressEvent, WalletEvent};
-
 use iota_client::{
+    api::verify_semantic,
     bee_message::{
         address::Address,
         output::{unlock_condition::UnlockCondition, Output},
         payload::transaction::TransactionEssence,
         unlock_block::UnlockBlocks,
     },
-    signing::{types::InputSigningData, verify_unlock_blocks, Network, SignMessageMetadata},
+    signing::{types::InputSigningData, Network, SignMessageMetadata},
 };
+
+use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
+#[cfg(feature = "events")]
+use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to sign a transaction essence
@@ -88,8 +89,12 @@ impl AccountHandle {
             let (_bech32_hrp, address) = Address::try_from_bech32(&input_signing_data.bech32_address)?;
             input_addresses.push(address);
         }
-        verify_unlock_blocks(&transaction_payload, input_addresses)?;
+
+        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+        verify_semantic(&transaction_inputs, &transaction_payload, milestone_index, local_time)?;
+
         log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
+
         Ok(transaction_payload)
     }
 }

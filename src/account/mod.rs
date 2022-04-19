@@ -11,28 +11,31 @@ pub(crate) mod handle;
 pub(crate) mod operations;
 /// Types used in an account and returned from methods.
 pub mod types;
-pub use operations::{
-    address_generation::AddressGenerationOptions,
-    output_collection::OutputsToCollect,
-    syncing::SyncOptions,
-    transfer::{RemainderValueStrategy, TransferOptions},
-};
 
-use crate::account::types::{
-    address::{AccountAddress, AddressWithBalance},
-    AccountBalance, OutputData,
-};
-pub use handle::AccountHandle;
+use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
 use iota_client::bee_message::{output::OutputId, payload::transaction::TransactionId};
 use serde::{Deserialize, Serialize};
 
-use std::collections::{HashMap, HashSet};
+use self::types::{
+    address::{AccountAddress, AddressWithUnspentOutputs},
+    AccountBalance, OutputData,
+};
+pub use self::{
+    handle::AccountHandle,
+    operations::{
+        address_generation::AddressGenerationOptions,
+        output_collection::OutputsToCollect,
+        syncing::SyncOptions,
+        transfer::{RemainderValueStrategy, TransferOptions},
+    },
+};
 
 /// An Account.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     /// The account index
     index: u32,
@@ -43,11 +46,11 @@ pub struct Account {
     pub(crate) public_addresses: Vec<AccountAddress>,
     pub(crate) internal_addresses: Vec<AccountAddress>,
     // used to improve performance for syncing and getbalance because it's in most cases only a subset of all addresses
-    addresses_with_balance: Vec<AddressWithBalance>,
+    addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
     // stored separated from the account for performance?
     outputs: HashMap<OutputId, OutputData>,
-    // outputs used in transactions should be locked here so they don't get used again, resulting in conflicting
-    // transactions
+    // outputs used in transactions should be locked here so they don't get used again, which would result in a
+    // conflicting transaction
     locked_outputs: HashSet<OutputId>,
     // have unspent outputs in a separated hashmap so we don't need to iterate over all outputs we have
     unspent_outputs: HashMap<OutputId, OutputData>,
@@ -63,6 +66,7 @@ pub struct Account {
 
 /// Account options
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,
     pub(crate) automatic_output_consolidation: bool,

@@ -3,10 +3,11 @@
 
 //! cargo run --example wallet --release
 
-use iota_wallet::{
-    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressAndAmount, ClientOptions, Result,
-};
 use std::time::Instant;
+
+use iota_wallet::{
+    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressWithAmount, ClientOptions, Result,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,7 +15,9 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new("flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil")?;
+    let signer = MnemonicSigner::new(
+        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
+    )?;
 
     let manager = AccountManager::builder()
         .with_signer(signer)
@@ -49,11 +52,11 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
-    let addresses_with_balance = account.list_addresses_with_balance().await?;
-    println!("Addresses with balance: {}", addresses_with_balance.len());
+    let addresses_with_unspent_outputs = account.list_addresses_with_unspent_outputs().await?;
+    println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
     // send transaction
-    let outputs = vec![AddressAndAmount {
+    let outputs = vec![AddressWithAmount {
         address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
         amount: 1_000_000,
     }];

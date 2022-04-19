@@ -1,26 +1,29 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "events")]
-use crate::events::types::{Event, WalletEventType};
-use crate::{account::types::AccountIdentifier, account_manager::AccountManager, Result};
-
-use backtrace::Backtrace;
-use futures::{Future, FutureExt};
-use zeroize::Zeroize;
-
 use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
     path::Path,
 };
 
-use crate::message_interface::{
-    account_method::AccountMethod,
-    message::Message,
-    message_type::{AccountToCreate, MessageType},
-    response::Response,
-    response_type::ResponseType,
+use backtrace::Backtrace;
+use futures::{Future, FutureExt};
+use zeroize::Zeroize;
+
+#[cfg(feature = "events")]
+use crate::events::types::{Event, WalletEventType};
+use crate::{
+    account::types::AccountIdentifier,
+    account_manager::AccountManager,
+    message_interface::{
+        account_method::AccountMethod,
+        message::Message,
+        message_type::{AccountToCreate, MessageType},
+        response::Response,
+        response_type::ResponseType,
+    },
+    Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> ResponseType {
@@ -194,7 +197,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_collect } => {
                 let output_ids = account_handle
-                    .get_outputs_with_additional_unlock_conditions(*outputs_to_collect)
+                    .get_unlockable_outputs_with_additional_unlock_conditions(*outputs_to_collect)
                     .await?;
                 Ok(ResponseType::OutputIds(output_ids))
             }
@@ -202,9 +205,9 @@ impl WalletMessageHandler {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(ResponseType::Addresses(addresses))
             }
-            AccountMethod::ListAddressesWithBalance => {
-                let addresses = account_handle.list_addresses_with_balance().await?;
-                Ok(ResponseType::AddressesWithBalance(addresses))
+            AccountMethod::ListAddressesWithUnspentOutputs => {
+                let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
+                Ok(ResponseType::AddressesWithUnspentOutputs(addresses))
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;

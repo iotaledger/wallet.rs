@@ -1,8 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::Result;
-
 use iota_client::bee_message::{
     address::{Address, AliasAddress},
     milestone::MilestoneIndex,
@@ -17,6 +15,8 @@ use iota_client::bee_message::{
     },
 };
 use primitive_types::U256;
+
+use crate::Result;
 
 // todo: move to bee-message/iota.rs
 

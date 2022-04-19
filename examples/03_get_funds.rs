@@ -5,11 +5,11 @@
 // In this example we request funds from the faucet to our address
 // Rename `.env.example` to `.env` first
 
+use std::{env, path::PathBuf};
+
 use dotenv::dotenv;
 use iota_client::request_funds_from_faucet;
 use iota_wallet::{account_manager::AccountManager, signing::stronghold::StrongholdSigner, Result};
-
-use std::{env, path::PathBuf};
 
 #[tokio::main]
 async fn main() -> Result<()> {

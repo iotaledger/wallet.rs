@@ -1,15 +1,15 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::cmp;
+
+use iota_client::signing::{GenerateAddressMetadata, Network};
+
 use crate::account::{
     handle::AccountHandle,
     operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
     types::AccountBalance,
 };
-
-use iota_client::signing::{GenerateAddressMetadata, Network};
-
-use std::cmp;
 
 impl AccountHandle {
     /// Search addresses with funds
@@ -107,15 +107,18 @@ impl AccountHandle {
         old_highest_internal_address_index: u32,
     ) -> AccountHandle {
         let mut account = self.write().await;
-        let addresses_with_balance = account.addresses_with_balance().iter().filter(|a| a.amount != 0);
-        let highest_public_index_with_balance = addresses_with_balance
+        let addresses_with_unspent_outputs = account
+            .addresses_with_unspent_outputs()
+            .iter()
+            .filter(|a| a.amount != 0);
+        let highest_public_index_with_balance = addresses_with_unspent_outputs
             .clone()
             .filter(|a| !a.internal)
             .map(|a| a.key_index)
             .max()
             // We want to have at least one address
             .unwrap_or(0);
-        let highest_internal_index_with_balance = addresses_with_balance
+        let highest_internal_index_with_balance = addresses_with_unspent_outputs
             .filter(|a| a.internal)
             .map(|a| a.key_index)
             .max()

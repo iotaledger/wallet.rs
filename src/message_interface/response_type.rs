@@ -1,21 +1,20 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::bee_message::output::OutputId;
+use serde::Serialize;
+
 use crate::{
     account::{
         operations::transfer::TransferResult,
         types::{
-            address::{AccountAddress, AddressWithBalance},
+            address::{AccountAddress, AddressWithUnspentOutputs},
             AccountBalance, OutputData, Transaction,
         },
         Account,
     },
     Error,
 };
-
-use iota_client::bee_message::output::OutputId;
-
-use serde::Serialize;
 
 /// The response message.
 #[derive(Serialize, Debug)]
@@ -29,8 +28,8 @@ pub enum ResponseType {
     ReadAccounts(Vec<Account>),
     /// ListAddresses
     Addresses(Vec<AccountAddress>),
-    /// ListAddressesWithBalance.
-    AddressesWithBalance(Vec<AddressWithBalance>),
+    /// ListAddressesWithUnspentOutputs.
+    AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputs>),
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
     /// ListOutputs/ListUnspentOutputs.

@@ -2,14 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "storage")]
-use crate::account::handle::AccountHandle;
-#[cfg(feature = "events")]
-use crate::events::EventEmitter;
-#[cfg(feature = "storage")]
-use crate::storage::constants::ROCKSDB_FOLDERNAME;
-#[cfg(feature = "storage")]
-use crate::storage::manager::ManagerStorage;
-use crate::{account_manager::AccountManager, ClientOptions};
+use std::path::PathBuf;
+use std::sync::{atomic::AtomicUsize, Arc};
 
 use iota_client::signing::SignerHandle;
 use serde::{Deserialize, Serialize};
@@ -18,8 +12,14 @@ use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
 #[cfg(feature = "storage")]
-use std::path::PathBuf;
-use std::sync::{atomic::AtomicUsize, Arc};
+use crate::account::handle::AccountHandle;
+#[cfg(feature = "events")]
+use crate::events::EventEmitter;
+#[cfg(feature = "storage")]
+use crate::storage::constants::ROCKSDB_FOLDERNAME;
+#[cfg(feature = "storage")]
+use crate::storage::manager::ManagerStorage;
+use crate::{account_manager::AccountManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.

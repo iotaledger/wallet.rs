@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithBalance};
+use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
@@ -13,14 +13,14 @@ use iota_client::{
     bee_rest_api::types::responses::OutputResponse,
 };
 
-use std::{str::FromStr, time::Instant};
+use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
 
 impl AccountHandle {
     /// Convert OutputResponse to OutputData with the network_id added
     pub(crate) async fn output_response_to_output_data(
         &self,
         output_responses: Vec<OutputResponse>,
-        associated_address: &AddressWithBalance,
+        associated_address: &AddressWithUnspentOutputs,
     ) -> crate::Result<Vec<OutputData>> {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
