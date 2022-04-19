@@ -208,7 +208,7 @@ impl AccountHandle {
         let transaction_payload = match self
             .sign_tx_essence(
                 prepared_transaction_data.essence,
-                prepared_transaction_data.input_signing_data_entrys,
+                prepared_transaction_data.input_signing_data_entries,
                 selected_transaction_data.remainder_output,
             )
             .await
