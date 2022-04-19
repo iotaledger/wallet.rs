@@ -34,11 +34,12 @@ pub struct SyncOptions {
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
     pub sync_aliases_and_nfts: bool,
     // Automatically try to collect basic outputs that have additional unlock conditions to their
-    // [AddressUnlockCondition].
+    // [AddressUnlockCondition](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition).
     #[serde(rename = "tryCollectOutputs", default = "default_try_collect_outputs")]
     pub try_collect_outputs: OutputsToCollect,
-    /// Amount of unspent outputs, only with a [`AddressUnlockCondition`], before they get consolidated (merged with a
-    /// transaction to a single output).
+    /// Amount of unspent outputs, only with a
+    /// [`AddressUnlockCondition`](iota_client::bee_message::output::unlock_condition::AddressUnlockCondition),
+    /// before they get consolidated (merged with a transaction to a single output).
     #[serde(
         rename = "outputConsolidationThreshold",
         default = "default_output_consolidation_threshold"
