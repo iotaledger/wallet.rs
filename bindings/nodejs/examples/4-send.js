@@ -34,7 +34,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your message on http://localhost:14265/api/v2/messages/${node_response.id}`,
+            `Check your message on http://localhost:14265/api/v2/messages/${response.id}`,
         );
     } catch (error) {
         console.log('Error: ' + error);
