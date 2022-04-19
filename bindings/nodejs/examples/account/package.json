@@ -1,0 +1,18 @@
+{
+    "name": "account",
+    "version": "1.0.0",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "create-account": "rimraf __storage__ && node dist/createAccount",
+        "generate-address": "npm run create-account && node dist/generateAddress",
+        "check-balance": "npm run create-account && node dist/checkBalance"
+    },
+    "dependencies": {
+        "@iota/wallet": "../../"
+    },
+    "devDependencies": {
+        "rimraf": "^3.0.2",
+        "typescript": "^4.6.3"
+    }
+}
