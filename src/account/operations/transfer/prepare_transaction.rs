@@ -129,7 +129,7 @@ impl AccountHandle {
         );
         Ok(PreparedTransactionData {
             essence,
-            input_signing_data_entrys: inputs_for_signing,
+            input_signing_data_entries: inputs_for_signing,
         })
     }
 }

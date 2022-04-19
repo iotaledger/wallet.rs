@@ -9,7 +9,7 @@ use iota_client::{
         output::{Output, OutputId},
         payload::transaction::TransactionId,
     },
-    node_api::indexer_api::query_parameters::QueryParameter,
+    node_api::indexer::query_parameters::QueryParameter,
     Client,
 };
 
