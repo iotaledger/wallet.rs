@@ -45,7 +45,7 @@ Package                    Version
 iota-wallet-python-binding 0.1.0
 ```
 
-Once your python environment has installed the `iota-wallet-python-binding` , you can start developing using the python binding.
+Once your python environment has installed the `iota-wallet-python-binding`, you can start developing using the python binding.
 
 ## Usage
 
