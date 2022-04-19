@@ -774,7 +774,7 @@ async fn perform_sync(
         .map(|a| *a.key_index())
         .unwrap_or(0);
 
-    let public_addresses = account.addresses.iter().filter(|a| !a.internal());
+    let mut public_addresses = account.addresses.iter().filter(|a| !a.internal());
     let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
     let mut latest_public_address_index = public_addresses
         .clone()
@@ -1003,12 +1003,11 @@ async fn perform_sync(
     if return_all_addresses && !addresses_to_save.iter().any(|a| *a.key_index() == 0 && !a.internal()) {
         log::debug!("[SYNC] adding first public address because we're discovering this account");
         addresses_to_save.push(
-            (*public_addresses
-                .collect::<Vec<&Address>>()
-                .first()
+            public_addresses
+                .next()
                 // Safe to unwrap because we generate the first address during account creation
-                .expect("No first address"))
-            .clone(),
+                .expect("No first address")
+                .clone(),
         );
     }
 
