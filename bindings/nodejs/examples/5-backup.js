@@ -4,14 +4,9 @@
  */
 
 require('dotenv').config();
+const manager = require('./account-manager');
 
 async function run() {
-    const { AccountManager } = require('@iota/wallet');
-
-    const manager = new AccountManager({
-        storagePath: './alice-database',
-    });
-
     try {
         await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 

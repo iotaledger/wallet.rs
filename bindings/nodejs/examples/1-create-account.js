@@ -3,9 +3,10 @@
  */
 
 require('dotenv').config();
+const manager = require('./account-manager');
 
 async function run() {
-    const { AccountManager, initLogger } = require('@iota/wallet');
+    const { initLogger } = require('@iota/wallet');
 
     initLogger({
         color_enabled: true,
@@ -15,24 +16,6 @@ async function run() {
                 level_filter: 'debug',
             },
         ],
-    });
-
-    const manager = new AccountManager({
-        storagePath: './alice-database',
-        clientOptions: {
-            nodes: [
-                {
-                    url: 'http://localhost:14265/',
-                    auth: null,
-                    disabled: false,
-                },
-            ],
-            localPow: true,
-        },
-        signer: {
-            Mnemonic:
-                'acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast',
-        },
     });
 
     try {

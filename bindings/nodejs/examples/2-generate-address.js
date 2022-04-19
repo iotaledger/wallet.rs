@@ -3,14 +3,9 @@
  */
 
 require('dotenv').config();
+const manager = require('./account-manager');
 
 async function run() {
-    const { AccountManager } = require('@iota/wallet');
-
-    const manager = new AccountManager({
-        storagePath: './alice-database',
-    });
-
     try {
         // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
         const account = await manager.getAccount('0');
@@ -34,7 +29,6 @@ async function run() {
         // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")
     } catch (error) {
         console.log('Error: ' + error);
-        process.exit(1);
     }
     process.exit(0);
 }
