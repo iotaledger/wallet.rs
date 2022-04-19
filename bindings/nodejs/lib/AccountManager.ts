@@ -74,6 +74,15 @@ export class AccountManager {
     /**
      * TODO: Replace string type with proper type
      */
+    async generateMnemonic(): Promise<string> {
+        return this.messageHandler.sendMessage({
+            cmd: 'GenerateMnemonic',
+        });
+    }
+    
+    /**
+     * TODO: Replace string type with proper type
+     */
     async storeMnemonic(mnemonic: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
@@ -84,6 +93,15 @@ export class AccountManager {
                 mnemonic,
             },
         });
+    }
+
+    async verifyMnemonic(mnemonic: string): Promise<boolean> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'VerifyMnemonic',
+            payload: mnemonic,
+        })
+        console.log('Response: ', response);
+        return JSON.parse(response).payload === 'true'
     }
 
     /**
