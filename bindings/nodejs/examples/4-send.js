@@ -44,6 +44,7 @@ async function run() {
     } catch (error) {
         console.log('Error: ' + error);
     }
+    process.exit(0);
 }
 
 run();

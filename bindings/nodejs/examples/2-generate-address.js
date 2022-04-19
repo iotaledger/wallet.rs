@@ -34,7 +34,9 @@ async function run() {
         // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")
     } catch (error) {
         console.log('Error: ' + error);
+        process.exit(1);
     }
+    process.exit(0);
 }
 
 run();
