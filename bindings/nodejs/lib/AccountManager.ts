@@ -94,14 +94,15 @@ export class AccountManager {
             },
         });
     }
-
-    async verifyMnemonic(mnemonic: string): Promise<boolean> {
-        const response = await this.messageHandler.sendMessage({
+    
+    /**
+     * TODO: Replace string type with proper type
+     */
+    async verifyMnemonic(mnemonic: string): Promise<string> {
+        return this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',
             payload: mnemonic,
         })
-        console.log('Response: ', response);
-        return JSON.parse(response).payload === 'true'
     }
 
     /**
