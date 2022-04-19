@@ -1006,7 +1006,7 @@ async fn perform_sync(
             (*public_addresses
                 .collect::<Vec<&Address>>()
                 .first()
-                // Save to unwrap because we generate the first address during account creation
+                // Safe to unwrap because we generate the first address during account creation
                 .expect("No first address"))
             .clone(),
         );
