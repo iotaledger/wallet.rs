@@ -1,5 +1,5 @@
 ---
-description: Official IOTA Wallet Library Java API examples.
+description: THE Official IOTA Wallet Library Java API examples.
 image: /img/logo/iota_mark_light.png
 keywords:
 - api
@@ -8,6 +8,7 @@ keywords:
 - type
 - node
 - client
+- reference
 ---
 # Examples
 
@@ -21,9 +22,9 @@ git clone https://github.com/iotaledger/wallet.rs
 cd wallet.rs/bindings/java
 ```
 
-Examples are all collected in a sample project. By default it runs a node info example, but there are many more.
+Examples are all collected in a sample project. By default, it runs a node info example, but there are more.
 
-Run the example like:
+You can run the example as:
 
 Gradle: `./gradlew examples:java-app:test --info`
 
@@ -56,7 +57,8 @@ String id = account.id();
 
 ```
 
-3. You can secure your account in a backup file:
+3. Secure your account in a backup file:
+
 ```java
 // backup the stored accounts to ./backup/${backup_name}
 Path backupPath = manager.backup("./backup");
@@ -64,6 +66,7 @@ Path backupPath = manager.backup("./backup");
 
 
 4. You can import the backup later, or in another application using the following snippet:
+
 ```java
 manager.importAccounts(backupPath, "password");
 
@@ -72,9 +75,10 @@ Account imported_account_handle = manager.getAccount(id);
 
 That's it! You can now backup and restore your account!
 
-## Transfer funds
+## Transfer Funds
 
 1. Get or Create your account:
+
 ```java
 AccountManager manager = AccountManager.Builder().finish();
 
@@ -99,11 +103,13 @@ try {
 ```
 
 2. Generate the address:
+
 ```java
 Address address = account.generateAddress();
 ```
 
 3. Print and wait
+
 ```java
 System.out.println("Send iotas from the faucet to {} and press enter after the transaction got confirmed" +
     address
@@ -113,6 +119,7 @@ System.in.read();
 ```
 
 4. Send and wait
+
 ```java
 System.out.println("Sending transfer...");
 Message message = account
@@ -127,7 +134,7 @@ Message message = account
 System.out.println("Message sent: " + message.id());
 ```
 
-## Event listening
+## Event Listening
 
 ```java
 
