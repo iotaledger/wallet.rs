@@ -75,9 +75,10 @@ export class AccountManager {
      * TODO: Replace string type with proper type
      */
     async generateMnemonic(): Promise<string> {
-        return this.messageHandler.sendMessage({
+        const response = await this.messageHandler.sendMessage({
             cmd: 'GenerateMnemonic',
         });
+        return JSON.parse(response).payload
     }
     
     /**
