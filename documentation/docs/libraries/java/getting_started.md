@@ -25,8 +25,8 @@ Ensure you have installed the [required dependencies for the library](https://gi
 
 Download or clone the `wallet.rs` repository:
 
-```
-$ git clone https://github.com/iotaledger/iota.rs.git
+```bash
+git clone https://github.com/iotaledger/iota.rs.git
 ```
 
 ## Security
@@ -36,7 +36,7 @@ In a production setup, do not store passwords in the host's environment variable
 
 ## Installation
 
-To build using the Wallet.rs Java bindings, you need two parts:
+To build using the Wallet.rs Java bindings, you will need:
 
 1. JNI Native library linking `Rust` to `C`, and then `C` to java `native` methods (`.so` , `.dll` or `.dylib` depending on your system).
 2. Java archive(Jar) containing `native` methods which call C code. (`.jar`).
@@ -45,12 +45,12 @@ To build using the Wallet.rs Java bindings, you need two parts:
 
 Build the wallet library (this generates the java source code and JNI library file):
 
-```
+```bash
 cd wallet.rs/bindings/java
 cargo build --release
 ```
 
-Generated binaries can then be found in `wallet.rs/bindings/java/target/release`.
+You can find the generated binaries in `wallet.rs/bindings/java/target/release`.
 
 :::note
 
