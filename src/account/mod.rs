@@ -1076,7 +1076,12 @@ impl AccountHandle {
                 iota_client::bee_message::output::OutputId,
                 crate::participation::response_types::OutputStatusResponse,
             )>,
-        ) = crate::participation::account_helpers::get_outputs_participation(spent_outputs, node.clone(), assembly_event_id).await?;
+        ) = crate::participation::account_helpers::get_outputs_participation(
+            spent_outputs,
+            node.clone(),
+            assembly_event_id,
+        )
+        .await?;
 
         for (old_output_id, _spent_output_status_response) in &spent_output_status_responses {
             processed_outputs.insert(*old_output_id);
@@ -1092,7 +1097,7 @@ impl AccountHandle {
                 iota_client::bee_message::output::OutputId,
                 crate::participation::response_types::OutputStatusResponse,
             )>,
-        ) = crate::participation::account_helpers::get_outputs_participation(unspent_outputs, node.clone()).await?;
+        ) = crate::participation::account_helpers::get_outputs_participation(unspent_outputs, node.clone(), assembly_event_id).await?;
         for (output_id, _output_status_response) in &output_status_responses {
             processed_outputs.insert(*output_id);
         }

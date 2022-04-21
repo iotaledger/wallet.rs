@@ -21,7 +21,7 @@ pub(crate) async fn get_outputs_participation(
         String,
         Vec<crate::participation::response_types::TrackedParticipation>,
     > = HashMap::new();
-    let mut shimmer_staked_funds = 0;
+    let shimmer_staked_funds = 0;
     let mut assembly_staked_funds = 0;
     let mut output_participations = Vec::new();
 
@@ -45,7 +45,7 @@ pub(crate) async fn get_outputs_participation(
         for res in results {
             let (output, output_participation_res) = res;
             if let Ok(output_participation) = output_participation_res {
-                for (event_id, _participation) in output_participation.participations {
+                for (event_id, participation) in &output_participation.participations {
                     if event_id == assembly_event_id {
                         assembly_staked_funds += output.amount;
                     }
