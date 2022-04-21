@@ -1,5 +1,5 @@
 ---
-description: THE Official IOTA Wallet Library Java API examples.
+description: The Official IOTA Wallet Library Java API examples.
 image: /img/logo/iota_mark_light.png
 keywords:
 - api
@@ -24,14 +24,14 @@ cd wallet.rs/bindings/java
 
 Examples are all collected in a sample project. By default, it runs a node info example, but there are more.
 
-You can run the example as:
+You can run the example with Gradle or Maven using the following commands:
 
 Gradle: `./gradlew examples:java-app:test --info`
 
 Maven: `cd examples/java-app && mvn test`
 
 
-## Backup and Restore Example
+## Backup and Restore
 
 1. Create an account manager and set a password:
 
@@ -75,7 +75,7 @@ Account imported_account_handle = manager.getAccount(id);
 
 That's it! You can now backup and restore your account!
 
-## Transfer Funds
+## Transfering Funds
 
 1. Get or Create your account:
 
@@ -108,7 +108,7 @@ try {
 Address address = account.generateAddress();
 ```
 
-3. Print and wait
+3. Print and wait:
 
 ```java
 System.out.println("Send iotas from the faucet to {} and press enter after the transaction got confirmed" +
@@ -118,7 +118,7 @@ System.out.println("Send iotas from the faucet to {} and press enter after the t
 System.in.read();
 ```
 
-4. Send and wait
+4. Send and wait:
 
 ```java
 System.out.println("Sending transfer...");
@@ -134,7 +134,7 @@ Message message = account
 System.out.println("Message sent: " + message.id());
 ```
 
-## Event Listening
+## Listen to Events
 
 ```java
 
