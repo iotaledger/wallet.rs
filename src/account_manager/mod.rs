@@ -5,7 +5,7 @@ pub(crate) mod builder;
 pub(crate) mod operations;
 
 #[cfg(feature = "storage")]
-use std::path::Path;
+use std::path::PathBuf;
 use std::{
     collections::hash_map::Entry,
     sync::{
@@ -14,6 +14,8 @@ use std::{
     },
 };
 
+#[cfg(feature = "stronghold")]
+use iota_client::db::DatabaseProvider;
 use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -223,20 +225,37 @@ impl AccountManager {
         Ok(())
     }
 
-    // storage feature
-    #[allow(dead_code, unused_variables)]
-    #[cfg(feature = "storage")]
-    pub async fn backup<P: AsRef<Path>>(&self, destination: P, stronghold_password: String) -> crate::Result<()> {
+    /// Backup the accounts in Stronghold
+    #[cfg(all(feature = "storage", feature = "stronghold"))]
+    pub async fn backup(&self, destination: PathBuf, stronghold_password: String) -> crate::Result<()> {
+        match &mut *self.secret_manager.write().await {
+            SecretManager::Stronghold(stronghold) => {
+                stronghold.set_password(&stronghold_password).await;
+
+                // Save current data to Stronghold
+                // TODO: Write all data and not only the client options and use consts for the keys
+                let client_options = self.client_options.read().await.to_json()?;
+                stronghold
+                    .insert("clientOptions".as_bytes(), client_options.as_bytes())
+                    .await?;
+
+                // Get current snapshot_path to set it again after the backup
+                let current_snapshot_path = stronghold.snapshot_path.clone();
+                stronghold.snapshot_path = Some(destination);
+                stronghold.write_stronghold_snapshot().await?;
+                stronghold.snapshot_path = current_snapshot_path;
+            }
+            _ => {
+                return Err(crate::Error::BackupError("Backups are only supported with Stronghold"));
+            }
+        }
+
         Ok(())
     }
-    #[allow(dead_code, unused_variables)]
-    #[cfg(feature = "storage")]
-    pub async fn restore_backup<S: AsRef<Path>>(&self, source: S, stronghold_password: String) -> crate::Result<()> {
-        Ok(())
-    }
-    #[allow(dead_code)]
+
     #[cfg(feature = "storage")]
     pub async fn delete_storage(&self) -> crate::Result<()> {
+        std::fs::remove_dir_all(self.storage_options.storage_path.clone())?;
         Ok(())
     }
 }

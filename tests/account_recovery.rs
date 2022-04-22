@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+// Tests for recovering accounts from mnemonic without a backup
+
 use iota_wallet::{
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},

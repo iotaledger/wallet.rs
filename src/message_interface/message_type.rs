@@ -51,14 +51,15 @@ pub enum MessageType {
         /// Stronghold file password.
         password: String,
     },
-    #[cfg(feature = "storage")]
-    /// Import accounts from storage.
-    RestoreBackup {
-        /// The path to the backed up storage.
-        source: String,
-        /// Stronghold file password.
-        password: String,
-    },
+    // Todo: need to decide if we have an extra method for that or if the options for the account manager alone should
+    // be used #[cfg(feature = "storage")]
+    // /// Import accounts from storage.
+    // RestoreBackup {
+    //     /// The path to the backed up storage.
+    //     source: String,
+    //     /// Stronghold file password.
+    //     password: String,
+    // },
     #[cfg(feature = "storage")]
     /// Deletes the storage.
     DeleteStorage,
@@ -97,7 +98,9 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
             }
             MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
-            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
+            // Todo: need to decide if we have an extra method for that or if the options for the account manager alone
+            // should be used MessageType::RestoreBackup { .. } =>
+            // serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 7, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 8, "VerifyMnemonic"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 9, "DeleteStorage"),
