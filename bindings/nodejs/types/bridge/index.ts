@@ -21,7 +21,6 @@ import type {
     __SendNftPayloadMethod__,
     __SendTransferPayloadMethod__,
     __TryCollectOutputsPayloadMethod__,
-
     __SyncAccountPayload__,
     __GetNodeInfoPayload__,
     __GenerateAddressesPayload__,
