@@ -162,8 +162,8 @@ You can use the following example to send tokens using an Account instance to an
 The full function signature is `Account.send(address, amount, [options])`.
 You can use the default options. However, you can provide additional options, such as `remainderValueStrategy` , which has the following strategies:
 
-*`changeAddress()` : Send the remainder value to an internal address.
-*`reuseAddress()` : Send the remainder value back to its original address.
+* `changeAddress()`: Send the remainder value to an internal address.
+* `reuseAddress()`: Send the remainder value back to its original address.
 
 The `Account.send()` function returns a _wallet message_ that fully describes the given transaction. You can use the _messageId_ to check confirmation statuses. You can also retrieve individual messages related to any given account using the `Account.listMessages()` function.
 
