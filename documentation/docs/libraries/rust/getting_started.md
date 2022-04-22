@@ -20,7 +20,7 @@ We recommend you update _Rust_ to the [latest stable version](https://github.com
 
 ### Dependencies
 
- _cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/) are required to run Rust. To run the build process successfully using Cargo, you may need install additional build tools onto your system. 
+[_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/) are required to run Rust. To run the build process successfully using Cargo, you may need install additional build tools onto your system. 
 
 ### Windows
 
