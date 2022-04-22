@@ -54,6 +54,9 @@ pub enum Error {
     #[error("provided backup path isn't a valid file")]
     InvalidBackupFile,
     /// Backup `destination` argument is invalid
+    #[error("backup failed {0}")]
+    BackupError(&'static str),
+    /// Backup `destination` argument is invalid
     #[error("backup destination must be an existing directory or a file on an existing directory")]
     InvalidBackupDestination,
     /// Invalid mnemonic error
@@ -186,6 +189,7 @@ impl serde::Serialize for Error {
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidCoinType(_) => serialize_variant(self, serializer, "InvalidCoinType"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
+            Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),

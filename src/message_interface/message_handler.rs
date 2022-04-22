@@ -4,7 +4,7 @@
 use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
-    path::Path,
+    path::PathBuf,
 };
 
 use backtrace::Backtrace;
@@ -99,7 +99,7 @@ impl WalletMessageHandler {
             #[cfg(feature = "storage")]
             MessageType::Backup { destination, password } => {
                 convert_async_panics(|| async {
-                    let res = self.backup(destination, password.to_string()).await;
+                    let res = self.backup(destination.to_path_buf(), password.to_string()).await;
                     password.zeroize();
                     res
                 })
@@ -196,16 +196,17 @@ impl WalletMessageHandler {
     }
 
     #[cfg(feature = "storage")]
-    async fn backup(&self, destination_path: &Path, password: String) -> Result<ResponseType> {
+    async fn backup(&self, destination_path: PathBuf, password: String) -> Result<ResponseType> {
         self.account_manager.backup(destination_path, password).await?;
         Ok(ResponseType::BackupSuccessful)
     }
 
-    #[cfg(feature = "storage")]
-    async fn restore_backup(&self, source: &str, password: String) -> Result<ResponseType> {
-        self.account_manager.restore_backup(source, password).await?;
-        Ok(ResponseType::BackupRestored)
-    }
+    // Todo: need to decide if we have an extra method for that or if the options for the account manager alone should
+    // be used #[cfg(feature = "storage")]
+    // async fn restore_backup(&self, source: &str, password: String) -> Result<ResponseType> {
+    //     self.account_manager.restore_backup(source, password).await?;
+    //     Ok(ResponseType::BackupRestored)
+    // }
 
     async fn call_account_method(
         &self,
