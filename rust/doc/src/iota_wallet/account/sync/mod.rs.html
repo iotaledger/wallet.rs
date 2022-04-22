@@ -2884,6 +2884,19 @@
 <span id="2879">2879</span>
 <span id="2880">2880</span>
 <span id="2881">2881</span>
+<span id="2882">2882</span>
+<span id="2883">2883</span>
+<span id="2884">2884</span>
+<span id="2885">2885</span>
+<span id="2886">2886</span>
+<span id="2887">2887</span>
+<span id="2888">2888</span>
+<span id="2889">2889</span>
+<span id="2890">2890</span>
+<span id="2891">2891</span>
+<span id="2892">2892</span>
+<span id="2893">2893</span>
+<span id="2894">2894</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -3660,7 +3673,7 @@
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">key_index</span>())
         .<span class="ident">unwrap_or</span>(<span class="number">0</span>);
 
-    <span class="kw">let</span> <span class="ident">public_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>());
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">public_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>());
     <span class="kw">let</span> <span class="ident">internal_addresses</span> <span class="op">=</span> <span class="ident">account</span>.<span class="ident">addresses</span>.<span class="ident">iter</span>().<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">internal</span>());
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">latest_public_address_index</span> <span class="op">=</span> <span class="ident">public_addresses</span>
         .<span class="ident">clone</span>()
@@ -3797,6 +3810,7 @@
 
     <span class="kw">let</span> <span class="ident">is_latest_public_address_empty</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">latest_public_address_index</span> <span class="op">&gt;</span> <span class="ident">max_new_public_index</span> {
         <span class="ident">public_addresses</span>
+            .<span class="ident">clone</span>()
             .<span class="ident">max_by_key</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">key_index</span>())
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">outputs</span>().<span class="ident">is_empty</span>())
             .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>)
@@ -3882,6 +3896,18 @@
             };
             <span class="ident">addresses_to_save</span>.<span class="ident">push</span>(<span class="ident">address</span>);
         };
+    }
+
+    <span class="comment">// If we discover the account and the first public address isn&#39;t added, we will do it here</span>
+    <span class="kw">if</span> <span class="ident">return_all_addresses</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">addresses_to_save</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span>.<span class="ident">key_index</span>() <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">a</span>.<span class="ident">internal</span>()) {
+        <span class="macro">log::debug!</span>(<span class="string">&quot;[SYNC] adding first public address because we&#39;re discovering this account&quot;</span>);
+        <span class="ident">addresses_to_save</span>.<span class="ident">push</span>(
+            <span class="ident">public_addresses</span>
+                .<span class="ident">next</span>()
+                <span class="comment">// Safe to unwrap because we generate the first address during account creation</span>
+                .<span class="ident">expect</span>(<span class="string">&quot;No first address&quot;</span>)
+                .<span class="ident">clone</span>(),
+        );
     }
 
     <span class="comment">// First sort by internal and then by key index, otherwise dedup could fail</span>
