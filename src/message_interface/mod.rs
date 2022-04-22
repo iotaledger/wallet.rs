@@ -8,7 +8,9 @@ mod message_type;
 mod response;
 mod response_type;
 
-use iota_client::signing::SignerHandle;
+use std::str::FromStr;
+
+use iota_client::secret::SecretManagerType;
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -30,12 +32,12 @@ pub struct ManagerOptions {
     storage_path: Option<String>,
     #[serde(rename = "clientOptions")]
     client_options: Option<String>,
-    #[serde(serialize_with = "signer_serialize")]
-    signer: Option<String>,
+    #[serde(serialize_with = "secret_manager_serialize")]
+    secret_manager: Option<String>,
 }
 
-// Don't serialize the signer, because we don't want to log the mnemonic or password
-fn signer_serialize<S>(x: &Option<String>, s: S) -> Result<S::Ok, S::Error>
+// Don't serialize the secret_manager, because we don't want to log the mnemonic or password
+fn secret_manager_serialize<S>(x: &Option<String>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
@@ -55,8 +57,8 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
             builder = builder.with_storage_path(&storage_path);
         }
 
-        if let Some(signer) = options.signer {
-            builder = builder.with_signer(SignerHandle::from_str(&signer)?);
+        if let Some(secret_manager) = options.secret_manager {
+            builder = builder.with_secret_manager(SecretManagerType::from_str(&secret_manager)?);
         }
 
         if let Some(client_options) = options.client_options {
@@ -104,7 +106,7 @@ mod tests {
     #[tokio::test]
     async fn message_interface_create_account() {
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
-        let signer = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
         let client_options = r#"{
             "nodes":[
                {
@@ -130,7 +132,7 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_create_account".to_string()),
             client_options: Some(client_options),
-            signer: Some(signer),
+            secret_manager: Some(secret_manager),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
@@ -153,7 +155,7 @@ mod tests {
     #[tokio::test]
     async fn message_interface_events() {
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
-        let signer = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
         let client_options = r#"{
             "nodes":[
                {
@@ -169,7 +171,7 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_events".to_string()),
             client_options: Some(client_options),
-            signer: Some(signer),
+            secret_manager: Some(secret_manager),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();

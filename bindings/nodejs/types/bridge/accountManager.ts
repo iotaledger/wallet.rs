@@ -27,7 +27,7 @@ export type __GenerateMnemonicPayload__ = {
 export type __StoreMnemonicPayload__ = {
     cmd: 'StoreMnemonic'
     payload: {
-        signerType: {
+        secretManagerType: {
             type: 'Stronghold'
         },
         mnemonic: string

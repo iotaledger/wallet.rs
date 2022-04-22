@@ -8,7 +8,7 @@ use iota_client::{
         input::INPUT_COUNT_MAX,
         output::{ByteCostConfig, Output},
     },
-    signing::types::InputSigningData,
+    secret::types::InputSigningData,
 };
 
 use crate::account::handle::AccountHandle;

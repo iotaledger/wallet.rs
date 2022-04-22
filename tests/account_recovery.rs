@@ -1,7 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
+use iota_wallet::{
+    account_manager::AccountManager,
+    secret::{mnemonic::MnemonicSecretManager, SecretManagerType},
+    ClientOptions, Result,
+};
 
 #[ignore]
 #[tokio::test]
@@ -12,12 +16,12 @@ async fn account_recovery_empty() -> Result<()> {
         .with_node_sync_disabled();
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
         .with_client_options(client_options)
         .with_storage_path("test-storage/account_recovery_empty")
         .finish()
@@ -39,12 +43,12 @@ async fn account_recovery_existing_accounts() -> Result<()> {
         .with_node_sync_disabled();
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -73,12 +77,12 @@ async fn account_recovery_with_balance() -> Result<()> {
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -110,12 +114,12 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "merit blame slam front add unknown winner wait matrix carbon lion cram picnic mushroom turn stadium bright wheel open tragic liar will law time",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
         .with_client_options(client_options)
         .finish()
         .await?;

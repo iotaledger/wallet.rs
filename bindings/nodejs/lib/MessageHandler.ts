@@ -12,7 +12,7 @@ export class MessageHandler {
         const messageOptions = {
             storagePath: options.storagePath,
             clientOptions: JSON.stringify(options.clientOptions),
-            signer: JSON.stringify(options.signer)
+            secret_manager: JSON.stringify(options.secret_manager)
         }
 
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));

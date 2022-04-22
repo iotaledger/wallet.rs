@@ -18,7 +18,7 @@ use iota_client::{
         MessageId,
     },
     bee_rest_api::types::responses::OutputResponse,
-    signing::types::InputSigningData,
+    secret::types::InputSigningData,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};

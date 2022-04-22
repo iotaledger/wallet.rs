@@ -35,7 +35,7 @@ cargo run --example transfer # execute the `transfer` example
 let manager = AccountManager::builder().finish().await.unwrap();
 
 manager.set_stronghold_password("password").await.unwrap();
-manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+manager.store_mnemonic(SecretManagerType::Stronghold, None).await.unwrap();
 
 ```
 

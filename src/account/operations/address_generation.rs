@@ -1,7 +1,10 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::signing::{GenerateAddressMetadata, Network};
+use iota_client::{
+    constants::SHIMMER_TESTNET_BECH32_HRP,
+    secret::{GenerateAddressMetadata, Network, SecretManager, SecretManagerType},
+};
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
@@ -53,7 +56,6 @@ impl AccountHandle {
         let options = options.unwrap_or_default();
         log::debug!("[ADDRESS GENERATION] generating {} addresses", amount);
         let mut account = self.write().await;
-        let mut signer = self.signer.lock().await;
 
         // get the highest index for the public or internal addresses
         let highest_current_index_plus_one = if options.internal {
@@ -74,7 +76,7 @@ impl AccountHandle {
                         .client
                         .get_bech32_hrp()
                         .await
-                        .unwrap_or_else(|_| "iota".to_string());
+                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
                     bech32_hrp
                 }
             }
@@ -82,33 +84,50 @@ impl AccountHandle {
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
 
-        #[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
+        #[cfg(all(feature = "events", feature = "ledger-nano"))]
         // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
         // have it visible on the computer first, so we need to generate it without the prompt first
         if !options.metadata.syncing {
-            let mut changed_metadata = options.metadata.clone();
-            changed_metadata.syncing = true;
-            let addresses = signer
-                .generate_addresses(
-                    account.coin_type,
-                    account.index,
-                    address_range.clone(),
-                    options.internal,
-                    changed_metadata,
-                )
-                .await?;
-            for address in addresses {
-                let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
-                self.event_emitter.lock().await.emit(
-                    account.index,
-                    WalletEvent::LedgerAddressGeneration(AddressData {
-                        address: address_wrapper.to_bech32(),
-                    }),
-                );
-            }
+            match *self.secret_manager.read().await {
+                SecretManagerType::LedgerNano(_) | SecretManagerType::LedgerNanoSimulator(_) => {
+                    let mut changed_metadata = options.metadata.clone();
+                    changed_metadata.syncing = true;
+                    let addresses = self
+                        .secret_manager
+                        .read()
+                        .await
+                        .generate_addresses(
+                            account.coin_type,
+                            account.index,
+                            address_range.clone(),
+                            options.internal,
+                            changed_metadata,
+                        )
+                        .await?;
+                    for address in addresses {
+                        let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
+                        self.event_emitter.lock().await.emit(
+                            account.index,
+                            WalletEvent::LedgerAddressGeneration(AddressData {
+                                address: address_wrapper.to_bech32(),
+                            }),
+                        );
+                    }
+                }
+                _ => {}
+            };
         }
 
-        let addresses = signer
+        // If we use stronghold we need to read the snapshot in case it hasn't been done already
+        #[cfg(feature = "stronghold")]
+        if let SecretManagerType::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
+            stronghold_secret_manager.read_stronghold_snapshot().await?;
+        }
+
+        let addresses = self
+            .secret_manager
+            .read()
+            .await
             .generate_addresses(
                 account.coin_type,
                 account.index,

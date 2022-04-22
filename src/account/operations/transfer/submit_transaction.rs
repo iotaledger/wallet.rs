@@ -20,6 +20,7 @@ impl AccountHandle {
         let account = self.read().await;
         #[cfg(feature = "events")]
         let account_index = account.index;
+        // Drop account so it's not locked during PoW
         drop(account);
 
         let local_pow = self.client.get_local_pow().await;

@@ -8,7 +8,7 @@ use iota_wallet::{
         MigrationDataFinder as RustMigrationDataFinder,
     },
     message::MessageId,
-    signing::SignerType,
+    secret::secret_managerType,
 };
 use std::{
     cell::RefCell,
@@ -28,26 +28,26 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum AccountSignerType {
+pub enum Accountsecret_managerType {
     Stronghold = 1,
     LedgerNano = 2,
     LedgerNanoSimulator = 3,
 }
 
-pub fn signer_type_enum_to_type(signer_type: AccountSignerType) -> SignerType {
-    match signer_type {
+pub fn secret_manager_type_enum_to_type(secret_manager_type: Accountsecret_managerType) -> secret_managerType {
+    match secret_manager_type {
         #[cfg(feature = "stronghold")]
-        AccountSignerType::Stronghold => SignerType::Stronghold,
+        Accountsecret_managerType::Stronghold => secret_managerType::Stronghold,
 
         #[cfg(feature = "ledger-nano")]
-        AccountSignerType::LedgerNano => SignerType::LedgerNano,
+        Accountsecret_managerType::LedgerNano => secret_managerType::LedgerNano,
 
         #[cfg(feature = "ledger-nano")]
-        AccountSignerType::LedgerNanoSimulator => SignerType::LedgerNanoSimulator,
+        Accountsecret_managerType::LedgerNanoSimulator => secret_managerType::LedgerNanoSimulator,
 
         // Default will only happen when we compile without any features...
         #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano",)))]
-        _ => panic!("No signer type found during compilation"),
+        _ => panic!("No secret_manager type found during compilation"),
     }
 }
 
@@ -199,14 +199,14 @@ impl AccountManager {
         }
     }
 
-    pub fn store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()> {
-        let signer_type = signer_type_enum_to_type(signer_type_enum);
+    pub fn store_mnemonic(&mut self, secret_manager_type_enum: Accountsecret_managerType, mnemonic: String) -> Result<()> {
+        let secret_manager_type = secret_manager_type_enum_to_type(secret_manager_type_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
             _ => Some(mnemonic),
         };
 
-        match crate::block_on(async move { self.manager.store_mnemonic(signer_type, opt_mnemonic).await }) {
+        match crate::block_on(async move { self.manager.store_mnemonic(secret_manager_type, opt_mnemonic).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }

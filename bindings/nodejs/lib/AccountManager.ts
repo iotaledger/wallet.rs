@@ -88,7 +88,7 @@ export class AccountManager {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: {
-                signerType: {
+                secret_managerType: {
                     type: 'Stronghold',
                 },
                 mnemonic,

@@ -73,14 +73,14 @@ Determines whether all accounts have the latest address unused.
 
 Returns _true_ if the latest address is unused.
 
-### store_mnemonic(signer_type, mnemonic (optional)): bool
+### store_mnemonic(secret_manager_type, mnemonic (optional)): bool
 
-Stores a mnemonic for the given signer type.
+Stores a mnemonic for the given secret_manager type.
 If the mnemonic is not provided, we'll generate one.
 
 | Param       | Type  | Default              | Description                                                      |
 | ----------- | ----- | -------------------- | ---------------------------------------------------------------- |
-| signer_type | `str` | `undefined`          | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
+| secret_manager_type | `str` | `undefined`          | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
 | mnemonic    | `str` | `randomly generated` | The provided mnemonic or the randomly generated one              |
 
 ### generate_mnemonic(): str
@@ -399,9 +399,9 @@ Returns the list of [WalletMessage](#walletmessage).
 
 Returns the account ID.
 
-### signer_type(): str
+### secret_manager_type(): str
 
-Returns the signer type of this account.
+Returns the secret_manager type of this account.
 
 ### index(): int
 
@@ -564,13 +564,13 @@ Get the [WalletMessage](#walletmessage) by the message identifier in the account
 
 ## AccountInitialiser
 
-### signer_type(signer_type): void
+### secret_manager_type(secret_manager_type): void
 
 Sets the account type.
 
 | Param       | Type  | Default       | Description                                                      |
 | ----------- | ----- | ------------- | ---------------------------------------------------------------- |
-| signer_type | `str` | `signer_type` | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
+| secret_manager_type | `str` | `secret_manager_type` | Should be _Stronghold_ , _LedgerNano_ , or _LedgerNanoSimulator_ |
 
 ### alias(alias): void
 

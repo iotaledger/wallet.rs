@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import org.iota.wallet.Account;
 import org.iota.wallet.AccountManager;
 import org.iota.wallet.AccountManagerBuilder;
-import org.iota.wallet.AccountSignerType;
+import org.iota.wallet.Accountsecret_managerType;
 import org.iota.wallet.ClientOptions;
 import org.iota.wallet.ClientOptions;
 import org.iota.wallet.EventManager;
@@ -128,7 +128,7 @@ public class Migration implements MigrationProgressListener {
             System.out.println("IMPORTANT: SAVE THIS MNEMONIC SECURELY. IF YOU LOSE IT, YOU POTENTIALLY LOSE EVERYTHING." 
                 + System.lineSeparator() + mnemonic);
         
-            manager.storeMnemonic(AccountSignerType.STRONGHOLD, mnemonic);
+            manager.storeMnemonic(Accountsecret_managerType.STRONGHOLD, mnemonic);
         
             // network migration6 for the migration testnet, otherwise leave out the network option for mainnet
             ClientOptions ClientOptions = new ClientOptions()
