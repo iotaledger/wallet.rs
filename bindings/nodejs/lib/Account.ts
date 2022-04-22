@@ -178,7 +178,6 @@ export class Account {
             this.meta.index,
             {
                 name: 'GetBalance',
-
             }
         )
 

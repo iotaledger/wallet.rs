@@ -20,6 +20,10 @@ export type __SetStrongholdPasswordPayload__ = {
     payload: string;
 }
 
+export type __GenerateMnemonicPayload__ = {
+    cmd: 'GenerateMnemonic'
+}
+
 export type __StoreMnemonicPayload__ = {
     cmd: 'StoreMnemonic'
     payload: {
@@ -28,6 +32,11 @@ export type __StoreMnemonicPayload__ = {
         },
         mnemonic: string
     };
+}
+
+export type __VerifyMnemonicPayload__ = {
+    cmd: 'VerifyMnemonic',
+    payload: string
 }
 
 export type __BackupPayload__ = {

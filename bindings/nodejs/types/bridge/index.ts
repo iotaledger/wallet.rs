@@ -1,4 +1,5 @@
 
+import type { AccountId } from '../account';
 import type {
     __SyncAccountPayloadMethod__,
     __GetInfoPayloadMethod__,
@@ -21,7 +22,6 @@ import type {
     __SendNftPayloadMethod__,
     __SendTransferPayloadMethod__,
     __TryCollectOutputsPayloadMethod__,
-
     __SyncAccountPayload__,
     __GetNodeInfoPayload__,
     __GenerateAddressesPayload__,
@@ -53,9 +53,10 @@ import type {
     __StoreMnemonicPayload__,
     __BackupPayload__,
     __ImportAccountsPayload__,
+    __GenerateMnemonicPayload__,
+    __VerifyMnemonicPayload__,
     
 } from './accountManager'
-
 
 export type __AccountPayloadMethods__ =
     | __SyncAccountPayloadMethod__
@@ -80,14 +81,23 @@ export type __AccountPayloadMethods__ =
     | __SendTransferPayloadMethod__
     | __TryCollectOutputsPayloadMethod__
 
-
+export type __CallAccountMethodPayload__ = {
+    cmd: 'CallAccountMethod',
+    payload: {
+        accountId: AccountId,
+        method: __AccountPayloadMethods__
+    }
+}
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__
     | __GetAccountMessagePayload__
     | __CreateAccountMessagePayload__
+    | __CallAccountMethodPayload__
     | __SetStrongholdPasswordPayload__
+    | __GenerateMnemonicPayload__
     | __StoreMnemonicPayload__
+    | __VerifyMnemonicPayload__
     | __BackupPayload__
     | __ImportAccountsPayload__
     | __SyncAccountPayload__
