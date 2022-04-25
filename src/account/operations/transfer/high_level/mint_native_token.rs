@@ -10,8 +10,8 @@ use iota_client::{
                 AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
                 StateControllerAddressUnlockCondition, UnlockCondition,
             },
-            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
-            SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
+            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken,
+            NativeTokens, Output, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
         },
     },
 };
@@ -146,9 +146,10 @@ impl AccountHandle {
                     new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
             }
 
-            // todo: clean this up because it's only required for the stroage deposit calculation
-            let mut native_tokens_for_storage_deposit = std::collections::HashMap::new();
-            native_tokens_for_storage_deposit.insert(token_id, native_token_options.circulating_supply);
+            let native_tokens_for_storage_deposit = NativeTokens::try_from(vec![NativeToken::new(
+                token_id,
+                native_token_options.circulating_supply,
+            )?])?;
 
             let outputs = vec![
                 Output::Alias(new_alias_output_builder.finish()?),
@@ -159,7 +160,7 @@ impl AccountHandle {
                         native_token_options.token_tag,
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             native_token_options.circulating_supply,
-                            U256::from(0),
+                            U256::from(0u8),
                             native_token_options.maximum_supply,
                         )?),
                     )?
