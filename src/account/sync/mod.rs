@@ -2433,8 +2433,6 @@ async fn perform_transfer(
         .with_unlock_blocks(UnlockBlocks::new(unlock_blocks)?)
         .finish()?;
 
-    println!("{}", serde_json::to_string(&address_inputs_for_validation)?);
-    println!("{}", serde_json::to_string(&transaction)?);
     verify_unlock_blocks(&transaction, address_inputs_for_validation)?;
     transfer_obj
         .emit_event_if_needed(account_.id().to_string(), TransferProgressType::PerformingPoW)
