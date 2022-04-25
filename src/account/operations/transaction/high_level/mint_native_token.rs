@@ -12,6 +12,8 @@ use iota_client::bee_block::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
         SimpleTokenScheme, TokenId, TokenScheme,
     },
+    payload::transaction::TransactionId,
+    BlockId,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -36,6 +38,14 @@ pub struct NativeTokenOptions {
     /// Foundry metadata
     #[serde(rename = "foundryMetadata")]
     pub foundry_metadata: Option<Vec<u8>>,
+}
+
+/// The result of a minting native token transfer, message_id is an option because submitting the transaction could fail
+#[derive(Debug, Serialize)]
+pub struct MintTokenTransactionResult {
+    pub token_id: TokenId,
+    pub transaction_id: TransactionId,
+    pub message_id: Option<BlockId>,
 }
 
 impl AccountHandle {
@@ -64,7 +74,7 @@ impl AccountHandle {
         &self,
         native_token_options: NativeTokenOptions,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<MintTokenTransactionResult> {
         log::debug!("[TRANSACTION] mint_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
@@ -165,7 +175,13 @@ impl AccountHandle {
                     .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
                     .finish_output()?,
             ];
-            self.send(outputs, options).await
+            self.send(outputs, options)
+                .await
+                .map(|transfer_result| MintTokenTransactionResult {
+                    token_id,
+                    transaction_id: transfer_result.transaction_id,
+                    message_id: transfer_result.message_id,
+                })
         } else {
             unreachable!("We checked if it's an alias output before")
         }
@@ -198,33 +214,32 @@ impl AccountHandle {
             // Create a new alias output
             None => {
                 drop(account);
-                let outputs = vec![
-                    AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
-                        .with_state_index(0)
-                        .with_foundry_counter(0)
-                        .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                            StateControllerAddressUnlockCondition::new(controller_address),
-                        ))
-                        .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                            controller_address,
-                        )))
-                        .finish_output()?,
-                ];
+                let outputs =
+                    vec![
+                        AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
+                            .with_state_index(0)
+                            .with_foundry_counter(0)
+                            .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                                StateControllerAddressUnlockCondition::new(controller_address),
+                            ))
+                            .add_unlock_condition(UnlockCondition::GovernorAddress(
+                                GovernorAddressUnlockCondition::new(controller_address),
+                            ))
+                            .finish_output()?,
+                    ];
                 let transaction_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSACTION] sent alias output");
                 if let Some(block_id) = transaction_result.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
                 } else {
-                    self.sync_pending_transactions().await?;
-                }
-
-                // Try to get the transaction confirmed
-                for _ in 0..10 {
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    self.sync_pending_transactions().await?;
-                    let balance = self.sync(None).await?;
-                    if !balance.aliases.is_empty() {
-                        return Ok(balance.aliases[0]);
+                    // Try to get the transaction confirmed
+                    for _ in 0..10 {
+                        self.sync_pending_transactions().await?;
+                        let balance = self.sync(None).await?;
+                        if !balance.aliases.is_empty() {
+                            return Ok(balance.aliases[0]);
+                        }
+                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                     }
                 }
 
