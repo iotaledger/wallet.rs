@@ -128,7 +128,7 @@ pub enum Error {
     Logger(iota_client::logger::Error),
     /// Local time doesn't match the time of the latest timestamp
     #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
-    TimeNotSynced(u64, u64),
+    TimeNotSynced(u32, u32),
 }
 
 impl From<iota_client::Error> for Error {

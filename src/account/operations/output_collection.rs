@@ -1,27 +1,24 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{hash_map::Entry, HashMap, HashSet};
+use std::collections::HashSet;
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_message::output::{
         unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeToken, NftOutputBuilder, Output, OutputId,
+        BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::{
-            helpers::time::{can_output_be_unlocked_now, is_expired},
-            transfer::TransferResult,
-        },
-        OutputData, TransferOptions,
+use crate::account::{
+    handle::AccountHandle,
+    operations::{
+        helpers::time::{can_output_be_unlocked_now, is_expired},
+        transfer::TransferResult,
     },
-    Result,
+    OutputData, TransferOptions,
 };
 
 /// Enum to specify which outputs should be collected
@@ -236,7 +233,7 @@ impl AccountHandle {
             let mut outputs_to_send = Vec::new();
             // Amount we get with the storage deposit return amounts already subtracted
             let mut new_amount = 0;
-            let mut new_native_tokens = HashMap::new();
+            let mut new_native_tokens = NativeTokensBuilder::new();
             // check native tokens
             for output_data in outputs {
                 if let Output::Nft(nft_output) = &output_data.output {
@@ -266,16 +263,7 @@ impl AccountHandle {
                 if is_expired(&output_data.output, local_time as u32, milestone_index) {
                     new_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {
-                        for native_token in native_tokens.iter() {
-                            match new_native_tokens.entry(*native_token.token_id()) {
-                                Entry::Vacant(e) => {
-                                    e.insert(*native_token.amount());
-                                }
-                                Entry::Occupied(mut e) => {
-                                    *e.get_mut() += *native_token.amount();
-                                }
-                            }
-                        }
+                        new_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
                 } else {
                     // if storage deposit return, we have to subtract this amount and create the return output
@@ -301,30 +289,12 @@ impl AccountHandle {
                         // for own output subtract the return amount
                         new_amount += output_data.output.amount() - return_amount;
                         if let Some(native_tokens) = output_data.output.native_tokens() {
-                            for native_token in native_tokens.iter() {
-                                match new_native_tokens.entry(*native_token.token_id()) {
-                                    Entry::Vacant(e) => {
-                                        e.insert(*native_token.amount());
-                                    }
-                                    Entry::Occupied(mut e) => {
-                                        *e.get_mut() += *native_token.amount();
-                                    }
-                                }
-                            }
+                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
                         }
                     } else {
                         new_amount += output_data.output.amount();
                         if let Some(native_tokens) = output_data.output.native_tokens() {
-                            for native_token in native_tokens.iter() {
-                                match new_native_tokens.entry(*native_token.token_id()) {
-                                    Entry::Vacant(e) => {
-                                        e.insert(*native_token.amount());
-                                    }
-                                    Entry::Occupied(mut e) => {
-                                        *e.get_mut() += *native_token.amount();
-                                    }
-                                }
-                            }
+                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
                         }
                     }
                 }
@@ -334,7 +304,7 @@ impl AccountHandle {
             let option_native_token = if new_native_tokens.is_empty() {
                 None
             } else {
-                Some(new_native_tokens.clone())
+                Some(new_native_tokens.clone().finish()?)
             };
             let required_storage_deposit = minimum_storage_deposit(
                 &byte_cost_config,
@@ -356,16 +326,7 @@ impl AccountHandle {
                     if new_amount < required_storage_deposit {
                         new_amount += output_data.output.amount();
                         if let Some(native_tokens) = output_data.output.native_tokens() {
-                            for native_token in native_tokens.iter() {
-                                match new_native_tokens.entry(*native_token.token_id()) {
-                                    Entry::Vacant(e) => {
-                                        e.insert(*native_token.amount());
-                                    }
-                                    Entry::Occupied(mut e) => {
-                                        *e.get_mut() += *native_token.amount();
-                                    }
-                                }
-                            }
+                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
                         }
                         additional_inputs.push(output_data.output_id);
                     } else {
@@ -381,14 +342,7 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         first_account_address.address.inner,
                     )))
-                    .with_native_tokens(
-                        new_native_tokens
-                            .into_iter()
-                            .map(|(id, amount)| {
-                                NativeToken::new(id, amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
-                            })
-                            .collect::<Result<Vec<NativeToken>>>()?,
-                    )
+                    .with_native_tokens(new_native_tokens.finish()?)
                     .finish()?,
             ));
 

@@ -17,12 +17,12 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 async-trait = { version = "0.1.51", default-features = false }
-packable = { version = "0.2.0", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.3.1", default-features = false, features = [ "serde", "primitive-types" ] }
 backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "6edc83607575570d7d71e2bd221a4a7a0cf2d2e3", default-features = false, features = ["async", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "9c4f375f24f68e84f6bb97f602549f746e394dd0", default-features = false, features = ["async", "tls"] }
 # iota-client = { path = "../iota.rs", default-features = false, features = ["async", "tls"] }
 iota-crypto = { version = "0.9.1", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
