@@ -185,6 +185,9 @@ pub enum Error {
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
+    /// Missing unlock block in transaction.
+    #[error("missing unlock block in transaction")]
+    MissingUnlockBlock,
     /// Node not synced when creating account or updating client options.
     #[error("nodes {0} not synced")]
     NodesNotSynced(String),
@@ -374,6 +377,7 @@ impl serde::Serialize for Error {
             Self::DustError(_) => serialize_variant(self, serializer, "DustError"),
             Self::LeavingDustError(_) => serialize_variant(self, serializer, "LeavingDustError"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
+            Self::MissingUnlockBlock => serialize_variant(self, serializer, "MissingUnlockBlock"),
             Self::NodesNotSynced(_) => serialize_variant(self, serializer, "NodesNotSynced"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
             Self::TooManyOutputs(_, _) => serialize_variant(self, serializer, "TooManyOutputs"),
