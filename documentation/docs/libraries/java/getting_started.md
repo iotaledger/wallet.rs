@@ -55,38 +55,39 @@ You can find the generated binaries in `wallet.rs/bindings/java/target/release`.
 :::note
 
 Compiling for Android requires additional compilation instructions.
-These instructions can be found in the [Android development](android_development) section.
+
+You can find these instructions in the [Android development](android_development) section.
 :::
 
 ### Step 2: Creating the Java Archive
 
 #### Generating the source files and classes
 
-After you complete step 1, Java source files will be generated under `wallet.rs/bindings/java/native/src/main/java/org/iota/wallet`.
+After you complete step 1, you can find the Java generated source files under `wallet.rs/bindings/java/native/src/main/java/org/iota/wallet`.
 
 If this step succeeds, you need to generate the jar file containing the newly generated Java source files.
 
 #### Generating the jar
 
-Generating the jar can be done with your tool of preference. We provide examples for Gradle and Maven in this guide.
+You can generate the jar file with your tool of preference. This guide provides examples for Gradle and Maven.
 
 ##### Gradle
 
-Make `gradlew` executable (`chmod +x gradlew`) if needed, then run:
+Make `gradlew` executable (`chmod +x gradlew`) if needed, then run the following commands from the project root:
 
-```
+```bash
 cd wallet.rs/bindings/java
 ./gradlew jar
 ```
 
 ##### Maven
 
-```
+```bash
 cd wallet.rs/bindings/java
 mvn install
 ```
 
-After running one of these commands, the jar can then be found at `wallet.rs/bindings/java/native/build/libs/native.jar`
+After running one of these commands, you can find the jar file at `wallet.rs/bindings/java/native/build/libs/native.jar`
 
 ## Usage
 
@@ -96,23 +97,27 @@ You can find more information on using the `wallet.rs` library's java binding in
 
 ```
 ./gradlew examples:java-app:test --info
-```
+```bash
 
 ### Maven
 
-```
+You can run the examples using Maven by running the following command:
+
+
+```bash
 mvn exec:exec
 ```
 
 ## API Reference
 
-You can find the API Reference [here](api_reference).
+You can find the references for the binding's API in the [Java API Reference](api_reference) section.
 
 ## Limitations
 
-Due to the fact that we are linking through C from Rust, there are a few limiting factors.
+Due to the fact that tje Java binding through C to Rust, there are a few limiting factors.
 
-- Classic builder patterns return a `clone` after each builder call since we can only pass back to C by reference in `Rust`
+- Classic builder patterns return a `clone` after each builder call since we can only pass back to C by reference in `Rust` as shown in the example below.
+
 ```Java
 Builder builder1 = new Builder();
 Builder builder2 = builder1.setValue(true);

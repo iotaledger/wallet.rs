@@ -23,7 +23,7 @@ import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding
 
 In this section, you will go over several examples that use the node.js binding of the `wallet.rs` library. You can also find examples of the code in the `/bindings/nodejs/examples` folder of the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/nodejs/examples).
 
-All of the examples in this section are based on you having set your custom password in the _.env_ file:
+ll the examples in this section expect you to set your custom password  in the _.env_ file:
 
 ```bash
 SH_PASSWORD="here is your super secure password"
@@ -42,7 +42,7 @@ The following example creates a new database and account:
 * Storage is initialized under the given path (`./alice-database`).
 * The password is set based on your password in _.env_ file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)` ).
 * When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)` ).
-* The seed should only be for the first time. You can open an already initialized database using your password.
+* You will only need to set the seed when you initialize the database for the first time. You can open an already initialized database using your password.
 
 The storage is encrypted at rest, so you need a strong password and location to place your storage. 
 
@@ -56,20 +56,20 @@ Deal with the password with utmost care.
 
 Storage is made of two things:
 
-* A single file called _wallet.stronghold_, which contains the _seed_. `Stronghold` will secure the seed and encrypt it at rest. The generated seed (mnemonic) serves as a cryptographic key, which is used to generate all accounts and related addresses.
+* A single file called _wallet.stronghold_ contains the _seed_. `Stronghold` will secure the seed and encrypt it at rest. The generated seed (mnemonic) serves as a cryptographic key, which is used to generate all accounts and related addresses.
 * Other data used by the library that is stored under _db_ sub-directory. The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
 One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You manage your accounts via an _AccountManager_ instance and all the complexities are hidden under the hood and are dealt with securely.
 
 If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. Using this method generates a random seed. You can also use it before the actual account initialization.
 
-You can find detailed information about seed generation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#seed).
+You can find detailed information about seed generation in the [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/guides/developer#seed).
 
 ### Accounts
 
-The `wallet.rs` library uses a model of individual accounts to separate individual users or clients from each other. It is possible to generate multiple addresses for each account deterministically. You can find more information about account management in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/exchange_guide#how-do-i-implement-it-to-my-exchange).
+The `wallet.rs` library uses a model of individual accounts to separate individual users or clients from each other. You can generate multiple addresses for each account deterministically. You can find more information about account management in the [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/guides/exchange#implementation-guide).
 
-Once the backend storage has been created, individual accounts for individual users can be created by running the `manager.createAccount()` method:
+Once you have created the backend storage, you can create individual accounts for individual users can be created by running the `manager.createAccount()` method:
 
 ```javascript
     let account = await manager.createAccount({
@@ -105,12 +105,12 @@ Once an account has been created, you can retrieve an instance using the followi
 
 The most common methods of _account_ instance are:
 
-*`account.alias()` : returns an alias of the given account.
-*`account.listAddresses()` : returns list of addresses related to the account.
-*`account.getUnusedAddress()` : returns a first unused address.
-*`account.generateAddress()` : generate a new address for the address index incremented by 1.
-*`account.balance()` : returns the balance for the given account.
-*`account.sync()` : sync the account information with the Tangle.
+*`account.alias()` : Returns an alias of the given account.
+*`account.listAddresses()` : Returns list of addresses related to the account.
+*`account.getUnusedAddress()` : Returns a first unused address.
+*`account.generateAddress()` : Generate a new address for the address index incremented by 1.
+*`account.balance()` : Returns the balance for the given account.
+*`account.sync()` : Sync the account information with the Tangle.
 
 ## Generating Address(es)
 

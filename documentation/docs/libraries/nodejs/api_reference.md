@@ -10,7 +10,6 @@ keywords:
 ---
 # API Reference
 
-Below are the node.js API references that you can use as a guide.
 ## initLogger(config: LogOptions)
 
 Initializes the logging system.
