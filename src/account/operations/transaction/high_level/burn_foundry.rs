@@ -74,12 +74,14 @@ impl AccountHandle {
 
         for foundry_id in foundry_ids {
             let alias_id = *foundry_id.alias_address().alias_id();
-            existing_alias_and_foundry_output_data.push(self.find_alias_and_foundry_output_data(alias_id, foundry_id).await?);
+            existing_alias_and_foundry_output_data
+                .push(self.find_alias_and_foundry_output_data(alias_id, foundry_id).await?);
         }
 
         let mut custom_inputs = Vec::new();
 
-        for (existing_alias_output_data, existing_foundry_output_data) in existing_alias_and_foundry_output_data.iter() {
+        for (existing_alias_output_data, existing_foundry_output_data) in existing_alias_and_foundry_output_data.iter()
+        {
             custom_inputs.push(existing_alias_output_data.output_id);
             custom_inputs.push(existing_foundry_output_data.output_id);
         }
@@ -118,7 +120,6 @@ impl AccountHandle {
                 _ => unreachable!("We checked if it's an alias output before"),
             };
         }
-        
 
         self.send(outputs, options).await
     }

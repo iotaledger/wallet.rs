@@ -85,15 +85,13 @@ async fn different_seed() -> Result<()> {
         .finish()
         .await?;
 
-    // Generating a new account needs to return an error, because the seed from the secret_manager is different
-    assert!(
-        manager
-            .create_account()
-            .with_alias("Bob".to_string())
-            .finish()
-            .await
-            .is_err()
-    );
+    // Generating a new account needs to return an error, because the seed from the signer is different
+    assert!(manager
+        .create_account()
+        .with_alias("Bob".to_string())
+        .finish()
+        .await
+        .is_err());
 
     std::fs::remove_dir_all("test-storage/different_seed").unwrap_or(());
     Ok(())

@@ -8,8 +8,8 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
-    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Error, NativeTokenOptions,
-    NftOptions, Result, U256, AliasOptions,
+    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AliasOptions, ClientOptions, Error,
+    NativeTokenOptions, NftOptions, Result, U256,
 };
 
 #[tokio::test]
@@ -225,10 +225,12 @@ async fn burn_foundry() -> Result<()> {
     let _ = account.burn_foundry(foundry_id.clone(), None).await?;
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
-    let search = balance.foundries.iter().find(|&balance_foundry_id| *balance_foundry_id == foundry_id);
+    let search = balance
+        .foundries
+        .iter()
+        .find(|&balance_foundry_id| *balance_foundry_id == foundry_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
-    
 
     Ok(())
 }
@@ -270,17 +272,25 @@ async fn destroy_alias() -> Result<()> {
 
     // Let's destroy the first alias we can find
     // let alias_id = balance.aliases.first().unwrap().clone();
-    let alias_id: [u8; 20] = hex::decode("f7d16b94e0c1d0542ce8014a5a16312afaccf391").unwrap().try_into().unwrap();
+    let alias_id: [u8; 20] = hex::decode("f7d16b94e0c1d0542ce8014a5a16312afaccf391")
+        .unwrap()
+        .try_into()
+        .unwrap();
     let alias_id = AliasId::new(alias_id);
     println!("alias_id -> {alias_id}");
-    let alias_options = AliasOptions { alias_id, burn_foundries: None };
+    let alias_options = AliasOptions {
+        alias_id,
+        burn_foundries: None,
+    };
     let _ = account.destroy_alias(alias_options, None).await?;
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
-    let search = balance.aliases.iter().find(|&balance_alias_id| *balance_alias_id == alias_id);
+    let search = balance
+        .aliases
+        .iter()
+        .find(|&balance_alias_id| *balance_alias_id == alias_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
-    
 
     Ok(())
 }

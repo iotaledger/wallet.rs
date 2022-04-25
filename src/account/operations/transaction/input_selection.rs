@@ -22,6 +22,7 @@ impl AccountHandle {
         custom_inputs: Option<Vec<InputSigningData>>,
         remainder_address: Option<Address>,
         byte_cost_config: &ByteCostConfig,
+        allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
         // lock so the same inputs can't be selected in multiple transactions
@@ -45,8 +46,15 @@ impl AccountHandle {
                 }
             }
 
-            let selected_transaction_data =
-                try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config, false).await?;
+            let selected_transaction_data = try_select_inputs(
+                custom_inputs,
+                outputs,
+                true,
+                remainder_address,
+                byte_cost_config,
+                allow_burning,
+            )
+            .await?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -118,7 +126,7 @@ impl AccountHandle {
             false,
             remainder_address,
             byte_cost_config,
-            false,
+            allow_burning,
         )
         .await
         {

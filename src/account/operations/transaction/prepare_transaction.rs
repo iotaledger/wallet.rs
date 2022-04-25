@@ -118,8 +118,16 @@ impl AccountHandle {
             None => None,
         };
 
+        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
+
         let selected_transaction_data = self
-            .select_inputs(outputs, custom_inputs, remainder_address, &byte_cost_config)
+            .select_inputs(
+                outputs,
+                custom_inputs,
+                remainder_address,
+                &byte_cost_config,
+                allow_burning,
+            )
             .await?;
 
         let prepared_transaction_data = match self

@@ -13,10 +13,9 @@ use iota_client::bee_block::{
         SimpleTokenScheme, UnlockCondition,
     },
 };
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use std::collections::HashSet;
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AliasOptions {
@@ -42,7 +41,11 @@ impl AccountHandle {
             .iter()
             .find(|(&output_id, output_data)| match &output_data.output {
                 Output::Alias(alias_output) => {
-                    println!("{} == {}", alias_output.alias_id().or_from_output_id(output_id), alias_options.alias_id);
+                    println!(
+                        "{} == {}",
+                        alias_output.alias_id().or_from_output_id(output_id),
+                        alias_options.alias_id
+                    );
                     alias_output.alias_id().or_from_output_id(output_id) == alias_options.alias_id
                 }
                 _ => false,
@@ -53,11 +56,7 @@ impl AccountHandle {
             Output::Alias(alias_output) => {
                 let custom_inputs = vec![*output_id];
                 let outputs = vec![Self::alias_to_basic_output(alias_output)?];
-                (
-                    alias_output.foundry_counter(),
-                    custom_inputs,
-                    outputs,
-                )
+                (alias_output.foundry_counter(), custom_inputs, outputs)
             }
             _ => unreachable!("We already checked that it's an alias output"),
         };
@@ -67,7 +66,9 @@ impl AccountHandle {
         match alias_options.burn_foundries {
             Some(burn) if !burn => {}
             _ => {
-                let transfer_result = self.burn_alias_foundries(alias_options.alias_id, foundry_counter, options.clone()).await?;
+                let transfer_result = self
+                    .burn_alias_foundries(alias_options.alias_id, foundry_counter, options.clone())
+                    .await?;
                 match transfer_result.message_id {
                     Some(message_id) => {
                         let _ = self.client.retry_until_included(&message_id, None, None).await?;
