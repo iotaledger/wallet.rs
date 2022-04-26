@@ -202,3 +202,29 @@ impl From<u32> for AccountIdentifier {
         Self::Index(value)
     }
 }
+
+/// BIP 44 coin type
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum CoinType {
+    IOTA = 4218,
+    Shimmer = 4219,
+}
+
+impl Default for CoinType {
+    fn default() -> Self {
+        CoinType::Shimmer
+    }
+}
+
+impl TryFrom<u32> for CoinType {
+    type Error = crate::Error;
+
+    fn try_from(value: u32) -> Result<Self, Self::Error> {
+        let coin_type = match value {
+            x if x == CoinType::IOTA as u32 => CoinType::IOTA,
+            x if x == CoinType::Shimmer as u32 => CoinType::Shimmer,
+            _ => return Err(crate::Error::InvalidCoinType(value)),
+        };
+        Ok(coin_type)
+    }
+}

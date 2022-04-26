@@ -27,7 +27,7 @@ use crate::{
     account::{
         constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         handle::AccountHandle,
-        types::{address::AddressWrapper, AccountAddress},
+        types::{address::AddressWrapper, AccountAddress, CoinType},
         Account, AccountOptions,
     },
     ClientOptions, Error,
@@ -35,8 +35,9 @@ use crate::{
 
 /// The AccountBuilder
 pub struct AccountBuilder {
-    client_options: Arc<RwLock<ClientOptions>>,
     alias: Option<String>,
+    client_options: Arc<RwLock<ClientOptions>>,
+    coin_type: Option<CoinType>,
     signer: SignerHandle,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
@@ -55,8 +56,9 @@ impl AccountBuilder {
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
         Self {
-            client_options,
             alias: None,
+            client_options,
+            coin_type: None,
             signer,
             accounts,
             #[cfg(feature = "events")]
@@ -72,10 +74,17 @@ impl AccountBuilder {
         self
     }
 
+    /// Set the coin type, only useful for the first account, later accounts need to have the same coin type, to prevent
+    /// issues with signing
+    pub fn with_coin_type(mut self, coin_type: CoinType) -> Self {
+        self.coin_type.replace(coin_type);
+        self
+    }
+
     /// Build the Account and add it to the accounts from AccountManager
     /// Also generates the first address of the account and if it's not the first account, the address for the first
     /// account will also be generated and compared, so no accounts get generated with different seeds
-    pub async fn finish(&self) -> crate::Result<AccountHandle> {
+    pub async fn finish(&mut self) -> crate::Result<AccountHandle> {
         let mut accounts = self.accounts.write().await;
         let account_index = accounts.len() as u32;
         // If no alias is provided, the account index will be set as alias
@@ -86,9 +95,20 @@ impl AccountBuilder {
             account_index
         );
 
-        // Check that the alias isn't already used for another account
+        // Check that the alias isn't already used for another account and that the coin type is the same for new and
+        // existing accounts
         for account_handle in accounts.iter() {
-            if account_handle.read().await.alias().to_lowercase() == account_alias.to_lowercase() {
+            let account = account_handle.read().await;
+            let existing_coin_type: CoinType = account.coin_type.try_into()?;
+            if let Some(provided_coin_type) = &self.coin_type {
+                if &existing_coin_type != provided_coin_type {
+                    return Err(Error::InvalidCoinType(provided_coin_type.clone() as u32));
+                }
+            } else {
+                // If coin type is None we will set it
+                self.coin_type.replace(existing_coin_type);
+            }
+            if account.alias().to_lowercase() == account_alias.to_lowercase() {
                 return Err(Error::AccountAliasAlreadyExists);
             }
         }
@@ -149,7 +169,7 @@ impl AccountBuilder {
         };
         let account = Account {
             index: account_index,
-            coin_type: IOTA_COIN_TYPE,
+            coin_type: self.coin_type.clone().unwrap_or_default() as u32,
             alias: account_alias,
             public_addresses: vec![first_public_account_address],
             internal_addresses: Vec::new(),

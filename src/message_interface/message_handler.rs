@@ -328,6 +328,10 @@ impl WalletMessageHandler {
             builder = builder.with_alias(alias.clone());
         }
 
+        if let Some(coin_type) = &account.coin_type {
+            builder = builder.with_coin_type((*coin_type).try_into()?);
+        }
+
         match builder.finish().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
