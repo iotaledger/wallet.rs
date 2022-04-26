@@ -136,7 +136,10 @@ mod tests {
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // create an account
-        let account = AccountToCreate { alias: None };
+        let account = AccountToCreate {
+            alias: None,
+            coin_type: None,
+        };
         let response =
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
@@ -185,6 +188,7 @@ mod tests {
         // create an account
         let account = AccountToCreate {
             alias: Some("alias".to_string()),
+            coin_type: None,
         };
         let _ = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 

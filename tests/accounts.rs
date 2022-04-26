@@ -178,7 +178,7 @@ async fn account_coin_type() -> Result<()> {
     let manager = AccountManager::builder()
         .with_signer(signer)
         .with_client_options(client_options)
-        .with_storage_path("test-storage/account_ordering")
+        .with_storage_path("test-storage/account_coin_type")
         .finish()
         .await?;
 
