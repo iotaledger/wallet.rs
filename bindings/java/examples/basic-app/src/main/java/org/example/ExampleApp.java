@@ -46,7 +46,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         // String mnemonic = manager.generateMnemonic();
         
         // null means "generate one for me"
-        manager.storeMnemonic(Accountsecret_manager.STRONGHOLD, null);
+        manager.storeMnemonic(AccountSecretManager.STRONGHOLD, null);
 
         BrokerOptions mqtt = new BrokerOptions();
         
@@ -57,7 +57,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         
         Account account = manager
             .createAccount(ClientOptions)
-            .secret_manager(Accountsecret_manager.STRONGHOLD)
+            .secret_manager(AccountSecretManager.STRONGHOLD)
             .alias("alias1")
             .initialise();
 

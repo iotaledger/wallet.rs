@@ -28,22 +28,22 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum Accountsecret_manager {
+pub enum AccountSecretManager {
     Stronghold = 1,
     LedgerNano = 2,
     LedgerNanoSimulator = 3,
 }
 
-pub fn secret_manager_enum_to_type(secret_manager: Accountsecret_manager) -> secret_manager {
+pub fn secret_manager_enum_to_type(secret_manager: AccountSecretManager) -> secret_manager {
     match secret_manager {
         #[cfg(feature = "stronghold")]
-        Accountsecret_manager::Stronghold => secret_manager::Stronghold,
+        AccountSecretManager::Stronghold => secret_manager::Stronghold,
 
         #[cfg(feature = "ledger-nano")]
-        Accountsecret_manager::LedgerNano => secret_manager::LedgerNano,
+        AccountSecretManager::LedgerNano => secret_manager::LedgerNano,
 
         #[cfg(feature = "ledger-nano")]
-        Accountsecret_manager::LedgerNanoSimulator => secret_manager::LedgerNanoSimulator,
+        AccountSecretManager::LedgerNanoSimulator => secret_manager::LedgerNanoSimulator,
 
         // Default will only happen when we compile without any features...
         #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano",)))]
@@ -199,7 +199,7 @@ impl AccountManager {
         }
     }
 
-    pub fn store_mnemonic(&mut self, secret_manager_enum: Accountsecret_manager, mnemonic: String) -> Result<()> {
+    pub fn store_mnemonic(&mut self, secret_manager_enum: AccountSecretManager, mnemonic: String) -> Result<()> {
         let secret_manager = secret_manager_enum_to_type(secret_manager_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
