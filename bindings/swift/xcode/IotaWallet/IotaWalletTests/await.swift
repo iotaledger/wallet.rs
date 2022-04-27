@@ -11,7 +11,7 @@ class SwiftAwait: XCTestCase {
     struct ManagerOptions: Codable {
         var storagePath: String?
         var clientOptions: String?
-        var secret_manager: String?
+        var secretManager: String?
     }
 
     override func setUpWithError() throws {
@@ -25,7 +25,7 @@ class SwiftAwait: XCTestCase {
     func testCreateAccount() async throws {
         let wallet = try! IotaWallet.Wallet()
         
-        let request = "{\"cmd\": \"CreateAccount\", \"payload\": { \"clientOptions\": { \"node\": \"https://nodes.devnet.iota.org:443\" } }, \"secret_managerType\": { \"type\": \"Stronghold\" } }";
+        let request = "{\"cmd\": \"CreateAccount\", \"payload\": { \"clientOptions\": { \"node\": \"https://nodes.devnet.iota.org:443\" } }, \"secretManager\": { \"type\": \"Stronghold\" } }";
         
         let response = try! await wallet.sendMessage(request)
         print("\(response)")
@@ -50,7 +50,7 @@ class SwiftAwait: XCTestCase {
         }
         """
         
-        let manager_options = ManagerOptions(storagePath: "teststorage", clientOptions: client_options, secret_manager: secret_manager)
+        let manager_options = ManagerOptions(storagePath: "teststorage", clientOptions: client_options, secretManager: secret_manager)
         
         let json = try JSONEncoder().encode(manager_options)
         let manager_options_json = String(data: json, encoding: .utf8)!

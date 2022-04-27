@@ -14,7 +14,7 @@ class IotaWallet():
         if client_options:
             options['clientOptions'] = dumps(client_options)
         if secret_manager:
-            options['secret_manager'] = dumps({'Mnemonic': secret_manager})
+            options['secretManager'] = dumps({'Mnemonic': secret_manager})
 
         options = dumps(options)
 

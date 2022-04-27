@@ -10,8 +10,10 @@ use iota_client::{
         unlock_block::UnlockBlocks,
     },
     constants::{IOTA_BECH32_HRP, SHIMMER_BECH32_HRP},
-    secret::{types::InputSigningData, Network, SecretManageExt, SecretManager, SignMessageMetadata},
+    secret::{types::InputSigningData, Network, SecretManageExt, SignMessageMetadata},
 };
+#[cfg(feature = "stronghold")]
+use iota_client::secret::SecretManager;
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
 #[cfg(feature = "events")]

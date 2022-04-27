@@ -90,7 +90,7 @@ async fn main() -> iota_wallet::Result<()> {
         .build()?;
     let account = manager
         .create_account(client_options)?
-        .secret_manager_type(SecretManager::Stronghold)
+        .secret_manager(SecretManager::Stronghold)
         .initialise()
         .await?;
     let address = account.generate_address().await?;

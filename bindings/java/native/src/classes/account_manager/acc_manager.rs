@@ -8,7 +8,7 @@ use iota_wallet::{
         MigrationDataFinder as RustMigrationDataFinder,
     },
     message::MessageId,
-    secret::secret_managerType,
+    secret::secret_manager,
 };
 use std::{
     cell::RefCell,
@@ -28,22 +28,22 @@ use crate::{
 };
 
 #[derive(Debug)]
-pub enum Accountsecret_managerType {
+pub enum Accountsecret_manager {
     Stronghold = 1,
     LedgerNano = 2,
     LedgerNanoSimulator = 3,
 }
 
-pub fn secret_manager_type_enum_to_type(secret_manager_type: Accountsecret_managerType) -> secret_managerType {
-    match secret_manager_type {
+pub fn secret_manager_enum_to_type(secret_manager: Accountsecret_manager) -> secret_manager {
+    match secret_manager {
         #[cfg(feature = "stronghold")]
-        Accountsecret_managerType::Stronghold => secret_managerType::Stronghold,
+        Accountsecret_manager::Stronghold => secret_manager::Stronghold,
 
         #[cfg(feature = "ledger-nano")]
-        Accountsecret_managerType::LedgerNano => secret_managerType::LedgerNano,
+        Accountsecret_manager::LedgerNano => secret_manager::LedgerNano,
 
         #[cfg(feature = "ledger-nano")]
-        Accountsecret_managerType::LedgerNanoSimulator => secret_managerType::LedgerNanoSimulator,
+        Accountsecret_manager::LedgerNanoSimulator => secret_manager::LedgerNanoSimulator,
 
         // Default will only happen when we compile without any features...
         #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano",)))]
@@ -199,14 +199,14 @@ impl AccountManager {
         }
     }
 
-    pub fn store_mnemonic(&mut self, secret_manager_type_enum: Accountsecret_managerType, mnemonic: String) -> Result<()> {
-        let secret_manager_type = secret_manager_type_enum_to_type(secret_manager_type_enum);
+    pub fn store_mnemonic(&mut self, secret_manager_enum: Accountsecret_manager, mnemonic: String) -> Result<()> {
+        let secret_manager = secret_manager_enum_to_type(secret_manager_enum);
         let opt_mnemonic = match mnemonic.as_str() {
             "" => None,
             _ => Some(mnemonic),
         };
 
-        match crate::block_on(async move { self.manager.store_mnemonic(secret_manager_type, opt_mnemonic).await }) {
+        match crate::block_on(async move { self.manager.store_mnemonic(secret_manager, opt_mnemonic).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }

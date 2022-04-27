@@ -4,7 +4,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use crate::{
-    acc_manager::Accountsecret_managerType,
+    acc_manager::Accountsecret_manager,
     address::Address,
     client_options::ClientOptions,
     message::{Message, Transfer},
@@ -40,9 +40,9 @@ impl AccountInitialiser {
         }
     }
 
-    pub fn secret_manager_type(&mut self, secret_manager_type_enum: Accountsecret_managerType) -> Self {
-        let secret_manager_type = crate::acc_manager::secret_manager_type_enum_to_type(secret_manager_type_enum);
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().secret_manager_type(secret_manager_type);
+    pub fn secret_manager(&mut self, secret_manager_enum: Accountsecret_manager) -> Self {
+        let secret_manager = crate::acc_manager::secret_manager_enum_to_type(secret_manager_enum);
+        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().secret_manager(secret_manager);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
