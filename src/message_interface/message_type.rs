@@ -71,6 +71,8 @@ pub enum MessageType {
     SetClientOptions(Box<ClientOptions>),
     /// Get the node information
     GetNodeInfo,
+    /// Set the stronghold password.
+    SetStrongholdPassword(String),
     /// Start background syncing.
     StartBackgroundSync {
         /// Sync options
@@ -108,15 +110,18 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 10, "SetClientOptions")
             }
             MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 11, "GetNodeInfo"),
+            MessageType::SetStrongholdPassword(_) => {
+                serializer.serialize_unit_variant("MessageType", 12, "SetStrongholdPassword")
+            }
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 12, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 13, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 13, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 14, "StopBackgroundSync")
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 14, "EmitTestEvent"),
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 15, "EmitTestEvent"),
         }
     }
 }

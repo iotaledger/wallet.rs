@@ -7,7 +7,7 @@ use iota_client::{
     node_manager::node::{Node, NodeDto, Url},
     secret::stronghold::StrongholdSecretManager,
 };
-use iota_wallet::{account_manager::AccountManager, secret::SecretManagerType, ClientOptions, Result};
+use iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions, Result};
 
 #[tokio::test]
 // Backup and restore with Stronghold
@@ -27,7 +27,7 @@ async fn backup_and_restore() -> Result<()> {
     stronghold_secmngr.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Stronghold(Box::new(stronghold_secmngr)))
+        .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_client_options(client_options)
         .with_storage_path("test-storage/backup_and_restore/1")
         .finish()
@@ -56,7 +56,7 @@ async fn backup_and_restore() -> Result<()> {
 
     let manager2 = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")
-        .with_secret_manager(SecretManagerType::Stronghold(Box::new(stronghold_secmngr)))
+        .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_backup_path(PathBuf::from("test-storage/backup_and_restore/backup.stronghold"))
         .finish()
         .await?;
