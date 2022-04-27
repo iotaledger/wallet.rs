@@ -109,7 +109,7 @@ impl AccountManagerBuilder {
         // load backup if exists
         if let Some(backup_path) = &self.backup_path {
             log::debug!("[AccountManagerBuilder] loading stronghold backup");
-            if let SecretManagerType::Stronghold(stronghold) = &mut *self
+            if let SecretManager::Stronghold(stronghold) = &mut *self
                 .secret_manager
                 .as_ref()
                 .ok_or(crate::Error::MissingParameter("secret_manager"))?
