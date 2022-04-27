@@ -786,8 +786,16 @@ impl AccountManager {
 
     /// Starts monitoring the accounts with the node's mqtt topics.
     async fn start_monitoring(accounts: AccountStore) {
-        for account in accounts.read().await.values() {
-            crate::monitor::monitor_account_addresses_balance(account.clone()).await;
+        let mut account_handles = Vec::new();
+        let account_store = accounts.read().await;
+
+        for account_handle in account_store.values() {
+            account_handles.push(account_handle.clone());
+        }
+        drop(account_store);
+
+        for account_handle in account_handles {
+            crate::monitor::monitor_account_addresses_balance(account_handle).await;
         }
     }
 
