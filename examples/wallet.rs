@@ -6,7 +6,9 @@
 use std::time::Instant;
 
 use iota_wallet::{
-    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AddressWithAmount, ClientOptions, Result,
+    account_manager::AccountManager,
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
+    AddressWithAmount, ClientOptions, Result,
 };
 
 #[tokio::main]
@@ -15,12 +17,12 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;

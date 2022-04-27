@@ -32,7 +32,7 @@ pub mod storage;
 pub mod logger;
 
 // Expose for high level functions
-pub use iota_client::{self, signing};
+pub use iota_client::{self, secret};
 pub use primitive_types::U256;
 
 pub use self::{

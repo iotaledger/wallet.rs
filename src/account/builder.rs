@@ -6,12 +6,10 @@ use std::{
     sync::Arc,
 };
 
-#[cfg(feature = "ledger-nano")]
-use iota_client::signing::SignerType;
 use iota_client::{
     bee_message::address::Address,
-    constants::IOTA_COIN_TYPE,
-    signing::{GenerateAddressMetadata, Network, SignerHandle},
+    constants::{SHIMMER_COIN_TYPE, SHIMMER_TESTNET_BECH32_HRP},
+    secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -37,7 +35,7 @@ use crate::{
 pub struct AccountBuilder {
     client_options: Arc<RwLock<ClientOptions>>,
     alias: Option<String>,
-    signer: SignerHandle,
+    secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
     event_emitter: Arc<Mutex<EventEmitter>>,
@@ -50,14 +48,14 @@ impl AccountBuilder {
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
         client_options: Arc<RwLock<ClientOptions>>,
-        signer: SignerHandle,
+        secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
         Self {
             client_options,
             alias: None,
-            signer,
+            secret_manager,
             accounts,
             #[cfg(feature = "events")]
             event_emitter,
@@ -95,9 +93,10 @@ impl AccountBuilder {
 
         let mut bech32_hrp = None;
         if let Some(first_account) = accounts.first() {
+            let coin_type = *first_account.read().await.coin_type();
             // Generate the first address of the first account and compare it to the stored address from the first
             // account to prevent having multiple accounts created with different seeds
-            let first_account_public_address = get_first_public_address(&self.signer, IOTA_COIN_TYPE, 0).await?;
+            let first_account_public_address = get_first_public_address(&self.secret_manager, coin_type, 0).await?;
             let first_account_addresses = first_account.list_addresses().await?;
 
             if first_account_public_address
@@ -127,13 +126,17 @@ impl AccountBuilder {
                 // from the client Doesn't work for offline creating, should we use the network from the
                 // GenerateAddressMetadata instead to use `iota` or `atoi`?
                 None => {
-                    let bech32_hrp = client.get_bech32_hrp().await.unwrap_or_else(|_| "iota".to_string());
+                    let bech32_hrp = client
+                        .get_bech32_hrp()
+                        .await
+                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
                     bech32_hrp
                 }
             }
         };
 
-        let first_public_address = get_first_public_address(&self.signer, IOTA_COIN_TYPE, account_index).await?;
+        let first_public_address =
+            get_first_public_address(&self.secret_manager, SHIMMER_COIN_TYPE, account_index).await?;
 
         let first_public_account_address = AccountAddress {
             address: AddressWrapper::new(first_public_address, bech32_hrp),
@@ -142,14 +145,16 @@ impl AccountBuilder {
             used: false,
         };
 
-        let consolidation_threshold = match self.signer.signer_type {
+        let consolidation_threshold = match *self.secret_manager.read().await {
             #[cfg(feature = "ledger-nano")]
-            SignerType::LedgerNano | SignerType::LedgerNanoSimulator => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
+            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+                DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
+            }
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         };
         let account = Account {
             index: account_index,
-            coin_type: IOTA_COIN_TYPE,
+            coin_type: SHIMMER_COIN_TYPE,
             alias: account_alias,
             public_addresses: vec![first_public_account_address],
             internal_addresses: Vec::new(),
@@ -168,7 +173,7 @@ impl AccountBuilder {
         let account_handle = AccountHandle::new(
             account,
             client,
-            self.signer.clone(),
+            self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),
             #[cfg(feature = "storage")]
@@ -183,12 +188,12 @@ impl AccountBuilder {
 
 /// Generate the first public address of an account
 pub(crate) async fn get_first_public_address(
-    signer: &SignerHandle,
+    secret_manager: &Arc<RwLock<SecretManager>>,
     coin_type: u32,
     account_index: u32,
 ) -> crate::Result<Address> {
-    Ok(signer
-        .lock()
+    Ok(secret_manager
+        .read()
         .await
         .generate_addresses(
             coin_type,

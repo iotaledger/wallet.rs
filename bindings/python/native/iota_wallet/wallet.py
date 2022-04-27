@@ -5,7 +5,7 @@ from json import loads, dumps
 
 
 class IotaWallet():
-    def __init__(self, storage_path='./walletdb', client_options=None, signer=None):
+    def __init__(self, storage_path='./walletdb', client_options=None, secret_manager=None):
         """Initialize the IOTA Wallet.
         """
 
@@ -13,8 +13,8 @@ class IotaWallet():
         options = {'storagePath': storage_path}
         if client_options:
             options['clientOptions'] = dumps(client_options)
-        if signer:
-            options['signer'] = dumps({'Mnemonic': signer})
+        if secret_manager:
+            options['secretManager'] = dumps({'Mnemonic': secret_manager})
 
         options = dumps(options)
 

@@ -3,7 +3,11 @@
 
 //! cargo run --example background_syncing --release
 
-use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, ClientOptions, Result};
+use iota_wallet::{
+    account_manager::AccountManager,
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
+    ClientOptions, Result,
+};
 use tokio::time::{sleep, Duration};
 
 #[tokio::main]
@@ -12,12 +16,12 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;

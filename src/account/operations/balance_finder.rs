@@ -3,7 +3,7 @@
 
 use std::cmp;
 
-use iota_client::signing::{GenerateAddressMetadata, Network};
+use iota_client::secret::{GenerateAddressMetadata, Network};
 
 use crate::account::{
     handle::AccountHandle,

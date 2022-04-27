@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-use iota_client::signing::SignerHandle;
+use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -28,7 +28,7 @@ pub struct AccountManagerBuilder {
     storage_options: Option<StorageOptions>,
     client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
-    signer: Option<SignerHandle>,
+    secret_manager: Option<Arc<RwLock<SecretManager>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -57,7 +57,7 @@ impl AccountManagerBuilder {
     /// Initialises a new instance of the account manager builder with the default storage adapter.
     pub fn new() -> Self {
         Self {
-            signer: None,
+            secret_manager: None,
             ..Default::default()
         }
     }
@@ -68,9 +68,16 @@ impl AccountManagerBuilder {
         self
     }
 
-    /// Set the signer to be used.
-    pub fn with_signer(mut self, signer: SignerHandle) -> Self {
-        self.signer.replace(signer);
+    /// Set the secret_manager to be used.
+    pub fn with_secret_manager(mut self, secret_manager: SecretManager) -> Self {
+        self.secret_manager.replace(Arc::new(RwLock::new(secret_manager)));
+        self
+    }
+
+    /// Set the secret_manager to be used wrapped in an Arc<RwLock<>> so it can be cloned and mutated also outside of
+    /// the AccountManager.
+    pub fn with_secret_manager_arc(mut self, secret_manager: Arc<RwLock<SecretManager>>) -> Self {
+        self.secret_manager.replace(secret_manager);
         self
     }
 
@@ -102,7 +109,7 @@ impl AccountManagerBuilder {
         {
             let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
 
-            let (client_options, signer) = match manager_builder {
+            let (client_options, secret_manager) = match manager_builder {
                 Some(data) => {
                     let client_options = match data.client_options {
                         Some(options) => options,
@@ -113,7 +120,8 @@ impl AccountManagerBuilder {
                     (
                         client_options,
                         // todo: can we get this from the read data? Maybe just with type and path for Stronghold?
-                        self.signer.ok_or(crate::Error::MissingParameter("Signer"))?,
+                        self.secret_manager
+                            .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     )
                 }
                 // If no account manager data exist, we will set it
@@ -123,7 +131,8 @@ impl AccountManagerBuilder {
                     (
                         self.client_options
                             .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
-                        self.signer.ok_or(crate::Error::MissingParameter("Signer"))?,
+                        self.secret_manager
+                            .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     )
                 }
             };
@@ -139,7 +148,7 @@ impl AccountManagerBuilder {
                 accounts: Arc::new(RwLock::new(
                     accounts
                         .into_iter()
-                        .map(|a| AccountHandle::new(a, client.clone(), signer.clone(), storage_manager.clone()))
+                        .map(|a| AccountHandle::new(a, client.clone(), secret_manager.clone(), storage_manager.clone()))
                         .collect(),
                 )),
                 #[cfg(feature = "events")]
@@ -150,7 +159,7 @@ impl AccountManagerBuilder {
                             AccountHandle::new(
                                 a,
                                 client.clone(),
-                                signer.clone(),
+                                secret_manager.clone(),
                                 event_emitter.clone(),
                                 storage_manager.clone(),
                             )
@@ -159,7 +168,7 @@ impl AccountManagerBuilder {
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
-                signer,
+                secret_manager,
                 #[cfg(feature = "events")]
                 event_emitter,
                 storage_options,
@@ -174,7 +183,9 @@ impl AccountManagerBuilder {
                 self.client_options
                     .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
             )),
-            signer: self.signer.ok_or(crate::Error::MissingParameter("Signer"))?,
+            secret_manager: self
+                .secret_manager
+                .ok_or(crate::Error::MissingParameter("secret_manager"))?,
             #[cfg(feature = "events")]
             event_emitter: Arc::new(Mutex::new(EventEmitter::new())),
             #[cfg(feature = "storage")]

@@ -10,7 +10,7 @@ use std::{env, path::PathBuf};
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
-    signing::{stronghold::StrongholdSigner, Signer},
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
     ClientOptions, Result,
 };
 
@@ -18,8 +18,8 @@ use iota_wallet::{
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
-    // Setup Stronghold signer
-    let mut signer = StrongholdSigner::builder()
+    // Setup Stronghold secret_manager
+    let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .snapshot_path(PathBuf::from("wallet.stronghold"))
         .build();
@@ -27,14 +27,14 @@ async fn main() -> Result<()> {
     let mnemonic = env::var("NONSECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
 
     // The mnemonic only needs to be stored the first time
-    signer.store_mnemonic(mnemonic).await?;
+    secret_manager.store_mnemonic(mnemonic).await?;
 
-    // Create the account manager with the signer and client options
+    // Create the account manager with the secret_manager and client options
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
     let manager = AccountManager::builder()
-        .with_signer(signer.into())
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;
