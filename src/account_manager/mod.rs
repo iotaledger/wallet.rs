@@ -14,7 +14,7 @@ use std::{
     },
 };
 
-use iota_client::{signing::SignerHandle, Client, NodeInfoWrapper};
+use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -37,14 +37,14 @@ use crate::{
 };
 
 /// The account manager, used to create and get accounts. One account manager can hold many accounts, but they should
-/// all share the same signer type with the same seed/mnemonic.
+/// all share the same secret_manager type with the same seed/mnemonic.
 pub struct AccountManager {
     // should we use a hashmap instead of a vec like in wallet.rs?
     pub(crate) accounts: Arc<RwLock<Vec<AccountHandle>>>,
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
-    pub(crate) signer: SignerHandle,
+    pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
     #[cfg(feature = "storage")]
@@ -65,7 +65,7 @@ impl AccountManager {
         AccountBuilder::new(
             self.accounts.clone(),
             self.client_options.clone(),
-            self.signer.clone(),
+            self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),
             #[cfg(feature = "storage")]
@@ -78,9 +78,9 @@ impl AccountManager {
         Ok(self.accounts.read().await.clone())
     }
 
-    /// Get the [SignerHandle]
-    pub fn get_signer(&self) -> SignerHandle {
-        self.signer.clone()
+    /// Get the [SecretManager]
+    pub fn get_secret_manager(&self) -> Arc<RwLock<SecretManager>> {
+        self.secret_manager.clone()
     }
 
     /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
@@ -97,7 +97,7 @@ impl AccountManager {
         {
             // Update account manager data with new client options
             let account_manager_builder = AccountManagerBuilder::new()
-                .with_signer(self.signer.clone())
+                .with_secret_manager_arc(self.secret_manager.clone())
                 .with_storage_path(
                     &self
                         .storage_options

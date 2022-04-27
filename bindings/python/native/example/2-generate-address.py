@@ -6,10 +6,10 @@ client_options = {
     'primaryNode': {'url': 'https://api.lb-0.h.chrysalis-devnet.iota.cafe'},
     'localPow': True,
 }
-signer = ("flame fever pig forward exact dash body idea link scrub tennis minute " +
+secret_manager = ("flame fever pig forward exact dash body idea link scrub tennis minute " +
           "surge unaware prosper over waste kitten ceiling human knife arch situate civil")
 
-wallet = IotaWallet('./alice-database', client_options, signer)
+wallet = IotaWallet('./alice-database', client_options, secret_manager)
 account = wallet.get_account('Alice')
 print(f'Account: {account}')
 

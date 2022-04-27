@@ -3,8 +3,7 @@
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{self, ManagerOptions},
-    message_interface::{MessageType, WalletMessageHandler},
+    message_interface::{self, ManagerOptions, MessageType, WalletMessageHandler},
 };
 
 use std::{

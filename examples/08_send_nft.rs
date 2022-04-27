@@ -9,7 +9,9 @@ use std::{env, path::PathBuf, str::FromStr};
 
 use dotenv::dotenv;
 use iota_wallet::{
-    account_manager::AccountManager, iota_client::bee_message::output::NftId, signing::stronghold::StrongholdSigner,
+    account_manager::AccountManager,
+    iota_client::bee_message::output::NftId,
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
     AddressAndNftId, Result,
 };
 
@@ -17,14 +19,17 @@ use iota_wallet::{
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
-    // Setup Stronghold signer
-    let signer = StrongholdSigner::builder()
+    // Setup Stronghold secret_manager
+    let secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .snapshot_path(PathBuf::from("wallet.stronghold"))
         .build();
 
     // Create the account manager
-    let manager = AccountManager::builder().with_signer(signer.into()).finish().await?;
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
+        .finish()
+        .await?;
 
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;

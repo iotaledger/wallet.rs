@@ -1,10 +1,10 @@
 
 import type { ClientOptions } from './network';
-import type { Signer } from './signer';
+import type { SecretManager } from './secretManager';
 
 export interface AccountManagerOptions {
     storagePath?: string;
     clientOptions: ClientOptions;
-    signer: Signer;
+    secretManager: SecretManager;
 }
 
