@@ -137,6 +137,12 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetNodeInfo => {
+                convert_async_panics(|| async {
+                    self.account_manager.get_node_info().await.map(ResponseType::NodeInfo)
+                })
+                .await
+            }
             MessageType::StartBackgroundSync { options, interval } => {
                 convert_async_panics(|| async {
                     self.account_manager

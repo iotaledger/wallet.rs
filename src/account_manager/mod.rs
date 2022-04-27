@@ -14,7 +14,7 @@ use std::{
     },
 };
 
-use iota_client::{signing::SignerHandle, Client};
+use iota_client::{signing::SignerHandle, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -121,6 +121,28 @@ impl AccountManager {
     /// Get the used client options
     pub async fn get_client_options(&self) -> ClientOptions {
         self.client_options.read().await.clone()
+    }
+
+    /// Get the node info
+    pub async fn get_node_info(&self) -> crate::Result<NodeInfoWrapper> {
+        let accounts = self.accounts.read().await;
+
+        // Try to get the Client from the first account and only build the Client if we have no account
+        let node_info_wrapper = match &accounts.first() {
+            Some(account) => account.client.get_info().await?,
+            None => {
+                self.client_options
+                    .read()
+                    .await
+                    .clone()
+                    .finish()
+                    .await?
+                    .get_info()
+                    .await?
+            }
+        };
+
+        Ok(node_info_wrapper)
     }
 
     /// Get the balance of all accounts added together
