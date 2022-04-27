@@ -161,6 +161,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::SetStrongholdPassword(password) => {
+                convert_async_panics(|| async {
+                    self.account_manager.set_stronghold_password(password).await?;
+                    Ok(ResponseType::UpdatedAllClientOptions)
+                })
+                .await
+            }
             MessageType::StartBackgroundSync { options, interval } => {
                 convert_async_panics(|| async {
                     self.account_manager
