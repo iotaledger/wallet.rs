@@ -10,7 +10,7 @@ use iota_client::{
         unlock_block::UnlockBlocks,
     },
     constants::{IOTA_BECH32_HRP, SHIMMER_BECH32_HRP},
-    secret::{types::InputSigningData, Network, SecretManager, SecretManagerType, SignMessageMetadata},
+    secret::{types::InputSigningData, Network, SecretManageExt, SecretManager, SignMessageMetadata},
 };
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
@@ -69,7 +69,7 @@ impl AccountHandle {
 
         // If we use stronghold we need to read the snapshot in case it hasn't been done already
         #[cfg(feature = "stronghold")]
-        if let SecretManagerType::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
+        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
             stronghold_secret_manager.read_stronghold_snapshot().await?;
         }
 

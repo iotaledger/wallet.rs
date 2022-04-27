@@ -3,7 +3,7 @@
 
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, Network, SecretManager, SecretManagerType},
+    secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
 };
 use serde::{Deserialize, Serialize};
 
@@ -89,7 +89,7 @@ impl AccountHandle {
         // have it visible on the computer first, so we need to generate it without the prompt first
         if !options.metadata.syncing {
             match *self.secret_manager.read().await {
-                SecretManagerType::LedgerNano(_) | SecretManagerType::LedgerNanoSimulator(_) => {
+                SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
                     let mut changed_metadata = options.metadata.clone();
                     changed_metadata.syncing = true;
                     let addresses = self
@@ -120,7 +120,7 @@ impl AccountHandle {
 
         // If we use stronghold we need to read the snapshot in case it hasn't been done already
         #[cfg(feature = "stronghold")]
-        if let SecretManagerType::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
+        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
             stronghold_secret_manager.read_stronghold_snapshot().await?;
         }
 

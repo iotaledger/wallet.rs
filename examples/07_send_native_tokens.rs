@@ -11,7 +11,7 @@ use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::bee_message::output::TokenId,
-    secret::{stronghold::StrongholdSecretManager, SecretManagerType},
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
     AddressNativeTokens, Result,
 };
 use primitive_types::U256;
@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
 
     // Create the account manager
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Stronghold(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .finish()
         .await?;
 

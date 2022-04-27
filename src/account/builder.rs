@@ -9,7 +9,7 @@ use std::{
 use iota_client::{
     bee_message::address::Address,
     constants::{SHIMMER_COIN_TYPE, SHIMMER_TESTNET_BECH32_HRP},
-    secret::{GenerateAddressMetadata, Network, SecretManager, SecretManagerType},
+    secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -35,7 +35,7 @@ use crate::{
 pub struct AccountBuilder {
     client_options: Arc<RwLock<ClientOptions>>,
     alias: Option<String>,
-    secret_manager: Arc<RwLock<SecretManagerType>>,
+    secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
     event_emitter: Arc<Mutex<EventEmitter>>,
@@ -48,7 +48,7 @@ impl AccountBuilder {
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
         client_options: Arc<RwLock<ClientOptions>>,
-        secret_manager: Arc<RwLock<SecretManagerType>>,
+        secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
@@ -147,7 +147,7 @@ impl AccountBuilder {
 
         let consolidation_threshold = match *self.secret_manager.read().await {
             #[cfg(feature = "ledger-nano")]
-            SecretManagerType::LedgerNano(_) | SecretManagerType::LedgerNanoSimulator(_) => {
+            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
                 DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
             }
             _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
@@ -188,7 +188,7 @@ impl AccountBuilder {
 
 /// Generate the first public address of an account
 pub(crate) async fn get_first_public_address(
-    secret_manager: &Arc<RwLock<SecretManagerType>>,
+    secret_manager: &Arc<RwLock<SecretManager>>,
     coin_type: u32,
     account_index: u32,
 ) -> crate::Result<Address> {

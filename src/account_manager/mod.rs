@@ -14,7 +14,7 @@ use std::{
     },
 };
 
-use iota_client::{secret::SecretManagerType, Client};
+use iota_client::{secret::SecretManager, Client};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -44,7 +44,7 @@ pub struct AccountManager {
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
-    pub(crate) secret_manager: Arc<RwLock<SecretManagerType>>,
+    pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
     #[cfg(feature = "storage")]
@@ -78,8 +78,8 @@ impl AccountManager {
         Ok(self.accounts.read().await.clone())
     }
 
-    /// Get the [SecretManagerType]
-    pub fn get_secret_manager(&self) -> Arc<RwLock<SecretManagerType>> {
+    /// Get the [SecretManager]
+    pub fn get_secret_manager(&self) -> Arc<RwLock<SecretManager>> {
         self.secret_manager.clone()
     }
 

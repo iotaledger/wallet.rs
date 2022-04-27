@@ -4,7 +4,7 @@
 use iota_client::node_manager::node::{Node, NodeDto, Url};
 use iota_wallet::{
     account_manager::AccountManager,
-    secret::{mnemonic::MnemonicSecretManager, SecretManagerType},
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
 
@@ -19,7 +19,7 @@ async fn stored_account_manager_data() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path("test-storage/stored_account_manager_data")
         .finish()
@@ -34,7 +34,7 @@ async fn stored_account_manager_data() -> Result<()> {
 
     // Recreate AccountManager without providing client options
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_storage_path("test-storage/stored_account_manager_data")
         .finish()
         .await?;
@@ -60,7 +60,7 @@ async fn different_seed() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path("test-storage/different_seed")
         .finish()
@@ -80,7 +80,7 @@ async fn different_seed() -> Result<()> {
         "route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy",
     )?;
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager2)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager2))
         .with_storage_path("test-storage/different_seed")
         .finish()
         .await?;

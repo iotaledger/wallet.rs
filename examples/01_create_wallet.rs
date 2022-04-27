@@ -10,7 +10,7 @@ use std::{env, path::PathBuf};
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
-    secret::{stronghold::StrongholdSecretManager, SecretManagerType},
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
     ClientOptions, Result,
 };
 
@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Stronghold(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;

@@ -3,7 +3,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use iota_client::{secret::SecretManagerType, Client};
+use iota_client::{secret::SecretManager, Client};
 use tokio::sync::{Mutex, RwLock};
 
 #[cfg(feature = "events")]
@@ -27,7 +27,7 @@ use crate::{
 pub struct AccountHandle {
     account: Arc<RwLock<Account>>,
     pub(crate) client: Client,
-    pub(crate) secret_manager: Arc<RwLock<SecretManagerType>>,
+    pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     // mutex to prevent multiple sync calls at the same or almost the same time, the u128 is a timestamp
     // if the last synced time was < `MIN_SYNC_INTERVAL` second ago, we don't sync, but only calculate the balance
     // again, because sending transactions can change that
@@ -43,7 +43,7 @@ impl AccountHandle {
     pub(crate) fn new(
         account: Account,
         client: Client,
-        secret_manager: Arc<RwLock<SecretManagerType>>,
+        secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {

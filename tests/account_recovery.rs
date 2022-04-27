@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     account_manager::AccountManager,
-    secret::{mnemonic::MnemonicSecretManager, SecretManagerType},
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
 
@@ -21,7 +21,7 @@ async fn account_recovery_empty() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path("test-storage/account_recovery_empty")
         .finish()
@@ -48,7 +48,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -82,7 +82,7 @@ async fn account_recovery_with_balance() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;
@@ -119,7 +119,7 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;

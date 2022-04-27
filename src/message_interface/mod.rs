@@ -10,7 +10,7 @@ mod response_type;
 
 use std::str::FromStr;
 
-use iota_client::secret::SecretManagerType;
+use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -58,7 +58,7 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
         }
 
         if let Some(secret_manager) = options.secret_manager {
-            builder = builder.with_secret_manager(SecretManagerType::from_str(&secret_manager)?);
+            builder = builder.with_secret_manager(SecretManager::from_str(&secret_manager)?);
         }
 
         if let Some(client_options) = options.client_options {

@@ -7,7 +7,7 @@ use std::time::Instant;
 
 use iota_wallet::{
     account_manager::AccountManager,
-    secret::{mnemonic::MnemonicSecretManager, SecretManagerType},
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
 
@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     )?;
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Mnemonic(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .finish()
         .await?;

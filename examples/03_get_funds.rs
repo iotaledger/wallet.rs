@@ -11,7 +11,7 @@ use dotenv::dotenv;
 use iota_client::request_funds_from_faucet;
 use iota_wallet::{
     account_manager::AccountManager,
-    secret::{stronghold::StrongholdSecretManager, SecretManagerType},
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
     Result,
 };
 
@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
 
     // Create the account manager
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManagerType::Stronghold(Box::new(secret_manager)))
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .finish()
         .await?;
 

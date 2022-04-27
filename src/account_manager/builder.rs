@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-use iota_client::secret::SecretManagerType;
+use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -28,7 +28,7 @@ pub struct AccountManagerBuilder {
     storage_options: Option<StorageOptions>,
     client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
-    secret_manager: Option<Arc<RwLock<SecretManagerType>>>,
+    secret_manager: Option<Arc<RwLock<SecretManager>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,14 +69,14 @@ impl AccountManagerBuilder {
     }
 
     /// Set the secret_manager to be used.
-    pub fn with_secret_manager(mut self, secret_manager: SecretManagerType) -> Self {
+    pub fn with_secret_manager(mut self, secret_manager: SecretManager) -> Self {
         self.secret_manager.replace(Arc::new(RwLock::new(secret_manager)));
         self
     }
 
     /// Set the secret_manager to be used wrapped in an Arc<RwLock<>> so it can be cloned and mutated also outside of
     /// the AccountManager.
-    pub fn with_secret_manager_arc(mut self, secret_manager: Arc<RwLock<SecretManagerType>>) -> Self {
+    pub fn with_secret_manager_arc(mut self, secret_manager: Arc<RwLock<SecretManager>>) -> Self {
         self.secret_manager.replace(secret_manager);
         self
     }

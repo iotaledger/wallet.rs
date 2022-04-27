@@ -72,7 +72,7 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" 
 In order to use the library, you first need to create an _AccountManager_ :
 
 ```rust
-use iota_wallet::{account_manager::AccountManager, ClientOptions, secret::SecretManagerType};
+use iota_wallet::{account_manager::AccountManager, ClientOptions, secret::SecretManager};
 use std::path::PathBuf;
 
 #[tokio::main]
@@ -84,13 +84,13 @@ async fn main() -> iota_wallet::Result<()> {
         .await?;
     manager.set_stronghold_password("password").await?;
     // If no mnemonic is provided, then the Stronghold file is the only way for a backup
-    manager.store_mnemonic(SecretManagerType::Stronghold, None).await?;
+    manager.store_mnemonic(SecretManager::Stronghold, None).await?;
     let client_options = ClientOptions::new()
         .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
         .build()?;
     let account = manager
         .create_account(client_options)?
-        .secret_manager_type(SecretManagerType::Stronghold)
+        .secret_manager_type(SecretManager::Stronghold)
         .initialise()
         .await?;
     let address = account.generate_address().await?;
