@@ -1,6 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "stronghold")]
+use iota_client::secret::SecretManager;
 use iota_client::{
     api::verify_semantic,
     bee_message::{
@@ -12,8 +14,6 @@ use iota_client::{
     constants::{IOTA_BECH32_HRP, SHIMMER_BECH32_HRP},
     secret::{types::InputSigningData, Network, SecretManageExt, SignMessageMetadata},
 };
-#[cfg(feature = "stronghold")]
-use iota_client::secret::SecretManager;
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
 #[cfg(feature = "events")]
