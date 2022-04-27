@@ -28,26 +28,69 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
-    // Total amount
+    /// Total amount
     pub total: u64,
-    // Balance that can currently be spend
+    /// Balance that can currently be spend
     pub available: u64,
-    // Current required storage deposit amount
+    /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
-    // Native tokens
+    /// Native tokens
     #[serde(rename = "nativeTokens")]
     pub native_tokens: HashMap<TokenId, U256>,
-    // Nfts
+    /// Nfts
     pub nfts: Vec<NftId>,
-    // Aliases
+    /// Aliases
     pub aliases: Vec<AliasId>,
-    // Foundries
+    /// Foundries
     pub foundries: Vec<FoundryId>,
-    // Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
-    // [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
+    /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+    /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
     pub potentially_locked_outputs: HashMap<OutputId, bool>,
+}
+/// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
+/// [`crate::account::handle::AccountHandle::balance()`].
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+pub struct AccountBalanceDto {
+    /// Total amount
+    // Using a String to prevent overflow issues in other languages
+    pub total: String,
+    /// Balance that can currently be spend
+    // Using a String to prevent overflow issues in other languages
+    pub available: String,
+    /// Current required storage deposit amount
+    #[serde(rename = "requiredStorageDeposit")]
+    // Using a String to prevent overflow issues in other languages
+    pub required_storage_deposit: String,
+    /// Native tokens
+    #[serde(rename = "nativeTokens")]
+    pub native_tokens: HashMap<TokenId, U256>,
+    /// Nfts
+    pub nfts: Vec<NftId>,
+    /// Aliases
+    pub aliases: Vec<AliasId>,
+    /// Foundries
+    pub foundries: Vec<FoundryId>,
+    /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+    /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
+    #[serde(rename = "potentiallyLockedOutputs")]
+    pub potentially_locked_outputs: HashMap<OutputId, bool>,
+}
+
+impl From<&AccountBalance> for AccountBalanceDto {
+    fn from(value: &AccountBalance) -> Self {
+        Self {
+            total: value.total.to_string(),
+            available: value.available.to_string(),
+            required_storage_deposit: value.required_storage_deposit.to_string(),
+            native_tokens: value.native_tokens.clone(),
+            nfts: value.nfts.clone(),
+            aliases: value.aliases.clone(),
+            foundries: value.foundries.clone(),
+            potentially_locked_outputs: value.potentially_locked_outputs.clone(),
+        }
+    }
 }
 
 /// An output with metadata
