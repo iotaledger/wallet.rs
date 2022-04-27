@@ -174,12 +174,12 @@ async fn account_coin_type() -> Result<()> {
         .with_node_sync_disabled();
 
     // mnemonic without balance
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path("test-storage/account_coin_type")
         .finish()
