@@ -12,7 +12,7 @@ export class MessageHandler {
         const messageOptions = {
             storagePath: options.storagePath,
             clientOptions: JSON.stringify(options.clientOptions),
-            secret_manager: JSON.stringify(options.secret_manager)
+            secretManager: JSON.stringify(options.secretManager)
         }
 
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
