@@ -12,7 +12,7 @@ const accountManagerOptions = {
         ],
         localPow: true,
     },
-    signer: {
+    secretManager: {
         Mnemonic:
             'acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast',
     },

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
+    account::types::CoinType,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
@@ -162,5 +163,48 @@ async fn account_first_address_exists() -> Result<()> {
     assert_eq!(account.list_addresses().await?.first().unwrap().internal(), &false);
 
     std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
+    Ok(())
+}
+
+#[tokio::test]
+async fn account_coin_type() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/account_coin_type").unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_storage_path("test-storage/account_coin_type")
+        .finish()
+        .await?;
+
+    let _account = manager
+        .create_account()
+        .with_coin_type(CoinType::Shimmer)
+        .finish()
+        .await?;
+    let _account = manager
+        .create_account()
+        .with_coin_type(CoinType::Shimmer)
+        .finish()
+        .await?;
+    // Creating a new account with a different coin type fails
+    assert!(
+        manager
+            .create_account()
+            .with_coin_type(CoinType::IOTA)
+            .finish()
+            .await
+            .is_err()
+    );
+
+    std::fs::remove_dir_all("test-storage/account_coin_type").unwrap_or(());
     Ok(())
 }
