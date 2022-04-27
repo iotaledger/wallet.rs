@@ -39,7 +39,7 @@ The following example creates a new database and account:
 
 * Storage is initialized under the given path (`./alice-database`)
 * The password is set based on your password in _.env_ file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)` )
-* When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)` ).
+* When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(secret_manager.Stronghold)` ).
 * The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
 
 The storage is encrypted at rest, so you need a strong password and location where to place your storage. 

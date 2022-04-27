@@ -25,7 +25,7 @@ use crate::account::{
     AccountBalance,
 };
 #[cfg(feature = "ledger-nano")]
-use crate::signing::SignerType;
+use crate::secret::SecretManager;
 
 impl AccountHandle {
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
@@ -79,10 +79,10 @@ impl AccountHandle {
 
         if options.automatic_output_consolidation {
             // Only consolidates outputs for non ledger accounts, because they require approval from the user
-            match self.signer.signer_type {
+            match *self.secret_manager.read().await {
                 #[cfg(feature = "ledger-nano")]
                 // don't automatically consolidate with ledger accounts, because they require approval from the user
-                SignerType::LedgerNano | SignerType::LedgerNanoSimulator => {}
+                SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {}
                 _ => {
                     self.consolidate_outputs().await?;
                 }
@@ -90,10 +90,10 @@ impl AccountHandle {
         }
 
         // Only consolidates outputs for non ledger accounts, because they require approval from the user
-        match self.signer.signer_type {
+        match *self.secret_manager.read().await {
             #[cfg(feature = "ledger-nano")]
             // don't automatically consolidate with ledger accounts, because they require approval from the user
-            SignerType::LedgerNano | SignerType::LedgerNanoSimulator => {}
+            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {}
             _ => {
                 self.try_collect_outputs(options.try_collect_outputs).await?;
             }

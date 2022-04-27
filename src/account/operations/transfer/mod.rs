@@ -19,7 +19,7 @@ use iota_client::{
         payload::transaction::{TransactionId, TransactionPayload},
         MessageId,
     },
-    signing::types::InputSigningData,
+    secret::types::InputSigningData,
 };
 use packable::bounded::TryIntoBoundedU16Error;
 use serde::Serialize;

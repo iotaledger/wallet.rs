@@ -5,16 +5,20 @@
 
 use std::time::Instant;
 
-use iota_wallet::{account_manager::AccountManager, signing::mnemonic::MnemonicSigner, Result};
+use iota_wallet::{
+    account_manager::AccountManager,
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
+    Result,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
     )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_storage_path("wallet-database")
         .finish()
         .await?;

@@ -222,8 +222,8 @@ impl AccountHandle {
         drop(account);
 
         let mut collection_results = Vec::new();
-        // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <= max
-        // inputs
+        // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited) and
+        // is <= max inputs
         //
         // Consideration: outputs with expiration and storage deposit return unlock
         // conditions might require more outputs or maybe more additional inputs are required for the storage deposit

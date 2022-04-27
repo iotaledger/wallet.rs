@@ -15,7 +15,7 @@ use iota_client::{
         },
     },
     packable::PackableExt,
-    signing::types::InputSigningData,
+    secret::types::InputSigningData,
 };
 
 #[cfg(feature = "events")]

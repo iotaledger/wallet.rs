@@ -72,7 +72,7 @@ In order to use the library you first need to create an `AccountManager`:
 
 ```rust
 use iota_wallet::{
-    account_manager::AccountManager, ClientOptions, signing::SignerType,
+    account_manager::AccountManager, ClientOptions, secret::SecretManager,
 };
 use std::path::PathBuf;
 
