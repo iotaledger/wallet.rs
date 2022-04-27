@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::output::OutputId;
+use iota_client::{bee_message::output::OutputId, NodeInfoWrapper};
 use serde::Serialize;
 
 use crate::{
@@ -58,6 +58,8 @@ pub enum ResponseType {
     GeneratedMnemonic(String),
     /// VerifyMnemonic response.
     VerifiedMnemonic,
+    /// Node info response.
+    NodeInfo(NodeInfoWrapper),
     // /// SetAlias response.
     // UpdatedAlias,
     /// DeleteStorage response.
