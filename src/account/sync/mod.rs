@@ -2777,7 +2777,7 @@ fn verify_signature(
     if let Some(UnlockBlock::Signature(signature_unlock_block)) = unlock_blocks.get(index) {
         Ok(address.verify(essence_hash, signature_unlock_block)?)
     } else {
-        return Err(crate::Error::MissingUnlockBlock);
+        Err(crate::Error::MissingUnlockBlock)
     }
 }
 
