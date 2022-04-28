@@ -267,4 +267,13 @@ impl AccountManager {
         }
         Ok(())
     }
+
+    #[cfg(feature = "stronghold")]
+    /// Store a mnemonic into the Stronghold vault
+    pub async fn store_mnemonic(&self, mnemonic: String) -> crate::Result<()> {
+        if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
+            stronghold.store_mnemonic(mnemonic).await?;
+        }
+        Ok(())
+    }
 }

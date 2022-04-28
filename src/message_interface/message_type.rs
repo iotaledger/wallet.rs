@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// An account to create.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountToCreate {
     /// The account alias.
@@ -83,6 +83,8 @@ pub enum MessageType {
     GetNodeInfo,
     /// Set the stronghold password.
     SetStrongholdPassword(String),
+    /// Store a mnemonic into the Stronghold vault.
+    StoreMnemonic(String),
     /// Start background syncing.
     StartBackgroundSync {
         /// Sync options
@@ -124,6 +126,7 @@ impl Serialize for MessageType {
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 12, "SetStrongholdPassword")
             }
+            MessageType::StoreMnemonic(_) => serializer.serialize_unit_variant("MessageType", 12, "StoreMnemonic"),
             MessageType::StartBackgroundSync { .. } => {
                 serializer.serialize_unit_variant("MessageType", 13, "StartBackgroundSync")
             }

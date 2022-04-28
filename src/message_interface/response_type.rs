@@ -44,10 +44,6 @@ pub enum ResponseType {
     Balance(AccountBalance),
     /// SyncAccount response.
     SyncedAccount(AccountBalance),
-    /// Backup response.
-    BackupSuccessful,
-    /// ImportAccounts response.
-    BackupRestored,
     /// SendTransfer and InternalTransfer response.
     SentTransfer(TransferResult),
     /// TryCollectOutputs and CollectOutputs response.
@@ -58,16 +54,8 @@ pub enum ResponseType {
     Panic(String),
     /// GenerateMnemonic response.
     GeneratedMnemonic(String),
-    /// VerifyMnemonic response.
-    VerifiedMnemonic,
     /// Node info response.
     NodeInfo(NodeInfoWrapper),
-    // /// SetAlias response.
-    // UpdatedAlias,
-    /// DeleteStorage response.
-    DeletedStorage,
-    /// SetClientOptions response.
-    UpdatedAllClientOptions,
     /// All went fine.
     Ok(()),
 }
