@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod account_method;
+mod dtos;
 mod message;
 mod message_handler;
 mod message_type;
@@ -15,6 +16,7 @@ use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
     account_method::AccountMethod,
+    dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     message_type::{AccountToCreate, MessageType},

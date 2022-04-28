@@ -18,11 +18,14 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
+        dtos::AccountBalanceDto,
         message::Message,
         message_type::{AccountToCreate, MessageType},
         response::Response,
+        response_type::ResponseType,
+        AddressWithUnspentOutputsDto,
     },
-    Result,
+    AddressWithAmount, AddressWithMicroAmount, Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Response {
@@ -237,7 +240,9 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListAddressesWithUnspentOutputs => {
                 let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
-                Ok(Response::AddressesWithUnspentOutputs(addresses))
+                Ok(ResponseType::AddressesWithUnspentOutputs(
+                    addresses.iter().map(AddressWithUnspentOutputsDto::from).collect(),
+                ))
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;
@@ -274,17 +279,25 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::GetBalance => Ok(Response::Balance(account_handle.balance().await?)),
-            AccountMethod::SyncAccount { options } => {
-                Ok(Response::Balance(account_handle.sync(options.clone()).await?))
-            }
+            AccountMethod::GetBalance => Ok(ResponseType::Balance(AccountBalanceDto::from(
+                &account_handle.balance().await?,
+            ))),
+            AccountMethod::SyncAccount { options } => Ok(ResponseType::Balance(AccountBalanceDto::from(
+                &account_handle.sync(options.clone()).await?,
+            ))),
             AccountMethod::SendAmount {
                 addresses_with_amount,
                 options,
             } => {
                 convert_async_panics(|| async {
                     let message = account_handle
-                        .send_amount(addresses_with_amount.clone(), options.clone())
+                        .send_amount(
+                            addresses_with_amount
+                                .iter()
+                                .map(AddressWithAmount::try_from)
+                                .collect::<Result<Vec<AddressWithAmount>>>()?,
+                            options.clone(),
+                        )
                         .await?;
                     Ok(Response::SentTransfer(message))
                 })
@@ -296,7 +309,13 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     let message = account_handle
-                        .send_micro_transaction(addresses_with_micro_amount.clone(), options.clone())
+                        .send_micro_transaction(
+                            addresses_with_micro_amount
+                                .iter()
+                                .map(AddressWithMicroAmount::try_from)
+                                .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
+                            options.clone(),
+                        )
                         .await?;
                     Ok(Response::SentTransfer(message))
                 })

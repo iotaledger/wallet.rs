@@ -56,28 +56,3 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-/// address with amount for `send_amount()`
-pub struct AddressWithAmountDto {
-    /// Bech32 encoded address
-    pub address: String,
-    /// Amount
-    // Using a String to prevent overflow issues in other languages
-    pub amount: String,
-}
-
-impl TryFrom<&AddressWithAmountDto> for AddressWithAmountDto {
-    type Error = crate::Error;
-
-    fn try_from(value: &AddressWithAmountDto) -> crate::Result<Self> {
-        Ok(Self {
-            address: value.address.clone(),
-            amount: value
-                .amount
-                .parse::<u64>()
-                .map_err(|_| iota_client::Error::InvalidAmount(value.amount.clone()))?
-                .to_string(),
-        })
-    }
-}

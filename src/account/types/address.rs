@@ -47,38 +47,6 @@ pub struct AddressWithUnspentOutputs {
     pub(crate) output_ids: Vec<OutputId>,
 }
 
-/// Dto for an account address with output_ids of unspent outputs.
-#[derive(Debug, Setters, Clone, Serialize, Deserialize)]
-pub struct AddressWithUnspentOutputsDto {
-    /// The address.
-    #[serde(with = "crate::account::types::address_serde")]
-    pub(crate) address: AddressWrapper,
-    /// The address key index.
-    #[serde(rename = "keyIndex")]
-    pub(crate) key_index: u32,
-    /// Determines if an address is a public or an internal (change) address.
-    #[getset(set = "pub(crate)")]
-    pub(crate) internal: bool,
-    /// Amount
-    // Using a String to prevent overflow issues in other languages
-    pub(crate) amount: String,
-    /// Output ids
-    #[serde(rename = "outputIds")]
-    pub(crate) output_ids: Vec<OutputId>,
-}
-
-impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
-    fn from(value: &AddressWithUnspentOutputs) -> Self {
-        Self {
-            address: value.address.clone(),
-            key_index: value.key_index,
-            internal: value.internal,
-            amount: value.amount.to_string(),
-            output_ids: value.output_ids.clone(),
-        }
-    }
-}
-
 /// An address and its network type.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct AddressWrapper {
