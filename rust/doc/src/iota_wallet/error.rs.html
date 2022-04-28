@@ -404,6 +404,10 @@
 <span id="399">399</span>
 <span id="400">400</span>
 <span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -591,6 +595,9 @@
     <span class="doccomment">/// Invalid output kind.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid output kind: {0}&quot;</span>)]</span>
     <span class="ident">InvalidOutputKind</span>(<span class="ident">String</span>),
+    <span class="doccomment">/// Missing unlock block in transaction.</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;missing unlock block in transaction&quot;</span>)]</span>
+    <span class="ident">MissingUnlockBlock</span>,
     <span class="doccomment">/// Node not synced when creating account or updating client options.</span>
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;nodes {0} not synced&quot;</span>)]</span>
     <span class="ident">NodesNotSynced</span>(<span class="ident">String</span>),
@@ -780,6 +787,7 @@
             <span class="ident"><span class="self">Self</span>::DustError</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;DustError&quot;</span>),
             <span class="ident"><span class="self">Self</span>::LeavingDustError</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;LeavingDustError&quot;</span>),
             <span class="ident"><span class="self">Self</span>::InvalidOutputKind</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;InvalidOutputKind&quot;</span>),
+            <span class="ident"><span class="self">Self</span>::MissingUnlockBlock</span> =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;MissingUnlockBlock&quot;</span>),
             <span class="ident"><span class="self">Self</span>::NodesNotSynced</span>(<span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;NodesNotSynced&quot;</span>),
             <span class="ident"><span class="self">Self</span>::FailedToGetRemainder</span> =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;FailedToGetRemainder&quot;</span>),
             <span class="ident"><span class="self">Self</span>::TooManyOutputs</span>(<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="ident">serialize_variant</span>(<span class="self">self</span>, <span class="ident">serializer</span>, <span class="string">&quot;TooManyOutputs&quot;</span>),

@@ -2897,6 +2897,75 @@
 <span id="2892">2892</span>
 <span id="2893">2893</span>
 <span id="2894">2894</span>
+<span id="2895">2895</span>
+<span id="2896">2896</span>
+<span id="2897">2897</span>
+<span id="2898">2898</span>
+<span id="2899">2899</span>
+<span id="2900">2900</span>
+<span id="2901">2901</span>
+<span id="2902">2902</span>
+<span id="2903">2903</span>
+<span id="2904">2904</span>
+<span id="2905">2905</span>
+<span id="2906">2906</span>
+<span id="2907">2907</span>
+<span id="2908">2908</span>
+<span id="2909">2909</span>
+<span id="2910">2910</span>
+<span id="2911">2911</span>
+<span id="2912">2912</span>
+<span id="2913">2913</span>
+<span id="2914">2914</span>
+<span id="2915">2915</span>
+<span id="2916">2916</span>
+<span id="2917">2917</span>
+<span id="2918">2918</span>
+<span id="2919">2919</span>
+<span id="2920">2920</span>
+<span id="2921">2921</span>
+<span id="2922">2922</span>
+<span id="2923">2923</span>
+<span id="2924">2924</span>
+<span id="2925">2925</span>
+<span id="2926">2926</span>
+<span id="2927">2927</span>
+<span id="2928">2928</span>
+<span id="2929">2929</span>
+<span id="2930">2930</span>
+<span id="2931">2931</span>
+<span id="2932">2932</span>
+<span id="2933">2933</span>
+<span id="2934">2934</span>
+<span id="2935">2935</span>
+<span id="2936">2936</span>
+<span id="2937">2937</span>
+<span id="2938">2938</span>
+<span id="2939">2939</span>
+<span id="2940">2940</span>
+<span id="2941">2941</span>
+<span id="2942">2942</span>
+<span id="2943">2943</span>
+<span id="2944">2944</span>
+<span id="2945">2945</span>
+<span id="2946">2946</span>
+<span id="2947">2947</span>
+<span id="2948">2948</span>
+<span id="2949">2949</span>
+<span id="2950">2950</span>
+<span id="2951">2951</span>
+<span id="2952">2952</span>
+<span id="2953">2953</span>
+<span id="2954">2954</span>
+<span id="2955">2955</span>
+<span id="2956">2956</span>
+<span id="2957">2957</span>
+<span id="2958">2958</span>
+<span id="2959">2959</span>
+<span id="2960">2960</span>
+<span id="2961">2961</span>
+<span id="2962">2962</span>
+<span id="2963">2963</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -2919,12 +2988,14 @@
 <span class="kw">use</span> <span class="ident">iota_client</span>::{
     <span class="ident">api::finish_pow</span>,
     <span class="ident">bee_message</span>::{
+        <span class="ident">address::Address</span> <span class="kw">as</span> <span class="ident">BeeAddress</span>,
         <span class="ident">constants::INPUT_OUTPUT_COUNT_MAX</span>,
         <span class="ident">prelude</span>::{
             <span class="ident">Essence</span>, <span class="ident">Input</span>, <span class="ident">Message</span> <span class="kw">as</span> <span class="ident">IotaMessage</span>, <span class="ident">MessageId</span>, <span class="ident">Output</span>, <span class="ident">OutputId</span>, <span class="ident">Payload</span>, <span class="ident">RegularEssence</span>,
             <span class="ident">SignatureLockedDustAllowanceOutput</span>, <span class="ident">SignatureLockedSingleOutput</span>, <span class="ident">TransactionPayload</span>, <span class="ident">UnlockBlocks</span>,
             <span class="ident">UtxoInput</span>,
         },
+        <span class="ident">unlock::UnlockBlock</span>,
     },
     <span class="ident">common::packable::Packable</span>,
     <span class="ident">AddressOutputsOptions</span>, <span class="ident">Client</span>,
@@ -4951,6 +5022,7 @@
                 <span class="ident">address_output</span>.<span class="ident">clone</span>(),
                 <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">key_index</span>(),
                 <span class="kw-2">*</span><span class="ident">account_address</span>.<span class="ident">internal</span>(),
+                <span class="ident">account_address</span>.<span class="ident">address</span>().<span class="ident">inner</span>,
             ));
         }
         <span class="ident">utxos</span>.<span class="ident">extend</span>(<span class="ident">outputs</span>.<span class="ident">into_iter</span>());
@@ -4971,12 +5043,13 @@
             <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::error::Error::InvalidOutputKind</span>(<span class="string">&quot;Treasury&quot;</span>.<span class="ident">to_string</span>())),
         }
     }
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_inputs_for_validation</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Input</span>, <span class="ident">BeeAddress</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs_for_essence</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inputs_for_event</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TransactionIO</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_output_sum</span> <span class="op">=</span> <span class="number">0</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remainder_value</span> <span class="op">=</span> <span class="number">0</span>;
 
-    <span class="kw">for</span> (<span class="ident">utxo</span>, <span class="ident">address_index</span>, <span class="ident">address_internal</span>) <span class="kw">in</span> <span class="ident">utxos</span> {
+    <span class="kw">for</span> (<span class="ident">utxo</span>, <span class="ident">address_index</span>, <span class="ident">address_internal</span>, <span class="ident">bee_address</span>) <span class="kw">in</span> <span class="ident">utxos</span> {
         <span class="kw">let</span> (<span class="ident">amount</span>, <span class="ident">address</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">utxo</span>.<span class="ident">kind</span> {
             <span class="ident">OutputKind::SignatureLockedSingle</span> =&gt; {
                 <span class="kw">if</span> <span class="ident">utxo</span>.<span class="ident">amount</span> <span class="op">&lt;</span> <span class="ident">DUST_ALLOWANCE_VALUE</span> {
@@ -4998,6 +5071,7 @@
 
         <span class="kw">let</span> <span class="ident">input</span>: <span class="ident">Input</span> <span class="op">=</span> <span class="ident">UtxoInput::new</span>(<span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">transaction_id</span>(), <span class="kw-2">*</span><span class="ident">utxo</span>.<span class="ident">index</span>())<span class="question-mark">?</span>.<span class="ident">into</span>();
         <span class="ident">inputs_for_essence</span>.<span class="ident">push</span>(<span class="ident">input</span>.<span class="ident">clone</span>());
+        <span class="ident">address_inputs_for_validation</span>.<span class="ident">push</span>((<span class="ident">input</span>.<span class="ident">clone</span>(), <span class="ident">bee_address</span>));
         <span class="ident">transaction_inputs</span>.<span class="ident">push</span>(<span class="ident"><span class="kw">crate</span>::signing::TransactionInput</span> {
             <span class="ident">input</span>,
             <span class="ident">address_index</span>,
@@ -5327,6 +5401,7 @@
         .<span class="ident">with_unlock_blocks</span>(<span class="ident">UnlockBlocks::new</span>(<span class="ident">unlock_blocks</span>)<span class="question-mark">?</span>)
         .<span class="ident">finish</span>()<span class="question-mark">?</span>;
 
+    <span class="ident">verify_unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>, <span class="ident">address_inputs_for_validation</span>)<span class="question-mark">?</span>;
     <span class="ident">transfer_obj</span>
         .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">TransferProgressType::PerformingPoW</span>)
         .<span class="kw">await</span>;
@@ -5647,13 +5722,46 @@
     <span class="prelude-val">Ok</span>(<span class="ident">message</span>)
 }
 
+<span class="kw">fn</span> <span class="ident">verify_unlock_blocks</span>(
+    <span class="ident">transaction_payload</span>: <span class="kw-2">&amp;</span><span class="ident">TransactionPayload</span>,
+    <span class="kw-2">mut</span> <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Input</span>, <span class="ident">BeeAddress</span>)<span class="op">&gt;</span>,
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="comment">// Sort inputs</span>
+    <span class="ident">inputs</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="number">0</span>.<span class="ident">pack_new</span>().<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="number">0</span>.<span class="ident">pack_new</span>()));
+    <span class="kw">let</span> <span class="ident">essence_hash</span> <span class="op">=</span> <span class="ident">transaction_payload</span>.<span class="ident">essence</span>().<span class="ident">hash</span>();
+    <span class="kw">let</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="ident">transaction_payload</span>.<span class="ident">unlock_blocks</span>();
+    <span class="kw">for</span> (<span class="ident">index</span>, (<span class="ident">_input</span>, <span class="ident">address</span>)) <span class="kw">in</span> <span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+        <span class="ident">verify_signature</span>(<span class="ident">address</span>, <span class="ident">unlock_blocks</span>, <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="ident">essence_hash</span>)<span class="question-mark">?</span>;
+    }
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">fn</span> <span class="ident">verify_signature</span>(
+    <span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="ident">BeeAddress</span>,
+    <span class="ident">unlock_blocks</span>: <span class="kw-2">&amp;</span><span class="ident">UnlockBlocks</span>,
+    <span class="ident">index</span>: <span class="ident">usize</span>,
+    <span class="ident">essence_hash</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>; <span class="number">32</span>],
+) -&gt; <span class="ident"><span class="kw">crate</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">UnlockBlock::Signature</span>(<span class="ident">signature_unlock_block</span>)) <span class="op">=</span> <span class="ident">unlock_blocks</span>.<span class="ident">get</span>(<span class="ident">index</span>) {
+        <span class="prelude-val">Ok</span>(<span class="ident">address</span>.<span class="ident">verify</span>(<span class="ident">essence_hash</span>, <span class="ident">signature_unlock_block</span>)<span class="question-mark">?</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::Error::MissingUnlockBlock</span>)
+    }
+}
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
     <span class="kw">use</span> <span class="kw">crate</span>::{
+        <span class="ident">account::sync::verify_unlock_blocks</span>,
         <span class="ident">address</span>::{<span class="ident">AddressOutput</span>, <span class="ident">OutputKind</span>},
         <span class="ident">client::ClientOptionsBuilder</span>,
     };
-    <span class="kw">use</span> <span class="ident">iota_client::bee_message::prelude</span>::{<span class="ident">MessageId</span>, <span class="ident">TransactionId</span>};
+    <span class="kw">use</span> <span class="ident">iota_client::bee_message</span>::{
+        <span class="ident">address::Address</span> <span class="kw">as</span> <span class="ident">BeeAddress</span>,
+        <span class="ident">input::Input</span>,
+        <span class="ident">payload::transaction::TransactionPayload</span>,
+        <span class="ident">prelude</span>::{<span class="ident">MessageId</span>, <span class="ident">TransactionId</span>},
+    };
     <span class="kw">use</span> <span class="ident">quickcheck_macros::quickcheck</span>;
     <span class="kw">use</span> <span class="ident">std::collections::HashMap</span>;
 
@@ -5789,6 +5897,36 @@
                 <span class="op">+</span> <span class="ident">events</span>.<span class="ident">iter</span>().<span class="ident">fold</span>(<span class="number">0i64</span>, <span class="op">|</span><span class="ident">a</span>, <span class="ident">c</span><span class="op">|</span> <span class="ident">a</span> <span class="op">-</span> (<span class="ident">c</span>.<span class="ident">balance_change</span>.<span class="ident">spent</span> <span class="kw">as</span> <span class="ident">i64</span>)
                     <span class="op">+</span> (<span class="ident">c</span>.<span class="ident">balance_change</span>.<span class="ident">received</span> <span class="kw">as</span> <span class="ident">i64</span>))
         );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">signature_validation</span>() {
+        <span class="comment">// Single input, single address</span>
+        <span class="kw">let</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Input</span>, <span class="ident">BeeAddress</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(
+            <span class="string">r#&quot;[[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;4ec422d65362578e6f87f6d1c026efab1f445ff2df088cd6e9718bbbecf7062c0000&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;3c6ac30b8067754b78ecc1b52c54d102126f5ac65adacc4d8b9ccdc8798cb72e&quot;}]]&quot;#</span>,
+        )
+        .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">transaction_payload</span>: <span class="ident">TransactionPayload</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="string">r#&quot;{&quot;essence&quot;:{&quot;type&quot;:&quot;Regular&quot;,&quot;data&quot;:{&quot;inputs&quot;:[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;4ec422d65362578e6f87f6d1c026efab1f445ff2df088cd6e9718bbbecf7062c0000&quot;}],&quot;outputs&quot;:[{&quot;type&quot;:&quot;SignatureLockedSingle&quot;,&quot;data&quot;:{&quot;address&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;afd2911a6bfb04473d316673c8d5aa430ea1b70e9c0ea3b70729f9844249ef72&quot;},&quot;amount&quot;:9000000}},{&quot;type&quot;:&quot;SignatureLockedDustAllowance&quot;,&quot;data&quot;:{&quot;address&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813&quot;},&quot;amount&quot;:1000000}}],&quot;payload&quot;:null}},&quot;unlock_blocks&quot;:[{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[3,230,86,61,104,98,11,242,120,245,14,61,4,126,192,110,223,144,237,192,217,83,52,214,131,234,80,216,166,45,160,169],&quot;signature&quot;:[170,45,8,190,44,193,159,150,167,139,218,187,188,155,159,126,55,194,187,9,67,182,18,181,99,166,200,10,151,74,46,255,161,223,186,79,26,94,185,131,47,125,41,239,133,15,190,12,9,24,116,71,58,60,6,6,85,3,247,241,164,116,22,5]}}}]}&quot;#</span>)
+        .<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">verify_unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_payload</span>, <span class="ident">addresses</span>).<span class="ident">is_ok</span>());
+
+        <span class="comment">// Two inputs, single address</span>
+        <span class="kw">let</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Input</span>, <span class="ident">BeeAddress</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(
+            <span class="string">r#&quot;[[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;d6748b4df6c3b391c3e0ccc5bc76c17ffda80cc47aa38bb53035eb13f705c5310000&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;2a207649c365626e42221b93f0b93a3edf4e4a101a6fed46ac25dbea963cfa1c&quot;}],[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;f6ca585d8a884c56efc32705ecab4465eb222fd2723357b08ae4ec69bc0fe04a0000&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;2a207649c365626e42221b93f0b93a3edf4e4a101a6fed46ac25dbea963cfa1c&quot;}]]&quot;#</span>,
+        )
+        .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">transaction_payload</span>: <span class="ident">TransactionPayload</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="string">r#&quot;{&quot;essence&quot;:{&quot;type&quot;:&quot;Regular&quot;,&quot;data&quot;:{&quot;inputs&quot;:[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;d6748b4df6c3b391c3e0ccc5bc76c17ffda80cc47aa38bb53035eb13f705c5310000&quot;},{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;f6ca585d8a884c56efc32705ecab4465eb222fd2723357b08ae4ec69bc0fe04a0000&quot;}],&quot;outputs&quot;:[{&quot;type&quot;:&quot;SignatureLockedDustAllowance&quot;,&quot;data&quot;:{&quot;address&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813&quot;},&quot;amount&quot;:11000000}}],&quot;payload&quot;:null}},&quot;unlock_blocks&quot;:[{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[252,182,140,90,85,29,197,138,147,248,32,149,235,90,227,81,133,29,94,151,99,226,27,142,157,1,216,253,215,65,245,55],&quot;signature&quot;:[5,143,55,167,104,165,33,54,65,185,234,11,13,47,5,43,239,75,163,93,141,85,136,199,166,118,210,131,221,197,127,88,219,171,244,219,59,45,40,158,216,218,33,144,248,76,196,227,36,68,91,26,75,215,47,39,235,241,85,93,41,154,90,5]}}},{&quot;type&quot;:&quot;Reference&quot;,&quot;data&quot;:0}]}&quot;#</span>)
+        .<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">verify_unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_payload</span>, <span class="ident">addresses</span>).<span class="ident">is_ok</span>());
+
+        <span class="comment">// Three inputs, two address</span>
+        <span class="kw">let</span> <span class="ident">addresses</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">Input</span>, <span class="ident">BeeAddress</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(
+            <span class="string">r#&quot;[[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;a8496dc13810c06609c843dada9e69e9089d17bbf51fa8a26baea1c822b495f00000&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;1858fc15c73e5b7afd8e7f26d763a5ed1216dec8223cb2d757c8185d6988adec&quot;}],[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;95759d802d3c96b2c5619b720a3fbe1ae8dc55f8b4b8e3c0fb29c50f840d99830100&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;7b6269039c2b1460cd92976416513d3b80eb355e55f3af2cb11b2fefcbc94214&quot;}],[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;2a66b58d4cbb11cc4222c7129e544cbe0a95735b713964b35336fb194c5d9d0e0100&quot;},{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;7b6269039c2b1460cd92976416513d3b80eb355e55f3af2cb11b2fefcbc94214&quot;}]]&quot;#</span>,
+        )
+        .<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">transaction_payload</span>: <span class="ident">TransactionPayload</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="string">r#&quot;{&quot;essence&quot;:{&quot;type&quot;:&quot;Regular&quot;,&quot;data&quot;:{&quot;inputs&quot;:[{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;2a66b58d4cbb11cc4222c7129e544cbe0a95735b713964b35336fb194c5d9d0e0100&quot;},{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;95759d802d3c96b2c5619b720a3fbe1ae8dc55f8b4b8e3c0fb29c50f840d99830100&quot;},{&quot;type&quot;:&quot;Utxo&quot;,&quot;data&quot;:&quot;a8496dc13810c06609c843dada9e69e9089d17bbf51fa8a26baea1c822b495f00000&quot;}],&quot;outputs&quot;:[{&quot;type&quot;:&quot;SignatureLockedSingle&quot;,&quot;data&quot;:{&quot;address&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;afd2911a6bfb04473d316673c8d5aa430ea1b70e9c0ea3b70729f9844249ef72&quot;},&quot;amount&quot;:2000000}},{&quot;type&quot;:&quot;SignatureLockedDustAllowance&quot;,&quot;data&quot;:{&quot;address&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:&quot;96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813&quot;},&quot;amount&quot;:19000000}}],&quot;payload&quot;:null}},&quot;unlock_blocks&quot;:[{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[65,70,94,121,54,19,63,47,138,158,43,147,80,103,36,79,184,187,220,227,55,190,178,44,85,92,47,3,61,57,149,109],&quot;signature&quot;:[218,240,132,193,143,135,231,63,51,216,56,243,251,58,170,153,226,48,201,58,39,247,204,205,156,52,228,7,87,26,217,94,252,244,97,165,147,152,35,214,0,157,59,174,191,67,241,136,33,175,232,229,25,101,40,85,118,77,159,112,125,226,113,1]}}},{&quot;type&quot;:&quot;Reference&quot;,&quot;data&quot;:0},{&quot;type&quot;:&quot;Signature&quot;,&quot;data&quot;:{&quot;type&quot;:&quot;Ed25519&quot;,&quot;data&quot;:{&quot;public_key&quot;:[153,251,5,41,39,91,214,187,164,77,124,144,134,99,98,255,80,157,105,188,12,131,106,150,204,199,166,15,72,60,8,219],&quot;signature&quot;:[214,33,105,6,59,170,247,75,170,193,106,3,198,47,99,48,82,150,124,23,163,239,109,84,89,23,150,231,47,87,29,113,46,141,241,242,147,147,88,72,168,214,189,221,184,115,171,109,178,238,37,84,88,194,212,193,208,202,191,142,202,169,193,13]}}}]}&quot;#</span>)
+        .<span class="ident">unwrap</span>();
+        <span class="macro">assert!</span>(<span class="ident">verify_unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="ident">transaction_payload</span>, <span class="ident">addresses</span>).<span class="ident">is_ok</span>());
     }
 }
 </code></pre></div>
