@@ -70,7 +70,7 @@ pub enum MessageType {
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     DeleteStorage,
     /// Generates a new mnemonic.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`GeneratedMnemonic`](crate::message_interface::ResponseType::GeneratedMnemonic)
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
