@@ -2774,17 +2774,11 @@ fn verify_signature(
     index: usize,
     essence_hash: &[u8; 32],
 ) -> crate::Result<()> {
-    let signature_unlock_block = match unlock_blocks.get(index) {
-        Some(unlock_block) => match unlock_block {
-            UnlockBlock::Signature(b) => b,
-            UnlockBlock::Reference(b) => match unlock_blocks.get(b.index().into()) {
-                Some(UnlockBlock::Signature(unlock_block)) => unlock_block,
-                _ => return Err(crate::Error::MissingUnlockBlock),
-            },
-        },
-        None => return Err(crate::Error::MissingUnlockBlock),
-    };
-    Ok(address.verify(essence_hash, signature_unlock_block)?)
+    if let Some(UnlockBlock::Signature(signature_unlock_block)) = unlock_blocks.get(index) {
+        Ok(address.verify(essence_hash, signature_unlock_block)?)
+    } else {
+        return Err(crate::Error::MissingUnlockBlock);
+    }
 }
 
 #[cfg(test)]
