@@ -1,4 +1,3 @@
-
 export enum OutputsToCollect {
     None = 'None',
     MicroTransactions = 'MicroTransactions',
@@ -28,9 +27,9 @@ export interface OutputData {
     isSpent: boolean;
     address: {
         // TODO: Also add other types
-        type: 'Ed25519',
+        type: 'Ed25519';
         data: string;
-    },
+    };
     networkId: number;
     remainder: boolean;
     // TODO: Replace with proper type

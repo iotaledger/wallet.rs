@@ -1,17 +1,17 @@
 export type RemainderValueStrategy = {
     ChangeAddress: {
         strategy: 'ChangeAddress';
-        value: null
-    },
+        value: null;
+    };
     ReuseAddress: {
         strategy: 'ReuseAddress';
-        value: null
-    },
+        value: null;
+    };
     AccountAddress: {
         strategy: 'AccountAddress';
         value: string;
-    },
-}
+    };
+};
 
 export interface NativeTokenOptions {
     // TOOD: Should this be just "address"?

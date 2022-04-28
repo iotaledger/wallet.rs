@@ -7,7 +7,7 @@ export type Auth = {
     jwt?: string;
     username?: string;
     password?: string;
-}
+};
 
 export interface MqttBrokerOptions {
     automaticDisconnect?: boolean;
@@ -22,7 +22,7 @@ export type Node = {
     url: string;
     auth?: Auth;
     disabled?: boolean;
-}
+};
 
 export interface ClientOptions {
     primaryNode?: string | Node;

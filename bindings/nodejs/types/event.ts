@@ -1,4 +1,3 @@
-
 export type EventType =
     | '*'
     | 'ErrorThrown'
@@ -8,4 +7,3 @@ export type EventType =
     | 'Reattachment'
     | 'Broadcast'
     | 'TransferProgress';
-

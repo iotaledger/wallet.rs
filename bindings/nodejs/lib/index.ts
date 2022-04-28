@@ -11,6 +11,7 @@ export * from './MessageHandler';
 export * from './Account';
 export * from '../types';
 
-const initLogger = (config: LoggerConfig) => addon.initLogger(JSON.stringify(config));
+const initLogger = (config: LoggerConfig) =>
+    addon.initLogger(JSON.stringify(config));
 
 export { initLogger };

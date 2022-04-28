@@ -1,4 +1,3 @@
-
 import type { Address } from './address';
 
 /**
@@ -37,7 +36,7 @@ export interface AccountMeta {
     accountOptions: {
         outputConsolidationThreshold: number;
         automaticOutputConsolidation: boolean;
-    }
+    };
 }
 
 export enum CoinType {
@@ -46,6 +45,6 @@ export enum CoinType {
 }
 
 export interface CreateAccountPayload {
-    alias: string
-    coinType?: CoinType
+    alias: string;
+    coinType?: CoinType;
 }
