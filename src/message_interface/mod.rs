@@ -32,7 +32,7 @@ pub struct ManagerOptions {
     storage_path: Option<String>,
     #[serde(rename = "clientOptions")]
     client_options: Option<String>,
-    #[serde(serialize_with = "secret_manager_serialize")]
+    #[serde(rename = "secretManager", serialize_with = "secret_manager_serialize")]
     secret_manager: Option<String>,
 }
 

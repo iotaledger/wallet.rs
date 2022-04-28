@@ -3,7 +3,6 @@
 
 use iota_client::bee_message::{
     address::{Address, AliasAddress},
-    milestone::MilestoneIndex,
     output::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, GovernorAddressUnlockCondition,
@@ -13,6 +12,7 @@ use iota_client::bee_message::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCost, ByteCostConfig, FeatureBlock, FoundryOutputBuilder,
         NativeToken, NftId, NftOutputBuilder, Output, OutputAmount, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
     },
+    payload::milestone::MilestoneIndex,
 };
 use primitive_types::U256;
 
