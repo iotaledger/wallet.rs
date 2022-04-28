@@ -23,7 +23,7 @@ pub enum ResponseType {
     /// Account succesfully created or GetAccount response.
     Account(Account),
     /// GetAccounts response.
-    ReadAccounts(Vec<Account>),
+    Accounts(Vec<Account>),
     /// ListAddresses
     Addresses(Vec<AccountAddress>),
     /// ListAddressesWithUnspentOutputs.
