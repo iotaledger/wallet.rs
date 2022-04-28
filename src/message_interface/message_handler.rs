@@ -117,7 +117,7 @@ impl WalletMessageHandler {
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async {
                     self.account_manager.delete_storage().await?;
-                    Ok(ResponseType::DeletedStorage)
+                    Ok(ResponseType::Ok(()))
                 })
                 .await
             }
@@ -127,14 +127,13 @@ impl WalletMessageHandler {
                     .map(ResponseType::GeneratedMnemonic)
             }),
             MessageType::VerifyMnemonic(mnemonic) => convert_panics(|| {
-                self.account_manager
-                    .verify_mnemonic(mnemonic)
-                    .map(|_| ResponseType::VerifiedMnemonic)
+                self.account_manager.verify_mnemonic(mnemonic)?;
+                Ok(ResponseType::Ok(()))
             }),
             MessageType::SetClientOptions(options) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
-                    Ok(ResponseType::UpdatedAllClientOptions)
+                    Ok(ResponseType::Ok(()))
                 })
                 .await
             }
@@ -147,7 +146,14 @@ impl WalletMessageHandler {
             MessageType::SetStrongholdPassword(password) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_stronghold_password(password).await?;
-                    Ok(ResponseType::UpdatedAllClientOptions)
+                    Ok(ResponseType::Ok(()))
+                })
+                .await
+            }
+            MessageType::StoreMnemonic(mnemonic) => {
+                convert_async_panics(|| async {
+                    self.account_manager.store_mnemonic(mnemonic.to_string()).await?;
+                    Ok(ResponseType::Ok(()))
                 })
                 .await
             }
@@ -188,14 +194,14 @@ impl WalletMessageHandler {
     #[cfg(feature = "storage")]
     async fn backup(&self, destination_path: PathBuf, password: String) -> Result<ResponseType> {
         self.account_manager.backup(destination_path, password).await?;
-        Ok(ResponseType::BackupSuccessful)
+        Ok(ResponseType::Ok(()))
     }
 
     // Todo: need to decide if we have an extra method for that or if the options for the account manager alone should
     // be used #[cfg(feature = "storage")]
     // async fn restore_backup(&self, source: &str, password: String) -> Result<ResponseType> {
     //     self.account_manager.restore_backup(source, password).await?;
-    //     Ok(ResponseType::BackupRestored)
+    //     Ok(ResponseType::Ok(()))
     // }
 
     async fn call_account_method(

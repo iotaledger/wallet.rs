@@ -215,4 +215,54 @@ mod tests {
         let _response = message_interface::send_message(&wallet_handle, transfer).await;
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }
+
+    #[cfg(feature = "stronghold")]
+    #[tokio::test]
+    async fn message_interface_stronghold() {
+        std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
+        let secret_manager = r#"{"Stronghold": {"snapshotPath": "test.stronghold"}}"#.to_string();
+        let client_options = r#"{
+            "nodes":[
+               {
+                  "url":"http://localhost:14265/",
+                  "auth":null,
+                  "disabled":false
+               }
+            ]
+         }"#
+        .to_string();
+
+        let options = ManagerOptions {
+            #[cfg(feature = "storage")]
+            storage_path: Some("test-storage/message_interface_stronghold".to_string()),
+            client_options: Some(client_options),
+            secret_manager: Some(secret_manager),
+        };
+
+        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+
+        // Set password and store mnemonic
+        let _ = message_interface::send_message(
+            &wallet_handle,
+            MessageType::SetStrongholdPassword("some_hopefully_secure_password".to_string()),
+        )
+        .await;
+        let mnemonic = "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast".to_string();
+        let _ = message_interface::send_message(&wallet_handle, MessageType::StoreMnemonic(mnemonic)).await;
+
+        // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
+        // an address
+        let account = AccountToCreate { ..Default::default() };
+        let response =
+            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+
+        match response.response() {
+            ResponseType::CreatedAccount(account) => {
+                let id = account.index();
+                println!("Created account index: {id}")
+            }
+            _ => panic!("unexpected response {:?}", response),
+        }
+        std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
+    }
 }
