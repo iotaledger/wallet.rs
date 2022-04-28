@@ -145,7 +145,7 @@ mod tests {
         let response =
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
-            ResponseType::CreatedAccount(account) => {
+            ResponseType::Account(account) => {
                 let id = account.index();
                 println!("Created account index: {id}")
             }
@@ -257,7 +257,7 @@ mod tests {
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 
         match response.response() {
-            ResponseType::CreatedAccount(account) => {
+            ResponseType::Account(account) => {
                 let id = account.index();
                 println!("Created account index: {id}")
             }

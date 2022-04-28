@@ -356,7 +356,7 @@ impl WalletMessageHandler {
         match builder.finish().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
-                Ok(ResponseType::CreatedAccount(account.clone()))
+                Ok(ResponseType::Account(account.clone()))
             }
             Err(e) => Err(e),
         }
@@ -365,7 +365,7 @@ impl WalletMessageHandler {
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<ResponseType> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
-        Ok(ResponseType::ReadAccount(account.clone()))
+        Ok(ResponseType::Account(account.clone()))
     }
 
     async fn get_accounts(&self) -> Result<ResponseType> {

@@ -30,12 +30,16 @@ pub struct AccountToCreate {
 #[allow(clippy::large_enum_variant)]
 pub enum MessageType {
     /// Creates an account.
+    /// Expected response: [`CreatedAccount`](crate::message_interface::ResponseType::CreatedAccount)
     CreateAccount(Box<AccountToCreate>),
     /// Read account.
+    /// Expected response: [`ReadAccount`](crate::message_interface::ResponseType::ReadAccount)
     GetAccount(AccountIdentifier),
     /// Read accounts.
+    /// Expected response: [`ReadAccounts`](crate::message_interface::ResponseType::ReadAccounts)
     GetAccounts,
     /// Consume an account method.
+    /// Returns [`ResponseType`](crate::message_interface::ResponseType)
     CallAccountMethod {
         /// The account identifier.
         #[serde(rename = "accountId")]
@@ -45,6 +49,7 @@ pub enum MessageType {
     },
     #[cfg(feature = "storage")]
     /// Backup storage.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     Backup {
         /// The backup destination.
         destination: PathBuf,
@@ -62,20 +67,28 @@ pub enum MessageType {
     // },
     #[cfg(feature = "storage")]
     /// Deletes the storage.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     DeleteStorage,
     /// Generates a new mnemonic.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     VerifyMnemonic(String),
     /// Updates the client options for all accounts.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     SetClientOptions(Box<ClientOptions>),
     /// Get the node information
+    /// Expected response: [`NodeInfo`](crate::message_interface::ResponseType::NodeInfo)
     GetNodeInfo,
     /// Set the stronghold password.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     SetStrongholdPassword(String),
     /// Store a mnemonic into the Stronghold vault.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     StoreMnemonic(String),
     /// Start background syncing.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     StartBackgroundSync {
         /// Sync options
         options: Option<SyncOptions>,
@@ -83,9 +96,12 @@ pub enum MessageType {
         interval: Option<Duration>,
     },
     /// Stop background syncing.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     StopBackgroundSync,
     #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
+    /// Emits an event for testing if the event system is working
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     EmitTestEvent(WalletEvent),
 }
 
