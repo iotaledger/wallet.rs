@@ -41,11 +41,6 @@ impl AccountHandle {
             .iter()
             .find(|(&output_id, output_data)| match &output_data.output {
                 Output::Alias(alias_output) => {
-                    println!(
-                        "{} == {}",
-                        alias_output.alias_id().or_from_output_id(output_id),
-                        alias_options.alias_id
-                    );
                     alias_output.alias_id().or_from_output_id(output_id) == alias_options.alias_id
                 }
                 _ => false,
