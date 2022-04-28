@@ -30,13 +30,13 @@ pub struct AccountToCreate {
 #[allow(clippy::large_enum_variant)]
 pub enum MessageType {
     /// Creates an account.
-    /// Expected response: [`CreatedAccount`](crate::message_interface::ResponseType::CreatedAccount)
+    /// Expected response: [`Account`](crate::message_interface::ResponseType::Account)
     CreateAccount(Box<AccountToCreate>),
     /// Read account.
-    /// Expected response: [`ReadAccount`](crate::message_interface::ResponseType::ReadAccount)
+    /// Expected response: [`Account`](crate::message_interface::ResponseType::Account)
     GetAccount(AccountIdentifier),
     /// Read accounts.
-    /// Expected response: [`ReadAccounts`](crate::message_interface::ResponseType::ReadAccounts)
+    /// Expected response: [`Accounts`](crate::message_interface::ResponseType::Accounts)
     GetAccounts,
     /// Consume an account method.
     /// Returns [`ResponseType`](crate::message_interface::ResponseType)
