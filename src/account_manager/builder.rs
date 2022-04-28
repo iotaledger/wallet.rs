@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "storage")]
+#[cfg(any(feature = "storage", feature = "stronghold"))]
 use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, Arc};
 
@@ -31,6 +31,7 @@ pub struct AccountManagerBuilder {
     client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
     secret_manager: Option<Arc<RwLock<SecretManager>>>,
+    #[cfg(feature = "stronghold")]
     backup_path: Option<PathBuf>,
 }
 
@@ -102,7 +103,7 @@ impl AccountManagerBuilder {
     }
 
     /// Builds the account manager
-    #[allow(unreachable_code)]
+    #[allow(unreachable_code, unused_mut)]
     pub async fn finish(mut self) -> crate::Result<AccountManager> {
         log::debug!("[AccountManagerBuilder]");
         #[cfg(feature = "stronghold")]
