@@ -8,8 +8,9 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
-    account_manager::AccountManager, signing::mnemonic::MnemonicSigner, AliasOptions, ClientOptions, Error,
-    NativeTokenOptions, NftOptions, Result, U256,
+    account_manager::AccountManager,
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
+    AliasOptions, ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
 };
 
 #[tokio::test]
@@ -21,12 +22,12 @@ async fn mint_and_burn_nft() -> Result<()> {
         .unwrap()
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    ).unwrap();
+    )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path(storage_path)
         .finish()
@@ -92,12 +93,12 @@ async fn mint_and_burn_native_token() -> Result<()> {
         .unwrap()
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    ).unwrap();
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+        )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path(storage_path)
         .finish()
@@ -193,12 +194,12 @@ async fn burn_foundry() -> Result<()> {
         .unwrap()
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    ).unwrap();
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+        )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path(storage_path)
         .finish()
@@ -244,12 +245,12 @@ async fn destroy_alias() -> Result<()> {
         .unwrap()
         .with_node_sync_disabled();
 
-    let signer = MnemonicSigner::new(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    ).unwrap();
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+        )?;
 
     let manager = AccountManager::builder()
-        .with_signer(signer)
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_storage_path(storage_path)
         .finish()
