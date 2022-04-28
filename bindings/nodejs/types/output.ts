@@ -1,3 +1,5 @@
+import type { IOutputResponse, OutputTypes, AddressTypes } from '@iota/types';
+
 export enum OutputsToCollect {
     None = 'None',
     MicroTransactions = 'MicroTransactions',
@@ -6,32 +8,19 @@ export enum OutputsToCollect {
     All = 'All',
 }
 
-export interface OutputResponse {
-    messageId: string;
-    transactionId: string;
-    outputIndex: number;
-    isSpent: boolean;
-    milestoneIndexBooked: number;
-    milestoneTimestampBooked: number;
-    ledgerIndex: number;
-    // TODO: Replace with proper type
-    output: any;
-}
-
 export interface OutputData {
     outputId: string;
-    outputResponse: OutputResponse;
-    // TODO: Replace with proper type
-    output: any;
+    outputResponse: IOutputResponse;
+    output: OutputTypes;
     amount: number;
     isSpent: boolean;
-    address: {
-        // TODO: Also add other types
-        type: 'Ed25519';
-        data: string;
-    };
+    address: AddressTypes;
     networkId: number;
     remainder: boolean;
-    // TODO: Replace with proper type
-    chain: any;
+    chain: Segment[];
+}
+
+export interface Segment {
+    hardened: boolean;
+    bs: number[];
 }
