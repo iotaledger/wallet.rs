@@ -20,10 +20,8 @@ use crate::{
 #[derive(Serialize, Debug)]
 #[serde(tag = "type", content = "payload")]
 pub enum ResponseType {
-    /// Account succesfully created.
-    CreatedAccount(Account),
-    /// GetAccount response.
-    ReadAccount(Account),
+    /// Account succesfully created or GetAccount response.
+    Account(Account),
     /// GetAccounts response.
     ReadAccounts(Vec<Account>),
     /// ListAddresses
@@ -40,11 +38,10 @@ pub enum ResponseType {
     Transactions(Vec<Transaction>),
     /// GenerateAddress response.
     GeneratedAddress(Vec<AccountAddress>),
-    /// GetBalance response.
+    /// GetBalance/SyncAccount response.
     Balance(AccountBalance),
-    /// SyncAccount response.
-    SyncedAccount(AccountBalance),
-    /// SendTransfer and InternalTransfer response.
+    /// SendAmount, MintNativeTokens, MintNfts, SendMicroTransaction, SendNativeTokens, SendNft, SendTransfer and
+    /// InternalTransfer response.
     SentTransfer(TransferResult),
     /// TryCollectOutputs and CollectOutputs response.
     SentTransfers(Vec<TransferResult>),
