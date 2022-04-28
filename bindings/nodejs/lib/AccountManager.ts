@@ -9,8 +9,8 @@ import type {
     EventType,
     AccountManagerOptions,
     CreateAccountPayload,
-    NodeInfo
-} from '../types'
+    NodeInfo,
+} from '../types';
 
 export class AccountManager {
     private messageHandler: MessageHandler;
@@ -20,16 +20,14 @@ export class AccountManager {
     }
 
     destroy() {
-        this.messageHandler
-            .destroy()
+        this.messageHandler.destroy();
     }
 
     async getAccount(accountId: AccountId): Promise<Account> {
-        const response = await this.messageHandler
-            .sendMessage({
-                cmd: 'GetAccount',
-                payload: accountId,
-            });
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GetAccount',
+            payload: accountId,
+        });
 
         const account = new Account(
             JSON.parse(response).payload,
@@ -46,7 +44,7 @@ export class AccountManager {
 
         const { payload } = JSON.parse(response);
 
-        let accounts: Account[] = [];
+        const accounts: Account[] = [];
 
         for (const account of payload) {
             accounts.push(new Account(account, this.messageHandler));
@@ -58,9 +56,8 @@ export class AccountManager {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'GetNodeInfo',
-                payload: { url, auth }
-            }
-            )
+                payload: { url, auth },
+            }),
         ).payload;
     }
 
@@ -68,16 +65,12 @@ export class AccountManager {
      * The coin type only needs to be set on the first account
      */
     async createAccount(payload: CreateAccountPayload): Promise<Account> {
-        const response = await this.messageHandler
-            .sendMessage({
-                cmd: 'CreateAccount',
-                payload,
-            });
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CreateAccount',
+            payload,
+        });
 
-        return new Account(
-            JSON.parse(response).payload,
-            this.messageHandler,
-        );
+        return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
     /**
@@ -97,7 +90,7 @@ export class AccountManager {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GenerateMnemonic',
         });
-        return JSON.parse(response).payload
+        return JSON.parse(response).payload;
     }
 
     /**
@@ -117,7 +110,7 @@ export class AccountManager {
         return this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',
             payload: mnemonic,
-        })
+        });
     }
 
     /**
@@ -136,7 +129,10 @@ export class AccountManager {
     /**
      * TODO: Replace string type with proper type
      */
-    async importAccounts(backupPath: string, password: string): Promise<string> {
+    async importAccounts(
+        backupPath: string,
+        password: string,
+    ): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
@@ -146,7 +142,10 @@ export class AccountManager {
         });
     }
 
-    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
+    listen(
+        eventTypes: EventType[],
+        callback: (error: Error, result: string) => void,
+    ): void {
         return this.messageHandler.listen(eventTypes, callback);
     }
 }

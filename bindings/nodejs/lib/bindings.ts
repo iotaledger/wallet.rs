@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import type { MessageHandler } from './MessageHandler';
-// @ts-ignore
-const addon = require('../../index.node');
+// @ts-ignore: path is set to match runtime transpiled js path
+import addon = require('../../index.node');
 
 const {
     initLogger,
