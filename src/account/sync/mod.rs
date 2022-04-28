@@ -2759,7 +2759,7 @@ fn verify_unlock_blocks(
     mut inputs: Vec<(Input, BeeAddress)>,
 ) -> crate::Result<()> {
     // Sort inputs
-    inputs.sort_by(|a, b| a.0.cmp(&b.0));
+    inputs.sort_by(|a, b| a.0.pack_new().cmp(&b.0.pack_new()));
     let essence_hash = transaction_payload.essence().hash();
     let unlock_blocks = transaction_payload.unlock_blocks();
     for (index, (_input, address)) in inputs.iter().enumerate() {
