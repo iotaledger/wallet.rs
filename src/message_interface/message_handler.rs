@@ -208,18 +208,19 @@ impl WalletMessageHandler {
         let _ = message.response_tx.send(Response::new(message.message_type, response));
     }
 
-    #[cfg(feature = "storage")]
-    async fn backup(&self, destination_path: PathBuf, password: String) -> Result<ResponseType> {
-        self.account_manager.backup(destination_path, password).await?;
+    #[cfg(feature = "stronghold")]
+    async fn backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
+        self.account_manager.backup(backup_path, password).await?;
         Ok(ResponseType::Ok(()))
     }
 
-    // Todo: need to decide if we have an extra method for that or if the options for the account manager alone should
-    // be used #[cfg(feature = "storage")]
-    // async fn restore_backup(&self, source: &str, password: String) -> Result<ResponseType> {
-    //     self.account_manager.restore_backup(source, password).await?;
-    //     Ok(ResponseType::Ok(()))
-    // }
+    #[cfg(feature = "stronghold")]
+    async fn restore_backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
+        self.account_manager
+            .restore_backup(backup_path, stronghold_password)
+            .await?;
+        Ok(ResponseType::Ok(()))
+    }
 
     async fn call_account_method(
         &self,

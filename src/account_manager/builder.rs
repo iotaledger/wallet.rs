@@ -5,8 +5,6 @@
 use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, Arc};
 
-#[cfg(feature = "stronghold")]
-use iota_client::db::DatabaseProvider;
 use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
@@ -31,8 +29,6 @@ pub struct AccountManagerBuilder {
     client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
     secret_manager: Option<Arc<RwLock<SecretManager>>>,
-    #[cfg(feature = "stronghold")]
-    backup_path: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -85,13 +81,6 @@ impl AccountManagerBuilder {
         self
     }
 
-    #[cfg(feature = "stronghold")]
-    /// Set the backup_path from which to load a Stronghold file
-    pub fn with_backup_path(mut self, backup_path: PathBuf) -> Self {
-        self.backup_path.replace(backup_path);
-        self
-    }
-
     #[cfg(feature = "storage")]
     /// Set the storage path to be used.
     pub fn with_storage_path(mut self, path: &str) -> Self {
@@ -106,37 +95,7 @@ impl AccountManagerBuilder {
     #[allow(unreachable_code, unused_mut)]
     pub async fn finish(mut self) -> crate::Result<AccountManager> {
         log::debug!("[AccountManagerBuilder]");
-        #[cfg(feature = "stronghold")]
-        // load backup if exists
-        if let Some(backup_path) = &self.backup_path {
-            log::debug!("[AccountManagerBuilder] loading stronghold backup");
-            if let SecretManager::Stronghold(stronghold) = &mut *self
-                .secret_manager
-                .as_ref()
-                .ok_or(crate::Error::MissingParameter("secret_manager"))?
-                .write()
-                .await
-            {
-                // Get current snapshot_path to set it again after the backup
-                let current_snapshot_path = stronghold.snapshot_path.clone();
-                // Read backup
-                stronghold.snapshot_path = Some(backup_path.to_path_buf());
-                stronghold.read_stronghold_snapshot().await?;
-                // TODO: read all data that gets stored in the backup and use consts
-                let client_options = stronghold.get("clientOptions".as_bytes()).await?;
-                if let Some(client_options_bytes) = client_options {
-                    let client_options_string = String::from_utf8(client_options_bytes)
-                        .map_err(|_| crate::Error::BackupError("Invalid client_options"))?;
-                    let client_options: ClientOptions = serde_json::from_str(&client_options_string)?;
-                    self.client_options = Some(client_options);
-                }
 
-                // Set snapshot_path back
-                stronghold.snapshot_path = current_snapshot_path;
-                // Write stronghold so it's available the next time we start
-                stronghold.write_stronghold_snapshot().await?;
-            }
-        }
         #[cfg(feature = "storage")]
         let storage_options = self.storage_options.clone().unwrap_or_default();
         #[cfg(feature = "storage")]

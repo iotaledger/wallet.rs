@@ -3,6 +3,8 @@
 
 pub(crate) mod account_recovery;
 pub(crate) mod background_syncing;
+#[cfg(feature = "stronghold")]
+pub(crate) mod backup;
 pub(crate) mod get_account;
 #[cfg(debug_assertions)]
 pub(crate) mod verify_integrity;

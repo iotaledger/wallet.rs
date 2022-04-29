@@ -65,7 +65,7 @@ pub struct Account {
 }
 
 /// Account options
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct AccountOptions {
     pub(crate) output_consolidation_threshold: usize,

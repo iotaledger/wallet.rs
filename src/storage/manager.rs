@@ -121,23 +121,6 @@ impl StorageManager {
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
     }
-
-    #[cfg(feature = "ledger-nano")]
-    // used for ledger accounts to verify that the same menmonic is used for all accounts
-    pub async fn save_first_ledger_address(
-        &mut self,
-        address: &iota_client::bee_message::address::Address,
-    ) -> crate::Result<()> {
-        self.storage.set(FIRST_LEDGER_ADDRESS_KEY, address).await?;
-        Ok(())
-    }
-
-    #[cfg(feature = "ledger-nano")]
-    pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
-        let address: iota_client::bee_message::address::Address =
-            serde_json::from_str(&self.storage.get(FIRST_LEDGER_ADDRESS_KEY).await?)?;
-        Ok(address)
-    }
 }
 
 // Parse accounts from strings and decrypt them first if necessary
