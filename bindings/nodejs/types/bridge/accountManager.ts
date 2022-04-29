@@ -26,12 +26,7 @@ export type __GenerateMnemonicPayload__ = {
 
 export type __StoreMnemonicPayload__ = {
     cmd: 'StoreMnemonic'
-    payload: {
-        secretManager: {
-            type: 'Stronghold'
-        },
-        mnemonic: string
-    };
+    payload: string
 }
 
 export type __VerifyMnemonicPayload__ = {
