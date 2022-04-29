@@ -97,12 +97,7 @@ export class AccountManager {
     async storeMnemonic(mnemonic: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
-            payload: {
-                secretManager: {
-                    type: 'Stronghold',
-                },
-                mnemonic,
-            },
+            payload: mnemonic,
         });
     }
     
