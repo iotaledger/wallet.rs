@@ -1117,7 +1117,12 @@ impl AccountHandle {
                 }
             }
         }
-        tracked_participations.extend(stored_output_participation_data);
+        for (event_id, participations) in stored_output_participation_data {
+            tracked_participations
+                .entry(event_id.to_string())
+                .and_modify(|p| p.extend(participations.clone()))
+                .or_insert_with(|| participations.to_vec());
+        }
 
         // update read_participation_outputs
         for (spent_output_id, spent_output_status_response) in spent_output_status_responses {
@@ -1132,7 +1137,12 @@ impl AccountHandle {
         }
 
         // Add the unspent tracked_participations so we have all together
-        tracked_participations.extend(unspent_tracked_participations);
+        for (event_id, participations) in unspent_tracked_participations {
+            tracked_participations
+                .entry(event_id.to_string())
+                .and_modify(|p| p.extend(participations.clone()))
+                .or_insert_with(|| participations.to_vec());
+        }
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
