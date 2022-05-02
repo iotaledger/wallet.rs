@@ -97,9 +97,10 @@ impl AccountHandle {
                 metadata.clone(),
             )?;
             // NftId needs to be set to 0 for the creation
-            let mut nft_builder = NftOutputBuilder::new_with_amount(minimum_storage_deposit, NftId::from([0; 20]))?
-                // Address which will own the nft
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
+            let mut nft_builder =
+                NftOutputBuilder::new_with_amount(minimum_storage_deposit, NftId::from([0; NftId::LENGTH]))?
+                    // Address which will own the nft
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
             if let Some(immutable_metadata) = immutable_metadata {
                 nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
             }
