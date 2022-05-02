@@ -2966,6 +2966,11 @@
 <span id="2961">2961</span>
 <span id="2962">2962</span>
 <span id="2963">2963</span>
+<span id="2964">2964</span>
+<span id="2965">2965</span>
+<span id="2966">2966</span>
+<span id="2967">2967</span>
+<span id="2968">2968</span>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2020 IOTA Stiftung</span>
 <span class="comment">// SPDX-License-Identifier: Apache-2.0</span>
 
@@ -5125,7 +5130,7 @@
 
     <span class="ident">drop</span>(<span class="ident">account_</span>);
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
-
+    <span class="kw">let</span> <span class="ident">account_id</span> <span class="op">=</span> <span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses_to_watch</span> <span class="op">=</span> <span class="macro">vec!</span>[];
 
     <span class="comment">// if there&#39;s remainder value, we check the strategy defined in the transfer</span>
@@ -5159,7 +5164,7 @@
                         );
                         <span class="ident">transfer_obj</span>
                             .<span class="ident">emit_event_if_needed</span>(
-                                <span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
+                                <span class="ident">account_id</span>.<span class="ident">clone</span>(),
                                 <span class="ident">TransferProgressType::GeneratingRemainderDepositAddress</span>(<span class="ident">AddressData</span> {
                                     <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
                                 }),
@@ -5210,7 +5215,7 @@
                         );
                         <span class="ident">transfer_obj</span>
                             .<span class="ident">emit_event_if_needed</span>(
-                                <span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
+                                <span class="ident">account_id</span>.<span class="ident">clone</span>(),
                                 <span class="ident">TransferProgressType::GeneratingRemainderDepositAddress</span>(<span class="ident">AddressData</span> {
                                     <span class="ident">address</span>: <span class="ident">address</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
                                 }),
@@ -5260,7 +5265,7 @@
                     .<span class="kw">await</span><span class="question-mark">?</span>;
                     <span class="ident">transfer_obj</span>
                         .<span class="ident">emit_event_if_needed</span>(
-                            <span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
+                            <span class="ident">account_id</span>.<span class="ident">clone</span>(),
                             <span class="ident">TransferProgressType::GeneratingRemainderDepositAddress</span>(<span class="ident">AddressData</span> {
                                 <span class="ident">address</span>: <span class="ident">change_address_for_event</span>.<span class="ident">address</span>().<span class="ident">to_bech32</span>(),
                             }),
@@ -5361,7 +5366,7 @@
 
     <span class="ident">transfer_obj</span>
         .<span class="ident">emit_event_if_needed</span>(
-            <span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(),
+            <span class="ident">account_id</span>.<span class="ident">clone</span>(),
             <span class="ident">TransferProgressType::PreparedTransaction</span>(<span class="ident">PreparedTransactionData</span> {
                 <span class="ident">inputs</span>: <span class="ident">inputs_for_event</span>,
                 <span class="ident">outputs</span>: <span class="ident">outputs_for_event</span>,
@@ -5370,7 +5375,7 @@
         )
         .<span class="kw">await</span>;
     <span class="ident">transfer_obj</span>
-        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">TransferProgressType::SigningTransaction</span>)
+        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>(), <span class="ident">TransferProgressType::SigningTransaction</span>)
         .<span class="kw">await</span>;
     <span class="kw">let</span> <span class="ident">unlock_blocks</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::signing::get_signer</span>(<span class="ident">account_</span>.<span class="ident">signer_type</span>())
         .<span class="kw">await</span>
@@ -5403,14 +5408,17 @@
 
     <span class="ident">verify_unlock_blocks</span>(<span class="kw-2">&amp;</span><span class="ident">transaction</span>, <span class="ident">address_inputs_for_validation</span>)<span class="question-mark">?</span>;
     <span class="ident">transfer_obj</span>
-        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">TransferProgressType::PerformingPoW</span>)
+        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_id</span>.<span class="ident">clone</span>(), <span class="ident">TransferProgressType::PerformingPoW</span>)
         .<span class="kw">await</span>;
+
+    <span class="comment">// Drop account so we don&#39;t lock it during PoW and submitting</span>
+    <span class="ident">drop</span>(<span class="ident">account_</span>);
+
     <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">finish_pow</span>(<span class="kw-2">&amp;</span><span class="ident">client</span>, <span class="prelude-val">Some</span>(<span class="ident">Payload::Transaction</span>(<span class="ident">Box::new</span>(<span class="ident">transaction</span>)))).<span class="kw">await</span><span class="question-mark">?</span>;
 
     <span class="macro">log::debug!</span>(<span class="string">&quot;[TRANSFER] submitting message {:#?}&quot;</span>, <span class="ident">message</span>);
-
     <span class="ident">transfer_obj</span>
-        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_</span>.<span class="ident">id</span>().<span class="ident">to_string</span>(), <span class="ident">TransferProgressType::Broadcasting</span>)
+        .<span class="ident">emit_event_if_needed</span>(<span class="ident">account_id</span>, <span class="ident">TransferProgressType::Broadcasting</span>)
         .<span class="kw">await</span>;
 
     <span class="kw">let</span> <span class="ident">message_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">client</span>.<span class="ident">post_message</span>(<span class="kw-2">&amp;</span><span class="ident">message</span>).<span class="kw">await</span> {
@@ -5418,6 +5426,8 @@
         <span class="comment">// Ignore errors from posting the message, the wallet will try to submit the message later during syncing again</span>
         <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">message</span>.<span class="ident">id</span>().<span class="number">0</span>,
     };
+
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">account_</span> <span class="op">=</span> <span class="ident">account_handle</span>.<span class="ident">write</span>().<span class="kw">await</span>;
 
     <span class="comment">// if this is a transfer to the account&#39;s latest address or we used the latest as deposit of the remainder</span>
     <span class="comment">// value, we generate a new one to keep the latest address unused</span>
