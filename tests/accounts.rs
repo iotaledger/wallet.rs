@@ -225,9 +225,10 @@ async fn account_creation_stronghold() -> Result<()> {
 
     let mnemonic = "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak";
 
+    // Create directory before, because stronghold would panic otherwise
     std::fs::create_dir_all(folder_path).unwrap_or(());
     let mut stronghold_secret_manager = StrongholdSecretManager::builder()
-        .password(&"some_hopefully_secure_password")
+        .password("some_hopefully_secure_password")
         .snapshot_path(PathBuf::from(
             "test-storage/account_creation_stronghold/test.stronghold",
         ))
