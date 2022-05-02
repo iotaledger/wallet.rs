@@ -2157,7 +2157,7 @@ async fn perform_transfer(
 
     drop(account_);
     let mut account_ = account_handle.write().await;
-
+    let account_id = account_.id().to_string();
     let mut addresses_to_watch = vec![];
 
     // if there's remainder value, we check the strategy defined in the transfer
@@ -2191,7 +2191,7 @@ async fn perform_transfer(
                         );
                         transfer_obj
                             .emit_event_if_needed(
-                                account_.id().to_string(),
+                                account_id.clone(),
                                 TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                     address: address.address().to_bech32(),
                                 }),
@@ -2242,7 +2242,7 @@ async fn perform_transfer(
                         );
                         transfer_obj
                             .emit_event_if_needed(
-                                account_.id().to_string(),
+                                account_id.clone(),
                                 TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                     address: address.address().to_bech32(),
                                 }),
@@ -2292,7 +2292,7 @@ async fn perform_transfer(
                     .await?;
                     transfer_obj
                         .emit_event_if_needed(
-                            account_.id().to_string(),
+                            account_id.clone(),
                             TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                 address: change_address_for_event.address().to_bech32(),
                             }),
@@ -2393,7 +2393,7 @@ async fn perform_transfer(
 
     transfer_obj
         .emit_event_if_needed(
-            account_.id().to_string(),
+            account_id.clone(),
             TransferProgressType::PreparedTransaction(PreparedTransactionData {
                 inputs: inputs_for_event,
                 outputs: outputs_for_event,
@@ -2402,7 +2402,7 @@ async fn perform_transfer(
         )
         .await;
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SigningTransaction)
+        .emit_event_if_needed(account_id.clone(), TransferProgressType::SigningTransaction)
         .await;
     let unlock_blocks = crate::signing::get_signer(account_.signer_type())
         .await
@@ -2435,14 +2435,17 @@ async fn perform_transfer(
 
     verify_unlock_blocks(&transaction, address_inputs_for_validation)?;
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::PerformingPoW)
+        .emit_event_if_needed(account_id.clone(), TransferProgressType::PerformingPoW)
         .await;
+
+    // Drop account so we don't lock it during PoW and submitting
+    drop(account_);
+
     let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
-
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::Broadcasting)
+        .emit_event_if_needed(account_id, TransferProgressType::Broadcasting)
         .await;
 
     let message_id = match client.post_message(&message).await {
@@ -2450,6 +2453,8 @@ async fn perform_transfer(
         // Ignore errors from posting the message, the wallet will try to submit the message later during syncing again
         Err(_) => message.id().0,
     };
+
+    let mut account_ = account_handle.write().await;
 
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
     // value, we generate a new one to keep the latest address unused
