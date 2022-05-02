@@ -1,6 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "stronghold")]
+use iota_client::secret::SecretManager;
 use iota_client::{
     api::verify_semantic,
     bee_message::{
@@ -9,7 +11,8 @@ use iota_client::{
         payload::transaction::TransactionEssence,
         unlock_block::UnlockBlocks,
     },
-    signing::{types::InputSigningData, Network, SignMessageMetadata},
+    constants::{IOTA_BECH32_HRP, SHIMMER_BECH32_HRP},
+    secret::{types::InputSigningData, Network, SecretManageExt, SignMessageMetadata},
 };
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
@@ -21,7 +24,7 @@ impl AccountHandle {
     pub(crate) async fn sign_tx_essence(
         &self,
         essence: TransactionEssence,
-        mut transaction_inputs: Vec<InputSigningData>,
+        transaction_inputs: Vec<InputSigningData>,
         remainder: Option<Output>,
     ) -> crate::Result<TransactionPayload> {
         log::debug!("[TRANSFER] sign_tx_essence");
@@ -52,26 +55,33 @@ impl AccountHandle {
             .address
             .bech32_hrp()
         {
-            "iota" => Network::Mainnet,
+            IOTA_BECH32_HRP | SHIMMER_BECH32_HRP => Network::Mainnet,
             _ => Network::Testnet,
         };
 
         // todo remainder address
         // let remainder = match remainder_deposit_address {
-        //     Some(remainder_deposit_address) => Some(iota_client::signing::types::AccountAddress {
+        //     Some(remainder_deposit_address) => Some(iota_client::secret::types::AccountAddress {
         //         address: remainder_deposit_address.address.inner,
         //         key_index: remainder_deposit_address.key_index,
         //         internal: remainder_deposit_address.internal,
         //     }),
         //     None => None,
         // };
+
+        // If we use stronghold we need to read the snapshot in case it hasn't been done already
+        #[cfg(feature = "stronghold")]
+        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
+            stronghold_secret_manager.read_stronghold_snapshot().await?;
+        }
+
         let unlock_blocks = self
-            .signer
-            .lock()
+            .secret_manager
+            .read()
             .await
             .sign_transaction_essence(
                 &essence,
-                &mut transaction_inputs,
+                &transaction_inputs,
                 SignMessageMetadata {
                     remainder_value,
                     // todo remainder address

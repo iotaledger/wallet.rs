@@ -4,7 +4,7 @@
 /// Amount at which outputs on a single addresses will get consolidated by default if consolidatioin is enabled
 pub(crate) const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 #[cfg(feature = "ledger-nano")]
-/// Amount at which outputs on a single addresses will get consolidated by default with a ledger signer if
+/// Amount at which outputs on a single addresses will get consolidated by default with a ledger secret_manager if
 /// consolidatioin is enabled, needs to be smaller because the memory of the ledger nano s is limited
 pub(crate) const DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 16;
 
@@ -16,7 +16,7 @@ pub(crate) const PARALLEL_REQUESTS_AMOUNT: usize = 500;
 pub(crate) const MIN_SYNC_INTERVAL: u128 = 3000;
 
 /// Max allowed difference between the local time and latest milestone time, 5 minutes in seconds
-pub(crate) const FIVE_MINUTES_IN_SECONDS: u64 = 300;
+pub(crate) const FIVE_MINUTES_IN_SECONDS: u32 = 300;
 
 // Default expiration time for [ExpirationUnlockCondition] when sending native tokens, one day in seconds
 pub(crate) const DEFAULT_EXPIRATION_TIME: u32 = 86400;

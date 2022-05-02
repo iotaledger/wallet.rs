@@ -74,16 +74,36 @@ export class AccountManager {
     /**
      * TODO: Replace string type with proper type
      */
+    async generateMnemonic(): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GenerateMnemonic',
+        });
+        return JSON.parse(response).payload
+    }
+    
+    /**
+     * TODO: Replace string type with proper type
+     */
     async storeMnemonic(mnemonic: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: {
-                signerType: {
+                secretManager: {
                     type: 'Stronghold',
                 },
                 mnemonic,
             },
         });
+    }
+    
+    /**
+     * TODO: Replace string type with proper type
+     */
+    async verifyMnemonic(mnemonic: string): Promise<string> {
+        return this.messageHandler.sendMessage({
+            cmd: 'VerifyMnemonic',
+            payload: mnemonic,
+        })
     }
 
     /**

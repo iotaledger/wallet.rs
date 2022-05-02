@@ -59,6 +59,9 @@ pub enum Error {
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
+    /// Invalid coin type error
+    #[error("invalid coin type: {0}")]
+    InvalidCoinType(u32),
     /// Can't import accounts because the storage already exist
     #[error("failed to restore backup: storage file already exists")]
     StorageExists,
@@ -128,7 +131,7 @@ pub enum Error {
     Logger(iota_client::logger::Error),
     /// Local time doesn't match the time of the latest timestamp
     #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
-    TimeNotSynced(u64, u64),
+    TimeNotSynced(u32, u32),
 }
 
 impl From<iota_client::Error> for Error {
@@ -181,6 +184,7 @@ impl serde::Serialize for Error {
             Self::BeeMessageDtoError(_) => serialize_variant(self, serializer, "BeeMessageDtoError"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
+            Self::InvalidCoinType(_) => serialize_variant(self, serializer, "InvalidCoinType"),
             Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),

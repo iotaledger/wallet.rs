@@ -64,10 +64,10 @@ foreign_enum!(
 );
 
 foreign_enum!(
-    enum AccountSignerType {
-        STRONGHOLD = AccountSignerType::Stronghold,
-        LEDGER_NANO = AccountSignerType::LedgerNano,
-        LEDGER_NANO_SIMULATOR = AccountSignerType::LedgerNanoSimulator,
+    enum AccountSecretManager {
+        STRONGHOLD = AccountSecretManager::Stronghold,
+        LEDGER_NANO = AccountSecretManager::LedgerNano,
+        LEDGER_NANO_SIMULATOR = AccountSecretManager::LedgerNanoSimulator,
     }
 );
 
@@ -255,7 +255,7 @@ foreign_class!(
         fn AccountManager::set_stronghold_password(&mut self, password: &str) -> Result<()>; alias setStrongholdPassword;
         fn AccountManager::change_stronghold_password(&mut self, current_password: &str, new_password: &str) -> Result<()>; alias changeStrongholdPassword;
         fn AccountManager::generate_mnemonic(&mut self) -> Result<String>; alias generateMnemonic;
-        fn AccountManager::store_mnemonic(&mut self, signer_type_enum: AccountSignerType, mnemonic: String) -> Result<()>; alias storeMnemonic;
+        fn AccountManager::store_mnemonic(&mut self, secret_manager_enum: AccountSecretManager, mnemonic: String) -> Result<()>; alias storeMnemonic;
         fn AccountManager::verify_mnemonic(&mut self, mnemonic: String) -> Result<()>; alias verifyMnemonic;
         fn AccountManager::create_account(&mut self, client_options: ClientOptions) -> Result<AccountInitialiser>; alias createAccount;
         fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
@@ -552,7 +552,7 @@ foreign_class!(
     class AccountInitialiser{
         self_type AccountInitialiser;
         private constructor = empty;
-        fn AccountInitialiser::signer_type(&mut self, signer_type_enum: AccountSignerType) -> AccountInitialiser; alias signerType;
+        fn AccountInitialiser::secret_manager(&mut self, secret_manager_enum: AccountSecretManager) -> AccountInitialiser; alias secret_manager;
         fn AccountInitialiser::alias(&mut self, alias: String) -> AccountInitialiser;
         fn AccountInitialiser::created_at(&mut self, created_at: DateTime<Local>) -> AccountInitialiser; alias createdAt;
         fn AccountInitialiser::messages(&mut self, messages: Vec<Message>) -> AccountInitialiser;

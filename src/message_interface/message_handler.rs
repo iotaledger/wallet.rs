@@ -137,6 +137,12 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            MessageType::GetNodeInfo => {
+                convert_async_panics(|| async {
+                    self.account_manager.get_node_info().await.map(ResponseType::NodeInfo)
+                })
+                .await
+            }
             MessageType::StartBackgroundSync { options, interval } => {
                 convert_async_panics(|| async {
                     self.account_manager
@@ -326,6 +332,10 @@ impl WalletMessageHandler {
 
         if let Some(alias) = &account.alias {
             builder = builder.with_alias(alias.clone());
+        }
+
+        if let Some(coin_type) = &account.coin_type {
+            builder = builder.with_coin_type((*coin_type).try_into()?);
         }
 
         match builder.finish().await {

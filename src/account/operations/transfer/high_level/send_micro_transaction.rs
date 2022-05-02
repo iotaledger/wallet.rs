@@ -3,13 +3,13 @@
 
 use iota_client::bee_message::{
     address::Address,
-    milestone::MilestoneIndex,
     output::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
         BasicOutputBuilder, Output,
     },
+    payload::milestone::MilestoneIndex,
 };
 use serde::{Deserialize, Serialize};
 

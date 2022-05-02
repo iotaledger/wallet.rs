@@ -20,6 +20,8 @@ use crate::{
 pub struct AccountToCreate {
     /// The account alias.
     pub alias: Option<String>,
+    /// The account coin type.
+    pub coin_type: Option<u32>,
 }
 
 /// The messages that can be sent to the actor.
@@ -66,6 +68,8 @@ pub enum MessageType {
     VerifyMnemonic(String),
     /// Updates the client options for all accounts.
     SetClientOptions(Box<ClientOptions>),
+    /// Get the node information
+    GetNodeInfo,
     /// Start background syncing.
     StartBackgroundSync {
         /// Sync options
@@ -100,15 +104,16 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 10, "SetClientOptions")
             }
+            MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 11, "GetNodeInfo"),
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 11, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 12, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 12, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 13, "StopBackgroundSync")
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 13, "EmitTestEvent"),
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 14, "EmitTestEvent"),
         }
     }
 }

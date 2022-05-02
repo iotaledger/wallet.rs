@@ -20,14 +20,23 @@ export type __SetStrongholdPasswordPayload__ = {
     payload: string;
 }
 
+export type __GenerateMnemonicPayload__ = {
+    cmd: 'GenerateMnemonic'
+}
+
 export type __StoreMnemonicPayload__ = {
     cmd: 'StoreMnemonic'
     payload: {
-        signerType: {
+        secretManager: {
             type: 'Stronghold'
         },
         mnemonic: string
     };
+}
+
+export type __VerifyMnemonicPayload__ = {
+    cmd: 'VerifyMnemonic',
+    payload: string
 }
 
 export type __BackupPayload__ = {

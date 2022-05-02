@@ -69,8 +69,8 @@ impl AccountHandle {
 
         let mut consolidation_results = Vec::new();
         for outputs_on_one_address in outputs_to_consolidate {
-            // todo: remove magic number and get a value that works for the current signer (ledger is limited) and is <=
-            // max inputs
+            // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited)
+            // and is <= max inputs
             for outputs in outputs_on_one_address.chunks(16) {
                 let output_sum = outputs.iter().map(|o| o.amount).sum();
                 let consolidation_output = vec![Output::Basic(

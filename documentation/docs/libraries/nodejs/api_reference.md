@@ -94,7 +94,7 @@ Creates a new account.
 | [account.mnemonic]    | `string`                          | `undefined`               | The account BIP39 mnemonic                               |
 | [account.alias]       | `string`                          | `Account ${index + 1}`    | The account alias                                        |
 | [account.createdAt]   | `string`                          | the current date and time | The ISO 8601 date string of the account creation         |
-| [account.signerType]  | `number`                          | 1 = Stronghold            | The account signer type. 1 = Stronghold, 2 = EnvMnemonic |
+| [account.secretManager]  | `number`                          | 1 = Stronghold            | The account secret_manager type. 1 = Stronghold, 2 = EnvMnemonic |
 
 ### getAccount(accountId)
 

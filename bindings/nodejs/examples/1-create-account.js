@@ -3,9 +3,10 @@
  */
 
 require('dotenv').config();
+const manager = require('./account-manager');
 
 async function run() {
-    const { AccountManager, initLogger } = require('@iota/wallet');
+    const { initLogger } = require('@iota/wallet');
 
     initLogger({
         color_enabled: true,
@@ -27,7 +28,7 @@ async function run() {
             ],
             "localPow":true,
          },
-        signer:{
+        secretManager:{
             "Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"
         }
     });
@@ -43,6 +44,7 @@ async function run() {
     } catch (error) {
         console.log('Error: ' + error);
     }
+    process.exit(0);
 }
 
 run();

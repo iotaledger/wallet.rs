@@ -3,13 +3,13 @@
 
 use iota_client::bee_message::{
     address::Address,
-    milestone::MilestoneIndex,
     output::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
         BasicOutputBuilder, ByteCost, ByteCostConfig, NativeToken, Output, OutputAmount, TokenId,
     },
+    payload::milestone::MilestoneIndex,
 };
 use primitive_types::U256;
 

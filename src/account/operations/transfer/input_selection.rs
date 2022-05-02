@@ -8,7 +8,7 @@ use iota_client::{
         input::INPUT_COUNT_MAX,
         output::{ByteCostConfig, Output},
     },
-    signing::types::InputSigningData,
+    secret::types::InputSigningData,
 };
 
 use crate::account::handle::AccountHandle;
@@ -46,7 +46,7 @@ impl AccountHandle {
             }
 
             let selected_transaction_data =
-                try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config).await?;
+                try_select_inputs(custom_inputs, outputs, true, remainder_address, byte_cost_config, false).await?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -112,19 +112,27 @@ impl AccountHandle {
                 }
             }
         }
-        let selected_transaction_data =
-            match try_select_inputs(available_outputs, outputs, false, remainder_address, byte_cost_config).await {
-                Ok(r) => r,
-                Err(iota_client::Error::ConsolidationRequired(output_count)) => {
-                    #[cfg(feature = "events")]
-                    self.event_emitter
-                        .lock()
-                        .await
-                        .emit(account.index, WalletEvent::ConsolidationRequired);
-                    return Err(crate::Error::ConsolidationRequired(output_count, INPUT_COUNT_MAX));
-                }
-                Err(e) => return Err(e.into()),
-            };
+        let selected_transaction_data = match try_select_inputs(
+            available_outputs,
+            outputs,
+            false,
+            remainder_address,
+            byte_cost_config,
+            false,
+        )
+        .await
+        {
+            Ok(r) => r,
+            Err(iota_client::Error::ConsolidationRequired(output_count)) => {
+                #[cfg(feature = "events")]
+                self.event_emitter
+                    .lock()
+                    .await
+                    .emit(account.index, WalletEvent::ConsolidationRequired);
+                return Err(crate::Error::ConsolidationRequired(output_count, INPUT_COUNT_MAX));
+            }
+            Err(e) => return Err(e.into()),
+        };
 
         // lock outputs so they don't get used by another transaction
         for output in &selected_transaction_data.inputs {
