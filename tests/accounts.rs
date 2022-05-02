@@ -1,6 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "stronghold")]
+use std::path::PathBuf;
+
+#[cfg(feature = "stronghold")]
+use iota_client::secret::stronghold::StrongholdSecretManager;
 use iota_wallet::{
     account::types::CoinType,
     account_manager::AccountManager,
@@ -206,5 +211,43 @@ async fn account_coin_type() -> Result<()> {
     );
 
     std::fs::remove_dir_all("test-storage/account_coin_type").unwrap_or(());
+    Ok(())
+}
+
+#[cfg(feature = "stronghold")]
+#[tokio::test]
+async fn account_creation_stronghold() -> Result<()> {
+    let folder_path = "test-storage/account_creation_stronghold";
+    std::fs::remove_dir_all(folder_path).unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    let mnemonic = "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak";
+
+    std::fs::create_dir_all(folder_path).unwrap_or(());
+    let mut stronghold_secret_manager = StrongholdSecretManager::builder()
+        .password(&"some_hopefully_secure_password")
+        .snapshot_path(PathBuf::from(
+            "test-storage/account_creation_stronghold/test.stronghold",
+        ))
+        .build();
+    stronghold_secret_manager.store_mnemonic(mnemonic.to_string()).await?;
+    let secret_manager = SecretManager::Stronghold(stronghold_secret_manager);
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(secret_manager)
+        .with_client_options(client_options)
+        .with_storage_path(folder_path)
+        .finish()
+        .await?;
+
+    let _account = manager
+        .create_account()
+        .with_coin_type(CoinType::Shimmer)
+        .finish()
+        .await?;
+
+    std::fs::remove_dir_all(folder_path).unwrap_or(());
     Ok(())
 }
