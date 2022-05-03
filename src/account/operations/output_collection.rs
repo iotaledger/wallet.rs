@@ -255,7 +255,7 @@ impl AccountHandle {
                     for immutable_feature_block in nft_output.immutable_feature_blocks().iter() {
                         nft_builder = nft_builder.add_immutable_feature_block(immutable_feature_block.clone());
                     }
-                    outputs_to_send.push(Output::Nft(nft_builder.finish()?));
+                    outputs_to_send.push(nft_builder.finish_output()?);
                 }
 
                 // if expired, we can send everything to us
@@ -276,13 +276,13 @@ impl AccountHandle {
                             storage_deposit = true;
                             return_amount = sdr.amount();
                             // create return output
-                            outputs_to_send.push(Output::Basic(
+                            outputs_to_send.push(
                                 BasicOutputBuilder::new_with_amount(sdr.amount())?
                                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                         *sdr.return_address(),
                                     )))
-                                    .finish()?,
-                            ));
+                                    .finish_output()?,
+                            );
                         }
                     }
                     if storage_deposit {
@@ -337,14 +337,14 @@ impl AccountHandle {
             }
 
             // Create output with collected values
-            outputs_to_send.push(Output::Basic(
+            outputs_to_send.push(
                 BasicOutputBuilder::new_with_amount(new_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         first_account_address.address.inner,
                     )))
                     .with_native_tokens(new_native_tokens.finish()?)
-                    .finish()?,
-            ));
+                    .finish_output()?,
+            );
 
             match self
                 .send_transfer(

@@ -6,7 +6,7 @@ use iota_client::bee_message::{
     output::{
         feature_block::{FeatureBlock, MetadataFeatureBlock},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        NftId, NftOutputBuilder, Output,
+        NftId, NftOutputBuilder,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -88,7 +88,7 @@ impl AccountHandle {
 
             // NftId needs to be set to 0 for the creation
             let mut nft_builder =
-                NftOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone(), NftId::from([0; 20]))?
+                NftOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone(), NftId::null())?
                     // Address which will own the nft
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
             if let Some(immutable_metadata) = immutable_metadata {
@@ -97,7 +97,7 @@ impl AccountHandle {
             if let Some(metadata) = metadata {
                 nft_builder = nft_builder.add_feature_block(metadata);
             }
-            outputs.push(Output::Nft(nft_builder.finish()?));
+            outputs.push(nft_builder.finish_output()?);
         }
         self.send(outputs, options).await
     }

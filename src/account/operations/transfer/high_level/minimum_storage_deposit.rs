@@ -7,7 +7,7 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCost, ByteCostConfig, NativeToken, Output, OutputAmount, TokenId,
+        BasicOutputBuilder, ByteCost, ByteCostConfig, NativeToken, OutputAmount, TokenId,
     },
     payload::milestone::MilestoneIndex,
 };
@@ -49,5 +49,6 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
                 .collect::<Result<Vec<NativeToken>>>()?,
         );
     }
-    Ok(Output::Basic(basic_output_builder.finish()?).byte_cost(config))
+
+    Ok(basic_output_builder.finish_output()?.byte_cost(config))
 }

@@ -9,7 +9,7 @@ use iota_client::bee_message::{
     address::Address,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, Output,
+        BasicOutputBuilder,
     },
 };
 use iota_wallet::{
@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
-                    let outputs = vec![Output::Basic(
+                    let outputs = vec![
                         BasicOutputBuilder::new_with_amount(1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(
@@ -70,8 +70,8 @@ async fn main() -> Result<()> {
                                 )?
                                 .1,
                             )))
-                            .finish()?,
-                    )];
+                            .finish_output()?,
+                    ];
                     let res = account_.send(outputs, None).await?;
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",

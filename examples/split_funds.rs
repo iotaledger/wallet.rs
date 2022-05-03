@@ -7,7 +7,7 @@ use std::time::Instant;
 
 use iota_client::bee_message::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, Output,
+    BasicOutputBuilder,
 };
 use iota_wallet::{
     account_manager::AccountManager,
@@ -68,15 +68,13 @@ async fn main() -> Result<()> {
         let outputs = chunk
             .into_iter()
             .map(|a| {
-                Output::Basic(
-                    BasicOutputBuilder::new_with_amount(1_000_000)
-                        .unwrap()
-                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                            *a.address().as_ref(),
-                        )))
-                        .finish()
-                        .unwrap(),
-                )
+                BasicOutputBuilder::new_with_amount(1_000_000)
+                    .unwrap()
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        *a.address().as_ref(),
+                    )))
+                    .finish_output()
+                    .unwrap()
             })
             .collect();
         match account.send(outputs, None).await {

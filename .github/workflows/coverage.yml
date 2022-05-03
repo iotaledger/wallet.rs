@@ -6,10 +6,6 @@ on:
       - main
       - dev
       - develop
-  pull_request:
-    branches:
-      - dev
-      - develop
 
 jobs:
   collect-coverage:
@@ -55,14 +51,14 @@ jobs:
         restore-keys: |
           ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           ubuntu-latest-nightly-cargo-index-
-    
+
     - name: Install binutils and rustfilt
       run: cargo install cargo-binutils rustfilt
 
     - name: Run tests and collect coverage
       run: bash ./coverage.sh
       timeout-minutes: 40
-    
+
     - name: Upload coverage data to Coveralls
       uses: coverallsapp/github-action@v1.1.2
       with:
