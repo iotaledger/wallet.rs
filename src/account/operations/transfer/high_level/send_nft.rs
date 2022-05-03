@@ -79,7 +79,7 @@ impl AccountHandle {
                     for immutable_feature_block in nft_output.immutable_feature_blocks().iter() {
                         nft_builder = nft_builder.add_immutable_feature_block(immutable_feature_block.clone());
                     }
-                    outputs.push(Output::Nft(nft_builder.finish()?));
+                    outputs.push(nft_builder.finish_output()?);
                     // Add custom input
                     custom_inputs.push(nft_output_data.output_id);
                 }
