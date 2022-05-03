@@ -6,7 +6,7 @@ use iota_client::bee_message::{
     output::{
         feature_block::{FeatureBlock, MetadataFeatureBlock},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        NftId, NftOutputBuilder, Output,
+        NftId, NftOutputBuilder,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -107,7 +107,7 @@ impl AccountHandle {
             if let Some(metadata) = metadata {
                 nft_builder = nft_builder.add_feature_block(metadata);
             }
-            outputs.push(Output::Nft(nft_builder.finish()?));
+            outputs.push(nft_builder.finish_output()?);
         }
         self.send(outputs, options).await
     }

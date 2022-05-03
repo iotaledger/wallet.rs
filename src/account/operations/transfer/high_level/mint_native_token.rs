@@ -152,35 +152,31 @@ impl AccountHandle {
             )?])?;
 
             let outputs = vec![
-                Output::Alias(new_alias_output_builder.finish()?),
-                Output::Foundry(
-                    FoundryOutputBuilder::new_with_amount(
-                        minimum_storage_deposit_foundry(&byte_cost_config)?,
-                        alias_output.foundry_counter() + 1,
-                        native_token_options.token_tag,
-                        TokenScheme::Simple(SimpleTokenScheme::new(
-                            native_token_options.circulating_supply,
-                            U256::from(0u8),
-                            native_token_options.maximum_supply,
-                        )?),
-                    )?
-                    .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
-                        ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
-                    ))
-                    .finish()?,
-                ),
-                Output::Basic(
-                    BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
-                        &byte_cost_config,
-                        &controller_address,
-                        &Some(native_tokens_for_storage_deposit),
-                    )?)?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        controller_address,
-                    )))
-                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
-                    .finish()?,
-                ),
+                new_alias_output_builder.finish_output()?,
+                FoundryOutputBuilder::new_with_amount(
+                    minimum_storage_deposit_foundry(&byte_cost_config)?,
+                    alias_output.foundry_counter() + 1,
+                    native_token_options.token_tag,
+                    TokenScheme::Simple(SimpleTokenScheme::new(
+                        native_token_options.circulating_supply,
+                        U256::from(0u8),
+                        native_token_options.maximum_supply,
+                    )?),
+                )?
+                .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
+                    ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
+                ))
+                .finish_output()?,
+                BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
+                    &byte_cost_config,
+                    &controller_address,
+                    &Some(native_tokens_for_storage_deposit),
+                )?)?
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                    controller_address,
+                )))
+                .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
+                .finish_output()?,
             ];
             self.send(outputs, options).await
         } else {
@@ -216,7 +212,7 @@ impl AccountHandle {
             None => {
                 drop(account);
                 let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
-                let outputs = vec![Output::Alias(
+                let outputs = vec![
                     AliasOutputBuilder::new_with_amount(amount, AliasId::from([0; AliasId::LENGTH]))?
                         .with_state_index(0)
                         .with_foundry_counter(0)
@@ -226,8 +222,8 @@ impl AccountHandle {
                         .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
                             controller_address,
                         )))
-                        .finish()?,
-                )];
+                        .finish_output()?,
+                ];
                 let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
                 if let Some(message_id) = transfer_result.message_id {
