@@ -65,6 +65,7 @@ impl AccountHandle {
     ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
     ///     maximum_supply: U256::from(100),
+    ///     foundry_metadata: None
     /// };
     ///
     /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
