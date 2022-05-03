@@ -310,7 +310,7 @@ async fn get_foundry_and_basic_outputs_for_alias_outputs(
                 Address::Alias(AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id)));
             foundry_output_ids.extend(
                 client
-                    .foundries_output_ids(vec![QueryParameter::Address(
+                    .foundries_output_ids(vec![QueryParameter::AliasAddress(
                         alias_address.to_bech32(bech32_hrp.clone()),
                     )])
                     .await?
