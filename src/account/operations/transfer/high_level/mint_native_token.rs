@@ -6,6 +6,7 @@ use iota_client::{
     bee_message::{
         address::{Address, AliasAddress},
         output::{
+            feature_block::{FeatureBlock, MetadataFeatureBlock},
             unlock_condition::{
                 AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
                 StateControllerAddressUnlockCondition, UnlockCondition,
@@ -30,11 +31,10 @@ use crate::{
     Error,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `mint_native_token()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NativeTokenOptions {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
     #[serde(rename = "accountAddress")]
     pub account_address: Option<String>,
     /// Token tag
@@ -46,6 +46,9 @@ pub struct NativeTokenOptions {
     /// Maximum supply
     #[serde(rename = "maximumSupply")]
     pub maximum_supply: U256,
+    /// Foundry metadata
+    #[serde(rename = "foundryMetadata")]
+    pub foundry_metadata: Vec<u8>,
 }
 
 impl AccountHandle {
@@ -167,6 +170,9 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
                         ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
                     ))
+                    .add_immutable_feature_block(FeatureBlock::Metadata(MetadataFeatureBlock::new(
+                        native_token_options.foundry_metadata,
+                    )?))
                     .finish()?,
                 ),
                 Output::Basic(
