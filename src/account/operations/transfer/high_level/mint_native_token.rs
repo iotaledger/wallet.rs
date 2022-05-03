@@ -213,7 +213,7 @@ impl AccountHandle {
                 drop(account);
                 let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
                 let outputs = vec![
-                    AliasOutputBuilder::new_with_amount(amount, AliasId::from([0; AliasId::LENGTH]))?
+                    AliasOutputBuilder::new_with_amount(amount, AliasId::null())?
                         .with_state_index(0)
                         .with_foundry_counter(0)
                         .add_unlock_condition(UnlockCondition::StateControllerAddress(
