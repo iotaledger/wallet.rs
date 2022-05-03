@@ -24,7 +24,7 @@ use crate::Result;
 pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &Address) -> Result<u64> {
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let alias_output = AliasOutputBuilder::new_with_amount(OutputAmount::MIN, AliasId::from([0; AliasId::LENGTH]))?
+    let alias_output = AliasOutputBuilder::new_with_amount(OutputAmount::MIN, AliasId::null())?
         .with_state_index(0)
         .with_foundry_counter(0)
         .add_unlock_condition(UnlockCondition::StateControllerAddress(
@@ -99,7 +99,7 @@ pub(crate) fn minimum_storage_deposit_nft(
     let address_unlock_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let mut nft_builder = NftOutputBuilder::new_with_amount(OutputAmount::MIN, NftId::from([0; NftId::LENGTH]))?
+    let mut nft_builder = NftOutputBuilder::new_with_amount(OutputAmount::MIN, NftId::null())?
         .add_unlock_condition(address_unlock_condition);
     if let Some(immutable_metadata) = immutable_metadata {
         nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
