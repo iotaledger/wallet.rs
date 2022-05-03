@@ -7,6 +7,7 @@ use iota_client::{
     db::DatabaseProvider,
     secret::{SecretManager, SecretManagerDto},
 };
+use zeroize::Zeroize;
 
 use crate::{
     account::Account,
@@ -20,7 +21,7 @@ pub(crate) const ACCOUNTS_KEY: &str = "accounts";
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file
-    pub async fn backup(&self, backup_path: PathBuf, stronghold_password: String) -> crate::Result<()> {
+    pub async fn backup(&self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
         log::debug!("[backup] creating a stronghold backup");
         let mut secret_manager = self.secret_manager.write().await;
         let secret_manager_dto = SecretManagerDto::from(&*secret_manager);
@@ -64,12 +65,14 @@ impl AccountManager {
             }
         }
 
+        stronghold_password.zeroize();
+
         Ok(())
     }
 
     /// Restore a backup from a Stronghold file
     /// Replaces client_options, secret_manager, returns an error if accounts were are already created
-    pub async fn restore_backup(&mut self, backup_path: PathBuf, stronghold_password: String) -> crate::Result<()> {
+    pub async fn restore_backup(&mut self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
         log::debug!("[restore_backup] loading stronghold backup");
         let mut accounts = self.accounts.write().await;
         // We don't want to overwrite possible existing accounts
@@ -173,6 +176,8 @@ impl AccountManager {
                 account.save(None).await?;
             }
         }
+
+        stronghold_password.zeroize();
 
         Ok(())
     }

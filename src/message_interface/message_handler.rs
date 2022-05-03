@@ -84,7 +84,7 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&self, mut message: Message) {
+    pub async fn handle(&mut self, mut message: Message) {
         let response: Result<ResponseType> = match message.message_type_mut() {
             MessageType::CreateAccount(account) => {
                 convert_async_panics(|| async { self.create_account(account).await }).await
@@ -96,7 +96,7 @@ impl WalletMessageHandler {
             MessageType::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(account_id, method).await }).await
             }
-            #[cfg(feature = "storage")]
+            #[cfg(feature = "stronghold")]
             MessageType::Backup { destination, password } => {
                 convert_async_panics(|| async {
                     let res = self.backup(destination.to_path_buf(), password.to_string()).await;
@@ -104,13 +104,6 @@ impl WalletMessageHandler {
                     res
                 })
                 .await
-            }
-            #[cfg(feature = "storage")]
-            MessageType::RestoreBackup { source, password } => {
-                let res =
-                    convert_async_panics(|| async { self.restore_backup(source, password.to_string()).await }).await;
-                password.zeroize();
-                res
             }
             MessageType::RecoverAccounts {
                 account_gap_limit,
@@ -129,6 +122,15 @@ impl WalletMessageHandler {
                     Ok(ResponseType::ReadAccounts(accounts))
                 })
                 .await
+            }
+            #[cfg(feature = "stronghold")]
+            MessageType::RestoreBackup { source, password } => {
+                let res = convert_async_panics(|| async {
+                    self.restore_backup(source.to_path_buf(), password.to_string()).await
+                })
+                .await;
+                password.zeroize();
+                res
             }
             #[cfg(feature = "storage")]
             MessageType::DeleteStorage => {
@@ -210,12 +212,12 @@ impl WalletMessageHandler {
 
     #[cfg(feature = "stronghold")]
     async fn backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
-        self.account_manager.backup(backup_path, password).await?;
+        self.account_manager.backup(backup_path, stronghold_password).await?;
         Ok(ResponseType::Ok(()))
     }
 
     #[cfg(feature = "stronghold")]
-    async fn restore_backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
+    async fn restore_backup(&mut self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
         self.account_manager
             .restore_backup(backup_path, stronghold_password)
             .await?;

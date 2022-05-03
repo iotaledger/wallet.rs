@@ -58,7 +58,7 @@ async fn backup_and_restore() -> Result<()> {
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
         .finish()
         .await?;
-    // todo
+
     restore_manager
         .restore_backup(
             PathBuf::from("test-storage/backup_and_restore/backup.stronghold"),

@@ -47,20 +47,12 @@ pub enum MessageType {
         /// The account method to call.
         method: AccountMethod,
     },
-    #[cfg(feature = "storage")]
     /// Backup storage.
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    #[cfg(feature = "storage")]
     Backup {
         /// The backup destination.
         destination: PathBuf,
-        /// Stronghold file password.
-        password: String,
-    },
-    #[cfg(feature = "storage")]
-    /// Import accounts from storage.
-    RestoreBackup {
-        /// The path to the backed up storage.
-        source: String,
         /// Stronghold file password.
         password: String,
     },
@@ -75,9 +67,18 @@ pub enum MessageType {
         /// address has unspent outputs, the counter is reset
         address_gap_limit: u32,
     },
+    /// Import accounts from a Stronghold backup.
+    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     #[cfg(feature = "storage")]
+    RestoreBackup {
+        /// The path to the backed up Stronghold.
+        source: PathBuf,
+        /// Stronghold file password.
+        password: String,
+    },
     /// Deletes the storage.
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    #[cfg(feature = "storage")]
     DeleteStorage,
     /// Generates a new mnemonic.
     /// Expected response: [`GeneratedMnemonic`](crate::message_interface::ResponseType::GeneratedMnemonic)
@@ -108,10 +109,10 @@ pub enum MessageType {
     /// Stop background syncing.
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
     StopBackgroundSync,
-    #[cfg(feature = "events")]
-    #[cfg(debug_assertions)]
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    #[cfg(feature = "events")]
+    #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
 }
 
@@ -127,11 +128,12 @@ impl Serialize for MessageType {
             MessageType::CallAccountMethod { .. } => {
                 serializer.serialize_unit_variant("MessageType", 4, "CallAccountMethod")
             }
+            #[cfg(feature = "stronghold")]
             MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
-            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
             MessageType::RecoverAccounts { .. } => {
                 serializer.serialize_unit_variant("MessageType", 7, "RecoverAccounts")
-            }
+            #[cfg(feature = "stronghold")]
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 8, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 9, "VerifyMnemonic"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 10, "DeleteStorage"),
@@ -142,16 +144,16 @@ impl Serialize for MessageType {
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 12, "SetStrongholdPassword")
             }
-            MessageType::StoreMnemonic(_) => serializer.serialize_unit_variant("MessageType", 12, "StoreMnemonic"),
+            MessageType::StoreMnemonic(_) => serializer.serialize_unit_variant("MessageType", 13, "StoreMnemonic"),
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 13, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 14, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 14, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 15, "StopBackgroundSync")
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 15, "EmitTestEvent"),
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 16, "EmitTestEvent"),
         }
     }
 }
