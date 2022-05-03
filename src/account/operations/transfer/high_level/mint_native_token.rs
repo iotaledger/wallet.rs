@@ -1,18 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::input_selection::minimum_storage_deposit,
-    bee_message::{
-        address::{Address, AliasAddress},
-        output::{
-            unlock_condition::{
-                AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
-                StateControllerAddressUnlockCondition, UnlockCondition,
-            },
-            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken,
-            NativeTokens, Output, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
+use iota_client::bee_message::{
+    address::{Address, AliasAddress},
+    output::{
+        unlock_condition::{
+            AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
+            StateControllerAddressUnlockCondition, UnlockCondition,
         },
+        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
+        SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
     },
 };
 use primitive_types::U256;
@@ -139,11 +136,6 @@ impl AccountHandle {
                     new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
             }
 
-            let native_tokens_for_storage_deposit = NativeTokens::try_from(vec![NativeToken::new(
-                token_id,
-                native_token_options.circulating_supply,
-            )?])?;
-
             let outputs = vec![
                 new_alias_output_builder.finish_output()?,
                 FoundryOutputBuilder::new_with_minimum_storage_deposit(
@@ -160,16 +152,12 @@ impl AccountHandle {
                     ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
                 ))
                 .finish_output()?,
-                BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
-                    &byte_cost_config,
-                    &controller_address,
-                    &Some(native_tokens_for_storage_deposit),
-                )?)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    controller_address,
-                )))
-                .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
-                .finish_output()?,
+                BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        controller_address,
+                    )))
+                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
+                    .finish_output()?,
             ];
             self.send(outputs, options).await
         } else {
@@ -204,18 +192,19 @@ impl AccountHandle {
             // Create a new alias output
             None => {
                 drop(account);
-                let outputs = vec![
-                    AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
-                        .with_state_index(0)
-                        .with_foundry_counter(0)
-                        .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                            StateControllerAddressUnlockCondition::new(controller_address),
-                        ))
-                        .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                            controller_address,
-                        )))
-                        .finish_output()?,
-                ];
+                let outputs =
+                    vec![
+                        AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
+                            .with_state_index(0)
+                            .with_foundry_counter(0)
+                            .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                                StateControllerAddressUnlockCondition::new(controller_address),
+                            ))
+                            .add_unlock_condition(UnlockCondition::GovernorAddress(
+                                GovernorAddressUnlockCondition::new(controller_address),
+                            ))
+                            .finish_output()?,
+                    ];
                 let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
                 if let Some(message_id) = transfer_result.message_id {
