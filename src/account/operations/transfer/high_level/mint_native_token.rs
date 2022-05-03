@@ -48,7 +48,7 @@ pub struct NativeTokenOptions {
     pub maximum_supply: U256,
     /// Foundry metadata
     #[serde(rename = "foundryMetadata")]
-    pub foundry_metadata: Vec<u8>,
+    pub foundry_metadata: Option<Vec<u8>>,
 }
 
 impl AccountHandle {
@@ -155,9 +155,9 @@ impl AccountHandle {
             )?])?;
 
             let outputs = vec![
-                Output::Alias(new_alias_output_builder.finish()?),
-                Output::Foundry(
-                    FoundryOutputBuilder::new_with_amount(
+                new_alias_output_builder.finish_output()?,
+                {
+                    let mut foundry_builder = FoundryOutputBuilder::new_with_amount(
                         minimum_storage_deposit_foundry(&byte_cost_config)?,
                         alias_output.foundry_counter() + 1,
                         native_token_options.token_tag,
@@ -169,24 +169,26 @@ impl AccountHandle {
                     )?
                     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
                         ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
-                    ))
-                    .add_immutable_feature_block(FeatureBlock::Metadata(MetadataFeatureBlock::new(
-                        native_token_options.foundry_metadata,
-                    )?))
-                    .finish()?,
-                ),
-                Output::Basic(
-                    BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
-                        &byte_cost_config,
-                        &controller_address,
-                        &Some(native_tokens_for_storage_deposit),
-                    )?)?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        controller_address,
-                    )))
-                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
-                    .finish()?,
-                ),
+                    ));
+
+                    if let Some(foundry_metadata) = native_token_options.foundry_metadata {
+                        foundry_builder = foundry_builder.add_immutable_feature_block(FeatureBlock::Metadata(
+                            MetadataFeatureBlock::new(foundry_metadata)?,
+                        ))
+                    }
+
+                    foundry_builder.finish_output()?
+                },
+                BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
+                    &byte_cost_config,
+                    &controller_address,
+                    &Some(native_tokens_for_storage_deposit),
+                )?)?
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                    controller_address,
+                )))
+                .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
+                .finish_output()?,
             ];
             self.send(outputs, options).await
         } else {

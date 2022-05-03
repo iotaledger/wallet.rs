@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
         token_tag: TokenTag::new([0u8; 12]),
         circulating_supply: U256::from(100),
         maximum_supply: U256::from(100),
-        foundry_metadata: Vec::new(),
+        foundry_metadata: None,
     };
 
     let transfer_result = account.mint_native_token(native_token_options, None).await?;
