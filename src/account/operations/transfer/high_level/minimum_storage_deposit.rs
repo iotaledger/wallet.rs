@@ -10,7 +10,7 @@ use iota_client::bee_message::{
             StorageDepositReturnUnlockCondition, UnlockCondition,
         },
         AliasId, AliasOutputBuilder, BasicOutputBuilder, ByteCost, ByteCostConfig, FeatureBlock, FoundryOutputBuilder,
-        NativeToken, NftId, NftOutputBuilder, Output, OutputAmount, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
+        NativeToken, NftId, NftOutputBuilder, OutputAmount, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
     },
     payload::milestone::MilestoneIndex,
 };
@@ -33,8 +33,9 @@ pub(crate) fn minimum_storage_deposit_alias(config: &ByteCostConfig, address: &A
         .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
             *address,
         )))
-        .finish()?;
-    Ok(Output::Alias(alias_output).byte_cost(config))
+        .finish_output()?;
+
+    Ok(alias_output.byte_cost(config))
 }
 
 /// Computes the minimum amount that an foundry output needs to have.
@@ -50,8 +51,9 @@ pub(crate) fn minimum_storage_deposit_foundry(config: &ByteCostConfig) -> Result
     .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
         ImmutableAliasAddressUnlockCondition::new(AliasAddress::new(AliasId::new([0u8; AliasId::LENGTH]))),
     ))
-    .finish()?;
-    Ok(Output::Foundry(foundry_output).byte_cost(config))
+    .finish_output()?;
+
+    Ok(foundry_output.byte_cost(config))
 }
 
 /// Computes the minimum amount that an output needs to have, when sent with [AddressUnlockCondition],
@@ -86,7 +88,8 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
                 .collect::<Result<Vec<NativeToken>>>()?,
         );
     }
-    Ok(Output::Basic(basic_output_builder.finish()?).byte_cost(config))
+
+    Ok(basic_output_builder.finish_output()?.byte_cost(config))
 }
 
 /// Computes the minimum amount that an nft output needs to have.
@@ -107,5 +110,6 @@ pub(crate) fn minimum_storage_deposit_nft(
     if let Some(metadata) = metadata {
         nft_builder = nft_builder.add_feature_block(metadata);
     }
-    Ok(Output::Nft(nft_builder.finish()?).byte_cost(config))
+
+    Ok(nft_builder.finish_output()?.byte_cost(config))
 }

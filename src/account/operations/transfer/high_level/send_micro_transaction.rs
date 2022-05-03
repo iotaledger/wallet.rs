@@ -7,7 +7,7 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, Output,
+        BasicOutputBuilder,
     },
     payload::milestone::MilestoneIndex,
 };
@@ -87,7 +87,7 @@ impl AccountHandle {
                 None,
             )?;
 
-            outputs.push(Output::Basic(
+            outputs.push(
                 // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount
                 BasicOutputBuilder::new_with_amount(address_with_amount.amount + storage_deposit_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
@@ -101,8 +101,8 @@ impl AccountHandle {
                         MilestoneIndex::new(0),
                         expiration_time,
                     )?))
-                    .finish()?,
-            ))
+                    .finish_output()?,
+            )
         }
         self.send(outputs, options).await
     }

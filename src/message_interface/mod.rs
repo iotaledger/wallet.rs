@@ -95,7 +95,7 @@ mod tests {
         address::Address,
         output::{
             unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            BasicOutputBuilder, Output,
+            BasicOutputBuilder,
         },
     };
 
@@ -195,7 +195,7 @@ mod tests {
         let _ = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 
         // send transaction
-        let outputs = vec![Output::Basic(
+        let outputs = vec![
             BasicOutputBuilder::new_with_amount(1_000_000)
                 .unwrap()
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
@@ -203,9 +203,9 @@ mod tests {
                         .unwrap()
                         .1,
                 )))
-                .finish()
+                .finish_output()
                 .unwrap(),
-        )];
+        ];
 
         let transfer = MessageType::CallAccountMethod {
             account_id: "alias".into(),
