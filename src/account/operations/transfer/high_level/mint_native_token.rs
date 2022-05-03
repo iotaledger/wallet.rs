@@ -225,7 +225,7 @@ impl AccountHandle {
             None => {
                 drop(account);
                 let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
-                let outputs = vec![Output::Alias(
+                let outputs = vec![
                     AliasOutputBuilder::new_with_amount(amount, AliasId::from([0; AliasId::LENGTH]))?
                         .with_state_index(0)
                         .with_foundry_counter(0)
@@ -235,8 +235,8 @@ impl AccountHandle {
                         .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
                             controller_address,
                         )))
-                        .finish()?,
-                )];
+                        .finish_output()?,
+                ];
                 let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
                 if let Some(message_id) = transfer_result.message_id {

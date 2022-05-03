@@ -7,7 +7,7 @@ use iota_client::bee_message::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, NativeToken, Output, TokenId,
+        BasicOutputBuilder, NativeToken, TokenId,
     },
     payload::milestone::MilestoneIndex,
 };
@@ -90,7 +90,7 @@ impl AccountHandle {
                 Some(address_with_amount.native_tokens.clone()),
             )?;
 
-            outputs.push(Output::Basic(
+            outputs.push(
                 BasicOutputBuilder::new_with_amount(storage_deposit_amount)?
                     .with_native_tokens(
                         address_with_amount
@@ -113,8 +113,8 @@ impl AccountHandle {
                         MilestoneIndex::new(0),
                         expiration_time,
                     )?))
-                    .finish()?,
-            ))
+                    .finish_output()?,
+            )
         }
         self.send(outputs, options).await
     }

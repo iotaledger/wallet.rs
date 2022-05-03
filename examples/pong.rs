@@ -9,7 +9,7 @@
 use iota_client::{
     bee_message::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, Output,
+        BasicOutputBuilder,
     },
     init_logger, request_funds_from_faucet,
 };
@@ -103,14 +103,14 @@ async fn main() -> Result<()> {
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
-                    let outputs = vec![Output::Basic(
+                    let outputs = vec![
                         // send one or two Mi for more different transactions
                         BasicOutputBuilder::new_with_amount(n * 1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 *ping_addresses_[address_index % amount_addresses].address().as_ref(),
                             )))
-                            .finish()?,
-                    )];
+                            .finish_output()?,
+                    ];
                     let res = pong_account_.send(outputs, None).await?;
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
