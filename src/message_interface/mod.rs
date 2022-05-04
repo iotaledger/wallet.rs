@@ -135,7 +135,7 @@ mod tests {
             secret_manager: Some(secret_manager),
         };
 
-        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+        let mut wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // create an account
         let account = AccountToCreate {
@@ -143,7 +143,7 @@ mod tests {
             coin_type: None,
         };
         let response =
-            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+            message_interface::send_message(&mut wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response.response() {
             ResponseType::Account(account) => {
                 let id = account.index();
@@ -177,7 +177,7 @@ mod tests {
             secret_manager: Some(secret_manager),
         };
 
-        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+        let mut wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         wallet_handle
             .listen(vec![], |event| {
@@ -192,7 +192,8 @@ mod tests {
             alias: Some("alias".to_string()),
             coin_type: None,
         };
-        let _ = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let _ =
+            message_interface::send_message(&mut wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 
         // send transaction
         let outputs = vec![
@@ -212,7 +213,7 @@ mod tests {
             method: AccountMethod::SendTransfer { outputs, options: None },
         };
 
-        let _response = message_interface::send_message(&wallet_handle, transfer).await;
+        let _response = message_interface::send_message(&mut wallet_handle, transfer).await;
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }
 
@@ -239,22 +240,22 @@ mod tests {
             secret_manager: Some(secret_manager),
         };
 
-        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+        let mut wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // Set password and store mnemonic
         let _ = message_interface::send_message(
-            &wallet_handle,
+            &mut wallet_handle,
             MessageType::SetStrongholdPassword("some_hopefully_secure_password".to_string()),
         )
         .await;
         let mnemonic = "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast".to_string();
-        let _ = message_interface::send_message(&wallet_handle, MessageType::StoreMnemonic(mnemonic)).await;
+        let _ = message_interface::send_message(&mut wallet_handle, MessageType::StoreMnemonic(mnemonic)).await;
 
         // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
         // an address
         let account = AccountToCreate { ..Default::default() };
         let response =
-            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+            message_interface::send_message(&mut wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 
         match response.response() {
             ResponseType::Account(account) => {

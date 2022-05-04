@@ -26,6 +26,8 @@ use crate::{
 pub(crate) const CLIENT_OPTIONS_KEY: &str = "client_options";
 pub(crate) const SECRET_MANAGER_KEY: &str = "secret_manager";
 pub(crate) const ACCOUNTS_KEY: &str = "accounts";
+// pub(crate) const SCHEMA_VERSION_KEY: &str = "schema_version";
+// pub(crate) const SCHEMA_VERSION: u8 = 1;
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file
@@ -139,7 +141,11 @@ async fn save_data_to_stronghold_backup(
 ) -> crate::Result<()> {
     stronghold.set_password(&stronghold_password).await;
 
-    // Save current data to Stronghold
+    // // Save current data to Stronghold
+    // stronghold
+    //     .insert(SCHEMA_VERSION_KEY.as_bytes(), &[SCHEMA_VERSION])
+    //     .await?;
+
     let client_options = account_manager.client_options.read().await.to_json()?;
     stronghold
         .insert(CLIENT_OPTIONS_KEY.as_bytes(), client_options.as_bytes())
@@ -203,6 +209,16 @@ async fn read_data_from_stronghold_backup(
 
     // Set snapshot_path back
     stronghold.snapshot_path = current_snapshot_path;
+
+    // Get version
+    //     let version = stronghold
+    //     .get(SCHEMA_VERSION_KEY.as_bytes())
+    //     .await?;
+    // if let Some(version) = version {
+    //     if version[0] != SCHEMA_VERSION{
+    //         return Err(crate::Error::InvalidBackupVersion)
+    //     }
+    // }
 
     // Get client_options
     let client_options = stronghold.get(CLIENT_OPTIONS_KEY.as_bytes()).await?;
