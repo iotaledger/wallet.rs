@@ -52,7 +52,7 @@ async fn backup_and_restore() -> Result<()> {
         .snapshot_path(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))
         .build();
 
-    let mut restore_manager = AccountManager::builder()
+    let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")
         .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
@@ -129,7 +129,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
     )?;
 
-    let mut restore_manager = AccountManager::builder()
+    let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore_mnemonic_secret_manager/2")
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)

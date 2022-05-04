@@ -58,7 +58,7 @@ impl AccountManager {
 
     /// Restore a backup from a Stronghold file
     /// Replaces client_options, secret_manager, returns an error if accounts were are already created
-    pub async fn restore_backup(&mut self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
+    pub async fn restore_backup(&self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
         log::debug!("[restore_backup] loading stronghold backup");
         let mut accounts = self.accounts.write().await;
         // We don't want to overwrite possible existing accounts
@@ -115,6 +115,8 @@ impl AccountManager {
                         .expect("Can't convert os string"),
                 )
                 .with_client_options(self.client_options.read().await.clone());
+            // drop secret manager, otherwise we get a deadlock in save_account_manager_data
+            drop(secret_manager);
             self.storage_manager
                 .lock()
                 .await

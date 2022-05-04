@@ -84,7 +84,7 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&mut self, mut message: Message) {
+    pub async fn handle(&self, mut message: Message) {
         let response: Result<ResponseType> = match message.message_type_mut() {
             MessageType::CreateAccount(account) => {
                 convert_async_panics(|| async { self.create_account(account).await }).await
@@ -217,7 +217,7 @@ impl WalletMessageHandler {
     }
 
     #[cfg(feature = "stronghold")]
-    async fn restore_backup(&mut self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
+    async fn restore_backup(&self, backup_path: PathBuf, stronghold_password: String) -> Result<ResponseType> {
         self.account_manager
             .restore_backup(backup_path, stronghold_password)
             .await?;
