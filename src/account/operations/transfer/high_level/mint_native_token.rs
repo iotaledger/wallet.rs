@@ -6,6 +6,7 @@ use iota_client::{
     bee_message::{
         address::{Address, AliasAddress},
         output::{
+            feature_block::{FeatureBlock, MetadataFeatureBlock},
             unlock_condition::{
                 AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
                 StateControllerAddressUnlockCondition, UnlockCondition,
@@ -30,11 +31,10 @@ use crate::{
     Error,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `mint_native_token()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NativeTokenOptions {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
     #[serde(rename = "accountAddress")]
     pub account_address: Option<String>,
     /// Token tag
@@ -46,6 +46,9 @@ pub struct NativeTokenOptions {
     /// Maximum supply
     #[serde(rename = "maximumSupply")]
     pub maximum_supply: U256,
+    /// Foundry metadata
+    #[serde(rename = "foundryMetadata")]
+    pub foundry_metadata: Option<Vec<u8>>,
 }
 
 impl AccountHandle {
@@ -62,6 +65,7 @@ impl AccountHandle {
     ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
     ///     maximum_supply: U256::from(100),
+    ///     foundry_metadata: None
     /// };
     ///
     /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
@@ -153,20 +157,29 @@ impl AccountHandle {
 
             let outputs = vec![
                 new_alias_output_builder.finish_output()?,
-                FoundryOutputBuilder::new_with_amount(
-                    minimum_storage_deposit_foundry(&byte_cost_config)?,
-                    alias_output.foundry_counter() + 1,
-                    native_token_options.token_tag,
-                    TokenScheme::Simple(SimpleTokenScheme::new(
-                        native_token_options.circulating_supply,
-                        U256::from(0u8),
-                        native_token_options.maximum_supply,
-                    )?),
-                )?
-                .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
-                    ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
-                ))
-                .finish_output()?,
+                {
+                    let mut foundry_builder = FoundryOutputBuilder::new_with_amount(
+                        minimum_storage_deposit_foundry(&byte_cost_config)?,
+                        alias_output.foundry_counter() + 1,
+                        native_token_options.token_tag,
+                        TokenScheme::Simple(SimpleTokenScheme::new(
+                            native_token_options.circulating_supply,
+                            U256::from(0u8),
+                            native_token_options.maximum_supply,
+                        )?),
+                    )?
+                    .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
+                        ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
+                    ));
+
+                    if let Some(foundry_metadata) = native_token_options.foundry_metadata {
+                        foundry_builder = foundry_builder.add_immutable_feature_block(FeatureBlock::Metadata(
+                            MetadataFeatureBlock::new(foundry_metadata)?,
+                        ))
+                    }
+
+                    foundry_builder.finish_output()?
+                },
                 BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
                     &byte_cost_config,
                     &controller_address,
