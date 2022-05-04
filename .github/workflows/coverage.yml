@@ -1,67 +1,41 @@
-name: Test coverage
-
+name: Test Coverage
 on:
   push:
     branches:
-      - main
-      - dev
       - develop
+      - dev
 
 jobs:
   collect-coverage:
+    name: Collect Coverage
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
 
-    - name: Install nightly toolchain with llvm-tools-preview
-      uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
+      - name: Set Up Nightly llvm-tools-preview, with binutils and rustfilt
+        uses: ./.github/actions/setup-rust
+        with:
           toolchain: nightly
-          override: true
           components: llvm-tools-preview
+          install: cargo-binutils rustfilt
+          cache: true
+          cache-job-id: ${{ github.workflow }}-${{ github.job }}
+          cache-hash: ${{ hashFiles('.github/workflows/coverage.yml') }}
 
-    - name: Get current date
-      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+      - name: Install Required Dependencies (Ubuntu)
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-    - name: Install required packages (Ubuntu)
-      run: |
-        sudo apt-get update
-        sudo apt-get install libudev-dev libusb-1.0-0-dev
+      - name: Run Tests and Collect Coverage
+        run: bash ./coverage.sh
 
-    - name: Cache cargo registry
-      uses: actions/cache@v2.1.4
-      with:
-        path: ~/.cargo/registry
-        # Add date to the cache to keep it up to date
-        key: ubuntu-latest-nightly-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ubuntu-latest-nightly-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ubuntu-latest-nightly-cargo-registry-
-
-    - name: Cache cargo index
-      uses: actions/cache@v2.1.4
-      with:
-        path: ~/.cargo/git
-        # Add date to the cache to keep it up to date
-        key: ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ubuntu-latest-nightly-cargo-index-
-
-    - name: Install binutils and rustfilt
-      run: cargo install cargo-binutils rustfilt
-
-    - name: Run tests and collect coverage
-      run: bash ./coverage.sh
-      timeout-minutes: 40
-
-    - name: Upload coverage data to Coveralls
-      uses: coverallsapp/github-action@v1.1.2
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: coverage/coverage.info
-        flag-name: Unit
+      - name: Upload Coverage data to Coveralls
+        uses: coverallsapp/github-action@v1.1.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage/coverage.info
+          flag-name: Unit

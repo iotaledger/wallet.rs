@@ -1,0 +1,139 @@
+name: Examine the Swift Bindings
+on:
+  push:
+    branches:
+      - develop
+      - dev
+    paths:
+      - '.github/workflows/examine-swift-bindings.yml'
+      - '.github/actions/**'
+      - 'bindings/swift/**'
+      # Watch the Rust core too
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  pull_request:
+    branches:
+      - develop
+      - dev
+    paths:
+      - '.github/workflows/examine-swift-bindings.yml'
+      - '.github/actions/**'
+      - 'bindings/swift/**'
+      # Watch the Rust core too
+      - 'src/**'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    if: ${{ ! github.event.schedule }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Nightly Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          cache: true
+          cache-root: bindings/swift/
+          cache-job-id: ${{ github.workflow }}-${{ github.job }}-${{ matrix.os }}
+          cache-hash: ${{ hashFiles('.github/workflows/examine-swift-bindings.yml') }}
+
+      - name: Run Cargo Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --manifest-path bindings/swift/Cargo.toml --all-features --release
+
+      # TODO: Test the Swift code too
+
+  lint:
+    name: Lint
+    if: ${{ ! github.event.schedule }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Nightly Clippy
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          components: clippy
+          cache: true
+          cache-root: bindings/swift/
+          cache-job-id: ${{ github.workflow }}-${{ github.job }}
+          cache-hash: ${{ hashFiles('.github/workflows/examine-swift-bindings.yml') }}
+
+      - name: Run Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --manifest-path bindings/swift/Cargo.toml --all-features --all-targets -- --deny warnings
+          name: Clippy Results for the Swift Bindings
+
+      # TODO: Lint the Swift code too
+
+  check-unused-deps:
+    name: Check Unused Dependencies
+    if: ${{ ! github.event.schedule }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
+
+      - name: Install Cargo-udeps with Nightly Rust
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          cache: true
+          install: cargo-udeps
+          cache-root: bindings/swift/
+          cache-job-id: ${{ github.workflow }}-${{ github.job }}
+          cache-hash: ${{ hashFiles('.github/workflows/examine-swift-bindings.yml') }}
+
+      - name: Run Cargo Udeps
+        uses: actions-rs/cargo@v1
+        with:
+          command: udeps
+          args: --manifest-path bindings/swift/Cargo.toml --all-targets --all-features
+
+      # TODO: Check XCode too?
+
+  check-format:
+    name: Check Format
+    if: ${{ ! github.event.schedule }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the Source Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Nightly Rustfmt
+        uses: ./.github/actions/setup-rust
+        with:
+          toolchain: nightly
+          components: rustfmt
+          cache: false
+
+      - name: Run Cargo Fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --manifest-path bindings/swift/Cargo.toml --all -- --check
+
+      # TODO: Check the Swift code too
