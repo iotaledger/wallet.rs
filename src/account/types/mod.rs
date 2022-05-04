@@ -18,10 +18,11 @@ use iota_client::{
         MessageId,
     },
     bee_rest_api::types::responses::OutputResponse,
+    constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
     secret::types::{InputSigningData, OutputMetadata},
 };
 use primitive_types::U256;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
@@ -205,10 +206,11 @@ impl From<u32> for AccountIdentifier {
 }
 
 /// BIP 44 coin type
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[repr(u32)]
 pub enum CoinType {
-    IOTA = 4218,
-    Shimmer = 4219,
+    IOTA = IOTA_COIN_TYPE,
+    Shimmer = SHIMMER_COIN_TYPE,
 }
 
 impl Default for CoinType {
@@ -227,5 +229,60 @@ impl TryFrom<u32> for CoinType {
             _ => return Err(crate::Error::InvalidCoinType(value)),
         };
         Ok(coin_type)
+    }
+}
+
+// Custom serialization to return the coin type number
+impl Serialize for CoinType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match *self {
+            CoinType::IOTA => serializer.serialize_u32(self.clone() as u32),
+            CoinType::Shimmer => serializer.serialize_u32(self.clone() as u32),
+        }
+    }
+}
+
+// Custom deserialize to accept the coin type number
+impl<'de> serde::Deserialize<'de> for CoinType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        use serde::de::Error;
+        use serde_json::Value;
+
+        let v = Value::deserialize(deserializer)?;
+
+        if let Some(coin_type) = v.as_u64() {
+            if let Ok(coin_type) = CoinType::try_from(coin_type as u32) {
+                return Ok(coin_type);
+            }
+        }
+
+        Err(D::Error::custom("Invalid CoinType"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::CoinType;
+
+    #[test]
+    fn coin_type_de_serialization() {
+        let coin_type = CoinType::IOTA;
+        let serialized_coin_type = serde_json::to_string(&coin_type).unwrap();
+        let deserialized_coin_type = serde_json::from_str(&serialized_coin_type).unwrap();
+        assert_eq!(coin_type, deserialized_coin_type);
+
+        let coin_type = CoinType::Shimmer;
+        let serialized_coin_type = serde_json::to_string(&coin_type).unwrap();
+        let deserialized_coin_type = serde_json::from_str(&serialized_coin_type).unwrap();
+        assert_eq!(coin_type, deserialized_coin_type);
+
+        assert_eq!(CoinType::IOTA, serde_json::from_str("4218").unwrap());
+        assert_eq!(CoinType::Shimmer, serde_json::from_str("4219").unwrap());
     }
 }
