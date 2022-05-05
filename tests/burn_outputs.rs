@@ -48,7 +48,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
     let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/plugins/faucet/v1/enqueue",
+        "http://faucet.localhost:14265/api/enqueue",
         &account_addresses[0].address().to_bech32(),
     )
     .await?;
@@ -89,7 +89,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")
+        .with_node("http://api.localhost:14265")
         .unwrap()
         .with_node_sync_disabled();
 
@@ -119,7 +119,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
     let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/plugins/faucet/v1/enqueue",
+        "http://faucet.localhost:14265/api/enqueue",
         &account_addresses[0].address().to_bech32(),
     )
     .await?;
@@ -133,6 +133,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
         token_tag: TokenTag::new([0u8; 12]),
         circulating_supply,
         maximum_supply: U256::from(100),
+        foundry_metadata: None,
     };
 
     let transfer_result = account.mint_native_token(native_token_options, None).await.unwrap();
@@ -181,11 +182,6 @@ async fn mint_and_burn_native_token() -> Result<()> {
 }
 
 #[tokio::test]
-async fn mint_and_burn_native_token_without_foundry() -> Result<()> {
-    Err(Error::BurningFailed("not implemented".to_string()))
-}
-
-#[tokio::test]
 async fn burn_foundry() -> Result<()> {
     let storage_path = "test-storage/burn_foundry";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
@@ -217,11 +213,14 @@ async fn burn_foundry() -> Result<()> {
         Err(e) => return Err(e),
     };
 
+    let _account_addresses = account.generate_addresses(1, None).await.unwrap();
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
-    // Let's burn the first foundry we can find
+    // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good idea
     let foundry_id = balance.foundries.first().unwrap().clone();
+    // let foundry_id: [u8; FoundryId::LENGTH] = hex::decode("087711e3ffdc9db7ff13c0605996c47f2c8570425b4fbef98ab17119efab31a68e0100000000").unwrap().try_into().unwrap();
+    // let foundry_id = FoundryId::new(foundry_id);
 
     let _ = account.burn_foundry(foundry_id.clone(), None).await?;
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -268,22 +267,25 @@ async fn destroy_alias() -> Result<()> {
         Err(e) => return Err(e),
     };
 
+    let _account_addresses = account.generate_addresses(1, None).await.unwrap();
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
-    // Let's destroy the first alias we can find
-    // let alias_id = balance.aliases.first().unwrap().clone();
-    let alias_id: [u8; 20] = hex::decode("f7d16b94e0c1d0542ce8014a5a16312afaccf391")
-        .unwrap()
-        .try_into()
-        .unwrap();
-    let alias_id = AliasId::new(alias_id);
+    // Let's destroy the first alias we can find, this can fail if one of its foundries have been previously burnt
+    let alias_id = balance.aliases.first().unwrap().clone();
+    // let alias_id: [u8; AliasId::LENGTH] =
+    //     hex::decode("e37b17f36e490beb8b7a757cf14e0b1b5006a739b2478ea8a056ef7cafe9e2a3")
+    //         .unwrap()
+    //         .try_into()
+    //         .unwrap();
+    // let alias_id = AliasId::new(alias_id);
     println!("alias_id -> {alias_id}");
     let alias_options = AliasOptions {
         alias_id,
-        burn_foundries: None,
+        // burn_foundries: false,
+        ..Default::default()
     };
-    let _ = account.destroy_alias(alias_options, None).await?;
+    let _ = account.destroy_alias(alias_options, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance

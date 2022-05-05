@@ -12,3 +12,4 @@ pub(crate) mod send_amount;
 pub(crate) mod send_micro_transaction;
 pub(crate) mod send_native_tokens;
 pub(crate) mod send_nft;
+pub(crate) mod sweep_outputs;

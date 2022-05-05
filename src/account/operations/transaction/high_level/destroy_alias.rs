@@ -22,7 +22,16 @@ pub struct AliasOptions {
     /// Alias id for output to be destroyed
     pub alias_id: AliasId,
     /// Whether to burn all controlled foundries or error out if any of the foundries cannot be found
-    pub burn_foundries: Option<bool>,
+    pub burn_foundries: bool,
+}
+
+impl Default for AliasOptions {
+    fn default() -> Self {
+        AliasOptions {
+            alias_id: AliasId::new([0u8; AliasId::LENGTH]),
+            burn_foundries: true,
+        }
+    }
 }
 
 impl AccountHandle {
@@ -34,44 +43,33 @@ impl AccountHandle {
     ) -> crate::Result<TransactionResult> {
         log::debug!("[TRANSFER] destroy_alias");
 
-        let account = self.read().await;
+        // let address = self.get_sweep_remainder_address(&options).await?;
+        // self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_options.alias_id)), address)
+        //     .await?;
 
-        let (output_id, output_data) = account
-            .unspent_outputs()
-            .iter()
-            .find(|(&output_id, output_data)| match &output_data.output {
-                Output::Alias(alias_output) => {
-                    alias_output.alias_id().or_from_output_id(output_id) == alias_options.alias_id
-                }
-                _ => false,
-            })
-            .ok_or_else(|| Error::BurningFailed("alias not found in unspent outputs".to_string()))?;
+        let (mut output_id, mut alias_output) = self.find_alias_output(alias_options.alias_id).await?;
 
-        let (foundry_counter, custom_inputs, outputs) = match &output_data.output {
-            Output::Alias(alias_output) => {
-                let custom_inputs = vec![*output_id];
-                let outputs = vec![Self::alias_to_basic_output(alias_output)?];
-                (alias_output.foundry_counter(), custom_inputs, outputs)
-            }
-            _ => unreachable!("We already checked that it's an alias output"),
-        };
+        if alias_options.burn_foundries {
+            let foundries = self.alias_foundries(alias_options.alias_id, alias_output.foundry_counter());
+            if !foundries.is_empty() {
+                let transfer_result = self.burn_foundries(foundries, options.clone()).await?;
 
-        drop(account);
-
-        match alias_options.burn_foundries {
-            Some(burn) if !burn => {}
-            _ => {
-                let transfer_result = self
-                    .burn_alias_foundries(alias_options.alias_id, foundry_counter, options.clone())
-                    .await?;
                 match transfer_result.message_id {
                     Some(message_id) => {
                         let _ = self.client.retry_until_included(&message_id, None, None).await?;
+                        let _ = self.sync(None).await?;
+                        (output_id, alias_output) = self.find_alias_output(alias_options.alias_id).await?;
                     }
                     _ => return Err(Error::BurningFailed("Unable to burn foundries".to_string())),
                 }
             }
         }
+
+        let (custom_inputs, outputs) = {
+            let custom_inputs = vec![output_id];
+            let outputs = vec![self.alias_to_basic_output(&alias_output)?];
+            (custom_inputs, outputs)
+        };
 
         let options = match options {
             Some(mut options) => {
@@ -87,7 +85,7 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
-    fn alias_to_basic_output(alias_output: &AliasOutput) -> crate::Result<Output> {
+    fn alias_to_basic_output(&self, alias_output: &AliasOutput) -> crate::Result<Output> {
         Ok(Output::Basic(
             BasicOutputBuilder::new_with_amount(alias_output.amount())?
                 .with_feature_blocks(alias_output.feature_blocks().clone())
@@ -99,12 +97,7 @@ impl AccountHandle {
         ))
     }
 
-    async fn burn_alias_foundries(
-        &self,
-        alias_id: AliasId,
-        foundry_counter: u32,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    fn alias_foundries(&self, alias_id: AliasId, foundry_counter: u32) -> HashSet<FoundryId> {
         let alias_address = AliasAddress::new(alias_id);
         let mut foundry_ids = HashSet::new();
 
@@ -113,6 +106,6 @@ impl AccountHandle {
             foundry_ids.insert(foundry_id);
         }
 
-        self.burn_foundries(foundry_ids, options).await
+        foundry_ids
     }
 }

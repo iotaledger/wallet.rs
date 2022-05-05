@@ -15,9 +15,9 @@ impl AccountHandle {
     pub async fn burn_foundry(
         &self,
         foundry_id: FoundryId,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
-        log::debug!("[TRANSFER] destroy_foundry");
+        options: Option<TransferOptions>,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] burn_foundry");
 
         let alias_id = *foundry_id.alias_address().alias_id();
         let (existing_alias_output_data, existing_foundry_output_data) =
@@ -66,9 +66,15 @@ impl AccountHandle {
     pub async fn burn_foundries(
         &self,
         foundry_ids: HashSet<FoundryId>,
+<<<<<<< HEAD:src/account/operations/transaction/high_level/burn_foundry.rs
         options: Option<TransactionOptions>,
     ) -> crate::Result<TransactionResult> {
         log::debug!("[TRANSFER] destroy_foundries");
+=======
+        options: Option<TransferOptions>,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] burn_foundries");
+>>>>>>> 74560f74 (Fix destroy alias and refactor):src/account/operations/transfer/high_level/burn_foundry.rs
 
         let mut existing_alias_and_foundry_output_data = Vec::new();
 
@@ -124,7 +130,7 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
-    pub(crate) async fn find_alias_and_foundry_output_data(
+    pub(super) async fn find_alias_and_foundry_output_data(
         &self,
         alias_id: AliasId,
         foundry_id: FoundryId,

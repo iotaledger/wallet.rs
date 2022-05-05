@@ -10,8 +10,8 @@ use iota_client::bee_block::{
     output::{
         dto::OutputDto,
         unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
-        AliasOutputBuilder, FoundryOutputBuilder, NativeToken, Output, SimpleTokenScheme, TokenId, TokenScheme,
-        OUTPUT_COUNT_MAX,
+        AliasOutputBuilder, FoundryOutputBuilder, NativeToken, Output, OutputId, SimpleTokenScheme, TokenId,
+        TokenScheme, OUTPUT_COUNT_MAX,
     },
 };
 use primitive_types::U256;
@@ -90,29 +90,60 @@ impl AccountHandle {
         let token_id = native_token.0;
         let burn_token_amount = native_token.1;
 
+        let (custom_inputs, outputs) = self.select_native_token_output(token_id, burn_token_amount).await?;
+
+        let options = match options {
+            Some(mut options) => {
+                options.custom_inputs.replace(custom_inputs);
+                Some(options)
+            }
+            None => Some(TransferOptions {
+                custom_inputs: Some(custom_inputs),
+                ..Default::default()
+            }),
+        };
+
+        self.send(outputs, options).await
+    }
+
+    async fn select_native_token_output(
+        &self,
+        token_id: TokenId,
+        burn_token_amount: U256,
+    ) -> crate::Result<(Vec<OutputId>, Vec<Output>)> {
         let account = self.read().await;
         let mut inputs_and_outputs = Vec::new();
         for (output_id, output_data) in account.unspent_outputs().iter() {
-            if let Some(native_tokens) = output_data.output.native_tokens() {
-                let mut amount = U256::from(0);
-                let mut not_to_be_burnt_native_tokens = Vec::new();
-                for native_token in native_tokens.iter() {
-                    if *native_token.token_id() == token_id {
-                        amount += *native_token.amount();
-                    } else {
-                        not_to_be_burnt_native_tokens.push(native_token);
+            match output_data.output {
+                Output::Alias(_) | Output::Basic(_) | Output::Nft(_) => {
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        let mut amount = U256::from(0);
+                        let mut not_to_be_burnt_native_tokens = Vec::new();
+                        for native_token in native_tokens.iter() {
+                            if *native_token.token_id() == token_id {
+                                amount += *native_token.amount();
+                            } else {
+                                not_to_be_burnt_native_tokens.push(native_token);
+                            }
+                        }
+
+                        // If the output has a native token that we wish to burn,
+                        // clone the output but without native tokens that are to be burnt
+                        if !amount.is_zero() {
+                            let not_to_be_burnt_native_tokens = not_to_be_burnt_native_tokens.iter().cloned();
+
+                            let output =
+                                Self::output_with_native_tokens(&output_data.output, not_to_be_burnt_native_tokens)?;
+                            inputs_and_outputs.push((output_id, amount, output));
+                        }
                     }
                 }
-
-                // If the output has a native token that we wish to burn,
-                // clone the output but without native tokens that are to be burnt
-                if !amount.is_zero() {
-                    let not_to_be_burnt_native_tokens = not_to_be_burnt_native_tokens.iter().cloned();
-
-                    let output = Self::output_with_native_tokens(&output_data.output, not_to_be_burnt_native_tokens)?;
-                    inputs_and_outputs.push((output_id, amount, output));
-                }
+                Output::Treasury(_) | Output::Foundry(_) => continue,
             }
+        }
+
+        if inputs_and_outputs.is_empty() {
+            return Err(crate::Error::BurningFailed("Native token not found".to_string()));
         }
 
         // Sort descending order based on token amount
@@ -121,6 +152,7 @@ impl AccountHandle {
         // Select unspent outputs with token id that sum up to the required amount
         let mut outputs = Vec::new();
         let mut custom_inputs = Vec::new();
+
         let mut native_token_amount_acc = U256::from(0);
         for input_and_output in inputs_and_outputs.into_iter().take(OUTPUT_COUNT_MAX as usize) {
             custom_inputs.push(*input_and_output.0);
@@ -141,20 +173,7 @@ impl AccountHandle {
             }
         }
 
-        drop(account);
-
-        let options = match options {
-            Some(mut options) => {
-                options.custom_inputs.replace(custom_inputs);
-                Some(options)
-            }
-            None => Some(TransactionOptions {
-                custom_inputs: Some(custom_inputs),
-                ..Default::default()
-            }),
-        };
-
-        self.send(outputs, options).await
+        Ok((custom_inputs, outputs))
     }
 
     fn output_with_native_tokens<'a>(

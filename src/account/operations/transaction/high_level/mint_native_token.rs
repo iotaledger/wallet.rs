@@ -187,7 +187,7 @@ impl AccountHandle {
         }
     }
 
-    // Get an existing alias output or create a new one
+    /// Get an existing alias output or create a new one
     pub(crate) async fn get_or_create_alias_output(
         &self,
         controller_address: Address,
@@ -227,9 +227,9 @@ impl AccountHandle {
                             ))
                             .finish_output()?,
                     ];
-                let transaction_result = self.send(outputs, options).await?;
-                log::debug!("[TRANSACTION] sent alias output");
-                if let Some(block_id) = transaction_result.block_id {
+                let transfer_result = self.send(outputs, options, false).await?;
+                log::debug!("[TRANSFER] sent alias output");
+                if let Some(block_id) = transfer_result.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
                 } else {
                     // Try to get the transaction confirmed
