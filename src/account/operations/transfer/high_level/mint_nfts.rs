@@ -12,11 +12,7 @@ use iota_client::bee_message::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::transfer::{high_level::minimum_storage_deposit::minimum_storage_deposit_nft, TransferResult},
-        TransferOptions,
-    },
+    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
     Error,
 };
 
@@ -90,16 +86,11 @@ impl AccountHandle {
                 None
             };
 
-            let minimum_storage_deposit = minimum_storage_deposit_nft(
-                &byte_cost_config,
-                &address,
-                immutable_metadata.clone(),
-                metadata.clone(),
-            )?;
             // NftId needs to be set to 0 for the creation
-            let mut nft_builder = NftOutputBuilder::new_with_amount(minimum_storage_deposit, NftId::null())?
-                // Address which will own the nft
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
+            let mut nft_builder =
+                NftOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone(), NftId::null())?
+                    // Address which will own the nft
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
             if let Some(immutable_metadata) = immutable_metadata {
                 nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
             }

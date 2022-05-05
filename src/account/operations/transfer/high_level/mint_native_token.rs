@@ -1,33 +1,23 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::input_selection::minimum_storage_deposit,
-    bee_message::{
-        address::{Address, AliasAddress},
-        output::{
-            feature_block::{FeatureBlock, MetadataFeatureBlock},
-            unlock_condition::{
-                AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
-                StateControllerAddressUnlockCondition, UnlockCondition,
-            },
-            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken,
-            NativeTokens, Output, SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
+use iota_client::bee_message::{
+    address::{Address, AliasAddress},
+    output::{
+        feature_block::{FeatureBlock, MetadataFeatureBlock},
+        unlock_condition::{
+            AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
+            StateControllerAddressUnlockCondition, UnlockCondition,
         },
+        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
+        SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
     },
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{
-        handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::{minimum_storage_deposit_alias, minimum_storage_deposit_foundry},
-            TransferResult,
-        },
-        TransferOptions,
-    },
+    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
     Error,
 };
 
@@ -150,16 +140,11 @@ impl AccountHandle {
                     new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
             }
 
-            let native_tokens_for_storage_deposit = NativeTokens::try_from(vec![NativeToken::new(
-                token_id,
-                native_token_options.circulating_supply,
-            )?])?;
-
             let outputs = vec![
                 new_alias_output_builder.finish_output()?,
                 {
-                    let mut foundry_builder = FoundryOutputBuilder::new_with_amount(
-                        minimum_storage_deposit_foundry(&byte_cost_config)?,
+                    let mut foundry_builder = FoundryOutputBuilder::new_with_minimum_storage_deposit(
+                        byte_cost_config.clone(),
                         alias_output.foundry_counter() + 1,
                         native_token_options.token_tag,
                         TokenScheme::Simple(SimpleTokenScheme::new(
@@ -180,16 +165,12 @@ impl AccountHandle {
 
                     foundry_builder.finish_output()?
                 },
-                BasicOutputBuilder::new_with_amount(minimum_storage_deposit(
-                    &byte_cost_config,
-                    &controller_address,
-                    &Some(native_tokens_for_storage_deposit),
-                )?)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    controller_address,
-                )))
-                .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
-                .finish_output()?,
+                BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        controller_address,
+                    )))
+                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
+                    .finish_output()?,
             ];
             self.send(outputs, options).await
         } else {
@@ -224,9 +205,8 @@ impl AccountHandle {
             // Create a new alias output
             None => {
                 drop(account);
-                let amount = minimum_storage_deposit_alias(&byte_cost_config, &controller_address)?;
                 let outputs = vec![
-                    AliasOutputBuilder::new_with_amount(amount, AliasId::null())?
+                    AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
                         .with_state_index(0)
                         .with_foundry_counter(0)
                         .add_unlock_condition(UnlockCondition::StateControllerAddress(
