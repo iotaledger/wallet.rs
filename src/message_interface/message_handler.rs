@@ -18,7 +18,7 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::AccountBalanceDto,
+        dtos::{AccountBalanceDto, AccountDto},
         message::Message,
         message_type::{AccountToCreate, MessageType},
         response::Response,
@@ -114,7 +114,7 @@ impl WalletMessageHandler {
                     let mut accounts = Vec::new();
                     for account_handle in account_handles {
                         let account = account_handle.read().await;
-                        accounts.push(account.clone());
+                        accounts.push(AccountDto::from(&*account));
                     }
                     Ok(Response::Accounts(accounts))
                 })
@@ -384,7 +384,7 @@ impl WalletMessageHandler {
         match builder.finish().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
-                Ok(Response::Account(account.clone()))
+                Ok(ResponseType::CreatedAccount(AccountDto::from(&*account)))
             }
             Err(e) => Err(e),
         }
@@ -393,7 +393,7 @@ impl WalletMessageHandler {
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<Response> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
-        Ok(Response::Account(account.clone()))
+        Ok(ResponseType::ReadAccount(AccountDto::from(&*account)))
     }
 
     async fn get_accounts(&self) -> Result<Response> {
@@ -401,7 +401,7 @@ impl WalletMessageHandler {
         let mut accounts = Vec::new();
         for account_handle in account_handles {
             let account = account_handle.read().await;
-            accounts.push(account.clone());
+            accounts.push(AccountDto::from(&*account));
         }
         Ok(Response::Accounts(accounts))
     }

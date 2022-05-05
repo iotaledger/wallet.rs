@@ -3,14 +3,25 @@
 
 // Dtos with amount as String, to prevent overflow issues in other languages
 
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+};
 
-use iota_client::bee_message::output::{AliasId, FoundryId, NftId, OutputId, TokenId};
+use iota_client::bee_message::{
+    output::{AliasId, FoundryId, NftId, OutputId, TokenId},
+    payload::transaction::TransactionId,
+};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::types::{address::AddressWrapper, AccountBalance, AddressWithUnspentOutputs},
+    account::{
+        types::{
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData, Transaction,
+        },
+        Account, AccountOptions,
+    },
     AddressWithAmount, AddressWithMicroAmount,
 };
 
@@ -69,17 +80,17 @@ impl TryFrom<&AddressWithMicroAmountDto> for AddressWithMicroAmount {
 pub struct AddressWithUnspentOutputsDto {
     /// The address.
     #[serde(with = "crate::account::types::address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub address: AddressWrapper,
     /// The address key index.
     #[serde(rename = "keyIndex")]
-    pub(crate) key_index: u32,
+    pub key_index: u32,
     /// Determines if an address is a public or an internal (change) address.
-    pub(crate) internal: bool,
+    pub internal: bool,
     /// Amount
-    pub(crate) amount: String,
+    pub amount: String,
     /// Output ids
     #[serde(rename = "outputIds")]
-    pub(crate) output_ids: Vec<OutputId>,
+    pub output_ids: Vec<OutputId>,
 }
 
 impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
@@ -131,6 +142,59 @@ impl From<&AccountBalance> for AccountBalanceDto {
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),
             potentially_locked_outputs: value.potentially_locked_outputs.clone(),
+        }
+    }
+}
+
+/// Dto for an Account.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AccountDto {
+    /// The account index
+    pub index: u32,
+    /// The coin type
+    pub coin_type: u32,
+    /// The account alias.
+    pub alias: String,
+    /// Public addresses
+    pub public_addresses: Vec<AccountAddress>,
+    /// Internal addresses
+    pub internal_addresses: Vec<AccountAddress>,
+    /// Addresses with unspent outputs
+    pub addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputsDto>,
+    /// Outputs
+    pub outputs: HashMap<OutputId, OutputData>,
+    /// Unspent outputs that are currently used as input for transactions
+    pub locked_outputs: HashSet<OutputId>,
+    /// Unspent outputs
+    pub unspent_outputs: HashMap<OutputId, OutputData>,
+    /// Sent transactions
+    pub transactions: HashMap<TransactionId, Transaction>,
+    /// Pending transactions
+    pub pending_transactions: HashSet<TransactionId>,
+    /// Account options
+    pub account_options: AccountOptions,
+}
+
+impl From<&Account> for AccountDto {
+    fn from(value: &Account) -> Self {
+        Self {
+            index: *value.index(),
+            coin_type: *value.coin_type(),
+            alias: value.alias().clone(),
+            public_addresses: value.public_addresses.clone(),
+            internal_addresses: value.internal_addresses.clone(),
+            addresses_with_unspent_outputs: value
+                .addresses_with_unspent_outputs()
+                .iter()
+                .map(AddressWithUnspentOutputsDto::from)
+                .collect(),
+            outputs: value.outputs().clone(),
+            locked_outputs: value.locked_outputs().clone(),
+            unspent_outputs: value.unspent_outputs().clone(),
+            transactions: value.transactions().clone(),
+            pending_transactions: value.pending_transactions().clone(),
+            account_options: *value.account_options(),
         }
     }
 }
