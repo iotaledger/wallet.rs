@@ -112,6 +112,24 @@ impl WalletMessageHandler {
                 password.zeroize();
                 res
             }
+            MessageType::RecoverAccounts {
+                account_gap_limit,
+                address_gap_limit,
+            } => {
+                convert_async_panics(|| async {
+                    let account_handles = self
+                        .account_manager
+                        .recover_accounts(*account_gap_limit, *address_gap_limit)
+                        .await?;
+                    let mut accounts = Vec::new();
+                    for account_handle in account_handles {
+                        let account = account_handle.read().await;
+                        accounts.push(account.clone());
+                    }
+                    Ok(ResponseType::ReadAccounts(accounts))
+                })
+                .await
+            }
             #[cfg(feature = "storage")]
             MessageType::DeleteStorage => {
                 convert_async_panics(|| async {
