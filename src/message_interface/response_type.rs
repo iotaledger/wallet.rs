@@ -32,6 +32,8 @@ pub enum ResponseType {
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputs>),
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
+    /// GetOutput.
+    Output(Box<Option<OutputData>>),
     /// ListOutputs/ListUnspentOutputs.
     Outputs(Vec<OutputData>),
     /// ListTransactions/ListPendingTransactions.

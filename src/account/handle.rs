@@ -3,7 +3,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use iota_client::{secret::SecretManager, Client};
+use iota_client::{bee_message::output::OutputId, secret::SecretManager, Client};
 use tokio::sync::{Mutex, RwLock};
 
 #[cfg(feature = "events")]
@@ -61,6 +61,12 @@ impl AccountHandle {
 
     pub async fn alias(&self) -> String {
         self.read().await.alias.clone()
+    }
+
+    /// Get the [`OutputData`] of an output stored in the account
+    pub async fn get_output(&self, output_id: &OutputId) -> Option<OutputData> {
+        let account = self.read().await;
+        account.outputs().get(output_id).cloned()
     }
 
     /// Returns all addresses of the account
