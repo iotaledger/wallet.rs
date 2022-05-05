@@ -10,6 +10,7 @@ use iota_client::{
 use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::test]
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 // Backup and restore with Stronghold
 async fn backup_and_restore() -> Result<()> {
     std::fs::remove_dir_all("test-storage/backup_and_restore").unwrap_or(());
@@ -90,6 +91,7 @@ async fn backup_and_restore() -> Result<()> {
 }
 
 #[tokio::test]
+#[cfg(all(feature = "stronghold", feature = "storage"))]
 // Backup and restore with Stronghold and MnemonicSecretManager
 async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
     std::fs::remove_dir_all("test-storage/backup_and_restore_mnemonic_secret_manager").unwrap_or(());

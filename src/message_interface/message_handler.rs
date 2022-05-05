@@ -119,7 +119,7 @@ impl WalletMessageHandler {
                         let account = account_handle.read().await;
                         accounts.push(account.clone());
                     }
-                    Ok(ResponseType::ReadAccounts(accounts))
+                    Ok(ResponseType::Accounts(accounts))
                 })
                 .await
             }

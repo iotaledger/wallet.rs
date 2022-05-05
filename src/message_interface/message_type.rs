@@ -57,6 +57,7 @@ pub enum MessageType {
         password: String,
     },
     /// Find accounts with unspent outputs
+    /// Expected response: [`Accounts`](crate::message_interface::ResponseType::Accounts)
     RecoverAccounts {
         #[serde(rename = "accountGapLimit")]
         /// Defines how many accounts without unspent outputs will be
@@ -131,9 +132,10 @@ impl Serialize for MessageType {
             #[cfg(feature = "stronghold")]
             MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
             MessageType::RecoverAccounts { .. } => {
-                serializer.serialize_unit_variant("MessageType", 7, "RecoverAccounts")
+                serializer.serialize_unit_variant("MessageType", 6, "RecoverAccounts")
+            }
             #[cfg(feature = "stronghold")]
-            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
+            MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 7, "RestoreBackup"),
             MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 8, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 9, "VerifyMnemonic"),
             MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 10, "DeleteStorage"),
@@ -142,18 +144,18 @@ impl Serialize for MessageType {
             }
             MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 12, "GetNodeInfo"),
             MessageType::SetStrongholdPassword(_) => {
-                serializer.serialize_unit_variant("MessageType", 12, "SetStrongholdPassword")
+                serializer.serialize_unit_variant("MessageType", 13, "SetStrongholdPassword")
             }
-            MessageType::StoreMnemonic(_) => serializer.serialize_unit_variant("MessageType", 13, "StoreMnemonic"),
+            MessageType::StoreMnemonic(_) => serializer.serialize_unit_variant("MessageType", 14, "StoreMnemonic"),
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 14, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 15, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 15, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 16, "StopBackgroundSync")
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 16, "EmitTestEvent"),
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 17, "EmitTestEvent"),
         }
     }
 }

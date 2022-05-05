@@ -157,7 +157,7 @@ impl AccountBuilder {
 
         let first_public_address = get_first_public_address(
             &self.secret_manager,
-            self.coin_type.clone().unwrap_or_default() as u32,
+            self.coin_type.unwrap_or_default() as u32,
             account_index,
         )
         .await?;
