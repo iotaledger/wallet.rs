@@ -18,7 +18,7 @@ use iota_client::{
         MessageId,
     },
     bee_rest_api::types::responses::OutputResponse,
-    secret::types::InputSigningData,
+    secret::types::{InputSigningData, OutputMetadata},
 };
 use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -79,7 +79,8 @@ pub struct OutputData {
 impl OutputData {
     pub fn input_signing_data(&self) -> crate::Result<InputSigningData> {
         Ok(InputSigningData {
-            output_response: self.output_response.clone(),
+            output: Output::try_from(&self.output_response.output)?,
+            output_metadata: OutputMetadata::try_from(&self.output_response)?,
             chain: self.chain.clone(),
             bech32_address: self.address.to_bech32("atoi"),
         })
