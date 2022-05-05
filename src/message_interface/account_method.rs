@@ -22,6 +22,11 @@ pub enum AccountMethod {
         options: Option<AddressGenerationOptions>,
     },
     /// Get outputs with additional unlock conditions
+    GetOutput {
+        #[serde(rename = "outputId")]
+        output_id: OutputId,
+    },
+    /// Get outputs with additional unlock conditions
     GetOutputsWithAdditionalUnlockConditions {
         #[serde(rename = "outputsToCollect")]
         outputs_to_collect: OutputsToCollect,
