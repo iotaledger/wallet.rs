@@ -23,7 +23,6 @@ import type {
     __SendTransferPayloadMethod__,
     __TryCollectOutputsPayloadMethod__,
     __SyncAccountPayload__,
-    __GetNodeInfoPayload__,
     __GenerateAddressesPayload__,
     __LatestAddressPayload__,
     __BalancePayload__,
@@ -48,6 +47,7 @@ import type {
 import type {
     __GetAccountsMessagePayload__,
     __GetAccountMessagePayload__,
+    __GetNodeInfoPayload__,
     __CreateAccountMessagePayload__,
     __SetStrongholdPasswordPayload__,
     __StoreMnemonicPayload__,
