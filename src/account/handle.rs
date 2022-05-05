@@ -64,13 +64,9 @@ impl AccountHandle {
     }
 
     /// Get the [`OutputData`] of an output stored in the account
-    pub async fn get_output(&self, output_id: &OutputId) -> Result<OutputData> {
+    pub async fn get_output(&self, output_id: &OutputId) -> Option<OutputData> {
         let account = self.read().await;
-        account
-            .outputs()
-            .get(output_id)
-            .cloned()
-            .ok_or(crate::Error::OutputNotFoundInAccount)
+        account.outputs().get(output_id).cloned()
     }
 
     /// Returns all addresses of the account

@@ -114,9 +114,6 @@ pub enum Error {
     /// Tokio task join error
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
-    /// Output not found in account
-    #[error("output not found in account")]
-    OutputNotFoundInAccount,
     /// std thread join error
     #[error("Thread join error")]
     StdThreadJoinError,
@@ -206,7 +203,6 @@ impl serde::Serialize for Error {
             Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
-            Self::OutputNotFoundInAccount => serialize_variant(self, serializer, "OutputNotFoundInAccount"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),

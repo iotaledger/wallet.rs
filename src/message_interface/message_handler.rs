@@ -226,7 +226,7 @@ impl WalletMessageHandler {
                 Ok(ResponseType::OutputIds(output_ids))
             }
             AccountMethod::GetOutput { output_id } => {
-                let output_data = account_handle.get_output(output_id).await?;
+                let output_data = account_handle.get_output(output_id).await;
                 Ok(ResponseType::Output(Box::new(output_data)))
             }
             AccountMethod::ListAddresses => {

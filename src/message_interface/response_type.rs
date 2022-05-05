@@ -33,7 +33,7 @@ pub enum ResponseType {
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
     /// GetOutput.
-    Output(Box<OutputData>),
+    Output(Box<Option<OutputData>>),
     /// ListOutputs/ListUnspentOutputs.
     Outputs(Vec<OutputData>),
     /// ListTransactions/ListPendingTransactions.
