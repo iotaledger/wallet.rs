@@ -3,27 +3,22 @@
 
 use std::time::Instant;
 
-use crypto::hashes::{blake2b::Blake2b256, Digest};
 use iota_client::{
     api::PreparedTransactionData,
     bee_message::{
         input::{Input, UtxoInput},
-        output::{unlock_condition::UnlockCondition, Output},
+        output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
         payload::{
             transaction::{RegularTransactionEssence, TransactionEssence},
             Payload,
         },
     },
-    packable::PackableExt,
     secret::types::InputSigningData,
 };
 
+use crate::account::{handle::AccountHandle, operations::transfer::TransferOptions};
 #[cfg(feature = "events")]
 use crate::events::types::{PreparedTransactionEventData, TransactionIO, TransferProgressEvent, WalletEvent};
-use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferOptions},
-    Result,
-};
 impl AccountHandle {
     /// Function to build the transaction essence
     pub(crate) async fn prepare_transaction(
@@ -48,10 +43,9 @@ impl AccountHandle {
             inputs_for_signing.push(utxo.clone());
             #[cfg(feature = "events")]
             {
-                let output = Output::try_from(&utxo.output_response.output)?;
                 inputs_for_event.push(TransactionIO {
                     address: utxo.bech32_address.clone(),
-                    amount: output.amount(),
+                    amount: utxo.output.amount(),
                     remainder: None,
                 })
             }
@@ -61,12 +55,9 @@ impl AccountHandle {
 
         let input_outputs = inputs_for_signing
             .iter()
-            .map(|i| Ok(Output::try_from(&i.output_response.output)?.pack_to_vec()))
-            .collect::<Result<Vec<Vec<u8>>>>()?;
-        let input_outputs = input_outputs.into_iter().flatten().collect::<Vec<u8>>();
-        let inputs_commitment = Blake2b256::digest(&input_outputs)
-            .try_into()
-            .map_err(|_e| crate::Error::Blake2b256("Hashing outputs for inputs_commitment failed."))?;
+            .map(|i| i.output.clone())
+            .collect::<Vec<Output>>();
+        let inputs_commitment = InputsCommitment::new(input_outputs.iter());
         let mut essence_builder =
             RegularTransactionEssence::builder(self.client.get_network_id().await?, inputs_commitment);
         essence_builder = essence_builder.with_inputs(inputs_for_essence);
