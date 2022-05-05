@@ -238,10 +238,7 @@ impl Serialize for CoinType {
     where
         S: Serializer,
     {
-        match *self {
-            CoinType::IOTA => serializer.serialize_u32(self.clone() as u32),
-            CoinType::Shimmer => serializer.serialize_u32(self.clone() as u32),
-        }
+        serializer.serialize_u32(self.clone() as u32)
     }
 }
 
