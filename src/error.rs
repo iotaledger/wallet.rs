@@ -50,15 +50,9 @@ pub enum Error {
     /// Bee rest api error
     #[error("{0}")]
     BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
-    /// Path provided to `import_accounts` isn't a valid file
-    #[error("provided backup path isn't a valid file")]
-    InvalidBackupFile,
-    /// Backup `destination` argument is invalid
+    /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
     BackupError(&'static str),
-    /// Backup `destination` argument is invalid
-    #[error("backup destination must be an existing directory or a file on an existing directory")]
-    InvalidBackupDestination,
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
@@ -188,9 +182,7 @@ impl serde::Serialize for Error {
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidCoinType(_) => serialize_variant(self, serializer, "InvalidCoinType"),
-            Self::InvalidBackupFile => serialize_variant(self, serializer, "InvalidBackupFile"),
             Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
-            Self::InvalidBackupDestination => serialize_variant(self, serializer, "InvalidBackupDestination"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
             Self::RecordDecrypt(_) => serialize_variant(self, serializer, "RecordDecrypt"),
