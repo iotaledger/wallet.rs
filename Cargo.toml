@@ -17,7 +17,7 @@ rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
 async-trait = { version = "0.1.51", default-features = false }
-packable = { version = "0.3.1", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.3.2", default-features = false, features = [ "serde", "primitive-types" ] }
 backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
