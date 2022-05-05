@@ -59,6 +59,17 @@ pub enum MessageType {
         /// Stronghold file password.
         password: String,
     },
+    /// Find accounts with unspent outputs
+    RecoverAccounts {
+        #[serde(rename = "accountGapLimit")]
+        /// Defines how many accounts without unspent outputs will be
+        /// checked, if an account has unspent outputs, the counter is reset
+        account_gap_limit: u32,
+        #[serde(rename = "addressGapLimit")]
+        /// Defines how many addresses without unspent outputs will be checked in each account, if an
+        /// address has unspent outputs, the counter is reset
+        address_gap_limit: u32,
+    },
     #[cfg(feature = "storage")]
     /// Deletes the storage.
     DeleteStorage,
@@ -98,22 +109,25 @@ impl Serialize for MessageType {
             }
             MessageType::Backup { .. } => serializer.serialize_unit_variant("MessageType", 5, "Backup"),
             MessageType::RestoreBackup { .. } => serializer.serialize_unit_variant("MessageType", 6, "RestoreBackup"),
-            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 7, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 8, "VerifyMnemonic"),
-            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 9, "DeleteStorage"),
-            MessageType::SetClientOptions(_) => {
-                serializer.serialize_unit_variant("MessageType", 10, "SetClientOptions")
+            MessageType::RecoverAccounts { .. } => {
+                serializer.serialize_unit_variant("MessageType", 7, "RecoverAccounts")
             }
-            MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 11, "GetNodeInfo"),
+            MessageType::GenerateMnemonic => serializer.serialize_unit_variant("MessageType", 8, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => serializer.serialize_unit_variant("MessageType", 9, "VerifyMnemonic"),
+            MessageType::DeleteStorage => serializer.serialize_unit_variant("MessageType", 10, "DeleteStorage"),
+            MessageType::SetClientOptions(_) => {
+                serializer.serialize_unit_variant("MessageType", 11, "SetClientOptions")
+            }
+            MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 12, "GetNodeInfo"),
             MessageType::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("MessageType", 12, "StartBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 13, "StartBackgroundSync")
             }
             MessageType::StopBackgroundSync => {
-                serializer.serialize_unit_variant("MessageType", 13, "StopBackgroundSync")
+                serializer.serialize_unit_variant("MessageType", 14, "StopBackgroundSync")
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 14, "EmitTestEvent"),
+            MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 15, "EmitTestEvent"),
         }
     }
 }

@@ -6,15 +6,15 @@ use std::collections::HashSet;
 use crate::{account::handle::AccountHandle, account_manager::AccountManager};
 
 impl AccountManager {
-    /// Find accounts with outputs
-    /// `address_gap_limit` defines how many addresses without unspent outputs will be checked in each account, if an
-    /// address has unspent outputs, the counter is reset
+    /// Find accounts with unspent outputs
     /// `account_gap_limit` defines how many accounts without unspent outputs will be
     /// checked, if an account has unspent outputs, the counter is reset
+    /// `address_gap_limit` defines how many addresses without unspent outputs will be checked in each account, if an
+    /// address has unspent outputs, the counter is reset
     pub async fn recover_accounts(
         &self,
-        address_gap_limit: u32,
         account_gap_limit: u32,
+        address_gap_limit: u32,
     ) -> crate::Result<Vec<AccountHandle>> {
         log::debug!("[recover_accounts]");
         let mut account_indexes_to_keep = HashSet::new();
