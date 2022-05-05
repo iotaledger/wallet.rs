@@ -206,7 +206,7 @@ impl From<u32> for AccountIdentifier {
 }
 
 /// BIP 44 coin type
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 #[repr(u32)]
 pub enum CoinType {
     IOTA = IOTA_COIN_TYPE,
@@ -238,7 +238,7 @@ impl Serialize for CoinType {
     where
         S: Serializer,
     {
-        serializer.serialize_u32(self.clone() as u32)
+        serializer.serialize_u32(*self as u32)
     }
 }
 
