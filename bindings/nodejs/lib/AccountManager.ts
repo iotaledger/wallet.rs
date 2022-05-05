@@ -8,7 +8,8 @@ import type {
     AccountId,
     EventType,
     AccountManagerOptions,
-    CreateAccountPayload
+    CreateAccountPayload,
+    NodeInfo
 } from '../types'
 
 export class AccountManager {
@@ -46,6 +47,15 @@ export class AccountManager {
             accounts.push(new Account(account, this.messageHandler));
         }
         return accounts;
+    }
+
+    async getNodeInfo(): Promise<NodeInfo> {
+        return JSON.parse(
+            await this.messageHandler.sendMessage({
+                    cmd: 'GetNodeInfo',
+                }
+            )
+        );
     }
 
     async createAccount(account: CreateAccountPayload): Promise<Account> {

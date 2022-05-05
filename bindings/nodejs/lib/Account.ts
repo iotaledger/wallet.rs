@@ -7,7 +7,6 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
-    NodeInfo,
     ClientOptions,
     OutputsToCollect,
     OutputData,
@@ -130,21 +129,6 @@ export class Account {
                 data: options || {},
             }
         )
-    }
-
-    /**
-     * TODO: Test this method through example and see if the interface is correct
-     */
-    async getNodeInfo(url: string): Promise<NodeInfo> {
-        return JSON.parse(
-            await this.messageHandler.callAccountMethod(
-                this.meta.index,
-                {
-                    name: 'GetNodeInfo',
-                    data: [url],
-                }
-            )
-        );
     }
 
     async generateAddresses(): Promise<Address[]> {

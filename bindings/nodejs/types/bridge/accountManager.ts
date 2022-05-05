@@ -10,6 +10,10 @@ export type __GetAccountMessagePayload__ = {
     payload: AccountId
 }
 
+export type __GetNodeInfoPayload__ = {
+    cmd: 'GetNodeInfo'
+}
+
 export type __CreateAccountMessagePayload__ = {
     cmd: 'CreateAccount'
     payload: CreateAccountPayload

@@ -23,14 +23,6 @@ export type __GetInfoPayloadMethod__ = {
     data: string[]
 }
 
-export type __GetNodeInfoPayload__ = {
-    cmd: 'CallAccountMethod'
-    payload: {
-        accountId: AccountId;
-        method: __GetInfoPayloadMethod__
-    };
-}
-
 export type __GenerateAddressesPayloadMethod__ = {
     name: 'GenerateAddresses',
     data: {
