@@ -40,6 +40,12 @@ export interface AccountMeta {
     }
 }
 
+export enum CoinType {
+    IOTA = 4218,
+    Shimmer = 4219,
+}
+
 export interface CreateAccountPayload {
     alias: string
+    coinType: CoinType
 }
