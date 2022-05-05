@@ -100,7 +100,7 @@ impl AccountBuilder {
             let existing_coin_type: CoinType = account.coin_type.try_into()?;
             if let Some(provided_coin_type) = &self.coin_type {
                 if &existing_coin_type != provided_coin_type {
-                    return Err(Error::InvalidCoinType(provided_coin_type.clone() as u32));
+                    return Err(Error::InvalidCoinType(*provided_coin_type as u32));
                 }
             } else {
                 // If coin type is None we will set it
@@ -174,7 +174,7 @@ impl AccountBuilder {
         };
         let account = Account {
             index: account_index,
-            coin_type: self.coin_type.clone().unwrap_or_default() as u32,
+            coin_type: self.coin_type.unwrap_or_default() as u32,
             alias: account_alias,
             public_addresses: vec![first_public_account_address],
             internal_addresses: Vec::new(),
