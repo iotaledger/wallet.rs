@@ -3,7 +3,7 @@
 
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::{message_type::MessageType, response_type::Response};
+use super::{message_type::MessageType, response::Response};
 
 /// The message type.
 #[derive(Debug, Clone)]

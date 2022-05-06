@@ -20,7 +20,7 @@ use crate::{
         account_method::AccountMethod,
         message::Message,
         message_type::{AccountToCreate, MessageType},
-        response_type::Response,
+        response::Response,
     },
     Result,
 };

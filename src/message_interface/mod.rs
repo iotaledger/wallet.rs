@@ -5,7 +5,7 @@ mod account_method;
 mod message;
 mod message_handler;
 mod message_type;
-mod response_type;
+mod response;
 
 use std::str::FromStr;
 
@@ -18,7 +18,7 @@ pub use self::{
     message::Message,
     message_handler::WalletMessageHandler,
     message_type::{AccountToCreate, MessageType},
-    response_type::Response,
+    response::Response,
 };
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
