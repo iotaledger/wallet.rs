@@ -11,11 +11,17 @@ async function run() {
         // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
         // await manager.storeMnemonic();
 
+        // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',
-            coinType: CoinType.Shimmer,
+            coinType: CoinType.IOTA,
         });
         console.log('Account created:', account);
+
+        const secondAccount = await manager.createAccount({
+            alias: 'Bob',
+        });
+        console.log('Account created:', secondAccount);
     } catch (error) {
         console.log('Error: ' + error);
     }
