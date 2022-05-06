@@ -19,7 +19,6 @@ import type {
     AddressNativeTokens,
     AddressNftId,
 } from '../types';
-import type { INodeInfo } from '@iota/types';
 
 export class Account {
     meta: AccountMeta;

@@ -1,4 +1,5 @@
 import type { AccountId, CreateAccountPayload } from '../account';
+import type { Auth } from '../network';
 
 export type __GetAccountsMessagePayload__ = {
     cmd: 'GetAccounts';
@@ -13,7 +14,7 @@ export type __GetNodeInfoPayload__ = {
     cmd: 'GetNodeInfo';
     payload: {
         url?: string;
-        auth?: any;
+        auth?: Auth;
     };
 };
 

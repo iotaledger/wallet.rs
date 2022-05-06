@@ -9,7 +9,8 @@ import type {
     EventType,
     AccountManagerOptions,
     CreateAccountPayload,
-    NodeInfo,
+    NodeInfoWrapper,
+    Auth,
 } from '../types';
 
 export class AccountManager {
@@ -52,7 +53,7 @@ export class AccountManager {
         return accounts;
     }
 
-    async getNodeInfo(url?: string, auth?: any): Promise<NodeInfo> {
+    async getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                 cmd: 'GetNodeInfo',

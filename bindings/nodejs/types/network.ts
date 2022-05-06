@@ -1,3 +1,5 @@
+import type { INodeInfo } from '@iota/types';
+
 export enum Network {
     Mainnet,
     Testnet,
@@ -36,19 +38,12 @@ export interface ClientOptions {
     localPow?: boolean;
 }
 
-export interface NodeInfo {
-    name: string;
-    version: string;
-    isHealthy: boolean;
-    networkId: string;
-    bech32HRP: string;
-    minPoWScore: number;
-    messagesPerSecond: number;
-    referencedMessagesPerSecond: number;
-    referencedRate: number;
-    latestMilestoneTimestamp: number;
-    latestMilestoneIndex: number;
-    confirmedMilestoneIndex: number;
-    pruningIndex: number;
-    features: string[];
+/**
+ * NodeInfo wrapper which contains the nodeinfo and the url from the node (useful when multiple nodes are used)
+ */
+export interface NodeInfoWrapper {
+    /** The returned nodeinfo */
+    nodeinfo: INodeInfo;
+    /** The url from the node which returned the nodeinfo */
+    url: string;
 }

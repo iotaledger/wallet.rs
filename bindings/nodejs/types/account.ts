@@ -22,8 +22,7 @@ export interface AccountSyncOptions {
 
 export interface AccountMeta {
     index: number;
-    // TODO: Should this be an enum?
-    coinType: number;
+    coinType: CoinType;
     alias: string;
     publicAddresses: Address[];
     internalAddresses: Address[];
@@ -39,10 +38,6 @@ export interface AccountMeta {
     };
 }
 
-export enum CoinType {
-    IOTA = 4218,
-    Shimmer = 4219,
-}
 export type OutputsMap = {
     [outputId: string]: OutputData;
 };
@@ -50,6 +45,11 @@ export type OutputsMap = {
 export type TransactionsMap = {
     [transactionId: string]: Transaction;
 };
+
+export enum CoinType {
+    IOTA = 4218,
+    Shimmer = 4219,
+}
 
 export interface CreateAccountPayload {
     alias: string;
