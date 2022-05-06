@@ -1,26 +1,58 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::{bee_message::output::OutputId, NodeInfoWrapper};
 use serde::Serialize;
 
-use crate::message_interface::{message_type::MessageType, response_type::ResponseType};
+use crate::{
+    account::{
+        operations::transfer::TransferResult,
+        types::{
+            address::{AccountAddress, AddressWithUnspentOutputs},
+            AccountBalance, OutputData, Transaction,
+        },
+        Account,
+    },
+    Error,
+};
 
-/// The actor response type.
+/// The response message.
 #[derive(Serialize, Debug)]
-pub struct Response {
-    #[serde(flatten)]
-    response: ResponseType,
-    action: MessageType,
-}
-
-impl Response {
-    /// Creates a new response.
-    pub fn new(action: MessageType, response: ResponseType) -> Self {
-        Self { response, action }
-    }
-
-    /// The response's type.
-    pub fn response(&self) -> &ResponseType {
-        &self.response
-    }
+#[serde(tag = "type", content = "payload")]
+pub enum Response {
+    /// Account succesfully created or GetAccount response.
+    Account(Account),
+    /// GetAccounts response.
+    Accounts(Vec<Account>),
+    /// ListAddresses
+    Addresses(Vec<AccountAddress>),
+    /// ListAddressesWithUnspentOutputs.
+    AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputs>),
+    /// GetOutputsWithAdditionalUnlockConditions.
+    OutputIds(Vec<OutputId>),
+    /// GetOutput.
+    Output(Box<Option<OutputData>>),
+    /// ListOutputs/ListUnspentOutputs.
+    Outputs(Vec<OutputData>),
+    /// ListTransactions/ListPendingTransactions.
+    Transactions(Vec<Transaction>),
+    /// GenerateAddress response.
+    GeneratedAddress(Vec<AccountAddress>),
+    /// GetBalance/SyncAccount response.
+    Balance(AccountBalance),
+    /// SendAmount, MintNativeTokens, MintNfts, SendMicroTransaction, SendNativeTokens, SendNft, SendTransfer and
+    /// InternalTransfer response.
+    SentTransfer(TransferResult),
+    /// TryCollectOutputs and CollectOutputs response.
+    SentTransfers(Vec<TransferResult>),
+    /// An error occurred.
+    Error(Error),
+    /// A panic occurred.
+    Panic(String),
+    /// GenerateMnemonic response.
+    GeneratedMnemonic(String),
+    /// Node info response.
+    NodeInfo(NodeInfoWrapper),
+    /// All went fine.
+    Ok(()),
 }

@@ -5,7 +5,6 @@ mod account_method;
 mod message;
 mod message_handler;
 mod message_type;
-mod response;
 mod response_type;
 
 use std::str::FromStr;
@@ -19,8 +18,7 @@ pub use self::{
     message::Message,
     message_handler::WalletMessageHandler,
     message_type::{AccountToCreate, MessageType},
-    response::Response,
-    response_type::ResponseType,
+    response_type::Response,
 };
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
@@ -101,7 +99,7 @@ mod tests {
 
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, ResponseType};
+    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, Response};
 
     #[tokio::test]
     async fn message_interface_create_account() {
@@ -144,8 +142,8 @@ mod tests {
         };
         let response =
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
-        match response.response() {
-            ResponseType::Account(account) => {
+        match response {
+            Response::Account(account) => {
                 let id = account.index();
                 println!("Created account index: {id}")
             }
@@ -256,8 +254,8 @@ mod tests {
         let response =
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
 
-        match response.response() {
-            ResponseType::Account(account) => {
+        match response {
+            Response::Account(account) => {
                 let id = account.index();
                 println!("Created account index: {id}")
             }
