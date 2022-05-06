@@ -160,7 +160,7 @@ impl WalletMessageHandler {
             }
             MessageType::StoreMnemonic(mnemonic) => {
                 convert_async_panics(|| async {
-                    self.account_manager.store_mnemonic(mnemonic.to_string()).await?;
+                    self.account_manager.store_mnemonic(mnemonic).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
