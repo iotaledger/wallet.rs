@@ -30,16 +30,16 @@ pub struct AccountToCreate {
 #[allow(clippy::large_enum_variant)]
 pub enum MessageType {
     /// Creates an account.
-    /// Expected response: [`Account`](crate::message_interface::ResponseType::Account)
+    /// Expected response: [`Account`](crate::message_interface::Response::Account)
     CreateAccount(Box<AccountToCreate>),
     /// Read account.
-    /// Expected response: [`Account`](crate::message_interface::ResponseType::Account)
+    /// Expected response: [`Account`](crate::message_interface::Response::Account)
     GetAccount(AccountIdentifier),
     /// Read accounts.
-    /// Expected response: [`Accounts`](crate::message_interface::ResponseType::Accounts)
+    /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     GetAccounts,
     /// Consume an account method.
-    /// Returns [`ResponseType`](crate::message_interface::ResponseType)
+    /// Returns [`Response`](crate::message_interface::Response)
     CallAccountMethod {
         /// The account identifier.
         #[serde(rename = "accountId")]
@@ -48,7 +48,7 @@ pub enum MessageType {
         method: AccountMethod,
     },
     /// Backup storage.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
     Backup {
         /// The backup destination.
@@ -57,7 +57,7 @@ pub enum MessageType {
         password: String,
     },
     /// Find accounts with unspent outputs
-    /// Expected response: [`Accounts`](crate::message_interface::ResponseType::Accounts)
+    /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     RecoverAccounts {
         #[serde(rename = "accountGapLimit")]
         /// Defines how many accounts without unspent outputs will be
@@ -69,7 +69,7 @@ pub enum MessageType {
         address_gap_limit: u32,
     },
     /// Import accounts from a Stronghold backup.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
     RestoreBackup {
         /// The path to the backed up Stronghold.
@@ -78,29 +78,29 @@ pub enum MessageType {
         password: String,
     },
     /// Deletes the storage.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
     DeleteStorage,
     /// Generates a new mnemonic.
-    /// Expected response: [`GeneratedMnemonic`](crate::message_interface::ResponseType::GeneratedMnemonic)
+    /// Expected response: [`GeneratedMnemonic`](crate::message_interface::Response::GeneratedMnemonic)
     GenerateMnemonic,
     /// Checks if the given mnemonic is valid.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     VerifyMnemonic(String),
     /// Updates the client options for all accounts.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetClientOptions(Box<ClientOptions>),
     /// Get the node information
-    /// Expected response: [`NodeInfo`](crate::message_interface::ResponseType::NodeInfo)
+    /// Expected response: [`NodeInfo`](crate::message_interface::Response::NodeInfo)
     GetNodeInfo,
     /// Set the stronghold password.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetStrongholdPassword(String),
     /// Store a mnemonic into the Stronghold vault.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StoreMnemonic(String),
     /// Start background syncing.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StartBackgroundSync {
         /// Sync options
         options: Option<SyncOptions>,
@@ -108,10 +108,10 @@ pub enum MessageType {
         interval: Option<Duration>,
     },
     /// Stop background syncing.
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StopBackgroundSync,
     /// Emits an event for testing if the event system is working
-    /// Expected response: [`Ok`](crate::message_interface::ResponseType::Ok)
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),

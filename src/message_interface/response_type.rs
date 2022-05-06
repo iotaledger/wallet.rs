@@ -19,7 +19,7 @@ use crate::{
 /// The response message.
 #[derive(Serialize, Debug)]
 #[serde(tag = "type", content = "payload")]
-pub enum ResponseType {
+pub enum Response {
     /// Account succesfully created or GetAccount response.
     Account(Account),
     /// GetAccounts response.

@@ -3,7 +3,7 @@
 
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::{message_type::MessageType, response::Response};
+use super::{message_type::MessageType, response_type::Response};
 
 /// The message type.
 #[derive(Debug, Clone)]
@@ -19,16 +19,6 @@ impl Message {
             message_type,
             response_tx,
         }
-    }
-
-    /// The message type.
-    pub fn message_type(&self) -> &MessageType {
-        &self.message_type
-    }
-
-    /// The message type.
-    pub(crate) fn message_type_mut(&mut self) -> &mut MessageType {
-        &mut self.message_type
     }
 
     /// The response sender.
