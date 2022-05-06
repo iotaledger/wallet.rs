@@ -6,8 +6,7 @@ use std::sync::Arc;
 use iota_wallet::{
     events::types::{Event, WalletEventType},
     message_interface::{
-        create_message_handler, ManagerOptions, Message as WalletMessage, MessageType, Response, Response,
-        WalletMessageHandler,
+        create_message_handler, ManagerOptions, Message as WalletMessage, MessageType, Response, WalletMessageHandler,
     },
 };
 use neon::prelude::*;
@@ -51,13 +50,13 @@ impl MessageHandler {
                 self.wallet_message_handler.handle(wallet_message).await;
                 let response = response_rx.recv().await;
                 if let Some(res) = response {
-                    let mut is_err = matches!(res.response(), Response::Error(_) | Response::Panic(_));
+                    let mut is_err = matches!(res, Response::Error(_) | Response::Panic(_));
 
                     let msg = match serde_json::to_string(&res) {
                         Ok(msg) => msg,
                         Err(e) => {
                             is_err = true;
-                            serde_json::to_string(&Response::new(message, Response::Error(e.into())))
+                            serde_json::to_string(&Response::Error(e.into()))
                                 .expect("The response is generated manually, so unwrap is safe.")
                         }
                     };
