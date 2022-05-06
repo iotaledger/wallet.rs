@@ -57,7 +57,10 @@ export class AccountManager {
             )
         );
     }
-
+    
+    /**
+     * The coin type only needs to be set on the first account
+     */
     async createAccount(account: CreateAccountPayload): Promise<Account> {
         const response = await this.messageHandler
             .sendMessage({
