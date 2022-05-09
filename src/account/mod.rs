@@ -77,7 +77,7 @@ pub struct Account {
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountOptions {
-    /// Threshold for the amount of unspent outputs before they get consoldiated (sent in a transaction to the account
+    /// Threshold for the amount of unspent outputs before they get consolidated (sent in a transaction to the account
     /// itself)
     pub output_consolidation_threshold: usize,
     pub automatic_output_consolidation: bool,
