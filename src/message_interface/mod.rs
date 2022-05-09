@@ -146,7 +146,7 @@ mod tests {
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response {
             Response::Account(account) => {
-                let id = account.index();
+                let id = account.index;
                 println!("Created account index: {id}")
             }
             _ => panic!("unexpected response {:?}", response),
@@ -258,7 +258,7 @@ mod tests {
 
         match response {
             Response::Account(account) => {
-                let id = account.index();
+                let id = account.index;
                 println!("Created account index: {id}")
             }
             _ => panic!("unexpected response {:?}", response),

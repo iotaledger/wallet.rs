@@ -22,7 +22,6 @@ use crate::{
         message::Message,
         message_type::{AccountToCreate, MessageType},
         response::Response,
-        response_type::ResponseType,
         AddressWithUnspentOutputsDto,
     },
     AddressWithAmount, AddressWithMicroAmount, Result,
@@ -240,7 +239,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListAddressesWithUnspentOutputs => {
                 let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
-                Ok(ResponseType::AddressesWithUnspentOutputs(
+                Ok(Response::AddressesWithUnspentOutputs(
                     addresses.iter().map(AddressWithUnspentOutputsDto::from).collect(),
                 ))
             }
@@ -279,10 +278,10 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::GetBalance => Ok(ResponseType::Balance(AccountBalanceDto::from(
+            AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.balance().await?,
             ))),
-            AccountMethod::SyncAccount { options } => Ok(ResponseType::Balance(AccountBalanceDto::from(
+            AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.sync(options.clone()).await?,
             ))),
             AccountMethod::SendAmount {
@@ -384,7 +383,7 @@ impl WalletMessageHandler {
         match builder.finish().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
-                Ok(ResponseType::CreatedAccount(AccountDto::from(&*account)))
+                Ok(Response::Account(AccountDto::from(&*account)))
             }
             Err(e) => Err(e),
         }
@@ -393,7 +392,7 @@ impl WalletMessageHandler {
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<Response> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
-        Ok(ResponseType::ReadAccount(AccountDto::from(&*account)))
+        Ok(Response::Account(AccountDto::from(&*account)))
     }
 
     async fn get_accounts(&self) -> Result<Response> {
