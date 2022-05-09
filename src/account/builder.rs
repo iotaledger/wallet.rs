@@ -8,7 +8,7 @@ use std::{
 
 use iota_client::{
     bee_message::address::Address,
-    constants::{SHIMMER_COIN_TYPE, SHIMMER_TESTNET_BECH32_HRP},
+    constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
@@ -155,8 +155,12 @@ impl AccountBuilder {
             }
         };
 
-        let first_public_address =
-            get_first_public_address(&self.secret_manager, SHIMMER_COIN_TYPE, account_index).await?;
+        let first_public_address = get_first_public_address(
+            &self.secret_manager,
+            self.coin_type.unwrap_or_default() as u32,
+            account_index,
+        )
+        .await?;
 
         let first_public_account_address = AccountAddress {
             address: AddressWrapper::new(first_public_address, bech32_hrp),

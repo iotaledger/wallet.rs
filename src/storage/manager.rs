@@ -3,8 +3,9 @@
 
 use std::sync::Arc;
 
+use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
-use tokio::sync::Mutex;
+use tokio::sync::{Mutex, RwLock};
 
 use crate::{
     account::Account,
@@ -74,14 +75,41 @@ impl StorageManager {
         log::debug!("save_account_manager_data");
         self.storage
             .set(ACCOUNT_MANAGER_INDEXATION_KEY, account_manager_builder)
-            .await
+            .await?;
+
+        if let Some(secret_manager) = &account_manager_builder.secret_manager {
+            let secret_manager = secret_manager.read().await;
+            let secret_manager_dto = SecretManagerDto::from(&*secret_manager);
+            // Only store secret_managers that aren't SecretManagerDto::Mnemonic, because there the Seed can't be
+            // serialized, so we can't create the SecretManager again
+            match secret_manager_dto {
+                SecretManagerDto::Mnemonic(_) => {}
+                _ => {
+                    self.storage.set(SECRET_MANAGER_KEY, secret_manager_dto).await?;
+                }
+            }
+        }
+        Ok(())
     }
 
     pub async fn get_account_manager_data(&self) -> crate::Result<AccountManagerBuilder> {
         log::debug!("get_account_manager_data");
         let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
         log::debug!("get_account_manager_data {}", data);
-        let builder: AccountManagerBuilder = serde_json::from_str(&data)?;
+        let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
+        if let Ok(data) = self.storage.get(SECRET_MANAGER_KEY).await {
+            log::debug!("get_secret_manager {}", data);
+            let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
+            // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
+            // be serialized, so we can't create the SecretManager again
+            match secret_manager_dto {
+                SecretManagerDto::Mnemonic(_) => {}
+                _ => {
+                    let secret_manager = SecretManager::try_from(&secret_manager_dto)?;
+                    builder.secret_manager = Some(Arc::new(RwLock::new(secret_manager)));
+                }
+            }
+        }
         Ok(builder)
     }
 
@@ -120,23 +148,6 @@ impl StorageManager {
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
-    }
-
-    #[cfg(feature = "ledger-nano")]
-    // used for ledger accounts to verify that the same menmonic is used for all accounts
-    pub async fn save_first_ledger_address(
-        &mut self,
-        address: &iota_client::bee_message::address::Address,
-    ) -> crate::Result<()> {
-        self.storage.set(FIRST_LEDGER_ADDRESS_KEY, address).await?;
-        Ok(())
-    }
-
-    #[cfg(feature = "ledger-nano")]
-    pub async fn get_first_ledger_address(&self) -> crate::Result<iota_client::bee_message::address::Address> {
-        let address: iota_client::bee_message::address::Address =
-            serde_json::from_str(&self.storage.get(FIRST_LEDGER_ADDRESS_KEY).await?)?;
-        Ok(address)
     }
 }
 

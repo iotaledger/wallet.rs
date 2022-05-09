@@ -4,8 +4,6 @@
 pub(crate) mod builder;
 pub(crate) mod operations;
 
-#[cfg(feature = "storage")]
-use std::path::Path;
 use std::{
     collections::hash_map::Entry,
     sync::{
@@ -223,20 +221,27 @@ impl AccountManager {
         Ok(())
     }
 
-    // storage feature
-    #[allow(dead_code, unused_variables)]
-    #[cfg(feature = "storage")]
-    pub async fn backup<P: AsRef<Path>>(&self, destination: P, stronghold_password: String) -> crate::Result<()> {
-        Ok(())
-    }
-    #[allow(dead_code, unused_variables)]
-    #[cfg(feature = "storage")]
-    pub async fn restore_backup<S: AsRef<Path>>(&self, source: S, stronghold_password: String) -> crate::Result<()> {
-        Ok(())
-    }
-    #[allow(dead_code)]
     #[cfg(feature = "storage")]
     pub async fn delete_storage(&self) -> crate::Result<()> {
+        std::fs::remove_dir_all(self.storage_options.storage_path.clone())?;
+        Ok(())
+    }
+
+    #[cfg(feature = "stronghold")]
+    /// Set the stronghold password
+    pub async fn set_stronghold_password(&self, password: &str) -> crate::Result<()> {
+        if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
+            stronghold.set_password(password).await;
+        }
+        Ok(())
+    }
+
+    #[cfg(feature = "stronghold")]
+    /// Store a mnemonic into the Stronghold vault
+    pub async fn store_mnemonic(&self, mnemonic: String) -> crate::Result<()> {
+        if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
+            stronghold.store_mnemonic(mnemonic).await?;
+        }
         Ok(())
     }
 }

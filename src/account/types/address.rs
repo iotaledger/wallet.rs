@@ -27,7 +27,7 @@ pub struct AccountAddress {
 }
 
 /// An account address with unspent output_ids for unspent outputs.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[getset(get = "pub")]
 pub struct AddressWithUnspentOutputs {
     /// The address.

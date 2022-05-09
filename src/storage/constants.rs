@@ -9,9 +9,7 @@ pub(crate) const ROCKSDB_FOLDERNAME: &str = "walletdb";
 
 pub(crate) const ACCOUNT_MANAGER_INDEXATION_KEY: &str = "iota-wallet-account-manager";
 
+pub(crate) const SECRET_MANAGER_KEY: &str = "secret_manager";
+
 pub(crate) const ACCOUNTS_INDEXATION_KEY: &str = "iota-wallet-accounts";
 pub(crate) const ACCOUNT_INDEXATION_KEY: &str = "iota-wallet-account-";
-
-#[cfg(feature = "ledger-nano")]
-// Key to store the first address in the db so it can be used to verify that new accounts use the same mnemonic
-pub(crate) const FIRST_LEDGER_ADDRESS_KEY: &str = "FIRST_LEDGER_ADDRESS";

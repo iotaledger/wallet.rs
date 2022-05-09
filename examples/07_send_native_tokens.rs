@@ -5,14 +5,11 @@
 // In this example we will send native tokens
 // Rename `.env.example` to `.env` first
 
-use std::{env, path::PathBuf, str::FromStr};
+use std::{env, str::FromStr};
 
 use dotenv::dotenv;
 use iota_wallet::{
-    account_manager::AccountManager,
-    iota_client::bee_message::output::TokenId,
-    secret::{stronghold::StrongholdSecretManager, SecretManager},
-    AddressNativeTokens, Result,
+    account_manager::AccountManager, iota_client::bee_message::output::TokenId, AddressNativeTokens, Result,
 };
 use primitive_types::U256;
 
@@ -20,22 +17,20 @@ use primitive_types::U256;
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
-    // Setup Stronghold secret_manager
-    let secret_manager = StrongholdSecretManager::builder()
-        .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
-        .snapshot_path(PathBuf::from("wallet.stronghold"))
-        .build();
 
     // Create the account manager
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Stronghold(secret_manager))
-        .finish()
-        .await?;
+    let manager = AccountManager::builder().finish().await?;
 
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
 
+    // Set the stronghold password
+    manager
+        .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
+        .await?;
+
     let outputs = vec![AddressNativeTokens {
+        // todo update address and token id
         address: "atoi1qqv5avetndkxzgr3jtrswdtz5ze6mag20s0jdqvzk4fwezve8q9vk92ryhu".to_string(),
         native_tokens: vec![(
             TokenId::from_str("089292bbb5129efe5e9bd767aa0a789d475b37047d0100000000000000000000000000000000")?,

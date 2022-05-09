@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "storage")]
+#[cfg(any(feature = "storage", feature = "stronghold"))]
 use std::path::PathBuf;
 use std::sync::{atomic::AtomicUsize, Arc};
 
@@ -28,7 +28,7 @@ pub struct AccountManagerBuilder {
     storage_options: Option<StorageOptions>,
     client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
-    secret_manager: Option<Arc<RwLock<SecretManager>>>,
+    pub(crate) secret_manager: Option<Arc<RwLock<SecretManager>>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,8 +92,10 @@ impl AccountManagerBuilder {
     }
 
     /// Builds the account manager
-    #[allow(unreachable_code)]
-    pub async fn finish(self) -> crate::Result<AccountManager> {
+    #[allow(unreachable_code, unused_mut)]
+    pub async fn finish(mut self) -> crate::Result<AccountManager> {
+        log::debug!("[AccountManagerBuilder]");
+
         #[cfg(feature = "storage")]
         let storage_options = self.storage_options.clone().unwrap_or_default();
         #[cfg(feature = "storage")]
@@ -111,18 +113,20 @@ impl AccountManagerBuilder {
 
             let (client_options, secret_manager) = match manager_builder {
                 Some(data) => {
-                    let client_options = match data.client_options {
+                    // prioritise provided client_options and secret_manager over stored ones
+                    let client_options = match self.client_options {
                         Some(options) => options,
-                        None => self
+                        None => data
                             .client_options
                             .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
                     };
-                    (
-                        client_options,
-                        // todo: can we get this from the read data? Maybe just with type and path for Stronghold?
-                        self.secret_manager
+                    let secret_manager = match self.secret_manager {
+                        Some(secret_manager) => secret_manager,
+                        None => data
+                            .secret_manager
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
-                    )
+                    };
+                    (client_options, secret_manager)
                 }
                 // If no account manager data exist, we will set it
                 None => {
@@ -136,6 +140,7 @@ impl AccountManagerBuilder {
                     )
                 }
             };
+
             let client = client_options.clone().finish().await?;
 
             let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
