@@ -25,7 +25,7 @@ use crate::{
     account::{
         constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         handle::AccountHandle,
-        types::{address::AddressWrapper, AccountAddress, CoinType},
+        types::{address::AddressWrapper, AccountAddress},
         Account, AccountOptions,
     },
     ClientOptions, Error,
@@ -35,7 +35,7 @@ use crate::{
 pub struct AccountBuilder {
     alias: Option<String>,
     client_options: Arc<RwLock<ClientOptions>>,
-    coin_type: Option<CoinType>,
+    coin_type: Option<u32>,
     secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
@@ -74,7 +74,7 @@ impl AccountBuilder {
 
     /// Set the coin type, only useful for the first account, later accounts need to have the same coin type, to prevent
     /// issues with signing
-    pub fn with_coin_type(mut self, coin_type: CoinType) -> Self {
+    pub fn with_coin_type(mut self, coin_type: u32) -> Self {
         self.coin_type.replace(coin_type);
         self
     }
@@ -97,10 +97,10 @@ impl AccountBuilder {
         // existing accounts
         for account_handle in accounts.iter() {
             let account = account_handle.read().await;
-            let existing_coin_type: CoinType = account.coin_type.try_into()?;
+            let existing_coin_type = account.coin_type;
             if let Some(provided_coin_type) = &self.coin_type {
                 if &existing_coin_type != provided_coin_type {
-                    return Err(Error::InvalidCoinType(*provided_coin_type as u32));
+                    return Err(Error::InvalidCoinType(*provided_coin_type, existing_coin_type));
                 }
             } else {
                 // If coin type is None we will set it

@@ -359,7 +359,7 @@ impl WalletMessageHandler {
         }
 
         if let Some(coin_type) = &account.coin_type {
-            builder = builder.with_coin_type((*coin_type).try_into()?);
+            builder = builder.with_coin_type(*coin_type);
         }
 
         match builder.finish().await {
