@@ -4,10 +4,10 @@
 #[cfg(feature = "stronghold")]
 use std::path::PathBuf;
 
+use iota_client::constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE};
 #[cfg(feature = "stronghold")]
 use iota_client::secret::stronghold::StrongholdSecretManager;
 use iota_wallet::{
-    account::types::CoinType,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
@@ -192,19 +192,19 @@ async fn account_coin_type_shimmer() -> Result<()> {
 
     let _account = manager
         .create_account()
-        .with_coin_type(CoinType::Shimmer)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
     let _account = manager
         .create_account()
-        .with_coin_type(CoinType::Shimmer)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
     // Creating a new account with a different coin type fails
     assert!(
         manager
             .create_account()
-            .with_coin_type(CoinType::IOTA)
+            .with_coin_type(IOTA_COIN_TYPE)
             .finish()
             .await
             .is_err()
@@ -233,13 +233,13 @@ async fn account_coin_type_iota() -> Result<()> {
         .finish()
         .await?;
 
-    let _account = manager.create_account().with_coin_type(CoinType::IOTA).finish().await?;
-    let _account = manager.create_account().with_coin_type(CoinType::IOTA).finish().await?;
+    let _account = manager.create_account().with_coin_type(IOTA_COIN_TYPE).finish().await?;
+    let _account = manager.create_account().with_coin_type(IOTA_COIN_TYPE).finish().await?;
     // Creating a new account with a different coin type fails
     assert!(
         manager
             .create_account()
-            .with_coin_type(CoinType::Shimmer)
+            .with_coin_type(SHIMMER_COIN_TYPE)
             .finish()
             .await
             .is_err()
@@ -280,7 +280,7 @@ async fn account_creation_stronghold() -> Result<()> {
 
     let _account = manager
         .create_account()
-        .with_coin_type(CoinType::Shimmer)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 

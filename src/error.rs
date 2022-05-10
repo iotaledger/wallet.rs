@@ -56,9 +56,9 @@ pub enum Error {
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
-    /// Invalid coin type error
-    #[error("invalid coin type: {0}")]
-    InvalidCoinType(u32),
+    /// Invalid coin type, all accounts need to have the same coin type
+    #[error("invalid coin type for new account: {0}, existing coin type is: {1}")]
+    InvalidCoinType(u32, u32),
     /// Can't import accounts because the storage already exist
     #[error("failed to restore backup: storage file already exists")]
     StorageExists,
@@ -181,7 +181,7 @@ impl serde::Serialize for Error {
             Self::BeeMessageDtoError(_) => serialize_variant(self, serializer, "BeeMessageDtoError"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
-            Self::InvalidCoinType(_) => serialize_variant(self, serializer, "InvalidCoinType"),
+            Self::InvalidCoinType(..) => serialize_variant(self, serializer, "InvalidCoinType"),
             Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
             Self::StorageExists => serialize_variant(self, serializer, "StorageExists"),
             Self::StorageAdapterNotSet(_) => serialize_variant(self, serializer, "StorageAdapterNotSet"),
