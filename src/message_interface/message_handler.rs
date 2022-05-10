@@ -84,6 +84,8 @@ impl WalletMessageHandler {
 
     /// Handles a message.
     pub async fn handle(&self, message: Message) {
+        log::debug!("Message: {:?}", message.message_type);
+
         let response: Result<Response> = match message.message_type {
             MessageType::CreateAccount(account) => {
                 convert_async_panics(|| async { self.create_account(&account).await }).await
@@ -196,6 +198,9 @@ impl WalletMessageHandler {
             Ok(r) => r,
             Err(e) => Response::Error(e),
         };
+
+        log::debug!("Response: {:?}", response);
+
         let _ = message.response_tx.send(response);
     }
 
