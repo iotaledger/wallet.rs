@@ -6,8 +6,8 @@ use crate::{
     Error,
 };
 
-use iota_client::bee_block::{
-    address::AliasAddress,
+use iota_client::bee_message::{
+    address::{Address, AliasAddress},
     output::{
         unlock_condition::AddressUnlockCondition, AliasId, AliasOutput, BasicOutputBuilder, FoundryId, Output,
         SimpleTokenScheme, UnlockCondition,
@@ -23,6 +23,8 @@ pub struct AliasOptions {
     pub alias_id: AliasId,
     /// Whether to burn all controlled foundries or error out if any of the foundries cannot be found
     pub burn_foundries: bool,
+    /// Burn native tokens in foundry, or transfer to alias output if false
+    pub burn_native_token_remainder: bool,
 }
 
 impl Default for AliasOptions {
@@ -30,6 +32,7 @@ impl Default for AliasOptions {
         AliasOptions {
             alias_id: AliasId::new([0u8; AliasId::LENGTH]),
             burn_foundries: true,
+            burn_native_token_remainder: true,
         }
     }
 }
@@ -43,16 +46,18 @@ impl AccountHandle {
     ) -> crate::Result<TransactionResult> {
         log::debug!("[TRANSFER] destroy_alias");
 
-        // let address = self.get_sweep_remainder_address(&options).await?;
-        // self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_options.alias_id)), address)
-        //     .await?;
+        let address = self.get_sweep_remainder_address(&options).await?;
+        self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_options.alias_id)), address)
+            .await?;
 
         let (mut output_id, mut alias_output) = self.find_alias_output(alias_options.alias_id).await?;
 
         if alias_options.burn_foundries {
             let foundries = self.alias_foundries(alias_options.alias_id, alias_output.foundry_counter());
             if !foundries.is_empty() {
-                let transfer_result = self.burn_foundries(foundries, options.clone()).await?;
+                let transfer_result = self
+                    .burn_foundries(foundries, options.clone(), alias_options.burn_native_token_remainder)
+                    .await?;
 
                 match transfer_result.message_id {
                     Some(message_id) => {

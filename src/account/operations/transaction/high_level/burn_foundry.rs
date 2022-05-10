@@ -16,6 +16,7 @@ impl AccountHandle {
         &self,
         foundry_id: FoundryId,
         options: Option<TransferOptions>,
+        burn_native_token_remainder: bool,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] burn_foundry");
 
@@ -43,9 +44,18 @@ impl AccountHandle {
             Output::Alias(alias_output) => {
                 // Amount in foundry can't be burned, only native tokens
                 let amount = existing_alias_output_data.amount + existing_foundry_output_data.amount;
+                let mut native_tokens = Vec::from_iter(alias_output.native_tokens().clone());
+                if !burn_native_token_remainder {
+                    // Transfer native tokens from foundry to alias
+                    if let Output::Foundry(foundry_output) = existing_foundry_output_data.output {
+                        native_tokens.extend(foundry_output.native_tokens().clone())
+                    } else {
+                        unreachable!("We already checked output is a foundry");
+                    }
+                };
                 // Create the new alias output with the same feature blocks, just updated amount and state_index
                 let alias_output = AliasOutputBuilder::new_with_amount(amount, alias_id)?
-                    .with_native_tokens(alias_output.native_tokens().clone())
+                    .with_native_tokens(native_tokens)
                     .with_state_index(alias_output.state_index() + 1)
                     .with_state_metadata(alias_output.state_metadata().to_vec())
                     .with_foundry_counter(alias_output.foundry_counter())
@@ -72,6 +82,7 @@ impl AccountHandle {
         log::debug!("[TRANSFER] destroy_foundries");
 =======
         options: Option<TransferOptions>,
+        burn_native_token_remainder: bool,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] burn_foundries");
 >>>>>>> 74560f74 (Fix destroy alias and refactor):src/account/operations/transfer/high_level/burn_foundry.rs
@@ -110,9 +121,19 @@ impl AccountHandle {
                 Output::Alias(alias_output) => {
                     // Amount in foundry can't be burned, only native tokens
                     let amount = existing_alias_output_data.amount + existing_foundry_output_data.amount;
+                    let mut native_tokens = Vec::from_iter(alias_output.native_tokens().clone());
+                    if !burn_native_token_remainder {
+                        // Transfer native tokens from foundry to alias
+                        if let Output::Foundry(foundry_output) = existing_foundry_output_data.output {
+                            native_tokens.extend(foundry_output.native_tokens().clone())
+                        } else {
+                            unreachable!("We already checked output is a foundry");
+                        }
+                    };
+
                     // Create the new alias output with the same feature blocks, just updated amount and state_index
                     let alias_output = AliasOutputBuilder::new_with_amount(amount, *alias_output.alias_id())?
-                        .with_native_tokens(alias_output.native_tokens().clone())
+                        .with_native_tokens(native_tokens)
                         .with_state_index(alias_output.state_index() + 1)
                         .with_state_metadata(alias_output.state_metadata().to_vec())
                         .with_foundry_counter(alias_output.foundry_counter())

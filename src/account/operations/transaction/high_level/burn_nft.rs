@@ -3,7 +3,10 @@
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
 
-use iota_client::bee_message::output::{BasicOutputBuilder, NftId, NftOutput, Output};
+use iota_client::bee_message::{
+    address::{Address, NftAddress},
+    output::{BasicOutputBuilder, NftId, NftOutput, Output},
+};
 
 impl AccountHandle {
     /// Function to mint nft.
@@ -14,9 +17,9 @@ impl AccountHandle {
     ) -> crate::Result<TransactionResult> {
         log::debug!("[TRANSFER] burn_nft");
 
-        // let address = self.get_sweep_remainder_address(&options).await?;
-        // self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), address)
-        //     .await?;
+        let address = self.get_sweep_remainder_address(&options).await?;
+        self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), address)
+            .await?;
 
         let (output_id, nft_output) = self.find_nft_output(nft_id).await?;
         let custom_inputs = vec![output_id];

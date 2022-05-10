@@ -5,7 +5,7 @@ use crate::{
     account::{
         handle::AccountHandle,
         types::{address::AddressWrapper, AccountAddress},
-        AddressGenerationOptions, RemainderValueStrategy, SyncOptions, TransferOptions,
+        AddressGenerationOptions, RemainderValueStrategy, TransferOptions,
     },
     Error,
 };
@@ -19,7 +19,8 @@ use iota_client::{
                 dto::{AddressUnlockConditionDto, UnlockConditionDto},
                 AddressUnlockCondition,
             },
-            AliasId, AliasOutput, NftId, NftOutput, Output, OutputId, OUTPUT_COUNT_MAX,
+            AliasId, AliasOutput, AliasOutputBuilder, NftId, NftOutput, NftOutputBuilder, Output, OutputId,
+            OUTPUT_COUNT_MAX,
         },
         payload::transaction::TransactionId,
     },
@@ -107,9 +108,12 @@ impl AccountHandle {
         address: Address,
         remainder_address: AddressWrapper,
     ) -> crate::Result<()> {
-        let query_parameters = vec![QueryParameter::Address(
-            address.to_bech32(remainder_address.bech32_hrp()),
-        )];
+        let query_parameters = vec![
+            QueryParameter::Address(address.to_bech32(remainder_address.bech32_hrp())),
+            QueryParameter::HasExpirationCondition(false),
+            QueryParameter::HasTimelockCondition(false),
+            QueryParameter::HasStorageDepositReturnCondition(false),
+        ];
 
         let alias_output_ids = self.client.aliases_output_ids(query_parameters.clone()).await?;
         let basic_output_ids = self.client.output_ids(query_parameters.clone()).await?;
@@ -132,18 +136,15 @@ impl AccountHandle {
             }
 
             match &mut output_response.output {
-                OutputDto::Basic(output_dto) => Self::replace_address_unlock_conditions(
-                    &mut output_dto.unlock_conditions,
-                    AddressUnlockCondition::new(remainder_address.inner),
-                )?,
-                OutputDto::Alias(output_dto) => Self::replace_address_unlock_conditions(
-                    &mut output_dto.unlock_conditions,
-                    AddressUnlockCondition::new(remainder_address.inner),
-                )?,
-                OutputDto::Nft(output_dto) => Self::replace_address_unlock_conditions(
-                    &mut output_dto.unlock_conditions,
-                    AddressUnlockCondition::new(remainder_address.inner),
-                )?,
+                OutputDto::Basic(output_dto) => {
+                    Self::replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
+                }
+                OutputDto::Alias(output_dto) => {
+                    Self::replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
+                }
+                OutputDto::Nft(output_dto) => {
+                    Self::replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
+                }
                 OutputDto::Treasury(_) | OutputDto::Foundry(_) => continue,
             }
 
@@ -157,22 +158,12 @@ impl AccountHandle {
             if output_ids.len() == (OUTPUT_COUNT_MAX - 1) as usize {
                 self.send_sweep_transaction(address, output_ids.drain(..), outputs.drain(..))
                     .await?;
-                let sync_options = SyncOptions {
-                    addresses: vec![remainder_address.to_bech32()],
-                    ..Default::default()
-                };
-                self.sync(Some(sync_options)).await?;
             }
         }
 
         if !output_ids.is_empty() {
             self.send_sweep_transaction(address, output_ids.drain(..), outputs.drain(..))
                 .await?;
-            let sync_options = SyncOptions {
-                addresses: vec![remainder_address.to_bech32()],
-                ..Default::default()
-            };
-            self.sync(Some(sync_options)).await?;
         }
 
         Ok(())
@@ -184,19 +175,35 @@ impl AccountHandle {
         output_ids: impl IntoIterator<Item = OutputId>,
         outputs: impl IntoIterator<Item = Output>,
     ) -> crate::Result<()> {
-        let mut custom_inputs = output_ids.into_iter().collect::<Vec<_>>();
-        let outputs = outputs.into_iter().collect::<Vec<_>>();
-
-        println!("1 -> {:?}", custom_inputs);
+        let mut custom_inputs = Vec::new();
+        let mut custom_outputs = Vec::new();
 
         match address {
             Address::Alias(alias_address) => {
-                let (output_id, _alias_output) = self.find_alias_output(*alias_address.alias_id()).await?;
+                let (output_id, alias_output) = self.find_alias_output(*alias_address.alias_id()).await?;
+                let alias_output =
+                    AliasOutputBuilder::new_with_amount(alias_output.amount(), *alias_output.alias_id())?
+                        .with_native_tokens(alias_output.native_tokens().clone())
+                        .with_state_index(alias_output.state_index() + 1)
+                        .with_state_metadata(alias_output.state_metadata().to_vec())
+                        .with_foundry_counter(alias_output.foundry_counter())
+                        .with_unlock_conditions(alias_output.unlock_conditions().clone())
+                        .with_feature_blocks(alias_output.feature_blocks().clone())
+                        .with_immutable_feature_blocks(alias_output.immutable_feature_blocks().clone())
+                        .finish()?;
                 custom_inputs.push(output_id);
+                custom_outputs.push(Output::Alias(alias_output));
             }
             Address::Nft(nft_address) => {
-                let (output_id, _nft_output) = self.find_nft_output(*nft_address.nft_id()).await?;
+                let (output_id, nft_output) = self.find_nft_output(*nft_address.nft_id()).await?;
+                let nft_output = NftOutputBuilder::new_with_amount(nft_output.amount(), *nft_output.nft_id())?
+                    .with_native_tokens(nft_output.native_tokens().clone())
+                    .with_unlock_conditions(nft_output.unlock_conditions().clone())
+                    .with_feature_blocks(nft_output.feature_blocks().clone())
+                    .with_immutable_feature_blocks(nft_output.immutable_feature_blocks().clone())
+                    .finish()?;
                 custom_inputs.push(output_id);
+                custom_outputs.push(Output::Nft(nft_output));
             }
             Address::Ed25519(_) => {
                 return Err(Error::BurningFailed(
@@ -205,45 +212,31 @@ impl AccountHandle {
             }
         }
 
-        println!("2 -> {:?}", custom_inputs);
+        custom_inputs.append(&mut output_ids.into_iter().collect::<Vec<_>>());
+        custom_outputs.append(&mut outputs.into_iter().collect::<Vec<_>>());
 
-        // let transfer_options = Some(TransferOptions {
-        //     custom_inputs: Some(custom_inputs),
-        //     ..Default::default()
-        // });
+        let transfer_options = Some(TransferOptions {
+            custom_inputs: Some(custom_inputs),
+            ..Default::default()
+        });
 
-        // let transfer_result = self.send(outputs, transfer_options, false).await.unwrap();
-        let secret_manager = self.secret_manager.read().await;
-        let mut message_builder = self
-            .client
-            .message()
-            .with_secret_manager(&secret_manager)
-            .with_outputs(outputs)?;
-        for input in custom_inputs {
-            message_builder = message_builder.with_input(input.into())?;
+        let transfer_result = self.send(custom_outputs, transfer_options, false).await?;
+        match &transfer_result.message_id {
+            Some(message_id) => {
+                let _ = self.client.retry_until_included(message_id, None, None).await?;
+                let _ = self.sync(None).await?;
+            }
+            None => return Err(Error::BurningFailed("Could not sweep address outputs".to_string())),
         }
-        let message = message_builder.finish().await.unwrap();
-
-        let _ = self.client.retry_until_included(&message.id(), None, None).await?;
 
         Ok(())
     }
 
-    fn replace_address_unlock_conditions(
-        unlock_conditions: &mut [UnlockConditionDto],
-        address_unlock: AddressUnlockCondition,
-    ) -> crate::Result<()> {
-        for condition in unlock_conditions.iter_mut() {
-            if let UnlockConditionDto::Address(address_unlock_condition_dto) = condition {
-                *address_unlock_condition_dto = AddressUnlockConditionDto {
-                    kind: AddressUnlockCondition::KIND,
-                    address: address_unlock.address().into(),
-                };
-                // There can't be more than one unlock condition type so it's okay to break
-                break;
-            }
-        }
-
-        Ok(())
+    fn replace_unlock_conditions(unlock_conditions: &mut Vec<UnlockConditionDto>, address: &Address) {
+        unlock_conditions.clear();
+        unlock_conditions.push(UnlockConditionDto::Address(AddressUnlockConditionDto {
+            kind: AddressUnlockCondition::KIND,
+            address: address.into(),
+        }));
     }
 }

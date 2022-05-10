@@ -8,6 +8,7 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
+    account::SyncOptions,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     AliasOptions, ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
@@ -89,7 +90,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
-        .with_node("http://api.localhost:14265")
+        .with_node("http://localhost:14265")
         .unwrap()
         .with_node_sync_disabled();
 
@@ -181,6 +182,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     Ok(())
 }
 
+#[ignore]
 #[tokio::test]
 async fn burn_foundry() -> Result<()> {
     let storage_path = "test-storage/burn_foundry";
@@ -214,15 +216,17 @@ async fn burn_foundry() -> Result<()> {
     };
 
     let _account_addresses = account.generate_addresses(1, None).await.unwrap();
-    let balance = account.sync(None).await.unwrap();
+    let sync_options = SyncOptions {
+        try_collect_outputs: iota_wallet::account::OutputsToCollect::All,
+        ..Default::default()
+    };
+    let balance = account.sync(Some(sync_options)).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good idea
     let foundry_id = balance.foundries.first().unwrap().clone();
-    // let foundry_id: [u8; FoundryId::LENGTH] = hex::decode("087711e3ffdc9db7ff13c0605996c47f2c8570425b4fbef98ab17119efab31a68e0100000000").unwrap().try_into().unwrap();
-    // let foundry_id = FoundryId::new(foundry_id);
 
-    let _ = account.burn_foundry(foundry_id.clone(), None).await?;
+    let _ = account.burn_foundry(foundry_id.clone(), None, false).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
@@ -235,6 +239,7 @@ async fn burn_foundry() -> Result<()> {
     Ok(())
 }
 
+#[ignore]
 #[tokio::test]
 async fn destroy_alias() -> Result<()> {
     let storage_path = "test-storage/destroy_alias";
@@ -248,6 +253,7 @@ async fn destroy_alias() -> Result<()> {
             "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
         )?;
 
+    // Create the account manager
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
@@ -267,22 +273,21 @@ async fn destroy_alias() -> Result<()> {
         Err(e) => return Err(e),
     };
 
-    let _account_addresses = account.generate_addresses(1, None).await.unwrap();
+    // let _account_addresses = account.generate_addresses(1, None).await.unwrap();
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's destroy the first alias we can find, this can fail if one of its foundries have been previously burnt
-    let alias_id = balance.aliases.first().unwrap().clone();
-    // let alias_id: [u8; AliasId::LENGTH] =
-    //     hex::decode("e37b17f36e490beb8b7a757cf14e0b1b5006a739b2478ea8a056ef7cafe9e2a3")
-    //         .unwrap()
-    //         .try_into()
-    //         .unwrap();
-    // let alias_id = AliasId::new(alias_id);
+    // let alias_id = balance.aliases.first().unwrap().clone();
+    let alias_id: [u8; AliasId::LENGTH] =
+        hex::decode("7558a4fa695848cb31953073794f1f213607624c5b81fbc02ebe1a47fb8eb2f6")
+            .unwrap()
+            .try_into()
+            .unwrap();
+    let alias_id = AliasId::new(alias_id);
     println!("alias_id -> {alias_id}");
     let alias_options = AliasOptions {
         alias_id,
-        // burn_foundries: false,
         ..Default::default()
     };
     let _ = account.destroy_alias(alias_options, None).await.unwrap();
