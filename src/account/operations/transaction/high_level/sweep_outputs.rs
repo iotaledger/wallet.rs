@@ -108,6 +108,13 @@ impl AccountHandle {
         address: Address,
         remainder_address: AddressWrapper,
     ) -> crate::Result<()> {
+        let alias_query_parameters = vec![
+            QueryParameter::Governor(address.to_bech32(remainder_address.bech32_hrp())),
+            QueryParameter::HasExpirationCondition(false),
+            QueryParameter::HasTimelockCondition(false),
+            QueryParameter::HasStorageDepositReturnCondition(false),
+        ];
+
         let query_parameters = vec![
             QueryParameter::Address(address.to_bech32(remainder_address.bech32_hrp())),
             QueryParameter::HasExpirationCondition(false),
@@ -115,7 +122,7 @@ impl AccountHandle {
             QueryParameter::HasStorageDepositReturnCondition(false),
         ];
 
-        let alias_output_ids = self.client.aliases_output_ids(query_parameters.clone()).await?;
+        let alias_output_ids = self.client.aliases_output_ids(alias_query_parameters).await?;
         let basic_output_ids = self.client.output_ids(query_parameters.clone()).await?;
         let nft_output_ids = self.client.nfts_output_ids(query_parameters).await?;
 
