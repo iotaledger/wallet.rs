@@ -79,7 +79,7 @@ impl Debug for Response {
             Response::SentTransfers(transfers) => write!(f, "SentTransfers({:?})", transfers),
             Response::Error(error) => write!(f, "Error({:?})", error),
             Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
-            Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic()"),
+            Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
             Response::NodeInfo(info) => write!(f, "NodeInfo({:?})", info),
             Response::Ok(()) => write!(f, "Ok(())"),
         }

@@ -130,7 +130,7 @@ impl Debug for MessageType {
             MessageType::GetAccounts => write!(f, "GetAccounts"),
             MessageType::CallAccountMethod { account_id, method } => write!(
                 f,
-                "CallAccountMethod{{ account_id: {:?}, method: {:?} }})",
+                "CallAccountMethod{{ account_id: {:?}, method: {:?} }}",
                 account_id, method
             ),
             #[cfg(feature = "storage")]
@@ -151,11 +151,11 @@ impl Debug for MessageType {
             #[cfg(feature = "storage")]
             MessageType::DeleteStorage => write!(f, "DeleteStorage"),
             MessageType::GenerateMnemonic => write!(f, "GenerateMnemonic"),
-            MessageType::VerifyMnemonic(_) => write!(f, "VerifyMnemonic()"),
+            MessageType::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
             MessageType::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             MessageType::GetNodeInfo => write!(f, "GetNodeInfo"),
-            MessageType::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword()"),
-            MessageType::StoreMnemonic(_) => write!(f, "StoreMnemonic()"),
+            MessageType::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
+            MessageType::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
             MessageType::StartBackgroundSync { options, interval } => write!(
                 f,
                 "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
