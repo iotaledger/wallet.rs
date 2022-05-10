@@ -16,8 +16,8 @@ use crate::{
     Error,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `send_nft()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftOptions {
     /// Bech32 encoded address to which the Nft will be minted. Default will use the
     /// first address of the account

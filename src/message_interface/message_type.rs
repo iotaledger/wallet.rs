@@ -16,11 +16,11 @@ use crate::{
 
 /// An account to create.
 #[derive(Clone, Debug, Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
 pub struct AccountToCreate {
     /// The account alias.
     pub alias: Option<String>,
     /// The account coin type.
+    #[serde(rename = "coinType")]
     pub coin_type: Option<u32>,
 }
 

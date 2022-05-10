@@ -13,8 +13,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Address and nft for `send_nft()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressAndNftId {
     /// Bech32 encoded address
     pub address: String,

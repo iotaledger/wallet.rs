@@ -25,8 +25,8 @@ use crate::{
     AddressWithAmount, AddressWithMicroAmount,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Dto for address with amount for `send_amount()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressWithAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -46,8 +46,8 @@ impl TryFrom<&AddressWithAmountDto> for AddressWithAmount {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// Dto for address with amount for `send_micro_transaction()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressWithMicroAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -148,31 +148,38 @@ impl From<&AccountBalance> for AccountBalanceDto {
 
 /// Dto for an Account.
 #[derive(Debug, Serialize, Deserialize, Clone)]
-#[serde(rename_all = "camelCase")]
 pub struct AccountDto {
     /// The account index
     pub index: u32,
     /// The coin type
+    #[serde(rename = "coinType")]
     pub coin_type: u32,
     /// The account alias.
     pub alias: String,
     /// Public addresses
+    #[serde(rename = "publicAddresses")]
     pub public_addresses: Vec<AccountAddress>,
     /// Internal addresses
+    #[serde(rename = "internalAddresses")]
     pub internal_addresses: Vec<AccountAddress>,
     /// Addresses with unspent outputs
+    #[serde(rename = "addressesWithUnspentOutputs")]
     pub addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputsDto>,
     /// Outputs
     pub outputs: HashMap<OutputId, OutputData>,
     /// Unspent outputs that are currently used as input for transactions
+    #[serde(rename = "lockedOutputs")]
     pub locked_outputs: HashSet<OutputId>,
     /// Unspent outputs
+    #[serde(rename = "unspentOutputs")]
     pub unspent_outputs: HashMap<OutputId, OutputData>,
     /// Sent transactions
     pub transactions: HashMap<TransactionId, Transaction>,
     /// Pending transactions
+    #[serde(rename = "pendingTransactions")]
     pub pending_transactions: HashSet<TransactionId>,
     /// Account options
+    #[serde(rename = "accountOptions")]
     pub account_options: AccountOptions,
 }
 

@@ -25,8 +25,8 @@ use crate::{
     Error,
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// address with amount for `send_micro_transaction()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressWithMicroAmount {
     /// Bech32 encoded address
     pub address: String,

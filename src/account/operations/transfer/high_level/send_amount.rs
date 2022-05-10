@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
 /// address with amount for `send_amount()`
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressWithAmount {
     /// Bech32 encoded address
     pub address: String,
