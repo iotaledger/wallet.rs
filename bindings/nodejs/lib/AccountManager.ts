@@ -56,7 +56,7 @@ export class AccountManager {
                     payload: {url, auth}
                 }
             )
-        );
+        ).payload;
     }
     
     /**
