@@ -10,7 +10,13 @@ use iota_wallet::{
     },
 };
 use neon::prelude::*;
-use tokio::sync::mpsc::unbounded_channel;
+use tokio::sync::{mpsc::unbounded_channel, RwLock};
+
+// Wrapper so we can destroy the MessageHandler
+pub type MessageHandlerWrapperInner = Arc<RwLock<Option<Arc<MessageHandler>>>>;
+// Wrapper because we can't impl Finalize on MessageHandlerWrapperInner
+pub struct MessageHandlerWrapper(pub MessageHandlerWrapperInner);
+impl Finalize for MessageHandlerWrapper {}
 
 pub struct MessageHandler {
     channel: Channel,
@@ -19,9 +25,8 @@ pub struct MessageHandler {
 
 type JsCallback = Root<JsFunction<JsObject>>;
 
-impl Finalize for MessageHandler {}
 impl MessageHandler {
-    fn new(channel: Channel, options: String) -> Arc<Self> {
+    fn new(channel: Channel, options: String) -> Self {
         let manager_options = match serde_json::from_str::<ManagerOptions>(&options) {
             Ok(options) => Some(options),
             Err(e) => {
@@ -34,10 +39,10 @@ impl MessageHandler {
             .block_on(async move { create_message_handler(manager_options).await })
             .expect("error initializing account manager");
 
-        Arc::new(Self {
+        Self {
             channel,
             wallet_message_handler,
-        })
+        }
     }
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
@@ -88,23 +93,27 @@ impl MessageHandler {
         });
     }
 }
+impl Finalize for MessageHandler {}
 
-pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<Arc<MessageHandler>>> {
+pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<MessageHandlerWrapper>> {
     let options = cx.argument::<JsString>(0)?;
     let options = options.value(&mut cx);
     let channel = cx.channel();
     let message_handler = MessageHandler::new(channel, options);
 
-    Ok(cx.boxed(message_handler))
+    Ok(cx.boxed(MessageHandlerWrapper(Arc::new(RwLock::new(Some(Arc::new(
+        message_handler,
+    )))))))
 }
 
 pub fn send_message(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let message = cx.argument::<JsString>(0)?;
     let message = message.value(&mut cx);
-    let message_handler = Arc::clone(&&cx.argument::<JsBox<Arc<MessageHandler>>>(1)?);
+    let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(1)?.0);
     let callback = cx.argument::<JsFunction>(2)?.root(&mut cx);
 
     crate::RUNTIME.spawn(async move {
+        let message_handler = message_handler.read().await.clone().expect("missing message handler");
         let (response, is_error) = message_handler.send_message(message).await;
         message_handler.channel.send(move |mut cx| {
             let cb = callback.into_inner(&mut cx);
@@ -139,9 +148,14 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     }
 
     let callback = Arc::new(cx.argument::<JsFunction>(1)?.root(&mut cx));
-    let message_handler = Arc::clone(&&cx.argument::<JsBox<Arc<MessageHandler>>>(2)?);
+    let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(2)?.0);
 
     crate::RUNTIME.spawn(async move {
+        let message_handler = message_handler
+            .read()
+            .await
+            .clone()
+            .expect("missing wallet_message_handler");
         let cloned_message_handler = message_handler.clone();
         message_handler
             .wallet_message_handler
@@ -151,5 +165,13 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .await;
     });
 
+    Ok(cx.undefined())
+}
+
+pub fn destroy(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(0)?.0);
+    crate::RUNTIME.spawn(async move {
+        *message_handler.write().await = None;
+    });
     Ok(cx.undefined())
 }

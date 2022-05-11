@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { sendMessageAsync, messageHandlerNew, listen } from './bindings';
+import { sendMessageAsync, messageHandlerNew, listen, destroy } from './bindings';
 import type { EventType, AccountManagerOptions, __SendMessagePayload__, __AccountPayloadMethods__, AccountId } from '../types';
 
 // The MessageHandler class interacts with messages with the rust bindings.
@@ -34,5 +34,9 @@ export class MessageHandler {
 
     listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
         return listen(eventTypes, callback, this.messageHandler);
+    }
+
+    destroy(): void {
+        return destroy(this.messageHandler)
     }
 }
