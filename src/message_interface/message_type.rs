@@ -1,7 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{path::PathBuf, time::Duration};
+use std::{
+    fmt::{Debug, Formatter, Result},
+    path::PathBuf,
+    time::Duration,
+};
 
 use serde::{ser::Serializer, Deserialize, Serialize};
 
@@ -25,7 +29,7 @@ pub struct AccountToCreate {
 }
 
 /// The messages that can be sent to the actor.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(tag = "cmd", content = "payload")]
 #[allow(clippy::large_enum_variant)]
 pub enum MessageType {
@@ -115,6 +119,54 @@ pub enum MessageType {
     #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
+}
+
+// Custom Debug implementation to not log secrets
+impl Debug for MessageType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        match self {
+            MessageType::CreateAccount(account) => write!(f, "CreateAccount({:?})", account),
+            MessageType::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
+            MessageType::GetAccounts => write!(f, "GetAccounts"),
+            MessageType::CallAccountMethod { account_id, method } => write!(
+                f,
+                "CallAccountMethod{{ account_id: {:?}, method: {:?} }}",
+                account_id, method
+            ),
+            #[cfg(feature = "storage")]
+            MessageType::Backup {
+                destination,
+                password: _,
+            } => write!(f, "Backup{{ destination: {:?} }}", destination),
+            MessageType::RecoverAccounts {
+                account_gap_limit,
+                address_gap_limit,
+            } => write!(
+                f,
+                "RecoverAccoounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
+                account_gap_limit, address_gap_limit
+            ),
+            #[cfg(feature = "storage")]
+            MessageType::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
+            #[cfg(feature = "storage")]
+            MessageType::DeleteStorage => write!(f, "DeleteStorage"),
+            MessageType::GenerateMnemonic => write!(f, "GenerateMnemonic"),
+            MessageType::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
+            MessageType::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
+            MessageType::GetNodeInfo => write!(f, "GetNodeInfo"),
+            MessageType::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
+            MessageType::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
+            MessageType::StartBackgroundSync { options, interval } => write!(
+                f,
+                "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
+                options, interval
+            ),
+            MessageType::StopBackgroundSync => write!(f, "StopBackgroundSync"),
+            #[cfg(feature = "events")]
+            #[cfg(debug_assertions)]
+            MessageType::EmitTestEvent(event) => write!(f, "EmitTestEvent({:?})", event),
+        }
+    }
 }
 
 impl Serialize for MessageType {
