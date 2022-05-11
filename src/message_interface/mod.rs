@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod account_method;
+mod dtos;
 mod message;
 mod message_handler;
 mod message_type;
@@ -15,6 +16,7 @@ use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
     account_method::AccountMethod,
+    dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     message_type::{AccountToCreate, MessageType},
@@ -144,7 +146,7 @@ mod tests {
             message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
         match response {
             Response::Account(account) => {
-                let id = account.index();
+                let id = account.index;
                 println!("Created account index: {id}")
             }
             _ => panic!("unexpected response {:?}", response),
@@ -256,7 +258,7 @@ mod tests {
 
         match response {
             Response::Account(account) => {
-                let id = account.index();
+                let id = account.index;
                 println!("Created account index: {id}")
             }
             _ => panic!("unexpected response {:?}", response),

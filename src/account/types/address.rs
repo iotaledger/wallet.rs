@@ -43,6 +43,7 @@ pub struct AddressWithUnspentOutputs {
     /// Amount
     pub(crate) amount: u64,
     /// Output ids
+    #[serde(rename = "outputIds")]
     pub(crate) output_ids: Vec<OutputId>,
 }
 

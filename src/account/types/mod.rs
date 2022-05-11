@@ -27,24 +27,24 @@ use serde::{Deserialize, Deserializer, Serialize};
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub struct AccountBalance {
-    // Total amount
+    /// Total amount
     pub total: u64,
-    // Balance that can currently be spend
+    /// Balance that can currently be spend
     pub available: u64,
-    // Current required storage deposit amount
+    /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
-    // Native tokens
+    /// Native tokens
     #[serde(rename = "nativeTokens")]
     pub native_tokens: HashMap<TokenId, U256>,
-    // Nfts
+    /// Nfts
     pub nfts: Vec<NftId>,
-    // Aliases
+    /// Aliases
     pub aliases: Vec<AliasId>,
-    // Foundries
+    /// Foundries
     pub foundries: Vec<FoundryId>,
-    // Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
-    // [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
+    /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+    /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
     pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }

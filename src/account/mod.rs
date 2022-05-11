@@ -35,41 +35,60 @@ pub use self::{
 /// An Account.
 #[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
 #[getset(get = "pub")]
-#[serde(rename_all = "camelCase")]
 pub struct Account {
     /// The account index
     index: u32,
     /// The coin type
+    #[serde(rename = "coinType")]
     coin_type: u32,
     /// The account alias.
     alias: String,
+    /// Public addresses
+    #[serde(rename = "publicAddresses")]
     pub(crate) public_addresses: Vec<AccountAddress>,
+    /// Internal addresses
+    #[serde(rename = "internalAddresses")]
     pub(crate) internal_addresses: Vec<AccountAddress>,
+    /// Addresses with unspent outputs
     // used to improve performance for syncing and getbalance because it's in most cases only a subset of all addresses
+    #[serde(rename = "addressesWithUnspentOutputs")]
     addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
+    /// Outputs
     // stored separated from the account for performance?
     outputs: HashMap<OutputId, OutputData>,
+    /// Unspent outputs that are currently used as input for transactions
     // outputs used in transactions should be locked here so they don't get used again, which would result in a
     // conflicting transaction
+    #[serde(rename = "lockedOutputs")]
     locked_outputs: HashSet<OutputId>,
+    /// Unspent outputs
     // have unspent outputs in a separated hashmap so we don't need to iterate over all outputs we have
+    #[serde(rename = "unspentOutputs")]
     unspent_outputs: HashMap<OutputId, OutputData>,
+    /// Sent transactions
     // stored separated from the account for performance and only the transaction id here? where to add the network id?
     // transactions: HashSet<TransactionId>,
     transactions: HashMap<TransactionId, types::Transaction>,
+    /// Pending transactions
     // Maybe pending transactions even additionally separated?
+    #[serde(rename = "pendingTransactions")]
     pending_transactions: HashSet<TransactionId>,
+    /// Account options
     // sync interval, output consolidation
+    #[serde(rename = "accountOptions")]
     #[getset(get = "pub(crate)")]
     account_options: AccountOptions,
 }
 
 /// Account options
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct AccountOptions {
-    pub(crate) output_consolidation_threshold: usize,
-    pub(crate) automatic_output_consolidation: bool,
+pub struct AccountOptions {
+    /// Threshold for the amount of unspent outputs before they get consolidated (sent in a transaction to the account
+    /// itself)
+    #[serde(rename = "outputConsolidationThreshold")]
+    pub output_consolidation_threshold: usize,
+    #[serde(rename = "automaticOutputConsolidation")]
+    pub automatic_output_consolidation: bool,
     // #[cfg(feature = "storage")]
     // pub(crate) persist_events: bool,
 }

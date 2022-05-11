@@ -18,11 +18,13 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
+        dtos::{AccountBalanceDto, AccountDto},
         message::Message,
         message_type::{AccountToCreate, MessageType},
         response::Response,
+        AddressWithUnspentOutputsDto,
     },
-    Result,
+    AddressWithAmount, AddressWithMicroAmount, Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Response {
@@ -113,7 +115,7 @@ impl WalletMessageHandler {
                     let mut accounts = Vec::new();
                     for account_handle in account_handles {
                         let account = account_handle.read().await;
-                        accounts.push(account.clone());
+                        accounts.push(AccountDto::from(&*account));
                     }
                     Ok(Response::Accounts(accounts))
                 })
@@ -242,7 +244,9 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListAddressesWithUnspentOutputs => {
                 let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
-                Ok(Response::AddressesWithUnspentOutputs(addresses))
+                Ok(Response::AddressesWithUnspentOutputs(
+                    addresses.iter().map(AddressWithUnspentOutputsDto::from).collect(),
+                ))
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;
@@ -279,17 +283,25 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::GetBalance => Ok(Response::Balance(account_handle.balance().await?)),
-            AccountMethod::SyncAccount { options } => {
-                Ok(Response::Balance(account_handle.sync(options.clone()).await?))
-            }
+            AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
+                &account_handle.balance().await?,
+            ))),
+            AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
+                &account_handle.sync(options.clone()).await?,
+            ))),
             AccountMethod::SendAmount {
                 addresses_with_amount,
                 options,
             } => {
                 convert_async_panics(|| async {
                     let message = account_handle
-                        .send_amount(addresses_with_amount.clone(), options.clone())
+                        .send_amount(
+                            addresses_with_amount
+                                .iter()
+                                .map(AddressWithAmount::try_from)
+                                .collect::<Result<Vec<AddressWithAmount>>>()?,
+                            options.clone(),
+                        )
                         .await?;
                     Ok(Response::SentTransfer(message))
                 })
@@ -301,7 +313,13 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     let message = account_handle
-                        .send_micro_transaction(addresses_with_micro_amount.clone(), options.clone())
+                        .send_micro_transaction(
+                            addresses_with_micro_amount
+                                .iter()
+                                .map(AddressWithMicroAmount::try_from)
+                                .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
+                            options.clone(),
+                        )
                         .await?;
                     Ok(Response::SentTransfer(message))
                 })
@@ -370,7 +388,7 @@ impl WalletMessageHandler {
         match builder.finish().await {
             Ok(account_handle) => {
                 let account = account_handle.read().await;
-                Ok(Response::Account(account.clone()))
+                Ok(Response::Account(AccountDto::from(&*account)))
             }
             Err(e) => Err(e),
         }
@@ -379,7 +397,7 @@ impl WalletMessageHandler {
     async fn get_account(&self, account_id: &AccountIdentifier) -> Result<Response> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
         let account = account_handle.read().await;
-        Ok(Response::Account(account.clone()))
+        Ok(Response::Account(AccountDto::from(&*account)))
     }
 
     async fn get_accounts(&self) -> Result<Response> {
@@ -387,7 +405,7 @@ impl WalletMessageHandler {
         let mut accounts = Vec::new();
         for account_handle in account_handles {
             let account = account_handle.read().await;
-            accounts.push(account.clone());
+            accounts.push(AccountDto::from(&*account));
         }
         Ok(Response::Accounts(accounts))
     }

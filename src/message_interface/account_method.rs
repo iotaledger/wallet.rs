@@ -9,7 +9,8 @@ use crate::{
         address_generation::AddressGenerationOptions, output_collection::OutputsToCollect, syncing::SyncOptions,
         transfer::TransferOptions,
     },
-    AddressAndNftId, AddressNativeTokens, AddressWithAmount, AddressWithMicroAmount, NativeTokenOptions, NftOptions,
+    message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
+    AddressAndNftId, AddressNativeTokens, NativeTokenOptions, NftOptions,
 };
 
 /// Each public account method.
@@ -81,14 +82,14 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SendAmount {
         #[serde(rename = "addressWithAmount")]
-        addresses_with_amount: Vec<AddressWithAmount>,
+        addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransferOptions>,
     },
     /// Send amount below minimum storage deposit.
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SendMicroTransaction {
         #[serde(rename = "addressWithMicroAmount")]
-        addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
+        addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
         options: Option<TransferOptions>,
     },
     /// Send native tokens.

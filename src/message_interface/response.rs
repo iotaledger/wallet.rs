@@ -9,12 +9,9 @@ use serde::Serialize;
 use crate::{
     account::{
         operations::transfer::TransferResult,
-        types::{
-            address::{AccountAddress, AddressWithUnspentOutputs},
-            AccountBalance, OutputData, Transaction,
-        },
-        Account,
+        types::{address::AccountAddress, OutputData, Transaction},
     },
+    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
 
@@ -23,13 +20,13 @@ use crate::{
 #[serde(tag = "type", content = "payload")]
 pub enum Response {
     /// Account succesfully created or GetAccount response.
-    Account(Account),
+    Account(AccountDto),
     /// GetAccounts response.
-    Accounts(Vec<Account>),
+    Accounts(Vec<AccountDto>),
     /// ListAddresses
     Addresses(Vec<AccountAddress>),
     /// ListAddressesWithUnspentOutputs.
-    AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputs>),
+    AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
     /// GetOutputsWithAdditionalUnlockConditions.
     OutputIds(Vec<OutputId>),
     /// GetOutput.
@@ -41,7 +38,7 @@ pub enum Response {
     /// GenerateAddress response.
     GeneratedAddress(Vec<AccountAddress>),
     /// GetBalance/SyncAccount response.
-    Balance(AccountBalance),
+    Balance(AccountBalanceDto),
     /// SendAmount, MintNativeTokens, MintNfts, SendMicroTransaction, SendNativeTokens, SendNft, SendTransfer and
     /// InternalTransfer response.
     SentTransfer(TransferResult),
