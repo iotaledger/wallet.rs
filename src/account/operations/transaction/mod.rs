@@ -19,7 +19,6 @@ use iota_client::{
         semantic::ConflictReason,
         BlockId,
     },
-    packable::bounded::TryIntoBoundedU16Error,
     secret::types::InputSigningData,
 };
 use serde::Serialize;

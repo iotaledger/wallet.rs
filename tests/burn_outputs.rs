@@ -11,7 +11,7 @@ use iota_wallet::{
     account::SyncOptions,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
-    AliasOptions, ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
+    ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
 };
 
 #[tokio::test]
@@ -119,11 +119,8 @@ async fn mint_and_burn_native_token() -> Result<()> {
 
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
-    let faucet_response = request_funds_from_faucet(
-        "http://faucet.localhost:14265/api/enqueue",
-        &account_addresses[0].address().to_bech32(),
-    )
-    .await?;
+    let faucet_response =
+        request_funds_from_faucet("http://localhost:14265", &account_addresses[0].address().to_bech32()).await?;
 
     println!("{}", faucet_response);
 
@@ -226,7 +223,7 @@ async fn burn_foundry() -> Result<()> {
     // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good idea
     let foundry_id = balance.foundries.first().unwrap().clone();
 
-    let _ = account.burn_foundry(foundry_id.clone(), None, false).await.unwrap();
+    let _ = account.burn_foundry(foundry_id.clone(), None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
@@ -242,55 +239,38 @@ async fn burn_foundry() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn destroy_alias() -> Result<()> {
-    let storage_path = "test-storage/destroy_alias";
-    std::fs::remove_dir_all(storage_path).unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")
-        .unwrap()
-        .with_node_sync_disabled();
-
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-        )?;
-
     // Create the account manager
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    // Create the account manager with the secret_manager and client options
+    let client_options = iota_wallet::ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
-        .with_storage_path(storage_path)
         .finish()
-        .await
-        .unwrap();
+        .await?;
 
-    let account = match manager.get_account("Alice".to_string()).await {
-        Ok(account) => account,
-        Err(Error::AccountNotFound) => manager
-            .create_account()
-            .with_alias("Alice".to_string())
-            .finish()
-            .await
-            .unwrap(),
-        Err(e) => return Err(e),
-    };
+    // Get the account we generated with `01_create_wallet`
+    let account = manager.get_account("Alice").await?;
 
     // let _account_addresses = account.generate_addresses(1, None).await.unwrap();
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
-    // Let's destroy the first alias we can find, this can fail if one of its foundries have been previously burnt
-    // let alias_id = balance.aliases.first().unwrap().clone();
-    let alias_id: [u8; AliasId::LENGTH] =
-        hex::decode("7558a4fa695848cb31953073794f1f213607624c5b81fbc02ebe1a47fb8eb2f6")
-            .unwrap()
-            .try_into()
-            .unwrap();
-    let alias_id = AliasId::new(alias_id);
+    // Let's destroy the first alias we can find
+    let alias_id = balance.aliases.first().unwrap().clone();
+    // let alias_id: [u8; AliasId::LENGTH] =
+    //     hex::decode("bd7f195319e3e9e3bb40f7877584944d2296b4d39c78e22b3105f9ef6dd4905e")
+    //         .unwrap()
+    //         .try_into()
+    //         .unwrap();
+    // let alias_id = AliasId::new(alias_id);
     println!("alias_id -> {alias_id}");
-    let alias_options = AliasOptions {
-        alias_id,
-        ..Default::default()
-    };
-    let _ = account.destroy_alias(alias_options, None).await.unwrap();
+    let _ = account.destroy_alias(alias_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance

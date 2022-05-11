@@ -34,10 +34,10 @@ pub use iota_client::{self, secret};
 pub use primitive_types::U256;
 
 pub use self::{
-    account::operations::transaction::high_level::{
-        destroy_alias::AliasOptions, mint_native_token::NativeTokenOptions, mint_nfts::NftOptions,
-        send_amount::AddressWithAmount, send_micro_transaction::AddressWithMicroAmount,
-        send_native_tokens::AddressNativeTokens, send_nft::AddressAndNftId,
+    account::operations::transfer::high_level::{
+        mint_native_token::NativeTokenOptions, mint_nfts::NftOptions, send_amount::AddressWithAmount,
+        send_micro_transaction::AddressWithMicroAmount, send_native_tokens::AddressNativeTokens,
+        send_nft::AddressAndNftId,
     },
     error::Error,
 };

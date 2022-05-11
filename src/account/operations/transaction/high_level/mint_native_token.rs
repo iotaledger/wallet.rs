@@ -227,7 +227,7 @@ impl AccountHandle {
                             ))
                             .finish_output()?,
                     ];
-                let transfer_result = self.send(outputs, options, false).await?;
+                let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
                 if let Some(block_id) = transfer_result.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
