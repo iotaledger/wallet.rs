@@ -70,7 +70,7 @@ impl Debug for Response {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
-            Response::Output(output) => write!(f, "OutputData({:?})", output),
+            Response::Output(output) => write!(f, "Output({:?})", output),
             Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
