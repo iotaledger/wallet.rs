@@ -9,6 +9,7 @@ use std::{
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
+use iota_client::{Client, NodeInfoWrapper};
 use zeroize::Zeroize;
 
 #[cfg(feature = "events")]
@@ -150,9 +151,17 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            MessageType::GetNodeInfo => {
-                convert_async_panics(|| async { self.account_manager.get_node_info().await.map(Response::NodeInfo) })
-                    .await
+            MessageType::GetNodeInfo { url, auth } => {
+                convert_async_panics(|| async {
+                    match url {
+                        Some(url) => {
+                            let nodeinfo = Client::get_node_info(&url, auth).await?;
+                            Ok(Response::NodeInfo(NodeInfoWrapper { nodeinfo, url }))
+                        }
+                        None => self.account_manager.get_node_info().await.map(Response::NodeInfo),
+                    }
+                })
+                .await
             }
             MessageType::SetStrongholdPassword(mut password) => {
                 convert_async_panics(|| async {

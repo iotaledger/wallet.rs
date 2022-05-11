@@ -12,6 +12,10 @@ export type __GetAccountMessagePayload__ = {
 
 export type __GetNodeInfoPayload__ = {
     cmd: 'GetNodeInfo'
+    payload:{
+        url?: string
+        auth?: any
+    }
 }
 
 export type __CreateAccountMessagePayload__ = {
@@ -21,7 +25,7 @@ export type __CreateAccountMessagePayload__ = {
 
 export type __SetStrongholdPasswordPayload__ = {
     cmd: 'SetStrongholdPassword'
-    payload: string;
+    payload: string
 }
 
 export type __GenerateMnemonicPayload__ = {

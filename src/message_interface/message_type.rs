@@ -7,6 +7,7 @@ use std::{
     time::Duration,
 };
 
+use iota_client::node_manager::node::NodeAuth;
 use serde::{ser::Serializer, Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -96,7 +97,12 @@ pub enum MessageType {
     SetClientOptions(Box<ClientOptions>),
     /// Get the node information
     /// Expected response: [`NodeInfo`](crate::message_interface::Response::NodeInfo)
-    GetNodeInfo,
+    GetNodeInfo {
+        /// Url
+        url: Option<String>,
+        /// Node authentication
+        auth: Option<NodeAuth>,
+    },
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetStrongholdPassword(String),
@@ -153,7 +159,7 @@ impl Debug for MessageType {
             MessageType::GenerateMnemonic => write!(f, "GenerateMnemonic"),
             MessageType::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
             MessageType::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
-            MessageType::GetNodeInfo => write!(f, "GetNodeInfo"),
+            MessageType::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             MessageType::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
             MessageType::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
             MessageType::StartBackgroundSync { options, interval } => write!(
@@ -194,7 +200,7 @@ impl Serialize for MessageType {
             MessageType::SetClientOptions(_) => {
                 serializer.serialize_unit_variant("MessageType", 11, "SetClientOptions")
             }
-            MessageType::GetNodeInfo => serializer.serialize_unit_variant("MessageType", 12, "GetNodeInfo"),
+            MessageType::GetNodeInfo { .. } => serializer.serialize_unit_variant("MessageType", 12, "GetNodeInfo"),
             MessageType::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("MessageType", 13, "SetStrongholdPassword")
             }

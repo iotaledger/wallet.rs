@@ -49,13 +49,14 @@ export class AccountManager {
         return accounts;
     }
 
-    async getNodeInfo(): Promise<NodeInfo> {
+    async getNodeInfo(url?: string, auth?: any): Promise<NodeInfo> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
                     cmd: 'GetNodeInfo',
+                    payload: {url, auth}
                 }
             )
-        );
+        ).payload;
     }
     
     /**
