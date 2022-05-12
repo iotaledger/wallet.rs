@@ -8,9 +8,20 @@
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
 It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. It uses RocksDB as a database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/dev/specs/wallet-ENGINEERING-SPEC-0000.md).
 
+## Branching structure for development
+
+This library follows the following branching strategy:
+
+|Branch|Description|
+|------|-----------|
+|`develop`|Ongoing development for future releases of the networks. This branch gets merged into `staging` on releases.|
+|`production`|The latest releases for the IOTA networks.|
+|`staging`|The latest releases for the Shimmer networks.|
+| other |Other branches that may reflect current projects. Similar to `develop`, they will find their way into `staging` once they are ready.|
+
 ## Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file.
 
 ## Prerequisites
 
@@ -22,7 +33,7 @@ We recommend you update Rust to the latest stable version [`rustup update stable
 
 ### Dependencies
 
-`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
+`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system.
 
 ### Windows
 
