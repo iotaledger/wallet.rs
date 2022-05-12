@@ -3,7 +3,7 @@
 
 pub mod types;
 
-use iota_client::common::logger::{logger_init, LoggerConfigBuilder};
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     events::types::WalletEventType,
     message_interface::{ManagerOptions, MessageType},
@@ -25,8 +25,9 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
 #[pyfunction]
 /// Init the logger of wallet library.
 pub fn init_logger(config: String) -> PyResult<()> {
-    let config: LoggerConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
-    logger_init(config.finish()).expect("failed to init logger");
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config).expect("failed to init logger");
     Ok(())
 }
 

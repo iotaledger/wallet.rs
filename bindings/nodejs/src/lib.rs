@@ -4,7 +4,7 @@
 #![allow(clippy::needless_borrow)]
 
 pub mod message_handler;
-use bee_common::logger::{logger_init, LoggerConfigBuilder};
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 pub use message_handler::*;
 use neon::prelude::*;
 use once_cell::sync::Lazy;
@@ -13,8 +13,9 @@ pub static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
 
 pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let config = cx.argument::<JsString>(0)?.value(&mut cx);
-    let config: LoggerConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
-    logger_init(config.finish()).expect("failed to init logger");
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config).expect("failed to init logger");
     Ok(cx.undefined())
 }
 

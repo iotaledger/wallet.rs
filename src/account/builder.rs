@@ -15,7 +15,7 @@ use iota_client::{
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-#[cfg(feature = "ledger-nano")]
+#[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
@@ -170,7 +170,7 @@ impl AccountBuilder {
         };
 
         let consolidation_threshold = match *self.secret_manager.read().await {
-            #[cfg(feature = "ledger-nano")]
+            #[cfg(feature = "ledger_nano")]
             SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
                 DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
             }

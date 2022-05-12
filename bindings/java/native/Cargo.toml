@@ -35,7 +35,7 @@ once_cell = { version = "1.8", default-features = false }
 tokio = { version = "1.12.0", default-features = false }
 
 # Needed for serialization
-serde = { version = "1.0.130", default-features = false }
+serde = { version = "1.0.137", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 
 [build-dependencies]
@@ -46,5 +46,5 @@ flapigen = { git = "https://github.com/Dushistov/flapigen-rs", default-features 
 [features]
 default = ["stronghold"]
 stronghold = ["iota-wallet/stronghold"]
-ledger-nano = ["iota-wallet/ledger-nano"]
-ledger-nano-simulator = ["iota-wallet/ledger-nano-simulator"]
+ledger_nano = ["iota-wallet/ledger_nano"]
+ledger_nano-simulator = ["iota-wallet/ledger_nano-simulator"]

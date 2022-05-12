@@ -39,14 +39,14 @@ pub fn secret_manager_enum_to_type(secret_manager: AccountSecretManager) -> secr
         #[cfg(feature = "stronghold")]
         AccountSecretManager::Stronghold => secret_manager::Stronghold,
 
-        #[cfg(feature = "ledger-nano")]
+        #[cfg(feature = "ledger_nano")]
         AccountSecretManager::LedgerNano => secret_manager::LedgerNano,
 
-        #[cfg(feature = "ledger-nano")]
+        #[cfg(feature = "ledger_nano")]
         AccountSecretManager::LedgerNanoSimulator => secret_manager::LedgerNanoSimulator,
 
         // Default will only happen when we compile without any features...
-        #[cfg(not(all(feature = "stronghold", feature = "ledger-nano", feature = "ledger-nano",)))]
+        #[cfg(not(all(feature = "stronghold", feature = "ledger_nano", feature = "ledger_nano",)))]
         _ => panic!("No secret_manager type found during compilation"),
     }
 }

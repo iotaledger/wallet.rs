@@ -27,7 +27,7 @@ iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "ba1947626f
 iota-crypto = { version = "0.10.0", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
 primitive-types = { version = "0.10.1", default-features = false }
-serde = { version = "1.0.130", default-features = false, features = ["derive"] }
+serde = { version = "1.0.137", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 thiserror = { version = "1.0.29", default-features = false }
 tokio = { version = "1.12.0", default-features = false }

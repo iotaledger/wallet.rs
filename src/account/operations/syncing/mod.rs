@@ -24,7 +24,7 @@ use crate::account::{
     types::{address::AddressWithUnspentOutputs, InclusionState, OutputData},
     AccountBalance,
 };
-#[cfg(feature = "ledger-nano")]
+#[cfg(feature = "ledger_nano")]
 use crate::secret::SecretManager;
 
 impl AccountHandle {
@@ -78,7 +78,7 @@ impl AccountHandle {
             self.get_outputs(spent_output_ids.clone(), true).await?;
 
         let non_ledger_secret_manager = match *self.secret_manager.read().await {
-            #[cfg(feature = "ledger-nano")]
+            #[cfg(feature = "ledger_nano")]
             // don't automatically consolidate/collect outputs with ledger secret_managers, because they require
             // approval from the user
             SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => false,
