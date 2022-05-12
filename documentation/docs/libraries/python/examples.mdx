@@ -8,6 +8,7 @@ keywords:
 - python
 - balance
 - Chrysalis
+- reference
 ---
 import CodeBlock from '@theme/CodeBlock';
 import create_account_manager from  '!!raw-loader!./../../../../bindings/python/examples/1a_create_account_manager.py';
@@ -21,7 +22,7 @@ import restore from  '!!raw-loader!./../../../../bindings/python/examples/6_rest
 import b_event_simple_event from  '!!raw-loader!./../../../../bindings/python/examples/7b_event_simple_event.py';
 import event_queue from  '!!raw-loader!./../../../../bindings/python/examples/7_event_queue.py';
 
-This section will guide you through several examples using the python binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/python/examples` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
+In this section, you can find several examples that use the python binding of the `wallet.rs` library. You can also find examples of the code in the `/bindings/python/examples` folder of the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
 
 All the examples in this section expect you to set your custom password  in the _.env_ file:
 
@@ -31,7 +32,7 @@ SH_PASSWORD="here is your super secure password"
 
 ## Account Manager and Individual Accounts
 
-You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
+You can initialize (open) a secure storage for individual accounts. The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
 
 The following example creates a new database and account:
 
@@ -39,26 +40,29 @@ The following example creates a new database and account:
   {create_account_manager}
 </CodeBlock>
 
-* Storage is initialized under the given path (`./alice-database`)
-* The password is set based on your password in _.env_ file ( `manager.setStrongholdPassword(process.env.SH_PASSWORD)` )
-* When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default ( `manager.storeMnemonic(SignerType.Stronghold)` ).
-* The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
+* Storage is initialized under the given path (`./alice-database`).
+* The password is set based on your password in _.env_ file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`).
+* When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
+* The seed should be set only for the first time. You can open the initialized database by using your password.
 
 The storage is encrypted at rest, so you need a strong password and location where to place your storage.
 
-:::warning
-We highly recommended that you to store your `Stronghold` password encrypted on rest and separated from `Stronghold` snapshots.
+:::note
 
-Deal with the password with utmost care.
+We recommended you to store your `Stronghold` password encrypted on rest and separated from `Stronghold` snapshots.
+
+Manage your password with utmost care.
+
 :::
 
- The storage comprises two things:
-* A single file called _wallet.stronghold_ , which contains _seed_ and is secured by `Stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
-* Other data used by library that is stored under the _db_ sub-directory.  The includes account information, generated addresses, fetched messages, etc.  This data is used to speed up some operations, such as account creation, address generation, etc.
+The storage is made of:
 
-One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an _AccountManager_ instance.  All complexities are hidden under the hood and dealt with securely.
+* A single file called _wallet.stronghold_ , which contains a _seed_ and is secured by `Stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
+* Other data used by the library that is stored under the _db_ sub-directory. This includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
-If you also want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
+One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an _AccountManager_ instance. All complexities are hidden under the hood and are dealt with securely.
+
+If you want to store a seed somewhere else, you can use the `AccountManager.generateMnemonic()` method. This method will generate a random seed, and it can be used before the actual account initialization.
 
 You can find detailed information about seed generation at [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#seed).
 
@@ -66,18 +70,19 @@ You can find detailed information about seed generation at [Developer Guide to C
 
 The `wallet.rs` library uses a model of individual accounts to separate individual users and clients from each other. It is possible to generate multiple addresses for each account deterministically.
 
-Each account is related to a specific IOTA network (mainnet or testnet), which is referenced by node properties such as node url.  In this example, the `Chrysalis` testnet balancer.
+Each account is related to a specific IOTA network (mainnet or devnet), which is referenced by node properties such as node url. In this example, it is the `Chrysalis` testnet balancer.
 
-For more information about _client_options_ , please refer to [Wallet Python API Reference](api_reference.md#clientoptions).
+For more information about _client_options_ , please refer to the [Wallet Python API Reference](api_reference.md#clientoptions) section.
 
 <CodeBlock className="language-python">
   {b_create_account}
 </CodeBlock>
 
-_Alias_ should be unique, and it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time new account is created.
+An _alias_ should be unique so it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time a new account is created.
 Any account can be then referred to by its _index_ , _alias_ or one of its generated _addresses_ .
 
 Once an account has been created, you retrieve an instance of it using the following methods:
+
 - `get_account(account_id: str)`
 - `get_accounts()` .
 
@@ -97,11 +102,14 @@ account = account_manager.get_account("Alice")
 
 Several API calls can be performed via an _account_ instance.
 
-:::info
-It is a good practice to sync the given _account_ with the Tangle every time you work with an _account_ instance to retrieve the latest information available.  You can do this using the `account.sync()` method.  By default, `account.sync()` is performed automatically on `send` , `retry` , `reattach` and `promote` API calls.
+:::note
+
+It is a good practice to sync the given _account_ with the Tangle every time you work with an _account_ instance to retrieve the latest information available. You can do this using the `account.sync()` method. By default, `account.sync()` is performed automatically on `send` , `retry` , `reattach` , and `promote` API calls.
+
 :::
 
 The most common methods of _account_ instance are:
+
 * `account.alias()` : returns an alias of the given account.
 * `account.addresses()` : returns list of addresses related to the account.
 * `account.get_unused_address()` : returns a first unused address.
@@ -114,15 +122,17 @@ The most common methods of _account_ instance are:
 
 Each _account_ can have multiple _addresses_ . _Addresses_ are generated deterministically based on the _account_ and _address_ index. This means that the combination of _account_ and index uniquely identifies the given address.
 
-There are two types of addresses, _internal_ and _public_ (external), and each set of addresses is independent of each other and has independent _index_ id.
+There are two types of addresses, _internal_ and _public_ (external), and each set of addresses are independent of each other and have an independent _index_ id.
 
 * _Public_ addresses are created by `account.generateAddress()` and are indicated as `internal=false` (public)
 * _Internal_ addresses are also called _change_ addresses. _Internal_ addresses are used to store the excess funds and are indicated as `internal=true`.
 
 This approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
 
-:::info
+:::note
+
 The IOTA 1.5 (Chrysalis) network supports reusing addresses multiple times.
+
 :::
 
 You can use the following example to generate a new address via an instance of _account_ which was retrieved using an _account_manager_ instance:
@@ -153,13 +163,13 @@ Example output:
     }
 ]
 ```
-There are two human-readable prefixes in IOTA 1.5 network: _iota_ (mainnet) and _atoi_ (testnet). If you take a close look at the addresses in the output, you will be able to notice that both of them start with _atoi_ , and are therefore testnet addresses.
+There are two human-readable prefixes in IOTA 1.5 network: _iota_ (mainnet) and _atoi_ (devnet). If you take a close look at the addresses in the output, you will notice that both of them start with _atoi_ , and are therefore devnet addresses.
 
 You can find detailed information about generating addresses at the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#addresskey-space).
 
 ## Checking the Balance
 
-Before we continue further, please visit the [IOTA testnet faucet service](https://faucet.chrysalis-devnet.iota.cafe/) and send some tokens to your testnet addresses.
+Before we continue further, please visit the [IOTA devnet faucet service](https://faucet.chrysalis-devnet.iota.cafe/) and send some tokens to your devnet addresses.
 
 ![IOTA Faucet Service](/img/libraries/screenshot_faucet.png)
 
@@ -170,6 +180,7 @@ You can use the following example to sync your accounts and retrieve their balan
 </CodeBlock>
 
 Example output:
+
 ```json
 Total balance:
 {
@@ -218,25 +229,31 @@ Balance per individual addresses:
     }
 ]
 ```
-In the detailed view per individual addresses, there is also _outputs_ section.  The _outputs_ shows all the transactions (also known as _wallet message(s)_ ), which are related to that _address_, and therefore account for the balance.
+In the detailed view per individual addresses, there is also an _outputs_ section. The _outputs_ show all the transactions (also known as _wallet message(s)_ ), which are related to that _address_, and therefore account for the balance.
 
 You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/devnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
-:::info
+:::note
+
 IOTA is based on _Unspent Transaction Output_ model. You can find a detailed explanation in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
+
 :::
 
 ## Sending Tokens
 
 The process of sending tokens via _wallet.rs_ can be described as follows:
+
 1. Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: _amount_, _address_ and _remainder_value_strategy_ .
 The _remainder_value_strategy_ argument can be either:
    - `ReuseAddress`
    - `ChangeAddress`
+
 2. Once you have created an instance of `iota_wallet.Transfer()` , you can send the tokens using the `transfer()` function of the _Account_ instance.
 
-:::info
-We highly recommend that you sync the account information with the Tangle by running the `account.sync().execute()` method before doing anything with the account. This way you can ensure that you rely on the latest available information.
+:::note
+
+We recommend that you sync the account information with the Tangle by running the `account.sync().execute()` method before doing anything with the account. This way, you can ensure that you rely on the latest available information.
+
 :::
 
 <CodeBlock className="language-python">
@@ -244,6 +261,7 @@ We highly recommend that you sync the account information with the Tangle by run
 </CodeBlock>
 
 The previous snippet should have a similar output to the following JSON object:
+
 ```json
 {
     'id': '9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3',
@@ -308,7 +326,7 @@ This is a _wallet message_ that fully describes the given transaction.
 
 To understand all aspects of messages, you will need to get familiar with concept of _UTXO_ . You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
 
-You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using its _node_response['id']_.  Please make sure you select the right network.
+You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using its _node_response['id']_. Please make sure you select the right network.
 
 If you have used the _ChangeAddress remainder_value_strategy_, the message will transfer tokens to the target address as well as new _internal_ address within the given account (`internal=True`).
 
@@ -322,7 +340,7 @@ If you need to reattach a message, you should use the [`iota_wallet.promote(acco
 
 You can query for a list of all particular messages (transactions) related to the given account using [ `account.list_messages()` ](api_reference.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [ `account.message_count()` ](api_reference.md#message_countmessage_type-optional-int) method.
 
-You can use those methods to check whether a message is confirmed, broadcast, etc. You should always _Sync_ the account with the Tangle before checking confirmation status.
+You can use those methods to check whether a message is confirmed, broadcast, etc. You should always _Sync_ the account with the Tangle before checking the confirmation status.
 
 You can use the following example to _sync_ an _account_ , and list all the messages related to the _account_ .
 
@@ -334,16 +352,18 @@ You can use the following example to _sync_ an _account_ , and list all the mess
 
 The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
-:::info
-“... micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address.
+:::note
+
+“... micro-transactions below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address.
 That's why we sent 1Mi in the last example to comply with the protection.”
+
 :::
 
-Dust protection also means you can't leave less than 1Mi on a spent address (leave a dust behind).
+Dust protection also means you can not leave less than 1Mi on a spent address (leave a dust behind).
 
 ## Backup Database
 
-Due to security practices that are incorporated in the `Stronghold's` DNA, there's no way to retrieve a seed, as seeds are encrypted at rest.  Therefore, if you're using the default options, backing up the seed storage is a very important task.
+Due to security practices that are incorporated in the `Stronghold's` DNA, there is no way to retrieve a seed, as seeds are encrypted at rest.  Therefore, if you are using the default options, backing up the seed storage is a very important task.
 
 The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 
@@ -360,8 +380,9 @@ Alternatively, you can create a copy of the _wallet.stronghold_ file and use it 
 ## Restore a Database
 
 To restore a database via `wallet.rs`, you will need to:
-1. Create new empty database with a password (without mnemonic seed)
-2. Import all accounts from the file that has been backed up earlier
+
+1. Create new empty database with a password (without mnemonic seed).
+2. Import all accounts from the file that has been backed up earlier.
 
 The following example restores a secured backup file:
 
@@ -369,7 +390,7 @@ The following example restores a secured backup file:
   {restore}
 </CodeBlock>
 
-Since the backup file is just a copy of the original database it can be also be renamed to _wallet.stronghold_ and opened in a standard way.
+Since the backup file is just a copy of the original database, it can be also be renamed to _wallet.stronghold_ and opened in a standard way.
 
 ```python
 account_manager = iw.AccountManager(
@@ -380,35 +401,37 @@ account_manager.set_stronghold_password("password")
 
 ## Listening to Events
 
-`wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
+The `wallet.rs` library can listen to several supported events. As soon as the event occurs, a provided callback will be triggered.
 
 You can add any of the following event listeners:
-* `on_balance_change(callback): id`
-* `on_new_transaction(callback): id`
-* `on_confirmation_state_change(callback): id`
-* `on_reattachment(callback): id`
-* `on_broadcast(callback): id`
-* `on_error(callback): id`
-* `on_stronghold_status_change(callback): id`
 
-Once you have registered an event listener using, the function will return an _id_ for the listener as a list[Bytes].
+* `on_balance_change(callback): id` .
+* `on_new_transaction(callback): id` .
+* `on_confirmation_state_change(callback): id` .
+* `on_reattachment(callback): id` .
+* `on_broadcast(callback): id` .
+* `on_error(callback): id` .
+* `on_stronghold_status_change(callback): id` .
+
+Once you have registered an event listener, the function will return an _id_ for the listener as a list [Bytes].
 You can later use this _id_ to remove a listener by using the corresponding method described below:
 
-* `remove_balance_change_listener(id)`
-* `remove_new_transaction_listener(id)`
-* `remove_confirmation_state_change_listener(id)`
-* `remove_reattachment_listener(id)`
-* `remove_broadcast_listener(id)`
-* `remove_error_listener(id)`
-* `remove_stronghold_status_change_listener(id)`
+* `remove_balance_change_listener(id)` .
+* `remove_new_transaction_listener(id)` .
+* `remove_confirmation_state_change_listener(id)` .
+* `remove_reattachment_listener(id)` .
+* `remove_broadcast_listener(id)` .
+* `remove_error_listener(id)` .
+* `remove_stronghold_status_change_listener(id)` .
 
-The following example set's up a listener for the _on_balance_change_ event using an event-based pattern:
+The following example sets up a listener for the _on_balance_change_ event using an event-based pattern:
 
 <CodeBlock className="language-python">
   {b_event_simple_event}
 </CodeBlock>
 
 Expected output:
+
 ```plaintext
 Account: Alice
 Syncing...

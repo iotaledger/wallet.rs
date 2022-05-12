@@ -1,5 +1,24 @@
 # Changelog
 
+## \[1.0.16]
+
+- Fix generateAddress to always return an address with a new higher index than the last one.
+  - [20ae49e0](https://github.com/iotaledger/wallet.rs/commit/20ae49e055f33aebb18243fbfef2c619a7239fd6) Fix generate_address ([#957](https://github.com/iotaledger/wallet.rs/pull/957)) on 2022-03-28
+
+## \[1.0.15]
+
+- Fix reading messages from db.
+  - [9e07c9e0](https://github.com/iotaledger/wallet.rs/commit/9e07c9e0984636474bd897fa492261fb14286b8e) Update workflows and syncing with sync_spent_outputs enabled ([#933](https://github.com/iotaledger/wallet.rs/pull/933)) on 2022-03-16
+- Sync outputs again, when syncing spent outputs is enabled.
+  Update windows workflows so binaries are built again.
+  - [9e07c9e0](https://github.com/iotaledger/wallet.rs/commit/9e07c9e0984636474bd897fa492261fb14286b8e) Update workflows and syncing with sync_spent_outputs enabled ([#933](https://github.com/iotaledger/wallet.rs/pull/933)) on 2022-03-16
+
+## \[1.0.14]
+
+- Reduce output requests. Skip processing unchanged addresses.
+  Fix unused internal address generation.
+  - [625dd65a](https://github.com/iotaledger/wallet.rs/commit/625dd65a103fcbc544d004ff0a0cf2a9331747cb) Reduce output requests. Skip processing unchanged addresses. ([#925](https://github.com/iotaledger/wallet.rs/pull/925)) on 2022-03-15
+
 ## \[1.0.13]
 
 - Improve syncing speed and return possible syncing errors that got previously ignored.

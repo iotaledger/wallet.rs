@@ -8,6 +8,7 @@ use iota_client::node_manager::Node;
 pub(crate) async fn get_outputs_participation(
     address_outputs: Vec<AddressOutput>,
     node: Node,
+    assembly_event_id: &str,
 ) -> crate::Result<(
     u64,
     u64,
@@ -15,7 +16,7 @@ pub(crate) async fn get_outputs_participation(
 )> {
     // let mut total_output_participation: HashMap<String, crate::participation::response_types::TrackedParticipation> =
     //     HashMap::new();
-    let mut shimmer_staked_funds = 0;
+    let shimmer_staked_funds = 0;
     let mut assembly_staked_funds = 0;
 
     // We split the outputs into chunks so we don't get timeouts if we have thousands
@@ -39,10 +40,7 @@ pub(crate) async fn get_outputs_participation(
             let (output, output_participation_res) = res;
             if let Ok(output_participation) = output_participation_res {
                 for (event_id, _participation) in output_participation.participations {
-                    if event_id == crate::participation::types::SHIMMER_EVENT_ID {
-                        shimmer_staked_funds += output.amount;
-                    }
-                    if event_id == crate::participation::types::ASSEMBLY_EVENT_ID {
+                    if event_id == assembly_event_id {
                         assembly_staked_funds += output.amount;
                     }
                     // total_output_participation
@@ -61,10 +59,9 @@ pub(crate) async fn get_outputs_participation(
 pub(crate) async fn get_addresses_staking_rewards(
     addresses: Vec<Address>,
     node: Node,
+    assembly_event_id: &str,
 ) -> crate::Result<(u64, u64, u64, u64)> {
-    let mut shimmer_rewards = 0;
     let mut assembly_rewards = 0;
-    let mut shimmer_rewards_below_minimum = 0;
     let mut assembly_rewards_below_minimum = 0;
     // We split the addresses into chunks so we don't get timeouts if we have thousands
     for addresses_chunk in addresses.chunks(100).map(|x: &[Address]| x.to_vec()) {
@@ -87,31 +84,16 @@ pub(crate) async fn get_addresses_staking_rewards(
         for res in results {
             let staking_status = res?;
             for (event_id, status) in staking_status.rewards {
-                match event_id.as_ref() {
-                    crate::participation::types::SHIMMER_EVENT_ID => {
-                        if status.minimum_reached {
-                            shimmer_rewards += status.amount
-                        } else {
-                            shimmer_rewards_below_minimum += status.amount
-                        }
+                if event_id == assembly_event_id {
+                    if status.minimum_reached {
+                        assembly_rewards += status.amount
+                    } else {
+                        assembly_rewards_below_minimum += status.amount
                     }
-                    crate::participation::types::ASSEMBLY_EVENT_ID => {
-                        if status.minimum_reached {
-                            assembly_rewards += status.amount
-                        } else {
-                            assembly_rewards_below_minimum += status.amount
-                        }
-                    }
-                    _ => {}
                 }
             }
         }
     }
 
-    Ok((
-        shimmer_rewards,
-        assembly_rewards,
-        shimmer_rewards_below_minimum,
-        assembly_rewards_below_minimum,
-    ))
+    Ok((0, assembly_rewards, 0, assembly_rewards_below_minimum))
 }

@@ -5,8 +5,9 @@ import os
 
 # Read the test vector
 tv = dict()
-with open('tests/fixtures/test_vectors.json') as json_file:
+with open('../../../tests/fixtures/test_vectors.json') as json_file:
     tv = json.load(json_file)
+tv = tv['python']
 pat = tv['account_manager']
 account = None
 manager = None
@@ -214,8 +215,12 @@ def test_get_migration_data():
         bundle = manager.create_migration_bundle(
             seed, input_address_indexes, mine=True, timeout_seconds=40, offset=0)
 
-        manager.send_migration_bundle(
-            [legacy_node], bundle['bundle_hash'], min_weight_magnitude)
-
     except ValueError as e:
-        assert 'input list is empty' in str(e)
+        assert 'Input value is < dust protection value' in str(e)
+    else:
+        try:
+            manager.send_migration_bundle(
+                [legacy_node], bundle['bundle_hash'], min_weight_magnitude)
+
+        except ValueError as e:
+            assert 'input list is empty' in str(e)

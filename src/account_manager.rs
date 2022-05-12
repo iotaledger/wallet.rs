@@ -1434,13 +1434,14 @@ impl AccountManager {
     /// Get a participating overview of the accounts by looking at the messages
     pub async fn get_participation_overview(
         &self,
+        assembly_event_id: &str,
     ) -> crate::Result<crate::participation::types::ParticipatingAccounts> {
         let mut participation_information = crate::participation::types::ParticipatingAccounts { accounts: Vec::new() };
         let accounts = self.get_accounts().await?;
         for account in accounts {
             participation_information
                 .accounts
-                .push(account.get_participation_overview().await?);
+                .push(account.get_participation_overview(assembly_event_id).await?);
         }
         Ok(participation_information)
     }

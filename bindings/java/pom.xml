@@ -14,7 +14,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <junit.version>4.12</junit.version>
+    <junit.version>4.13.1</junit.version>
     <maven-compiler-plugin.version>3.5</maven-compiler-plugin.version>
     <exec-maven-plugin.version>1.6.0</exec-maven-plugin.version>
     <maven.compiler.target>1.8</maven.compiler.target>

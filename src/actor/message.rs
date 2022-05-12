@@ -360,7 +360,11 @@ pub enum MessageType {
     },
     #[cfg(feature = "participation")]
     /// Get participating overview
-    GetParticipationOverview,
+    GetParticipationOverview {
+        #[serde(rename = "assemblyEventId")]
+        /// Event id for assembly
+        assembly_event_id: String,
+    },
     #[cfg(feature = "participation")]
     /// Get participation events
     GetParticipationEvents,
@@ -459,7 +463,7 @@ impl Serialize for MessageType {
                 serializer.serialize_unit_variant("MessageType", 37, "StopParticipating")
             }
             #[cfg(feature = "participation")]
-            MessageType::GetParticipationOverview => {
+            MessageType::GetParticipationOverview { .. } => {
                 serializer.serialize_unit_variant("MessageType", 38, "GetParticipationOverview")
             }
             #[cfg(feature = "participation")]

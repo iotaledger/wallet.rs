@@ -100,6 +100,11 @@ impl AccountManagerBuilder {
         AccountManagerBuilder::new_with_builder(new_builder)
     }
 
+    /// Skip polling
+    pub fn with_skip_polling(&mut self) -> Self {
+        let new_builder = self.builder.borrow_mut().take().unwrap().with_skip_polling();
+        AccountManagerBuilder::new_with_builder(new_builder)
+    }
     /// Disables the automatic output consolidation process.
     pub fn with_automatic_output_consolidation_disabled(&mut self) -> Self {
         let new_builder = self
@@ -187,6 +192,20 @@ impl AccountManager {
                 .change_stronghold_password(current_password, new_password)
                 .await
         }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(_) => Ok(()),
+        }
+    }
+
+    pub fn is_latest_address_unused(&mut self) -> Result<bool> {
+        match crate::block_on(async move { self.manager.is_latest_address_unused().await }) {
+            Err(e) => Err(anyhow!(e.to_string())),
+            Ok(b) => Ok(b),
+        }
+    }
+
+    pub fn set_client_options(&mut self, options: ClientOptions) -> Result<()> {
+        match crate::block_on(async move { self.manager.set_client_options(options.to_inner()).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }

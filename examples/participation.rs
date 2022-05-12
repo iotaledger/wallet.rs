@@ -11,7 +11,7 @@ async fn main() -> iota_wallet::Result<()> {
     //     account_manager::AccountManager,
     //     client::ClientOptionsBuilder,
     //     message::MessageId,
-    //     participation::types::{Participation, Participations},
+    //     participation::types::{Participation},
     //     signing::SignerType,
     // };
     // use log::LevelFilter;
@@ -51,7 +51,8 @@ async fn main() -> iota_wallet::Result<()> {
     // account.set_client_options(client_options).await?;
     // println!("{:?}", account.get_staking_rewards().await?);
     // println!("{:?}", manager.get_participation_events().await?);
-    // println!("{:?}", manager.get_participation_overview().await?);
+    // println!("{:?}",
+    // manager.get_participation_overview("249dfc25efde867884ff083e35f8df4e32bd0abb40862b6304203a27f0e1e5d0").await?);
 
     // let address = account.generate_address().await?;
     // println!(
@@ -86,7 +87,8 @@ async fn main() -> iota_wallet::Result<()> {
     // );
 
     // for _ in 0..30 {
-    //     println!("{:?}", manager.get_participation_overview().await?);
+    //     println!("{:?}",
+    // manager.get_participation_overview("249dfc25efde867884ff083e35f8df4e32bd0abb40862b6304203a27f0e1e5d0").await?);
     //     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
     // }
 

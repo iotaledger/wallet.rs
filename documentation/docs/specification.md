@@ -8,27 +8,29 @@ keywords:
 - Required client library
 - access modifiers
 - types
+- reference
 ---
 # Wallet Library Spec
 
 ## Introduction
 
-The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
+The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package is compatible with different platforms such as web, desktop, and mobile. 
 
-The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://chrysalis.docs.iota.org/guides/dev_guide#seed). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://wiki.iota.org/chrysalis-docs/guides/developer#seed). It has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account also maintains various behaviours, including moving funds, looking for new messages, and making copies of message histories. Additionally, it provides a degree of financial privacy and thus does not incur any overhead. 
 
-A similar account package was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
+[A similar account package was used before](https://wiki.iota.org/chrysalis-docs/introduction/what_is_chrysalis#ed25519-signature-scheme) but it became obsolete with the introduction of Ed25519 signatures. The previous account package was also limited to a single account, whereas the new package manages multiple accounts. 
 
-To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
+For IOTA, the motivation to use this package was to offer a simplified (stateful) approach to handle IOTA payments.
 
 ## Considerations
 
 *   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based `Stronghold` library or hardware enclaves such as a `Ledger Nano`.
+
 *   The secure enclave should have the ability to generate addresses and sign messages upon receipt, and return the output in a new message. If the secure enclave is initialized with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
 
 ## Naming Conventions
 
-The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, standard [Rust naming conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html) are followed. All interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
+The primary language is [Rust](https://github.com/rust-lang/rust). Therefore, you should follow the standard [Rust naming conventions](https://doc.rust-lang.org/1.0.0/style/style/naming/README.html). For reference, all interfaces (types) use _CamelCase_ while all function and variable names use _snake\_case_.
 
 ## Interfaces
 
