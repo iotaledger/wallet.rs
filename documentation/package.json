@@ -2,7 +2,8 @@
   "name": "wallet-rs",
   "version": "0.0.0",
   "scripts": {
-    "start": "docusaurus start"
+    "start": "iota-wiki start",
+    "build": "iota-wiki build"
   },
   "license": "UNLICENSED",
   "engines": {
