@@ -14,14 +14,14 @@ This library follows the following branching strategy:
 
 |Branch|Description|
 |------|-----------|
-|`production`|The latest release for the IOTA networks (`mainnet`, `devnet`, `comnet`).|
-|`develop`|The ongoing development for future releases of these networks. With every release, the `develop` branch will be merged into `production`.|
-|`staging`|The latest release for the Shimmer networks (`testnet`).|
-| other | Branches with codenames like `stardust` reflect current projects. Similar to `develop`, they will find their way into `staging` once they are ready.| 
+|`develop`|Ongoing development for future releases of the networks. This branch gets merged into `staging` on releases.|
+|`production`|The latest releases for the IOTA networks.|
+|`staging`|The latest releases for the Shimmer networks.|
+| other |Other branches that may reflect current projects. Similar to `develop`, they will find their way into `staging` once they are ready.|
 
 ## Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ We recommend you update Rust to the latest stable version [`rustup update stable
 
 ### Dependencies
 
-`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
+`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system.
 
 ### Windows
 
