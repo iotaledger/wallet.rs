@@ -22,7 +22,7 @@ backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "efb00a55877d34bb88cb0d7995f369edd2e9ded3", default-features = false, features = ["async", "tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "ba1947626f00eb6f4d5eb986c438351b89d6dbaf", default-features = false, features = ["tls"] }
 # iota-client = { path = "../iota.rs", default-features = false, features = ["async", "tls"] }
 iota-crypto = { version = "0.10.0", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
 log = { version = "0.4.14", default-features = false }
@@ -42,7 +42,7 @@ dotenv = { version =  "0.15.0", default-features = false }
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
 default = ["mnemonic", "storage", "stronghold"]
-ledger-nano = ["iota-client/ledger"]
+ledger_nano = ["iota-client/ledger_nano"]
 stronghold = ["iota-client/stronghold"]
 storage = ["rocksdb"]
 message_interface = []

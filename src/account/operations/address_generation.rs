@@ -5,7 +5,7 @@
 use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, Network, SecretManage},
+    secret::{GenerateAddressMetadata, SecretManage},
 };
 use serde::{Deserialize, Serialize};
 
@@ -27,10 +27,7 @@ impl Default for AddressGenerationOptions {
     fn default() -> Self {
         Self {
             internal: false,
-            metadata: GenerateAddressMetadata {
-                syncing: false,
-                network: Network::Testnet,
-            },
+            metadata: GenerateAddressMetadata { syncing: false },
         }
     }
 }

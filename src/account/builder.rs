@@ -9,7 +9,7 @@ use std::{
 use iota_client::{
     bee_message::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
+    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -229,10 +229,7 @@ pub(crate) async fn get_first_public_address(
             account_index,
             0..1,
             false,
-            GenerateAddressMetadata {
-                network: Network::Testnet,
-                syncing: true,
-            },
+            GenerateAddressMetadata { syncing: true },
         )
         .await?[0])
 }

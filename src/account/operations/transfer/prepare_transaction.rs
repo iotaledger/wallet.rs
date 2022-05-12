@@ -6,121 +6,136 @@ use std::time::Instant;
 use iota_client::{
     api::PreparedTransactionData,
     bee_message::{
-        input::{Input, UtxoInput},
-        output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
-        payload::{
-            transaction::{RegularTransactionEssence, TransactionEssence},
-            Payload,
-        },
+        input::INPUT_COUNT_RANGE,
+        output::{ByteCostConfig, Output, OUTPUT_COUNT_RANGE},
     },
     secret::types::InputSigningData,
 };
+use packable::bounded::TryIntoBoundedU16Error;
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferOptions};
+use crate::account::{
+    handle::AccountHandle,
+    operations::transfer::{RemainderValueStrategy, TransferOptions},
+    AddressGenerationOptions,
+};
 #[cfg(feature = "events")]
-use crate::events::types::{PreparedTransactionEventData, TransactionIO, TransferProgressEvent, WalletEvent};
+use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
+
 impl AccountHandle {
-    /// Function to build the transaction essence
+    /// Get inputs and build the transaction essence
     pub(crate) async fn prepare_transaction(
         &self,
-        inputs: Vec<InputSigningData>,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
+        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSFER] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-
-        let mut inputs_for_essence: Vec<Input> = Vec::new();
-        let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
-        #[cfg(feature = "events")]
-        let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
-        #[cfg(feature = "events")]
-        let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
-
-        for utxo in &inputs {
-            let input = Input::Utxo(UtxoInput::from(utxo.output_id()?));
-            inputs_for_essence.push(input.clone());
-            inputs_for_signing.push(utxo.clone());
-            #[cfg(feature = "events")]
-            {
-                inputs_for_event.push(TransactionIO {
-                    address: utxo.bech32_address.clone(),
-                    amount: utxo.output.amount(),
-                    remainder: None,
-                })
-            }
-        }
-
-        // Build transaction essence
-
-        let input_outputs = inputs_for_signing
-            .iter()
-            .map(|i| i.output.clone())
-            .collect::<Vec<Output>>();
-        let inputs_commitment = InputsCommitment::new(input_outputs.iter());
-        let mut essence_builder =
-            RegularTransactionEssence::builder(self.client.get_network_id().await?, inputs_commitment);
-        essence_builder = essence_builder.with_inputs(inputs_for_essence);
-
+        // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            let mut address = None;
-            if let Output::Basic(basic_output) = output {
-                for unlock_condition in basic_output.unlock_conditions().iter() {
-                    if let UnlockCondition::Address(address_unlock_condition) = unlock_condition {
-                        address.replace(address_unlock_condition.address());
-                        break;
+            output.verify_storage_deposit(byte_cost_config)?;
+        }
+
+        // validate amounts
+        if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
+            return Err(crate::Error::BeeMessage(
+                iota_client::bee_message::Error::InvalidOutputCount(TryIntoBoundedU16Error::Truncated(outputs.len())),
+            ));
+        }
+
+        let custom_inputs: Option<Vec<InputSigningData>> = {
+            if let Some(options) = options.clone() {
+                // validate inputs amount
+                if let Some(inputs) = &options.custom_inputs {
+                    if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
+                        return Err(crate::Error::BeeMessage(
+                            iota_client::bee_message::Error::InvalidInputCount(TryIntoBoundedU16Error::Truncated(
+                                inputs.len(),
+                            )),
+                        ));
                     }
+                    let account = self.read().await;
+                    let mut input_outputs = Vec::new();
+                    for output_id in inputs {
+                        match account.unspent_outputs().get(output_id) {
+                            Some(output) => input_outputs.push(output.input_signing_data()?),
+                            None => {
+                                return Err(crate::Error::CustomInputError(format!(
+                                    "Custom input {} not found in unspent outputs",
+                                    output_id
+                                )));
+                            }
+                        }
+                    }
+                    Some(input_outputs)
+                } else {
+                    None
                 }
-                #[cfg(feature = "events")]
-                outputs_for_event.push(TransactionIO {
-                    address: address
-                        .expect("todo: update transaction events to new outputs")
-                        .to_bech32("iota"),
-                    amount: output.amount(),
-                    remainder: None,
-                })
+            } else {
+                None
             }
-        }
-        essence_builder = essence_builder.with_outputs(outputs);
+        };
 
-        // Optional add a tagged payload
-        #[cfg(feature = "events")]
-        let mut tagged_data: Option<String> = None;
-        if let Some(options) = options {
-            if let Some(tagged_data_payload) = &options.tagged_data_payload {
-                #[cfg(feature = "events")]
-                {
-                    tagged_data = Some(hex::encode(tagged_data_payload.data()));
+        let remainder_address = match &options {
+            Some(options) => {
+                match &options.remainder_value_strategy {
+                    RemainderValueStrategy::ReuseAddress => {
+                        // select_inputs will select an address from the inputs if it's none
+                        None
+                    }
+                    RemainderValueStrategy::ChangeAddress => {
+                        let remainder_address = self
+                            .generate_addresses(
+                                1,
+                                Some(AddressGenerationOptions {
+                                    internal: true,
+                                    ..Default::default()
+                                }),
+                            )
+                            .await?
+                            .first()
+                            .expect("Didn't generate an address")
+                            .clone();
+                        #[cfg(feature = "events")]
+                        {
+                            let account_index = self.read().await.index;
+                            self.event_emitter.lock().await.emit(
+                                account_index,
+                                WalletEvent::TransferProgress(
+                                    TransferProgressEvent::GeneratingRemainderDepositAddress(AddressData {
+                                        address: remainder_address.address.to_bech32(),
+                                    }),
+                                ),
+                            );
+                        }
+                        Some(remainder_address.address().inner)
+                    }
+                    RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
                 }
-                essence_builder =
-                    essence_builder.with_payload(Payload::TaggedData(Box::new(tagged_data_payload.clone())));
             }
-        }
+            None => None,
+        };
 
-        let essence = essence_builder.finish()?;
-        let essence = TransactionEssence::Regular(essence);
+        let selected_transaction_data = self
+            .select_inputs(outputs, custom_inputs, remainder_address, byte_cost_config)
+            .await?;
 
-        #[cfg(feature = "events")]
+        let prepared_transaction_data = match self
+            .build_transaction_essence(selected_transaction_data.clone(), options)
+            .await
         {
-            let account_index = self.read().await.index;
-            self.event_emitter.lock().await.emit(
-                account_index,
-                WalletEvent::TransferProgress(TransferProgressEvent::PreparedTransaction(
-                    PreparedTransactionEventData {
-                        inputs: inputs_for_event,
-                        outputs: outputs_for_event,
-                        data: tagged_data,
-                    },
-                )),
-            );
-        }
+            Ok(res) => res,
+            Err(err) => {
+                // unlock outputs so they are available for a new transaction
+                self.unlock_inputs(selected_transaction_data.inputs).await?;
+                return Err(err);
+            }
+        };
+
         log::debug!(
             "[TRANSFER] finished prepare_transaction in {:.2?}",
             prepare_transaction_start_time.elapsed()
         );
-        Ok(PreparedTransactionData {
-            essence,
-            input_signing_data_entries: inputs_for_signing,
-        })
+        Ok(prepared_transaction_data)
     }
 }
