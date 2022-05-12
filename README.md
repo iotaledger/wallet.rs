@@ -6,11 +6,22 @@
 ## Introduction
 
 The wallet library is a stateful package with a standardised interface for developers to build applications involving IOTA value transactions.
-It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. It uses RocksDB as a database. See the full specification [here](https://github.com/iotaledger/wallet.rs/blob/dev/specs/wallet-ENGINEERING-SPEC-0000.md).
+It offers abstractions to handle IOTA payments and can optionally interact with [IOTA Stronghold](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage and state backup. It uses RocksDB as a database.
+
+## Branching structure for development
+
+This library follows the following branching strategy:
+
+|Branch|Description|
+|------|-----------|
+|`develop`|Ongoing development for future releases of the networks. This branch gets merged into `staging` on releases.|
+|`production`|The latest releases for the IOTA networks.|
+|`staging`|The latest releases for the Shimmer networks.|
+| other |Other branches that may reflect current projects. Similar to `develop`, they will find their way into `staging` once they are ready.|
 
 ## Documentation
 
-You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file. 
+You can find the latest version of the documentation in the [official Wallet.rs documentation site](https://wiki.iota.org/wallet.rs/welcome/). Alternatively, you can run the documentation site locally following the instructions in the [documentation/README.md](documentation/README.md) file.
 
 ## Prerequisites
 
@@ -18,11 +29,9 @@ You can find the latest version of the documentation in the [official Wallet.rs 
 
 We recommend you update Rust to the latest stable version [`rustup update stable`](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). Nightly should be fine but there's a chance some changes are not compatible.
 
-`no_std` is not supported currently, but we are working on it, and will provide it as a feature once the new implementation is ready.
-
 ### Dependencies
 
-`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system. 
+`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system.
 
 ### Windows
 
@@ -63,7 +72,7 @@ To use the library, add this to your `Cargo.toml`:
 
 ```
 [dependencies]
-iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev", default-features = false, features = ["stronghold"] }
+iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop" }
 ```
 
 ### Initialisation
@@ -71,24 +80,54 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev",
 In order to use the library you first need to create an `AccountManager`:
 
 ```rust
-use iota_wallet::{
-    account_manager::AccountManager, ClientOptions, secret::SecretManager,
-};
 use std::path::PathBuf;
 
+use iota_wallet::{
+    account_manager::AccountManager,
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
+    ClientOptions, Result,
+};
+
 #[tokio::main]
-async fn main() -> iota_wallet::Result<()> {
-    let storage_path: PathBuf = "./my-db".into();
-    let manager =
-        AccountManager::builder()
-            .with_storage(&storage_path, None)
-            .finish()
-            .await?;
-    let client_options = ClientOptions::new().with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?.build();
-    let account = manager
-        .create_account(client_options)?
-        .initialise()
+async fn main() -> Result<()> {
+    // Shouldn't be hardcoded in production
+    // mnemonic can be generated with `manager.generate_mnemonic()?` and will be the only way to recover your funds if
+    // you loose the stronghold file/password, so be sure to save it securely
+    let nonsecure_use_of_development_mnemonic = "endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river".to_string();
+    let stronghold_password = "some_hopefully_secure_password";
+
+    // Setup Stronghold secret_manager
+    let mut secret_manager = StrongholdSecretManager::builder()
+        .password(&stronghold_password)
+        .snapshot_path(PathBuf::from("wallet.stronghold"))
+        .build();
+
+    // The mnemonic only needs to be stored the first time
+    secret_manager
+        .store_mnemonic(nonsecure_use_of_development_mnemonic)
         .await?;
+
+    // Create the account manager with the secret_manager and client options
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
+        .with_client_options(client_options)
+        .finish()
+        .await?;
+
+    // Create a new account, this will automatically generate an address
+    let account = manager
+        .create_account()
+        .with_alias("Alice".to_string())
+        .finish()
+        .await?;
+
+    println!(
+        "Generated a new account with addresses {:?}",
+        account.list_addresses().await?
+    );
+
     Ok(())
 }
 ```
@@ -107,12 +146,12 @@ You can see the examples in the [examples](examples/) directory and try them wit
 
 ```
 cargo run --example # lists the available examples
-cargo run --example transfer # execute the `transfer` example
+cargo run --example 01_create_wallet # execute the `01_create_wallet` example
 ```
 
 ## Joining the discussion
 
-If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
+If you want to get involved in discussions about this library, or you're looking for support, go to the #wallet-library channel on [Discord](https://discord.iota.org).
 
 
 ## License
