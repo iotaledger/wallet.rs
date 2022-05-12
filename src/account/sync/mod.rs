@@ -20,12 +20,14 @@ use getset::Getters;
 use iota_client::{
     api::finish_pow,
     bee_message::{
+        address::Address as BeeAddress,
         constants::INPUT_OUTPUT_COUNT_MAX,
         prelude::{
             Essence, Input, Message as IotaMessage, MessageId, Output, OutputId, Payload, RegularEssence,
             SignatureLockedDustAllowanceOutput, SignatureLockedSingleOutput, TransactionPayload, UnlockBlocks,
             UtxoInput,
         },
+        unlock::UnlockBlock,
     },
     common::packable::Packable,
     AddressOutputsOptions, Client,
@@ -283,15 +285,10 @@ async fn sync_address_list(
             });
         }
         let results = futures::future::try_join_all(tasks).await?;
-        let mut inserted_remainder_address = false;
         for res in results {
             let (messages, address) = res?;
             if !address.outputs().is_empty() || return_all_addresses {
                 found_addresses.push(address);
-            } else if !inserted_remainder_address {
-                // We want to insert one unused address to have an unused remainder address
-                found_addresses.push(address);
-                inserted_remainder_address = true;
             }
             found_messages.extend(messages);
         }
@@ -326,22 +323,20 @@ async fn check_for_new_used_addresses(
     // get the latest address index +1 for public or internal addresses
     let mut address_index_to_start_from = if internal {
         let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
-        let latest_internal_address_index = internal_addresses
+        internal_addresses
             .clone()
             .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .cloned()
-            .unwrap_or(0);
-        latest_internal_address_index + 1
+            // + 1 because we don't want to sync the existing address
+            .map(|a| a.key_index() + 1)
+            .unwrap_or(0)
     } else {
         let public_addresses = account.addresses.iter().filter(|a| !a.internal());
-        let latest_public_address_index = public_addresses
+        public_addresses
             .clone()
             .max_by_key(|a| a.key_index())
-            .map(|a| a.key_index())
-            .cloned()
-            .unwrap_or(0);
-        latest_public_address_index + 1
+            // + 1 because we don't want to sync the existing address
+            .map(|a| a.key_index() + 1)
+            .unwrap_or(0)
     };
 
     let mut generated_addresses = vec![];
@@ -527,7 +522,9 @@ async fn sync_addresses_and_messages(
                     }
 
                     log::debug!(
-                        "[SYNC] syncing messages and outputs for address {}, got {} outputs",
+                        "[SYNC] syncing messages and outputs for address internal: {} index:{} {}, got {} outputs",
+                        address.internal(),
+                        address.key_index(),
                         address.address().to_bech32(),
                         address_output_ids.len(),
                     );
@@ -660,10 +657,11 @@ async fn perform_sync(
     return_all_addresses: bool,
 ) -> crate::Result<SyncedAccountData> {
     log::debug!(
-        "[SYNC] perform_sync: syncing account {} with address_index = {}, gap_limit = {}",
+        "[SYNC] perform_sync: syncing account {} with address_index = {}, gap_limit = {}, return_all_addresses = {}",
         account_handle.read().await.index(),
         address_index,
-        gap_limit
+        gap_limit,
+        return_all_addresses
     );
     let (mut found_addresses, found_messages) = if let Some(index) = steps
         .iter()
@@ -761,32 +759,63 @@ async fn perform_sync(
         found_addresses.iter().filter(|a| *a.internal()).cloned().collect(),
     ));
 
+    // generate all missing addresses
+    log::debug!("[SYNC] check for missing addresses");
+
     let new_addresses = addresses_to_save.clone();
-    let max_new_public_index = new_addresses
+    let mut max_new_public_index = new_addresses
         .iter()
         .filter(|a| !a.internal())
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
-    let max_new_internal_index = new_addresses
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    let mut max_new_internal_index = new_addresses
         .iter()
         .filter(|a| *a.internal())
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
 
-    let public_addresses = account.addresses.iter().filter(|a| !a.internal());
+    let mut public_addresses = account.addresses.iter().filter(|a| !a.internal());
     let internal_addresses = account.addresses.iter().filter(|a| *a.internal());
-    let latest_public_address_index = public_addresses
+    let mut latest_public_address_index = public_addresses
         .clone()
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
-    let latest_internal_address_index = internal_addresses
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if public_addresses.clone().count() < latest_public_address_index + 1 {
+        log::debug!(
+            "[SYNC] check addresses from index 0, because public_addresses count < latest_public_address_index+1 {}/{}",
+            public_addresses.clone().count(),
+            latest_public_address_index + 1
+        );
+        // Use the highest index, so we don't miss addresses
+        if max_new_public_index < latest_public_address_index + 1 {
+            max_new_public_index = latest_public_address_index + 1;
+        }
+        latest_public_address_index = 0;
+    }
+
+    let mut latest_internal_address_index = internal_addresses
         .clone()
         .max_by_key(|a| a.key_index())
-        .map(|a| a.key_index())
-        .unwrap_or(&0);
+        .map(|a| *a.key_index())
+        .unwrap_or(0);
+    // if the account address count < latest index+1, then one or more addresses are missing in the
+    // account and we start checking the addresses from 0
+    if internal_addresses.clone().count() < latest_internal_address_index + 1 {
+        log::debug!(
+            "[SYNC] check addresses from index 0, because internal_addresses count < latest_internal_address_index+1 {}/{}", 
+            internal_addresses.clone().count() , latest_internal_address_index + 1
+        );
+        // Use the highest index, so we don't miss addresses
+        if max_new_internal_index < latest_internal_address_index + 1 {
+            max_new_internal_index = latest_internal_address_index + 1;
+        }
+        latest_internal_address_index = 0;
+    }
 
     let bech32_hrp = match account.addresses().first() {
         Some(address) => address.address().bech32_hrp().to_string(),
@@ -800,94 +829,91 @@ async fn perform_sync(
                 .bech32_hrp
         }
     };
-    // generate all missing addresses
-    if !addresses_to_save.is_empty() {
-        log::debug!("[SYNC] check for missing addresses");
 
-        // generate missing public addresses
-        for key_index in *latest_public_address_index..*max_new_public_index {
-            if !account
-                .addresses()
+    // generate missing public addresses
+    for key_index in latest_public_address_index..max_new_public_index {
+        if !account
+            .addresses()
+            .iter()
+            .any(|a| a.key_index() == &key_index && !a.internal())
+            && !addresses_to_save
+                .clone()
                 .iter()
                 .any(|a| a.key_index() == &key_index && !a.internal())
-                && !addresses_to_save
-                    .clone()
-                    .iter()
-                    .any(|a| a.key_index() == &key_index && !a.internal())
+        {
+            // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+            // don't want to require an unlock for syncing
+            if let Ok(iota_address) = crate::address::get_iota_address(
+                &account,
+                key_index,
+                false,
+                bech32_hrp.clone(),
+                GenerateAddressMetadata {
+                    syncing: true,
+                    network: account.network(),
+                },
+            )
+            .await
             {
-                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
-                // don't want to require an unlock for syncing
-                if let Ok(iota_address) = crate::address::get_iota_address(
-                    &account,
+                log::debug!(
+                    "[SYNC] generated missing public address {} at index {}",
+                    iota_address.to_bech32(),
+                    key_index
+                );
+                let address = Address {
+                    address: iota_address,
                     key_index,
-                    false,
-                    bech32_hrp.clone(),
-                    GenerateAddressMetadata {
-                        syncing: true,
-                        network: account.network(),
-                    },
-                )
-                .await
-                {
-                    log::debug!(
-                        "[SYNC] generated missing public address {} at index {}",
-                        iota_address.to_bech32(),
-                        key_index
-                    );
-                    let address = Address {
-                        address: iota_address,
-                        key_index,
-                        internal: false,
-                        outputs: Default::default(),
-                    };
-                    addresses_to_save.push(address);
+                    internal: false,
+                    outputs: Default::default(),
                 };
-            }
+                addresses_to_save.push(address);
+            };
         }
-        // generate missing internal addresses
-        for key_index in *latest_internal_address_index..*max_new_internal_index {
-            if !account
-                .addresses()
+    }
+    // generate missing internal addresses
+    for key_index in latest_internal_address_index..max_new_internal_index {
+        if !account
+            .addresses()
+            .iter()
+            .any(|a| a.key_index() == &key_index && *a.internal())
+            && !addresses_to_save
+                .clone()
                 .iter()
                 .any(|a| a.key_index() == &key_index && *a.internal())
-                && !addresses_to_save
-                    .clone()
-                    .iter()
-                    .any(|a| a.key_index() == &key_index && *a.internal())
+        {
+            // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
+            // don't want to require an unlock for syncing
+            if let Ok(iota_address) = crate::address::get_iota_address(
+                &account,
+                key_index,
+                true,
+                bech32_hrp.clone(),
+                GenerateAddressMetadata {
+                    syncing: true,
+                    network: account.network(),
+                },
+            )
+            .await
             {
-                // generate address, ignore errors because Stronghold could be locked or a ledger not connected and we
-                // don't want to require an unlock for syncing
-                if let Ok(iota_address) = crate::address::get_iota_address(
-                    &account,
+                log::debug!(
+                    "[SYNC] generated missing internal address {} at index {}",
+                    iota_address.to_bech32(),
+                    key_index
+                );
+                let address = Address {
+                    address: iota_address,
                     key_index,
-                    true,
-                    bech32_hrp.clone(),
-                    GenerateAddressMetadata {
-                        syncing: true,
-                        network: account.network(),
-                    },
-                )
-                .await
-                {
-                    log::debug!(
-                        "[SYNC] generated missing internal address {} at index {}",
-                        iota_address.to_bech32(),
-                        key_index
-                    );
-                    let address = Address {
-                        address: iota_address,
-                        key_index,
-                        internal: true,
-                        outputs: Default::default(),
-                    };
-                    addresses_to_save.push(address);
+                    internal: true,
+                    outputs: Default::default(),
                 };
-            }
+                addresses_to_save.push(address);
+            };
         }
     }
 
     let is_latest_public_address_empty = if latest_public_address_index > max_new_public_index {
         public_addresses
+            .clone()
             .max_by_key(|a| a.key_index())
             .map(|a| a.outputs().is_empty())
             .unwrap_or(false)
@@ -975,8 +1001,21 @@ async fn perform_sync(
         };
     }
 
-    addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
+    // If we discover the account and the first public address isn't added, we will do it here
+    if return_all_addresses && !addresses_to_save.iter().any(|a| *a.key_index() == 0 && !a.internal()) {
+        log::debug!("[SYNC] adding first public address because we're discovering this account");
+        addresses_to_save.push(
+            public_addresses
+                .next()
+                // Safe to unwrap because we generate the first address during account creation
+                .expect("No first address")
+                .clone(),
+        );
+    }
+
+    // First sort by internal and then by key index, otherwise dedup could fail
     addresses_to_save.sort_unstable_by_key(|a| *a.internal());
+    addresses_to_save.sort_unstable_by_key(|a| *a.key_index());
     addresses_to_save.dedup();
 
     log::debug!("[SYNC] addresses to save: {:#?}", addresses_to_save);
@@ -2015,6 +2054,7 @@ async fn perform_transfer(
                 address_output.clone(),
                 *account_address.key_index(),
                 *account_address.internal(),
+                account_address.address().inner,
             ));
         }
         utxos.extend(outputs.into_iter());
@@ -2035,12 +2075,13 @@ async fn perform_transfer(
             _ => return Err(crate::error::Error::InvalidOutputKind("Treasury".to_string())),
         }
     }
+    let mut address_inputs_for_validation: Vec<(Input, BeeAddress)> = Vec::new();
     let mut inputs_for_essence: Vec<Input> = Vec::new();
     let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
     let mut current_output_sum = 0;
     let mut remainder_value = 0;
 
-    for (utxo, address_index, address_internal) in utxos {
+    for (utxo, address_index, address_internal, bee_address) in utxos {
         let (amount, address) = match utxo.kind {
             OutputKind::SignatureLockedSingle => {
                 if utxo.amount < DUST_ALLOWANCE_VALUE {
@@ -2062,6 +2103,7 @@ async fn perform_transfer(
 
         let input: Input = UtxoInput::new(*utxo.transaction_id(), *utxo.index())?.into();
         inputs_for_essence.push(input.clone());
+        address_inputs_for_validation.push((input.clone(), bee_address));
         transaction_inputs.push(crate::signing::TransactionInput {
             input,
             address_index,
@@ -2115,7 +2157,7 @@ async fn perform_transfer(
 
     drop(account_);
     let mut account_ = account_handle.write().await;
-
+    let account_id = account_.id().to_string();
     let mut addresses_to_watch = vec![];
 
     // if there's remainder value, we check the strategy defined in the transfer
@@ -2149,7 +2191,7 @@ async fn perform_transfer(
                         );
                         transfer_obj
                             .emit_event_if_needed(
-                                account_.id().to_string(),
+                                account_id.clone(),
                                 TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                     address: address.address().to_bech32(),
                                 }),
@@ -2200,7 +2242,7 @@ async fn perform_transfer(
                         );
                         transfer_obj
                             .emit_event_if_needed(
-                                account_.id().to_string(),
+                                account_id.clone(),
                                 TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                     address: address.address().to_bech32(),
                                 }),
@@ -2250,7 +2292,7 @@ async fn perform_transfer(
                     .await?;
                     transfer_obj
                         .emit_event_if_needed(
-                            account_.id().to_string(),
+                            account_id.clone(),
                             TransferProgressType::GeneratingRemainderDepositAddress(AddressData {
                                 address: change_address_for_event.address().to_bech32(),
                             }),
@@ -2351,7 +2393,7 @@ async fn perform_transfer(
 
     transfer_obj
         .emit_event_if_needed(
-            account_.id().to_string(),
+            account_id.clone(),
             TransferProgressType::PreparedTransaction(PreparedTransactionData {
                 inputs: inputs_for_event,
                 outputs: outputs_for_event,
@@ -2360,7 +2402,7 @@ async fn perform_transfer(
         )
         .await;
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::SigningTransaction)
+        .emit_event_if_needed(account_id.clone(), TransferProgressType::SigningTransaction)
         .await;
     let unlock_blocks = crate::signing::get_signer(account_.signer_type())
         .await
@@ -2391,18 +2433,28 @@ async fn perform_transfer(
         .with_unlock_blocks(UnlockBlocks::new(unlock_blocks)?)
         .finish()?;
 
+    verify_unlock_blocks(&transaction, address_inputs_for_validation)?;
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::PerformingPoW)
+        .emit_event_if_needed(account_id.clone(), TransferProgressType::PerformingPoW)
         .await;
+
+    // Drop account so we don't lock it during PoW and submitting
+    drop(account_);
+
     let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
-
     transfer_obj
-        .emit_event_if_needed(account_.id().to_string(), TransferProgressType::Broadcasting)
+        .emit_event_if_needed(account_id, TransferProgressType::Broadcasting)
         .await;
 
-    let message_id = client.post_message(&message).await?;
+    let message_id = match client.post_message(&message).await {
+        Ok(message_id) => message_id,
+        // Ignore errors from posting the message, the wallet will try to submit the message later during syncing again
+        Err(_) => message.id().0,
+    };
+
+    let mut account_ = account_handle.write().await;
 
     // if this is a transfer to the account's latest address or we used the latest as deposit of the remainder
     // value, we generate a new one to keep the latest address unused
@@ -2707,13 +2759,46 @@ pub(crate) async fn repost_message(
     Ok(message)
 }
 
+fn verify_unlock_blocks(
+    transaction_payload: &TransactionPayload,
+    mut inputs: Vec<(Input, BeeAddress)>,
+) -> crate::Result<()> {
+    // Sort inputs
+    inputs.sort_by(|a, b| a.0.pack_new().cmp(&b.0.pack_new()));
+    let essence_hash = transaction_payload.essence().hash();
+    let unlock_blocks = transaction_payload.unlock_blocks();
+    for (index, (_input, address)) in inputs.iter().enumerate() {
+        verify_signature(address, unlock_blocks, index, &essence_hash)?;
+    }
+    Ok(())
+}
+
+fn verify_signature(
+    address: &BeeAddress,
+    unlock_blocks: &UnlockBlocks,
+    index: usize,
+    essence_hash: &[u8; 32],
+) -> crate::Result<()> {
+    if let Some(UnlockBlock::Signature(signature_unlock_block)) = unlock_blocks.get(index) {
+        Ok(address.verify(essence_hash, signature_unlock_block)?)
+    } else {
+        Err(crate::Error::MissingUnlockBlock)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{
+        account::sync::verify_unlock_blocks,
         address::{AddressOutput, OutputKind},
         client::ClientOptionsBuilder,
     };
-    use iota_client::bee_message::prelude::{MessageId, TransactionId};
+    use iota_client::bee_message::{
+        address::Address as BeeAddress,
+        input::Input,
+        payload::transaction::TransactionPayload,
+        prelude::{MessageId, TransactionId},
+    };
     use quickcheck_macros::quickcheck;
     use std::collections::HashMap;
 
@@ -2849,5 +2934,35 @@ mod tests {
                 + events.iter().fold(0i64, |a, c| a - (c.balance_change.spent as i64)
                     + (c.balance_change.received as i64))
         );
+    }
+
+    #[test]
+    fn signature_validation() {
+        // Single input, single address
+        let addresses: Vec<(Input, BeeAddress)> = serde_json::from_str(
+            r#"[[{"type":"Utxo","data":"4ec422d65362578e6f87f6d1c026efab1f445ff2df088cd6e9718bbbecf7062c0000"},{"type":"Ed25519","data":"3c6ac30b8067754b78ecc1b52c54d102126f5ac65adacc4d8b9ccdc8798cb72e"}]]"#,
+        )
+        .unwrap();
+        let transaction_payload: TransactionPayload = serde_json::from_str(r#"{"essence":{"type":"Regular","data":{"inputs":[{"type":"Utxo","data":"4ec422d65362578e6f87f6d1c026efab1f445ff2df088cd6e9718bbbecf7062c0000"}],"outputs":[{"type":"SignatureLockedSingle","data":{"address":{"type":"Ed25519","data":"afd2911a6bfb04473d316673c8d5aa430ea1b70e9c0ea3b70729f9844249ef72"},"amount":9000000}},{"type":"SignatureLockedDustAllowance","data":{"address":{"type":"Ed25519","data":"96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813"},"amount":1000000}}],"payload":null}},"unlock_blocks":[{"type":"Signature","data":{"type":"Ed25519","data":{"public_key":[3,230,86,61,104,98,11,242,120,245,14,61,4,126,192,110,223,144,237,192,217,83,52,214,131,234,80,216,166,45,160,169],"signature":[170,45,8,190,44,193,159,150,167,139,218,187,188,155,159,126,55,194,187,9,67,182,18,181,99,166,200,10,151,74,46,255,161,223,186,79,26,94,185,131,47,125,41,239,133,15,190,12,9,24,116,71,58,60,6,6,85,3,247,241,164,116,22,5]}}}]}"#)
+        .unwrap();
+        assert!(verify_unlock_blocks(&transaction_payload, addresses).is_ok());
+
+        // Two inputs, single address
+        let addresses: Vec<(Input, BeeAddress)> = serde_json::from_str(
+            r#"[[{"type":"Utxo","data":"d6748b4df6c3b391c3e0ccc5bc76c17ffda80cc47aa38bb53035eb13f705c5310000"},{"type":"Ed25519","data":"2a207649c365626e42221b93f0b93a3edf4e4a101a6fed46ac25dbea963cfa1c"}],[{"type":"Utxo","data":"f6ca585d8a884c56efc32705ecab4465eb222fd2723357b08ae4ec69bc0fe04a0000"},{"type":"Ed25519","data":"2a207649c365626e42221b93f0b93a3edf4e4a101a6fed46ac25dbea963cfa1c"}]]"#,
+        )
+        .unwrap();
+        let transaction_payload: TransactionPayload = serde_json::from_str(r#"{"essence":{"type":"Regular","data":{"inputs":[{"type":"Utxo","data":"d6748b4df6c3b391c3e0ccc5bc76c17ffda80cc47aa38bb53035eb13f705c5310000"},{"type":"Utxo","data":"f6ca585d8a884c56efc32705ecab4465eb222fd2723357b08ae4ec69bc0fe04a0000"}],"outputs":[{"type":"SignatureLockedDustAllowance","data":{"address":{"type":"Ed25519","data":"96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813"},"amount":11000000}}],"payload":null}},"unlock_blocks":[{"type":"Signature","data":{"type":"Ed25519","data":{"public_key":[252,182,140,90,85,29,197,138,147,248,32,149,235,90,227,81,133,29,94,151,99,226,27,142,157,1,216,253,215,65,245,55],"signature":[5,143,55,167,104,165,33,54,65,185,234,11,13,47,5,43,239,75,163,93,141,85,136,199,166,118,210,131,221,197,127,88,219,171,244,219,59,45,40,158,216,218,33,144,248,76,196,227,36,68,91,26,75,215,47,39,235,241,85,93,41,154,90,5]}}},{"type":"Reference","data":0}]}"#)
+        .unwrap();
+        assert!(verify_unlock_blocks(&transaction_payload, addresses).is_ok());
+
+        // Three inputs, two address
+        let addresses: Vec<(Input, BeeAddress)> = serde_json::from_str(
+            r#"[[{"type":"Utxo","data":"a8496dc13810c06609c843dada9e69e9089d17bbf51fa8a26baea1c822b495f00000"},{"type":"Ed25519","data":"1858fc15c73e5b7afd8e7f26d763a5ed1216dec8223cb2d757c8185d6988adec"}],[{"type":"Utxo","data":"95759d802d3c96b2c5619b720a3fbe1ae8dc55f8b4b8e3c0fb29c50f840d99830100"},{"type":"Ed25519","data":"7b6269039c2b1460cd92976416513d3b80eb355e55f3af2cb11b2fefcbc94214"}],[{"type":"Utxo","data":"2a66b58d4cbb11cc4222c7129e544cbe0a95735b713964b35336fb194c5d9d0e0100"},{"type":"Ed25519","data":"7b6269039c2b1460cd92976416513d3b80eb355e55f3af2cb11b2fefcbc94214"}]]"#,
+        )
+        .unwrap();
+        let transaction_payload: TransactionPayload = serde_json::from_str(r#"{"essence":{"type":"Regular","data":{"inputs":[{"type":"Utxo","data":"2a66b58d4cbb11cc4222c7129e544cbe0a95735b713964b35336fb194c5d9d0e0100"},{"type":"Utxo","data":"95759d802d3c96b2c5619b720a3fbe1ae8dc55f8b4b8e3c0fb29c50f840d99830100"},{"type":"Utxo","data":"a8496dc13810c06609c843dada9e69e9089d17bbf51fa8a26baea1c822b495f00000"}],"outputs":[{"type":"SignatureLockedSingle","data":{"address":{"type":"Ed25519","data":"afd2911a6bfb04473d316673c8d5aa430ea1b70e9c0ea3b70729f9844249ef72"},"amount":2000000}},{"type":"SignatureLockedDustAllowance","data":{"address":{"type":"Ed25519","data":"96f9de0989e77d0e150e850a5a600e83045fa57419eaf3b20225b763d4e23813"},"amount":19000000}}],"payload":null}},"unlock_blocks":[{"type":"Signature","data":{"type":"Ed25519","data":{"public_key":[65,70,94,121,54,19,63,47,138,158,43,147,80,103,36,79,184,187,220,227,55,190,178,44,85,92,47,3,61,57,149,109],"signature":[218,240,132,193,143,135,231,63,51,216,56,243,251,58,170,153,226,48,201,58,39,247,204,205,156,52,228,7,87,26,217,94,252,244,97,165,147,152,35,214,0,157,59,174,191,67,241,136,33,175,232,229,25,101,40,85,118,77,159,112,125,226,113,1]}}},{"type":"Reference","data":0},{"type":"Signature","data":{"type":"Ed25519","data":{"public_key":[153,251,5,41,39,91,214,187,164,77,124,144,134,99,98,255,80,157,105,188,12,131,106,150,204,199,166,15,72,60,8,219],"signature":[214,33,105,6,59,170,247,75,170,193,106,3,198,47,99,48,82,150,124,23,163,239,109,84,89,23,150,231,47,87,29,113,46,141,241,242,147,147,88,72,168,214,189,221,184,115,171,109,178,238,37,84,88,194,212,193,208,202,191,142,202,169,193,13]}}}]}"#)
+        .unwrap();
+        assert!(verify_unlock_blocks(&transaction_payload, addresses).is_ok());
     }
 }

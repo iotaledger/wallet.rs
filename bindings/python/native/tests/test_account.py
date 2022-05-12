@@ -5,12 +5,16 @@ import os
 
 # Read the test vector
 tv = dict()
-with open('tests/fixtures/test_vectors.json') as json_file:
+with open('../../../tests/fixtures/test_vectors.json') as json_file:
     tv = json.load(json_file)
+general_tv = tv['general']
+tv = tv['python']
+
 account = None
 manager = None
 synced_account = None
 created_time = int(datetime.datetime.now().timestamp())
+address_to_verify = ""
 
 
 """
@@ -26,9 +30,10 @@ def test_account_initialiser():
 
     # NOTE: In real use cases, it is necessary to get the password form the env variables or other safer ways!
     manager.set_stronghold_password(pat['account_manager']['password'])
-    manager.store_mnemonic(pat['account_manager']['store_mnemonic'])
+    manager.store_mnemonic(general_tv['SIGNER_TYPE'],
+                           general_tv['MNEMNONIC'])
     account_initialiser = manager.create_account(pat['client_options'])
-    account_initialiser.signer_type(pat['signer_type'])
+    account_initialiser.signer_type(general_tv['SIGNER_TYPE'])
     account_initialiser.alias(pat['alias'])
     account_initialiser.created_at(created_time)
     account_initialiser.messages([])
@@ -146,7 +151,9 @@ def test_account_handle_consolidate_outputs():
 
 
 def test_account_handle_generate_address():
+    global address_to_verify
     generated_address = account.generate_address()
+    address_to_verify = generated_address
     assert isinstance(generated_address,
                       dict) and 'address' in generated_address
 
@@ -271,3 +278,12 @@ def test_accounts_synchronizer():
         accounts_synchronizer.execute()
     except ValueError as e:
         assert 'Failed to find seed vault' in str(e)
+
+
+"""
+Test address derivation from Mnemonic
+"""
+
+
+def test_mnemonic_address_generation():
+    assert general_tv['MNEMNONIC_ADDRESS_INDEX_1'] == address_to_verify['address']['inner']

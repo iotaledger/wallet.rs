@@ -961,7 +961,10 @@ impl AccountHandle {
         let account = self.read().await;
         let storage = crate::storage::get(&account.storage_path).await?;
         let mut storage = storage.lock().await;
+        let mut old_participations = Vec::new();
         if let Ok(mut participations) = storage.get_participations(*account.index()).await {
+            // Copy old events in case the transaction fails
+            old_participations = participations.clone();
             // remove provided events
             participations = participations
                 .into_iter()
@@ -973,12 +976,33 @@ impl AccountHandle {
         drop(account);
         // by using the participate function with en empty vec we will just send transactions only with the remaining or
         // no events
-        self.participate(Vec::new()).await
+        match self.participate(Vec::new()).await {
+            Ok(messages) => Ok(messages),
+            Err(e) => {
+                self.restore_participations(old_participations).await?;
+                Err(e)
+            }
+        }
+    }
+
+    #[cfg(feature = "participation")]
+    async fn restore_participations(
+        &self,
+        participations: Vec<crate::participation::types::Participation>,
+    ) -> crate::Result<()> {
+        let account = self.read().await;
+        let storage = crate::storage::get(&account.storage_path).await?;
+        let mut storage = storage.lock().await;
+        storage.save_participations(*account.index(), participations).await?;
+        Ok(())
     }
 
     #[cfg(feature = "participation")]
     /// Get an overview of the participations with the staked funds and the accumulated rewards.
-    pub async fn get_participation_overview(&self) -> crate::Result<crate::participation::types::ParticipatingAccount> {
+    pub async fn get_participation_overview(
+        &self,
+        assembly_event_id: &str,
+    ) -> crate::Result<crate::participation::types::ParticipatingAccount> {
         let account_balance = self.balance().await?;
         let account = self.read().await;
         let read_participations = match crate::storage::get(&account.storage_path)
@@ -1006,12 +1030,18 @@ impl AccountHandle {
             u64,
             u64,
             // HashMap<String, crate::participation::response_types::TrackedParticipation>,
-        ) = crate::participation::account_helpers::get_outputs_participation(available_outputs, node.clone()).await?;
+        ) = crate::participation::account_helpers::get_outputs_participation(
+            available_outputs,
+            node.clone(),
+            assembly_event_id,
+        )
+        .await?;
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
                 account.addresses().clone(),
                 node.clone(),
+                assembly_event_id,
             )
             .await?;
 

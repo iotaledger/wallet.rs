@@ -451,9 +451,12 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            MessageType::GetParticipationOverview => {
+            MessageType::GetParticipationOverview { assembly_event_id } => {
                 convert_async_panics(|| async {
-                    let overview = self.account_manager.get_participation_overview().await?;
+                    let overview = self
+                        .account_manager
+                        .get_participation_overview(assembly_event_id)
+                        .await?;
                     Ok(ResponseType::ParticipationOverview(overview))
                 })
                 .await

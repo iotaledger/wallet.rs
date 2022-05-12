@@ -1,5 +1,10 @@
 # Changelog
 
+## \[1.0.16]
+
+- Fix generateAddress to always return an address with a new higher index than the last one.
+  - [20ae49e0](https://github.com/iotaledger/wallet.rs/commit/20ae49e055f33aebb18243fbfef2c619a7239fd6) Fix generate_address ([#957](https://github.com/iotaledger/wallet.rs/pull/957)) on 2022-03-28
+
 ## \[1.0.15]
 
 - Fix reading messages from db.

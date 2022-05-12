@@ -8,14 +8,14 @@ keywords:
 - Rust
 - transfer
 - backup
+- how to
 ---
 import CodeBlock from '@theme/CodeBlock';
 import transfer from  '!!raw-loader!./../../../../examples/transfer.rs';
 import logger from  '!!raw-loader!./../../../../examples/logger.rs';
 import event from  '!!raw-loader!./../../../../examples/event.rs';
 
-You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples).
-You can list all available examples by running the following command:
+You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples). You can list all available examples by running the following command:
 
 ```bash
 cargo run --example # lists the available examples
@@ -64,6 +64,7 @@ let backup_path = manager.backup("./backup").await?;
 
 
 4. You can import the backup later, or in another application using the following snippet:
+
 ```rust
 manager.import_accounts(backup_path, "password").await?;
 
@@ -81,13 +82,13 @@ You can see the full code for the example in the [`wallet.rs` repository](https:
 
 ## Transfer Example:
 
-You use the following example to generate an account, and transfer funds. 
+You use the following example to generate an account and transfer funds. 
 
 <CodeBlock className="language-rust">
   {transfer}
 </CodeBlock>
 
-## Events example:
+## Events Example:
 
 `wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
@@ -97,7 +98,7 @@ You can use the following example to fetch an existing _Account_ and listen to t
   {event}
 </CodeBlock>
 
-## Logger example:
+## Logger Example:
 
 <CodeBlock className="language-rust">
   {logger}

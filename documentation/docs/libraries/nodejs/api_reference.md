@@ -6,8 +6,10 @@ keywords:
 - nodejs
 - param
 - type
+- reference
 ---
 # API Reference
+
 ## initLogger(config: LogOptions)
 
 Initializes the logging system.
