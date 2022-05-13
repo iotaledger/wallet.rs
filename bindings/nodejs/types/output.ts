@@ -21,6 +21,9 @@ export interface OutputResponse {
     transactionId: string;
     outputIndex: number;
     isSpent: boolean;
+    milestoneIndexSpent?: number;
+    milestoneTimestampSpent?: number;
+    transactionIdSpent?: string;
     milestoneIndexBooked: number;
     milestoneTimestampBooked: number;
     ledgerIndex: number;
