@@ -12,7 +12,8 @@ import type {
     CreateAccountPayload,
     NodeInfoWrapper,
     ClientOptions,
-    AccountSyncOptions
+    AccountSyncOptions,
+    WalletEvent
 } from '../types'
 
 export class AccountManager {
@@ -48,6 +49,7 @@ export class AccountManager {
         );
     }
 
+    // TODO: test this
     async recoverAccounts(accountGapLimit: number, addressGapLimit: number): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'RecoverAccounts',
@@ -169,10 +171,15 @@ export class AccountManager {
         });
     }
 
-    listen(
-        eventTypes: EventType[],
-        callback: (error: Error, result: string) => void,
-    ): void {
+    // TODO: test this
+    async emitTestEvent(event: WalletEvent): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'EmitTestEvent',
+            payload: event,
+        });
+    }
+
+    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
         return this.messageHandler.listen(eventTypes, callback);
     }
 }

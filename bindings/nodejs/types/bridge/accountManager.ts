@@ -1,5 +1,6 @@
 
 import type { AccountId, AccountSyncOptions, CreateAccountPayload } from '../account';
+import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions } from '../network';
 
 export type __GetAccountsMessagePayload__ = {
@@ -34,6 +35,11 @@ export type __RecoverAccountsPayload__ = {
 
 export type __DeleteStorageMessagePayload__ = {
     cmd: 'DeleteStorage'
+}
+
+export type __EmitTestEventPayload__ = {
+    cmd: 'EmitTestEvent',
+    payload: WalletEvent,
 }
 
 export type __SetStrongholdPasswordPayload__ = {
