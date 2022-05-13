@@ -48,6 +48,17 @@ export class AccountManager {
         );
     }
 
+    async recoverAccounts(accountGapLimit: number, addressGapLimit: number): Promise<Account[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'RecoverAccounts',
+            payload: {
+                accountGapLimit,
+                addressGapLimit,
+            }
+        })
+        return JSON.parse(response).payload
+    }
+
     async deleteStorage(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'DeleteStorage',

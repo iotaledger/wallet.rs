@@ -24,6 +24,14 @@ export type __CreateAccountMessagePayload__ = {
     payload: CreateAccountPayload;
 };
 
+export type __RecoverAccountsPayload__ = {
+    cmd: 'RecoverAccounts'
+    payload: {
+        accountGapLimit: number
+        addressGapLimit: number
+    }
+}
+
 export type __DeleteStorageMessagePayload__ = {
     cmd: 'DeleteStorage'
 }
