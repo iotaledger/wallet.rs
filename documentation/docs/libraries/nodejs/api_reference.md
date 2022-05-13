@@ -179,7 +179,7 @@ Backups the database.
 
 Returns the full path to the backup file.
 
-### importAccounts(source)
+### restoreBackup(source)
 
 Imports a database file.
 

@@ -50,8 +50,8 @@ export type __BackupPayload__ = {
     };
 };
 
-export type __ImportAccountsPayload__ = {
-    cmd: 'RestoreBackup';
+export type __RestoreBackupPayload__ = {
+    cmd: 'RestoreBackup'
     payload: {
         backupPath: string;
         password: string;

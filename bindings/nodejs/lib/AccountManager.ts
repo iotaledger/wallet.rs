@@ -19,6 +19,33 @@ export class AccountManager {
     constructor(options: AccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);
     }
+    
+    async backup(destination: string, password: string): Promise<string> {
+        return this.messageHandler.sendMessage({
+            cmd: 'Backup',
+            payload: {
+                destination,
+                password,
+            },
+        });
+    }
+
+    /**
+     * The coin type only needs to be set on the first account
+     */
+    async createAccount(payload: CreateAccountPayload): Promise<Account> {
+        const response = await this.messageHandler
+            .sendMessage({
+                cmd: 'CreateAccount',
+                payload,
+            });
+
+        return new Account(
+            JSON.parse(response).payload,
+            this.messageHandler,
+        );
+    }
+
 
     destroy() {
         this.messageHandler.destroy();
@@ -63,18 +90,6 @@ export class AccountManager {
     }
 
     /**
-     * The coin type only needs to be set on the first account
-     */
-    async createAccount(payload: CreateAccountPayload): Promise<Account> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'CreateAccount',
-            payload,
-        });
-
-        return new Account(JSON.parse(response).payload, this.messageHandler);
-    }
-
-    /**
      * TODO: Replace string type with proper type
      */
     async setStrongholdPassword(password: string): Promise<string> {
@@ -114,26 +129,12 @@ export class AccountManager {
         });
     }
 
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async backup(destination: string, password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
-            cmd: 'Backup',
-            payload: {
-                destination,
-                password,
-            },
-        });
-    }
+    
 
     /**
      * TODO: Replace string type with proper type
      */
-    async importAccounts(
-        backupPath: string,
-        password: string,
-    ): Promise<string> {
+    async restoreBackup(backupPath: string, password: string): Promise<string> {
         return this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
