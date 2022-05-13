@@ -158,17 +158,6 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async latestAddress(): Promise<Address> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'GetLatestAddress',
-            },
-        );
-
-        return JSON.parse(response).payload;
-    }
-
     async balance(): Promise<AccountBalance> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,

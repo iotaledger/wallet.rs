@@ -2,7 +2,6 @@ import type { AccountId } from '../account';
 import type {
     __SyncAccountPayloadMethod__,
     __GenerateAddressesPayloadMethod__,
-    __LatestAddressPayloadMethod__,
     __BalancePayloadMethod__,
     __SetCollectOutputsPayloadMethod__,
     __GetOutput__,
@@ -46,7 +45,6 @@ export type __AccountPayloadMethods__ =
     | __GenerateAddressesPayloadMethod__
     | __GetOutput__
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
-    | __LatestAddressPayloadMethod__
     | __ListAddressesPayloadMethod__
     | __ListAddressesWithUnspentOutputsPayloadMethod__
     | __ListOutputsPayloadMethod__

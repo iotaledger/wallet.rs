@@ -20,10 +20,6 @@ export type __GenerateAddressesPayloadMethod__ = {
     }
 }
 
-export type __LatestAddressPayloadMethod__ = {
-    name: 'GetLatestAddress';
-};
-
 export type __BalancePayloadMethod__ = {
     name: 'GetBalance';
 };
