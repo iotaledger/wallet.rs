@@ -5,6 +5,7 @@ import type {
     __LatestAddressPayloadMethod__,
     __BalancePayloadMethod__,
     __SetCollectOutputsPayloadMethod__,
+    __GetOutput__,
     __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__,
     __ListAddressesPayloadMethod__,
     __ListAddressesWithBalancePayloadMethod__,
@@ -43,6 +44,7 @@ import type {
 export type __AccountPayloadMethods__ =
     | __BalancePayloadMethod__
     | __GenerateAddressesPayloadMethod__
+    | __GetOutput__
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
     | __LatestAddressPayloadMethod__
     | __ListAddressesPayloadMethod__

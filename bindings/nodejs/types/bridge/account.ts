@@ -35,6 +35,13 @@ export type __SetCollectOutputsPayloadMethod__ = {
     };
 };
 
+export type __GetOutput__ = {
+    name: 'GetOutput',
+    data: {
+        outputId: string
+    }
+}
+
 export type __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__ = {
     name: 'GetOutputsWithAdditionalUnlockConditions';
     data: {
