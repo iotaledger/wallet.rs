@@ -111,12 +111,9 @@ export class Account {
 
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'ListPendingTransactions',
-            },
-        );
-
+            this.meta.index, {
+            name: 'ListPendingTransactions'
+        })
         return JSON.parse(response).payload;
     }
 
