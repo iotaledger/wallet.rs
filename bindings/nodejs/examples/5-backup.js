@@ -11,8 +11,12 @@ async function run() {
         await manager.setStrongholdPassword(process.env.SH_PASSWORD);
 
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
+        console.log('Backup created at:', path);
 
-        console.log('Backup path:', path);
+        await manager.deleteStorage();
+
+        await manager.restoreBackup('./backup', process.env.SH_PASSWORD);
+        console.log('Successfully restored backup');
     } catch (error) {
         console.log('Error: ' + error);
     }

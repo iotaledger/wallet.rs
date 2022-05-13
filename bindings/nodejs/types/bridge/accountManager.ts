@@ -57,7 +57,7 @@ export type __BackupPayload__ = {
 export type __RestoreBackupPayload__ = {
     cmd: 'RestoreBackup'
     payload: {
-        backupPath: string;
-        password: string;
+        source: string
+        password: string
     };
 };

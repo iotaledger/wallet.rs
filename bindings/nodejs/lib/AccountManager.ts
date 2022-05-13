@@ -123,16 +123,11 @@ export class AccountManager {
         });
     }
 
-    
-
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async restoreBackup(backupPath: string, password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    async restoreBackup(source: string, password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
-                backupPath,
+                source,
                 password,
             },
         });
