@@ -12,11 +12,6 @@ export type __SyncAccountPayloadMethod__ = {
     data: AccountSyncOptions
 }
 
-export type __GetInfoPayloadMethod__ = {
-    name: 'GetNodeInfo';
-    data: string[];
-};
-
 export type __GenerateAddressesPayloadMethod__ = {
     name: 'GenerateAddresses';
     data: {
