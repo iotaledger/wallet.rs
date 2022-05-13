@@ -120,10 +120,13 @@ export class Account {
     }
 
     async sync(options?: AccountSyncOptions): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SyncAccount',
-            data: options || {},
-        });
+        await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'SyncAccount',
+                data: options,
+            }
+        )
     }
 
     async generateAddresses(): Promise<Address[]> {
