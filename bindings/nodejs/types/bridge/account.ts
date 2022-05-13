@@ -1,10 +1,5 @@
 import type { AccountSyncOptions } from '../account';
-import type {
-    AddressWithAmount,
-    AddressWithMicroAmount,
-    AddressNativeTokens,
-    AddressNftId,
-} from '../address';
+import type { AddressWithAmount, AddressWithMicroAmount, AddressNativeTokens, AddressNftId, AddressGenerationOptions } from '../address';
 import type { OutputsToCollect, OutputData } from '../output';
 import type {
     NativeTokenOptions,
@@ -25,9 +20,10 @@ export type __GetInfoPayloadMethod__ = {
 export type __GenerateAddressesPayloadMethod__ = {
     name: 'GenerateAddresses';
     data: {
-        amount: number;
-    };
-};
+        amount: number
+        options?: AddressGenerationOptions
+    }
+}
 
 export type __LatestAddressPayloadMethod__ = {
     name: 'GetLatestAddress';

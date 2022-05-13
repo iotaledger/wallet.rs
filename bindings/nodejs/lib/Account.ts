@@ -18,6 +18,7 @@ import type {
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
+    AddressGenerationOptions
 } from '../types';
 
 export class Account {
@@ -129,17 +130,22 @@ export class Account {
         )
     }
 
-    async generateAddresses(): Promise<Address[]> {
+    async generateAddress(options?: AddressGenerationOptions): Promise<Address> {
+        const addresses = await this.generateAddresses(1, options);
+        return addresses[0];
+    }
+
+    async generateAddresses(amount: number, options?: AddressGenerationOptions): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'GenerateAddresses',
                 data: {
-                    // TODO: Why is the amount set to 1 here?
-                    amount: 1,
-                },
-            },
-        );
+                    amount,
+                    options
+                }
+            }
+        )
 
         return JSON.parse(response).payload;
     }

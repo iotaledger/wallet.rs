@@ -1,3 +1,5 @@
+import type { Network } from './network';
+
 export interface Address {
     address: string;
     keyIndex: number;
@@ -27,4 +29,14 @@ export interface AddressNativeTokens {
 export interface AddressNftId {
     address: string;
     nftId: string;
+}
+
+export interface AddressGenerationOptions {
+    internal: boolean
+    metadata: GenerateAddressMetadata
+}
+
+interface GenerateAddressMetadata {
+    syncing: boolean
+    network: Network
 }
