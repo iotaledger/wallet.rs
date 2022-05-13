@@ -10,12 +10,10 @@ async function run() {
         const mnemonic = await manager.generateMnemonic();
         console.log('Mnemonic:', mnemonic);
 
-        const verificationResponse = await manager.verifyMnemonic(mnemonic);
-        console.log('Verification Response:', verificationResponse);
+        await manager.verifyMnemonic(mnemonic);
 
-        // console.log(manager);
-        // const result = await manager.storeMnemonic(mnemonic);
-        // console.log('Store Mnemonic', result);
+        await manager.storeMnemonic(mnemonic);
+        console.log('Mnemonic successfully stored!');
     } catch (error) {
         console.log('Error: ' + error);
     }
