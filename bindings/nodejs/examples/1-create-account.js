@@ -8,9 +8,7 @@ const manager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-        // await manager.storeMnemonic();
-
+        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
         // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',

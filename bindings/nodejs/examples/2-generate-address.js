@@ -7,7 +7,6 @@ const manager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
         const account = await manager.getAccount('0');
         console.log('Account:', account);
 

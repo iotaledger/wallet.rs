@@ -7,10 +7,9 @@ const manager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
         const account = await manager.getAccount('Alice');
-        console.log('Account:', account);
+        const addressObject = await account.listAddresses();
+        console.log('Address:', addressObject);
 
         // Always sync before doing anything with the account
         const synced = await account.sync();

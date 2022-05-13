@@ -8,8 +8,6 @@ const manager = require('./account-manager');
 
 async function run() {
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
         console.log('Backup created at:', path);
 
