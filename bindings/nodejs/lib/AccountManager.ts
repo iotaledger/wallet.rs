@@ -94,12 +94,9 @@ export class AccountManager {
             }),
         ).payload;
     }
-
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async setStrongholdPassword(password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    
+    async setStrongholdPassword(password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
             payload: password,
         });
