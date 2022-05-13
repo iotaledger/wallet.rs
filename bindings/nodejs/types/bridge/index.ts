@@ -21,17 +21,9 @@ import type {
     __SendNftPayloadMethod__,
     __SendTransferPayloadMethod__,
     __TryCollectOutputsPayloadMethod__,
-    __SyncAccountPayload__,
-    __GenerateAddressesPayload__,
-    __LatestAddressPayload__,
-    __BalancePayload__,
     __SetClientOptionsPayload__,
-    __SetCollectOutputsPayload__,
-    __GetOutputsWithAdditionalUnlockConditionsPayload__,
-    __ListAddressesPayload__,
-    __ListAddressesWithBalancePayload__,
-    __ListOutputsPayload__,
     __ListPendingTransactionsPayload__,
+<<<<<<< HEAD
     __ListTransactionsPayload__,
     __ListUnspentOutputsPayload__,
     __MintNativeTokenPayload__,
@@ -42,6 +34,8 @@ import type {
     __SendNftPayload__,
     __SendTransferPayload__,
     __TryCollectOutputsPayload__,
+=======
+>>>>>>> chore: remove redundant types
 } from './account';
 import type {
     __GetAccountsMessagePayload__,
@@ -55,23 +49,23 @@ import type {
     __GenerateMnemonicPayload__,
     __VerifyMnemonicPayload__,
     __DeleteStorageMessagePayload__,
+    __StartBackgroundSyncPayload__,
+    __StopBackgroundSyncPayload__,
     
 } from './accountManager'
 
 export type __AccountPayloadMethods__ =
-    | __SyncAccountPayloadMethod__
-    | __GetInfoPayloadMethod__
-    | __GenerateAddressesPayloadMethod__
-    | __LatestAddressPayloadMethod__
     | __BalancePayloadMethod__
-    | __SetCollectOutputsPayloadMethod__
+    | __GenerateAddressesPayloadMethod__
+    | __GetInfoPayloadMethod__
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
+    | __LatestAddressPayloadMethod__
     | __ListAddressesPayloadMethod__
     | __ListAddressesWithBalancePayloadMethod__
     | __ListOutputsPayloadMethod__
-    | __ListUnspentOutputsPayloadMethod__
-    | __ListPendingTransactionsPayloadMethod__
+    | __ListPendingTransactionsPayloadMethod__ 
     | __ListTransactionsPayloadMethod__
+    | __ListUnspentOutputsPayloadMethod__
     | __MintNativeTokenPayloadMethod__
     | __MintNftsPayloadMethod__
     | __SendAmountPayloadMethod__
@@ -79,7 +73,9 @@ export type __AccountPayloadMethods__ =
     | __SendNativeTokensPayloadMethod__
     | __SendNftPayloadMethod__
     | __SendTransferPayloadMethod__
-    | __TryCollectOutputsPayloadMethod__;
+    | __SetCollectOutputsPayloadMethod__ 
+    | __SyncAccountPayloadMethod__
+    | __TryCollectOutputsPayloadMethod__
 
 export type __CallAccountMethodPayload__ = {
     cmd: 'CallAccountMethod';
@@ -90,36 +86,19 @@ export type __CallAccountMethodPayload__ = {
 };
 
 export type __SendMessagePayload__ =
-    | __GetAccountsMessagePayload__
-    | __GetAccountMessagePayload__
+    | __BackupPayload__
+    | __CallAccountMethodPayload__
     | __CreateAccountMessagePayload__
     | __DeleteStorageMessagePayload__
-    | __CallAccountMethodPayload__
-    | __SetStrongholdPasswordPayload__
     | __GenerateMnemonicPayload__
-    | __StoreMnemonicPayload__
-    | __VerifyMnemonicPayload__
-    | __BackupPayload__
-    | __RestoreBackupPayload__
-    | __SyncAccountPayload__
+    | __GetAccountMessagePayload__
+    | __GetAccountsMessagePayload__
     | __GetNodeInfoPayload__
-    | __GenerateAddressesPayload__
-    | __LatestAddressPayload__
-    | __BalancePayload__
-    | __SetClientOptionsPayload__
-    | __SetCollectOutputsPayload__
-    | __GetOutputsWithAdditionalUnlockConditionsPayload__
-    | __ListAddressesPayload__
-    | __ListAddressesWithBalancePayload__
-    | __ListOutputsPayload__
     | __ListPendingTransactionsPayload__
-    | __ListTransactionsPayload__
-    | __ListUnspentOutputsPayload__
-    | __MintNativeTokenPayload__
-    | __MintNftsPayload__
-    | __SendAmountPayload__
-    | __SendMicroTransactionPayload__
-    | __SendNativeTokensPayload__
-    | __SendNftPayload__
-    | __SendTransferPayload__
-    | __TryCollectOutputsPayload__;
+    | __RestoreBackupPayload__
+    | __StartBackgroundSyncPayload__
+    | __StopBackgroundSyncPayload__
+    | __SetClientOptionsPayload__
+    | __SetStrongholdPasswordPayload__
+    | __StoreMnemonicPayload__
+    | __VerifyMnemonicPayload__;
