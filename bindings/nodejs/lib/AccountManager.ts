@@ -46,6 +46,12 @@ export class AccountManager {
         );
     }
 
+    async deleteStorage(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'DeleteStorage',
+        })
+    }
+
 
     destroy() {
         this.messageHandler.destroy();

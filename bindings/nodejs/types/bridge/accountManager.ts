@@ -23,6 +23,10 @@ export type __CreateAccountMessagePayload__ = {
     payload: CreateAccountPayload;
 };
 
+export type __DeleteStorageMessagePayload__ = {
+    cmd: 'DeleteStorage'
+}
+
 export type __SetStrongholdPasswordPayload__ = {
     cmd: 'SetStrongholdPassword';
     payload: string;
