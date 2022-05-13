@@ -23,19 +23,6 @@ import type {
     __TryCollectOutputsPayloadMethod__,
     __SetClientOptionsPayload__,
     __ListPendingTransactionsPayload__,
-<<<<<<< HEAD
-    __ListTransactionsPayload__,
-    __ListUnspentOutputsPayload__,
-    __MintNativeTokenPayload__,
-    __MintNftsPayload__,
-    __SendAmountPayload__,
-    __SendMicroTransactionPayload__,
-    __SendNativeTokensPayload__,
-    __SendNftPayload__,
-    __SendTransferPayload__,
-    __TryCollectOutputsPayload__,
-=======
->>>>>>> chore: remove redundant types
 } from './account';
 import type {
     __GetAccountsMessagePayload__,

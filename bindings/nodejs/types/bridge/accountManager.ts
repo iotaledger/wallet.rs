@@ -1,5 +1,6 @@
-import type { AccountId, CreateAccountPayload } from '../account';
-import type { Auth } from '../network';
+
+import type { AccountId, AccountSyncOptions, CreateAccountPayload } from '../account';
+import type { Auth, ClientOptions } from '../network';
 
 export type __GetAccountsMessagePayload__ = {
     cmd: 'GetAccounts';
@@ -60,4 +61,21 @@ export type __RestoreBackupPayload__ = {
         source: string
         password: string
     };
-};
+}
+
+export type __SetClientOptionsPayload__ = {
+    cmd: 'SetClientOptions'
+    payload: ClientOptions;
+}
+
+export type __StartBackgroundSyncPayload__ = {
+    cmd: 'StartBackgroundSync',
+    payload: {
+        options?: AccountSyncOptions,
+        interval?: number
+    }
+}
+
+export type __StopBackgroundSyncPayload__ = {
+    cmd: 'StopBackgroundSync',
+}

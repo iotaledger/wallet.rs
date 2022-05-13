@@ -1,11 +1,10 @@
-import type { AccountId, AccountSyncOptions } from '../account';
+import type { AccountSyncOptions } from '../account';
 import type {
     AddressWithAmount,
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
 } from '../address';
-import type { ClientOptions } from '../network';
 import type { OutputsToCollect, OutputData } from '../output';
 import type {
     NativeTokenOptions,
@@ -38,11 +37,6 @@ export type __BalancePayloadMethod__ = {
     name: 'GetBalance';
 };
 
-export type __SetClientOptionsPayload__ = {
-    cmd: 'SetClientOptions';
-    payload: ClientOptions;
-};
-
 export type __SetCollectOutputsPayloadMethod__ = {
     name: 'CollectOutputs';
     data: {
@@ -71,14 +65,6 @@ export type __ListOutputsPayloadMethod__ = {
 
 export type __ListPendingTransactionsPayloadMethod__ = {
     name: 'ListPendingTransactions';
-};
-
-export type __ListPendingTransactionsPayload__ = {
-    cmd: 'CallAccountMethod';
-    payload: {
-        accountId: AccountId;
-        method: __ListPendingTransactionsPayloadMethod__;
-    };
 };
 
 export type __ListTransactionsPayloadMethod__ = {
