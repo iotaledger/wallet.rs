@@ -6,12 +6,13 @@ import { Account } from './Account';
 
 import type {
     AccountId,
+    Auth,
     EventType,
     AccountManagerOptions,
     CreateAccountPayload,
     NodeInfoWrapper,
-    Auth,
-} from '../types';
+    ClientOptions
+} from '../types'
 
 export class AccountManager {
     private messageHandler: MessageHandler;
@@ -121,6 +122,14 @@ export class AccountManager {
             cmd: 'VerifyMnemonic',
             payload: mnemonic,
         });
+    }
+
+    // TODO check clientOptions type w/ Thoralf
+    async setClientOptions(options: ClientOptions): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'SetClientOptions',
+            payload: options,
+        })
     }
 
     async restoreBackup(source: string, password: string): Promise<void> {
