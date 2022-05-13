@@ -8,7 +8,7 @@ import type {
     __GetOutput__,
     __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__,
     __ListAddressesPayloadMethod__,
-    __ListAddressesWithBalancePayloadMethod__,
+    __ListAddressesWithUnspentOutputsPayloadMethod__,
     __ListOutputsPayloadMethod__,
     __ListUnspentOutputsPayloadMethod__,
     __ListPendingTransactionsPayloadMethod__,
@@ -48,7 +48,7 @@ export type __AccountPayloadMethods__ =
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
     | __LatestAddressPayloadMethod__
     | __ListAddressesPayloadMethod__
-    | __ListAddressesWithBalancePayloadMethod__
+    | __ListAddressesWithUnspentOutputsPayloadMethod__
     | __ListOutputsPayloadMethod__
     | __ListPendingTransactionsPayloadMethod__ 
     | __ListTransactionsPayloadMethod__

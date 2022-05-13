@@ -17,7 +17,8 @@ import type {
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
-    AddressGenerationOptions
+    AddressGenerationOptions,
+    AddressWithUnspentOutputs
 } from '../types';
 
 export class Account {
@@ -75,7 +76,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async listAddressesWithUnspentOutputs(): Promise<Address[]> {
+    async listAddressesWithUnspentOutputs(): Promise<AddressWithUnspentOutputs[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

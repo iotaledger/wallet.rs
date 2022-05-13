@@ -12,6 +12,12 @@ export interface AddressWithAmount {
     amount: number;
 }
 
+export interface AddressWithUnspentOutputs extends AddressWithAmount {
+    keyIndex: number;
+    internal: boolean;
+    outputIds: string[];
+}
+
 export interface AddressWithMicroAmount {
     address: string;
     amount: number;

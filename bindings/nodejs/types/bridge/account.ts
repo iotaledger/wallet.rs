@@ -53,9 +53,9 @@ export type __ListAddressesPayloadMethod__ = {
     name: 'ListAddresses';
 };
 
-export type __ListAddressesWithBalancePayloadMethod__ = {
-    name: 'ListAddressesWithBalance';
-};
+export type __ListAddressesWithUnspentOutputsPayloadMethod__ = {
+    name: 'ListAddressesWithUnspentOutputs';
+}
 
 export type __ListOutputsPayloadMethod__ = {
     name: 'ListOutputs';
