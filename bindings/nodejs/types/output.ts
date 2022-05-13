@@ -8,10 +8,29 @@ export enum OutputsToCollect {
     All = 'All',
 }
 
+enum Output {
+    Treasury = 'Treasury',
+    Basic = 'Basic',
+    Alias = 'Alias',
+    Foundry = 'Foundry',
+    Nft = 'Nft',
+}
+
+export interface OutputResponse {
+    messageId: string;
+    transactionId: string;
+    outputIndex: number;
+    isSpent: boolean;
+    milestoneIndexBooked: number;
+    milestoneTimestampBooked: number;
+    ledgerIndex: number;
+    output: Output;
+}
+
 export interface OutputData {
     outputId: string;
-    outputResponse: IOutputResponse;
-    output: OutputTypes;
+    outputResponse: OutputResponse;
+    output: Output;
     amount: number;
     isSpent: boolean;
     address: AddressTypes;
