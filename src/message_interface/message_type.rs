@@ -149,7 +149,7 @@ impl Debug for MessageType {
                 address_gap_limit,
             } => write!(
                 f,
-                "RecoverAccoounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
+                "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
                 account_gap_limit, address_gap_limit
             ),
             #[cfg(feature = "storage")]
