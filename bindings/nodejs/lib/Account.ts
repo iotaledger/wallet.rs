@@ -7,7 +7,6 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
-    ClientOptions,
     OutputsToCollect,
     OutputData,
     Transaction,
@@ -76,7 +75,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async listAddressesWithBalance(): Promise<Address[]> {
+    async listAddressesWithUnspentOutputs(): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
