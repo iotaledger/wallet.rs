@@ -125,7 +125,6 @@ export class AccountManager {
         });
     }
 
-    // TODO check clientOptions type w/ Thoralf
     async setClientOptions(options: ClientOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetClientOptions',
