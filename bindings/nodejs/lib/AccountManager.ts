@@ -19,6 +19,11 @@ export class AccountManager {
         this.messageHandler = new MessageHandler(options);
     }
 
+    destroy() {
+        this.messageHandler
+            .destroy()
+    }
+
     async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler
             .sendMessage({
@@ -42,7 +47,7 @@ export class AccountManager {
         const { payload } = JSON.parse(response);
 
         let accounts: Account[] = [];
-        
+
         for (const account of payload) {
             accounts.push(new Account(account, this.messageHandler));
         }
@@ -52,13 +57,13 @@ export class AccountManager {
     async getNodeInfo(url?: string, auth?: any): Promise<NodeInfo> {
         return JSON.parse(
             await this.messageHandler.sendMessage({
-                    cmd: 'GetNodeInfo',
-                    payload: {url, auth}
-                }
+                cmd: 'GetNodeInfo',
+                payload: { url, auth }
+            }
             )
         ).payload;
     }
-    
+
     /**
      * The coin type only needs to be set on the first account
      */
@@ -94,7 +99,7 @@ export class AccountManager {
         });
         return JSON.parse(response).payload
     }
-    
+
     /**
      * TODO: Replace string type with proper type
      */
@@ -104,7 +109,7 @@ export class AccountManager {
             payload: mnemonic,
         });
     }
-    
+
     /**
      * TODO: Replace string type with proper type
      */

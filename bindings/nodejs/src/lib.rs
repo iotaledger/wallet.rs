@@ -24,6 +24,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     // Message handler methods.
     cx.export_function("sendMessage", message_handler::send_message)?;
     cx.export_function("messageHandlerNew", message_handler::message_handler_new)?;
+    cx.export_function("destroy", message_handler::destroy)?;
 
     cx.export_function("listen", message_handler::listen)?;
 

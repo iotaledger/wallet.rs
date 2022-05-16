@@ -11,7 +11,8 @@ const {
     messageHandlerNew,
     listen,
     eventListenerNew,
-    removeEventListeners
+    removeEventListeners,
+    destroy
 } = addon;
 
 const sendMessageAsync = (message: string, handler: MessageHandler): Promise<string> => new Promise((resolve, reject) => {
@@ -30,5 +31,6 @@ export {
     messageHandlerNew,
     listen,
     eventListenerNew,
-    removeEventListeners
+    removeEventListeners,
+    destroy
 };
