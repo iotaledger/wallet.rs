@@ -3,6 +3,6 @@ import type { SecretManager } from './secretManager';
 
 export interface AccountManagerOptions {
     storagePath?: string;
-    clientOptions: ClientOptions;
-    secretManager: SecretManager;
+    clientOptions?: ClientOptions;
+    secretManager?: SecretManager;
 }
