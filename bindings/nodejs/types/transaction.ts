@@ -18,3 +18,8 @@ export interface Transaction {
     networkId: number;
     incoming: boolean;
 }
+
+export interface TransactionReceipt {
+    transactionId: string;
+    messageId?: string
+}

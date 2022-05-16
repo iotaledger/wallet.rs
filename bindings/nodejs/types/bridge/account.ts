@@ -89,41 +89,41 @@ export type __SendAmountPayloadMethod__ = {
     name: 'SendAmount';
     data: {
         addressesWithAmount: AddressWithAmount[];
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __SendMicroTransactionPayloadMethod__ = {
     name: 'SendMicroTransaction';
     data: {
         addressesWithMicroAmount: AddressWithMicroAmount[];
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __SendNativeTokensPayloadMethod__ = {
     name: 'SendNativeTokens';
     data: {
         addressesNativeTokens: AddressNativeTokens[];
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __SendNftPayloadMethod__ = {
     name: 'SendNft';
     data: {
         addressesNftIds: AddressNftId[];
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __SendTransferPayloadMethod__ = {
     name: 'SendTransfer';
     data: {
         outputs: OutputData[];
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __TryCollectOutputsPayloadMethod__ = {
     name: 'TryCollectOutputs';

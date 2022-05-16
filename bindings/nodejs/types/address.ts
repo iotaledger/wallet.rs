@@ -9,7 +9,7 @@ export interface Address {
 
 export interface AddressWithAmount {
     address: string;
-    amount: number;
+    amount: string;
 }
 
 export interface AddressWithUnspentOutputs extends AddressWithAmount {
@@ -21,15 +21,15 @@ export interface AddressWithUnspentOutputs extends AddressWithAmount {
 export interface AddressWithMicroAmount {
     address: string;
     amount: number;
-    returnAddress: string;
-    expiration: number;
+    returnAddress?: string;
+    expiration?: number
 }
 
 export interface AddressNativeTokens {
     address: string;
     nativeTokens: string[];
-    returnAddress: string;
-    expiration: number;
+    returnAddress?: string;
+    expiration?: number;
 }
 
 export interface AddressNftId {

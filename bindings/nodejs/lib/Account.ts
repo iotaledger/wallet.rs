@@ -18,7 +18,8 @@ import type {
     AddressNativeTokens,
     AddressNftId,
     AddressGenerationOptions,
-    AddressWithUnspentOutputs
+    AddressWithUnspentOutputs,
+    TransactionReceipt
 } from '../types';
 
 export class Account {
@@ -30,13 +31,17 @@ export class Account {
         this.messageHandler = messageHandler;
     }
 
-    async collectOutputs(outputIds: string[]): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'CollectOutputs',
-            data: {
-                outputIdsToCollect: outputIds,
-            },
-        });
+    async collectOutputs(outputIds: string[]): Promise<TransactionReceipt[]> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'CollectOutputs',
+                data: {
+                    outputIdsToCollect: outputIds
+                },
+            }
+        )
+        return JSON.parse(resp).payload;
     }
 
     getAlias(): string {
@@ -172,7 +177,7 @@ export class Account {
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
         transferOptions?: TransferOptions,
-    ): Promise<Transaction[]> {
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -190,7 +195,7 @@ export class Account {
     async mintNfts(
         nftOptions: NftOptions,
         transferOptions?: TransferOptions,
-    ): Promise<Transaction[]> {
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -207,8 +212,8 @@ export class Account {
 
     async sendAmount(
         addressesWithAmount: AddressWithAmount[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -225,8 +230,8 @@ export class Account {
 
     async sendMicroTransaction(
         addressesWithMicroAmount: AddressWithMicroAmount[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -243,8 +248,8 @@ export class Account {
 
     async sendNativeTokens(
         addressNativeTokens: AddressNativeTokens[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -261,8 +266,8 @@ export class Account {
 
     async sendNft(
         addressesAndNftIds: AddressNftId[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -279,8 +284,8 @@ export class Account {
 
     async sendTransfer(
         outputs: OutputData[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -295,9 +300,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async tryCollectOutputs(
-        outputsToCollect: OutputsToCollect,
-    ): Promise<Transaction[]> {
+    async tryCollectOutputs(outputsToCollect: OutputsToCollect): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
