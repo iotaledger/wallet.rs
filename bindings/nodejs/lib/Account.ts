@@ -30,10 +30,6 @@ export class Account {
         this.messageHandler = messageHandler;
     }
 
-    alias(): string {
-        return this.meta.alias;
-    }
-
     async collectOutputs(outputIds: string[]): Promise<void> {
         await this.messageHandler.callAccountMethod(this.meta.index, {
             name: 'CollectOutputs',
@@ -41,6 +37,21 @@ export class Account {
                 outputIdsToCollect: outputIds,
             },
         });
+    }
+
+    getAlias(): string {
+        return this.meta.alias;
+    }
+
+    async getBalance(): Promise<AccountBalance> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetBalance',
+            }
+        )
+
+        return JSON.parse(response).payload;
     }
 
     async getOutput(outputId: string): Promise<OutputData> {
@@ -154,17 +165,6 @@ export class Account {
                 }
             }
         )
-
-        return JSON.parse(response).payload;
-    }
-
-    async balance(): Promise<AccountBalance> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'GetBalance',
-            },
-        );
 
         return JSON.parse(response).payload;
     }

@@ -14,7 +14,7 @@ async function run() {
         const synced = await account.sync();
         console.log('Syncing... - ', synced);
 
-        console.log('Available balance', await account.balance());
+        console.log('Available balance', await account.getBalance());
 
         //TODO: Replace with the address of your choice!
         const address =
