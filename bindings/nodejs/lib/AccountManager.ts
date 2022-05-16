@@ -23,8 +23,8 @@ export class AccountManager {
         this.messageHandler = new MessageHandler(options);
     }
     
-    async backup(destination: string, password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    async backup(destination: string, password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'Backup',
             payload: {
                 destination,
