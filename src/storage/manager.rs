@@ -99,7 +99,7 @@ impl StorageManager {
         let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
         if let Ok(data) = self.storage.get(SECRET_MANAGER_KEY).await {
             log::debug!("get_secret_manager {}", data);
-            let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
+            let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data).unwrap();
             // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
             // be serialized, so we can't create the SecretManager again
             match secret_manager_dto {
