@@ -25,7 +25,7 @@ pub enum WalletEvent {
     TransactionInclusion(TransactionInclusionEvent),
     TransferProgress(TransferProgressEvent),
     ConsolidationRequired,
-    #[cfg(feature = "ledger-nano")]
+    #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration(AddressData),
 }
 
@@ -35,7 +35,7 @@ pub enum WalletEventType {
     TransactionInclusion,
     TransferProgress,
     ConsolidationRequired,
-    #[cfg(feature = "ledger-nano")]
+    #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration,
 }
 
@@ -48,7 +48,7 @@ impl TryFrom<&str> for WalletEventType {
             "TransactionInclusion" => WalletEventType::TransactionInclusion,
             "TransferProgress" => WalletEventType::TransferProgress,
             "ConsolidationRequired" => WalletEventType::ConsolidationRequired,
-            #[cfg(feature = "ledger-nano")]
+            #[cfg(feature = "ledger_nano")]
             "LedgerAddressGeneration" => WalletEventType::LedgerAddressGeneration,
             _ => return Err(format!("invalid event type {}", value)),
         };

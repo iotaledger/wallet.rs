@@ -9,13 +9,13 @@ use std::{
 use iota_client::{
     bee_message::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, Network, SecretManage, SecretManager},
+    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-#[cfg(feature = "ledger-nano")]
+#[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
@@ -170,7 +170,7 @@ impl AccountBuilder {
         };
 
         let consolidation_threshold = match *self.secret_manager.read().await {
-            #[cfg(feature = "ledger-nano")]
+            #[cfg(feature = "ledger_nano")]
             SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
                 DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
             }
@@ -229,10 +229,7 @@ pub(crate) async fn get_first_public_address(
             account_index,
             0..1,
             false,
-            GenerateAddressMetadata {
-                network: Network::Testnet,
-                syncing: true,
-            },
+            GenerateAddressMetadata { syncing: true },
         )
         .await?[0])
 }

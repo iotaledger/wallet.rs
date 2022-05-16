@@ -18,11 +18,11 @@ exclude = ["index.node"]
 crate-type = ["cdylib"]
 
 [dependencies]
-bee-common = { version = "0.6.0", default-features = false }
-iota-wallet = { path = "../../", version = "0.2.0", default-features = false, features = ["mnemonic", "events", "storage", "stronghold", "message_interface", "ledger-nano"] }
+iota-wallet = { path = "../../", version = "0.2.0", default-features = false, features = ["mnemonic", "events", "storage", "stronghold", "message_interface", "ledger_nano"] }
+fern-logger = { version = "0.5.0", default-features = false }
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
-serde = { version = "1.0.130", default-features = false }
+serde = { version = "1.0.137", default-features = false }
 serde_json = { version = "1.0.68", default-features = false }
 tokio = { version = "1.12.0", default-features = false }
 

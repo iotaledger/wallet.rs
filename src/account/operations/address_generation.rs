@@ -5,7 +5,7 @@
 use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, Network, SecretManage},
+    secret::{GenerateAddressMetadata, SecretManage},
 };
 use serde::{Deserialize, Serialize};
 
@@ -13,7 +13,7 @@ use crate::account::{
     handle::AccountHandle,
     types::address::{AccountAddress, AddressWrapper},
 };
-#[cfg(all(feature = "events", any(feature = "ledger-nano", feature = "ledger-nano")))]
+#[cfg(all(feature = "events", any(feature = "ledger_nano", feature = "ledger_nano")))]
 use crate::events::types::{AddressData, WalletEvent};
 
 /// Options for address generation
@@ -27,10 +27,7 @@ impl Default for AddressGenerationOptions {
     fn default() -> Self {
         Self {
             internal: false,
-            metadata: GenerateAddressMetadata {
-                syncing: false,
-                network: Network::Testnet,
-            },
+            metadata: GenerateAddressMetadata { syncing: false },
         }
     }
 }
@@ -86,7 +83,7 @@ impl AccountHandle {
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
 
-        #[cfg(all(feature = "events", feature = "ledger-nano"))]
+        #[cfg(all(feature = "events", feature = "ledger_nano"))]
         // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
         // have it visible on the computer first, so we need to generate it without the prompt first
         if !options.metadata.syncing {

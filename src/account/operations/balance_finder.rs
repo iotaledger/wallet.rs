@@ -3,7 +3,7 @@
 
 use std::cmp;
 
-use iota_client::secret::{GenerateAddressMetadata, Network};
+use iota_client::secret::GenerateAddressMetadata;
 
 use crate::account::{
     handle::AccountHandle,
@@ -22,12 +22,6 @@ impl AccountHandle {
         address_gap_limit: u32,
     ) -> crate::Result<AccountBalance> {
         log::debug!("[search_addresses_with_funds]");
-
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
-        let network = match bech32_hrp.as_str() {
-            "iota" => Network::Mainnet,
-            _ => Network::Testnet,
-        };
 
         // store the length so we can remove addresses with higher indexes later if they don't have balance
         let (highest_public_address_index, highest_internal_address_index) = {
@@ -51,10 +45,7 @@ impl AccountHandle {
                     address_gap_limit,
                     Some(AddressGenerationOptions {
                         internal: false,
-                        metadata: GenerateAddressMetadata {
-                            network: network.clone(),
-                            syncing: true,
-                        },
+                        metadata: GenerateAddressMetadata { syncing: true },
                     }),
                 )
                 .await?;
@@ -62,10 +53,7 @@ impl AccountHandle {
                 address_gap_limit,
                 Some(AddressGenerationOptions {
                     internal: true,
-                    metadata: GenerateAddressMetadata {
-                        network: network.clone(),
-                        syncing: true,
-                    },
+                    metadata: GenerateAddressMetadata { syncing: true },
                 }),
             )
             .await?;
