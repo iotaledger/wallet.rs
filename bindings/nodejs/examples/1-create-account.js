@@ -33,9 +33,7 @@ async function createAccountManager() {
         clientOptions: {
             nodes: [
                 {
-                    url: 'https://api.alphanet.iotaledger.net',
-                    auth: null,
-                    disabled: false,
+                    url: 'https://firefly.h.chrysalis-devnet.iota.cafe/',
                 },
             ],
             localPow: true,
