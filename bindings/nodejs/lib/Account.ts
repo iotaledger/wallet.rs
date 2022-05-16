@@ -171,7 +171,7 @@ export class Account {
 
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
-        transferOptions: TransferOptions,
+        transferOptions?: TransferOptions,
     ): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -189,7 +189,7 @@ export class Account {
 
     async mintNfts(
         nftOptions: NftOptions,
-        transferOptions: TransferOptions,
+        transferOptions?: TransferOptions,
     ): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,

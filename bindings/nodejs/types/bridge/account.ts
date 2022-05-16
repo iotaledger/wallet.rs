@@ -73,17 +73,17 @@ export type __MintNativeTokenPayloadMethod__ = {
     name: 'MintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
-        options: TransferOptions;
-    };
-};
+        options?: TransferOptions
+    }
+}
 
 export type __MintNftsPayloadMethod__ = {
     name: 'MintNfts';
     data: {
-        nftsOptions: NftOptions;
-        options: TransferOptions;
-    };
-};
+        nftsOptions: NftOptions[];
+        options?: TransferOptions
+    }
+}
 
 export type __SendAmountPayloadMethod__ = {
     name: 'SendAmount';
