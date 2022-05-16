@@ -33,24 +33,24 @@ export type Node = {
 };
 
 export interface ClientOptions {
-    apiTimeout: number;
+    apiTimeout?: number;
     automaticDisconnect?: boolean;
     maxReconnectionAttempts?: number;
-    minQuorumSize: number;
+    minQuorumSize?: number;
     network?: string;
-    networkInfo: NetworkInfo;
+    networkInfo?: NetworkInfo;
     nodes?: Array<string | Node>;
-    nodeSyncEnabled: boolean;
-    nodeSyncInterval: number;
-    offline: boolean;
+    nodeSyncEnabled?: boolean;
+    nodeSyncInterval?: number;
+    offline?: boolean;
     permanodes?: Array<string | Node>;
     port?: number;
-    powWorkerCount: number;
+    powWorkerCount?: number;
     primaryNode?: string | Node;
     primaryPoWNode?: string | Node;
-    quorum: boolean;
+    quorum?: boolean;
     quorumTreshold?: boolean;
-    remotePowTimeout: number;
+    remotePowTimeout?: number;
     // timeout in seconds
     timeout?: number;
     useWs?: boolean;
