@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - develop
-      - dev
+      - staging
+      - production
     paths:
       - '.github/workflows/examine-nodejs-bindings.yml'
       - '.github/actions/**'
@@ -15,7 +16,8 @@ on:
   pull_request:
     branches:
       - develop
-      - dev
+      - staging
+      - production
     paths:
       - '.github/workflows/examine-nodejs-bindings.yml'
       - '.github/actions/**'

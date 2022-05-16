@@ -3,7 +3,8 @@ on:
   push:
     branches:
       - develop
-      - dev
+      - staging
+      - production
 
 jobs:
   collect-coverage:

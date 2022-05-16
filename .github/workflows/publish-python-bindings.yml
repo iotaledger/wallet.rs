@@ -3,8 +3,8 @@ name: Build python binding wheels
 on:
   push:
     branches:
-      - main
-      - dev
+      - staging
+      - production
     paths:
       - .github/workflows/python_binding_publish.yml
       - bindings/python/**
@@ -41,7 +41,7 @@ jobs:
        with:
         version: "11.0"
         directory: ${{ runner.temp }}/llvm
-      
+
      - name: Set LIBCLANG_PATH (Windows)
        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
        if: matrix.os == 'windows-latest'
