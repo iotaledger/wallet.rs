@@ -2,11 +2,11 @@
  * This example creates a generates, stores and verifies a mnemonic
  */
 
-require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
+        const manager = await unlockAndReturnManager();
         const mnemonic = await manager.generateMnemonic();
         console.log('Mnemonic:', mnemonic);
 

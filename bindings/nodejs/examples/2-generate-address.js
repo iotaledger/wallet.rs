@@ -1,12 +1,12 @@
 /**
- * This example genrates a new address.
+ * This example generates a new address.
  */
-
-require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
+        const manager = await unlockAndReturnManager();
+
         const account = await manager.getAccount('0');
         console.log('Account:', account);
 

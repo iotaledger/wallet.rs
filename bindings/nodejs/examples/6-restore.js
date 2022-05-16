@@ -3,12 +3,11 @@
  */
 
 require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
+        const manager = await unlockAndReturnManager();
         // Add the path to the file from example 5-backup.js
         // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
         const path = './backup'; //"input your backup file"

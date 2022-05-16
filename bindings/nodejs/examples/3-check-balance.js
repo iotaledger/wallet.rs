@@ -2,15 +2,14 @@
  * This example creates a new database and account
  */
 
-require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
+        const manager = await unlockAndReturnManager();
         const account = await manager.getAccount('Alice');
         const addressObject = await account.listAddresses();
-        console.log('Address:', addressObject);
-
+        console.log('Addresses before:', addressObject);
         // Always sync before doing anything with the account
         const synced = await account.sync();
         console.log('Syncing... - ', synced);

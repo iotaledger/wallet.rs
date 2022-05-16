@@ -4,10 +4,11 @@
  */
 
 require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
+        const manager = await unlockAndReturnManager();
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
         console.log('Backup created at:', path);
 

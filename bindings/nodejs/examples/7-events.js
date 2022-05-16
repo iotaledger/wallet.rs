@@ -2,13 +2,11 @@
  * This example shows some events.
  */
 
-require('dotenv').config();
-const manager = require('./account-manager');
+const unlockAndReturnManager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
+        const manager = await unlockAndReturnManager();
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
