@@ -15,9 +15,10 @@ use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to sign a transaction essence
-    pub(crate) async fn sign_tx_essence(
+    pub async fn sign_tx_essence(
         &self,
         prepared_transaction_data: &PreparedTransactionData,
+        offline: bool,
     ) -> crate::Result<TransactionPayload> {
         log::debug!("[TRANSFER] sign_tx_essence");
         #[cfg(feature = "events")]
@@ -49,13 +50,16 @@ impl AccountHandle {
             input_addresses.push(address);
         }
 
-        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
-        verify_semantic(
-            &prepared_transaction_data.inputs_data,
-            &transaction_payload,
-            milestone_index,
-            local_time,
-        )?;
+        // We can only validate the transaction with info from a node
+        if !offline {
+            let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+            verify_semantic(
+                &prepared_transaction_data.inputs_data,
+                &transaction_payload,
+                milestone_index,
+                local_time,
+            )?;
+        }
 
         log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
 

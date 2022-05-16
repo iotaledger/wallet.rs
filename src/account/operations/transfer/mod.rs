@@ -104,7 +104,7 @@ impl AccountHandle {
 
         let prepared_transaction_data = self.prepare_transaction(outputs, options, byte_cost_config).await?;
 
-        let transaction_payload = match self.sign_tx_essence(&prepared_transaction_data).await {
+        let transaction_payload = match self.sign_tx_essence(&prepared_transaction_data, false).await {
             Ok(res) => res,
             Err(err) => {
                 // unlock outputs so they are available for a new transaction
@@ -112,6 +112,16 @@ impl AccountHandle {
                 return Err(err);
             }
         };
+
+        self.submit_and_store_transaction(transaction_payload).await
+    }
+
+    // Submit the transaction and store it in the account
+    pub async fn submit_and_store_transaction(
+        &self,
+        transaction_payload: TransactionPayload,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] submit_and_store_transaction");
 
         // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
         let block_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
@@ -151,6 +161,7 @@ impl AccountHandle {
             block_id,
         })
     }
+
     // unlock outputs
     async fn unlock_inputs(&self, inputs: Vec<InputSigningData>) -> crate::Result<()> {
         let mut account = self.write().await;

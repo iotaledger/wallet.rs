@@ -23,7 +23,7 @@ use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Get inputs and build the transaction essence
-    pub(crate) async fn prepare_transaction(
+    pub async fn prepare_transaction(
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,

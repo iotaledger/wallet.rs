@@ -16,3 +16,8 @@ alice-database
 /pingdb
 /pongdb
 Cargo.lock
+offline_walletdb
+online_walletdb
+addresses.json
+prepared_transaction.json
+signed_transaction.json

@@ -33,6 +33,7 @@ use crate::{
 
 /// The AccountBuilder
 pub struct AccountBuilder {
+    addresses: Option<Vec<AccountAddress>>,
     alias: Option<String>,
     client_options: Arc<RwLock<ClientOptions>>,
     coin_type: Option<u32>,
@@ -54,6 +55,7 @@ impl AccountBuilder {
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
     ) -> Self {
         Self {
+            addresses: None,
             alias: None,
             client_options,
             coin_type: None,
@@ -64,6 +66,13 @@ impl AccountBuilder {
             #[cfg(feature = "storage")]
             storage_manager,
         }
+    }
+
+    /// Set the addresses, should only be used for accounts with an offline counterpart account from which the addresses
+    /// were exportet
+    pub fn with_addresses(mut self, addresses: Vec<AccountAddress>) -> Self {
+        self.addresses.replace(addresses);
+        self
     }
 
     /// Set the alias
@@ -111,62 +120,75 @@ impl AccountBuilder {
             }
         }
 
-        let mut bech32_hrp = None;
-        if let Some(first_account) = accounts.first() {
-            let coin_type = *first_account.read().await.coin_type();
-            // Generate the first address of the first account and compare it to the stored address from the first
-            // account to prevent having multiple accounts created with different seeds
-            let first_account_public_address = get_first_public_address(&self.secret_manager, coin_type, 0).await?;
-            let first_account_addresses = first_account.list_addresses().await?;
-
-            if first_account_public_address
-                != first_account_addresses
-                    .first()
-                    .ok_or(Error::FailedToGetRemainder)?
-                    .address
-                    .inner
-            {
-                return Err(Error::InvalidMnemonic(
-                    "First account address used another seed".to_string(),
-                ));
-            }
-
-            // Get bech32_hrp from address
-            if let Some(address) = first_account_addresses.first() {
-                bech32_hrp = Some(address.address.bech32_hrp.clone());
-            }
-        }
-
         let client = self.client_options.read().await.clone().finish().await?;
-        // get bech32_hrp
-        let bech32_hrp = {
-            match bech32_hrp {
-                Some(bech32_hrp) => bech32_hrp,
-                // Only when we create a new account we don't have the first address and need to get the information
-                // from the client Doesn't work for offline creating, should we use the network from the
-                // GenerateAddressMetadata instead to use `iota` or `atoi`?
-                None => {
-                    let bech32_hrp = client
-                        .get_bech32_hrp()
-                        .await
-                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
-                    bech32_hrp
+
+        // If addresses are provided we will use them directly without the additional checks, because then we assume
+        // that it's for offline signing and the secretManager can't be used
+        let addresses = match &self.addresses {
+            Some(addresses) => addresses.clone(),
+            None => {
+                let mut bech32_hrp = None;
+                if let Some(first_account) = accounts.first() {
+                    let coin_type = *first_account.read().await.coin_type();
+                    // Generate the first address of the first account and compare it to the stored address from the
+                    // first account to prevent having multiple accounts created with different
+                    // seeds
+                    let first_account_public_address =
+                        get_first_public_address(&self.secret_manager, coin_type, 0).await?;
+                    let first_account_addresses = first_account.list_addresses().await?;
+
+                    if first_account_public_address
+                        != first_account_addresses
+                            .first()
+                            .ok_or(Error::FailedToGetRemainder)?
+                            .address
+                            .inner
+                    {
+                        return Err(Error::InvalidMnemonic(
+                            "First account address used another seed".to_string(),
+                        ));
+                    }
+
+                    // Get bech32_hrp from address
+                    if let Some(address) = first_account_addresses.first() {
+                        bech32_hrp = Some(address.address.bech32_hrp.clone());
+                    }
                 }
+
+                // get bech32_hrp
+                let bech32_hrp = {
+                    match bech32_hrp {
+                        Some(bech32_hrp) => bech32_hrp,
+                        // Only when we create a new account we don't have the first address and need to get the
+                        // information from the client Doesn't work for offline creating, should
+                        // we use the network from the GenerateAddressMetadata instead to use
+                        // `iota` or `atoi`?
+                        None => {
+                            let bech32_hrp = client
+                                .get_bech32_hrp()
+                                .await
+                                .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
+                            bech32_hrp
+                        }
+                    }
+                };
+
+                let first_public_address = get_first_public_address(
+                    &self.secret_manager,
+                    self.coin_type.unwrap_or_default() as u32,
+                    account_index,
+                )
+                .await?;
+
+                let first_public_account_address = AccountAddress {
+                    address: AddressWrapper::new(first_public_address, bech32_hrp),
+                    key_index: 0,
+                    internal: false,
+                    used: false,
+                };
+
+                vec![first_public_account_address]
             }
-        };
-
-        let first_public_address = get_first_public_address(
-            &self.secret_manager,
-            self.coin_type.unwrap_or_default() as u32,
-            account_index,
-        )
-        .await?;
-
-        let first_public_account_address = AccountAddress {
-            address: AddressWrapper::new(first_public_address, bech32_hrp),
-            key_index: 0,
-            internal: false,
-            used: false,
         };
 
         let consolidation_threshold = match *self.secret_manager.read().await {
@@ -180,7 +202,7 @@ impl AccountBuilder {
             index: account_index,
             coin_type: self.coin_type.unwrap_or_default() as u32,
             alias: account_alias,
-            public_addresses: vec![first_public_account_address],
+            public_addresses: addresses,
             internal_addresses: Vec::new(),
             addresses_with_unspent_outputs: Vec::new(),
             outputs: HashMap::new(),

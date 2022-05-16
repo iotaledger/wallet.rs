@@ -20,7 +20,7 @@ use crate::{
 impl AccountHandle {
     /// Get the local time, but compare it to the time from the nodeinfo, if it's off more than 5 minutes, an error will
     /// be returned
-    pub(crate) async fn get_time_and_milestone_checked(&self) -> Result<(u32, u32)> {
+    pub async fn get_time_and_milestone_checked(&self) -> Result<(u32, u32)> {
         let local_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
