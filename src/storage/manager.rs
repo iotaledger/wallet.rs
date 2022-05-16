@@ -132,7 +132,7 @@ impl StorageManager {
 
     pub async fn save_account(&mut self, account: &Account) -> crate::Result<()> {
         // Only add account index if not already present
-        if !self.account_indexes.iter().any(|index| index == account.index()) {
+        if !self.account_indexes.contains(account.index()) {
             self.account_indexes.push(*account.index());
         }
 
