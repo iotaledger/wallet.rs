@@ -59,8 +59,6 @@ path = "examples/offline_signing/0_generate_addresses.rs"
 [[example]]
 name = "1_prepare_transaction"
 path = "examples/offline_signing/1_prepare_transaction.rs"
-# todo: remove, currently just a workaround
-required-features = [ "ledger_nano" ]
 
 [[example]]
 name = "2_sign_transaction"
@@ -69,8 +67,6 @@ path = "examples/offline_signing/2_sign_transaction.rs"
 [[example]]
 name = "3_send_transaction"
 path = "examples/offline_signing/3_send_transaction.rs"
-# todo: remove, currently just a workaround
-required-features = [ "ledger_nano" ]
 
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]

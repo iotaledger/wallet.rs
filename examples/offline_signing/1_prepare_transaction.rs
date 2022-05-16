@@ -2,8 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! In this example we will get inputs and prepare a transaction
-//! `cargo run --example 1_prepare_transaction --features=ledger_nano --release`.
-// todo: remove `--features=ledger_nano`
+//! `cargo run --example 1_prepare_transaction --release`.
 
 use std::{
     fs::File,
@@ -13,7 +12,7 @@ use std::{
 
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto},
-    secret::{ledger_nano::LedgerSecretManager, SecretManager},
+    secret::{placeholder::PlaceholderSecretManager, SecretManager},
 };
 use iota_wallet::{
     account::types::AccountAddress, account_manager::AccountManager, AddressWithAmount, ClientOptions, Result,
@@ -43,7 +42,7 @@ async fn main() -> Result<()> {
     let manager = AccountManager::builder()
         // todo: remove the need of this workaround
         // We provide the ledger nano simulator as secret_manager so it works, but it's not actually used
-        .with_secret_manager(SecretManager::LedgerNanoSimulator(LedgerSecretManager::new(true)))
+        .with_secret_manager(SecretManager::Placeholder(PlaceholderSecretManager))
         .with_client_options(client_options.clone())
         .with_storage_path("examples/offline_signing/online_walletdb")
         .finish()
