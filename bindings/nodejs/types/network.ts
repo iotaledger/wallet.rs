@@ -26,42 +26,34 @@ interface NetworkInfo {
     }
 }
 
-interface MqttBrokerOptions {
-    automaticDisconnect?: boolean;
-    // timeout in seconds
-    timeout?: number;
-    useWs?: boolean;
-    port?: number;
-    maxReconnectionAttempts?: number;
-}
-
 export type Node = {
     url: string;
     auth?: Auth;
     disabled?: boolean;
 };
 
-interface NodeManagerBuilder {
-    primaryNode?: string | Node;
-    primaryPoWNode?: string | Node;
-    nodes?: Array<string | Node>;
-    permanodes?: Array<string | Node>;
+export interface ClientOptions {
+    apiTimeout: number;
+    automaticDisconnect?: boolean;
+    maxReconnectionAttempts?: number;
+    minQuorumSize: number;
     network?: string;
+    networkInfo: NetworkInfo;
+    nodes?: Array<string | Node>;
     nodeSyncEnabled: boolean;
     nodeSyncInterval: number;
-    quorum: boolean;
-    minQuorumSize: number;
-    quorumTreshold?: boolean;
-}
-
-export interface ClientOptions {
-    nodeManagerBuilder?: NodeManagerBuilder;
-    brokerOptions: MqttBrokerOptions;
-    networkInfo: NetworkInfo;
-    apiTimeout: number;
-    remotePowTimeout: number;
     offline: boolean;
+    permanodes?: Array<string | Node>;
+    port?: number;
     powWorkerCount: number;
+    primaryNode?: string | Node;
+    primaryPoWNode?: string | Node;
+    quorum: boolean;
+    quorumTreshold?: boolean;
+    remotePowTimeout: number;
+    // timeout in seconds
+    timeout?: number;
+    useWs?: boolean;
 }
 
 /**
