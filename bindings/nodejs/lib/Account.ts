@@ -124,7 +124,7 @@ export class Account {
             this.meta.index,
             {
                 name: 'SyncAccount',
-                data: options,
+                data: options ?? {},
             }
         )
     }

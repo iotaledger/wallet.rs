@@ -16,14 +16,14 @@ export interface AccountBalance {
 }
 
 export interface AccountSyncOptions {
-    addresses: string[]
-    addressStartIndex: number;
-    automaticOutputConsolidation: boolean;
-    forceSyncing: boolean;
-    syncPendingTransactions: boolean;
-    syncAliasesAndNfts: boolean;
-    tryCollectOutputs: boolean;
-    outputConsolidationThreshold: number;
+    addresses?: string[]
+    addressStartIndex?: number;
+    automaticOutputConsolidation?: boolean;
+    forceSyncing?: boolean;
+    syncPendingTransactions?: boolean;
+    syncAliasesAndNfts?: boolean;
+    tryCollectOutputs?: boolean;
+    outputConsolidationThreshold?: number;
 }
 
 export interface AccountMeta {

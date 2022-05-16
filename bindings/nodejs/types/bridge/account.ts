@@ -13,9 +13,9 @@ import type {
 } from '../transfer';
 
 export type __SyncAccountPayloadMethod__ = {
-    name: 'SyncAccount';
-    data?: AccountSyncOptions;
-};
+    name: 'SyncAccount',
+    data: AccountSyncOptions
+}
 
 export type __GetInfoPayloadMethod__ = {
     name: 'GetNodeInfo';
