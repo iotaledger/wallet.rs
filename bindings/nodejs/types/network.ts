@@ -14,15 +14,15 @@ type Auth = {
 interface NetworkInfo {
     network?: string;
     networkId?: number;
-    bech32HRP: string;
-    minPoWScore: number;
-    localPow: boolean;
-    fallbackToLocalPow: boolean;
-    tipsInterval: number;
-    rentStructure: {
-        vByteCost: number;
-        vByteFactorKey: number;
-        vByteFactorData: number;
+    bech32HRP?: string;
+    minPoWScore?: number;
+    localPow?: boolean;
+    fallbackToLocalPow?: boolean;
+    tipsInterval?: number;
+    rentStructure?: {
+        vByteCost?: number;
+        vByteFactorKey?: number;
+        vByteFactorData?: number;
     }
 }
 
