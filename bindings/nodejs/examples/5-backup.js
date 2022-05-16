@@ -14,8 +14,7 @@ async function run() {
 
         await manager.deleteStorage();
 
-        await manager.restoreBackup('./backup', process.env.SH_PASSWORD);
-        console.log('Successfully restored backup');
+        console.log('Successfully created backup');
     } catch (error) {
         console.log('Error: ' + error);
     }
