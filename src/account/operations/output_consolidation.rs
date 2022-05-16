@@ -79,7 +79,7 @@ impl AccountHandle {
                         .finish_output()?,
                 ];
                 match self
-                    .send_transfer(
+                    .finish_transfer(
                         consolidation_output,
                         Some(TransferOptions {
                             skip_sync: true,

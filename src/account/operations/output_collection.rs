@@ -347,7 +347,7 @@ impl AccountHandle {
             );
 
             match self
-                .send_transfer(
+                .finish_transfer(
                     outputs_to_send,
                     Some(TransferOptions {
                         skip_sync: true,

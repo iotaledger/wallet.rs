@@ -13,16 +13,11 @@ use std::{
 
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto},
-    bee_message::{
-        address::Address,
-        output::{
-            unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            BasicOutputBuilder,
-        },
-    },
     secret::{ledger_nano::LedgerSecretManager, SecretManager},
 };
-use iota_wallet::{account::types::AccountAddress, account_manager::AccountManager, ClientOptions, Result};
+use iota_wallet::{
+    account::types::AccountAddress, account_manager::AccountManager, AddressWithAmount, ClientOptions, Result,
+};
 
 const ADDRESS_FILE_NAME: &str = "examples/offline_signing/addresses.json";
 const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_transaction.json";
@@ -30,10 +25,12 @@ const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_
 #[tokio::main]
 
 async fn main() -> Result<()> {
-    // Address to which we want to send the amount.
-    let address = "rms1qruzprxum2934lr3p77t96pzlecxv8pjzvtjrzdcgh2f5exa22n6ga0vm69";
-    // The amount to send.
-    let amount = 1_000_000;
+    let outputs = vec![AddressWithAmount {
+        // Address to which we want to send the amount.
+        address: "rms1qruzprxum2934lr3p77t96pzlecxv8pjzvtjrzdcgh2f5exa22n6ga0vm69".to_string(),
+        // The amount to send.
+        amount: 1_000_000,
+    }];
 
     // Recovers addresses from example `0_address_generation`.
     let addresses = read_addresses_from_file(ADDRESS_FILE_NAME)?;
@@ -63,20 +60,9 @@ async fn main() -> Result<()> {
     // Sync the account to get the outputs for the addresses
     account.sync(None).await?;
 
-    let byte_cost_config = client_options.finish().await?.get_byte_cost_config().await?;
-    let outputs = vec![
-        BasicOutputBuilder::new_with_amount(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32(address)?.1,
-            )))
-            .finish_output()?,
-    ];
-    let prepared_transaction = account
-        // .with_output(address, amount)?
-        .prepare_transaction(outputs, None, &byte_cost_config)
-        .await?;
+    let prepared_transaction = account.prepare_send_amount(outputs.clone(), None).await?;
 
-    println!("Prepared transaction sending {} to {}.", amount, address);
+    println!("Prepared transaction sending {:?}", outputs);
 
     write_transaction_to_file(PREPARED_TRANSACTION_FILE_NAME, prepared_transaction)
 }

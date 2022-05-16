@@ -1,11 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder,
+use iota_client::{
+    api::PreparedTransactionData,
+    bee_block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -43,6 +46,17 @@ impl AccountHandle {
         addresses_with_amount: Vec<AddressWithAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        let prepared_trasacton = self.prepare_send_amount(addresses_with_amount, options).await?;
+        self.sign_and_submit_transfer(prepared_trasacton).await
+    }
+
+    /// Function to prepare the transaction for
+    /// [AccountHandle.send_amount()](crate::account::handle::AccountHandle.send_amount)
+    pub async fn prepare_send_amount(
+        &self,
+        addresses_with_amount: Vec<AddressWithAmount>,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<PreparedTransactionData> {
         let mut outputs = Vec::new();
         for address_with_amount in addresses_with_amount {
             outputs.push(
@@ -53,6 +67,9 @@ impl AccountHandle {
                     .finish_output()?,
             )
         }
-        self.send(outputs, options).await
+
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        self.sync_and_prepare_transaction(outputs, options, &byte_cost_config)
+            .await
     }
 }

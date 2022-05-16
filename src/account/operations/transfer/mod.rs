@@ -14,6 +14,7 @@ pub(crate) mod submit_transaction;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
+    api::PreparedTransactionData,
     bee_block::{
         output::{ByteCostConfig, Output},
         payload::transaction::{TransactionId, TransactionPayload},
@@ -66,7 +67,8 @@ impl AccountHandle {
     /// }
     /// ```
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
-        // here to check before syncing, how to prevent duplicated verification (also in send_transfer())?
+        // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
+        // Checking it also here is good to return earlier if something is invalid
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
@@ -89,20 +91,30 @@ impl AccountHandle {
             }))
             .await?;
         }
-        self.send_transfer(outputs, options, &byte_cost_config).await
+        self.finish_transfer(outputs, options, &byte_cost_config).await
     }
 
-    // Separated function from send, so syncing isn't called recursiv with the consolidation function, which sends
-    // transfers
-    pub async fn send_transfer(
+    /// Separated function from send, so syncing isn't called recursiv with the consolidation function, which sends
+    /// transfers
+    pub async fn finish_transfer(
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
         byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] send");
+        log::debug!("[TRANSFER] finish_transfer");
 
         let prepared_transaction_data = self.prepare_transaction(outputs, options, byte_cost_config).await?;
+
+        self.sign_and_submit_transfer(prepared_transaction_data).await
+    }
+
+    /// Sign a transaction, submit it to a node and store it in the account
+    pub async fn sign_and_submit_transfer(
+        &self,
+        prepared_transaction_data: PreparedTransactionData,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] sign_and_submit_transfer");
 
         let transaction_payload = match self.sign_tx_essence(&prepared_transaction_data, false).await {
             Ok(res) => res,
@@ -114,6 +126,33 @@ impl AccountHandle {
         };
 
         self.submit_and_store_transaction(transaction_payload).await
+    }
+
+    /// Sync an account if not skipped in options and prepare the transaction
+    pub async fn sync_and_prepare_transaction(
+        &self,
+        outputs: Vec<Output>,
+        options: Option<TransferOptions>,
+        byte_cost_config: &ByteCostConfig,
+    ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] sync_and_prepare_transaction");
+        // sync account before sending a transaction
+        #[cfg(feature = "events")]
+        {
+            let account_index = self.read().await.index;
+            self.event_emitter.lock().await.emit(
+                account_index,
+                WalletEvent::TransferProgress(TransferProgressEvent::SyncingAccount),
+            );
+        }
+        if !options.clone().unwrap_or_default().skip_sync {
+            self.sync(Some(SyncOptions {
+                automatic_output_consolidation: false,
+                ..Default::default()
+            }))
+            .await?;
+        }
+        self.prepare_transaction(outputs, options, byte_cost_config).await
     }
 
     // Submit the transaction and store it in the account
