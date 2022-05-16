@@ -1,17 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{borrow::Borrow, cmp::Ordering};
+use std::cmp::Ordering;
 
 use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
 
 use iota_client::bee_block::{
     address::AliasAddress,
     output::{
-        dto::OutputDto,
         unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
-        AliasOutputBuilder, FoundryOutputBuilder, NativeToken, Output, OutputId, SimpleTokenScheme, TokenId,
-        TokenScheme, OUTPUT_COUNT_MAX,
+        AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NftOutputBuilder, Output, OutputId,
+        SimpleTokenScheme, TokenId, TokenScheme, OUTPUT_COUNT_MAX,
     },
 };
 use primitive_types::U256;
@@ -132,10 +131,10 @@ impl AccountHandle {
                         // If the output has a native token that we wish to burn,
                         // clone the output but without native tokens that are to be burnt
                         if !amount.is_zero() {
-                            let not_to_be_burnt_native_tokens = not_to_be_burnt_native_tokens.iter().cloned();
+                            let not_to_be_burnt_native_tokens = not_to_be_burnt_native_tokens.into_iter().cloned();
 
                             let output =
-                                Self::output_with_native_tokens(&output_data.output, not_to_be_burnt_native_tokens)?;
+                                replace_output_native_tokens(&output_data.output, not_to_be_burnt_native_tokens)?;
                             inputs_and_outputs.push((output_id, amount, output));
                         }
                     }
@@ -168,7 +167,7 @@ impl AccountHandle {
                 }
                 Ordering::Greater => {
                     let native_token = NativeToken::new(token_id, native_token_amount_acc - burn_token_amount)?;
-                    let output = Self::add_native_token(&input_and_output.2, &native_token)?;
+                    let output = add_native_token_to_output(&input_and_output.2, native_token)?;
                     outputs.push(output);
                     break;
                 }
@@ -177,67 +176,79 @@ impl AccountHandle {
 
         Ok((custom_inputs, outputs))
     }
+}
 
-    fn output_with_native_tokens<'a>(
-        output: &Output,
-        native_tokens: impl IntoIterator<Item = &'a NativeToken>,
-    ) -> crate::Result<Output> {
-        let mut output_dto: OutputDto = output.into();
-
-        match &mut output_dto {
-            OutputDto::Alias(alias_dto) => {
-                alias_dto.native_tokens.clear();
-                for native_token in native_tokens {
-                    alias_dto.native_tokens.push(native_token.into());
-                }
-            }
-            OutputDto::Basic(basic_dto) => {
-                basic_dto.native_tokens.clear();
-                for native_token in native_tokens {
-                    basic_dto.native_tokens.push(native_token.into());
-                }
-            }
-            OutputDto::Foundry(foundry_dto) => {
-                foundry_dto.native_tokens.clear();
-                for native_token in native_tokens {
-                    foundry_dto.native_tokens.push(native_token.into());
-                }
-            }
-            OutputDto::Nft(nft_dto) => {
-                nft_dto.native_tokens.clear();
-                for native_token in native_tokens {
-                    nft_dto.native_tokens.push(native_token.into());
-                }
-            }
-            OutputDto::Treasury(_) => {
-                return Err(crate::Error::InvalidOutputKind(
-                    "Treasury output cannot hold native tokens".to_string(),
-                ))
-            }
-        };
-
-        let output: Output = output_dto.borrow().try_into()?;
-
-        Ok(output)
-    }
-
-    fn add_native_token(output: &Output, native_token: &NativeToken) -> crate::Result<Output> {
-        let mut output_dto = output.into();
-
-        match &mut output_dto {
-            OutputDto::Alias(alias_dto) => alias_dto.native_tokens.push(native_token.into()),
-            OutputDto::Basic(basic_dto) => basic_dto.native_tokens.push(native_token.into()),
-            OutputDto::Foundry(foundry_dto) => foundry_dto.native_tokens.push(native_token.into()),
-            OutputDto::Nft(nft_dto) => nft_dto.native_tokens.push(native_token.into()),
-            OutputDto::Treasury(_) => {
-                return Err(crate::Error::InvalidOutputKind(
-                    "Treasury output cannot hold native tokens".to_string(),
-                ))
-            }
+fn replace_output_native_tokens(
+    output: &Output,
+    native_tokens: impl IntoIterator<Item = NativeToken>,
+) -> crate::Result<Output> {
+    let output = match &output {
+        Output::Alias(alias_output) => {
+            let alias_output = AliasOutputBuilder::from(alias_output)
+                .with_native_tokens(native_tokens)
+                .finish()?;
+            Output::Alias(alias_output)
         }
+        Output::Basic(basic_output) => {
+            let output = BasicOutputBuilder::from(basic_output)
+                .with_native_tokens(native_tokens)
+                .finish()?;
+            Output::Basic(output)
+        }
+        Output::Foundry(foundry_output) => {
+            let output = FoundryOutputBuilder::from(foundry_output)
+                .with_native_tokens(native_tokens)
+                .finish()?;
+            Output::Foundry(output)
+        }
+        Output::Nft(nft_output) => {
+            let output = NftOutputBuilder::from(nft_output)
+                .with_native_tokens(native_tokens)
+                .finish()?;
+            Output::Nft(output)
+        }
+        Output::Treasury(_) => {
+            return Err(crate::Error::InvalidOutputKind(
+                "Treasury output cannot hold native tokens".to_string(),
+            ))
+        }
+    };
 
-        let output: Output = output_dto.borrow().try_into()?;
+    Ok(output)
+}
 
-        Ok(output)
-    }
+fn add_native_token_to_output(output: &Output, native_token: NativeToken) -> crate::Result<Output> {
+    let output = match &output {
+        Output::Alias(alias_output) => {
+            let alias_output = AliasOutputBuilder::from(alias_output)
+                .add_native_token(native_token)
+                .finish()?;
+            Output::Alias(alias_output)
+        }
+        Output::Basic(basic_output) => {
+            let output = BasicOutputBuilder::from(basic_output)
+                .add_native_token(native_token)
+                .finish()?;
+            Output::Basic(output)
+        }
+        Output::Foundry(foundry_output) => {
+            let output = FoundryOutputBuilder::from(foundry_output)
+                .add_native_token(native_token)
+                .finish()?;
+            Output::Foundry(output)
+        }
+        Output::Nft(nft_output) => {
+            let output = NftOutputBuilder::from(nft_output)
+                .add_native_token(native_token)
+                .finish()?;
+            Output::Nft(output)
+        }
+        Output::Treasury(_) => {
+            return Err(crate::Error::InvalidOutputKind(
+                "Treasury output cannot hold native tokens".to_string(),
+            ))
+        }
+    };
+
+    Ok(output)
 }
