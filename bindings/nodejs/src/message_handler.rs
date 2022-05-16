@@ -77,6 +77,7 @@ impl MessageHandler {
         }
     }
 }
+
 impl Finalize for MessageHandler {}
 
 fn call_event_callback(channel: &neon::event::Channel, event_data: Event, callback: Arc<JsCallback>) {
