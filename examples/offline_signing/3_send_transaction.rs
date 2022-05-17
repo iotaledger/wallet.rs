@@ -7,12 +7,8 @@
 use std::{fs::File, io::prelude::*, path::Path};
 
 use iota_client::{
-    api::{verify_semantic, PreparedTransactionData, PreparedTransactionDataDto},
-    bee_message::{
-        payload::{transaction::dto::TransactionPayloadDto, TransactionPayload},
-        semantic::ConflictReason,
-    },
-    Error,
+    api::{PreparedTransactionData, PreparedTransactionDataDto},
+    bee_message::payload::{transaction::dto::TransactionPayloadDto, TransactionPayload},
 };
 use iota_wallet::{account_manager::AccountManager, Result};
 
@@ -35,21 +31,10 @@ async fn main() -> Result<()> {
     // Create a new account
     let account = manager.get_account("Alice").await?;
 
-    let (local_time, milestone_index) = account.get_time_and_milestone_checked().await?;
-
-    let conflict = verify_semantic(
-        &prepared_transaction.inputs_data,
-        &signed_transaction_payload,
-        milestone_index,
-        local_time,
-    )?;
-
-    if conflict != ConflictReason::None {
-        return Err(Error::TransactionSemantic(conflict).into());
-    }
-
     // Sends offline signed transaction online.
-    let result = account.submit_and_store_transaction(signed_transaction_payload).await?;
+    let result = account
+        .submit_and_store_transaction(prepared_transaction, signed_transaction_payload)
+        .await?;
 
     println!(
         "Transaction sent: https://explorer.iota.org/devnet/message/{}",

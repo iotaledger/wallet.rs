@@ -3,7 +3,11 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-use iota_client::{bee_block::output::OutputId, NodeInfoWrapper};
+use iota_client::{
+    api::PreparedTransactionDataDto,
+    bee_block::{output::OutputId, payload::transaction::dto::TransactionPayloadDto},
+    NodeInfoWrapper,
+};
 use serde::Serialize;
 
 use crate::{
@@ -42,8 +46,13 @@ pub enum Response {
     Outputs(Vec<OutputData>),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
+    PreparedTransaction(PreparedTransactionDataDto),
+    /// Response for
+    /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<Transaction>),
+    /// SignTransaction.
+    TransactionPayload(TransactionPayloadDto),
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)
     GeneratedAddress(Vec<AccountAddress>),
     /// Response for
@@ -103,7 +112,13 @@ impl Debug for Response {
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
             Response::Output(output) => write!(f, "Output({:?})", output),
             Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
+            Response::PreparedTransaction(transaction_data) => {
+                write!(f, "PreparedTransaction({:?})", transaction_data)
+            }
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
+            Response::TransactionPayload(transaction_payload) => {
+                write!(f, "TransactionPayload({:?})", transaction_payload)
+            }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
             Response::SentTransfer(transfer) => write!(f, "SentTransfer({:?})", transfer),

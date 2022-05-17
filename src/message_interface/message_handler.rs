@@ -9,7 +9,14 @@ use std::{
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
-use iota_client::{Client, NodeInfoWrapper};
+use iota_client::{
+    api::{PreparedTransactionData, PreparedTransactionDataDto},
+    bee_message::{
+        output::Output,
+        payload::transaction::{dto::TransactionPayloadDto, TransactionPayload},
+    },
+    Client, NodeInfoWrapper,
+};
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
 
@@ -320,6 +327,39 @@ impl WalletMessageHandler {
             AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.balance().await?,
             ))),
+            AccountMethod::PrepareSendAmount {
+                addresses_with_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_amount(
+                            addresses_with_amount
+                                .iter()
+                                .map(AddressWithAmount::try_from)
+                                .collect::<Result<Vec<AddressWithAmount>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareTransaction { outputs, options } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_transaction(
+                            outputs
+                                .iter()
+                                .map(|o| Ok(Output::try_from(o)?))
+                                .collect::<Result<Vec<Output>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
             AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.sync(options.clone()).await?,
             ))),
@@ -392,8 +432,45 @@ impl WalletMessageHandler {
             }
             AccountMethod::SendTransfer { outputs, options } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle.send(outputs.clone(), options.clone()).await?;
+                    let transfer = account_handle
+                        .send(
+                            outputs
+                                .iter()
+                                .map(|o| Ok(Output::try_from(o)?))
+                                .collect::<crate::Result<Vec<Output>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
                     Ok(Response::SentTransfer(transfer))
+                })
+                .await
+            }
+            AccountMethod::SignTransactionEssence {
+                prepared_transaction_data,
+            } => {
+                convert_async_panics(|| async {
+                    let transaction_payload = account_handle
+                        .sign_transaction_essence(&PreparedTransactionData::try_from(prepared_transaction_data)?)
+                        .await?;
+                    Ok(Response::TransactionPayload(TransactionPayloadDto::from(
+                        &transaction_payload,
+                    )))
+                })
+                .await
+            }
+            AccountMethod::SubmitAndStoreTransaction {
+                prepared_transaction_data,
+                transaction_payload,
+            } => {
+                convert_async_panics(|| async {
+                    let transaction_payload = TransactionPayload::try_from(transaction_payload)?;
+                    let transaction_result = account_handle
+                        .submit_and_store_transaction(
+                            PreparedTransactionData::try_from(prepared_transaction_data)?,
+                            transaction_payload,
+                        )
+                        .await?;
+                    Ok(Response::SentTransfer(transaction_result))
                 })
                 .await
             }

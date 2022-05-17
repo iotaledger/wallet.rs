@@ -68,8 +68,6 @@ impl AccountHandle {
             )
         }
 
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
-        self.sync_and_prepare_transaction(outputs, options, &byte_cost_config)
-            .await
+        self.sync_and_prepare_transaction(outputs, options).await
     }
 }

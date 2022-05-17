@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::types::{address::AddressWrapper, InclusionState};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct Event {
     /// Associated account index.
     #[serde(rename = "accountIndex")]
@@ -19,7 +19,7 @@ pub struct Event {
 // do we want an event for transaction confirmation or if it failed?
 // event for new detected outputs?
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum WalletEvent {
     BalanceChange(BalanceChangeEvent),
     TransactionInclusion(TransactionInclusionEvent),
@@ -29,7 +29,7 @@ pub enum WalletEvent {
     LedgerAddressGeneration(AddressData),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum WalletEventType {
     BalanceChange,
     TransactionInclusion,
@@ -56,7 +56,7 @@ impl TryFrom<&str> for WalletEventType {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct BalanceChangeEvent {
     /// The address.
     pub address: AddressWrapper,
@@ -67,13 +67,13 @@ pub struct BalanceChangeEvent {
     // the output/transaction?
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct TransactionInclusionEvent {
     pub transaction_id: TransactionId,
     pub inclusion_state: InclusionState,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub enum TransferProgressEvent {
     /// Syncing account.
     SyncingAccount,
@@ -91,7 +91,7 @@ pub enum TransferProgressEvent {
     Broadcasting,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct AddressConsolidationNeeded {
     /// The associated address.
     #[serde(with = "crate::account::types::address_serde")]
@@ -99,7 +99,7 @@ pub struct AddressConsolidationNeeded {
 }
 
 /// Address event data.
-#[derive(Debug, Clone, Serialize, Deserialize, Getters, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, Getters)]
 #[getset(get = "pub")]
 pub struct AddressData {
     /// The address.
@@ -108,7 +108,7 @@ pub struct AddressData {
 }
 
 /// Prepared transaction event data.
-#[derive(Debug, Clone, Getters, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, Getters)]
 #[getset(get = "pub")]
 pub struct PreparedTransactionEventData {
     /// Transaction inputs.
@@ -120,7 +120,7 @@ pub struct PreparedTransactionEventData {
 }
 
 /// Input or output data for PreparedTransactionData
-#[derive(Debug, Clone, Getters, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, Getters)]
 #[getset(get = "pub")]
 pub struct TransactionIO {
     /// Address

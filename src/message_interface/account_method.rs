@@ -1,7 +1,13 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::{Output, OutputId};
+use iota_client::{
+    api::PreparedTransactionDataDto,
+    bee_block::{
+        output::{dto::OutputDto, Output, OutputId},
+        payload::transaction::dto::TransactionPayloadDto,
+    },
+};
 use serde::Deserialize;
 
 use crate::{
@@ -71,6 +77,19 @@ pub enum AccountMethod {
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
+    /// Prepare transaction.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::SentTransfer)
+    PrepareTransaction {
+        outputs: Vec<OutputDto>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare send amount.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::SentTransfer)
+    PrepareSendAmount {
+        #[serde(rename = "addressWithAmount")]
+        addresses_with_amount: Vec<AddressWithAmountDto>,
+        options: Option<TransferOptions>,
+    },
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
     /// consolidate outputs if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
@@ -112,8 +131,22 @@ pub enum AccountMethod {
     /// Send funds.
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SendTransfer {
-        outputs: Vec<Output>,
+        outputs: Vec<OutputDto>,
         options: Option<TransferOptions>,
+    },
+    /// Sign a prepared transaction.
+    /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
+    SignTransactionEssence {
+        #[serde(rename = "preparedTransactionData")]
+        prepared_transaction_data: PreparedTransactionDataDto,
+    },
+    /// Validate the transaction, submit it to a node and store it in the account.
+    /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
+    SubmitAndStoreTransaction {
+        #[serde(rename = "preparedTransactionData")]
+        prepared_transaction_data: PreparedTransactionDataDto,
+        #[serde(rename = "transactionPayload")]
+        transaction_payload: TransactionPayloadDto,
     },
     /// Try to collect outputs.
     /// Expected response: [`SentTransfers`](crate::message_interface::Response::SentTransfers)

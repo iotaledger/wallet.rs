@@ -33,7 +33,7 @@ pub use self::{
 };
 
 /// An Account.
-#[derive(Debug, Getters, Setters, Serialize, Deserialize, Clone)]
+#[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Account {
     /// The account index
@@ -81,7 +81,7 @@ pub struct Account {
 }
 
 /// Account options
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountOptions {
     /// Threshold for the amount of unspent outputs before they get consolidated (sent in a transaction to the account
     /// itself)

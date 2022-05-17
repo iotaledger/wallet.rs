@@ -10,7 +10,8 @@ use std::{
 
 use iota_client::bee_block::{
     output::{AliasId, FoundryId, NftId, OutputId, TokenId},
-    payload::transaction::TransactionId,
+    payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+    MessageId,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -18,7 +19,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData, Transaction,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
+            OutputData, Transaction,
         },
         Account, AccountOptions,
     },
@@ -26,7 +28,7 @@ use crate::{
 };
 
 /// Dto for address with amount for `send_amount()`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -47,7 +49,7 @@ impl TryFrom<&AddressWithAmountDto> for AddressWithAmount {
 }
 
 /// Dto for address with amount for `send_micro_transaction()`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithMicroAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -76,7 +78,7 @@ impl TryFrom<&AddressWithMicroAmountDto> for AddressWithMicroAmount {
 }
 
 /// Dto for an account address with output_ids of unspent outputs.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithUnspentOutputsDto {
     /// The address.
     #[serde(with = "crate::account::types::address_serde")]
@@ -107,7 +109,7 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
 
 /// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalanceDto {
     /// Total amount
     pub total: String,
@@ -147,7 +149,7 @@ impl From<&AccountBalance> for AccountBalanceDto {
 }
 
 /// Dto for an Account.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccountDto {
     /// The account index
     pub index: u32,
@@ -202,6 +204,36 @@ impl From<&Account> for AccountDto {
             transactions: value.transactions().clone(),
             pending_transactions: value.pending_transactions().clone(),
             account_options: *value.account_options(),
+        }
+    }
+}
+
+/// Dto for a transaction with metadata
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TransactionDto {
+    pub payload: TransactionPayloadDto,
+    #[serde(rename = "blockId")]
+    pub block_id: Option<BlockId>,
+    #[serde(rename = "inclusionState")]
+    pub inclusion_state: InclusionState,
+    // remove because we have a timestamp in the outputs?
+    pub timestamp: String,
+    // network id to ignore outputs when set_client_options is used to switch to another network
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
+    pub incoming: bool,
+}
+
+impl From<&Transaction> for TransactionDto {
+    fn from(value: &Transaction) -> Self {
+        Self {
+            payload: TransactionPayloadDto::from(&value.payload),
+            block_id: value.block_id,
+            inclusion_state: value.inclusion_state,
+            timestamp: value.timestamp.to_string(),
+            network_id: value.network_id.to_string(),
+            incoming: value.incoming,
         }
     }
 }

@@ -33,7 +33,7 @@ impl EventEmitter {
         // if no event is provided the handler is registered for all event types
         if events.is_empty() {
             // we could use a crate like strum or a macro to iterate over all values, but not sure if it's worth it
-            for event_type in vec![
+            for event_type in &[
                 WalletEventType::BalanceChange,
                 WalletEventType::TransactionInclusion,
                 WalletEventType::TransferProgress,
@@ -41,7 +41,7 @@ impl EventEmitter {
                 #[cfg(feature = "ledger_nano")]
                 WalletEventType::LedgerAddressGeneration,
             ] {
-                let event_handlers = self.handlers.entry(event_type).or_insert_with(Vec::new);
+                let event_handlers = self.handlers.entry(*event_type).or_insert_with(Vec::new);
                 event_handlers.push(Box::new(handler.clone()));
             }
         }

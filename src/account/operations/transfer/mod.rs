@@ -10,14 +10,14 @@ mod options;
 mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
-
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    api::PreparedTransactionData,
+    api::{verify_semantic, PreparedTransactionData},
     bee_block::{
-        output::{ByteCostConfig, Output},
+        output::Output,
         payload::transaction::{TransactionId, TransactionPayload},
+        semantic::ConflictReason,
         BlockId,
     },
     secret::types::InputSigningData,
@@ -25,13 +25,16 @@ use iota_client::{
 use serde::Serialize;
 
 pub use self::options::{RemainderValueStrategy, TransferOptions};
-use crate::account::{
-    handle::AccountHandle,
-    operations::syncing::SyncOptions,
-    types::{InclusionState, Transaction},
-};
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::syncing::SyncOptions,
+        types::{InclusionState, Transaction},
+    },
+    iota_client::Error,
+};
 
 /// The result of a transfer, block_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
@@ -91,7 +94,7 @@ impl AccountHandle {
             }))
             .await?;
         }
-        self.finish_transfer(outputs, options, &byte_cost_config).await
+        self.finish_transfer(outputs, options).await
     }
 
     /// Separated function from send, so syncing isn't called recursiv with the consolidation function, which sends
@@ -100,11 +103,10 @@ impl AccountHandle {
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
-        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] finish_transfer");
 
-        let prepared_transaction_data = self.prepare_transaction(outputs, options, byte_cost_config).await?;
+        let prepared_transaction_data = self.prepare_transaction(outputs, options).await?;
 
         self.sign_and_submit_transfer(prepared_transaction_data).await
     }
@@ -116,7 +118,7 @@ impl AccountHandle {
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] sign_and_submit_transfer");
 
-        let transaction_payload = match self.sign_tx_essence(&prepared_transaction_data, false).await {
+        let transaction_payload = match self.sign_transaction_essence(&prepared_transaction_data).await {
             Ok(res) => res,
             Err(err) => {
                 // unlock outputs so they are available for a new transaction
@@ -125,7 +127,8 @@ impl AccountHandle {
             }
         };
 
-        self.submit_and_store_transaction(transaction_payload).await
+        self.submit_and_store_transaction(prepared_transaction_data, transaction_payload)
+            .await
     }
 
     /// Sync an account if not skipped in options and prepare the transaction
@@ -133,7 +136,6 @@ impl AccountHandle {
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
-        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSFER] sync_and_prepare_transaction");
         // sync account before sending a transaction
@@ -152,15 +154,31 @@ impl AccountHandle {
             }))
             .await?;
         }
-        self.prepare_transaction(outputs, options, byte_cost_config).await
+
+        self.prepare_transaction(outputs, options).await
     }
 
-    // Submit the transaction and store it in the account
+    /// Validate the transaction, submit it to a node and store it in the account
     pub async fn submit_and_store_transaction(
         &self,
+        prepared_transaction_data: PreparedTransactionData,
         transaction_payload: TransactionPayload,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] submit_and_store_transaction");
+
+        // Validate transaction before sending and storing it
+        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+
+        let conflict = verify_semantic(
+            &prepared_transaction_data.inputs_data,
+            &transaction_payload,
+            milestone_index,
+            local_time,
+        )?;
+
+        if conflict != ConflictReason::None {
+            return Err(Error::TransactionSemantic(conflict).into());
+        }
 
         // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
         let block_id = match self.submit_transaction_payload(transaction_payload.clone()).await {

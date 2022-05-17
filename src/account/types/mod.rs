@@ -25,7 +25,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalance {
     /// Total amount
     pub total: u64,
@@ -88,7 +88,7 @@ impl OutputData {
 }
 
 /// A transaction with metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Transaction {
     pub payload: TransactionPayload,
     #[serde(rename = "blockId")]
@@ -105,7 +105,7 @@ pub struct Transaction {
 }
 
 /// Possible InclusionStates for transactions
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub enum InclusionState {
     Pending,
     Confirmed,
@@ -113,7 +113,7 @@ pub enum InclusionState {
 }
 
 /// The output kind enum.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum OutputKind {
     /// Alias output.
     Alias,
@@ -144,7 +144,7 @@ impl FromStr for OutputKind {
 }
 
 /// The account identifier.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Eq, PartialEq, Hash)]
 #[serde(untagged)]
 pub enum AccountIdentifier {
     /// Account alias as identifier.
