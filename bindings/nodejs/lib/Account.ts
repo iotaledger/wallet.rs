@@ -219,9 +219,9 @@ export class Account {
             {
                 name: 'SendAmount',
                 data: {
-                    addressesWithAmount,
-                    options: transferOptions,
-                },
+                    addressWithAmount: addressesWithAmount,
+                    options: transferOptions
+                }
             },
         );
 
@@ -237,29 +237,26 @@ export class Account {
             {
                 name: 'SendMicroTransaction',
                 data: {
-                    addressesWithMicroAmount: addressesWithMicroAmount,
-                    options: transferOptions,
-                },
-            },
-        );
+                    addressWithMicroAmount: addressesWithMicroAmount,
+                    options: transferOptions
+                }
+            }
+        )
 
         return JSON.parse(response).payload;
     }
 
-    async sendNativeTokens(
-        addressNativeTokens: AddressNativeTokens[],
-        transferOptions?: TransferOptions,
-    ): Promise<TransactionReceipt[]> {
+    async sendNativeTokens(addressesNativeTokens: AddressNativeTokens[], transferOptions?: TransferOptions): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SendNativeTokens',
                 data: {
-                    addressesNativeTokens: addressNativeTokens,
-                    options: transferOptions,
-                },
-            },
-        );
+                    addressNativeTokens: addressesNativeTokens,
+                    options: transferOptions
+                }
+            }
+        )
 
         return JSON.parse(response).payload;
     }
@@ -273,11 +270,11 @@ export class Account {
             {
                 name: 'SendNft',
                 data: {
-                    addressesNftIds: addressesAndNftIds,
-                    options: transferOptions,
-                },
-            },
-        );
+                    addressNftIds: addressesAndNftIds,
+                    options: transferOptions
+                }
+            }
+        )
 
         return JSON.parse(response).payload;
     }

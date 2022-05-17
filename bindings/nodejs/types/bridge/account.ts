@@ -88,7 +88,7 @@ export type __MintNftsPayloadMethod__ = {
 export type __SendAmountPayloadMethod__ = {
     name: 'SendAmount';
     data: {
-        addressesWithAmount: AddressWithAmount[];
+        addressWithAmount: AddressWithAmount[];
         options?: TransferOptions
     }
 }
@@ -96,7 +96,7 @@ export type __SendAmountPayloadMethod__ = {
 export type __SendMicroTransactionPayloadMethod__ = {
     name: 'SendMicroTransaction';
     data: {
-        addressesWithMicroAmount: AddressWithMicroAmount[];
+        addressWithMicroAmount: AddressWithMicroAmount[];
         options?: TransferOptions
     }
 }
@@ -104,7 +104,7 @@ export type __SendMicroTransactionPayloadMethod__ = {
 export type __SendNativeTokensPayloadMethod__ = {
     name: 'SendNativeTokens';
     data: {
-        addressesNativeTokens: AddressNativeTokens[];
+        addressNativeTokens: AddressNativeTokens[];
         options?: TransferOptions
     }
 }
@@ -112,7 +112,7 @@ export type __SendNativeTokensPayloadMethod__ = {
 export type __SendNftPayloadMethod__ = {
     name: 'SendNft';
     data: {
-        addressesNftIds: AddressNftId[];
+        addressNftIds: AddressNftId[];
         options?: TransferOptions
     }
 }
