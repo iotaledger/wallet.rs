@@ -10,7 +10,6 @@ mod options;
 mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
-
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{

@@ -53,6 +53,9 @@ pub enum Response {
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
+    PreparedTransaction(PreparedTransactionDataDto),
+    /// Response for
+    /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<TransactionDto>),
     /// Response for
