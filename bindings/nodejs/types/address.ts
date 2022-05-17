@@ -1,5 +1,11 @@
 import type { Network } from './network';
 
+export enum AddressType {
+    Ed25519 = 'Ed25519',
+    Alias = 'Alias',
+    Nft = 'Nft',
+}
+
 export interface Address {
     address: string;
     keyIndex: number;
