@@ -9,10 +9,14 @@ import type { Transaction } from './transaction';
 export type AccountId = number | string;
 
 export interface AccountBalance {
-    total: number;
-    available: number;
-    incoming: number;
-    outgoing: number;
+    total: string;
+    available: string;
+    requiredStorageDeposit: string,
+    nativeTokens: Record<string, number>
+    nfts: string[]
+    aliases: string[];
+    foundries: string[];
+    potentiallyLockedOutputs: Record<string, boolean>
 }
 
 export interface AccountSyncOptions {

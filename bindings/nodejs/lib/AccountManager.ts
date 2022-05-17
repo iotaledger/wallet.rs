@@ -68,8 +68,9 @@ export class AccountManager {
     }
 
 
-    destroy() {
-        this.messageHandler.destroy();
+    destroy(): void {
+        this.messageHandler
+            .destroy()
     }
 
     async getAccount(accountId: AccountId): Promise<Account> {
