@@ -1,11 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
+use crate::{
+    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    Error,
+};
 
 use iota_client::bee_message::{
     address::{Address, NftAddress},
-    output::{BasicOutputBuilder, NftId, NftOutput, Output},
+    output::{BasicOutputBuilder, NftId, Output, OutputId},
 };
 
 impl AccountHandle {
@@ -21,9 +24,9 @@ impl AccountHandle {
         self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), &address)
             .await?;
 
-        let (output_id, nft_output) = self.find_nft_output(nft_id).await?;
+        let (output_id, basic_output) = self.output_id_and_basic_output_for_nft(nft_id).await?;
         let custom_inputs = vec![output_id];
-        let outputs = vec![Self::nft_to_basic_output(&nft_output)?];
+        let outputs = vec![basic_output];
 
         let options = match options {
             Some(mut options) => {
@@ -39,13 +42,31 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
-    fn nft_to_basic_output(nft_output: &NftOutput) -> crate::Result<Output> {
-        Ok(Output::Basic(
+    async fn output_id_and_basic_output_for_nft(&self, nft_id: NftId) -> crate::Result<(OutputId, Output)> {
+        let account = self.read().await;
+
+        let (output_id, output_data) = account
+            .unspent_outputs()
+            .iter()
+            .find(|(&output_id, output_data)| match &output_data.output {
+                Output::Nft(nft_output) => nft_output.nft_id().or_from_output_id(output_id) == nft_id,
+                _ => false,
+            })
+            .ok_or(Error::NftNotFoundInUnspentOutputs)?;
+
+        let nft_output = match &output_data.output {
+            Output::Nft(nft_output) => nft_output,
+            _ => unreachable!("We already checked that it's an nft output"),
+        };
+
+        let basic_output = Output::Basic(
             BasicOutputBuilder::new_with_amount(nft_output.amount())?
                 .with_feature_blocks(nft_output.feature_blocks().clone())
                 .with_unlock_conditions(nft_output.unlock_conditions().clone())
                 .with_native_tokens(nft_output.native_tokens().clone())
                 .finish()?,
-        ))
+        );
+
+        Ok((*output_id, basic_output))
     }
 }

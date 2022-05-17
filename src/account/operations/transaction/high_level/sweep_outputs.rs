@@ -22,8 +22,8 @@ use iota_client::{
                 dto::{AddressUnlockConditionDto, UnlockConditionDto},
                 AddressUnlockCondition,
             },
-            AliasId, AliasOutput, AliasOutputBuilder, FoundryId, NftId, NftOutput, NftOutputBuilder, Output, OutputId,
-            TokenScheme, OUTPUT_COUNT_MAX,
+            AliasId, AliasOutput, AliasOutputBuilder, FoundryId, NftId, NftOutput, Output, OutputId, TokenScheme,
+            OUTPUT_COUNT_MAX,
         },
         payload::transaction::TransactionId,
     },
@@ -67,7 +67,7 @@ impl AccountHandle {
         Ok(address)
     }
 
-    pub(crate) async fn find_nft_output(&self, nft_id: NftId) -> crate::Result<(OutputId, NftOutput)> {
+    async fn output_id_and_nft_output(&self, nft_id: NftId) -> crate::Result<(OutputId, NftOutput)> {
         let account = self.read().await;
 
         let (output_id, output_data) = account
@@ -87,7 +87,7 @@ impl AccountHandle {
         Ok((*output_id, nft_output))
     }
 
-    pub(crate) async fn find_alias_output(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
+    async fn output_id_and_next_alias_output_state(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
         let account = self.read().await;
 
         let (output_id, output_data) = account
@@ -100,11 +100,15 @@ impl AccountHandle {
             .ok_or_else(|| Error::BurningFailed("Alias output not found".to_string()))?;
 
         let alias_output = match &output_data.output {
-            Output::Alias(alias_output) => alias_output.clone(),
+            Output::Alias(alias_output) => alias_output,
             _ => unreachable!("We already checked that it's an alias output"),
         };
 
-        Ok((*output_id, alias_output))
+        let new_state_alias_output = AliasOutputBuilder::from(alias_output)
+            .with_state_index(alias_output.state_index() + 1)
+            .finish()?;
+
+        Ok((*output_id, new_state_alias_output))
     }
 
     pub(crate) fn sweep_address_outputs<'a>(
@@ -214,28 +218,14 @@ impl AccountHandle {
 
         match address.inner {
             Address::Alias(alias_address) => {
-                let (output_id, alias_output) = self.find_alias_output(*alias_address.alias_id()).await?;
-                let alias_output =
-                    AliasOutputBuilder::new_with_amount(alias_output.amount(), *alias_output.alias_id())?
-                        .with_native_tokens(alias_output.native_tokens().clone())
-                        .with_state_index(alias_output.state_index() + 1)
-                        .with_state_metadata(alias_output.state_metadata().to_vec())
-                        .with_foundry_counter(alias_output.foundry_counter())
-                        .with_unlock_conditions(alias_output.unlock_conditions().clone())
-                        .with_feature_blocks(alias_output.feature_blocks().clone())
-                        .with_immutable_feature_blocks(alias_output.immutable_feature_blocks().clone())
-                        .finish()?;
+                let (output_id, alias_output) = self
+                    .output_id_and_next_alias_output_state(*alias_address.alias_id())
+                    .await?;
                 custom_inputs.push(output_id);
                 custom_outputs.push(Output::Alias(alias_output));
             }
             Address::Nft(nft_address) => {
-                let (output_id, nft_output) = self.find_nft_output(*nft_address.nft_id()).await?;
-                let nft_output = NftOutputBuilder::new_with_amount(nft_output.amount(), *nft_output.nft_id())?
-                    .with_native_tokens(nft_output.native_tokens().clone())
-                    .with_unlock_conditions(nft_output.unlock_conditions().clone())
-                    .with_feature_blocks(nft_output.feature_blocks().clone())
-                    .with_immutable_feature_blocks(nft_output.immutable_feature_blocks().clone())
-                    .finish()?;
+                let (output_id, nft_output) = self.output_id_and_nft_output(*nft_address.nft_id()).await?;
                 custom_inputs.push(output_id);
                 custom_outputs.push(Output::Nft(nft_output));
             }

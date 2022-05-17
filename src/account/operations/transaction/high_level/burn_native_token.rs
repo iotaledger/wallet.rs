@@ -42,15 +42,10 @@ impl AccountHandle {
         if let Output::Alias(alias_output) = &existing_alias_output_data.output {
             // Amount can't be burned, only native tokens
             let amount = existing_alias_output_data.amount + existing_foundry_output.amount();
-            // Create the new alias output with the same feature blocks, just updated amount and state_index
-            let alias_output = AliasOutputBuilder::new_with_amount(amount, alias_id)?
-                .with_native_tokens(alias_output.native_tokens().clone())
+            // Create the new alias output with updated amount and state_index
+            let alias_output = AliasOutputBuilder::from(alias_output)
+                .with_amount(amount)?
                 .with_state_index(alias_output.state_index() + 1)
-                .with_state_metadata(alias_output.state_metadata().to_vec())
-                .with_foundry_counter(alias_output.foundry_counter())
-                .with_unlock_conditions(alias_output.unlock_conditions().clone())
-                .with_feature_blocks(alias_output.feature_blocks().clone())
-                .with_immutable_feature_blocks(alias_output.immutable_feature_blocks().clone())
                 .finish()?;
 
             let TokenScheme::Simple(foundry_simple_ts) = existing_foundry_output.token_scheme();

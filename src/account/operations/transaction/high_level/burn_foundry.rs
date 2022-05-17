@@ -58,15 +58,11 @@ impl AccountHandle {
                         unreachable!("We already checked output is a foundry");
                     }
                 };
-                // Create the new alias output with the same feature blocks, just updated amount and state_index
-                let alias_output = AliasOutputBuilder::new_with_amount(amount, alias_id)?
+                // Create the new alias output with updated amount, state_index and native token if not burning foundry tokens
+                let alias_output = AliasOutputBuilder::from(&alias_output)
+                    .with_amount(amount)?
                     .with_native_tokens(native_tokens)
                     .with_state_index(alias_output.state_index() + 1)
-                    .with_state_metadata(alias_output.state_metadata().to_vec())
-                    .with_foundry_counter(alias_output.foundry_counter())
-                    .with_unlock_conditions(alias_output.unlock_conditions().clone())
-                    .with_feature_blocks(alias_output.feature_blocks().clone())
-                    .with_immutable_feature_blocks(alias_output.immutable_feature_blocks().clone())
                     .finish()?;
 
                 vec![Output::Alias(alias_output)]
@@ -149,15 +145,11 @@ impl AccountHandle {
                             }
                         };
 
-                        // Create the new alias output with the same feature blocks, just updated amount and state_index
-                        let alias_output = AliasOutputBuilder::new_with_amount(amount, *alias_output.alias_id())?
+                        // Create the new alias output with updated amount, state_index and native token if not burning foundry tokens
+                        let alias_output = AliasOutputBuilder::from(&alias_output)
+                            .with_amount(amount)?
                             .with_native_tokens(native_tokens)
                             .with_state_index(alias_output.state_index() + 1)
-                            .with_state_metadata(alias_output.state_metadata().to_vec())
-                            .with_foundry_counter(alias_output.foundry_counter())
-                            .with_unlock_conditions(alias_output.unlock_conditions().clone())
-                            .with_feature_blocks(alias_output.feature_blocks().clone())
-                            .with_immutable_feature_blocks(alias_output.immutable_feature_blocks().clone())
                             .finish()?;
 
                         outputs.push(Output::Alias(alias_output));
