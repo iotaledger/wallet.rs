@@ -96,7 +96,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListAddressesWithBalance',
+                name: 'ListAddressesWithUnspentOutputs',
             },
         );
 
@@ -193,7 +193,7 @@ export class Account {
     }
 
     async mintNfts(
-        nftOptions: NftOptions,
+        nftsOptions: NftOptions[],
         transferOptions?: TransferOptions,
     ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
@@ -201,7 +201,7 @@ export class Account {
             {
                 name: 'MintNfts',
                 data: {
-                    nftsOptions: nftOptions,
+                    nftsOptions,
                     options: transferOptions,
                 },
             },
