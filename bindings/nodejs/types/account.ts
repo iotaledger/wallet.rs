@@ -11,12 +11,20 @@ export type AccountId = number | string;
 export interface AccountBalance {
     total: string;
     available: string;
-    requiredStorageDeposit: string,
-    nativeTokens: Record<string, number>
-    nfts: string[]
+    requiredStorageDeposit: string;
+    nativeTokens: nativeTokensMap;
+    nfts: string[];
     aliases: string[];
     foundries: string[];
-    potentiallyLockedOutputs: Record<string, boolean>
+    potentiallyLockedOutputs: potentiallyLockedOutputsMap;
+}
+
+export type nativeTokensMap = {
+    [tokenId: string]: number;
+};
+
+export type potentiallyLockedOutputsMap = {
+    [outputId: string]: boolean;
 }
 
 export interface AccountSyncOptions {
