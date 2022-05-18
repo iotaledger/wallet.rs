@@ -10,11 +10,8 @@ use std::{
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
-    api::{PreparedTransactionData, PreparedTransactionDataDto},
-    bee_message::{
-        output::Output,
-        payload::transaction::{dto::TransactionPayloadDto, TransactionPayload},
-    },
+    api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
+    bee_message::output::Output,
     Client, NodeInfoWrapper,
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -449,26 +446,22 @@ impl WalletMessageHandler {
                 prepared_transaction_data,
             } => {
                 convert_async_panics(|| async {
-                    let transaction_payload = account_handle
+                    let signed_transaction_data = account_handle
                         .sign_transaction_essence(&PreparedTransactionData::try_from(prepared_transaction_data)?)
                         .await?;
-                    Ok(Response::TransactionPayload(TransactionPayloadDto::from(
-                        &transaction_payload,
+                    Ok(Response::SignedTransactionData(SignedTransactionDataDto::from(
+                        &signed_transaction_data,
                     )))
                 })
                 .await
             }
             AccountMethod::SubmitAndStoreTransaction {
-                prepared_transaction_data,
-                transaction_payload,
+                signed_transaction_data,
             } => {
                 convert_async_panics(|| async {
-                    let transaction_payload = TransactionPayload::try_from(transaction_payload)?;
+                    let signed_transaction_data = SignedTransactionData::try_from(signed_transaction_data)?;
                     let transaction_result = account_handle
-                        .submit_and_store_transaction(
-                            PreparedTransactionData::try_from(prepared_transaction_data)?,
-                            transaction_payload,
-                        )
+                        .submit_and_store_transaction(signed_transaction_data)
                         .await?;
                     Ok(Response::SentTransfer(transaction_result))
                 })

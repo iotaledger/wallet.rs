@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    api::PreparedTransactionDataDto,
+    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     bee_block::{
         output::{dto::OutputDto, Output, OutputId},
         payload::transaction::dto::TransactionPayloadDto,
@@ -143,10 +143,8 @@ pub enum AccountMethod {
     /// Validate the transaction, submit it to a node and store it in the account.
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SubmitAndStoreTransaction {
-        #[serde(rename = "preparedTransactionData")]
-        prepared_transaction_data: PreparedTransactionDataDto,
-        #[serde(rename = "transactionPayload")]
-        transaction_payload: TransactionPayloadDto,
+        #[serde(rename = "signedTransactionData")]
+        signed_transaction_data: SignedTransactionDataDto,
     },
     /// Try to collect outputs.
     /// Expected response: [`SentTransfers`](crate::message_interface::Response::SentTransfers)

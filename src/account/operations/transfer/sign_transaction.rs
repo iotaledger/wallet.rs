@@ -4,7 +4,7 @@
 #[cfg(feature = "stronghold")]
 use iota_client::secret::SecretManager;
 use iota_client::{
-    api::{verify_semantic, PreparedTransactionData},
+    api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     bee_block::{address::Address, unlock::Unlocks},
     secret::SecretManageExt,
 };
@@ -18,7 +18,7 @@ impl AccountHandle {
     pub async fn sign_transaction_essence(
         &self,
         prepared_transaction_data: &PreparedTransactionData,
-    ) -> crate::Result<TransactionPayload> {
+    ) -> crate::Result<SignedTransactionData> {
         log::debug!("[TRANSFER] sign_transaction_essence");
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
@@ -51,6 +51,9 @@ impl AccountHandle {
 
         log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
 
-        Ok(transaction_payload)
+        Ok(SignedTransactionData {
+            transaction_payload,
+            inputs_data: prepared_transaction_data.inputs_data.clone(),
+        })
     }
 }

@@ -13,7 +13,7 @@ pub(crate) mod submit_transaction;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    api::{verify_semantic, PreparedTransactionData},
+    api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     bee_block::{
         output::Output,
         payload::transaction::{TransactionId, TransactionPayload},
@@ -118,7 +118,7 @@ impl AccountHandle {
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] sign_and_submit_transfer");
 
-        let transaction_payload = match self.sign_transaction_essence(&prepared_transaction_data).await {
+        let signed_transaction_data = match self.sign_transaction_essence(&prepared_transaction_data).await {
             Ok(res) => res,
             Err(err) => {
                 // unlock outputs so they are available for a new transaction
@@ -127,8 +127,7 @@ impl AccountHandle {
             }
         };
 
-        self.submit_and_store_transaction(prepared_transaction_data, transaction_payload)
-            .await
+        self.submit_and_store_transaction(signed_transaction_data).await
     }
 
     /// Sync an account if not skipped in options and prepare the transaction
@@ -161,8 +160,7 @@ impl AccountHandle {
     /// Validate the transaction, submit it to a node and store it in the account
     pub async fn submit_and_store_transaction(
         &self,
-        prepared_transaction_data: PreparedTransactionData,
-        transaction_payload: TransactionPayload,
+        signed_transaction_data: SignedTransactionData,
     ) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] submit_and_store_transaction");
 
@@ -170,8 +168,8 @@ impl AccountHandle {
         let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
 
         let conflict = verify_semantic(
-            &prepared_transaction_data.inputs_data,
-            &transaction_payload,
+            &signed_transaction_data.inputs_data,
+            &signed_transaction_data.transaction_payload,
             milestone_index,
             local_time,
         )?;
@@ -181,7 +179,10 @@ impl AccountHandle {
         }
 
         // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
-        let block_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
+        let block_id = match self
+            .submit_transaction_payload(signed_transaction_data.transaction_payload.clone())
+            .await
+        {
             Ok(block_id) => Some(block_id),
             Err(err) => {
                 log::error!("Failed to submit_transaction_payload {}", err);
@@ -191,12 +192,12 @@ impl AccountHandle {
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
-        let transaction_id = transaction_payload.id();
+        let transaction_id = signed_transaction_data.transaction_payload.id();
         let mut account = self.write().await;
         account.transactions.insert(
             transaction_id,
             Transaction {
-                payload: transaction_payload,
+                payload: signed_transaction_data.transaction_payload,
                 block_id,
                 network_id,
                 timestamp: SystemTime::now()

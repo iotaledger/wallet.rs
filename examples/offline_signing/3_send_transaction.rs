@@ -6,21 +6,14 @@
 
 use std::{fs::File, io::prelude::*, path::Path};
 
-use iota_client::{
-    api::{PreparedTransactionData, PreparedTransactionDataDto},
-    bee_message::payload::{transaction::dto::TransactionPayloadDto, TransactionPayload},
-};
+use iota_client::api::{SignedTransactionData, SignedTransactionDataDto};
 use iota_wallet::{account_manager::AccountManager, Result};
 
-const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_transaction.json";
 const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_transaction.json";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let signed_transaction_payload = read_signed_transaction_from_file(SIGNED_TRANSACTION_FILE_NAME)?;
-
-    // TODO @thibault-martinez: I don't like that we have to refetch the prepared transaction. Will revisit later.
-    let prepared_transaction = read_prepared_transaction_from_file(PREPARED_TRANSACTION_FILE_NAME)?;
+    let signed_transaction_data = read_signed_transaction_from_file(SIGNED_TRANSACTION_FILE_NAME)?;
 
     // Create the account manager with the secret_manager and client options
     let manager = AccountManager::builder()
@@ -32,9 +25,7 @@ async fn main() -> Result<()> {
     let account = manager.get_account("Alice").await?;
 
     // Sends offline signed transaction online.
-    let result = account
-        .submit_and_store_transaction(prepared_transaction, signed_transaction_payload)
-        .await?;
+    let result = account.submit_and_store_transaction(signed_transaction_data).await?;
 
     println!(
         "Transaction sent: https://explorer.iota.org/devnet/message/{}",
@@ -44,21 +35,12 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_prepared_transaction_from_file<P: AsRef<Path>>(path: P) -> Result<PreparedTransactionData> {
+fn read_signed_transaction_from_file<P: AsRef<Path>>(path: P) -> Result<SignedTransactionData> {
     let mut file = File::open(&path)?;
     let mut json = String::new();
     file.read_to_string(&mut json)?;
 
-    Ok(PreparedTransactionData::try_from(&serde_json::from_str::<
-        PreparedTransactionDataDto,
-    >(&json)?)?)
-}
+    let dto = serde_json::from_str::<SignedTransactionDataDto>(&json)?;
 
-fn read_signed_transaction_from_file<P: AsRef<Path>>(path: P) -> Result<TransactionPayload> {
-    let mut file = File::open(&path)?;
-    let mut json = String::new();
-    file.read_to_string(&mut json)?;
-
-    let payload_dto = serde_json::from_str::<TransactionPayloadDto>(&json)?;
-    Ok(TransactionPayload::try_from(&payload_dto)?)
+    Ok(SignedTransactionData::try_from(&dto)?)
 }

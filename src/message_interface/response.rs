@@ -4,7 +4,7 @@
 use std::fmt::{Debug, Formatter, Result};
 
 use iota_client::{
-    api::PreparedTransactionDataDto,
+    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     bee_block::{output::OutputId, payload::transaction::dto::TransactionPayloadDto},
     NodeInfoWrapper,
 };
@@ -52,7 +52,8 @@ pub enum Response {
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<Transaction>),
     /// SignTransaction.
-    TransactionPayload(TransactionPayloadDto),
+    SignedTransactionData(SignedTransactionDataDto),
+    /// GenerateAddress response.
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)
     GeneratedAddress(Vec<AccountAddress>),
     /// Response for
@@ -116,8 +117,8 @@ impl Debug for Response {
                 write!(f, "PreparedTransaction({:?})", transaction_data)
             }
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
-            Response::TransactionPayload(transaction_payload) => {
-                write!(f, "TransactionPayload({:?})", transaction_payload)
+            Response::SignedTransactionData(signed_transaction_data) => {
+                write!(f, "SignedTransactionData({:?})", signed_transaction_data)
             }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
