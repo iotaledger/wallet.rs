@@ -3,16 +3,16 @@
 
 use std::collections::HashSet;
 
+use iota_client::bee_message::{
+    output::{AliasId, AliasOutputBuilder, FoundryId, Output, OUTPUT_COUNT_MAX},
+    payload::transaction::TransactionId,
+};
+
 use crate::{
     account::{
         handle::AccountHandle, operations::transfer::TransferResult, types::OutputData, SyncOptions, TransferOptions,
     },
     Error,
-};
-
-use iota_client::bee_message::{
-    output::{AliasId, AliasOutputBuilder, FoundryId, Output, OUTPUT_COUNT_MAX},
-    payload::transaction::TransactionId,
 };
 
 impl AccountHandle {
@@ -58,7 +58,8 @@ impl AccountHandle {
                         unreachable!("We already checked output is a foundry");
                     }
                 };
-                // Create the new alias output with updated amount, state_index and native token if not burning foundry tokens
+                // Create the new alias output with updated amount, state_index and native token if not burning foundry
+                // tokens
                 let alias_output = AliasOutputBuilder::from(&alias_output)
                     .with_alias_id(alias_id)
                     .with_amount(amount)?
@@ -146,7 +147,8 @@ impl AccountHandle {
                             }
                         };
 
-                        // Create the new alias output with updated amount, state_index and native token if not burning foundry tokens
+                        // Create the new alias output with updated amount, state_index and native token if not burning
+                        // foundry tokens
                         let alias_output = AliasOutputBuilder::from(&alias_output)
                             .with_amount(amount)?
                             .with_native_tokens(native_tokens)

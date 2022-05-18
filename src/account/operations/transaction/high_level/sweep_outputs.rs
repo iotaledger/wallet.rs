@@ -1,17 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        types::{address::AddressWrapper, AccountAddress, OutputData},
-        AddressGenerationOptions, RemainderValueStrategy, TransferOptions,
-    },
-    Error,
-};
+use std::{borrow::Borrow, collections::HashSet, pin::Pin, str::FromStr};
 
-use futures::Future;
-use futures::FutureExt;
+use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientMessageBuilder,
     bee_message::{
@@ -31,7 +23,14 @@ use iota_client::{
     node_api::indexer::query_parameters::QueryParameter,
 };
 
-use std::{borrow::Borrow, collections::HashSet, pin::Pin, str::FromStr};
+use crate::{
+    account::{
+        handle::AccountHandle,
+        types::{address::AddressWrapper, AccountAddress, OutputData},
+        AddressGenerationOptions, RemainderValueStrategy, TransferOptions,
+    },
+    Error,
+};
 
 #[allow(dead_code)]
 impl AccountHandle {
@@ -262,9 +261,7 @@ impl AccountHandle {
         &self,
         address: &AddressWrapper,
     ) -> crate::Result<Vec<OutputResponse>> {
-        let alias_query_parameters = vec![
-            QueryParameter::Governor(address.to_bech32()),
-        ];
+        let alias_query_parameters = vec![QueryParameter::Governor(address.to_bech32())];
 
         let alias_output_ids = self.client.aliases_output_ids(alias_query_parameters).await?;
         let output_responses = self.client.get_outputs(alias_output_ids).await?;

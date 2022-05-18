@@ -1,16 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
-    Error,
-};
-
 use iota_client::bee_message::{
     address::{Address, AliasAddress},
     output::{
         unlock_condition::AddressUnlockCondition, AliasId, BasicOutputBuilder, Output, OutputId, UnlockCondition,
     },
+};
+
+use crate::{
+    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    Error,
 };
 
 impl AccountHandle {

@@ -214,19 +214,18 @@ impl AccountHandle {
             // Create a new alias output
             None => {
                 drop(account);
-                let outputs =
-                    vec![
-                        AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
-                            .with_state_index(0)
-                            .with_foundry_counter(0)
-                            .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                                StateControllerAddressUnlockCondition::new(controller_address),
-                            ))
-                            .add_unlock_condition(UnlockCondition::GovernorAddress(
-                                GovernorAddressUnlockCondition::new(controller_address),
-                            ))
-                            .finish_output()?,
-                    ];
+                let outputs = vec![
+                    AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
+                        .with_state_index(0)
+                        .with_foundry_counter(0)
+                        .add_unlock_condition(UnlockCondition::StateControllerAddress(
+                            StateControllerAddressUnlockCondition::new(controller_address),
+                        ))
+                        .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
+                            controller_address,
+                        )))
+                        .finish_output()?,
+                ];
                 let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
                 if let Some(block_id) = transfer_result.block_id {

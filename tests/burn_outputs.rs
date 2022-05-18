@@ -95,8 +95,8 @@ async fn mint_and_burn_native_token() -> Result<()> {
         .with_node_sync_disabled();
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-        )?;
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -190,8 +190,8 @@ async fn burn_foundry() -> Result<()> {
         .with_node_sync_disabled();
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-        )?;
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -220,7 +220,8 @@ async fn burn_foundry() -> Result<()> {
     let balance = account.sync(Some(sync_options)).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
-    // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good idea
+    // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good
+    // idea
     let foundry_id = balance.foundries.first().unwrap().clone();
 
     let _ = account.burn_foundry(foundry_id.clone(), None).await.unwrap();
