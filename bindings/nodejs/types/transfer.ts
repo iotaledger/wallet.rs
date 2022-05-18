@@ -1,17 +1,19 @@
+import type { ITaggedDataPayload } from '@iota/types';
+
 export type RemainderValueStrategy = {
     ChangeAddress: {
         strategy: 'ChangeAddress';
-        value: null
-    },
+        value: null;
+    };
     ReuseAddress: {
         strategy: 'ReuseAddress';
-        value: null
-    },
+        value: null;
+    };
     AccountAddress: {
         strategy: 'AccountAddress';
         value: string;
-    },
-}
+    };
+};
 
 export interface NativeTokenOptions {
     // TOOD: Should this be just "address"?
@@ -23,18 +25,18 @@ export interface NativeTokenOptions {
 }
 
 export interface NftOptions {
-    address: string;
-    // TOOD: Change to proper type
-    immutableMetadata: any;
-    // TOOD: Change to proper type
-    metadata: any;
+    /** Bech32 encoded address to which the Nft will be minted. Default will use the
+     * first address of the account
+     */
+    address?: string;
+    immutableMetadata?: number[];
+    metadata?: number[];
 }
 
 // TODO: Transfer & TransferOptions should probably be merged
 export interface TransferOptions {
     remainderValueStrategy: RemainderValueStrategy;
-    // TODO: Change to proper type
-    taggedDataPayload: any;
+    taggedDataPayload?: ITaggedDataPayload;
     skipSync: boolean;
-    customInputs: string[];
+    customInputs?: string[];
 }

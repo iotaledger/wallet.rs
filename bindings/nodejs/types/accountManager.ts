@@ -1,4 +1,3 @@
-
 import type { ClientOptions } from './network';
 import type { SecretManager } from './secretManager';
 
@@ -7,4 +6,3 @@ export interface AccountManagerOptions {
     clientOptions: ClientOptions;
     secretManager: SecretManager;
 }
-

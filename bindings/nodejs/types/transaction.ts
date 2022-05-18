@@ -1,7 +1,9 @@
-// TODO: Update Transaction interface
+import type { ITransactionPayload } from '@iota/types';
+
 export interface Transaction {
-    messageId: string;
-    inclusionState: 'Confirmed';
+    payload: ITransactionPayload;
+    messageId?: string;
+    inclusionState: 'Pending' | 'Confirmed' | 'Conflicting';
     timestamp: number;
     networkId: number;
     incoming: boolean;

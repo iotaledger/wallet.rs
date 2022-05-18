@@ -14,7 +14,7 @@ export interface AddressWithMicroAmount {
     address: string;
     amount: number;
     returnAddress: string;
-    expiration: number
+    expiration: number;
 }
 
 export interface AddressNativeTokens {

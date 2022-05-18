@@ -8,3 +8,4 @@ export * from './output';
 export * from './secretManager';
 export * from './transaction';
 export * from './transfer';
+export * from './loggerConfig';

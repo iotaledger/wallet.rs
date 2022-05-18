@@ -1,4 +1,3 @@
-
 import type { AccountId } from '../account';
 import type {
     __SyncAccountPayloadMethod__,
@@ -42,7 +41,7 @@ import type {
     __SendNativeTokensPayload__,
     __SendNftPayload__,
     __SendTransferPayload__,
-    __TryCollectOutputsPayload__
+    __TryCollectOutputsPayload__,
 } from './account';
 import type {
     __GetAccountsMessagePayload__,
@@ -55,8 +54,7 @@ import type {
     __ImportAccountsPayload__,
     __GenerateMnemonicPayload__,
     __VerifyMnemonicPayload__,
-    
-} from './accountManager'
+} from './accountManager';
 
 export type __AccountPayloadMethods__ =
     | __SyncAccountPayloadMethod__
@@ -64,13 +62,13 @@ export type __AccountPayloadMethods__ =
     | __GenerateAddressesPayloadMethod__
     | __LatestAddressPayloadMethod__
     | __BalancePayloadMethod__
-    | __SetCollectOutputsPayloadMethod__ 
+    | __SetCollectOutputsPayloadMethod__
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
     | __ListAddressesPayloadMethod__
     | __ListAddressesWithBalancePayloadMethod__
     | __ListOutputsPayloadMethod__
     | __ListUnspentOutputsPayloadMethod__
-    | __ListPendingTransactionsPayloadMethod__ 
+    | __ListPendingTransactionsPayloadMethod__
     | __ListTransactionsPayloadMethod__
     | __MintNativeTokenPayloadMethod__
     | __MintNftsPayloadMethod__
@@ -79,15 +77,15 @@ export type __AccountPayloadMethods__ =
     | __SendNativeTokensPayloadMethod__
     | __SendNftPayloadMethod__
     | __SendTransferPayloadMethod__
-    | __TryCollectOutputsPayloadMethod__
+    | __TryCollectOutputsPayloadMethod__;
 
 export type __CallAccountMethodPayload__ = {
-    cmd: 'CallAccountMethod',
+    cmd: 'CallAccountMethod';
     payload: {
-        accountId: AccountId,
-        method: __AccountPayloadMethods__
-    }
-}
+        accountId: AccountId;
+        method: __AccountPayloadMethods__;
+    };
+};
 
 export type __SendMessagePayload__ =
     | __GetAccountsMessagePayload__

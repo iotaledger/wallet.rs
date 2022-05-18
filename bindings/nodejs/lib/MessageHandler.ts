@@ -1,19 +1,30 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { sendMessageAsync, messageHandlerNew, listen, destroy } from './bindings';
-import type { EventType, AccountManagerOptions, __SendMessagePayload__, __AccountPayloadMethods__, AccountId } from '../types';
+import {
+    sendMessageAsync,
+    messageHandlerNew,
+    listen,
+    destroy,
+} from './bindings';
+import type {
+    EventType,
+    AccountManagerOptions,
+    __SendMessagePayload__,
+    __AccountPayloadMethods__,
+    AccountId,
+} from '../types';
 
 // The MessageHandler class interacts with messages with the rust bindings.
 export class MessageHandler {
-    messageHandler: any
+    messageHandler: any;
 
     constructor(options: AccountManagerOptions) {
         const messageOptions = {
             storagePath: options.storagePath,
             clientOptions: JSON.stringify(options.clientOptions),
-            secretManager: JSON.stringify(options.secretManager)
-        }
+            secretManager: JSON.stringify(options.secretManager),
+        };
 
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
     }
@@ -22,21 +33,27 @@ export class MessageHandler {
         return sendMessageAsync(JSON.stringify(message), this.messageHandler);
     }
 
-    async callAccountMethod(accountIndex: AccountId, method: __AccountPayloadMethods__): Promise<string> {
+    async callAccountMethod(
+        accountIndex: AccountId,
+        method: __AccountPayloadMethods__,
+    ): Promise<string> {
         return this.sendMessage({
             cmd: 'CallAccountMethod',
             payload: {
                 accountId: accountIndex,
                 method,
-            }
-        })
+            },
+        });
     }
 
-    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
+    listen(
+        eventTypes: EventType[],
+        callback: (error: Error, result: string) => void,
+    ): void {
         return listen(eventTypes, callback, this.messageHandler);
     }
 
     destroy(): void {
-        return destroy(this.messageHandler)
+        return destroy(this.messageHandler);
     }
 }

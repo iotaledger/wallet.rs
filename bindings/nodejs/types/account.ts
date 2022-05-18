@@ -1,5 +1,6 @@
-
 import type { Address } from './address';
+import type { OutputData } from './output';
+import type { Transaction } from './transaction';
 
 /**
  * Account identifier
@@ -21,24 +22,29 @@ export interface AccountSyncOptions {
 
 export interface AccountMeta {
     index: number;
-    // TODO: Should this be an enum?
-    coinType: number;
+    coinType: CoinType;
     alias: string;
     publicAddresses: Address[];
     internalAddresses: Address[];
     addressesWithBalance: Address[];
-    // TODO: Define type for outputs
-    outputs: any;
-    lockedOutputs: any;
-    unspentOutputs: any;
-    // TODO: Define type for outputs
-    transactions: any;
-    pendingTransactions: any;
+    outputs: OutputsMap;
+    lockedOutputs: Set<string>;
+    unspentOutputs: OutputsMap;
+    transactions: TransactionsMap;
+    pendingTransactions: Set<string>;
     accountOptions: {
         outputConsolidationThreshold: number;
         automaticOutputConsolidation: boolean;
-    }
+    };
 }
+
+export type OutputsMap = {
+    [outputId: string]: OutputData;
+};
+
+export type TransactionsMap = {
+    [transactionId: string]: Transaction;
+};
 
 export enum CoinType {
     IOTA = 4218,
@@ -46,6 +52,6 @@ export enum CoinType {
 }
 
 export interface CreateAccountPayload {
-    alias: string
-    coinType?: CoinType
+    alias: string;
+    coinType?: CoinType;
 }

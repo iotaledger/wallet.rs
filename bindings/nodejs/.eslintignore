@@ -1,0 +1,8 @@
+scripts
+target
+**/node_modules/
+**/out/
+**/tests/
+
+# TODO: Remove ignore examples when they are updated to TS
+examples
