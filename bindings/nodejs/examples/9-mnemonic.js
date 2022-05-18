@@ -2,11 +2,11 @@
  * This example creates a generates, stores and verifies a mnemonic
  */
 
-const unlockAndReturnManager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        const manager = await unlockAndReturnManager();
+        const manager = await getUnlockedManager();
         const mnemonic = await manager.generateMnemonic();
         console.log('Mnemonic:', mnemonic);
 

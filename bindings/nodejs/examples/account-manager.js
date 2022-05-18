@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { AccountManager } = require('@iota/wallet');
 
-async function unlockAndReturnManager() {
+async function getUnlockedManager() {
     const manager = new AccountManager({
         storagePath: './alice-database',
     });
@@ -9,4 +9,4 @@ async function unlockAndReturnManager() {
     return manager;
 }
 
-module.exports = unlockAndReturnManager;
+module.exports = getUnlockedManager;

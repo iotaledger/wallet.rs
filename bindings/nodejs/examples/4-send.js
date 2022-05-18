@@ -2,11 +2,11 @@
  * This example sends IOTA Toens to an address.
  */
 
-const unlockAndReturnManager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        const manager = await unlockAndReturnManager();
+        const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 

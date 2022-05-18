@@ -2,11 +2,11 @@
  * This example creates a new database and account
  */
 
-const unlockAndReturnManager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        const manager = await unlockAndReturnManager();
+        const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
         const addressObject = await account.listAddresses();
         console.log('Addresses before:', addressObject);

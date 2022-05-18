@@ -1,14 +1,14 @@
 /**
- * This example creates a new database and account
+ * This example demonstrates how to update client options.
  */
-const unlockAndReturnManager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        const manager = await unlockAndReturnManager();
+        const manager = await getUnlockedManager();
         const clientOptions = {
             primaryNode: {
-                url: 'https://api.alphanet.iotaledger.net/',
+                url: 'https://localhost:14265/',
                 auth: null,
                 disabled: false,
             },
