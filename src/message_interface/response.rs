@@ -44,6 +44,8 @@ pub enum Response {
     SentTransfer(TransferResult),
     /// TryCollectOutputs and CollectOutputs response.
     SentTransfers(Vec<TransferResult>),
+    /// IsStrongholdPasswordAvailable
+    StrongholdPasswordIsAvailable(bool),
     /// An error occurred.
     Error(Error),
     /// A panic occurred.
@@ -74,6 +76,9 @@ impl Debug for Response {
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
             Response::SentTransfer(transfer) => write!(f, "SentTransfer({:?})", transfer),
             Response::SentTransfers(transfers) => write!(f, "SentTransfers({:?})", transfers),
+            Response::StrongholdPasswordIsAvailable(is_available) => {
+                write!(f, "StrongholdPasswordIsAvailable({:?})", is_available)
+            }
             Response::Error(error) => write!(f, "Error({:?})", error),
             Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
             Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),

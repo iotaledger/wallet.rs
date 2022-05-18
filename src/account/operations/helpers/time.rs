@@ -25,7 +25,7 @@ impl AccountHandle {
             .duration_since(UNIX_EPOCH)
             .expect("Time went backwards")
             .as_secs() as u32;
-        let status_response = self.client.get_info().await?.nodeinfo.status;
+        let status_response = self.client.get_info().await?.node_info.status;
         let latest_ms_timestamp = status_response.latest_milestone.timestamp;
         // Check the local time is in the range of +-5 minutes of the node to prevent locking funds by accident
         if !(latest_ms_timestamp - FIVE_MINUTES_IN_SECONDS..latest_ms_timestamp + FIVE_MINUTES_IN_SECONDS)
