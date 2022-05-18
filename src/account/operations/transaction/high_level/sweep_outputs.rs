@@ -105,6 +105,7 @@ impl AccountHandle {
         };
 
         let new_state_alias_output = AliasOutputBuilder::from(alias_output)
+            .with_alias_id(alias_id)
             .with_state_index(alias_output.state_index() + 1)
             .finish()?;
 
@@ -263,9 +264,6 @@ impl AccountHandle {
     ) -> crate::Result<Vec<OutputResponse>> {
         let alias_query_parameters = vec![
             QueryParameter::Governor(address.to_bech32()),
-            QueryParameter::HasExpirationCondition(false),
-            QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageDepositReturnCondition(false),
         ];
 
         let alias_output_ids = self.client.aliases_output_ids(alias_query_parameters).await?;

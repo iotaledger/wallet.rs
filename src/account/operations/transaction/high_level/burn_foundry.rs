@@ -60,6 +60,7 @@ impl AccountHandle {
                 };
                 // Create the new alias output with updated amount, state_index and native token if not burning foundry tokens
                 let alias_output = AliasOutputBuilder::from(&alias_output)
+                    .with_alias_id(alias_id)
                     .with_amount(amount)?
                     .with_native_tokens(native_tokens)
                     .with_state_index(alias_output.state_index() + 1)

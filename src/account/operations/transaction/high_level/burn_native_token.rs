@@ -44,6 +44,7 @@ impl AccountHandle {
             let amount = existing_alias_output_data.amount + existing_foundry_output.amount();
             // Create the new alias output with updated amount and state_index
             let alias_output = AliasOutputBuilder::from(alias_output)
+                .with_alias_id(alias_id)
                 .with_amount(amount)?
                 .with_state_index(alias_output.state_index() + 1)
                 .finish()?;
