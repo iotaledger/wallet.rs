@@ -11,10 +11,6 @@ license = "Apache-2.0"
 keywords = ["iota", "wallet", "transaction"]
 categories = ["cryptography::cryptocurrencies"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
 [dependencies]
 async-trait = { version = "0.1.51", default-features = false }
 packable = { version = "0.3.2", default-features = false, features = [ "serde", "primitive-types" ] }
@@ -50,9 +46,18 @@ message_interface = []
 events = []
 mnemonic = []
 
-[[example]]
-name = "events"
-required-features = ["events"]
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
+
+[profile.production]
+codegen-units = 1
+inherits = "release"
+lto = true
+panic = "abort"
+strip = "symbols"
 
 [[example]]
 name = "0_generate_addresses"
@@ -73,3 +78,11 @@ path = "examples/offline_signing/3_send_transaction.rs"
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]
 normal = ["backtrace"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[example]]
+name = "events"
+required-features = ["events"]
