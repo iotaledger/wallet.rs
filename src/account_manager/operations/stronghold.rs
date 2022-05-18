@@ -6,7 +6,7 @@ use iota_client::secret::SecretManager;
 use crate::account_manager::AccountManager;
 
 impl AccountManager {
-    /// Set the Stronghold password
+    /// Sets the Stronghold password
     pub async fn set_stronghold_password(&self, password: &str) -> crate::Result<()> {
         if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
             stronghold.set_password(password).await;
