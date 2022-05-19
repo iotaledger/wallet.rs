@@ -10,10 +10,6 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
-        // Always sync before doing anything with the account
-        const synced = await account.sync();
-        console.log('Syncing... - ', synced);
-
         console.log('Available balance', await account.listOutputs());
 
         //TODO: Replace with the address of your choice!

@@ -10,7 +10,8 @@ async function run() {
         const account = await manager.getAccount('Alice');
         const addressObject = await account.listAddresses();
         console.log('Addresses before:', addressObject);
-        // Always sync before doing anything with the account
+
+        // Always sync before calling getBalance()
         const synced = await account.sync();
         console.log('Syncing... - ', synced);
 

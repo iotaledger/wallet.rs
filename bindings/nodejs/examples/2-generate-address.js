@@ -13,10 +13,6 @@ async function run() {
         const address = await account.generateAddresses();
         console.log('New address:', address);
 
-        // Always sync before doing anything with the account
-        const synced = await account.sync();
-        console.log('Syncing... - ', synced);
-
         const address2 = await account.generateAddresses();
         console.log('New address:', address2);
 
