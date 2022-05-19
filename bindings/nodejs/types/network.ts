@@ -5,7 +5,7 @@ export enum Network {
     Testnet,
 }
 
-type Auth = {
+export type Auth = {
     jwt?: string;
     username?: string;
     password?: string;

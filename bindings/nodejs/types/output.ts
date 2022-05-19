@@ -1,4 +1,4 @@
-import type { AddressType } from '@iota/types';
+import type { AddressTypes } from '@iota/types';
 
 export enum OutputsToCollect {
     None = 'None',
@@ -42,7 +42,7 @@ export interface OutputData {
     amount: number;
     isSpent: boolean;
     address: {
-        type: AddressType,
+        type: AddressTypes,
         data: string;
     },
     networkId: number;

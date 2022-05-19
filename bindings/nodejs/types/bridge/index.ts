@@ -37,7 +37,7 @@ import type {
     __StopBackgroundSyncPayload__,
     __RecoverAccountsPayload__,
     __EmitTestEventPayload__,
-    
+    __SetClientOptionsPayload__,
 } from './accountManager'
 
 export type __AccountPayloadMethods__ =
