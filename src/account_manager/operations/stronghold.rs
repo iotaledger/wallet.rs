@@ -12,6 +12,7 @@ impl AccountManager {
             stronghold.set_password(password).await;
             let result = stronghold.read_stronghold_snapshot().await;
             if let Err(err) = result {
+                // TODO: replace with actual error matching when updated to the new Stronghold version
                 if let iota_client::Error::StrongholdProcedureError(ref err_msg) = err {
                     if !err_msg.contains("IOError") {
                         return Err(err.into());
