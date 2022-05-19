@@ -42,7 +42,12 @@ impl AccountInitialiser {
 
     pub fn secret_manager(&mut self, secret_manager_enum: AccountSecretManager) -> Self {
         let secret_manager = crate::acc_manager::secret_manager_enum_to_type(secret_manager_enum);
-        let new_initialiser = self.initialiser.borrow_mut().take().unwrap().secret_manager(secret_manager);
+        let new_initialiser = self
+            .initialiser
+            .borrow_mut()
+            .take()
+            .unwrap()
+            .secret_manager(secret_manager);
         AccountInitialiser::new_with_initialiser(Rc::new(RefCell::new(Option::from(new_initialiser))))
     }
 
