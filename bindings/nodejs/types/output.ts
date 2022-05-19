@@ -16,11 +16,6 @@ enum Output {
     Nft = 'Nft',
 }
 
-export interface OutputId {
-    transactionId: string;
-    index: string
-}
-
 export interface OutputResponse {
     messageId: string;
     transactionId: string;
@@ -36,7 +31,7 @@ export interface OutputResponse {
 }
 
 export interface OutputData {
-    outputId: OutputId;
+    outputId: string;
     outputResponse: OutputResponse;
     output: Output;
     amount: number;
