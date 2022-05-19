@@ -46,9 +46,6 @@ message_interface = []
 events = []
 mnemonic = []
 
-[profile.dev]
-panic = "abort"
-
 [profile.release]
 panic = "abort"
 
@@ -56,7 +53,6 @@ panic = "abort"
 codegen-units = 1
 inherits = "release"
 lto = true
-panic = "abort"
 strip = "symbols"
 
 [[example]]
