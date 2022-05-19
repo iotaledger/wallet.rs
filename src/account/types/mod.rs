@@ -91,11 +91,14 @@ impl OutputData {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Transaction {
     pub payload: TransactionPayload,
+    #[serde(rename = "messageId")]
     pub message_id: Option<MessageId>,
+    #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
     // remove because we have a timestamp in the outputs?
     pub timestamp: u128,
     // network id to ignore outputs when set_client_options is used to switch to another network
+    #[serde(rename = "networkId")]
     pub network_id: u64,
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
