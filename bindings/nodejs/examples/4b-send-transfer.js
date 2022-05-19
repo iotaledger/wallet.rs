@@ -10,25 +10,19 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
-        console.log('Available balance', await account.listOutputs());
+        //TODO: test this once outputs can be conveniently built
+        // const response = await account.sendTransfer([
+        //     {
+        //         address,
+        //         amount,
+        //     },
+        // ]);
 
-        //TODO: Replace with the address of your choice!
-        const address =
-            'rms1qrrv7flg6lz5cssvzv2lsdt8c673khad060l4quev6q09tkm9mgtupgf0h0';
-        const amount = '1000000';
+        // console.log(response);
 
-        const response = await account.sendAmount([
-            {
-                address,
-                amount,
-            },
-        ]);
-
-        console.log(response);
-
-        console.log(
-            `Check your message on http://localhost:14265/api/v2/messages/${response.messageId}`,
-        );
+        // console.log(
+        //     `Check your message on http://localhost:14265/api/v2/messages/${response.messageId}`,
+        // );
     } catch (error) {
         console.log('Error: ' + error);
     }
