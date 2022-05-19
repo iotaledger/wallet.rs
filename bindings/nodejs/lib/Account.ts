@@ -72,13 +72,14 @@ export class Account {
         return JSON.parse(response).payload;
     }
     
-    async getOutputsWithAdditionalUnlockConditions(outputs: OutputsToCollect): Promise<string> {
-        return await this.messageHandler.callAccountMethod(this.meta.index, {
+    async getOutputsWithAdditionalUnlockConditions(outputs: OutputsToCollect): Promise<string[]> {
+        const response = await this.messageHandler.callAccountMethod(this.meta.index, {
             name: 'GetOutputsWithAdditionalUnlockConditions',
             data: {
                 outputsToCollect: outputs,
             },
         });
+        return JSON.parse(response).payload;
     }
 
     async listAddresses(): Promise<Address[]> {
