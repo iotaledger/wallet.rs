@@ -1,5 +1,5 @@
 /**
- * This example creates a new database and account
+ * This example lists the outputs of the first account
  */
 const unlockAndReturnManager = require('./account-manager');
 

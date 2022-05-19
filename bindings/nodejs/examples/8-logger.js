@@ -1,5 +1,5 @@
 /**
- * This example shows some events.
+ * This example initializes the logger.
  */
 
 const getUnlockedManager = require('./account-manager');
