@@ -1,11 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        NftId, NftOutputBuilder, Output,
+use iota_client::{
+    api::PreparedTransactionData,
+    bee_block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            NftId, NftOutputBuilder, Output,
+        },
     },
 };
 // use primitive_types::U256;
@@ -51,9 +54,24 @@ impl AccountHandle {
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        let prepared_trasacton = self.prepare_send_nft(addresses_nft_ids, options).await?;
+        self.sign_and_submit_transfer(prepared_trasacton).await
+    }
+
+    /// Function to prepare the transaction for
+    /// [AccountHandle.send_nft()](crate::account::handle::AccountHandle.send_nft)
+    pub async fn prepare_send_nft(
+        &self,
+        addresses_nft_ids: Vec<AddressAndNftId>,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] prepare_send_nft");
+
         let unspent_outputs = self.list_unspent_outputs().await?;
+
         let mut outputs = Vec::new();
         let mut custom_inputs = Vec::new();
+
         for address_and_nft_id in addresses_nft_ids {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_nft_id.address)?;
             // Find nft output from the inputs
@@ -97,6 +115,7 @@ impl AccountHandle {
                 ..Default::default()
             }),
         };
-        self.send(outputs, options).await
+
+        self.sync_and_prepare_transaction(outputs, options).await
     }
 }

@@ -57,6 +57,7 @@ impl AccountHandle {
         addresses_with_amount: Vec<AddressWithAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] prepare_send_amount");
         let mut outputs = Vec::new();
         for address_with_amount in addresses_with_amount {
             outputs.push(

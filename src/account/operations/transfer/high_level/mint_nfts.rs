@@ -1,12 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
-    address::Address,
-    output::{
-        feature::{Feature, MetadataFeature},
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        NftId, NftOutputBuilder,
+use iota_client::{
+    api::PreparedTransactionData,
+    bee_block::{
+        address::Address,
+        output::{
+            feature::{Feature, MetadataFeature},
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            NftId, NftOutputBuilder,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -57,7 +60,18 @@ impl AccountHandle {
         nfts_options: Vec<NftOptions>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] mint_nfts");
+        let prepared_trasacton = self.prepare_mint_nfts(nfts_options, options).await?;
+        self.sign_and_submit_transfer(prepared_trasacton).await
+    }
+
+    /// Function to prepare the transaction for
+    /// [AccountHandle.mint_nfts()](crate::account::handle::AccountHandle.mint_nfts)
+    pub async fn prepare_mint_nfts(
+        &self,
+        nfts_options: Vec<NftOptions>,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] prepare_mint_nfts");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
@@ -99,6 +113,7 @@ impl AccountHandle {
             }
             outputs.push(nft_builder.finish_output()?);
         }
-        self.send(outputs, options).await
+
+        self.sync_and_prepare_transaction(outputs, options).await
     }
 }

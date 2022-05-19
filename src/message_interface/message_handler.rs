@@ -331,6 +331,15 @@ impl WalletMessageHandler {
             AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.balance().await?,
             ))),
+            AccountMethod::PrepareMintNfts { nfts_options, options } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_mint_nfts(nfts_options.clone(), options.clone())
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
             AccountMethod::PrepareSendAmount {
                 addresses_with_amount,
                 options,
@@ -344,6 +353,48 @@ impl WalletMessageHandler {
                                 .collect::<Result<Vec<AddressWithAmount>>>()?,
                             options.clone(),
                         )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendMicroTransaction {
+                addresses_with_micro_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_micro_transaction(
+                            addresses_with_micro_amount
+                                .iter()
+                                .map(AddressWithMicroAmount::try_from)
+                                .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendNativeTokens {
+                addresses_native_tokens,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_native_tokens(addresses_native_tokens.clone(), options.clone())
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendNft {
+                addresses_nft_ids,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_nft(addresses_nft_ids.clone(), options.clone())
                         .await?;
                     Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
                 })
