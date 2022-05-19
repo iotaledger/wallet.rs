@@ -52,7 +52,7 @@ pub enum Response {
     /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
-    /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
+    /// todo
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
