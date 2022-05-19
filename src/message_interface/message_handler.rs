@@ -104,6 +104,22 @@ impl WalletMessageHandler {
             MessageType::Backup { destination, password } => {
                 convert_async_panics(|| async { self.backup(destination.to_path_buf(), password).await }).await
             }
+            #[cfg(feature = "stronghold")]
+            MessageType::ClearStrongholdPassword => {
+                convert_async_panics(|| async {
+                    self.account_manager.clear_stronghold_password().await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "stronghold")]
+            MessageType::IsStrongholdPasswordAvailable => {
+                convert_async_panics(|| async {
+                    let is_available = self.account_manager.is_stronghold_password_available().await?;
+                    Ok(Response::StrongholdPasswordIsAvailable(is_available))
+                })
+                .await
+            }
             MessageType::RecoverAccounts {
                 account_gap_limit,
                 address_gap_limit,
@@ -155,8 +171,8 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     match url {
                         Some(url) => {
-                            let nodeinfo = Client::get_node_info(&url, auth).await?;
-                            Ok(Response::NodeInfo(NodeInfoWrapper { nodeinfo, url }))
+                            let node_info = Client::get_node_info(&url, auth).await?;
+                            Ok(Response::NodeInfo(NodeInfoWrapper { node_info, url }))
                         }
                         None => self.account_manager.get_node_info().await.map(Response::NodeInfo),
                     }

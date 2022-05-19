@@ -54,13 +54,22 @@ pub enum MessageType {
     },
     /// Backup storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    #[cfg(feature = "storage")]
+    #[cfg(feature = "stronghold")]
     Backup {
         /// The backup destination.
         destination: PathBuf,
         /// Stronghold file password.
         password: String,
     },
+    /// Clears the Stronghold password from memory.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "stronghold")]
+    ClearStrongholdPassword,
+    /// Checks if the Stronghold password is available.
+    /// Expected response:
+    /// [`StrongholdPasswordIsAvailable`](crate::message_interface::Response::StrongholdPasswordIsAvailable)
+    #[cfg(feature = "stronghold")]
+    IsStrongholdPasswordAvailable,
     /// Find accounts with unspent outputs
     /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     RecoverAccounts {
@@ -75,7 +84,7 @@ pub enum MessageType {
     },
     /// Import accounts from a Stronghold backup.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    #[cfg(feature = "storage")]
+    #[cfg(feature = "stronghold")]
     RestoreBackup {
         /// The path to the backed up Stronghold.
         source: PathBuf,
@@ -139,7 +148,11 @@ impl Debug for MessageType {
                 "CallAccountMethod{{ account_id: {:?}, method: {:?} }}",
                 account_id, method
             ),
-            #[cfg(feature = "storage")]
+            #[cfg(feature = "stronghold")]
+            MessageType::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
+            #[cfg(feature = "stronghold")]
+            MessageType::IsStrongholdPasswordAvailable => write!(f, "IsStrongholdPasswordAvailable"),
+            #[cfg(feature = "stronghold")]
             MessageType::Backup {
                 destination,
                 password: _,
@@ -152,7 +165,7 @@ impl Debug for MessageType {
                 "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
                 account_gap_limit, address_gap_limit
             ),
-            #[cfg(feature = "storage")]
+            #[cfg(feature = "stronghold")]
             MessageType::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
             #[cfg(feature = "storage")]
             MessageType::DeleteStorage => write!(f, "DeleteStorage"),
@@ -214,6 +227,14 @@ impl Serialize for MessageType {
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
             MessageType::EmitTestEvent(_) => serializer.serialize_unit_variant("MessageType", 17, "EmitTestEvent"),
+            #[cfg(feature = "stronghold")]
+            MessageType::ClearStrongholdPassword => {
+                serializer.serialize_unit_variant("MessageType", 18, "ClearStrongholdPassword")
+            }
+            #[cfg(feature = "stronghold")]
+            MessageType::IsStrongholdPasswordAvailable => {
+                serializer.serialize_unit_variant("MessageType", 19, "IsStrongholdPasswordAvailable")
+            }
         }
     }
 }
