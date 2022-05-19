@@ -1,17 +1,13 @@
+import type { ITransactionPayload } from '@iota/types';
+
 enum InclusionState {
     Pending = 'Pending',
     Confirmed = 'Confirmed',
     Conflicting = 'Conflicting',
 }
 
-// TODO: properly type this
-interface TransactionPayload {
-    essence: any;
-    unlockBlocks: any
-}
-
 export interface Transaction {
-    payload: TransactionPayload;
+    payload: ITransactionPayload;
     messageId?: string;
     inclusionState: InclusionState;
     timestamp: number;

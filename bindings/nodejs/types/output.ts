@@ -1,4 +1,4 @@
-import type { AddressTypes } from '@iota/types';
+import type { AddressTypes, IOutputResponse } from '@iota/types';
 
 export enum OutputsToCollect {
     None = 'None',
@@ -16,30 +16,9 @@ enum OutputType {
     Nft = 'Nft',
 }
 
-export interface OutputResponse {
-    messageId: string;
-    transactionId: string;
-    outputIndex: number;
-    isSpent: boolean;
-    milestoneIndexSpent?: number;
-    milestoneTimestampSpent?: number;
-    transactionIdSpent?: string;
-    milestoneIndexBooked: number;
-    milestoneTimestampBooked: number;
-    ledgerIndex: number;
-    output: OutputDTO;
-}
-
-interface OutputDTO {
-    type: number;
-    amount: string;
-    // TODO: specify unlockConditions type
-    unlockConditions: any[]
-}
-
 export interface OutputData {
     outputId: string;
-    outputResponse: OutputResponse;
+    outputResponse: IOutputResponse;
     output: Output;
     amount: number;
     isSpent: boolean;
