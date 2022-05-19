@@ -40,8 +40,6 @@ async fn main() -> Result<()> {
 
     // Create the account manager with the secret_manager and client options
     let manager = AccountManager::builder()
-        // todo: remove the need of this workaround
-        // We provide the ledger nano simulator as secret_manager so it works, but it's not actually used
         .with_secret_manager(SecretManager::Placeholder(PlaceholderSecretManager))
         .with_client_options(client_options.clone())
         .with_storage_path("examples/offline_signing/online_walletdb")

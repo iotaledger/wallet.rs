@@ -47,14 +47,19 @@ pub enum Response {
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
     Outputs(Vec<OutputData>),
     /// Response for
-    /// todo
+    /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
+    /// [`PrepareMintNfts`](crate::message_interface::AccountMethod::PrepareMintNfts),
+    /// [`PrepareSendMicroTransaction`](crate::message_interface::AccountMethod::PrepareSendMicroTransaction),
+    /// [`PrepareSendNativeTokens`](crate::message_interface::AccountMethod::PrepareSendNativeTokens),
+    /// [`PrepareSendNft`](crate::message_interface::AccountMethod::PrepareSendNft),
+    /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<TransactionDto>),
-    /// SignTransaction.
-    /// todo
+    /// Response for
+    /// [`SignTransaction`](crate::message_interface::AccountMethod::SignTransaction)
     SignedTransactionData(SignedTransactionDataDto),
     /// GenerateAddress response.
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)
@@ -71,6 +76,7 @@ pub enum Response {
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
     /// [`SendTransfer`](crate::message_interface::AccountMethod::SendTransfer)
+    /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransfer(TransferResult),
     /// Response for [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)

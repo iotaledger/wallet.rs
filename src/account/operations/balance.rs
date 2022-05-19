@@ -21,7 +21,7 @@ impl AccountHandle {
 
         let network_id = self.client.get_network_id().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
-        // todo: use this to determine which outputs can be spent now
+
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
 
         let mut total_amount = 0;
