@@ -17,5 +17,5 @@ export interface Transaction {
 
 export interface TransactionReceipt {
     transactionId: string;
-    messageId?: string
+    messageId?: string;
 }

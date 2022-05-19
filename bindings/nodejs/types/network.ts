@@ -23,7 +23,7 @@ interface NetworkInfo {
         vByteCost?: number;
         vByteFactorKey?: number;
         vByteFactorData?: number;
-    }
+    };
 }
 
 export type Node = {

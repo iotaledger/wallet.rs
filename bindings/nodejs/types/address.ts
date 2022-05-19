@@ -28,7 +28,7 @@ export interface AddressWithMicroAmount {
     address: string;
     amount: number;
     returnAddress?: string;
-    expiration?: number
+    expiration?: number;
 }
 
 export interface AddressNativeTokens {
@@ -44,11 +44,11 @@ export interface AddressNftId {
 }
 
 export interface AddressGenerationOptions {
-    internal: boolean
-    metadata: GenerateAddressMetadata
+    internal: boolean;
+    metadata: GenerateAddressMetadata;
 }
 
 interface GenerateAddressMetadata {
-    syncing: boolean
-    network: Network
+    syncing: boolean;
+    network: Network;
 }

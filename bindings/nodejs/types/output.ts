@@ -23,9 +23,9 @@ export interface OutputData {
     amount: number;
     isSpent: boolean;
     address: {
-        type: AddressTypes,
+        type: AddressTypes;
         data: string;
-    },
+    };
     networkId: number;
     remainder: boolean;
     chain: Segment[];
@@ -34,7 +34,7 @@ export interface OutputData {
 export interface Output {
     type: OutputType;
     // TODO: specify the return type
-    data: any
+    data: any;
 }
 
 export interface Segment {

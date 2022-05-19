@@ -38,7 +38,7 @@ import type {
     __RecoverAccountsPayload__,
     __EmitTestEventPayload__,
     __SetClientOptionsPayload__,
-} from './accountManager'
+} from './accountManager';
 
 export type __AccountPayloadMethods__ =
     | __BalancePayloadMethod__
@@ -48,7 +48,7 @@ export type __AccountPayloadMethods__ =
     | __ListAddressesPayloadMethod__
     | __ListAddressesWithUnspentOutputsPayloadMethod__
     | __ListOutputsPayloadMethod__
-    | __ListPendingTransactionsPayloadMethod__ 
+    | __ListPendingTransactionsPayloadMethod__
     | __ListTransactionsPayloadMethod__
     | __ListUnspentOutputsPayloadMethod__
     | __MintNativeTokenPayloadMethod__
@@ -58,9 +58,9 @@ export type __AccountPayloadMethods__ =
     | __SendNativeTokensPayloadMethod__
     | __SendNftPayloadMethod__
     | __SendTransferPayloadMethod__
-    | __SetCollectOutputsPayloadMethod__ 
+    | __SetCollectOutputsPayloadMethod__
     | __SyncAccountPayloadMethod__
-    | __TryCollectOutputsPayloadMethod__
+    | __TryCollectOutputsPayloadMethod__;
 
 export type __CallAccountMethodPayload__ = {
     cmd: 'CallAccountMethod';

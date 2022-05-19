@@ -25,10 +25,10 @@ export type nativeTokensMap = {
 
 export type potentiallyLockedOutputsMap = {
     [outputId: string]: boolean;
-}
+};
 
 export interface AccountSyncOptions {
-    addresses?: string[]
+    addresses?: string[];
     addressStartIndex?: number;
     automaticOutputConsolidation?: boolean;
     forceSyncing?: boolean;
@@ -70,6 +70,6 @@ export enum CoinType {
 }
 
 export interface CreateAccountPayload {
-    alias?: string
-    coinType?: CoinType
+    alias?: string;
+    coinType?: CoinType;
 }

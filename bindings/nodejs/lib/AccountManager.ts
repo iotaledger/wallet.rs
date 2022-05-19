@@ -13,8 +13,8 @@ import type {
     NodeInfoWrapper,
     ClientOptions,
     AccountSyncOptions,
-    WalletEvent
-} from '../types'
+    WalletEvent,
+} from '../types';
 
 export class AccountManager {
     private messageHandler: MessageHandler;
@@ -22,7 +22,7 @@ export class AccountManager {
     constructor(options: AccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);
     }
-    
+
     async backup(destination: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'Backup',
@@ -37,40 +37,37 @@ export class AccountManager {
      * The coin type only needs to be set on the first account
      */
     async createAccount(payload: CreateAccountPayload): Promise<Account> {
-        const response = await this.messageHandler
-            .sendMessage({
-                cmd: 'CreateAccount',
-                payload,
-            });
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'CreateAccount',
+            payload,
+        });
 
-        return new Account(
-            JSON.parse(response).payload,
-            this.messageHandler,
-        );
+        return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
     // TODO: test this
-    async recoverAccounts(accountGapLimit: number, addressGapLimit: number): Promise<Account[]> {
+    async recoverAccounts(
+        accountGapLimit: number,
+        addressGapLimit: number,
+    ): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'RecoverAccounts',
             payload: {
                 accountGapLimit,
                 addressGapLimit,
-            }
-        })
-        return JSON.parse(response).payload
+            },
+        });
+        return JSON.parse(response).payload;
     }
 
     async deleteStorage(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'DeleteStorage',
-        })
+        });
     }
 
-
     destroy(): void {
-        this.messageHandler
-            .destroy()
+        this.messageHandler.destroy();
     }
 
     async getAccount(accountId: AccountId): Promise<Account> {
@@ -110,7 +107,7 @@ export class AccountManager {
             }),
         ).payload;
     }
-    
+
     async setStrongholdPassword(password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
@@ -124,14 +121,14 @@ export class AccountManager {
         });
         return JSON.parse(response).payload;
     }
-    
+
     async storeMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: mnemonic,
         });
     }
-    
+
     async verifyMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',
@@ -143,23 +140,26 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'SetClientOptions',
             payload: options,
-        })
+        });
     }
 
-    async startBackgroundSync(options?: AccountSyncOptions, interval?: number): Promise<void> {
+    async startBackgroundSync(
+        options?: AccountSyncOptions,
+        interval?: number,
+    ): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StartBackgroundSync',
             payload: {
                 options,
                 interval,
-            }
-        })
+            },
+        });
     }
 
     async stopBackgroundSync(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StopBackgroundSync',
-        })
+        });
     }
 
     async restoreBackup(source: string, password: string): Promise<void> {
@@ -180,7 +180,10 @@ export class AccountManager {
         });
     }
 
-    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
+    listen(
+        eventTypes: EventType[],
+        callback: (error: Error, result: string) => void,
+    ): void {
         return this.messageHandler.listen(eventTypes, callback);
     }
 }

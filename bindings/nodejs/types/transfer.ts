@@ -21,7 +21,7 @@ export interface NativeTokenOptions {
     tokenTag: any;
     circulatingSupply: number;
     maximumSupply: number;
-    foundryMetadata?: number[]
+    foundryMetadata?: number[];
 }
 
 export interface NftOptions {
