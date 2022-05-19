@@ -8,7 +8,7 @@ export enum OutputsToCollect {
     All = 'All',
 }
 
-enum Output {
+enum OutputType {
     Treasury = 'Treasury',
     Basic = 'Basic',
     Alias = 'Alias',
@@ -27,7 +27,14 @@ export interface OutputResponse {
     milestoneIndexBooked: number;
     milestoneTimestampBooked: number;
     ledgerIndex: number;
-    output: Output;
+    output: OutputDTO;
+}
+
+interface OutputDTO {
+    type: number;
+    amount: string;
+    // TODO: specify unlockConditions type
+    unlockConditions: any[]
 }
 
 export interface OutputData {
@@ -43,6 +50,12 @@ export interface OutputData {
     networkId: number;
     remainder: boolean;
     chain: Segment[];
+}
+
+export interface Output {
+    type: OutputType;
+    // TODO: specify the return type
+    data: any
 }
 
 export interface Segment {
