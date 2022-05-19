@@ -1,5 +1,5 @@
 /**
- * This example lists the outputs of the first account
+ * This example lists the transactions of the first account
  */
 const unlockAndReturnManager = require('./account-manager');
 
@@ -9,8 +9,8 @@ async function run() {
         const account = await manager.getAccount('Alice');
         
         await account.sync();
-        const outputs = await account.listOutputs()
-        console.log('Outputs:', outputs);
+        const transactions = await account.listTransactions()
+        console.log('Listing Transactions:', transactions);
     } catch (error) {
         console.log('Error: ' + error);
     }
