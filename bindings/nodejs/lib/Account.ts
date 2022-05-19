@@ -166,7 +166,7 @@ export class Account {
                 name: 'GenerateAddresses',
                 data: {
                     amount,
-                    options
+                    options,
                 }
             }
         )
