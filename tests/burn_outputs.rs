@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use iota_client::{
-    bee_block::output::{NftId, OutputId, TokenTag, AliasId},
+    bee_message::output::{NftId, OutputId, TokenTag},
     request_funds_from_faucet,
 };
 use iota_wallet::{
@@ -14,6 +14,7 @@ use iota_wallet::{
     ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
 };
 
+#[ignore]
 #[tokio::test]
 async fn mint_and_burn_nft() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
@@ -85,6 +86,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     Ok(())
 }
 
+#[ignore]
 #[tokio::test]
 async fn mint_and_burn_native_token() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";

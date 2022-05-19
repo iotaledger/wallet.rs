@@ -441,7 +441,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransaction(transaction))
+                    Ok(Response::MintTokenTransfer(message))
                 })
                 .await
             }
