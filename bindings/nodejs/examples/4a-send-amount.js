@@ -1,5 +1,5 @@
 /**
- * This example sends IOTA Toens to an address.
+ * This example sends IOTA tokens to an address.
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -14,25 +14,24 @@ async function run() {
         const synced = await account.sync();
         console.log('Syncing... - ', synced);
 
-        console.log('Available balance', await account.balance());
+        console.log('Available balance', await account.getBalance());
 
         //TODO: Replace with the address of your choice!
         const address =
-            'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r';
-        const amount = 1000000;
+            'rms1qrrv7flg6lz5cssvzv2lsdt8c673khad060l4quev6q09tkm9mgtupgf0h0';
+        const amount = '1000000';
 
-        const response = await account.send({
-            address,
-            amount,
-            remainder_value_strategy: {
-                strategy: 'ReuseAddress',
+        const response = await account.sendAmount([
+            {
+                address,
+                amount,
             },
-        });
+        ]);
 
         console.log(response);
 
         console.log(
-            `Check your message on http://localhost:14265/api/v2/messages/${response.id}`,
+            `Check your message on http://localhost:14265/api/v2/messages/${response.messageId}`,
         );
     } catch (error) {
         console.log('Error: ' + error);

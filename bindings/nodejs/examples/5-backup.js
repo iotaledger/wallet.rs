@@ -4,15 +4,17 @@
  */
 
 require('dotenv').config();
-const manager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
+        const manager = await getUnlockedManager();
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
+        console.log('Backup created at:', path);
 
-        console.log('Backup path:', path);
+        await manager.deleteStorage();
+
+        console.log('Successfully created backup');
     } catch (error) {
         console.log('Error: ' + error);
     }

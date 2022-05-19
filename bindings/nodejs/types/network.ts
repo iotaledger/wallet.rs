@@ -5,19 +5,25 @@ export enum Network {
     Testnet,
 }
 
-export type Auth = {
+type Auth = {
     jwt?: string;
     username?: string;
     password?: string;
 };
 
-export interface MqttBrokerOptions {
-    automaticDisconnect?: boolean;
-    // timeout in seconds
-    timeout?: number;
-    useWs?: boolean;
-    port?: number;
-    maxReconnectionAttempts?: number;
+interface NetworkInfo {
+    network?: string;
+    networkId?: number;
+    bech32HRP?: string;
+    minPoWScore?: number;
+    localPow?: boolean;
+    fallbackToLocalPow?: boolean;
+    tipsInterval?: number;
+    rentStructure?: {
+        vByteCost?: number;
+        vByteFactorKey?: number;
+        vByteFactorData?: number;
+    }
 }
 
 export type Node = {
@@ -27,15 +33,27 @@ export type Node = {
 };
 
 export interface ClientOptions {
+    apiTimeout?: number;
+    automaticDisconnect?: boolean;
+    maxReconnectionAttempts?: number;
+    minQuorumSize?: number;
+    network?: string;
+    networkInfo?: NetworkInfo;
+    nodes?: Array<string | Node>;
+    nodeSyncEnabled?: boolean;
+    nodeSyncInterval?: number;
+    offline?: boolean;
+    permanodes?: Array<string | Node>;
+    port?: number;
+    powWorkerCount?: number;
     primaryNode?: string | Node;
     primaryPoWNode?: string | Node;
-    node?: string | Node;
-    nodes?: Array<string | Node>;
-    network?: string;
-    mqttBrokerOptions?: MqttBrokerOptions;
-    quorumSize?: number;
-    quorumThreshold?: number;
-    localPow?: boolean;
+    quorum?: boolean;
+    quorumTreshold?: boolean;
+    remotePowTimeout?: number;
+    // timeout in seconds
+    timeout?: number;
+    useWs?: boolean;
 }
 
 /**

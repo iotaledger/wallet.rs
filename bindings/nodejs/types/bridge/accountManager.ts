@@ -1,5 +1,7 @@
-import type { AccountId, CreateAccountPayload } from '../account';
-import type { Auth } from '../network';
+
+import type { AccountId, AccountSyncOptions, CreateAccountPayload } from '../account';
+import type { WalletEvent } from '../event';
+import type { Auth, ClientOptions } from '../network';
 
 export type __GetAccountsMessagePayload__ = {
     cmd: 'GetAccounts';
@@ -22,6 +24,23 @@ export type __CreateAccountMessagePayload__ = {
     cmd: 'CreateAccount';
     payload: CreateAccountPayload;
 };
+
+export type __RecoverAccountsPayload__ = {
+    cmd: 'RecoverAccounts'
+    payload: {
+        accountGapLimit: number
+        addressGapLimit: number
+    }
+}
+
+export type __DeleteStorageMessagePayload__ = {
+    cmd: 'DeleteStorage'
+}
+
+export type __EmitTestEventPayload__ = {
+    cmd: 'EmitTestEvent',
+    payload: WalletEvent,
+}
 
 export type __SetStrongholdPasswordPayload__ = {
     cmd: 'SetStrongholdPassword';
@@ -50,10 +69,27 @@ export type __BackupPayload__ = {
     };
 };
 
-export type __ImportAccountsPayload__ = {
-    cmd: 'RestoreBackup';
+export type __RestoreBackupPayload__ = {
+    cmd: 'RestoreBackup'
     payload: {
-        backupPath: string;
-        password: string;
+        source: string
+        password: string
     };
-};
+}
+
+export type __SetClientOptionsPayload__ = {
+    cmd: 'SetClientOptions'
+    payload: ClientOptions;
+}
+
+export type __StartBackgroundSyncPayload__ = {
+    cmd: 'StartBackgroundSync',
+    payload: {
+        options?: AccountSyncOptions,
+        interval?: number
+    }
+}
+
+export type __StopBackgroundSyncPayload__ = {
+    cmd: 'StopBackgroundSync',
+}

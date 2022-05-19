@@ -16,8 +16,14 @@ export interface AccountBalance {
 }
 
 export interface AccountSyncOptions {
-    addressIndex?: number;
-    gapLimit?: number;
+    addresses?: string[]
+    addressStartIndex?: number;
+    automaticOutputConsolidation?: boolean;
+    forceSyncing?: boolean;
+    syncPendingTransactions?: boolean;
+    syncAliasesAndNfts?: boolean;
+    tryCollectOutputs?: boolean;
+    outputConsolidationThreshold?: number;
 }
 
 export interface AccountMeta {
@@ -52,6 +58,6 @@ export enum CoinType {
 }
 
 export interface CreateAccountPayload {
-    alias: string;
-    coinType?: CoinType;
+    alias?: string
+    coinType?: CoinType
 }

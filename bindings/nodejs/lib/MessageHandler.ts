@@ -19,12 +19,12 @@ import type {
 export class MessageHandler {
     messageHandler: any;
 
-    constructor(options: AccountManagerOptions) {
+    constructor(options?: AccountManagerOptions) {
         const messageOptions = {
-            storagePath: options.storagePath,
-            clientOptions: JSON.stringify(options.clientOptions),
-            secretManager: JSON.stringify(options.secretManager),
-        };
+            storagePath: options?.storagePath,
+            clientOptions: JSON.stringify(options?.clientOptions),
+            secretManager: JSON.stringify(options?.secretManager)
+        }
 
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
     }

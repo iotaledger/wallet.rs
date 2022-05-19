@@ -120,10 +120,13 @@ export class Account {
     }
 
     async sync(options?: AccountSyncOptions): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SyncAccount',
-            data: options || {},
-        });
+        await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'SyncAccount',
+                data: options ?? {},
+            }
+        )
     }
 
     async generateAddresses(): Promise<Address[]> {
@@ -301,19 +304,6 @@ export class Account {
                 },
             },
         );
-
-        return JSON.parse(response).payload;
-    }
-
-    /**
-     * TODO: Replace any with proper response type
-     * TODO: Why is this an account method? We do not expect account id.
-     */
-    async setClientOptions(options: ClientOptions): Promise<any> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'SetClientOptions',
-            payload: options,
-        });
 
         return JSON.parse(response).payload;
     }

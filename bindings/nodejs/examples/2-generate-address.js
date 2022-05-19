@@ -1,13 +1,12 @@
 /**
- * This example genrates a new address.
+ * This example generates a new address.
  */
-
-require('dotenv').config();
-const manager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
+        const manager = await getUnlockedManager();
+
         const account = await manager.getAccount('0');
         console.log('Account:', account);
 

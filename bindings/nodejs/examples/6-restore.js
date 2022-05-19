@@ -3,17 +3,20 @@
  */
 
 require('dotenv').config();
-const manager = require('./account-manager');
-
+const { AccountManager } = require('@iota/wallet');
 async function run() {
     try {
-        await manager.setStrongholdPassword(process.env.SH_PASSWORD);
+        const manager = new AccountManager({
+            secretManager: {
+                Stronghold: {},
+            },
+        });
 
         // Add the path to the file from example 5-backup.js
         // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
         const path = './backup'; //"input your backup file"
 
-        await manager.importAccounts(path, process.env.SH_PASSWORD);
+        await manager.restoreBackup(path, process.env.SH_PASSWORD);
         const account = await manager.getAccount('Alice');
         console.log('Account:', account.alias());
     } catch (error) {

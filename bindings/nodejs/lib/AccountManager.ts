@@ -6,12 +6,15 @@ import { Account } from './Account';
 
 import type {
     AccountId,
+    Auth,
     EventType,
     AccountManagerOptions,
     CreateAccountPayload,
     NodeInfoWrapper,
-    Auth,
-} from '../types';
+    ClientOptions,
+    AccountSyncOptions,
+    WalletEvent
+} from '../types'
 
 export class AccountManager {
     private messageHandler: MessageHandler;
@@ -19,6 +22,51 @@ export class AccountManager {
     constructor(options: AccountManagerOptions) {
         this.messageHandler = new MessageHandler(options);
     }
+    
+    async backup(destination: string, password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'Backup',
+            payload: {
+                destination,
+                password,
+            },
+        });
+    }
+
+    /**
+     * The coin type only needs to be set on the first account
+     */
+    async createAccount(payload: CreateAccountPayload): Promise<Account> {
+        const response = await this.messageHandler
+            .sendMessage({
+                cmd: 'CreateAccount',
+                payload,
+            });
+
+        return new Account(
+            JSON.parse(response).payload,
+            this.messageHandler,
+        );
+    }
+
+    // TODO: test this
+    async recoverAccounts(accountGapLimit: number, addressGapLimit: number): Promise<Account[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'RecoverAccounts',
+            payload: {
+                accountGapLimit,
+                addressGapLimit,
+            }
+        })
+        return JSON.parse(response).payload
+    }
+
+    async deleteStorage(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'DeleteStorage',
+        })
+    }
+
 
     destroy() {
         this.messageHandler.destroy();
@@ -61,92 +109,77 @@ export class AccountManager {
             }),
         ).payload;
     }
-
-    /**
-     * The coin type only needs to be set on the first account
-     */
-    async createAccount(payload: CreateAccountPayload): Promise<Account> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'CreateAccount',
-            payload,
-        });
-
-        return new Account(JSON.parse(response).payload, this.messageHandler);
-    }
-
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async setStrongholdPassword(password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    
+    async setStrongholdPassword(password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
             payload: password,
         });
     }
 
-    /**
-     * TODO: Replace string type with proper type
-     */
     async generateMnemonic(): Promise<string> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GenerateMnemonic',
         });
         return JSON.parse(response).payload;
     }
-
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async storeMnemonic(mnemonic: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    
+    async storeMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
             payload: mnemonic,
         });
     }
-
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async verifyMnemonic(mnemonic: string): Promise<string> {
-        return this.messageHandler.sendMessage({
+    
+    async verifyMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',
             payload: mnemonic,
         });
     }
 
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async backup(destination: string, password: string): Promise<string> {
-        return this.messageHandler.sendMessage({
-            cmd: 'Backup',
-            payload: {
-                destination,
-                password,
-            },
-        });
+    async setClientOptions(options: ClientOptions): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'SetClientOptions',
+            payload: options,
+        })
     }
 
-    /**
-     * TODO: Replace string type with proper type
-     */
-    async importAccounts(
-        backupPath: string,
-        password: string,
-    ): Promise<string> {
-        return this.messageHandler.sendMessage({
+    async startBackgroundSync(options?: AccountSyncOptions, interval?: number): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'StartBackgroundSync',
+            payload: {
+                options,
+                interval,
+            }
+        })
+    }
+
+    async stopBackgroundSync(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'StopBackgroundSync',
+        })
+    }
+
+    async restoreBackup(source: string, password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
             payload: {
-                backupPath,
+                source,
                 password,
             },
         });
     }
 
-    listen(
-        eventTypes: EventType[],
-        callback: (error: Error, result: string) => void,
-    ): void {
+    // TODO: test this
+    async emitTestEvent(event: WalletEvent): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'EmitTestEvent',
+            payload: event,
+        });
+    }
+
+    listen(eventTypes: EventType[], callback: (error: Error, result: string) => void): void {
         return this.messageHandler.listen(eventTypes, callback);
     }
 }

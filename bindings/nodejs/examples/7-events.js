@@ -2,13 +2,11 @@
  * This example shows some events.
  */
 
-require('dotenv').config();
-const manager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        // await manager.setStrongholdPassword(process.env.SH_PASSWORD);
-
+        const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
@@ -47,7 +45,6 @@ async function run() {
     } catch (error) {
         console.log('Error: ' + error);
     }
-    process.exit(0);
 
     // Possible Event Types:
     //
