@@ -13,9 +13,11 @@ use serde::Serialize;
 use crate::{
     account::{
         operations::transfer::TransferResult,
-        types::{address::AccountAddress, OutputData, Transaction},
+        types::{address::AccountAddress, OutputData},
     },
-    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
+    message_interface::dtos::{
+        AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
+    },
     Error,
 };
 
@@ -39,19 +41,20 @@ pub enum Response {
     /// GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
-    Output(Box<Option<OutputData>>),
+    Output(Box<Option<OutputDataDto>>),
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
     Outputs(Vec<OutputData>),
     /// Response for
-    /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
+    /// todo
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
-    Transactions(Vec<Transaction>),
+    Transactions(Vec<TransactionDto>),
     /// SignTransaction.
+    /// todo
     SignedTransactionData(SignedTransactionDataDto),
     /// GenerateAddress response.
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)

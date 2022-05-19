@@ -24,8 +24,9 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto},
         message::{AccountToCreate, Message},
+        dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
+        message_type::{AccountToCreate, MessageType},
         response::Response,
         AddressWithUnspentOutputsDto,
     },
@@ -274,7 +275,9 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetOutput { output_id } => {
                 let output_data = account_handle.get_output(output_id).await;
-                Ok(Response::Output(Box::new(output_data)))
+                Ok(Response::Output(Box::new(
+                    output_data.as_ref().map(OutputDataDto::from),
+                )))
             }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
@@ -296,11 +299,15 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;
-                Ok(Response::Transactions(transactions))
+                Ok(Response::Transactions(
+                    transactions.iter().map(TransactionDto::from).collect(),
+                ))
             }
             AccountMethod::ListPendingTransactions => {
                 let transactions = account_handle.list_pending_transactions().await?;
-                Ok(Response::Transactions(transactions))
+                Ok(Response::Transactions(
+                    transactions.iter().map(TransactionDto::from).collect(),
+                ))
             }
             AccountMethod::MintNativeToken {
                 native_token_options,

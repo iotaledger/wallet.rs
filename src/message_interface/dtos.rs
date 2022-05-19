@@ -8,10 +8,15 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::bee_block::{
-    output::{AliasId, FoundryId, NftId, OutputId, TokenId},
-    payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-    MessageId,
+use crypto::keys::slip10::Chain;
+use iota_client::{
+    bee_block::{
+        address::dto::AddressDto,
+        output::{dto::OutputDto, AliasId, FoundryId, NftId, OutputId, TokenId},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        MessageId,
+    },
+    bee_rest_api::types::responses::OutputResponse,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -168,15 +173,15 @@ pub struct AccountDto {
     #[serde(rename = "addressesWithUnspentOutputs")]
     pub addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputsDto>,
     /// Outputs
-    pub outputs: HashMap<OutputId, OutputData>,
+    pub outputs: HashMap<OutputId, OutputDataDto>,
     /// Unspent outputs that are currently used as input for transactions
     #[serde(rename = "lockedOutputs")]
     pub locked_outputs: HashSet<OutputId>,
     /// Unspent outputs
     #[serde(rename = "unspentOutputs")]
-    pub unspent_outputs: HashMap<OutputId, OutputData>,
+    pub unspent_outputs: HashMap<OutputId, OutputDataDto>,
     /// Sent transactions
-    pub transactions: HashMap<TransactionId, Transaction>,
+    pub transactions: HashMap<TransactionId, TransactionDto>,
     /// Pending transactions
     #[serde(rename = "pendingTransactions")]
     pub pending_transactions: HashSet<TransactionId>,
@@ -198,10 +203,25 @@ impl From<&Account> for AccountDto {
                 .iter()
                 .map(AddressWithUnspentOutputsDto::from)
                 .collect(),
-            outputs: value.outputs().clone(),
+            outputs: value
+                .outputs()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .collect(),
             locked_outputs: value.locked_outputs().clone(),
-            unspent_outputs: value.unspent_outputs().clone(),
-            transactions: value.transactions().clone(),
+            unspent_outputs: value
+                .unspent_outputs()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .collect(),
+            transactions: value
+                .transactions()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, TransactionDto::from(&o)))
+                .collect(),
             pending_transactions: value.pending_transactions().clone(),
             account_options: *value.account_options(),
         }
@@ -234,6 +254,49 @@ impl From<&Transaction> for TransactionDto {
             timestamp: value.timestamp.to_string(),
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
+        }
+    }
+}
+
+/// Dto for an output with metadata
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OutputDataDto {
+    /// The output id
+    #[serde(rename = "outputId")]
+    pub output_id: OutputId,
+    /// The output response
+    #[serde(rename = "outputResponse")]
+    pub output_response: OutputResponse,
+    /// The actual Output
+    pub output: OutputDto,
+    /// The output amount
+    pub amount: String,
+    /// If an output is spent
+    #[serde(rename = "isSpent")]
+    pub is_spent: bool,
+    /// Associated account address.
+    pub address: AddressDto,
+    /// Network ID
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    /// Remainder
+    pub remainder: bool,
+    /// Bip32 path
+    pub chain: Option<Chain>,
+}
+
+impl From<&OutputData> for OutputDataDto {
+    fn from(value: &OutputData) -> Self {
+        Self {
+            output_id: value.output_id,
+            output_response: value.output_response.clone(),
+            output: OutputDto::from(&value.output),
+            amount: value.amount.to_string(),
+            is_spent: value.is_spent,
+            address: AddressDto::from(&value.address),
+            network_id: value.network_id.to_string(),
+            remainder: value.remainder,
+            chain: value.chain.clone(),
         }
     }
 }
