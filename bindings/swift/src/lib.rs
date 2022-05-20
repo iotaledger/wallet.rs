@@ -61,8 +61,11 @@ fn null_with_error_message(dest: *mut c_char, src: Box<dyn std::fmt::Debug>, siz
     std::ptr::null_mut()
 }
 
+/// # Safety
+///
+/// Ensure `error_buffer_size` doesn't exceed actual `error_buffer` size to avoid potential buffer overflow
 #[no_mangle]
-pub extern "C" fn iota_initialize(
+pub unsafe extern "C" fn iota_initialize(
     manager_options: *const c_char,
     error_buffer: *mut c_char,
     error_buffer_size: usize,
@@ -70,7 +73,7 @@ pub extern "C" fn iota_initialize(
     let manager_options = if manager_options.is_null() {
         None
     } else {
-        let manager_options = unsafe { CStr::from_ptr(manager_options) };
+        let manager_options = CStr::from_ptr(manager_options);
         let manager_options = match manager_options.to_str() {
             Ok(manager_options) => manager_options,
             Err(e) => return null_with_error_message(error_buffer, Box::new(e), error_buffer_size),
@@ -90,24 +93,29 @@ pub extern "C" fn iota_initialize(
     }
 }
 
+/// # Safety
+///
+/// Does nothing if `handle` is null
 #[no_mangle]
-pub extern "C" fn iota_destroy(handle: *mut IotaWalletHandle) {
+pub unsafe extern "C" fn iota_destroy(handle: *mut IotaWalletHandle) {
     if handle.is_null() {
         return;
     }
-    unsafe {
-        Box::from_raw(handle);
-    }
+
+    Box::from_raw(handle);
 }
-/// warning: callback will be invoked from another thread so context must be safe to `Send` across threads
+
+/// # Safety
+///
+/// `callback` will be invoked from another thread so context must be safe to `Send` across threads
 #[no_mangle]
-pub extern "C" fn iota_send_message(
+pub unsafe extern "C" fn iota_send_message(
     handle: *mut IotaWalletHandle,
     message: *const c_char,
     callback: Callback,
     context: *mut c_void,
 ) {
-    let (handle, c_message) = unsafe {
+    let (handle, c_message) = {
         if handle.is_null() || message.is_null() {
             let error = CString::new("Null error; either wallet handle or message is null").unwrap();
             return callback(std::ptr::null(), error.as_ptr(), context);
@@ -144,8 +152,11 @@ pub extern "C" fn iota_send_message(
     });
 }
 
+/// # Safety
+///
+/// `callback` will be invoked from another thread so context must be safe to `Send` across threads
 #[no_mangle]
-pub extern "C" fn iota_listen(
+pub unsafe extern "C" fn iota_listen(
     handle: *mut IotaWalletHandle,
     event_types: *const c_char,
     callback: Callback,
@@ -153,7 +164,7 @@ pub extern "C" fn iota_listen(
     error_buffer: *mut c_char,
     error_buffer_size: usize,
 ) -> i8 {
-    let (handle, event_types) = unsafe {
+    let (handle, event_types) = {
         if handle.is_null() || event_types.is_null() {
             return -1;
         }
