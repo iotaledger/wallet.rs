@@ -213,7 +213,12 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: audit
-          args: --file bindings/nodejs/Cargo.lock --deny warnings
+          # The ignored security advisories:
+          #
+          # - RUSTSEC-2021-0119: Out-of-bounds write in nix::unistd::getgrouplist.
+          #   - A dependency of iota-ledger; it should be updated.
+          #   - We don't call this API, so we should be fine.
+          args: --file bindings/nodejs/Cargo.lock --deny warnings --ignore RUSTSEC-2021-0119
 
       - name: Run Yarn Audit
         working-directory: bindings/nodejs/
