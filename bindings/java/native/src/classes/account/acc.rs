@@ -17,7 +17,7 @@ use iota_wallet::{
         AccountBalance as AccountBalanceRust, AccountHandle as AccountHandleRust,
         AccountInitialiser as AccountInitialiserRust,
     },
-    message::{MessageId, MessageType},
+    message::{BlockId, MessageType},
     DateTime, Local,
 };
 
@@ -213,8 +213,8 @@ impl Account {
         Ok(addrs.into_iter().map(|a| a.into()).collect())
     }
 
-    pub fn get_message(&self, message_id: MessageId) -> Option<Message> {
-        let msg = crate::block_on(async move { self.handle.get_message(&message_id).await });
+    pub fn get_message(&self, block_id: BlockId) -> Option<Message> {
+        let msg = crate::block_on(async move { self.handle.get_message(&block_id).await });
 
         match msg {
             None => None,

@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::input_selection::{try_select_inputs, types::SelectedTransactionData},
-    bee_message::{
+    bee_block::{
         address::Address,
         input::INPUT_COUNT_MAX,
         output::{ByteCostConfig, Output},

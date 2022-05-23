@@ -12,8 +12,8 @@ use iota_wallet::{
         Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust,
         AddressWrapper, OutputKind,
     },
-    iota_client::bee_message::{payload::transaction::TransactionId, prelude::OutputId},
-    message::MessageId,
+    iota_client::bee_block::{payload::transaction::TransactionId, prelude::OutputId},
+    message::BlockId,
 };
 
 use crate::Result;
@@ -119,7 +119,7 @@ pub struct AddressOutput {
     pub transaction_id: TransactionId,
     /// Message ID of the output
     #[getset(get_copy = "pub")]
-    pub message_id: MessageId,
+    pub block_id: BlockId,
     /// Output index.
     #[getset(get_copy = "pub")]
     pub index: u16,
@@ -139,9 +139,9 @@ impl Display for AddressOutput {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,
-            "(transaction_id={}, message_id={}, index={}, amount={}, 
+            "(transaction_id={}, block_id={}, index={}, amount={}, 
             is_spent={}, address={:?}, kind={:?})",
-            self.transaction_id, self.message_id, self.index, self.amount, self.is_spent, self.address, self.kind
+            self.transaction_id, self.block_id, self.index, self.amount, self.is_spent, self.address, self.kind
         )
     }
 }
@@ -150,7 +150,7 @@ impl From<AddressOutputRust> for AddressOutput {
     fn from(ouput: AddressOutputRust) -> Self {
         Self {
             transaction_id: ouput.transaction_id().clone(),
-            message_id: ouput.message_id().clone(),
+            block_id: ouput.block_id().clone(),
             index: ouput.index().clone(),
             amount: ouput.amount().clone(),
             is_spent: ouput.is_spent().clone(),
@@ -169,8 +169,8 @@ impl AddressOutput {
     pub fn set_transaction_id(&mut self, transaction_id: TransactionId) {
         self.transaction_id = transaction_id
     }
-    pub fn set_message_id(&mut self, message_id: MessageId) {
-        self.message_id = message_id
+    pub fn set_block_id(&mut self, block_id: BlockId) {
+        self.block_id = block_id
     }
     pub fn set_index(&mut self, index: u16) {
         self.index = index
@@ -199,7 +199,7 @@ impl AddressOutput {
     pub fn to_inner(self) -> AddressOutputRust {
         AddressOutputRust {
             transaction_id: self.transaction_id,
-            message_id: self.message_id,
+            block_id: self.block_id,
             index: self.index,
             amount: self.amount,
             is_spent: self.is_spent,

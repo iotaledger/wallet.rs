@@ -7,7 +7,7 @@ use iota_wallet::{
         AccountManager as AccountManagerRust, AccountManagerBuilder as AccountManagerBuilderRust,
         MigrationDataFinder as RustMigrationDataFinder,
     },
-    message::MessageId,
+    message::BlockId,
     secret::secret_manager,
 };
 use std::{
@@ -254,22 +254,22 @@ impl AccountManager {
         }
     }
 
-    pub fn reattach(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        match crate::block_on(async move { self.manager.reattach(account_id, &message_id).await }) {
+    pub fn reattach(&self, account_id: String, block_id: BlockId) -> Result<Message> {
+        match crate::block_on(async move { self.manager.reattach(account_id, &block_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(msg) => Ok(msg.into()),
         }
     }
 
-    pub fn promote(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        match crate::block_on(async move { self.manager.promote(account_id, &message_id).await }) {
+    pub fn promote(&self, account_id: String, block_id: BlockId) -> Result<Message> {
+        match crate::block_on(async move { self.manager.promote(account_id, &block_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(msg) => Ok(msg.into()),
         }
     }
 
-    pub fn retry(&self, account_id: String, message_id: MessageId) -> Result<Message> {
-        match crate::block_on(async move { self.manager.retry(account_id, &message_id).await }) {
+    pub fn retry(&self, account_id: String, block_id: BlockId) -> Result<Message> {
+        match crate::block_on(async move { self.manager.retry(account_id, &block_id).await }) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(msg) => Ok(msg.into()),
         }

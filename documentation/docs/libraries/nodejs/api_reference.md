@@ -51,7 +51,7 @@ Creates a new instance of the AccountManager.
 | --------------------------------- | -------- | ----------- | -------------------------------------------- |
 | [ManagerOptions](#manageroptions) | `object` | `undefined` | The options to configure the account manager |
 
-#### ManagerOptions 
+#### ManagerOptions
 You can use any of the following parameters when constructing the ManagerOptions. All the parameters are optional.   
 
 | Param                            | Type      | Default     | Description                                                                               |
@@ -166,7 +166,7 @@ Transfers an amount from one sub-account to another.
 | toAccount   | `[Account](#account)` | `null`      | The destination account |
 | amount      | `number`              | `undefined` | The transfer amount     |
 
-Returns a promise resolving to the transfer's Message.
+Returns a promise resolving to the transfer's Block.
 
 ### backup(destination, password)
 
@@ -220,7 +220,7 @@ Gets the persisted balance change events.
 | [skip]          | `number` | `0`     | The number of events to skip                                 |
 | [fromTimestamp] | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, messageId?: string, remainder?: boolean, balanceChange: { spent: number, received: number } }
+Event object: { indexationId: string, accountId: string, blockId?: string, remainder?: boolean, balanceChange: { spent: number, received: number } }
 
 ### getBalanceChangeEventCount([fromTimestamp])
 
@@ -240,7 +240,7 @@ Gets the persisted transaction confirmation change events.
 | [skip]          | `number` | `0`     | The number of events to skip                                 |
 | [fromTimestamp] | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, message: Message, confirmed: boolean }
+Event object: { indexationId: string, accountId: string, block: Block, confirmed: boolean }
 
 ### getTransactionConfirmationEventCount([fromTimestamp])
 
@@ -260,7 +260,7 @@ Gets the persisted new transaction events.
 | [skip]          | `number` | `0`     | The number of events to skip                                 |
 | [fromTimestamp] | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, block: Block }
 
 ### getNewTransactionEventCount([fromTimestamp])
 
@@ -280,7 +280,7 @@ Gets the persisted transaction reattachment events.
 | [skip]          | `number` | `0`     | The number of events to skip                                 |
 | [fromTimestamp] | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, block: Block }
 
 ### getReattachmentEventCount([fromTimestamp])
 
@@ -300,7 +300,7 @@ Gets the persisted transaction broadcast events.
 | [skip]          | `number` | `0`     | The number of events to skip                                 |
 | [fromTimestamp] | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { indexationId: string, accountId: string, message: Message }
+Event object: { indexationId: string, accountId: string, block: Block }
 
 ### getBroadcastEventCount([fromTimestamp])
 
@@ -334,25 +334,25 @@ Returns the account's balance information object.
 
 Balance object: { total: number, available: number, incoming: number, outgoing: number }
 
-### messageCount([type])
+### blockCount([type])
 
-Returns the number of messages associated with the account.
+Returns the number of blocks associated with the account.
 
 | Param  | Type     | Default | Description                                                                              |
 | ------ | -------- | ------- | ---------------------------------------------------------------------------------------- |
-| [type] | `number` | `null`  | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+| [type] | `number` | `null`  | The block type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)   |
 
-### listMessages([count, from, type])
+### listBlocks([count, from, type])
 
-Returns the account's messages.
+Returns the account's blocks.
 
 | Param   | Type     | Default | Description                                                                              |
 | ------- | -------- | ------- | ---------------------------------------------------------------------------------------- |
-| [count] | `number` | `0`     | The number of messages to return (`0` to return all)                                     |
-| [skip]  | `number` | `0`     | The number of messages to skip                                                           |
-| [type]  | `number` | `null`  | The message type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5) |
+| [count] | `number` | `0`     | The number of blocks to return (`0` to return all)                                       |
+| [skip]  | `number` | `0`     | The number of blocks to skip                                                             |
+| [type]  | `number` | `null`  | The block type filter (Received = 1, Sent = 2, Failed = 3, Unconfirmed = 4, Value = 5)   |
 
-Message object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
+Block object: { confirmed: boolean, broadcasted: boolean, incoming: boolean, value: number }
 
 ### listAddresses([unspent])
 Returns the account's addresses.
@@ -390,7 +390,7 @@ Send funds to the given address.
 | Param                  | Type                                   | Default                 | Description                                           |
 | ---------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------- |
 | remainderValueStrategy | `RemainderValueStrategy`               | `null`                  | The strategy to use for the remainder value if any    |
-| indexation             | `{ index: string, data?: Uint8Array }` | `null`                  | Message indexation                                    |
+| indexation             | `{ index: string, data?: Uint8Array }` | `null`                  | Block indexation                                      |
 | skipSync               | `boolean`                              | `false`                 | Send transfer without synchronising the account first |
 | outputKind             | `OutputKind`                           | `signatureLockedSingle` | Output kind                                           |
 
@@ -435,8 +435,8 @@ All the values are for the NodeInfo are set by the nodes.
 | [networkId]                   | `number`   | `null` | The network ID                               |
 | [bech32HRP]                   | `string`   | `null` | The human-readable part of the bech32 string |
 | [minPoWScore]                 | `number`   | `null` | The node minimum proof of work score         |
-| [messagesPerSecond]           | `number`   | `null` | The node messages per second                 |
-| [referencedMessagesPerSecond] | `number`   | `null` | The node references per second               |
+| [blocksPerSecond]             | `number`   | `null` | The node blocks per second                   |
+| [referencedBlocksPerSecond]   | `number`   | `null` | The node references per second               |
 | [referencedRate]              | `number`   | `null` | The node reference rate                      |
 | [latestMilestoneTimestamp]    | `number`   | `null` | The node's latest milestone timestamp        |
 | [latestMilestoneIndex]        | `number`   | `null` | The node's latest milestone index            |
@@ -444,29 +444,29 @@ All the values are for the NodeInfo are set by the nodes.
 | [pruningIndex]                | `number`   | `null` | The node's pruning index                     |
 | [features]                    | `string[]` | `null` | The node's features.                         |
 
-### retry(messageId)
+### retry(blockId)
 
-Retries (promotes or reattaches) the given message.
-
-| Param     | Type     | Default | Description              |
-| --------- | -------- | ------- | ------------------------ |
-| messageId | `string` | `null`  | The message's identifier |
-
-### reattach(messageId)
-
-Reattach the given message.
+Retries (promotes or reattaches) the given block.
 
 | Param     | Type     | Default | Description              |
 | --------- | -------- | ------- | ------------------------ |
-| messageId | `string` | `null`  | The message's identifier |
+| blockId   | `string` | `null`  | The block's identifier   |
 
-### promote(messageId)
+### reattach(blockId)
 
-Promote the given message.
+Reattach the given block.
 
 | Param     | Type     | Default | Description              |
 | --------- | -------- | ------- | ------------------------ |
-| messageId | `string` | `null`  | The message's identifier |
+| blockId   | `string` | `null`  | The block's identifier   |
+
+### promote(blockId)
+
+Promote the given block.
+
+| Param     | Type     | Default | Description              |
+| --------- | -------- | ------- | ------------------------ |
+| blockId   | `string` | `null`  | The block's identifier   |
 
 ### consolidateOutputs([includeDustAllowanceOutputs])
 
@@ -498,13 +498,13 @@ Updates the account client options.
 | ------- | --------------------------------- | ------- | ------------------------------ |
 | options | `[ClientOptions](#ClientOptions)` | `null`  | The new account client options |
 
-### getMessage(messageId)
+### getBlock(blockId)
 
-Gets the message associated with the given identifier.
+Gets the block associated with the given identifier.
 
 | Param     | Type     | Default | Description              |
 | --------- | -------- | ------- | ------------------------ |
-| messageId | `string` | `null`  | The message's identifier |
+| blockId   | `string` | `null`  | The block's identifier   |
 
 ### getAddress(addressBech32)
 

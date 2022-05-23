@@ -3,7 +3,7 @@
 
 use std::collections::{hash_map::Entry, HashMap};
 
-use iota_client::bee_message::output::{
+use iota_client::bee_block::output::{
     unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, Output, UnlockCondition,
 };
 

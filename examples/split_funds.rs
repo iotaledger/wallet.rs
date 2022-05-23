@@ -5,7 +5,7 @@
 
 use std::time::Instant;
 
-use iota_client::bee_message::output::{
+use iota_client::bee_block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder,
 };
@@ -79,8 +79,8 @@ async fn main() -> Result<()> {
             .collect();
         match account.send(outputs, None).await {
             Ok(res) => println!(
-                "Message sent: http://localhost:14265/api/v2/messages/{}",
-                res.message_id.expect("No message created yet")
+                "Block sent: http://localhost:14265/api/v2/blocks/{}",
+                res.block_id.expect("No block created yet")
             ),
             Err(e) => println!("{}", e),
         }

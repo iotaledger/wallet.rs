@@ -1,16 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::{Address, AliasAddress},
     output::{
-        feature_block::{FeatureBlock, MetadataFeatureBlock},
+        feature::{Feature, MetadataFeature},
         unlock_condition::{
             AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
             StateControllerAddressUnlockCondition, UnlockCondition,
         },
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
-        SimpleTokenScheme, TokenId, TokenScheme, TokenTag,
+        SimpleTokenScheme, TokenId, TokenScheme,
     },
 };
 use primitive_types::U256;
@@ -27,9 +27,6 @@ pub struct NativeTokenOptions {
     /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
     #[serde(rename = "accountAddress")]
     pub account_address: Option<String>,
-    /// Token tag
-    #[serde(rename = "tokenTag")]
-    pub token_tag: TokenTag,
     /// Circulating supply
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256,
@@ -52,7 +49,6 @@ impl AccountHandle {
     /// ```ignore
     /// let native_token_options = NativeTokenOptions {
     ///     account_address: None,
-    ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
     ///     maximum_supply: U256::from(100),
     ///     foundry_metadata: None
@@ -60,8 +56,8 @@ impl AccountHandle {
     ///
     /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
     /// println!("Transaction created: {}", res.1);
-    /// if let Some(message_id) = res.0 {
-    ///     println!("Message sent: {}", message_id);
+    /// if let Some(block_id) = res.0 {
+    ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
     pub async fn mint_native_token(
@@ -119,7 +115,7 @@ impl AccountHandle {
                 alias_output.foundry_counter() + 1,
                 SimpleTokenScheme::KIND,
             );
-            let token_id = TokenId::build(&foundry_id, &native_token_options.token_tag);
+            let token_id = TokenId::from(foundry_id);
 
             // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
             let mut new_alias_output_builder =
@@ -132,12 +128,11 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
                         controller_address,
                     )));
-            for feature_block in alias_output.feature_blocks().iter() {
-                new_alias_output_builder = new_alias_output_builder.add_feature_block(feature_block.clone());
+            for feature in alias_output.features().iter() {
+                new_alias_output_builder = new_alias_output_builder.add_feature(feature.clone());
             }
-            for immutable_feature_block in alias_output.immutable_feature_blocks().iter() {
-                new_alias_output_builder =
-                    new_alias_output_builder.add_immutable_feature_block(immutable_feature_block.clone());
+            for immutable_feature in alias_output.immutable_features().iter() {
+                new_alias_output_builder = new_alias_output_builder.add_immutable_feature(immutable_feature.clone());
             }
 
             let outputs = vec![
@@ -146,7 +141,6 @@ impl AccountHandle {
                     let mut foundry_builder = FoundryOutputBuilder::new_with_minimum_storage_deposit(
                         byte_cost_config.clone(),
                         alias_output.foundry_counter() + 1,
-                        native_token_options.token_tag,
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             native_token_options.circulating_supply,
                             U256::from(0u8),
@@ -158,9 +152,8 @@ impl AccountHandle {
                     ));
 
                     if let Some(foundry_metadata) = native_token_options.foundry_metadata {
-                        foundry_builder = foundry_builder.add_immutable_feature_block(FeatureBlock::Metadata(
-                            MetadataFeatureBlock::new(foundry_metadata)?,
-                        ))
+                        foundry_builder = foundry_builder
+                            .add_immutable_feature(Feature::Metadata(MetadataFeature::new(foundry_metadata)?))
                     }
 
                     foundry_builder.finish_output()?
@@ -219,8 +212,8 @@ impl AccountHandle {
                 ];
                 let transfer_result = self.send(outputs, options).await?;
                 log::debug!("[TRANSFER] sent alias output");
-                if let Some(message_id) = transfer_result.message_id {
-                    self.client.retry_until_included(&message_id, None, None).await?;
+                if let Some(block_id) = transfer_result.block_id {
+                    self.client.retry_until_included(&block_id, None, None).await?;
                 } else {
                     self.sync_pending_transactions().await?;
                 }

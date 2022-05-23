@@ -4,7 +4,7 @@
 use iota_wallet::{
     iota_client::crypto::signatures::ed25519::{PublicKey as RustPublicKey, Signature as RustSignature},
     message::{
-        MessageId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
+        BlockId, MessageMilestonePayloadEssence as MilestonePayloadEssenceRust, MessagePayload as MessagePayloadRust,
     },
 };
 
@@ -81,7 +81,7 @@ impl MilestonePayloadEssence {
         self.essence.timestamp()
     }
 
-    pub fn parents(&self) -> Vec<MessageId> {
+    pub fn parents(&self) -> Vec<BlockId> {
         self.essence.parents().iter().map(|e| e.clone()).collect()
     }
 

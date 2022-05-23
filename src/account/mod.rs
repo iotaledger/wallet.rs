@@ -15,7 +15,7 @@ pub mod types;
 use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
-use iota_client::bee_message::{output::OutputId, payload::transaction::TransactionId};
+use iota_client::bee_block::{output::OutputId, payload::transaction::TransactionId};
 use serde::{Deserialize, Serialize};
 
 use self::types::{

@@ -5,7 +5,7 @@
 
 // In this example we will try to send transactions from multiple threads simultaneously
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::Address,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
@@ -74,9 +74,9 @@ async fn main() -> Result<()> {
                     ];
                     let res = account_.send(outputs, None).await?;
                     println!(
-                        "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
+                        "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
                         n,
-                        res.message_id.expect("No message created yet")
+                        res.block_id.expect("No block created yet")
                     );
                     iota_wallet::Result::Ok(n)
                 })

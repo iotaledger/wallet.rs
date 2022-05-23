@@ -3,7 +3,7 @@
 
 use std::{ops::Deref, sync::Arc};
 
-use iota_client::{bee_message::output::OutputId, secret::SecretManager, Client};
+use iota_client::{bee_block::output::OutputId, secret::SecretManager, Client};
 use tokio::sync::{Mutex, RwLock};
 
 #[cfg(feature = "events")]

@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    bee_message::{output::OutputId, payload::transaction::TransactionId},
+    bee_block::{output::OutputId, payload::transaction::TransactionId},
     bee_rest_api::types::responses::OutputResponse,
 };
 
@@ -189,7 +189,7 @@ impl AccountHandle {
                     account.unspent_outputs.remove(&output_id);
                     // Update spent data fields
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                        output_data.output_response.is_spent = true;
+                        output_data.output_response.metadata.is_spent = true;
                         output_data.is_spent = true;
                     }
                 }
@@ -198,8 +198,8 @@ impl AccountHandle {
 
         // Update output_response if it got spent to include the new metadata
         for output_response in spent_output_responses {
-            let transaction_id = TransactionId::from_str(&output_response.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.output_index)?;
+            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
             if let Some(output_data) = account.outputs.get_mut(&output_id) {
                 output_data.output_response = output_response;
             }

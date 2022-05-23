@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::{
-    bee_message::{input::Input, output::OutputId, payload::transaction::TransactionEssence, MessageId},
+    bee_block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
     bee_rest_api::types::dtos::LedgerInclusionStateDto,
 };
 
@@ -56,19 +56,19 @@ impl AccountHandle {
                 .clone();
             // only check transaction from the network we're connected to
             if transaction.network_id == network_id {
-                if let Some(message_id) = transaction.message_id {
-                    let metadata = self.client.get_message_metadata(&message_id).await?;
+                if let Some(block_id) = transaction.block_id {
+                    let metadata = self.client.get_block_metadata(&block_id).await?;
                     if let Some(inclusion_state) = metadata.ledger_inclusion_state {
                         match inclusion_state {
                             LedgerInclusionStateDto::Included => {
                                 log::debug!(
-                                    "[SYNC] confirmed transaction {} in message {}",
+                                    "[SYNC] confirmed transaction {} in block {}",
                                     transaction_id,
-                                    metadata.message_id
+                                    metadata.block_id
                                 );
                                 updated_transaction_and_outputs(
                                     transaction,
-                                    MessageId::from_str(&metadata.message_id)?,
+                                    BlockId::from_str(&metadata.block_id)?,
                                     InclusionState::Confirmed,
                                     &mut updated_transactions,
                                     &mut spent_output_ids,
@@ -76,20 +76,20 @@ impl AccountHandle {
                             }
                             LedgerInclusionStateDto::Conflicting => {
                                 log::debug!("[SYNC] conflicting transaction {}", transaction_id);
-                                // try to get the included message, because maybe only this attachment is conflicting
-                                // because it got confirmed in another message
-                                if let Ok(included_message) =
-                                    self.client.get_included_message(&transaction.payload.id()).await
+                                // try to get the included block, because maybe only this attachment is conflicting
+                                // because it got confirmed in another block
+                                if let Ok(included_block) =
+                                    self.client.get_included_block(&transaction.payload.id()).await
                                 {
                                     updated_transaction_and_outputs(
                                         transaction,
-                                        included_message.id(),
+                                        included_block.id(),
                                         InclusionState::Confirmed,
                                         &mut updated_transactions,
                                         &mut spent_output_ids,
                                     );
                                 } else {
-                                    // if we didn't get the included message it means that it got pruned, an input was
+                                    // if we didn't get the included block it means that it got pruned, an input was
                                     // spent in another transaction or there is
                                     // another conflict reason we check the inputs
                                     // because some of them could still be unspent
@@ -98,7 +98,7 @@ impl AccountHandle {
                                         if let Input::Utxo(input) = input {
                                             if let Ok(output_response) = self.client.get_output(input.output_id()).await
                                             {
-                                                if output_response.is_spent {
+                                                if output_response.metadata.is_spent {
                                                     spent_output_ids.push(*input.output_id());
                                                 } else {
                                                     output_ids_to_unlock.push(*input.output_id());
@@ -118,7 +118,7 @@ impl AccountHandle {
                                 }
                             }
                             LedgerInclusionStateDto::NoTransaction => {
-                                unreachable!("We should only get the metadata for messages with a transaction payload")
+                                unreachable!("We should only get the metadata for blocks with a transaction payload")
                             }
                         }
                     } else {
@@ -140,8 +140,8 @@ impl AccountHandle {
         drop(account);
         for mut transaction in transactions_to_reattach {
             log::debug!("[SYNC] reattach transaction");
-            let reattached_msg = self.submit_transaction_payload(transaction.payload.clone()).await?;
-            transaction.message_id.replace(reattached_msg);
+            let reattached_block = self.submit_transaction_payload(transaction.payload.clone()).await?;
+            transaction.block_id.replace(reattached_block);
             updated_transactions.push(transaction);
         }
 
@@ -155,12 +155,12 @@ impl AccountHandle {
 
 fn updated_transaction_and_outputs(
     mut transaction: Transaction,
-    message_id: MessageId,
+    block_id: BlockId,
     inclusion_state: InclusionState,
     updated_transactions: &mut Vec<Transaction>,
     spent_output_ids: &mut Vec<OutputId>,
 ) {
-    transaction.message_id.replace(message_id);
+    transaction.block_id.replace(block_id);
     transaction.inclusion_state = inclusion_state;
     // get spent inputs
     let TransactionEssence::Regular(essence) = transaction.payload.essence();

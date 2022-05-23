@@ -15,7 +15,7 @@ import b_create_account from  '!!raw-loader!./../../../../bindings/python/exampl
 import generate_address from  '!!raw-loader!./../../../../bindings/python/examples/2_generate_address.py';
 import check_balance from  '!!raw-loader!./../../../../bindings/python/examples/3_check_balance.py';
 import send from  '!!raw-loader!./../../../../bindings/python/examples/4_send.py';
-import b_list_messages from  '!!raw-loader!./../../../../bindings/python/examples/4b_list_messages.py';
+import b_list_blocks from  '!!raw-loader!./../../../../bindings/python/examples/4b_list_blocks.py';
 import backup from  '!!raw-loader!./../../../../bindings/python/examples/5_backup.py';
 import restore from  '!!raw-loader!./../../../../bindings/python/examples/6_restore.py';
 import b_event_simple_event from  '!!raw-loader!./../../../../bindings/python/examples/7b_event_simple_event.py';
@@ -31,7 +31,7 @@ SH_PASSWORD="here is your super secure password"
 
 ## Account Manager and Individual Accounts
 
-You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
+You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.
 
 The following example creates a new database and account:
 
@@ -54,7 +54,7 @@ Deal with the password with utmost care.
 
  The storage comprises two things:
 * A single file called _wallet.stronghold_ , which contains _seed_ and is secured by `Stronghold` and encrypted at rest. The generated seed (mnemonic) serves as a cryptographic key from which all accounts and related addresses are generated.
-* Other data used by library that is stored under the _db_ sub-directory.  The includes account information, generated addresses, fetched messages, etc.  This data is used to speed up some operations, such as account creation, address generation, etc.
+* Other data used by library that is stored under the _db_ sub-directory.  The includes account information, generated addresses, fetched blocks, etc.  This data is used to speed up some operations, such as account creation, address generation, etc.
 
 One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an _AccountManager_ instance.  All complexities are hidden under the hood and dealt with securely.
 
@@ -198,7 +198,7 @@ Balance per individual addresses:
         'internal': False,
         'outputs': [{
             'transaction_id': '1c88c91fe0a8eed074b5ccdfdad52403d7908d157b231ae1ef28b0e20ba14e8e',
-            'message_id': 'f1575f984f7fda6e9b3e23e96ef3304fcd0ba4ce323af3920856a427fabe1abe',
+            'block_id': 'f1575f984f7fda6e9b3e23e96ef3304fcd0ba4ce323af3920856a427fabe1abe',
             'index': 0,
             'amount': 10000000,
             'is_spent': False,
@@ -218,7 +218,7 @@ Balance per individual addresses:
     }
 ]
 ```
-In the detailed view per individual addresses, there is also _outputs_ section.  The _outputs_ shows all the transactions (also known as _wallet message(s)_ ), which are related to that _address_, and therefore account for the balance.
+In the detailed view per individual addresses, there is also _outputs_ section.  The _outputs_ shows all the transactions (also known as _wallet block(s)_ ), which are related to that _address_, and therefore account for the balance.
 
 You can also check the balance using the [Tangle Explorer](https://explorer.iota.org/devnet/addr/atoi1qzht4m2jt0q50lhlqa786pcx6vardm4xj8za72fezde6tj39acatq5zh2cg).
 
@@ -263,7 +263,7 @@ The previous snippet should have a similar output to the following JSON object:
                         'index': 0,
                         'metadata': {
                             'transaction_id': '692d6660084dd3b6341ef4f761bc8b8bb27ac35bb0b352bfb030f2c80753815b',
-                            'message_id': 'c6284e0cc2a6383474782d4e6b6cfaf16c1831c8875cca262982782758a248c0',
+                            'block_id': 'c6284e0cc2a6383474782d4e6b6cfaf16c1831c8875cca262982782758a248c0',
                             'index': 0,
                             'amount': 10000000,
                             'is_spent': False,
@@ -284,7 +284,7 @@ The previous snippet should have a similar output to the following JSON object:
                     'payload': None
                 }
             },
-            'unlock_blocks': [{
+            'unlocks': [{
                 'signature': {
                     'public_key': [15... < TRIMMED > ...],
                     'signature': [210... < TRIMMED > ...]
@@ -304,30 +304,30 @@ The previous snippet should have a similar output to the following JSON object:
     'remainder_value': 9000000
 }}
 ```
-This is a _wallet message_ that fully describes the given transaction.
+This is a _wallet block_ that fully describes the given transaction.
 
-To understand all aspects of messages, you will need to get familiar with concept of _UTXO_ . You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
+To understand all aspects of blocks, you will need to get familiar with concept of _UTXO_ . You can find detailed information in the [UTXO section in the Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#unspent-transaction-output-utxo).
 
-You can double-check the message using [Tangle Explorer](https://explorer.iota.org/) using its _node_response['id']_.  Please make sure you select the right network.
+You can double-check the block using [Tangle Explorer](https://explorer.iota.org/) using its _node_response['id']_.  Please make sure you select the right network.
 
-If you have used the _ChangeAddress remainder_value_strategy_, the message will transfer tokens to the target address as well as new _internal_ address within the given account (`internal=True`).
+If you have used the _ChangeAddress remainder_value_strategy_, the block will transfer tokens to the target address as well as new _internal_ address within the given account (`internal=True`).
 
-You can find detailed information about messages and payloads in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#messages-payloads-and-transactions).
+You can find detailed information about blocks and payloads in the [Developer Guide to Chrysalis](https://chrysalis.docs.iota.org/guides/dev_guide#blocks-payloads-and-transactions).
 
 ### Reattachments
 
-If you need to reattach a message, you should use the [`iota_wallet.promote(account_id, message_id)`](api_reference.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](api_reference.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your _account_id_ and _message_id_ as arguments.
+If you need to reattach a block, you should use the [`iota_wallet.promote(account_id, block_id)`](api_reference.md#promoteaccount_id-block_id-walletblockwalletblock) or [`iota_wallet.reattach(account_id, block_id)`](api_reference.md#reattachblock_id-walletblockwalletblock) methods, sending your _account_id_ and _block_id_ as arguments.
 
-### List of Messages (transactions)
+### List of Blocks (transactions)
 
-You can query for a list of all particular messages (transactions) related to the given account using [ `account.list_messages()` ](api_reference.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [ `account.message_count()` ](api_reference.md#message_countmessage_type-optional-int) method.
+You can query for a list of all particular blocks (transactions) related to the given account using [ `account.list_blocks()` ](api_reference.md#list_blockscount-from-block_type-optional-listwalletblockwalletblock) method, and the related [ `account.block_count()` ](api_reference.md#block_countblock_type-optional-int) method.
 
-You can use those methods to check whether a message is confirmed, broadcast, etc. You should always _Sync_ the account with the Tangle before checking confirmation status.
+You can use those methods to check whether a block is confirmed, broadcast, etc. You should always _Sync_ the account with the Tangle before checking confirmation status.
 
-You can use the following example to _sync_ an _account_ , and list all the messages related to the _account_ .
+You can use the following example to _sync_ an _account_ , and list all the blocks related to the _account_ .
 
 <CodeBlock className="language-python">
-  {b_list_messages}
+  {b_list_blocks}
 </CodeBlock>
 
 ### Dust Protection
@@ -424,4 +424,3 @@ Alternatively, events can be consumed via queue-base pattern as shown in the fol
 <CodeBlock className="language-python">
   {event_queue}
 </CodeBlock>
-

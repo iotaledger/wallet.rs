@@ -5,7 +5,7 @@
 use iota_client::secret::SecretManager;
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData},
-    bee_message::{address::Address, unlock_block::UnlockBlocks},
+    bee_block::{address::Address, unlock::Unlocks},
     secret::SecretManageExt,
 };
 
@@ -32,17 +32,15 @@ impl AccountHandle {
             stronghold_secret_manager.read_stronghold_snapshot().await?;
         }
 
-        let unlock_blocks = self
+        let unlocks = self
             .secret_manager
             .read()
             .await
             .sign_transaction_essence(prepared_transaction_data)
             .await?;
 
-        let transaction_payload = TransactionPayload::new(
-            prepared_transaction_data.essence.clone(),
-            UnlockBlocks::new(unlock_blocks)?,
-        )?;
+        let transaction_payload =
+            TransactionPayload::new(prepared_transaction_data.essence.clone(), Unlocks::new(unlocks)?)?;
 
         // Validate signature after signing. The hashed public key needs to match the input address
         let mut input_addresses = Vec::new();

@@ -9,7 +9,7 @@ use std::{env, str::FromStr};
 
 use dotenv::dotenv;
 use iota_wallet::{
-    account_manager::AccountManager, iota_client::bee_message::output::TokenId, AddressNativeTokens, Result,
+    account_manager::AccountManager, iota_client::bee_block::output::TokenId, AddressNativeTokens, Result,
 };
 use primitive_types::U256;
 
@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
     let transfer_result = account.send_native_tokens(outputs, None).await?;
 
     println!(
-        "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
         transfer_result.transaction_id,
-        transfer_result.message_id.expect("No message created yet")
+        transfer_result.block_id.expect("No block created yet")
     );
 
     Ok(())

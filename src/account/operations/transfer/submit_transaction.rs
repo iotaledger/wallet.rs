@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::finish_pow,
-    bee_message::{payload::Payload, MessageId},
+    bee_block::{payload::Payload, BlockId},
 };
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
@@ -11,11 +11,11 @@ use crate::account::{handle::AccountHandle, operations::transfer::TransactionPay
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
-    /// Submits a payload in a message
+    /// Submits a payload in a block
     pub(crate) async fn submit_transaction_payload(
         &self,
         transaction_payload: TransactionPayload,
-    ) -> crate::Result<MessageId> {
+    ) -> crate::Result<BlockId> {
         log::debug!("[TRANSFER] send_payload");
         let account = self.read().await;
         #[cfg(feature = "events")]
@@ -32,30 +32,26 @@ impl AccountHandle {
                 WalletEvent::TransferProgress(TransferProgressEvent::PerformingPoW),
             );
         }
-        let message = finish_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
-        // log::debug!("[TRANSFER] submitting message {:#?}", message);
+        let block = finish_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
+        // log::debug!("[TRANSFER] submitting block {:#?}", block);
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             account_index,
             WalletEvent::TransferProgress(TransferProgressEvent::Broadcasting),
         );
-        let message_id = self.client.post_message(&message).await?;
-        log::debug!("[TRANSFER] submitted message {}", message_id);
-        // spawn a thread which tries to get the message confirmed
+        let block_id = self.client.post_block(&block).await?;
+        log::debug!("[TRANSFER] submitted block {}", block_id);
+        // spawn a thread which tries to get the block confirmed
         let client = self.client.clone();
         tokio::spawn(async move {
-            if let Ok(messages) = client.retry_until_included(&message_id, None, None).await {
-                if let Some(confirmed_message) = messages.first() {
-                    if confirmed_message.0 != message_id {
-                        log::debug!(
-                            "[TRANSFER] reattached {}, new message id {}",
-                            message_id,
-                            confirmed_message.0
-                        );
+            if let Ok(blocks) = client.retry_until_included(&block_id, None, None).await {
+                if let Some(confirmed_block) = blocks.first() {
+                    if confirmed_block.0 != block_id {
+                        log::debug!("[TRANSFER] reattached {}, new block id {}", block_id, confirmed_block.0);
                     }
                 }
             }
         });
-        Ok(message_id)
+        Ok(block_id)
     }
 }

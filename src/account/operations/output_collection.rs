@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
-    bee_message::output::{
+    bee_block::output::{
         unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
@@ -249,11 +249,11 @@ impl AccountHandle {
                         first_account_address.address.inner,
                     )));
                     // native tokens are added later
-                    for feature_block in nft_output.feature_blocks().iter() {
-                        nft_builder = nft_builder.add_feature_block(feature_block.clone());
+                    for feature in nft_output.features().iter() {
+                        nft_builder = nft_builder.add_feature(feature.clone());
                     }
-                    for immutable_feature_block in nft_output.immutable_feature_blocks().iter() {
-                        nft_builder = nft_builder.add_immutable_feature_block(immutable_feature_block.clone());
+                    for immutable_feature in nft_output.immutable_features().iter() {
+                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
                     }
                     outputs_to_send.push(nft_builder.finish_output()?);
                 }
@@ -367,8 +367,8 @@ impl AccountHandle {
             {
                 Ok(res) => {
                     log::debug!(
-                        "[OUTPUT_COLLECTION] Collection transaction created: msg_id: {:?} tx_id: {:?}",
-                        res.message_id,
+                        "[OUTPUT_COLLECTION] Collection transaction created: block_id: {:?} tx_id: {:?}",
+                        res.block_id,
                         res.transaction_id
                     );
                     collection_results.push(res);

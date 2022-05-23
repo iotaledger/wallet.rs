@@ -4,7 +4,7 @@
 use std::{collections::HashSet, str::FromStr, time::Instant};
 
 use iota_client::{
-    bee_message::{
+    bee_block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
         payload::transaction::TransactionId,
@@ -225,13 +225,13 @@ impl AccountHandle {
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
         // Get basic outputs
         let mut output_ids = client
-            .output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
+            .basic_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
             .await?;
 
         if sync_options.sync_aliases_and_nfts {
             // Get nft outputs
             let nft_output_ids = client
-                .nfts_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
+                .nft_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                 .await?;
             output_ids.extend(nft_output_ids.clone().into_iter());
 
@@ -246,7 +246,7 @@ impl AccountHandle {
 
             // Get alias outputs
             let alias_output_ids = client
-                .aliases_output_ids(vec![
+                .alias_output_ids(vec![
                     QueryParameter::StateController(address.address.to_bech32()),
                     QueryParameter::Governor(address.address.to_bech32()),
                 ])
@@ -279,12 +279,12 @@ async fn get_basic_outputs_for_nft_outputs(
     for nft_output_response in nft_output_responses {
         let output = Output::try_from(&nft_output_response.output)?;
         if let Output::Nft(nft_output) = output {
-            let transaction_id = TransactionId::from_str(&nft_output_response.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, nft_output_response.output_index)?;
+            let transaction_id = TransactionId::from_str(&nft_output_response.metadata.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, nft_output_response.metadata.output_index)?;
             let nft_address = Address::Nft(NftAddress::new(nft_output.nft_id().or_from_output_id(output_id)));
             nft_basic_output_ids.extend(
                 client
-                    .output_ids(vec![QueryParameter::Address(nft_address.to_bech32(bech32_hrp.clone()))])
+                    .basic_output_ids(vec![QueryParameter::Address(nft_address.to_bech32(bech32_hrp.clone()))])
                     .await?
                     .into_iter(),
             );
@@ -304,13 +304,13 @@ async fn get_foundry_and_basic_outputs_for_alias_outputs(
     for alias_output_response in alias_output_responses {
         let output = Output::try_from(&alias_output_response.output)?;
         if let Output::Alias(alias_output) = output {
-            let transaction_id = TransactionId::from_str(&alias_output_response.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, alias_output_response.output_index)?;
+            let transaction_id = TransactionId::from_str(&alias_output_response.metadata.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, alias_output_response.metadata.output_index)?;
             let alias_address =
                 Address::Alias(AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id)));
             foundry_output_ids.extend(
                 client
-                    .foundries_output_ids(vec![QueryParameter::AliasAddress(
+                    .foundry_output_ids(vec![QueryParameter::AliasAddress(
                         alias_address.to_bech32(bech32_hrp.clone()),
                     )])
                     .await?
@@ -318,7 +318,7 @@ async fn get_foundry_and_basic_outputs_for_alias_outputs(
             );
             alias_basic_output_ids.extend(
                 client
-                    .output_ids(vec![QueryParameter::Address(
+                    .basic_output_ids(vec![QueryParameter::Address(
                         alias_address.to_bech32(bech32_hrp.clone()),
                     )])
                     .await?

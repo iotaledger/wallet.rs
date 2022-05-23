@@ -3,7 +3,7 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-use iota_client::{bee_message::output::OutputId, NodeInfoWrapper};
+use iota_client::{bee_block::output::OutputId, NodeInfoWrapper};
 use serde::Serialize;
 
 use crate::{
