@@ -16,7 +16,7 @@ use crate::account::{
 impl AccountHandle {
     /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
-    pub(crate) async fn consolidate_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
+    pub async fn consolidate_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
         let account = self.read().await;
         let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
         let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
