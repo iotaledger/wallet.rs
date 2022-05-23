@@ -4,7 +4,7 @@ image: /img/logo/wallet_light.png
 keywords:
 - wallet library methods
 - Rust
-- messages
+- blocks
 - Required client library
 - access modifiers
 - types
@@ -13,18 +13,18 @@ keywords:
 
 ## Introduction
 
-The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile. 
+The `wallet.rs` library is a stateful package with a standardized interface to build applications with IOTA value transactions. The package will be compatible with different platforms such as web, desktop and mobile.
 
-The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://chrysalis.docs.iota.org/guides/dev_guide#seed). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [messages](https://github.com/GalRogozinski/protocol-rfcs/blob/message/text/0017-message/0017-message.md). An account has various possible behaviours, including moving funds, looking for new messages, and making copies of message histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead. 
+The package introduces the concept of an _account_ . An _account_ is a reference to, or a label for, a [seed](https://chrysalis.docs.iota.org/guides/dev_guide#seed). An account has certain properties such as [addresses](https://github.com/Wollac/protocol-rfcs/blob/bech32-address-format/text/0020-bech32-address-format/0020-bech32-address-format.md) and [blocks](https://github.com/GalRogozinski/protocol-rfcs/blob/block/text/0017-block/0017-block.md). An account has various possible behaviours, including moving funds, looking for new blocks, and making copies of block histories. An account should also be able to provide a degree of financial privacy and this should not incur any overhead.
 
-A similar account package was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts. 
+A similar account package was previously developed but this became obsolete with the introduction of Ed25519 signatures. The previous account package was limited to a single account. As an improvement, the new package will be able to manage multiple accounts.
 
 To summarize, the main motivation behind this package is to offer a simplified (stateful) approach to handle IOTA payments.
 
 ## Considerations
 
 *   Seeds should be stored and managed separately in a secure enclave and should never leave the secure environment. Secure enclaves include software enclaves such as IOTA’s Rust-based `Stronghold` library or hardware enclaves such as a `Ledger Nano`.
-*   The secure enclave should have the ability to generate addresses and sign messages upon receipt, and return the output in a new message. If the secure enclave is initialized with a pre-generated seed, the sender process should immediately remove the seed traces from memory. 
+*   The secure enclave should have the ability to generate addresses and sign blocks upon receipt, and return the output in a new block. If the secure enclave is initialized with a pre-generated seed, the sender process should immediately remove the seed traces from memory.
 
 ## Naming Conventions
 
@@ -50,7 +50,7 @@ Account configuration or initialization object. It should support parameters acc
 | type             | ✘        | `default` or `ledger`                                                                                            | Account type. Required for differentiating ledger vs non-ledger accounts.                                                                                              |
 | provider         | ✘        | string                                                                                                           | Node URL.                                                                                                                                                              |
 | created_at       | ✘        | Date                                                                                                             | Time of account creation                                                                                                                                               |
-| messages         | ✘        | [Message](#message)[] Messages associated with account. Accounts can be initialized with locally stored messages. |
+| blocks         | ✘        | [Block](#block)[] Blocks associated with account. Accounts can be initialized with locally stored blocks. |
 | addresses        | ✘        | [Address](#address)[]                                                                                            | Address history associated with the account. Accounts can be initialized with locally stored address history                                                           |
 
 #### AccountObject
@@ -66,12 +66,12 @@ Account configuration or initialization object. It should support parameters acc
 | total_balance()             | ✔        | function | Gets total account balance.                                                                                     |
 | available_balance()         | ✔        | function | Gets available account balance.                                                                                 |
 | set_alias()                 | ✔        | function | Updates account name.                                                                                           |
-| list_messages()             | ✔        | function | Gets messages.                                                                                                  |
-| list_received_messages()    | ✔        | function | Gets all received messages.                                                                                     |
-| list_sent_messages()        | ✔        | function | Gets all sent messages.                                                                                         |
-| list_failed_messages()      | ✔        | function | Gets all failed messages.                                                                                       |
-| list_unconfirmed_messages() | ✔        | function | Gets all unconfirmed messages.                                                                                  |
-| get_message()               | ✔        | function | Gets message for providedID.                                                                                    |
+| list_blocks()             | ✔        | function | Gets block.                                                                                                  |
+| list_received_blocks()    | ✔        | function | Gets all received block.                                                                                     |
+| list_sent_blocks()        | ✔        | function | Gets all sent block.                                                                                         |
+| list_failed_blocks()      | ✔        | function | Gets all failed block.                                                                                       |
+| list_unconfirmed_blocks() | ✔        | function | Gets all unconfirmed block.                                                                                  |
+| get_block()               | ✔        | function | Gets block for providedID.                                                                                    |
 | list_addresses()            | ✔        | function | Gets all addresses.                                                                                             |
 | list_unspent_addresses()    | ✔        | function | Gets all unspent input addresses.                                                                               |
 | generate_address()          | ✔        | function | Gets the latest unused address.                                                                                 |
@@ -100,7 +100,7 @@ Account configuration or initialization object. It should support parameters acc
 | reattach()        | ✔        | function  | Reattaches an unconfirmed transaction.                    |
 
 
-#### Address 
+#### Address
 
 Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high-level-to-nuts-and-bolts-9a41545f5b0) for address management in Hierarchical Deterministic (HD) wallets.
 
@@ -129,12 +129,12 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 | --------------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
 | format(type: string):string | ✔        | function | Transaction timestamp in various formats.<br/> For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss. |
 
-#### Transfer 
+#### Transfer
 
 Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
 
 :::info
-Currently, it is not possible to send multiple payloads as part of the message. That is why the _tag_ property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
+Currently, it is not possible to send multiple payloads as part of the block. That is why the _tag_ property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
 :::
 
 | Property       | Required | Type               | Description                    |
@@ -246,12 +246,12 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | unblock_blocks_count | ✔          | number                | Number of inputs specifed.                                                                       |
 | unblock_blocks       | ✔          | SignatureUnblockBlock | ReferenceUnblockBlock                                                                            | Holds the unlock blocks unlocking inputs within an Unsigned Transaction |
 
-#### Message
+#### Block
 
 | Property                                    | Required                                                               | Type                                                  | Description                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------------------- | ---------------------------------------------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| version                                     | ✔                                                                      | number                                                | Message version. Defaults to `1`.                                                                                                                                                                                                                                                                                                |
-| parents                                     | ✔                                                                      | string[]                                              | Message ids this message references.                                                                                                                                                                                                                                                                                             |
+| version                                     | ✔                                                                      | number                                                | Block version. Defaults to `1`.                                                                                                                                                                                                                                                                                                |
+| parents                                     | ✔                                                                      | string[]                                              | Block ids this block references.                                                                                                                                                                                                                                                                                             |
 | payload_length                              | ✔                                                                      | number                                                | Length of the payload.                                                                                                                                                                                                                                                                                                           |
 | payload                                     | ✔                                                                      | [SignedTransactionPayload](#signedtransactionpayload) |
 | [UnsignedDataPayload](#unsigneddatapayload) |
@@ -260,8 +260,8 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | nonce                                       | ✔                                                                      | string                                                | Transaction nonce.                                                                                                                                                                                                                                                                                                               |
 | confirmed                                   | ✔                                                                      | boolean                                               | Determines if the transaction is confirmed.                                                                                                                                                                                                                                                                                      |
 | broadcasted                                 | ✔                                                                      | boolean                                               | Determines if the transaction was broadcasted to the network. This will be true if the transaction was fetched from the network or if the transaction was successfully broadcasted from the client itself. This property may only be required for clients with persistent storage. |
-| incoming                                    | ✔                                                                      | boolean                                               | Determines if the message is an incoming transaction or not.                                                                                                                                                                                                                                                                     |
-| value                                       | ✔                                                                      | number                                                | Message transfer value.                                                                                                                                                                                                                                                                                                          |
+| incoming                                    | ✔                                                                      | boolean                                               | Determines if the block is an incoming transaction or not.                                                                                                                                                                                                                                                                     |
+| value                                       | ✔                                                                      | number                                                | Block transfer value.                                                                                                                                                                                                                                                                                                          |
 
 
 #### StorageAdapter
@@ -273,15 +273,15 @@ Currently, it is not possible to send multiple payloads as part of the message. 
 | set(key: string, payload: string):void | ✔        | function | Stores account in storage.                               |
 | remove(key: string): void              | ✔        | function | Removes account from storage.                            |
 
-## Storage 
+## Storage
 
 :::warning
 Using Stronghold for storage is currently under research/development.
 :::
 
 You should consider multiple storage options should for managing data that requires persistence:
-- You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options. 
-- For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite). 
+- You can use a simple key-value [storage](https://capacitor.ionicframework.com/docs/apis/storage/) could be leveraged for wallet basic metadata, such as user settings or theming options.
+- For transactions and address data management you could use a relational database such as [SQLite](https://github.com/jepiqueau/capacitor-sqlite).
 
 What follows is an Entity Relationship Diagram (ERD)  that shows the logical representation of the data. An _account_ is the basic entity in this database design. It has a one-to-many relationship with _addresses_. This means an account could have multiple addresses , but an address can only belong to a single account. An account has a many-to-many relationship with _transactions_ .  Therefore, an account could have multiple transactions, but it is possible that a transaction belongs to multiple accounts. To accommodate this behaviour, an additional table that stores account IDs against transaction IDs (hashes) was added.  
 
@@ -299,12 +299,12 @@ See [storage adapter](#storageadapter) for adapter interface.
 
 ### API
 
-#### Initialisation 
+#### Initialisation
 
 Initializes account
 There are several scenarios in which an account can be initialized:
 
-- *Seed generated outside the Stronghold*: In this case, the _account_ should be initialized with a seed. It should communicate with the Stronghold using the `import_accounts` method and should expect an ID as a response. 
+- *Seed generated outside the Stronghold*: In this case, the _account_ should be initialized with a seed. It should communicate with the Stronghold using the `import_accounts` method and should expect an ID as a response.
 - *Seed generated inside the Stronghold*: In this case, the _account_ should be initialized without a seed. It should communicate with the Stronghold using its `create_account` method and should expect an “id” in response;
 - *Importing accounts from Stronghold backup*: In this case, the _account_ should receive all the initialization properties from the `Stronghold`. Please note that during backup, these configuration settings should be passed to the `Stronghold`. See [import_accounts()](#import_accounts).
 
@@ -337,15 +337,15 @@ The following should be considered when initializing an account:
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
 
-#### sync_addresses() 
+#### sync_addresses()
 
-Sync addresses with the Tangle. The method ensures that the wallet's local state contains all used addresses and an unused address. 
- 
+Sync addresses with the Tangle. The method ensures that the wallet's local state contains all used addresses and an unused address.
+
 The following should be considered when implementing this method:
 
 - The updated address history should not be written down in the database/persistent storage. Instead, the method should only return the updated address history (with transaction hashes).  This ensures that there are no partial writes to the database.
 - To sync addresses for an account from scratch, _index = 0_ and _gap_limit = 10_ should be sent as arguments.
-*   To sync addresses from the latest address, _index = latest address index_ and _gap_limit = 1_ should be sent as arguments. 
+*   To sync addresses from the latest address, _index = latest address index_ and _gap_limit = 1_ should be sent as arguments.
 
 ##### Parameters
 
@@ -360,41 +360,41 @@ The following should be considered when implementing this method:
 | *Name*    | *Type*    | *Description*                                |
 | --------- | --------- | -------------------------------------------- |
 | addresses | Address[] | Address history up to latest unused address. |
-| ids       | string[]  | Message IDs associated with the addresses.   |
+| ids       | string[]  | Block IDs associated with the addresses.   |
 
 ##### Additional Information
 
 
-      
+
 | *Name*                          | *Description*                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Access modifiers                | Private                                                                                                                                                                                                                                                                                                                                                                                                            |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                                                                                                                                                                                                                       |
-| Required client library methods | [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)\| [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs) |
+| Required client library methods | [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances)\| [find_blocks()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_blocks) \| [find_outputs()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_outputs) |
 
-#### sync_messages() 
+#### sync_blocks()
 
-Sync messages with the Tangle. The method should ensure that the wallet's local state has all messages associated with the address history. 
+Sync blocks with the Tangle. The method should ensure that the wallet's local state has all blocks associated with the address history.
 
 The following should be considered when implementing this method:
 
-- The updated message history should not be written down in the database/persistent storage. Instead, the method should only return the updated message history (with message IDs).
-- This method should check if there are any local messages (with “broadcasted: false”) matching the messages fetched from the network. If there are such messages, their “broadcasted” property should be set to true.
-- For newly-confirmed messages, the method should ensure that it updates the “confirmed” property of all its reattachments.
+- The updated block history should not be written down in the database/persistent storage. Instead, the method should only return the updated block history (with block IDs).
+- This method should check if there are any local blocks (with “broadcasted: false”) matching the blocks fetched from the network. If there are such blocks, their “broadcasted” property should be set to true.
+- For newly-confirmed blocks, the method should ensure that it updates the “confirmed” property of all its reattachments.
 
 
 ##### Parameters
 
 | *Name* | *Required* | *Type*   | *Description*                                                                                                                         |
 | ------ | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| ids    | ✔          | string[] | Message IDs. New message IDs should be calculated by running a difference of local message IDs with latest message IDs on the Tangle. |
+| ids    | ✔          | string[] | Block IDs. New block IDs should be calculated by running a difference of local block IDs with latest block IDs on the Tangle. |
 
 
 ##### Returns
 
 | *Name*   | *Type*                | *Description*   |
 | -------- | --------------------- | --------------- |
-| messages | [Message](#message)[] | Message history |
+| blocks | [Block](#block)[] | Block history |
 
 ##### Additional Information
 
@@ -402,17 +402,17 @@ The following should be considered when implementing this method:
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Private                                                                                                                |
 | Errors                          | List of error messages [TBD]                                                                                           |
-| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) |
+| Required client library methods | [find_blocks()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_blocks) |
 
 ##### Required client library methods
-- 
+-
 
-#### select_inputs() 
+#### select_inputs()
 
 Select inputs for funds transfer.
 
 :::info
-This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn't match the remainder address. 
+This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn't match the remainder address.
 :::
 
 See [Input Selection Process](#input-selection) for implementation details.
@@ -441,15 +441,15 @@ See [Input Selection Process](#input-selection) for implementation details.
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
 
-#### send() 
+#### send()
 
-Sends a message to the Tangle.  
+Sends a block to the Tangle.  
 
 :::info
-This method should only be used after a successful response from [sync()](#sync). 
+This method should only be used after a successful response from [sync()](#sync).
 :::
 
-Currently, it is not possible to send multiple payloads. 
+Currently, it is not possible to send multiple payloads.
 
 If you want to send a value transaction, please follow this process:
 1. Ensure _amount_ is not set to zero.
@@ -459,9 +459,9 @@ If you want to send a value transaction, please follow this process:
 5. Select inputs by using [select_inputs()](#select_inputs).
 6. Pass the serialized [unsigned transaction](#unsignedtransaction) to the `Stronghold` for signing with its “signTransaction” method.
 7. Perform proof-of-work. The _pow_ property in the account object should determine if the proof of work should be offloaded.
-8. Once proof-of-work is successfully performed, the message should be validated and stored in the persistent storage.
+8. Once proof-of-work is successfully performed, the block should be validated and stored in the persistent storage.
 9. After persisting the transaction, the transaction should be broadcast to the network.
-10.  In the event of a broadcast error, there should be three attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate, and it should be left to the user to retry the failed message. For failed messages, the “broadcasted” property in the transaction objects should be set to false. 
+10.  In the event of a broadcast error, there should be three attempts for automatic rebroadcasting. If all attempts fail, the send process should terminate, and it should be left to the user to retry the failed block. For failed blocks, the “broadcasted” property in the transaction objects should be set to false.
 
 
 ##### Parameters
@@ -475,43 +475,43 @@ If you want to send a value transaction, please follow this process:
 
 | *Name*  | *Type*              | *Description*       |
 | ------- | ------------------- | ------------------- |
-| message | [Message](#message) | Newly made message. |
+| block | [Block](#block) | Newly made block. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                                                                                                                                                                                                              |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Private                                                                                                                                                                                                                    |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                               |
-| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [send()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send) |
+| Required client library methods | [find_blocks()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_blocks) \| [send()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#send) |
 
 
-#### retry() 
+#### retry()
 
-Rebroadcasts failed message.
+Rebroadcasts failed block.
 
 :::info
-This method should only be used after a successful response from [sync()](#sync). 
+This method should only be used after a successful response from [sync()](#sync).
 :::
 
-If you want to retry broadcasting a failed message, you can use the following process:
+If you want to retry broadcasting a failed block, you can use the following process:
 
-1. Get the message by using [get_message()](#get_message).
-2. Rebroadcast the message.
+1. Get the block by using [get_block()](#get_block).
+2. Rebroadcast the block.
 3. Update the account in persistent storage.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description* |
 | ------ | ---------- | ------ | ------------- |
-| id     | ✔          | string | Message ID    |
+| id     | ✔          | string | Block ID    |
 
 ##### Returns
 
 | *Name*  | *Type*  | *Description*       |
 | ------- | ------- | ------------------- |
-| message | Message | Newly made message. |
+| block | Block | Newly made block. |
 
 
 ##### Additional Information
@@ -525,14 +525,14 @@ If you want to retry broadcasting a failed message, you can use the following pr
 
 #### sync()
 
-Syncs an account with the Tangle. The account syncing process should ensure that the latest metadata (balance, messages) associated with an account is retrieved from the Tangle and stored locally.  
-Please note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every message. 
+Syncs an account with the Tangle. The account syncing process should ensure that the latest metadata (balance, blocks) associated with an account is retrieved from the Tangle and stored locally.  
+Please note that it is a proposed design decision to enforce account syncing before every send. An alternative way would be to have the _send_ method always exposed and internally ensuring that the account is synced before every block.
 
 If you want to sync an account, you can use the following process:
 
 1. Sync addresses using [sync_addresses()](#sync_addresses).
-2. Sync messages using [sync_messages()](#sync_messages).
-3. Store updated addresses and messages information in persistent storage (if not explicitly set otherwise by the user). 
+2. Sync blocks using [sync_blocks()](#sync_blocks).
+3. Store updated addresses and blocks information in persistent storage (if not explicitly set otherwise by the user).
 
 ##### Parameters
 
@@ -556,31 +556,31 @@ If you want to sync an account, you can use the following process:
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Public                                                                                                                                                                                                                                                     |
 | Errors                          | List of error messages [TBD]                                                                                                                                                                                                                               |
-| Required client library methods | [find_messages()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_messages) \| [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances) |
+| Required client library methods | [find_blocks()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#find_blocks) \| [get_address_balances()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#get_address_balances) |
 
-####  reattach() 
+####  reattach()
 
-Reattaches unconfirmed message to the Tangle. 
+Reattaches unconfirmed block to the Tangle.
 The following should be considered when implementing this method:
 
-- Only an unconfirmed message can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed message ID is provided, the method should throw an error.
-- The method should also validate if a reattachment is necessary, by checking if the message falls below max depth. The criteria for whether the message has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent reattachment, the message can be reattached. See [this implementation](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) for reference.
-- Once reattached, the message should be stored in the persistent storage.
-- If the message was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers. 
+- Only an unconfirmed block can be reattached. The method should validate the confirmation state of the provided transaction. If a confirmed block ID is provided, the method should throw an error.
+- The method should also validate if a reattachment is necessary, by checking if the block falls below max depth. The criteria for whether the block has fallen below max depth is determined through its timestamp. If 11 minutes have passed since the timestamp of the most recent reattachment, the block can be reattached. See [this implementation](https://github.com/iotaledger/trinity-wallet/blob/3fab4f671c97e805a2b0ade99b4abb8b508c2842/src/shared/libs/iota/transfers.js#L141) for reference.
+- Once reattached, the block should be stored in the persistent storage.
+- If the block was reattached via polling, a [reattachment](#monitor-for-reattachments) event should be emitted to notify all subscribers.
 
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description* |
 | ------ | ---------- | ------ | ------------- |
-| id     | ✔          | string | Message ID.   |
+| id     | ✔          | string | Block ID.   |
 
 
 ##### Returns
 
 | *Name*  | *Type*  | *Description*             |
 | ------- | ------- | ------------------------- |
-| message | Message | Newly reattached message. |
+| block | Block | Newly reattached block. |
 
 ##### Additional Information
 
@@ -595,7 +595,7 @@ The following should be considered when implementing this method:
 
 Gets total account balance.
 
-The total balance should be read directly from local storage. To read the latest account balance from the network, [sync()](#sync) should be used first. 
+The total balance should be read directly from local storage. To read the latest account balance from the network, [sync()](#sync) should be used first.
 
 ##### Returns
 
@@ -615,7 +615,7 @@ The total balance should be read directly from local storage. To read the latest
 
 #### available_balance()
 
-Gets available account balance. The available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance. 
+Gets available account balance. The available account balance is the amount users are allowed to spend. It should subtract the pending balance from the total balance.
 
 For example, if a user with _50i_ total account balance has made a transaction spending _30i_, the available balance should be _20i_ (i.e. 50i - 30i).
 
@@ -637,7 +637,7 @@ The available balance should be read directly from local storage. If you want to
 | Required client library methods | None                         |
 
 
-#### set_alias() 
+#### set_alias()
 
 Updates an account's alias/name.
 
@@ -647,7 +647,7 @@ Updates an account's alias/name.
 | ------ | ---------- | ------ | ----------------- |
 | alias  | ✔          | string | New account name. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -656,24 +656,24 @@ Updates an account's alias/name.
 | Required client library methods | None                         |
 
 
-#### list_messages() 
+#### list_blocks()
 
-Gets messages. Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
+Gets blocks. Blocks should be read directly from local storage. To ensure the local database is updated with the latest blocks, you should use [sync()](#sync) first.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description*                                                                                                                |
 | ------ | ---------- | ------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| count  | ✔          | number | Number of (most recent) messages.                                                                                            |
-| from   | ✔          | number | Subset of messages. For example: count = 10, from = 5, it should return ten messages skipping the most recent five messages. |
+| count  | ✔          | number | Number of (most recent) blocks.                                                                                            |
+| from   | ✔          | number | Subset of blocks. For example: count = 10, from = 5, it should return ten blocks skipping the most recent five blocks. |
 
 ##### Returns
 
 | *Name*   | *Type*    | *Description* |
 | -------- | --------- | ------------- |
-| messages | Message[] | All messages. |
+| blocks | Block[] | All blocks. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -682,55 +682,55 @@ Gets messages. Messages should be read directly from local storage. To ensure th
 | Required client library methods | None                         |
 
 
-#### list_received_messages()
+#### list_received_blocks()
 
-Gets all received messages.
+Gets all received blocks.
 
-Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
+Blocks should be read directly from local storage. To ensure the local database is updated with the latest blocks, you should use [sync()](#sync) first.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description*                            |
 | ------ | ---------- | ------ | ---------------------------------------- |
-| count  | ✔          | number | Number of most recent received messages. |
-| from   | ✔          | number | Subset of received messages.             |
+| count  | ✔          | number | Number of most recent received blocks. |
+| from   | ✔          | number | Subset of received blocks.             |
 
 ##### Returns
 
 | *Name*   | *Type*    | *Description*          |
 | -------- | --------- | ---------------------- |
-| messages | Message[] | All received messages. |
+| blocks | Block[] | All received blocks. |
 
 
-##### Additional Information 
+##### Additional Information
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
 | Access modifiers                | Public                       |
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
 
-#### list_sent_messages()
+#### list_sent_blocks()
 
-Gets all sent messages.
+Gets all sent blocks.
 
-Messages should be read directly from local storage. To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first. 
+Blocks should be read directly from local storage. To ensure the local database is updated with the latest blocks, you should use [sync()](#sync) first.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description*                          |
 | ------ | ---------- | ------ | -------------------------------------- |
-| count  | ✔          | number | Number of (most recent) sent messages. |
-| from   | ✔          | number | Subset of sent messages.               |
+| count  | ✔          | number | Number of (most recent) sent blocks. |
+| from   | ✔          | number | Subset of sent blocks.               |
 
 
-##### Returns 
+##### Returns
 
 | *Name*   | *Type*    | *Description*      |
 | -------- | --------- | ------------------ |
-| messages | Message[] | All sent messages. |
+| blocks | Block[] | All sent blocks. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -739,26 +739,26 @@ Messages should be read directly from local storage. To ensure the local databas
 | Required client library methods | None                         |
 
 
-#### list_failed_messages()
+#### list_failed_blocks()
 
-Gets all failed (broadcasted = false) messages. Messages should be read directly from local storage.
+Gets all failed (broadcasted = false) blocks. Blocks should be read directly from local storage.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description*                            |
 | ------ | ---------- | ------ | ---------------------------------------- |
-| count  | ✔          | number | Number of (most recent) failed messages. |
-| from   | ✔          | number | Subset of failed messages.               |
+| count  | ✔          | number | Number of (most recent) failed blocks. |
+| from   | ✔          | number | Subset of failed blocks.               |
 
 
 ##### Returns
 
 | *Name*   | *Type*    | *Description*        |
 | -------- | --------- | -------------------- |
-| messages | Message[] | All failed messages. |
+| blocks | Block[] | All failed blocks. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -767,26 +767,26 @@ Gets all failed (broadcasted = false) messages. Messages should be read directly
 | Required client library methods | None                         |
 
 
-#### list_unconfirmed_messages()
+#### list_unconfirmed_blocks()
 
-Gets all unconfirmed (confirmed = false) messages. Messages should be read directly from local storage.  
+Gets all unconfirmed (confirmed = false) blocks. Blocks should be read directly from local storage.  
 
 ##### Returns
 
 | *Name* | *Required* | *Type* | *Description*                                 |
 | ------ | ---------- | ------ | --------------------------------------------- |
-| count  | ✔          | number | Number of (most recent) unconfirmed messages. |
-| from   | ✔          | number | Subset of unconfirmed messages.               |
+| count  | ✔          | number | Number of (most recent) unconfirmed blocks. |
+| from   | ✔          | number | Subset of unconfirmed blocks.               |
 
 
 ##### Returns
 
 | *Name*   | *Type*    | *Description*             |
 | -------- | --------- | ------------------------- |
-| messages | Message[] | All unconfirmed messages. |
+| blocks | Block[] | All unconfirmed blocks. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -794,26 +794,26 @@ Gets all unconfirmed (confirmed = false) messages. Messages should be read direc
 | Errors                          | List of error messages [TBD] |
 | Required client library methods | None                         |
 
-#### get_message()
+#### get_block()
 
-Gets message for provided ID.
+Gets block for provided ID.
 
-Messages should be read directly from local storage.  To ensure the local database is updated with the latest messages, you should use [sync()](#sync) first.
+Blocks should be read directly from local storage.  To ensure the local database is updated with the latest blocks, you should use [sync()](#sync) first.
 
 ##### Parameters
 
 | *Name* | *Required* | *Type* | *Description* |
 | ------ | ---------- | ------ | ------------- |
-| id     | ✔          | string | Message ID.   |
+| id     | ✔          | string | Block ID.   |
 
 
-##### Returns 
+##### Returns
 
 | *Name*  | *Type*  | *Description*   |
 | ------- | ------- | --------------- |
-| message | Message | Message object. |
+| block | Block | Block object. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -832,7 +832,7 @@ Gets all addresses.
 | addresses | [Address](#address)[] | All addresses. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -850,7 +850,7 @@ Gets all unspent input addresses
 | --------- | ----------------------- | ---------------------------- |
 | addresses | [Address](#address)[] | All unspent input addresses. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -868,7 +868,7 @@ Gets the latest unused address.
 | ------- | ------- | --------------------- |
 | address | Address | A new address object. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -878,11 +878,11 @@ Gets the latest unused address.
 
 ## Account Manager
 
-An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted using this account manager wrapper. 
+An account manager class should be publicly available for users. With the account manager, the user can create, update, delete or manage multiple accounts. The implementation details of a specific account should be abstracted using this account manager wrapper.
 
 ### API
 
-#### Initialisation 
+#### Initialisation
 
 Initializes the account manager. Account manager initialization should validate the adapter object semantics and return an _AccountManager_ instance.
 
@@ -893,14 +893,14 @@ Initializes the account manager. Account manager initialization should validate 
 | adapter | ✘          | [Adapter](#storageadapter) | Initialisation method receives an optional storage adapter. |
 
 
-##### Returns 
+##### Returns
 
 | *Name*  | *Type*                                   | *Description*             |
 | ------- | ---------------------------------------- | ------------------------- |
 | manager | [AccountManager](#accountmanagerobject) | Account manager instance. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -927,7 +927,7 @@ See account [initialisation](#initialisation) for detailed implementation guidel
 | accounts | [Account](#account) | Newly created account. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -960,9 +960,9 @@ The following should be considered when removing an account:
 | Required client library methods | None                         |
 
 
-#### sync_accounts() 
+#### sync_accounts()
 
-Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new messages associated with the stored account.
+Syncs all stored accounts with the Tangle. Syncing should get the latest balance for all accounts and should find any new blocks associated with the stored account.
 
 See [Accounts Syncing Process](#account-syncing-process) for further details.
 
@@ -973,7 +973,7 @@ See [Accounts Syncing Process](#account-syncing-process) for further details.
 | account | [SyncedAccount](#syncedaccountobject)[] | Synced accounts. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -984,7 +984,7 @@ See [Accounts Syncing Process](#account-syncing-process) for further details.
 
 #### move()
 
-Moves funds from one account to another. This method should use the [send()](#send) method from the sender account and initiate a message to the receiver account.
+Moves funds from one account to another. This method should use the [send()](#send) method from the sender account and initiate a blocks to the receiver account.
 
 ##### Parameters
 
@@ -994,7 +994,7 @@ Moves funds from one account to another. This method should use the [send()](#se
 | to     | ✔          | &#x7B; address: &lt;string> } \|   &#x7B; alias: &lt;string> } \|  &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number> } | Identifier. Could be one of address, alias, ID or index. |
 | amount | ✔          | number                                                                                                                                                       | Transaction amount.                                      |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -1007,7 +1007,7 @@ Moves funds from one account to another. This method should use the [send()](#se
 
 Safely creates a backup of the accounts to a destination. The file could simply be JSON containing the address & transaction histories for accounts.
 
-This method should provide the `Stronghold` instance with the metadata of all accounts. 
+This method should provide the `Stronghold` instance with the metadata of all accounts.
 
 ##### Parameters
 
@@ -1015,7 +1015,7 @@ This method should provide the `Stronghold` instance with the metadata of all ac
 | ----------- | ---------- | ------ | --------------------------------------- |
 | destination | ✔          | string | Path where the backup should be stored. |
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -1037,7 +1037,7 @@ Import (backed up) accounts.
 | accounts | ✔          | [Account](#account)[] | Account object. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -1046,7 +1046,7 @@ Import (backed up) accounts.
 | Required client library methods | None                         |
 
 
-#### get_account() 
+#### get_account()
 
 Returns the account associated with the provided identifier.
 
@@ -1065,7 +1065,7 @@ Returns the account associated with the provided identifier.
 | account | [Account](#account) | Account associated with identifier. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -1076,9 +1076,9 @@ Returns the account associated with the provided identifier.
 
 #### reattach()
 
-Reattaches an unconfirmed message.
+Reattaches an unconfirmed block.
 
-See [reattach()](#reattach) method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the [reattach()](#reattach) method on an account object. 
+See [reattach()](#reattach) method for implementation details. This method is a wrapper method provided for convenience. A user could directly access the [reattach()](#reattach) method on an account object.
 
 
 ##### Parameters
@@ -1086,18 +1086,18 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 | *Name*     | *Required* | *Type*                                                                                                                                                       | *Description*                                            |
 | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
 | identifier | ✔          | &#x7B; address: &lt;string> } \|  &#x7B; alias: &lt;string> } \| &#x7B; ID: &lt;number> } \| &#x7B; index: &lt;number }  | Identifier. Could be one of address, alias, ID or index. |
-| id         | ✔          | string                                                                                                                                                       | Message ID.                                              |
+| id         | ✔          | string                                                                                                                                                       | Block ID.                                              |
 
 
 
-##### Returns 
+##### Returns
 
 | *Name*  | *Type*              | *Description*             |
 | ------- | ------------------- | ------------------------- |
-| message | [Message](#message) | Newly reattached message. |
+| block | [Block](#block) | Newly reattached block. |
 
 
-##### Additional Information 
+##### Additional Information
 
 | *Name*                          | *Description*                |
 | ------------------------------- | ---------------------------- |
@@ -1106,39 +1106,39 @@ See [reattach()](#reattach) method for implementation details. This method is a 
 | Required client library methods | None                         |
 
 
-## Events 
+## Events
 
 Events can have two categories:
 
-1. Reactive messages emitted from the node software whenever the state on the node changes. For example, emitting new messages received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. For further details, please visit the [Firefly GitHub repository](https://github.com/iotaledger/wallet-spec/tree/events).
-   
-2. Messages emitted from the wallet library whenever there are any important state changes. Please note that in cases where a user triggered action leads to a state change, the messages will not be emitted. For example, if a user explicitly triggers a [sync()](#sync) action leading to a state change, an explicit event is not necessary.
+1. Reactive blocks emitted from the node software whenever the state on the node changes. For example, emitting new blocks received by the node. Clients (Wallet) can subscribe to these events to get notified if any relevant change occurs on the node. For further details, please visit the [Firefly GitHub repository](https://github.com/iotaledger/wallet-spec/tree/events).
+
+2. Blocks emitted from the wallet library whenever there are any important state changes. Please note that in cases where a user triggered action leads to a state change, the blocks will not be emitted. For example, if a user explicitly triggers a [sync()](#sync) action leading to a state change, an explicit event is not necessary.
 
 ### Category 1 events
 
-On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via [category 2 events](#category-2-events). 
+On every update sent from the node software via an event, the wallet library should update internal (persistent) storage and should also emit events via [category 2 events](#category-2-events).
 
 #### Monitor address for balance changes
 
 | *Event*                 | *Returned Data*                                                                |
 | ----------------------- | ------------------------------------------------------------------------------ |
 | &lt; Address : Balance> | Index 1: Address \| Index 2: New balance on the address |
-    
-#### Monitor address for new messages 
+
+#### Monitor address for new blocks
 
 | *Event*                | *Returned Data*                                                           |
 | ---------------------- | ------------------------------------------------------------------------- |
-| &lt;Address : Message> | Index 1: Address \| Index 2: Id of the new message |
+| &lt;Address : Block> | Index 1: Address \| Index 2: Id of the new block |
 
-#### Monitor message for confirmation state 
+#### Monitor block for confirmation state
 
 | *Event*        | *Returned Data*                                                           |
 | -------------- | ------------------------------------------------------------------------- |
-| &lt;BlockId> | Index 1: Message Id | Index 2: Confirmation state |
-    
+| &lt;BlockId> | Index 1: Block Id | Index 2: Confirmation state |
+
 ### Category 2 events
 
-They could be triggered via events from [category 1](#category-1-events) or through [polling](#polling). 
+They could be triggered via events from [category 1](#category-1-events) or through [polling](#polling).
 
 #### Monitor for balance changes
 
@@ -1147,33 +1147,33 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 | balances | [{ accountId, address, balance }] |
 
 
-#### Monitor for new messages 
+#### Monitor for new blocks
 
 | *Event*  | *Returned Data*           |
 | -------- | ------------------------- |
-| messages | [{ accountId, messages }] |
+| blocks | [{ accountId, blocks }] |
 
 
-#### Monitor for confirmation state 
-
-| *Event*       | *Returned Data*            |
-| ------------- | -------------------------- |
-| confirmations | [{ accountId, messages  }] |
-
-#### Monitor for reattachments 
+#### Monitor for confirmation state
 
 | *Event*       | *Returned Data*            |
 | ------------- | -------------------------- |
-| reattachments | [{ accountId, messages  }] |
+| confirmations | [{ accountId, blocks  }] |
+
+#### Monitor for reattachments
+
+| *Event*       | *Returned Data*            |
+| ------------- | -------------------------- |
+| reattachments | [{ accountId, blocks  }] |
 
 
-#### Monitor for broadcasts 
+#### Monitor for broadcasts
 
 | *Event*    | *Returned Data*            |
 | ---------- | -------------------------- |
-| broadcasts | [{ accountId, messages  }] |
+| broadcasts | [{ accountId, blocks  }] |
 
-#### Monitor for errors 
+#### Monitor for errors
 
 | *Event* | *Returned Data*  |
 | ------- | ---------------- |
@@ -1183,19 +1183,19 @@ They could be triggered via events from [category 1](#category-1-events) or thro
 
 To maintain the financial privacy of wallet users, you should enforce strategies in the application/wallet that will guarantee a certain level of anonymity:
 
-- The wallet should only use a single address per message.  If an address has already been used in a message, it should not be used as a deposit address.  Instead, a new address should be generated.- The input selection strategy should expose as little information as possible. Please see the [input selection process](#input-selection) for further details.
+- The wallet should only use a single address per block.  If an address has already been used in a block, it should not be used as a deposit address.  Instead, a new address should be generated.- The input selection strategy should expose as little information as possible. Please see the [input selection process](#input-selection) for further details.
 
-Some other privacy enhancing techniques can be found [in this document](https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#). 
+Some other privacy enhancing techniques can be found [in this document](https://docs.google.com/document/d/1frk4r1Eq4hnGGOiKWkDiGTK5QQxKbfrvl7Iol7OZ-dc/edit#).
 
 ## Input Selection
 
-The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardized input selection strategy used by the wallet. 
+The goal of input selection is to avoid remainder addresses. The remainder output leaves a clue to the user's future spends. There should be a standardized input selection strategy used by the wallet.
 
 The steps for input selection are as follows:
 
 1. Try to select an input with an exact match. For example, if a user intends to spend _X_ iotas, the wallet should try to find an address that has _X_ iotas as available balance.
 2. If the previous step fails, try to select a combination of inputs that satisfy the amount leaving no change. For example, consider a scenario where the wallet with account name _Foo_ has three addresses _A_, _B_ and _C_ with _10_, _20_ and _50_ IOTA respectively. If a user intends to spend _X = 30_ IOTA, the application should search for an exact match (step no. 1). In this case, no address balance matches _X_. Therefore, the wallet should search for a subset of addresses with an accumulated balance of _X_. In this scenario, _A_ and _B_.
-3. If both the previous steps fail, the wallet should select a combination of inputs that produce the minimum remainder. 
+3. If both the previous steps fail, the wallet should select a combination of inputs that produce the minimum remainder.
 
 A reference implementation of different input selection algorithms for Bitcoin can be found [in this project](https://github.com/bitcoinjs/coinselect).
 
@@ -1203,17 +1203,17 @@ The implementation of step no. 2 is also quite similar to the [subset sum proble
 
 ## Account Syncing Process
 
-The account syncing process should detect all used accounts on a seed with their corresponding address and message history. Once, all accounts and histories are detected, the wallet should accumulate the total balance. The syncing process should work as follows: 
+The account syncing process should detect all used accounts on a seed with their corresponding address and block history. Once, all accounts and histories are detected, the wallet should accumulate the total balance. The syncing process should work as follows:
 
 1. Start with the account at index 0, generate [gap limit](https://blog.blockonomics.co/bitcoin-what-is-this-gap-limit-4f098e52d7e1) number of addresses. This defaults to 20.
-2. Check for messages and balances on the generated addresses.
-3. If there are no messages and balances of 0 on all addresses, the process for generating addresses and finding messages and balances should be stopped.
-4. If any address has balance or associated messages, generate gap limit number of addresses from the index of the last address with messages or balance.
-5. Steps (1-4) should also be performed for the account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any messages or balance.
+2. Check for blocks and balances on the generated addresses.
+3. If there are no blocks and balances of 0 on all addresses, the process for generating addresses and finding blocks and balances should be stopped.
+4. If any address has balance or associated blocks, generate gap limit number of addresses from the index of the last address with blocks or balance.
+5. Steps (1-4) should also be performed for the account at index 1. The general idea is that _n + 1_ accounts should be checked if account _n_ has any blocks or balance.
 
 Treat accounts like addresses. Only allow 1 latest unused account.
 
-*Scenario 1*: The wallet message and address history stored in Stronghold backup
+*Scenario 1*: The wallet block and address history stored in Stronghold backup
 
 1. Start syncing from the latest address index stored in the Stronghold backup
 2.  Run the “Full sync” function to resync from index 0 across all accounts
@@ -1227,18 +1227,18 @@ Treat accounts like addresses. Only allow 1 latest unused account.
 
  A background process that automatically performs several tasks periodically should be part of the wallet library. The goal of the background process is to perform the following tasks:  
 
-- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [`sync_accounts()`](#sync_accounts) method. 
-  - If new messages are detected, a [messages](#monitor-for-new-messages) event should be used to notify all subscribers. 
-  - If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers. 
+- *Sync accounts*: The background process should sync all accounts with the network. This should be done using the [`sync_accounts()`](#sync_accounts) method.
+  - If new blocks are detected, a [blocks](#monitor-for-new-blocks) event should be used to notify all subscribers.
+  - If new balances are detected, a [balances](#monitor-for-balance-changes) event should be used to notify all subscribers.
   - If new confirmations are detected, a [confirmations](#monitor-for-confirmation-state) event should be used to notify all subscribers.
 :::info
-If there are multiple failed messages, priority should be given to the old ones. 
+If there are multiple failed blocks, priority should be given to the old ones.
 :::
-- *Reattach*: The background process should check if there are any unconfirmed messages that require reattachment. The detailed implementation flow for reattachment can be found in the [reattach section](#reattach). 
+- *Reattach*: The background process should check if there are any unconfirmed blocks that require reattachment. The detailed implementation flow for reattachment can be found in the [reattach section](#reattach).
 
 The following should be considered for implementation:
 
 *   Invoking a task explicitly that is already being performed through polling should lead to an error. For example, if the polling process is already syncing accounts, and a user explicitly calls [sync()](#sync), it should throw an error.
 *   Errors during the polling process should be communicated to subscribers via error events.
 
-The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity's implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component. 
+The background process should have a recurring checker that sequentially performs all the above tasks. The implementation should ensure that future tasks can easily be added to the background process. For reference, see [Trinity's implementation](https://github.com/iotaledger/trinity-wallet/blob/develop/src/mobile/src/ui/components/Poll.js) of the poll component.

@@ -119,7 +119,7 @@ Deletes an account.
 
 Returns the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
-### internal_transfer(from_account_id, to_account_id, amount): WalletMessage
+### internal_transfer(from_account_id, to_account_id, amount): WalletBlock
 
 Transfers an amount from an account to another.
 
@@ -129,7 +129,7 @@ Transfers an amount from an account to another.
 | to_account_id   | `str` | `undefined` | The destination of account id in the transfering |
 | amount          | `int` | `undefined` | The transfer amount                              |
 
-Returns the transfer's [WalletMessage](#walletmessage).
+Returns the transfer's [WalletBlock](#walletblock).
 
 ### backup(destination, Stronghold_password): str
 
@@ -167,38 +167,38 @@ Gets all stored accounts.
 
 Returns a list of [AccountHandle](#accounthandle).
 
-### retry(account_id, block_id): [WalletMessage](#walletmessage)
+### retry(account_id, block_id): [WalletBlock](#walletblock)
 
-Retries (promotes or reattaches) the given message.
-
-| Param      | Type  | Default     | Description                                          |
-| ---------- | ----- | ----------- | ---------------------------------------------------- |
-| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| block_id | `str` | `undefined` | The block's identifier                             |
-
-Returns the retried [WalletMessage](#walletmessage).
-
-### reattach(account_id, block_id): [WalletMessage](#walletmessage)
-
-Reattach the given message.
+Retries (promotes or reattaches) the given block.
 
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 | block_id | `str` | `undefined` | The block's identifier                             |
 
-Returns the reattached [WalletMessage](#walletmessage).
+Returns the retried [WalletBlock](#walletblock).
 
-### promote(account_id, block_id): [WalletMessage](#walletmessage)
+### reattach(account_id, block_id): [WalletBlock](#walletblock)
 
-Promote the given message.
+Reattach the given block.
 
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
 | block_id | `str` | `undefined` | The block's identifier                             |
 
-Returns the promoted [WalletMessage](#walletmessage).
+Returns the reattached [WalletBlock](#walletblock).
+
+### promote(account_id, block_id): [WalletBlock](#walletblock)
+
+Promote the given block.
+
+| Param      | Type  | Default     | Description                                          |
+| ---------- | ----- | ----------- | ---------------------------------------------------- |
+| account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
+| block_id | `str` | `undefined` | The block's identifier                             |
+
+Returns the promoted [WalletBlock](#walletblock).
 
 ### get_balance_change_events(count (optional), skip (optional), from_timestamp (optional))
 
@@ -230,7 +230,7 @@ Gets the persisted transaction confirmation change events.
 | skip           | `number` | `0`     | The number of events to skip                                 |
 | from_timestamp | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message, confirmed: boolean }
+Event object: { accountId: string, block: Block, confirmed: boolean }
 
 ### get_transaction_confirmation_event_count(from_timestamp (optional))
 
@@ -250,7 +250,7 @@ Gets the persisted new transaction events.
 | skip           | `number` | `0`     | The number of events to skip                                 |
 | from_timestamp | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { accountId: string, block: Block }
 
 ### get_new_transaction_event_count(from_timestamp (optional))
 
@@ -270,7 +270,7 @@ Gets the persisted transaction reattachment events.
 | skip           | `number` | `0`     | The number of events to skip                                 |
 | from_timestamp | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { accountId: string, block: Block }
 
 ### get_reattachment_event_count(from_timestamp (optional))
 
@@ -290,7 +290,7 @@ Gets the persisted transaction broadcast events.
 | skip           | `number` | `0`     | The number of events to skip                                 |
 | from_timestamp | `number` | `null`  | Filter events that were stored after the given UTC timestamp |
 
-Event object: { accountId: string, message: Message }
+Event object: { accountId: string, block: Block }
 
 ### get_broadcast_event_count(from_timestamp (optional))
 
@@ -312,7 +312,7 @@ Set the number of address indexes that are generated.
 
 ### skip_persistence(): void
 
-Skip saving new messages and addresses on the account object.
+Skip saving new blocks and addresses on the account object.
 The found [SyncedAccount](#syncedaccount) is returned on the _execute_ call but won't be persisted on the database.
 
 ### address_index(address_index): void
@@ -381,17 +381,17 @@ Get the deposit_address of this account.
 
 Returns the [Address](#address).
 
-### messages(): [WalletMessage](#walletmessage)
+### blocks(): [WalletBlock](#walletblock)
 
-Get the messages of this account.
+Get the blocks of this account.
 
-Returns the [WalletMessage](#walletmessage).
+Returns the [WalletBlock](#walletblock).
 
 ### addresses()
 
 Get the addresses of this account.
 
-Returns the list of [WalletMessage](#walletmessage).
+Returns the list of [WalletBlock](#walletblock).
 
 ## AccountHandle
 
@@ -431,7 +431,7 @@ Returns the Bech32 HRP string.
 
 Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
 
-### transfer(transfer_obj): [WalletMessage](#walletmessage)
+### transfer(transfer_obj): [WalletBlock](#walletblock)
 
 Transfer tokens.
 
@@ -439,43 +439,43 @@ Transfer tokens.
 | ------------ | ----------------------- | ----------- | ---------------------------- |
 | transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
 
-Returns the [WalletMessage](#walletmessage) which makes the transfering.
+Returns the [WalletBlock](#walletblock) which makes the transfering.
 
-### retry(block_id): [WalletMessage](#walletmessage)
+### retry(block_id): [WalletBlock](#walletblock)
 
-Retries (promotes or reattaches) the given message.
-
-| Param      | Type  | Default     | Description              |
-| ---------- | ----- | ----------- | ------------------------ |
-| block_id | `str` | `undefined` | The block's identifier |
-
-Returns the retried [WalletMessage](#walletmessage).
-
-### reattach(block_id): [WalletMessage](#walletmessage)
-
-Reattach the given message.
+Retries (promotes or reattaches) the given block.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
 | block_id | `str` | `undefined` | The block's identifier |
 
-Returns the reattached [WalletMessage](#walletmessage).
+Returns the retried [WalletBlock](#walletblock).
 
-### promote(block_id): [WalletMessage](#walletmessage)
+### reattach(block_id): [WalletBlock](#walletblock)
 
-Promote the given message.
+Reattach the given block.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
 | block_id | `str` | `undefined` | The block's identifier |
 
-Returns the promoted [WalletMessage](#walletmessage).
+Returns the reattached [WalletBlock](#walletblock).
 
-### consolidate_outputs(): list[WalletMessage](#walletmessage)
+### promote(block_id): [WalletBlock](#walletblock)
+
+Promote the given block.
+
+| Param      | Type  | Default     | Description              |
+| ---------- | ----- | ----------- | ------------------------ |
+| block_id | `str` | `undefined` | The block's identifier |
+
+Returns the promoted [WalletBlock](#walletblock).
+
+### consolidate_outputs(): list[WalletBlock](#walletblock)
 
 Consolidates the account addresses outputs.
 
-Returns the list of generated [WalletMessage](#walletmessage).
+Returns the list of generated [WalletBlock](#walletblock).
 
 ### generate_address(): list[[Address](#address)]
 
@@ -490,8 +490,8 @@ Returns the latest address in the account.
 ### is_latest_address_unused(): bool
 
 Syncs the latest address with the Tangle and determines whether it's unused or not.
-An unused address is an address without balance and associated message history.
-Note that such address might have been used in the past, because the message history might have been pruned by the node.
+An unused address is an address without balance and associated block history.
+Note that such address might have been used in the past, because the block history might have been pruned by the node.
 
 Returns _true_ if the latest address in the account is unused.
 
@@ -536,31 +536,31 @@ Updates the account's client options.
 | ------- | --------------------------------- | ----------- | ------------------------- |
 | options | `[ClientOptions](#ClientOptions)` | `undefined` | The client options to set |
 
-### message_count(message_type (optional)): int
+### block_count(block_type (optional)): int
 
-Returns the number of messages associated with the account.
-
-| Param        | Type  | Default     | Description                                                           |
-| ------------ | ----- | ----------- | --------------------------------------------------------------------- |
-| message_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
-
-### list_messages(count, from, message_type (optional)): list([WalletMessage](#walletmessage))
-
-Get the list of messages of this account.
+Returns the number of blocks associated with the account.
 
 | Param        | Type  | Default     | Description                                                           |
 | ------------ | ----- | ----------- | --------------------------------------------------------------------- |
-| count        | `int` | `undefined` | The count of the messages to get                                      |
+| block_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
+
+### list_blocks(count, from, block_type (optional)): list([WalletBlock](#walletblock))
+
+Get the list of blocks of this account.
+
+| Param        | Type  | Default     | Description                                                           |
+| ------------ | ----- | ----------- | --------------------------------------------------------------------- |
+| count        | `int` | `undefined` | The count of the blocks to get                                      |
 | from         | `int` | `undefined` | The iniital address index                                             |
-| message_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
+| block_type | `str` | `undefined` | Should be _Received_ , _Sent_ , _Failed_ , _Unconfirmed_ , or _Value_ |
 
 ### list_spent_addresses(): list[[Address](#address)]
 
 Returns the list of spent [Address](#address) in the account.
 
-### get_message(block_id): WalletMessage](#walletmessage) (optional)
+### get_block(block_id): WalletBlock](#walletblock) (optional)
 
-Get the [WalletMessage](#walletmessage) by the message identifier in the account if it exists.
+Get the [WalletBlock](#walletblock) by the block identifier in the account if it exists.
 
 ## AccountInitialiser
 
@@ -589,14 +589,14 @@ Time of account creation.
 | created_at | `u64` | `undefined` | The account creation time |
 
 
-### messages(messages): void
+### blocks(blocks): void
 
-Messages associated with the seed.
-The account can be initialised with locally stored messages.
+Blocks associated with the seed.
+The account can be initialised with locally stored blocks.
 
 | Param    | Type                                    | Default     | Description                 |
 | -------- | --------------------------------------- | ----------- | --------------------------- |
-| messages | `list([WalletMessage](#walletmessage))` | `undefined` | The locally stored messages |
+| blocks | `list([WalletBlock](#walletblock))` | `undefined` | The locally stored blocks |
 
 ### addresses(addresses): list([WalletAddress](#walletaddress))
 
@@ -640,7 +640,7 @@ Removes the balance change listener associated with the given identifier.
 
 ### on_new_transaction(callback): list[int]
 
-Listen to new messages.
+Listen to new blocks.
 
 | Param      | Type       | Default     | Description           |
 | ---------- | ---------- | ----------- | --------------------- |
@@ -890,13 +890,13 @@ client_options = {
     'request_timeout': int (optional), # in milliseconds
     'api_timeout': {
         'GetTips': int (optional) # in milliseconds
-        'PostMessage': int (optional) # in milliseconds
+        'PostBlock': int (optional) # in milliseconds
         'GetOutput': int (optional) # in milliseconds
     } (optional)
 }
 ```
 
-Note that this message object in `wallet.rs` is not the same as the message object in `iota.rs`.
+Note that this block object in `wallet.rs` is not the same as the block object in `iota.rs`.
 
 ## Node
 
@@ -934,12 +934,12 @@ broker_options = {
 }
 ```
 
-## WalletMessage
+## WalletBlock
 
 A dict with the following key:value pairs.
 
 ```python
-wallet_message = {
+wallet_block = {
     'id': str,
     'version': u64,
     'parents': list[str],
