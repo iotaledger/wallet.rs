@@ -61,7 +61,7 @@ impl AccountHandle {
     /// let res = account_handle.send_native_tokens(outputs, None).await?;
     /// println!("Transaction created: {}", res.1);
     /// if let Some(block_id) = res.0 {
-    ///     println!("Message sent: {}", block_id);
+    ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
     pub async fn send_native_tokens(

@@ -27,7 +27,7 @@ pub enum Error {
     #[error("insufficient funds {0}/{1} available")]
     InsufficientFunds(u64, u64),
     /// Latest account is empty (doesn't have history and balance) - can't create account.
-    #[error("can't create accounts when the latest account doesn't have message history and balance")]
+    #[error("can't create accounts when the latest account doesn't have block history and balance")]
     LatestAccountIsEmpty,
     /// Account not found
     #[error("account not found")]
@@ -43,10 +43,10 @@ pub enum Error {
     Panic(String),
     /// Error from bee_block crate.
     #[error("{0}")]
-    BeeMessage(iota_client::bee_block::Error),
-    /// Message dtos error
+    BeeBlock(iota_client::bee_block::Error),
+    /// Block dtos error
     #[error("{0}")]
-    BeeMessageDtoError(#[from] iota_client::bee_block::DtoError),
+    BeeBlockDtoError(#[from] iota_client::bee_block::DtoError),
     /// Bee rest api error
     #[error("{0}")]
     BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
@@ -139,7 +139,7 @@ impl From<iota_client::Error> for Error {
 
 impl From<iota_client::bee_block::Error> for Error {
     fn from(error: iota_client::bee_block::Error) -> Self {
-        Self::BeeMessage(error)
+        Self::BeeBlock(error)
     }
 }
 
@@ -177,8 +177,8 @@ impl serde::Serialize for Error {
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::BeeMessage(_) => serialize_variant(self, serializer, "BeeMessage"),
-            Self::BeeMessageDtoError(_) => serialize_variant(self, serializer, "BeeMessageDtoError"),
+            Self::BeeBlock(_) => serialize_variant(self, serializer, "BeeBlock"),
+            Self::BeeBlockDtoError(_) => serialize_variant(self, serializer, "BeeBlockDtoError"),
             Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidCoinType(..) => serialize_variant(self, serializer, "InvalidCoinType"),

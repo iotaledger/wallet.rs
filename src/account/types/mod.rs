@@ -91,7 +91,7 @@ impl OutputData {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Transaction {
     pub payload: TransactionPayload,
-    #[serde(rename = "messageId")]
+    #[serde(rename = "blockId")]
     pub block_id: Option<BlockId>,
     #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,

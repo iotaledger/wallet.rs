@@ -62,7 +62,7 @@ impl AccountHandle {
                         match inclusion_state {
                             LedgerInclusionStateDto::Included => {
                                 log::debug!(
-                                    "[SYNC] confirmed transaction {} in message {}",
+                                    "[SYNC] confirmed transaction {} in block {}",
                                     transaction_id,
                                     metadata.block_id
                                 );
@@ -76,20 +76,20 @@ impl AccountHandle {
                             }
                             LedgerInclusionStateDto::Conflicting => {
                                 log::debug!("[SYNC] conflicting transaction {}", transaction_id);
-                                // try to get the included message, because maybe only this attachment is conflicting
-                                // because it got confirmed in another message
-                                if let Ok(included_message) =
+                                // try to get the included block, because maybe only this attachment is conflicting
+                                // because it got confirmed in another block
+                                if let Ok(included_block) =
                                     self.client.get_included_block(&transaction.payload.id()).await
                                 {
                                     updated_transaction_and_outputs(
                                         transaction,
-                                        included_message.id(),
+                                        included_block.id(),
                                         InclusionState::Confirmed,
                                         &mut updated_transactions,
                                         &mut spent_output_ids,
                                     );
                                 } else {
-                                    // if we didn't get the included message it means that it got pruned, an input was
+                                    // if we didn't get the included block it means that it got pruned, an input was
                                     // spent in another transaction or there is
                                     // another conflict reason we check the inputs
                                     // because some of them could still be unspent
@@ -118,7 +118,7 @@ impl AccountHandle {
                                 }
                             }
                             LedgerInclusionStateDto::NoTransaction => {
-                                unreachable!("We should only get the metadata for messages with a transaction payload")
+                                unreachable!("We should only get the metadata for blocks with a transaction payload")
                             }
                         }
                     } else {

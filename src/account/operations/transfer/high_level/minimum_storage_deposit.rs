@@ -15,7 +15,7 @@ use primitive_types::U256;
 
 use crate::Result;
 
-// todo: move to bee-message/iota.rs
+// todo: move to bee-block/iota.rs
 
 /// Computes the minimum amount that an output needs to have, when sent with [AddressUnlockCondition],
 /// [StorageDepositReturnUnlockCondition] and [ExpirationUnlockCondition].

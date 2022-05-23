@@ -294,17 +294,17 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let message = account_handle
+                    let transfer = account_handle
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(message))
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
             AccountMethod::MintNfts { nfts_options, options } => {
                 convert_async_panics(|| async {
-                    let message = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
-                    Ok(Response::SentTransfer(message))
+                    let transfer = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
@@ -319,7 +319,7 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let message = account_handle
+                    let transfer = account_handle
                         .send_amount(
                             addresses_with_amount
                                 .iter()
@@ -328,7 +328,7 @@ impl WalletMessageHandler {
                             options.clone(),
                         )
                         .await?;
-                    Ok(Response::SentTransfer(message))
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
@@ -337,7 +337,7 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let message = account_handle
+                    let transfer = account_handle
                         .send_micro_transaction(
                             addresses_with_micro_amount
                                 .iter()
@@ -346,7 +346,7 @@ impl WalletMessageHandler {
                             options.clone(),
                         )
                         .await?;
-                    Ok(Response::SentTransfer(message))
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
@@ -355,10 +355,10 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let message = account_handle
+                    let transfer = account_handle
                         .send_native_tokens(addresses_native_tokens.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(message))
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
@@ -367,10 +367,10 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let message = account_handle
+                    let transfer = account_handle
                         .send_nft(addresses_nft_ids.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(message))
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }
@@ -383,8 +383,8 @@ impl WalletMessageHandler {
             }
             AccountMethod::SendTransfer { outputs, options } => {
                 convert_async_panics(|| async {
-                    let message = account_handle.send(outputs.clone(), options.clone()).await?;
-                    Ok(Response::SentTransfer(message))
+                    let transfer = account_handle.send(outputs.clone(), options.clone()).await?;
+                    Ok(Response::SentTransfer(transfer))
                 })
                 .await
             }

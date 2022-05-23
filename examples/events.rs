@@ -58,19 +58,17 @@ async fn main() -> Result<()> {
     println!("Balance: {:?}", balance);
 
     // send transaction
-    let outputs = vec![
-        BasicOutputBuilder::new_with_amount(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?.1,
-            )))
-            .finish_output()?,
-    ];
+    let outputs = vec![BasicOutputBuilder::new_with_amount(1_000_000)?
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+            Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")?.1,
+        )))
+        .finish_output()?];
     // let res = account.send(outputs, None).await?;
     let res = account.send(outputs, None).await?;
     println!(
-        "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
         res.transaction_id,
-        res.block_id.expect("No message created yet")
+        res.block_id.expect("No block created yet")
     );
 
     Ok(())

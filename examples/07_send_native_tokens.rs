@@ -42,9 +42,9 @@ async fn main() -> Result<()> {
     let transfer_result = account.send_native_tokens(outputs, None).await?;
 
     println!(
-        "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
         transfer_result.transaction_id,
-        transfer_result.block_id.expect("No message created yet")
+        transfer_result.block_id.expect("No block created yet")
     );
 
     Ok(())

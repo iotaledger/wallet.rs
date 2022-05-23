@@ -37,12 +37,12 @@ use crate::events::types::{TransferProgressEvent, WalletEvent};
 pub struct TransferResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
-    #[serde(rename = "messageId")]
+    #[serde(rename = "blockId")]
     pub block_id: Option<BlockId>,
 }
 
 impl AccountHandle {
-    /// Send a transaction, if sending a message fails, the function will return None for the block_id, but the wallet
+    /// Send a transaction, if sending a block fails, the function will return None for the block_id, but the wallet
     /// will retry sending the transaction during syncing.
     /// ```ignore
     /// let outputs = vec![TransferOutput {
@@ -62,7 +62,7 @@ impl AccountHandle {
     ///     .await?;
     /// println!("Transaction created: {}", res.1);
     /// if let Some(block_id) = res.0 {
-    ///     println!("Message sent: {}", block_id);
+    ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {

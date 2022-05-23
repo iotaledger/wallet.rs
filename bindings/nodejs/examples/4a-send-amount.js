@@ -25,7 +25,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your message on http://localhost:14265/api/v2/messages/${response.messageId}`,
+            `Check your block on http://localhost:14265/api/v2/blocks/${response.blockId}`,
         );
     } catch (error) {
         console.log('Error: ' + error);

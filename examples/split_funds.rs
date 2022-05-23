@@ -79,8 +79,8 @@ async fn main() -> Result<()> {
             .collect();
         match account.send(outputs, None).await {
             Ok(res) => println!(
-                "Message sent: http://localhost:14265/api/v2/messages/{}",
-                res.block_id.expect("No message created yet")
+                "Block sent: http://localhost:14265/api/v2/blocks/{}",
+                res.block_id.expect("No block created yet")
             ),
             Err(e) => println!("{}", e),
         }

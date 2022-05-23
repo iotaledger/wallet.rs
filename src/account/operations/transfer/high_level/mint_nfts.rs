@@ -47,9 +47,9 @@ impl AccountHandle {
     ///
     /// let transfer_result = account.mint_nfts(nft_options, None).await?;
     /// println!(
-    ///     "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
+    ///     "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
     ///     transfer_result.transaction_id,
-    ///     transfer_result.block_id.expect("No message created yet")
+    ///     transfer_result.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn mint_nfts(
