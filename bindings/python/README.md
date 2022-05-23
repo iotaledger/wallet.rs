@@ -174,7 +174,7 @@ Retries (promotes or reattaches) the given message.
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| block_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The block's identifier                             |
 
 Returns the retried [WalletMessage](#walletmessage).
 
@@ -185,7 +185,7 @@ Reattach the given message.
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| block_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The block's identifier                             |
 
 Returns the reattached [WalletMessage](#walletmessage).
 
@@ -196,7 +196,7 @@ Promote the given message.
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| block_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The block's identifier                             |
 
 Returns the promoted [WalletMessage](#walletmessage).
 
@@ -447,7 +447,7 @@ Retries (promotes or reattaches) the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| block_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The block's identifier |
 
 Returns the retried [WalletMessage](#walletmessage).
 
@@ -457,7 +457,7 @@ Reattach the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| block_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The block's identifier |
 
 Returns the reattached [WalletMessage](#walletmessage).
 
@@ -467,7 +467,7 @@ Promote the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| block_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The block's identifier |
 
 Returns the promoted [WalletMessage](#walletmessage).
 
