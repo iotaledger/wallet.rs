@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     let result = account.submit_and_store_transaction(signed_transaction_data).await?;
 
     println!(
-        "Transaction sent: https://explorer.iota.org/devnet/message/{}",
+        "Transaction sent: https://explorer.iota.org/devnet/block/{}",
         result.transaction_id
     );
 

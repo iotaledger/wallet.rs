@@ -3,10 +3,7 @@
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::{
-        output::{dto::OutputDto, Output, OutputId},
-        payload::transaction::dto::TransactionPayloadDto,
-    },
+    bee_block::output::{dto::OutputDto, OutputId},
 };
 use serde::Deserialize;
 

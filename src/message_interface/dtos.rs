@@ -14,7 +14,7 @@ use iota_client::{
         address::dto::AddressDto,
         output::{dto::OutputDto, AliasId, FoundryId, NftId, OutputId, TokenId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-        MessageId,
+        BlockId,
     },
     bee_rest_api::types::responses::OutputResponse,
 };

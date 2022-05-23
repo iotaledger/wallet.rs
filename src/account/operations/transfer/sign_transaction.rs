@@ -4,7 +4,7 @@
 #[cfg(feature = "stronghold")]
 use iota_client::secret::SecretManager;
 use iota_client::{
-    api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
+    api::{PreparedTransactionData, SignedTransactionData},
     bee_block::{address::Address, unlock::Unlocks},
     secret::SecretManageExt,
 };

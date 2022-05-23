@@ -11,7 +11,7 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_message::output::Output,
+    bee_block::output::Output,
     Client, NodeInfoWrapper,
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -291,11 +291,11 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;
-                Ok(Response::Outputs(outputs))
+                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListUnspentOutputs => {
                 let outputs = account_handle.list_unspent_outputs().await?;
-                Ok(Response::Outputs(outputs))
+                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;

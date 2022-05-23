@@ -5,16 +5,13 @@ use std::fmt::{Debug, Formatter, Result};
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::{output::OutputId, payload::transaction::dto::TransactionPayloadDto},
+    bee_block::output::OutputId,
     NodeInfoWrapper,
 };
 use serde::Serialize;
 
 use crate::{
-    account::{
-        operations::transfer::TransferResult,
-        types::{address::AccountAddress, OutputData},
-    },
+    account::{operations::transfer::TransferResult, types::address::AccountAddress},
     message_interface::dtos::{
         AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
     },
@@ -45,7 +42,7 @@ pub enum Response {
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
-    Outputs(Vec<OutputData>),
+    Outputs(Vec<OutputDataDto>),
     /// Response for
     /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
     /// [`PrepareMintNfts`](crate::message_interface::AccountMethod::PrepareMintNfts),
