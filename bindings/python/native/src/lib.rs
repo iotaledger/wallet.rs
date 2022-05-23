@@ -6,7 +6,7 @@ pub mod types;
 use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     events::types::WalletEventType,
-    message_interface::{ManagerOptions, MessageType},
+    message_interface::{ManagerOptions, Message},
 };
 use types::*;
 
@@ -53,15 +53,15 @@ pub fn create_message_handler(options: Option<String>) -> Result<WalletMessageHa
 
 #[pyfunction]
 /// Send message through handler.
-pub fn send_message(handle: &WalletMessageHandler, message_type: String) -> Result<String> {
-    let message_type = match serde_json::from_str::<MessageType>(&message_type) {
-        Ok(message_type) => message_type,
+pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<String> {
+    let message = match serde_json::from_str::<Message>(&message) {
+        Ok(message) => message,
         Err(e) => {
-            panic!("Wrong message type! {:?}", e);
+            panic!("Wrong message! {:?}", e);
         }
     };
     let response = crate::block_on(async {
-        iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message_type).await
+        iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message).await
     });
     Ok(serde_json::to_string(&response)?)
 }

@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{self, ManagerOptions, MessageType, WalletMessageHandler},
+    message_interface::{self, ManagerOptions, Message, WalletMessageHandler},
 };
 
 use std::{
@@ -125,8 +125,8 @@ pub extern "C" fn iota_send_message(
     };
 
     let message = c_message.to_str().unwrap();
-    let message_type = match serde_json::from_str::<MessageType>(message) {
-        Ok(message_type) => message_type,
+    let message = match serde_json::from_str::<Message>(message) {
+        Ok(message) => message,
         Err(e) => {
             let error = CString::new(format!("{:?}", e)).unwrap();
             return callback(std::ptr::null(), error.as_ptr(), context);
@@ -137,7 +137,7 @@ pub extern "C" fn iota_send_message(
 
     runtime().spawn(async move {
         let callback_context = callback_context;
-        let response = message_interface::send_message(handle, message_type).await;
+        let response = message_interface::send_message(handle, message).await;
         let response = serde_json::to_string(&response).unwrap();
         let response = CString::new(response).unwrap();
         callback(response.as_ptr(), std::ptr::null(), callback_context.data);

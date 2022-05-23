@@ -5,9 +5,7 @@ use std::sync::Arc;
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{
-        create_message_handler, ManagerOptions, Message as WalletMessage, MessageType, Response, WalletMessageHandler,
-    },
+    message_interface::{create_message_handler, ManagerOptions, Message, Response, WalletMessageHandler},
 };
 use neon::prelude::*;
 use tokio::sync::{mpsc::unbounded_channel, RwLock};
@@ -46,12 +44,11 @@ impl MessageHandler {
     }
 
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
-        match serde_json::from_str::<MessageType>(&serialized_message) {
+        match serde_json::from_str::<Message>(&serialized_message) {
             Ok(message) => {
                 let (response_tx, mut response_rx) = unbounded_channel();
-                let wallet_message = WalletMessage::new(message.clone(), response_tx);
 
-                self.wallet_message_handler.handle(wallet_message).await;
+                self.wallet_message_handler.handle(message, response_tx).await;
                 let response = response_rx.recv().await;
                 if let Some(res) = response {
                     let mut is_err = matches!(res, Response::Error(_) | Response::Panic(_));
