@@ -127,9 +127,9 @@ foreign_enum!(
     }
 );
 foreign_enum!(
-    enum UnlockBlockKind {
-        ED25519 = UnlockBlockKind::Ed25519,
-        REFERENCE = UnlockBlockKind::Reference,
+    enum UnlockKind {
+        ED25519 = UnlockKind::Ed25519,
+        REFERENCE = UnlockKind::Reference,
     }
 );
 
@@ -144,7 +144,7 @@ foreign_class!(class RustHex {
     }
 });
 
-foreign_class!( 
+foreign_class!(
     #[derive(camelCaseAliases, Display)]
     class MigrationData {
         self_type MigrationData;
@@ -1076,7 +1076,7 @@ foreign_class!(
         self_type MessageTransactionPayload;
         private constructor = empty;
         fn MessageTransactionPayload::essence(&self) -> Essence;
-        fn MessageTransactionPayload::unlocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
+        fn MessageTransactionPayload::unlocks(&self) -> Vec<Unlock>; alias unlocks;
     }
 );
 
@@ -1128,11 +1128,11 @@ foreign_class!(
 
 foreign_class!(
     #[derive(Display)]
-    class UnlockBlock {
-        self_type UnlockBlock;
+    class Unlock {
+        self_type Unlock;
         private constructor = empty;
-        private fn UnlockBlock::to_string(&self) -> String;
-        fn UnlockBlock::kind(&self) -> UnlockBlockKind;
+        private fn Unlock::to_string(&self) -> String;
+        fn Unlock::kind(&self) -> UnlockKind;
     }
 );
 

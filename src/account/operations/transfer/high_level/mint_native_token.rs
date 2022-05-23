@@ -49,7 +49,6 @@ impl AccountHandle {
     /// ```ignore
     /// let native_token_options = NativeTokenOptions {
     ///     account_address: None,
-    ///     token_tag: TokenTag::new([0u8; 12]),
     ///     circulating_supply: U256::from(100),
     ///     maximum_supply: U256::from(100),
     ///     foundry_metadata: None

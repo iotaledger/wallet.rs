@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     address::OutputKind as RustOutputKind,
-    iota_client::bee_block::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
+    iota_client::bee_block::prelude::{Payload as RustPayload, Unlock as RustUnlock},
     message::{
         InputSigningData as RustWalletInput, MessageTransactionPayload as MessageTransactionPayloadRust,
         TransactionEssence as TransactionEssenceRust, TransactionOutput as RustWalletOutput,
@@ -16,14 +16,14 @@ pub enum InputKind {
     Treasury = 1,
 }
 
-pub enum UnlockBlockKind {
+pub enum UnlockKind {
     Reference = 0,
     Ed25519 = 1,
 }
 
 pub struct MessageTransactionPayload {
     essence: Essence,
-    unlocks: Vec<UnlockBlock>,
+    unlocks: Vec<Unlock>,
 }
 
 impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
@@ -36,9 +36,7 @@ impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
                 .unlocks()
                 .iter()
                 .cloned()
-                .map(|unlock| UnlockBlock {
-                    unlock: unlock,
-                })
+                .map(|unlock| Unlock { unlock: unlock })
                 .collect(),
         }
     }
@@ -49,7 +47,7 @@ impl MessageTransactionPayload {
         self.essence.clone()
     }
 
-    pub fn unlocks(&self) -> Vec<UnlockBlock> {
+    pub fn unlocks(&self) -> Vec<Unlock> {
         self.unlocks.iter().cloned().collect()
     }
 }
@@ -159,15 +157,15 @@ impl TransactionOutput {
 }
 
 #[derive(Clone)]
-pub struct UnlockBlock {
-    unlock: RustUnlockBlock,
+pub struct Unlock {
+    unlock: RustUnlock,
 }
 
-impl UnlockBlock {
-    pub fn kind(&self) -> UnlockBlockKind {
+impl Unlock {
+    pub fn kind(&self) -> UnlockKind {
         match self.unlock {
-            RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
-            RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
+            RustUnlock::Signature(_) => UnlockKind::Ed25519,
+            RustUnlock::Reference(_) => UnlockKind::Reference,
         }
     }
 

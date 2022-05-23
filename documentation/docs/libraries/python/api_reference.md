@@ -887,7 +887,7 @@ A dict with the following key:value pairs.
 ```python
 client_options = {
     'nodes': list[[Node](#node)] (optional),
-    'primary_node': [Node](#node)] (optional), 
+    'primary_node': [Node](#node)] (optional),
     'primary_pow_node': [Node](#node)] (optional),
     'node_pool_urls': list[str] (optional),
     'network': str (optional),
@@ -986,11 +986,11 @@ transaction = {
     'essence': {
         regular: RegularEssence
     },
-    'unlocks': list[UnlockBlock],
+    'unlocks': list[Unlock],
 }
 ```
 
-Please refer to [RegularEssence](#regularessence) and [UnlockBlock](#unlockblock) for the details of these types.
+Please refer to [RegularEssence](#regularessence) and [Unlock](#unlock) for the details of these types.
 
 ## Milestone
 
@@ -1069,7 +1069,7 @@ input = {
 }
 ```
 
-## UnlockBlock
+## Unlock
 
 A dict with the following key:value pairs.
 

@@ -17,8 +17,6 @@ export type RemainderValueStrategy = {
 
 export interface NativeTokenOptions {
     accountAddress?: string;
-    // TOOD: Change to proper type
-    tokenTag: any;
     circulatingSupply: number;
     maximumSupply: number;
     foundryMetadata?: number[];
