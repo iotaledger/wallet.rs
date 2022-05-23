@@ -6,11 +6,11 @@ import type {
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions } from '../network';
 
-export type __GetAccountsMessagePayload__ = {
+export type __GetAccountsPayload__ = {
     cmd: 'GetAccounts';
 };
 
-export type __GetAccountMessagePayload__ = {
+export type __GetAccountPayload__ = {
     cmd: 'GetAccount';
     payload: AccountId;
 };
@@ -23,7 +23,7 @@ export type __GetNodeInfoPayload__ = {
     };
 };
 
-export type __CreateAccountMessagePayload__ = {
+export type __CreateAccountPayload__ = {
     cmd: 'CreateAccount';
     payload: CreateAccountPayload;
 };
@@ -36,7 +36,7 @@ export type __RecoverAccountsPayload__ = {
     };
 };
 
-export type __DeleteStorageMessagePayload__ = {
+export type __DeleteStoragePayload__ = {
     cmd: 'DeleteStorage';
 };
 

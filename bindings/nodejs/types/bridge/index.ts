@@ -22,17 +22,17 @@ import type {
     __TryCollectOutputsPayloadMethod__,
 } from './account';
 import type {
-    __GetAccountsMessagePayload__,
-    __GetAccountMessagePayload__,
+    __GetAccountsPayload__,
+    __GetAccountPayload__,
     __GetNodeInfoPayload__,
-    __CreateAccountMessagePayload__,
+    __CreateAccountPayload__,
     __SetStrongholdPasswordPayload__,
     __StoreMnemonicPayload__,
     __BackupPayload__,
     __RestoreBackupPayload__,
     __GenerateMnemonicPayload__,
     __VerifyMnemonicPayload__,
-    __DeleteStorageMessagePayload__,
+    __DeleteStoragePayload__,
     __StartBackgroundSyncPayload__,
     __StopBackgroundSyncPayload__,
     __RecoverAccountsPayload__,
@@ -73,12 +73,12 @@ export type __CallAccountMethodPayload__ = {
 export type __SendMessagePayload__ =
     | __BackupPayload__
     | __CallAccountMethodPayload__
-    | __CreateAccountMessagePayload__
-    | __DeleteStorageMessagePayload__
+    | __CreateAccountPayload__
+    | __DeleteStoragePayload__
     | __EmitTestEventPayload__
     | __GenerateMnemonicPayload__
-    | __GetAccountMessagePayload__
-    | __GetAccountsMessagePayload__
+    | __GetAccountPayload__
+    | __GetAccountsPayload__
     | __GetNodeInfoPayload__
     | __RecoverAccountsPayload__
     | __RestoreBackupPayload__
