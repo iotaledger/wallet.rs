@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! In this example we send the signed transaction in a message.
+//! In this example we send the signed transaction in a block.
 //! `cargo run --example 3_send_transaction --release`.
 
 use std::{fs::File, io::prelude::*, path::Path};
