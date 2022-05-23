@@ -10,10 +10,6 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
-        // Always sync before doing anything with the account
-        const synced = await account.sync();
-        console.log('Syncing... - ', synced);
-
         // You can also get the latest unused address:
         // const addressObject = await account.latestAddress();
         // console.log('Address:', addressObject);

@@ -5,7 +5,7 @@ export enum Network {
     Testnet,
 }
 
-type Auth = {
+export type Auth = {
     jwt?: string;
     username?: string;
     password?: string;
@@ -23,7 +23,7 @@ interface NetworkInfo {
         vByteCost?: number;
         vByteFactorKey?: number;
         vByteFactorData?: number;
-    }
+    };
 }
 
 export type Node = {

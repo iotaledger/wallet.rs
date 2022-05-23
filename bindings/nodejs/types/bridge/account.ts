@@ -4,6 +4,7 @@ import type {
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
+    AddressGenerationOptions,
 } from '../address';
 import type { OutputsToCollect, OutputData } from '../output';
 import type {
@@ -13,24 +14,16 @@ import type {
 } from '../transfer';
 
 export type __SyncAccountPayloadMethod__ = {
-    name: 'SyncAccount',
-    data: AccountSyncOptions
-}
-
-export type __GetInfoPayloadMethod__ = {
-    name: 'GetNodeInfo';
-    data: string[];
+    name: 'SyncAccount';
+    data: AccountSyncOptions;
 };
 
 export type __GenerateAddressesPayloadMethod__ = {
     name: 'GenerateAddresses';
     data: {
         amount: number;
+        options?: AddressGenerationOptions;
     };
-};
-
-export type __LatestAddressPayloadMethod__ = {
-    name: 'GetLatestAddress';
 };
 
 export type __BalancePayloadMethod__ = {
@@ -41,6 +34,13 @@ export type __SetCollectOutputsPayloadMethod__ = {
     name: 'CollectOutputs';
     data: {
         outputIdsToCollect: string[];
+    };
+};
+
+export type __GetOutput__ = {
+    name: 'GetOutput';
+    data: {
+        outputId: string;
     };
 };
 
@@ -55,8 +55,8 @@ export type __ListAddressesPayloadMethod__ = {
     name: 'ListAddresses';
 };
 
-export type __ListAddressesWithBalancePayloadMethod__ = {
-    name: 'ListAddressesWithBalance';
+export type __ListAddressesWithUnspentOutputsPayloadMethod__ = {
+    name: 'ListAddressesWithUnspentOutputs';
 };
 
 export type __ListOutputsPayloadMethod__ = {
@@ -79,47 +79,47 @@ export type __MintNativeTokenPayloadMethod__ = {
     name: 'MintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
-        options: TransferOptions;
+        options?: TransferOptions;
     };
 };
 
 export type __MintNftsPayloadMethod__ = {
     name: 'MintNfts';
     data: {
-        nftsOptions: NftOptions;
-        options: TransferOptions;
+        nftsOptions: NftOptions[];
+        options?: TransferOptions;
     };
 };
 
 export type __SendAmountPayloadMethod__ = {
     name: 'SendAmount';
     data: {
-        addressesWithAmount: AddressWithAmount[];
-        options: TransferOptions;
+        addressWithAmount: AddressWithAmount[];
+        options?: TransferOptions;
     };
 };
 
 export type __SendMicroTransactionPayloadMethod__ = {
     name: 'SendMicroTransaction';
     data: {
-        addressesWithMicroAmount: AddressWithMicroAmount[];
-        options: TransferOptions;
+        addressWithMicroAmount: AddressWithMicroAmount[];
+        options?: TransferOptions;
     };
 };
 
 export type __SendNativeTokensPayloadMethod__ = {
     name: 'SendNativeTokens';
     data: {
-        addressesNativeTokens: AddressNativeTokens[];
-        options: TransferOptions;
+        addressNativeTokens: AddressNativeTokens[];
+        options?: TransferOptions;
     };
 };
 
 export type __SendNftPayloadMethod__ = {
     name: 'SendNft';
     data: {
-        addressesNftIds: AddressNftId[];
-        options: TransferOptions;
+        addressNftIds: AddressNftId[];
+        options?: TransferOptions;
     };
 };
 
@@ -127,7 +127,7 @@ export type __SendTransferPayloadMethod__ = {
     name: 'SendTransfer';
     data: {
         outputs: OutputData[];
-        options: TransferOptions;
+        options?: TransferOptions;
     };
 };
 
@@ -135,5 +135,5 @@ export type __TryCollectOutputsPayloadMethod__ = {
     name: 'TryCollectOutputs';
     data: {
         outputsToCollect: OutputsToCollect;
-    }
-}
+    };
+};

@@ -7,7 +7,6 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
-    ClientOptions,
     OutputsToCollect,
     OutputData,
     Transaction,
@@ -18,6 +17,9 @@ import type {
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
+    AddressGenerationOptions,
+    AddressWithUnspentOutputs,
+    TransactionReceipt,
 } from '../types';
 
 export class Account {
@@ -29,28 +31,60 @@ export class Account {
         this.messageHandler = messageHandler;
     }
 
-    alias(): string {
+    async collectOutputs(outputIds: string[]): Promise<TransactionReceipt[]> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'CollectOutputs',
+                data: {
+                    outputIdsToCollect: outputIds,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    getAlias(): string {
         return this.meta.alias;
     }
 
-    async collectOutputs(outputIds: string[]): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'CollectOutputs',
-            data: {
-                outputIdsToCollect: outputIds,
+    async getBalance(): Promise<AccountBalance> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetBalance',
             },
-        });
+        );
+
+        return JSON.parse(response).payload;
+    }
+
+    async getOutput(outputId: string): Promise<OutputData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetOutput',
+                data: {
+                    outputId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
     }
 
     async getOutputsWithAdditionalUnlockConditions(
         outputs: OutputsToCollect,
-    ): Promise<string> {
-        return await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'GetOutputsWithAdditionalUnlockConditions',
-            data: {
-                outputsToCollect: outputs,
+    ): Promise<string[]> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetOutputsWithAdditionalUnlockConditions',
+                data: {
+                    outputsToCollect: outputs,
+                },
             },
-        });
+        );
+        return JSON.parse(response).payload;
     }
 
     async listAddresses(): Promise<Address[]> {
@@ -64,11 +98,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async listAddressesWithBalance(): Promise<Address[]> {
+    async listAddressesWithUnspentOutputs(): Promise<
+        AddressWithUnspentOutputs[]
+    > {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListAddressesWithBalance',
+                name: 'ListAddressesWithUnspentOutputs',
             },
         );
 
@@ -104,7 +140,6 @@ export class Account {
                 name: 'ListPendingTransactions',
             },
         );
-
         return JSON.parse(response).payload;
     }
 
@@ -120,46 +155,31 @@ export class Account {
     }
 
     async sync(options?: AccountSyncOptions): Promise<void> {
-        await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'SyncAccount',
-                data: options ?? {},
-            }
-        )
+        await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'SyncAccount',
+            data: options ?? {},
+        });
     }
 
-    async generateAddresses(): Promise<Address[]> {
+    async generateAddress(
+        options?: AddressGenerationOptions,
+    ): Promise<Address> {
+        const addresses = await this.generateAddresses(1, options);
+        return addresses[0];
+    }
+
+    async generateAddresses(
+        amount: number,
+        options?: AddressGenerationOptions,
+    ): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'GenerateAddresses',
                 data: {
-                    // TODO: Why is the amount set to 1 here?
-                    amount: 1,
+                    amount,
+                    options,
                 },
-            },
-        );
-
-        return JSON.parse(response).payload;
-    }
-
-    async latestAddress(): Promise<Address> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'GetLatestAddress',
-            },
-        );
-
-        return JSON.parse(response).payload;
-    }
-
-    async balance(): Promise<AccountBalance> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'GetBalance',
             },
         );
 
@@ -168,8 +188,8 @@ export class Account {
 
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -185,15 +205,15 @@ export class Account {
     }
 
     async mintNfts(
-        nftOptions: NftOptions,
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        nftsOptions: NftOptions[],
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'MintNfts',
                 data: {
-                    nftsOptions: nftOptions,
+                    nftsOptions,
                     options: transferOptions,
                 },
             },
@@ -204,14 +224,14 @@ export class Account {
 
     async sendAmount(
         addressesWithAmount: AddressWithAmount[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SendAmount',
                 data: {
-                    addressesWithAmount,
+                    addressWithAmount: addressesWithAmount,
                     options: transferOptions,
                 },
             },
@@ -222,14 +242,14 @@ export class Account {
 
     async sendMicroTransaction(
         addressesWithMicroAmount: AddressWithMicroAmount[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SendMicroTransaction',
                 data: {
-                    addressesWithMicroAmount: addressesWithMicroAmount,
+                    addressWithMicroAmount: addressesWithMicroAmount,
                     options: transferOptions,
                 },
             },
@@ -239,15 +259,15 @@ export class Account {
     }
 
     async sendNativeTokens(
-        addressNativeTokens: AddressNativeTokens[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        addressesNativeTokens: AddressNativeTokens[],
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SendNativeTokens',
                 data: {
-                    addressesNativeTokens: addressNativeTokens,
+                    addressNativeTokens: addressesNativeTokens,
                     options: transferOptions,
                 },
             },
@@ -258,14 +278,14 @@ export class Account {
 
     async sendNft(
         addressesAndNftIds: AddressNftId[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SendNft',
                 data: {
-                    addressesNftIds: addressesAndNftIds,
+                    addressNftIds: addressesAndNftIds,
                     options: transferOptions,
                 },
             },
@@ -276,8 +296,8 @@ export class Account {
 
     async sendTransfer(
         outputs: OutputData[],
-        transferOptions: TransferOptions,
-    ): Promise<Transaction[]> {
+        transferOptions?: TransferOptions,
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -294,7 +314,7 @@ export class Account {
 
     async tryCollectOutputs(
         outputsToCollect: OutputsToCollect,
-    ): Promise<Transaction[]> {
+    ): Promise<TransactionReceipt[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

@@ -35,7 +35,9 @@ use crate::events::types::{TransferProgressEvent, WalletEvent};
 /// The result of a transfer, message_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
 pub struct TransferResult {
+    #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
+    #[serde(rename = "messageId")]
     pub message_id: Option<MessageId>,
 }
 

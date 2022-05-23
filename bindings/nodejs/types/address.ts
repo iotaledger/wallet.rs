@@ -1,3 +1,11 @@
+import type { Network } from './network';
+
+export enum AddressType {
+    Ed25519 = 'Ed25519',
+    Alias = 'Alias',
+    Nft = 'Nft',
+}
+
 export interface Address {
     address: string;
     keyIndex: number;
@@ -7,24 +15,40 @@ export interface Address {
 
 export interface AddressWithAmount {
     address: string;
-    amount: number;
+    amount: string;
+}
+
+export interface AddressWithUnspentOutputs extends AddressWithAmount {
+    keyIndex: number;
+    internal: boolean;
+    outputIds: string[];
 }
 
 export interface AddressWithMicroAmount {
     address: string;
     amount: number;
-    returnAddress: string;
-    expiration: number;
+    returnAddress?: string;
+    expiration?: number;
 }
 
 export interface AddressNativeTokens {
     address: string;
     nativeTokens: string[];
-    returnAddress: string;
-    expiration: number;
+    returnAddress?: string;
+    expiration?: number;
 }
 
 export interface AddressNftId {
     address: string;
     nftId: string;
+}
+
+export interface AddressGenerationOptions {
+    internal: boolean;
+    metadata: GenerateAddressMetadata;
+}
+
+interface GenerateAddressMetadata {
+    syncing: boolean;
+    network: Network;
 }

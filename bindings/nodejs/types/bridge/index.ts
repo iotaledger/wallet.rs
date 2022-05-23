@@ -1,14 +1,13 @@
 import type { AccountId } from '../account';
 import type {
     __SyncAccountPayloadMethod__,
-    __GetInfoPayloadMethod__,
     __GenerateAddressesPayloadMethod__,
-    __LatestAddressPayloadMethod__,
     __BalancePayloadMethod__,
     __SetCollectOutputsPayloadMethod__,
+    __GetOutput__,
     __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__,
     __ListAddressesPayloadMethod__,
-    __ListAddressesWithBalancePayloadMethod__,
+    __ListAddressesWithUnspentOutputsPayloadMethod__,
     __ListOutputsPayloadMethod__,
     __ListUnspentOutputsPayloadMethod__,
     __ListPendingTransactionsPayloadMethod__,
@@ -38,19 +37,18 @@ import type {
     __StopBackgroundSyncPayload__,
     __RecoverAccountsPayload__,
     __EmitTestEventPayload__,
-    
-} from './accountManager'
+    __SetClientOptionsPayload__,
+} from './accountManager';
 
 export type __AccountPayloadMethods__ =
     | __BalancePayloadMethod__
     | __GenerateAddressesPayloadMethod__
-    | __GetInfoPayloadMethod__
+    | __GetOutput__
     | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
-    | __LatestAddressPayloadMethod__
     | __ListAddressesPayloadMethod__
-    | __ListAddressesWithBalancePayloadMethod__
+    | __ListAddressesWithUnspentOutputsPayloadMethod__
     | __ListOutputsPayloadMethod__
-    | __ListPendingTransactionsPayloadMethod__ 
+    | __ListPendingTransactionsPayloadMethod__
     | __ListTransactionsPayloadMethod__
     | __ListUnspentOutputsPayloadMethod__
     | __MintNativeTokenPayloadMethod__
@@ -60,9 +58,9 @@ export type __AccountPayloadMethods__ =
     | __SendNativeTokensPayloadMethod__
     | __SendNftPayloadMethod__
     | __SendTransferPayloadMethod__
-    | __SetCollectOutputsPayloadMethod__ 
+    | __SetCollectOutputsPayloadMethod__
     | __SyncAccountPayloadMethod__
-    | __TryCollectOutputsPayloadMethod__
+    | __TryCollectOutputsPayloadMethod__;
 
 export type __CallAccountMethodPayload__ = {
     cmd: 'CallAccountMethod';

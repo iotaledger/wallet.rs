@@ -10,18 +10,18 @@ export type RemainderValueStrategy = {
         value: null;
     };
     AccountAddress: {
-        strategy: 'AccountAddress';
+        strategy: 'CustomAddress';
         value: string;
     };
 };
 
 export interface NativeTokenOptions {
-    // TOOD: Should this be just "address"?
-    accountAddress: string;
+    accountAddress?: string;
     // TOOD: Change to proper type
     tokenTag: any;
     circulatingSupply: number;
     maximumSupply: number;
+    foundryMetadata?: number[];
 }
 
 export interface NftOptions {

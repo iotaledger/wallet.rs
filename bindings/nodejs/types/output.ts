@@ -1,4 +1,4 @@
-import type { IOutputResponse, OutputTypes, AddressTypes } from '@iota/types';
+import type { AddressTypes, IOutputResponse } from '@iota/types';
 
 export enum OutputsToCollect {
     None = 'None',
@@ -8,16 +8,33 @@ export enum OutputsToCollect {
     All = 'All',
 }
 
+enum OutputType {
+    Treasury = 'Treasury',
+    Basic = 'Basic',
+    Alias = 'Alias',
+    Foundry = 'Foundry',
+    Nft = 'Nft',
+}
+
 export interface OutputData {
     outputId: string;
     outputResponse: IOutputResponse;
-    output: OutputTypes;
+    output: Output;
     amount: number;
     isSpent: boolean;
-    address: AddressTypes;
+    address: {
+        type: AddressTypes;
+        data: string;
+    };
     networkId: number;
     remainder: boolean;
     chain: Segment[];
+}
+
+export interface Output {
+    type: OutputType;
+    // TODO: specify the return type
+    data: any;
 }
 
 export interface Segment {

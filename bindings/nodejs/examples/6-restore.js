@@ -18,7 +18,7 @@ async function run() {
 
         await manager.restoreBackup(path, process.env.SH_PASSWORD);
         const account = await manager.getAccount('Alice');
-        console.log('Account:', account.alias());
+        console.log('Account:', account.getAlias());
     } catch (error) {
         console.log('Error: ' + error);
     }

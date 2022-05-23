@@ -9,14 +9,26 @@ import type { Transaction } from './transaction';
 export type AccountId = number | string;
 
 export interface AccountBalance {
-    total: number;
-    available: number;
-    incoming: number;
-    outgoing: number;
+    total: string;
+    available: string;
+    requiredStorageDeposit: string;
+    nativeTokens: nativeTokensMap;
+    nfts: string[];
+    aliases: string[];
+    foundries: string[];
+    potentiallyLockedOutputs: potentiallyLockedOutputsMap;
 }
 
+export type nativeTokensMap = {
+    [tokenId: string]: number;
+};
+
+export type potentiallyLockedOutputsMap = {
+    [outputId: string]: boolean;
+};
+
 export interface AccountSyncOptions {
-    addresses?: string[]
+    addresses?: string[];
     addressStartIndex?: number;
     automaticOutputConsolidation?: boolean;
     forceSyncing?: boolean;
@@ -58,6 +70,6 @@ export enum CoinType {
 }
 
 export interface CreateAccountPayload {
-    alias?: string
-    coinType?: CoinType
+    alias?: string;
+    coinType?: CoinType;
 }

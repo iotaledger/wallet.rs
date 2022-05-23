@@ -1,5 +1,5 @@
 /**
- * This example shows some events.
+ * This example initializes the logger.
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -20,10 +20,6 @@ async function run() {
         const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
-
-        // Always sync before doing anything with the account
-        const synced = await account.sync();
-        console.log('Syncing... - ', synced);
     } catch (error) {
         console.log('Error: ' + error);
     }
