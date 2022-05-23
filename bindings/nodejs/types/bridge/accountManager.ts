@@ -6,16 +6,16 @@ import type {
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions } from '../network';
 
-export type __GetAccountsPayload__ = {
+export type __GetAccountsMessage__ = {
     cmd: 'GetAccounts';
 };
 
-export type __GetAccountPayload__ = {
+export type __GetAccountMessage__ = {
     cmd: 'GetAccount';
     payload: AccountId;
 };
 
-export type __GetNodeInfoPayload__ = {
+export type __GetNodeInfoMessage__ = {
     cmd: 'GetNodeInfo';
     payload: {
         url?: string;
@@ -23,12 +23,12 @@ export type __GetNodeInfoPayload__ = {
     };
 };
 
-export type __CreateAccountPayload__ = {
+export type __CreateAccountMessage__ = {
     cmd: 'CreateAccount';
     payload: CreateAccountPayload;
 };
 
-export type __RecoverAccountsPayload__ = {
+export type __RecoverAccountsMessage__ = {
     cmd: 'RecoverAccounts';
     payload: {
         accountGapLimit: number;
@@ -36,43 +36,43 @@ export type __RecoverAccountsPayload__ = {
     };
 };
 
-export type __DeleteStoragePayload__ = {
+export type __DeleteStorageMessage__ = {
     cmd: 'DeleteStorage';
 };
 
-export type __EmitTestEventPayload__ = {
+export type __EmitTestEventMessage__ = {
     cmd: 'EmitTestEvent';
     payload: WalletEvent;
 };
 
-export type __ClearStrongholdPasswordPayload__ = {
+export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'ClearStrongholdPassword';
 };
 
-export type __IsStrongholdPasswordAvailablePayload__ = {
+export type __IsStrongholdPasswordAvailableMessage__ = {
     cmd: 'IsStrongholdPasswordAvailable';
 };
 
-export type __SetStrongholdPasswordPayload__ = {
+export type __SetStrongholdPasswordMessage__ = {
     cmd: 'SetStrongholdPassword';
     payload: string;
 };
 
-export type __GenerateMnemonicPayload__ = {
+export type __GenerateMnemonicMessage__ = {
     cmd: 'GenerateMnemonic';
 };
 
-export type __StoreMnemonicPayload__ = {
+export type __StoreMnemonicMessage__ = {
     cmd: 'StoreMnemonic';
     payload: string;
 };
 
-export type __VerifyMnemonicPayload__ = {
+export type __VerifyMnemonicMessage__ = {
     cmd: 'VerifyMnemonic';
     payload: string;
 };
 
-export type __BackupPayload__ = {
+export type __BackupMessage__ = {
     cmd: 'Backup';
     payload: {
         destination: string;
@@ -80,7 +80,7 @@ export type __BackupPayload__ = {
     };
 };
 
-export type __RestoreBackupPayload__ = {
+export type __RestoreBackupMessage__ = {
     cmd: 'RestoreBackup';
     payload: {
         source: string;
@@ -88,12 +88,12 @@ export type __RestoreBackupPayload__ = {
     };
 };
 
-export type __SetClientOptionsPayload__ = {
+export type __SetClientOptionsMessage__ = {
     cmd: 'SetClientOptions';
     payload: ClientOptions;
 };
 
-export type __StartBackgroundSyncPayload__ = {
+export type __StartBackgroundSyncMessage__ = {
     cmd: 'StartBackgroundSync';
     payload: {
         options?: AccountSyncOptions;
@@ -101,6 +101,6 @@ export type __StartBackgroundSyncPayload__ = {
     };
 };
 
-export type __StopBackgroundSyncPayload__ = {
+export type __StopBackgroundSyncMessage__ = {
     cmd: 'StopBackgroundSync';
 };
