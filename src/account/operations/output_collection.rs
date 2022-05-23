@@ -367,7 +367,7 @@ impl AccountHandle {
             {
                 Ok(res) => {
                     log::debug!(
-                        "[OUTPUT_COLLECTION] Collection transaction created: msg_id: {:?} tx_id: {:?}",
+                        "[OUTPUT_COLLECTION] Collection transaction created: block_id: {:?} tx_id: {:?}",
                         res.block_id,
                         res.transaction_id
                     );

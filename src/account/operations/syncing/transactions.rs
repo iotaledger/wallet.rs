@@ -140,8 +140,8 @@ impl AccountHandle {
         drop(account);
         for mut transaction in transactions_to_reattach {
             log::debug!("[SYNC] reattach transaction");
-            let reattached_msg = self.submit_transaction_payload(transaction.payload.clone()).await?;
-            transaction.block_id.replace(reattached_msg);
+            let reattached_block = self.submit_transaction_payload(transaction.payload.clone()).await?;
+            transaction.block_id.replace(reattached_block);
             updated_transactions.push(transaction);
         }
 
