@@ -1,11 +1,11 @@
 /**
  * This example gets the outputs with additional unlock conditions */
 const { OutputsToCollect } = require('../out/types');
-const unlockAndReturnManager = require('./account-manager');
+const getUnlockedManager = require('./account-manager');
 
 async function run() {
     try {
-        const manager = await unlockAndReturnManager();
+        const manager = await getUnlockedManager();
         const account = await manager.getAccount('Bob');
         
         await account.sync();

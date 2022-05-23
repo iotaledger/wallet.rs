@@ -41,7 +41,6 @@ export class AccountManager {
             cmd: 'CreateAccount',
             payload,
         });
-
         return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
@@ -100,12 +99,24 @@ export class AccountManager {
     }
 
     async getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper> {
-        return JSON.parse(
-            await this.messageHandler.sendMessage({
-                cmd: 'GetNodeInfo',
-                payload: { url, auth },
-            }),
-        ).payload;
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GetNodeInfo',
+            payload: { url, auth },
+        })
+        return JSON.parse(response).payload;
+    }
+
+    async clearStrongholdPassword(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'ClearStrongholdPassword',
+        });
+    }
+
+    async isStrongholdPasswordAvailable(): Promise<boolean> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'IsStrongholdPasswordAvailable',
+        });
+        return JSON.parse(response).payload;
     }
 
     async setStrongholdPassword(password: string): Promise<void> {

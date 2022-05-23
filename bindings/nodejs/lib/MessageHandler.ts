@@ -10,8 +10,8 @@ import {
 import type {
     EventType,
     AccountManagerOptions,
-    __SendMessagePayload__,
-    __AccountPayloadMethods__,
+    __Message__,
+    __AccountMethod__,
     AccountId,
 } from '../types';
 
@@ -29,13 +29,13 @@ export class MessageHandler {
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
     }
 
-    async sendMessage(message: __SendMessagePayload__): Promise<string> {
+    async sendMessage(message: __Message__): Promise<string> {
         return sendMessageAsync(JSON.stringify(message), this.messageHandler);
     }
 
     async callAccountMethod(
         accountIndex: AccountId,
-        method: __AccountPayloadMethods__,
+        method: __AccountMethod__,
     ): Promise<string> {
         return this.sendMessage({
             cmd: 'CallAccountMethod',

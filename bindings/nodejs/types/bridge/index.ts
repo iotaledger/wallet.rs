@@ -1,90 +1,94 @@
 import type { AccountId } from '../account';
 import type {
-    __SyncAccountPayloadMethod__,
-    __GenerateAddressesPayloadMethod__,
-    __BalancePayloadMethod__,
-    __SetCollectOutputsPayloadMethod__,
-    __GetOutput__,
-    __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__,
-    __ListAddressesPayloadMethod__,
-    __ListAddressesWithUnspentOutputsPayloadMethod__,
-    __ListOutputsPayloadMethod__,
-    __ListUnspentOutputsPayloadMethod__,
-    __ListPendingTransactionsPayloadMethod__,
-    __ListTransactionsPayloadMethod__,
-    __MintNativeTokenPayloadMethod__,
-    __MintNftsPayloadMethod__,
-    __SendAmountPayloadMethod__,
-    __SendMicroTransactionPayloadMethod__,
-    __SendNativeTokensPayloadMethod__,
-    __SendNftPayloadMethod__,
-    __SendTransferPayloadMethod__,
-    __TryCollectOutputsPayloadMethod__,
+    __SyncAccountMethod__,
+    __GenerateAddressesMethod__,
+    __GetBalanceMethod__,
+    __SetCollectOutputsMethod__,
+    __GetOutputMethod__,
+    __GetOutputsWithAdditionalUnlockConditionsMethod__,
+    __ListAddressesMethod__,
+    __ListAddressesWithUnspentOutputsMethod__,
+    __ListOutputsMethod__,
+    __ListUnspentOutputsMethod__,
+    __ListPendingTransactionsMethod__,
+    __ListTransactionsMethod__,
+    __MintNativeTokenMethod__,
+    __MintNftsMethod__,
+    __SendAmountMethod__,
+    __SendMicroTransactionMethod__,
+    __SendNativeTokensMethod__,
+    __SendNftMethod__,
+    __SendTransferMethod__,
+    __TryCollectOutputsMethod__,
 } from './account';
 import type {
-    __GetAccountsMessagePayload__,
-    __GetAccountMessagePayload__,
-    __GetNodeInfoPayload__,
-    __CreateAccountMessagePayload__,
-    __SetStrongholdPasswordPayload__,
-    __StoreMnemonicPayload__,
-    __BackupPayload__,
-    __RestoreBackupPayload__,
-    __GenerateMnemonicPayload__,
-    __VerifyMnemonicPayload__,
-    __DeleteStorageMessagePayload__,
-    __StartBackgroundSyncPayload__,
-    __StopBackgroundSyncPayload__,
-    __RecoverAccountsPayload__,
-    __EmitTestEventPayload__,
-    __SetClientOptionsPayload__,
+    __GetAccountsMessage__,
+    __GetAccountMessage__,
+    __GetNodeInfoMessage__,
+    __CreateAccountMessage__,
+    __SetStrongholdPasswordMessage__,
+    __StoreMnemonicMessage__,
+    __BackupMessage__,
+    __RestoreBackupMessage__,
+    __GenerateMnemonicMessage__,
+    __VerifyMnemonicMessage__,
+    __DeleteStorageMessage__,
+    __StartBackgroundSyncMessage__,
+    __StopBackgroundSyncMessage__,
+    __RecoverAccountsMessage__,
+    __EmitTestEventMessage__,
+    __SetClientOptionsMessage__,
+    __IsStrongholdPasswordAvailableMessage__,
+    __ClearStrongholdPasswordMessage__,
 } from './accountManager';
 
-export type __AccountPayloadMethods__ =
-    | __BalancePayloadMethod__
-    | __GenerateAddressesPayloadMethod__
-    | __GetOutput__
-    | __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__
-    | __ListAddressesPayloadMethod__
-    | __ListAddressesWithUnspentOutputsPayloadMethod__
-    | __ListOutputsPayloadMethod__
-    | __ListPendingTransactionsPayloadMethod__
-    | __ListTransactionsPayloadMethod__
-    | __ListUnspentOutputsPayloadMethod__
-    | __MintNativeTokenPayloadMethod__
-    | __MintNftsPayloadMethod__
-    | __SendAmountPayloadMethod__
-    | __SendMicroTransactionPayloadMethod__
-    | __SendNativeTokensPayloadMethod__
-    | __SendNftPayloadMethod__
-    | __SendTransferPayloadMethod__
-    | __SetCollectOutputsPayloadMethod__
-    | __SyncAccountPayloadMethod__
-    | __TryCollectOutputsPayloadMethod__;
+export type __AccountMethod__ =
+    | __GetBalanceMethod__
+    | __GenerateAddressesMethod__
+    | __GetOutputMethod__
+    | __GetOutputsWithAdditionalUnlockConditionsMethod__
+    | __ListAddressesMethod__
+    | __ListAddressesWithUnspentOutputsMethod__
+    | __ListOutputsMethod__
+    | __ListPendingTransactionsMethod__
+    | __ListTransactionsMethod__
+    | __ListUnspentOutputsMethod__
+    | __MintNativeTokenMethod__
+    | __MintNftsMethod__
+    | __SendAmountMethod__
+    | __SendMicroTransactionMethod__
+    | __SendNativeTokensMethod__
+    | __SendNftMethod__
+    | __SendTransferMethod__
+    | __SetCollectOutputsMethod__
+    | __SyncAccountMethod__
+    | __TryCollectOutputsMethod__;
 
-export type __CallAccountMethodPayload__ = {
+export type __CallAccountMethodMessage__ = {
     cmd: 'CallAccountMethod';
     payload: {
         accountId: AccountId;
-        method: __AccountPayloadMethods__;
+        method: __AccountMethod__;
     };
 };
 
-export type __SendMessagePayload__ =
-    | __BackupPayload__
-    | __CallAccountMethodPayload__
-    | __CreateAccountMessagePayload__
-    | __DeleteStorageMessagePayload__
-    | __EmitTestEventPayload__
-    | __GenerateMnemonicPayload__
-    | __GetAccountMessagePayload__
-    | __GetAccountsMessagePayload__
-    | __GetNodeInfoPayload__
-    | __RecoverAccountsPayload__
-    | __RestoreBackupPayload__
-    | __StartBackgroundSyncPayload__
-    | __StopBackgroundSyncPayload__
-    | __SetClientOptionsPayload__
-    | __SetStrongholdPasswordPayload__
-    | __StoreMnemonicPayload__
-    | __VerifyMnemonicPayload__;
+export type __Message__ =
+    | __BackupMessage__
+    | __CallAccountMethodMessage__
+    | __ClearStrongholdPasswordMessage__
+    | __CreateAccountMessage__
+    | __DeleteStorageMessage__
+    | __EmitTestEventMessage__
+    | __GenerateMnemonicMessage__
+    | __GetAccountMessage__
+    | __GetAccountsMessage__
+    | __GetNodeInfoMessage__
+    | __IsStrongholdPasswordAvailableMessage__
+    | __RecoverAccountsMessage__
+    | __RestoreBackupMessage__
+    | __StartBackgroundSyncMessage__
+    | __StopBackgroundSyncMessage__
+    | __SetClientOptionsMessage__
+    | __SetStrongholdPasswordMessage__
+    | __StoreMnemonicMessage__
+    | __VerifyMnemonicMessage__;

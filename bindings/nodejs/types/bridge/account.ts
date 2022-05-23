@@ -13,12 +13,12 @@ import type {
     NftOptions,
 } from '../transfer';
 
-export type __SyncAccountPayloadMethod__ = {
+export type __SyncAccountMethod__ = {
     name: 'SyncAccount';
     data: AccountSyncOptions;
 };
 
-export type __GenerateAddressesPayloadMethod__ = {
+export type __GenerateAddressesMethod__ = {
     name: 'GenerateAddresses';
     data: {
         amount: number;
@@ -26,56 +26,56 @@ export type __GenerateAddressesPayloadMethod__ = {
     };
 };
 
-export type __BalancePayloadMethod__ = {
+export type __GetBalanceMethod__ = {
     name: 'GetBalance';
 };
 
-export type __SetCollectOutputsPayloadMethod__ = {
+export type __SetCollectOutputsMethod__ = {
     name: 'CollectOutputs';
     data: {
         outputIdsToCollect: string[];
     };
 };
 
-export type __GetOutput__ = {
+export type __GetOutputMethod__ = {
     name: 'GetOutput';
     data: {
         outputId: string;
     };
 };
 
-export type __GetOutputsWithAdditionalUnlockConditionsPayloadMethod__ = {
+export type __GetOutputsWithAdditionalUnlockConditionsMethod__ = {
     name: 'GetOutputsWithAdditionalUnlockConditions';
     data: {
         outputsToCollect: OutputsToCollect;
     };
 };
 
-export type __ListAddressesPayloadMethod__ = {
+export type __ListAddressesMethod__ = {
     name: 'ListAddresses';
 };
 
-export type __ListAddressesWithUnspentOutputsPayloadMethod__ = {
+export type __ListAddressesWithUnspentOutputsMethod__ = {
     name: 'ListAddressesWithUnspentOutputs';
 };
 
-export type __ListOutputsPayloadMethod__ = {
+export type __ListOutputsMethod__ = {
     name: 'ListOutputs';
 };
 
-export type __ListPendingTransactionsPayloadMethod__ = {
+export type __ListPendingTransactionsMethod__ = {
     name: 'ListPendingTransactions';
 };
 
-export type __ListTransactionsPayloadMethod__ = {
+export type __ListTransactionsMethod__ = {
     name: 'ListTransactions';
 };
 
-export type __ListUnspentOutputsPayloadMethod__ = {
+export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
 };
 
-export type __MintNativeTokenPayloadMethod__ = {
+export type __MintNativeTokenMethod__ = {
     name: 'MintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
@@ -83,7 +83,7 @@ export type __MintNativeTokenPayloadMethod__ = {
     };
 };
 
-export type __MintNftsPayloadMethod__ = {
+export type __MintNftsMethod__ = {
     name: 'MintNfts';
     data: {
         nftsOptions: NftOptions[];
@@ -91,7 +91,7 @@ export type __MintNftsPayloadMethod__ = {
     };
 };
 
-export type __SendAmountPayloadMethod__ = {
+export type __SendAmountMethod__ = {
     name: 'SendAmount';
     data: {
         addressWithAmount: AddressWithAmount[];
@@ -99,7 +99,7 @@ export type __SendAmountPayloadMethod__ = {
     };
 };
 
-export type __SendMicroTransactionPayloadMethod__ = {
+export type __SendMicroTransactionMethod__ = {
     name: 'SendMicroTransaction';
     data: {
         addressWithMicroAmount: AddressWithMicroAmount[];
@@ -107,7 +107,7 @@ export type __SendMicroTransactionPayloadMethod__ = {
     };
 };
 
-export type __SendNativeTokensPayloadMethod__ = {
+export type __SendNativeTokensMethod__ = {
     name: 'SendNativeTokens';
     data: {
         addressNativeTokens: AddressNativeTokens[];
@@ -115,7 +115,7 @@ export type __SendNativeTokensPayloadMethod__ = {
     };
 };
 
-export type __SendNftPayloadMethod__ = {
+export type __SendNftMethod__ = {
     name: 'SendNft';
     data: {
         addressNftIds: AddressNftId[];
@@ -123,7 +123,7 @@ export type __SendNftPayloadMethod__ = {
     };
 };
 
-export type __SendTransferPayloadMethod__ = {
+export type __SendTransferMethod__ = {
     name: 'SendTransfer';
     data: {
         outputs: OutputData[];
@@ -131,7 +131,7 @@ export type __SendTransferPayloadMethod__ = {
     };
 };
 
-export type __TryCollectOutputsPayloadMethod__ = {
+export type __TryCollectOutputsMethod__ = {
     name: 'TryCollectOutputs';
     data: {
         outputsToCollect: OutputsToCollect;
