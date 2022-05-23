@@ -29,7 +29,7 @@ SH_PASSWORD="here is your super secure password"
 ```
 
 ## Account Manager and Individual Accounts
-You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.  
+You can initialize (open) a secure storage for individual accounts.  The storage is backed up by `Stronghold` by default, using an AccountManager instance.
 
 The following example creates a new database and account:
 
@@ -42,17 +42,17 @@ The following example creates a new database and account:
 * When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(secret_manager.Stronghold)` ).
 * The seed should be set only for the first time. In order to open already initialized database, you can simply use your password.
 
-The storage is encrypted at rest, so you need a strong password and location where to place your storage. 
+The storage is encrypted at rest, so you need a strong password and location where to place your storage.
 
 :::warning
-We highly recommended that you to store your `Stronghold` password encrypted on rest and separated from `Stronghold` snapshots. 
+We highly recommended that you to store your `Stronghold` password encrypted on rest and separated from `Stronghold` snapshots.
 
 Deal with the password with utmost care.
 :::
 
  The storage comprises two things:
 * A single file called _wallet.stronghold_ , which contains _seed_.  `Stronghold` will secure the seed and encrypt it at rest. The generated seed (mnemonic) serves as a cryptographic key, which is used to generate all accounts and related addresses.
-* Other data used by library that is stored under _db_ sub-directory.  The includes account information, generated addresses, fetched messages, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
+* Other data used by library that is stored under _db_ sub-directory.  The includes account information, generated addresses, fetched blocks, etc. This data is used to speed up some operations, such as account creation, address generation, etc.
 
 One of the key principles behind `Stronghold` based storage is that no one can extract a seed from the storage. You deal with all accounts purely via an _AccountManager_ instance and all complexities are hidden under the hood and are dealt with securely.
 
@@ -77,7 +77,7 @@ Each account is related to a specific IOTA network (mainnet / testnet), which is
 
 For more information about _ClientOptions_ , please refer to [Wallet NodeJs API Reference](api_reference.md).
 
- _Alias_ should be unique, and it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time new account is created. 
+ _Alias_ should be unique, and it can be any string that you see fit. The _alias_ is usually used to identify the account later on. Each account is also represented by an _index_ which is incremented by 1 every time new account is created.
 Any account can be then referred to by its _index_ , _alias_ or one of its generated _addresses_ .
 
 Several API calls can be performed via an _account_ instance.
@@ -88,7 +88,7 @@ It is a good practice to sync accounts with the Tangle every time you work with 
 You can do this using `account.sync()`.`account.sync()` is performed automatically on `send`, `retry`,`reattach` and `promote` API calls.
 :::
 
-Once an account has been created, you can retrieve an instance using the following methods: 
+Once an account has been created, you can retrieve an instance using the following methods:
 - [`AccountManager.getAccount(accountId)` ](api_reference.md#getaccountaccountid)
 - [`AccountManager.getAccountByAlias(alias)` ](api_reference.md#getaccountbyaliasalias)
 - [`AccountManager.getAccounts()` .](api_reference.md#getaccounts)
@@ -113,7 +113,7 @@ This approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wa
 
 :::info
 The IOTA 1.5 (Chrysalis) network supports reusing addresses multiple times.
-::: 
+:::
 
 You can use the following example to generate a new address:
 
@@ -148,14 +148,14 @@ You can use the default options. However, you can provide additional options, su
 *`changeAddress()` : Send the remainder value to an internal address
 *`reuseAddress()` : Send the remainder value back to its original address
 
-The `Account.send()` function returns a _wallet message_ that fully describes the given transaction. You can use the _messageId_ to check confirmation status. You can retrieve individual messages related to any given account using the `Account.listMessages()` function.
+The `Account.send()` function returns a _wallet block_ that fully describes the given transaction. You can use the _blockId_ to check confirmation status. You can retrieve individual blocks related to any given account using the `Account.listBlocks()` function.
 
 ### Dust Protection
 
 The network uses a [dust protection](https://chrysalis.docs.iota.org/guides/dev_guide#dust-protection) protocol to prevent malicious actors from spamming the network while also keeping track of the unspent amount ( _UTXO_ ).
 
 :::info
-Micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address. 
+Micro-transaction below 1Mi of IOTA tokens can be sent to another address if there is already at least 1Mi on that address.
 That's why we sent 1Mi in the last example, to comply with the dust protection.
 
 Dust protection also means you can't leave less than 1Mi on a spent address (leave a dust behind).
@@ -163,7 +163,7 @@ Dust protection also means you can't leave less than 1Mi on a spent address (lea
 
 ## Backup a database
 
-Due to security practices that are incorporated in the Stronghold's DNA, there is no way to retrieve a seed, as it is encrypted at rest.  Therefore, if you're using the default options, you should make sure that you back up your seed regularly. 
+Due to security practices that are incorporated in the Stronghold's DNA, there is no way to retrieve a seed, as it is encrypted at rest.  Therefore, if you're using the default options, you should make sure that you back up your seed regularly.
 
 The following example will guide you in backing up your data in secure files. You can move this file to another app or device, and restore it.
 

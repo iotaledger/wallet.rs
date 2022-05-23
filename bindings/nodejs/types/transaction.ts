@@ -8,7 +8,7 @@ enum InclusionState {
 
 export interface Transaction {
     payload: ITransactionPayload;
-    messageId?: string;
+    blockId?: string;
     inclusionState: InclusionState;
     timestamp: number;
     networkId: number;
@@ -17,5 +17,5 @@ export interface Transaction {
 
 export interface TransactionReceipt {
     transactionId: string;
-    messageId?: string;
+    blockId?: string;
 }
