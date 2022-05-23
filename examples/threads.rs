@@ -62,14 +62,16 @@ async fn main() -> Result<()> {
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
-                    let outputs = vec![BasicOutputBuilder::new_with_amount(1_000_000)?
-                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                            Address::try_from_bech32(
-                                "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
-                            )?
-                            .1,
-                        )))
-                        .finish_output()?];
+                    let outputs = vec![
+                        BasicOutputBuilder::new_with_amount(1_000_000)?
+                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                Address::try_from_bech32(
+                                    "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
+                                )?
+                                .1,
+                            )))
+                            .finish_output()?,
+                    ];
                     let res = account_.send(outputs, None).await?;
                     println!(
                         "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
