@@ -106,6 +106,9 @@ pub enum AccountMethod {
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransferOptions>,
     },
+    /// Set the alias of the account.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    SetAlias { alias: String },
     /// Send funds.
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SendTransfer {

@@ -374,6 +374,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            AccountMethod::SetAlias { alias } => {
+                convert_async_panics(|| async {
+                    let _ = account_handle.set_alias(alias).await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
             AccountMethod::SendTransfer { outputs, options } => {
                 convert_async_panics(|| async {
                     let message = account_handle.send(outputs.clone(), options.clone()).await?;
