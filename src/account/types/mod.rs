@@ -11,11 +11,11 @@ use std::{collections::HashMap, str::FromStr};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    bee_message::{
+    bee_block::{
         address::Address,
         output::{AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::TransactionPayload,
-        MessageId,
+        BlockId,
     },
     bee_rest_api::types::responses::OutputResponse,
     secret::types::{InputSigningData, OutputMetadata},
@@ -92,7 +92,7 @@ impl OutputData {
 pub struct Transaction {
     pub payload: TransactionPayload,
     #[serde(rename = "messageId")]
-    pub message_id: Option<MessageId>,
+    pub block_id: Option<BlockId>,
     #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
     // remove because we have a timestamp in the outputs?

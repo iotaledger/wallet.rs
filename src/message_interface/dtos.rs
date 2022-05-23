@@ -8,7 +8,7 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     output::{AliasId, FoundryId, NftId, OutputId, TokenId},
     payload::transaction::TransactionId,
 };

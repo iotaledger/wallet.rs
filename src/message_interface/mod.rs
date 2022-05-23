@@ -91,7 +91,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use iota_client::bee_message::{
+    use iota_client::bee_block::{
         address::Address,
         output::{
             unlock_condition::{AddressUnlockCondition, UnlockCondition},

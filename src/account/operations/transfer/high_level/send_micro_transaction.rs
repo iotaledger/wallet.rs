@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::Address,
     output::{
         unlock_condition::{
@@ -58,7 +58,7 @@ impl AccountHandle {
     /// println!(
     ///    "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
     ///    transfer_result.transaction_id,
-    ///    transfer_result.message_id.expect("No message created yet")
+    ///    transfer_result.block_id.expect("No message created yet")
     /// );
     /// ```
     pub async fn send_micro_transaction(

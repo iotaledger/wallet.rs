@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota_client::bee_message::payload::transaction::TransactionId;
+use iota_client::bee_block::payload::transaction::TransactionId;
 use serde::{Deserialize, Serialize};
 
 use crate::account::types::{address::AddressWrapper, InclusionState};

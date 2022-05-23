@@ -27,14 +27,14 @@ use anyhow::{
 
 use iota_wallet::{
     message::{
-        MessageType, Value, ValueUnit, MessageId, TransactionSignatureLockedSingleOutput
+        MessageType, Value, ValueUnit, BlockId, TransactionSignatureLockedSingleOutput
     },
     address::{
         OutputKind, AddressWrapper, IotaAddress,
     },
     client::Api,
     iota_client::{
-        bee_message::payload::{
+        bee_block::payload::{
             milestone::MilestoneId,
             transaction::TransactionId,
         },
@@ -261,9 +261,9 @@ foreign_class!(
         fn AccountManager::remove_account(&self, account_id: String) -> Result<()>; alias removeAccount;
         fn AccountManager::get_account(&self, account_id: String) -> Result<Account>; alias getAccount;
         fn AccountManager::get_accounts(&self) -> Result<Vec<Account>>; alias getAccounts;
-        fn AccountManager::reattach(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-        fn AccountManager::promote(&self, account_id: String, message_id: MessageId) -> Result<Message>;
-        fn AccountManager::retry(&self, account_id: String, message_id: MessageId) -> Result<Message>;
+        fn AccountManager::reattach(&self, account_id: String, block_id: BlockId) -> Result<Message>;
+        fn AccountManager::promote(&self, account_id: String, block_id: BlockId) -> Result<Message>;
+        fn AccountManager::retry(&self, account_id: String, block_id: BlockId) -> Result<Message>;
         fn AccountManager::internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message>; alias internalTransfer;
         fn AccountManager::backup(&self, destination: PathBuf, stronghold_password: String) -> Result<PathBuf>;
         fn AccountManager::import_accounts(&mut self, source: PathBuf, stronghold_password: String) -> Result<()>; alias importAccounts;
@@ -385,12 +385,12 @@ foreign_class!(
 );
 foreign_class!(
     #[derive(Display)]
-    class MessageId {
-        self_type MessageId;
-        constructor MessageId::null() -> MessageId;
-        private fn MessageId::to_string(&self) -> String;
-        fn MessageId::fromString(str_rep: &str) -> MessageId {
-            MessageId::from_str(str_rep).unwrap()
+    class BlockId {
+        self_type BlockId;
+        constructor BlockId::null() -> BlockId;
+        private fn BlockId::to_string(&self) -> String;
+        fn BlockId::fromString(str_rep: &str) -> BlockId {
+            BlockId::from_str(str_rep).unwrap()
         }
     }
 );
@@ -425,9 +425,9 @@ foreign_class!(
         self_type Message;
         private constructor = empty;
         private fn Message::eq(&self, o: &Message) -> bool; alias rustEq;
-        fn Message::id(&self) -> MessageId;
+        fn Message::id(&self) -> BlockId;
         fn Message::version(&self) -> u64;
-        fn Message::parents(&self) -> Vec<MessageId>;
+        fn Message::parents(&self) -> Vec<BlockId>;
         fn Message::payload_length(&self) -> usize; alias payloadLength;
         fn Message::payload(&self) -> Option<MessagePayload>;
         fn Message::timestamp(&self) -> DateTime<Utc>;
@@ -496,8 +496,8 @@ foreign_class!(
         fn AddressOutput::transaction_id(&self) -> TransactionId;
         fn AddressOutput::set_transaction_id(&mut self, transaction_id: TransactionId);
         /// Message ID of the output
-        fn AddressOutput::message_id(&self) -> MessageId;
-        fn AddressOutput::set_message_id(&mut self, message_id: MessageId);
+        fn AddressOutput::block_id(&self) -> BlockId;
+        fn AddressOutput::set_block_id(&mut self, block_id: BlockId);
         /// Output index.
         fn AddressOutput::index(&self) -> u16;
         fn AddressOutput::set_index(&mut self, index: u16);
@@ -594,7 +594,7 @@ foreign_class!(
         fn Account::list_messages(&self, count: usize, from: usize, message_type: Option<MessageType>) -> Result<Vec<Message>>;
         fn Account::list_spent_addresses(&self) -> Result<Vec<Address>>;
         fn Account::list_unspent_addresses(&self) -> Result<Vec<Address>>;
-        fn Account::get_message(&self, message_id: MessageId) -> Option<Message>;
+        fn Account::get_message(&self, block_id: BlockId) -> Option<Message>;
         fn Account::alias(&self) -> String;
         fn Account::balance(&self) -> Result<AccountBalance>;
 
@@ -856,8 +856,8 @@ foreign_class!(
         private constructor = empty;
         fn WalletBalanceEvent::indexation_id(&self) -> &str; alias indexationId;
         fn WalletBalanceEvent::account_id(&self) -> &str; alias accountId;
-        fn WalletBalanceEvent::messageId(&self) -> Option<MessageId> {
-            this.message_id().clone()
+        fn WalletBalanceEvent::messageId(&self) -> Option<BlockId> {
+            this.block_id().clone()
         }
         fn WalletBalanceEvent::address(&self) -> AddressWrapper {
             this.address().clone()
@@ -880,8 +880,8 @@ foreign_class!(
         fn WalletTransactionReattachmentEvent::message(&self) -> Message {
             this.message().clone().into()
         }
-        fn WalletTransactionReattachmentEvent::reattachedMessageId(&self) -> MessageId {
-            this.reattached_message_id().clone()
+        fn WalletTransactionReattachmentEvent::reattachedBlockId(&self) -> BlockId {
+            this.reattached_block_id().clone()
         }
     }
 );
@@ -1032,7 +1032,7 @@ foreign_class!(
         /// Returns the timestamp of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::timestamp(&self) -> u64;
         /// Returns the parents of a `MilestonePayloadEssence`.
-        fn MilestonePayloadEssence::parents(&self) -> Vec<MessageId>;
+        fn MilestonePayloadEssence::parents(&self) -> Vec<BlockId>;
         /// Returns the merkle proof of a `MilestonePayloadEssence`.
         fn MilestonePayloadEssence::merkle_proof(&self) -> Vec<u8>;
         /// Returns the next proof of work score of a `MilestonePayloadEssence`.
@@ -1076,7 +1076,7 @@ foreign_class!(
         self_type MessageTransactionPayload;
         private constructor = empty;
         fn MessageTransactionPayload::essence(&self) -> Essence;
-        fn MessageTransactionPayload::unlock_blocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
+        fn MessageTransactionPayload::unlocks(&self) -> Vec<UnlockBlock>; alias unlockBlocks;
     }
 );
 

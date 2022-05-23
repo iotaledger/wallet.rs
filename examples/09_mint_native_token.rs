@@ -8,9 +8,7 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_wallet::{
-    account_manager::AccountManager, iota_client::bee_message::output::TokenTag, NativeTokenOptions, Result, U256,
-};
+use iota_wallet::{account_manager::AccountManager, NativeTokenOptions, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,7 +28,6 @@ async fn main() -> Result<()> {
 
     let native_token_options = NativeTokenOptions {
         account_address: None,
-        token_tag: TokenTag::new([0u8; 12]),
         circulating_supply: U256::from(100),
         maximum_supply: U256::from(100),
         foundry_metadata: None,
@@ -40,7 +37,7 @@ async fn main() -> Result<()> {
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         transfer_result.transaction_id,
-        transfer_result.message_id.expect("No message created yet")
+        transfer_result.block_id.expect("No message created yet")
     );
     Ok(())
 }

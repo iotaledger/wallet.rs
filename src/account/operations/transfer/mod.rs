@@ -14,10 +14,10 @@ pub(crate) mod submit_transaction;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    bee_message::{
+    bee_block::{
         output::{ByteCostConfig, Output},
         payload::transaction::{TransactionId, TransactionPayload},
-        MessageId,
+        BlockId,
     },
     secret::types::InputSigningData,
 };
@@ -32,17 +32,17 @@ use crate::account::{
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
 
-/// The result of a transfer, message_id is an option because submitting the transaction could fail
+/// The result of a transfer, block_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
 pub struct TransferResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
     #[serde(rename = "messageId")]
-    pub message_id: Option<MessageId>,
+    pub block_id: Option<BlockId>,
 }
 
 impl AccountHandle {
-    /// Send a transaction, if sending a message fails, the function will return None for the message_id, but the wallet
+    /// Send a transaction, if sending a message fails, the function will return None for the block_id, but the wallet
     /// will retry sending the transaction during syncing.
     /// ```ignore
     /// let outputs = vec![TransferOutput {
@@ -61,8 +61,8 @@ impl AccountHandle {
     ///     )
     ///     .await?;
     /// println!("Transaction created: {}", res.1);
-    /// if let Some(message_id) = res.0 {
-    ///     println!("Message sent: {}", message_id);
+    /// if let Some(block_id) = res.0 {
+    ///     println!("Message sent: {}", block_id);
     /// }
     /// ```
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
@@ -114,8 +114,8 @@ impl AccountHandle {
         };
 
         // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
-        let message_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
-            Ok(message_id) => Some(message_id),
+        let block_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
+            Ok(block_id) => Some(block_id),
             Err(err) => {
                 log::error!("Failed to submit_transaction_payload {}", err);
                 None
@@ -130,7 +130,7 @@ impl AccountHandle {
             transaction_id,
             Transaction {
                 payload: transaction_payload,
-                message_id,
+                block_id,
                 network_id,
                 timestamp: SystemTime::now()
                     .duration_since(UNIX_EPOCH)
@@ -148,7 +148,7 @@ impl AccountHandle {
         }
         Ok(TransferResult {
             transaction_id,
-            message_id,
+            block_id,
         })
     }
     // unlock outputs

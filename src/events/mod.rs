@@ -97,7 +97,7 @@ mod tests {
         },
     };
 
-    use iota_client::bee_message::payload::transaction::TransactionId;
+    use iota_client::bee_block::payload::transaction::TransactionId;
 
     use super::{
         types::{TransactionInclusionEvent, TransferProgressEvent, WalletEvent, WalletEventType},

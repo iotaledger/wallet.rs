@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::Address,
     output::{
         unlock_condition::{
@@ -60,8 +60,8 @@ impl AccountHandle {
     ///
     /// let res = account_handle.send_native_tokens(outputs, None).await?;
     /// println!("Transaction created: {}", res.1);
-    /// if let Some(message_id) = res.0 {
-    ///     println!("Message sent: {}", message_id);
+    /// if let Some(block_id) = res.0 {
+    ///     println!("Message sent: {}", block_id);
     /// }
     /// ```
     pub async fn send_native_tokens(

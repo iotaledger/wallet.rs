@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         res.transaction_id,
-        res.message_id.expect("No message created yet")
+        res.block_id.expect("No message created yet")
     );
     let now = Instant::now();
     let balance = account.sync(None).await?;

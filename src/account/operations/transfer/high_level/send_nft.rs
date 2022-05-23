@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::Address,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
@@ -25,8 +25,8 @@ pub struct AddressAndNftId {
 
 impl AccountHandle {
     /// Function to send native tokens in basic outputs with a
-    /// [`StorageDepositReturnUnlockCondition`](iota_client::bee_message::output::unlock_condition::
-    /// StorageDepositReturnUnlockCondition) and [`ExpirationUnlockCondition`](iota_client::bee_message::output::
+    /// [`StorageDepositReturnUnlockCondition`](iota_client::bee_block::output::unlock_condition::
+    /// StorageDepositReturnUnlockCondition) and [`ExpirationUnlockCondition`](iota_client::bee_block::output::
     /// unlock_condition::ExpirationUnlockCondition), so the storage deposit gets back to the sender and also that
     /// the sender gets access to the output again after a defined time (default 1 day), Calls
     /// [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
@@ -43,7 +43,7 @@ impl AccountHandle {
     /// println!(
     /// "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
     /// transfer_result.transaction_id,
-    /// transfer_result.message_id.expect("No message created yet")
+    /// transfer_result.block_id.expect("No message created yet")
     /// );
     /// ```
     pub async fn send_nft(
@@ -73,11 +73,11 @@ impl AccountHandle {
                     for native_token in nft_output.native_tokens().iter() {
                         nft_builder = nft_builder.add_native_token(native_token.clone());
                     }
-                    for feature_block in nft_output.feature_blocks().iter() {
-                        nft_builder = nft_builder.add_feature_block(feature_block.clone());
+                    for feature in nft_output.features().iter() {
+                        nft_builder = nft_builder.add_feature(feature.clone());
                     }
-                    for immutable_feature_block in nft_output.immutable_feature_blocks().iter() {
-                        nft_builder = nft_builder.add_immutable_feature_block(immutable_feature_block.clone());
+                    for immutable_feature in nft_output.immutable_features().iter() {
+                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
                     }
                     outputs.push(nft_builder.finish_output()?);
                     // Add custom input

@@ -520,7 +520,7 @@ If you want to retry broadcasting a failed message, you can use the following pr
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | Access modifiers                | Private                                                                                                              |
 | Errors                          | List of error messages [TBD]                                                                                         |
-| Required client library methods | [post_message()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_message) |
+| Required client library methods | [post_block()](https://github.com/iotaledger/iota.rs/blob/dev/specs/iota-rs-ENGINEERING-SPEC-0000.md#post_block) |
 
 
 #### sync()
@@ -1134,7 +1134,7 @@ On every update sent from the node software via an event, the wallet library sho
 
 | *Event*        | *Returned Data*                                                           |
 | -------------- | ------------------------------------------------------------------------- |
-| &lt;MessageId> | Index 1: Message Id | Index 2: Confirmation state |
+| &lt;BlockId> | Index 1: Message Id | Index 2: Confirmation state |
     
 ### Category 2 events
 

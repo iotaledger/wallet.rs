@@ -41,12 +41,12 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error from bee_message crate.
+    /// Error from bee_block crate.
     #[error("{0}")]
-    BeeMessage(iota_client::bee_message::Error),
+    BeeMessage(iota_client::bee_block::Error),
     /// Message dtos error
     #[error("{0}")]
-    BeeMessageDtoError(#[from] iota_client::bee_message::DtoError),
+    BeeMessageDtoError(#[from] iota_client::bee_block::DtoError),
     /// Bee rest api error
     #[error("{0}")]
     BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
@@ -137,8 +137,8 @@ impl From<iota_client::Error> for Error {
     }
 }
 
-impl From<iota_client::bee_message::Error> for Error {
-    fn from(error: iota_client::bee_message::Error) -> Self {
+impl From<iota_client::bee_block::Error> for Error {
+    fn from(error: iota_client::bee_block::Error) -> Self {
         Self::BeeMessage(error)
     }
 }

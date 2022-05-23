@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
     println!(
         "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
         transfer_result.transaction_id,
-        transfer_result.message_id.expect("No message created yet")
+        transfer_result.block_id.expect("No message created yet")
     );
 
     Ok(())

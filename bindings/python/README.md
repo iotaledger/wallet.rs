@@ -167,36 +167,36 @@ Gets all stored accounts.
 
 Returns a list of [AccountHandle](#accounthandle).
 
-### retry(account_id, message_id): [WalletMessage](#walletmessage)
+### retry(account_id, block_id): [WalletMessage](#walletmessage)
 
 Retries (promotes or reattaches) the given message.
 
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| message_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The message's identifier                             |
 
 Returns the retried [WalletMessage](#walletmessage).
 
-### reattach(account_id, message_id): [WalletMessage](#walletmessage)
+### reattach(account_id, block_id): [WalletMessage](#walletmessage)
 
 Reattach the given message.
 
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| message_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The message's identifier                             |
 
 Returns the reattached [WalletMessage](#walletmessage).
 
-### promote(account_id, message_id): [WalletMessage](#walletmessage)
+### promote(account_id, block_id): [WalletMessage](#walletmessage)
 
 Promote the given message.
 
 | Param      | Type  | Default     | Description                                          |
 | ---------- | ----- | ----------- | ---------------------------------------------------- |
 | account_id | `str` | `undefined` | The account id, alias, index or one of its addresses |
-| message_id | `str` | `undefined` | The message's identifier                             |
+| block_id | `str` | `undefined` | The message's identifier                             |
 
 Returns the promoted [WalletMessage](#walletmessage).
 
@@ -441,33 +441,33 @@ Transfer tokens.
 
 Returns the [WalletMessage](#walletmessage) which makes the transfering.
 
-### retry(message_id): [WalletMessage](#walletmessage)
+### retry(block_id): [WalletMessage](#walletmessage)
 
 Retries (promotes or reattaches) the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| message_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The message's identifier |
 
 Returns the retried [WalletMessage](#walletmessage).
 
-### reattach(message_id): [WalletMessage](#walletmessage)
+### reattach(block_id): [WalletMessage](#walletmessage)
 
 Reattach the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| message_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The message's identifier |
 
 Returns the reattached [WalletMessage](#walletmessage).
 
-### promote(message_id): [WalletMessage](#walletmessage)
+### promote(block_id): [WalletMessage](#walletmessage)
 
 Promote the given message.
 
 | Param      | Type  | Default     | Description              |
 | ---------- | ----- | ----------- | ------------------------ |
-| message_id | `str` | `undefined` | The message's identifier |
+| block_id | `str` | `undefined` | The message's identifier |
 
 Returns the promoted [WalletMessage](#walletmessage).
 
@@ -558,7 +558,7 @@ Get the list of messages of this account.
 
 Returns the list of spent [Address](#address) in the account.
 
-### get_message(message_id): WalletMessage](#walletmessage) (optional)
+### get_message(block_id): WalletMessage](#walletmessage) (optional)
 
 Get the [WalletMessage](#walletmessage) by the message identifier in the account if it exists.
 
@@ -805,7 +805,7 @@ A dict with the following key:value pairs.
 ```python
 wallet_address_output = {
     'transaction_id': str,
-    'message_id': str,
+    'block_id': str,
     'index': int,
     'amount': int,
     'is_spent': bool,
@@ -848,7 +848,7 @@ A dict with the following key:value pairs.
 ```python
 address_output = {
     'transaction_id': str,
-    'message_id': str,
+    'block_id': str,
     'index': int,
     'amount': int,
     'is_spent': bool,
@@ -977,7 +977,7 @@ transaction = {
     'essence': {
         regular: RegularEssence
     },
-    'unlock_blocks': list[UnlockBlock],
+    'unlocks': list[UnlockBlock],
 }
 ```
 
@@ -1065,7 +1065,7 @@ input = {
 A dict with the following key:value pairs.
 
 ```python
-unlock_block = {
+unlock = {
     'signature': Ed25519Signature (optional),
     'reference': int (optional)
 }

@@ -7,7 +7,7 @@
 // the first account (ping_account)
 
 use iota_client::{
-    bee_message::output::{
+    bee_block::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder,
     },
@@ -115,7 +115,7 @@ async fn main() -> Result<()> {
                     println!(
                         "Message from thread {} sent: http://localhost:14265/api/v2/messages/{}",
                         n,
-                        res.message_id.expect("No message created yet")
+                        res.block_id.expect("No message created yet")
                     );
                     iota_wallet::Result::Ok(n)
                 })

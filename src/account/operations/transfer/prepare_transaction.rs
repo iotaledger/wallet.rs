@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use iota_client::{
     api::PreparedTransactionData,
-    bee_message::{
+    bee_block::{
         input::INPUT_COUNT_RANGE,
         output::{ByteCostConfig, Output, OUTPUT_COUNT_RANGE},
     },
@@ -39,7 +39,7 @@ impl AccountHandle {
         // validate amounts
         if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
             return Err(crate::Error::BeeMessage(
-                iota_client::bee_message::Error::InvalidOutputCount(TryIntoBoundedU16Error::Truncated(outputs.len())),
+                iota_client::bee_block::Error::InvalidOutputCount(TryIntoBoundedU16Error::Truncated(outputs.len())),
             ));
         }
 
@@ -49,7 +49,7 @@ impl AccountHandle {
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
                         return Err(crate::Error::BeeMessage(
-                            iota_client::bee_message::Error::InvalidInputCount(TryIntoBoundedU16Error::Truncated(
+                            iota_client::bee_block::Error::InvalidInputCount(TryIntoBoundedU16Error::Truncated(
                                 inputs.len(),
                             )),
                         ));

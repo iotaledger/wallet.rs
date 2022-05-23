@@ -6,7 +6,7 @@ use std::{cell::RefCell, rc::Rc};
 use iota_wallet::{
     address::{AddressWrapper, OutputKind},
     message::{
-        Message as MessageRust, MessageId, RemainderValueStrategy as RemainderValueStrategyRust,
+        Message as MessageRust, BlockId, RemainderValueStrategy as RemainderValueStrategyRust,
         Transfer as TransferRust, TransferBuilder as TransferBuilderRust,
     },
 };
@@ -118,13 +118,13 @@ impl From<MessageRust> for Message {
 }
 
 impl Message {
-    pub fn id(&self) -> MessageId {
+    pub fn id(&self) -> BlockId {
         self.message.id().clone()
     }
     pub fn version(&self) -> u64 {
         *(self.message.version())
     }
-    pub fn parents(&self) -> Vec<MessageId> {
+    pub fn parents(&self) -> Vec<BlockId> {
         self.message.parents().to_vec()
     }
     pub fn payload_length(&self) -> usize {

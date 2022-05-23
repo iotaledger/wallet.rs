@@ -3,7 +3,7 @@
 
 use iota_wallet::{
     address::OutputKind as RustOutputKind,
-    iota_client::bee_message::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
+    iota_client::bee_block::prelude::{Payload as RustPayload, UnlockBlock as RustUnlockBlock},
     message::{
         InputSigningData as RustWalletInput, MessageTransactionPayload as MessageTransactionPayloadRust,
         TransactionEssence as TransactionEssenceRust, TransactionOutput as RustWalletOutput,
@@ -23,7 +23,7 @@ pub enum UnlockBlockKind {
 
 pub struct MessageTransactionPayload {
     essence: Essence,
-    unlock_blocks: Vec<UnlockBlock>,
+    unlocks: Vec<UnlockBlock>,
 }
 
 impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
@@ -32,12 +32,12 @@ impl From<&Box<MessageTransactionPayloadRust>> for MessageTransactionPayload {
             essence: Essence {
                 essence: payload.essence().to_owned(),
             },
-            unlock_blocks: payload
-                .unlock_blocks()
+            unlocks: payload
+                .unlocks()
                 .iter()
                 .cloned()
-                .map(|unlock_block| UnlockBlock {
-                    unlock_block: unlock_block,
+                .map(|unlock| UnlockBlock {
+                    unlock: unlock,
                 })
                 .collect(),
         }
@@ -49,8 +49,8 @@ impl MessageTransactionPayload {
         self.essence.clone()
     }
 
-    pub fn unlock_blocks(&self) -> Vec<UnlockBlock> {
-        self.unlock_blocks.iter().cloned().collect()
+    pub fn unlocks(&self) -> Vec<UnlockBlock> {
+        self.unlocks.iter().cloned().collect()
     }
 }
 #[derive(Clone)]
@@ -160,18 +160,18 @@ impl TransactionOutput {
 
 #[derive(Clone)]
 pub struct UnlockBlock {
-    unlock_block: RustUnlockBlock,
+    unlock: RustUnlockBlock,
 }
 
 impl UnlockBlock {
     pub fn kind(&self) -> UnlockBlockKind {
-        match self.unlock_block {
+        match self.unlock {
             RustUnlockBlock::Signature(_) => UnlockBlockKind::Ed25519,
             RustUnlockBlock::Reference(_) => UnlockBlockKind::Reference,
         }
     }
 
     pub fn to_string(&self) -> String {
-        format!("{:?}", self.unlock_block)
+        format!("{:?}", self.unlock)
     }
 }

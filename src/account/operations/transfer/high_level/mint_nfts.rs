@@ -1,10 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::Address,
     output::{
-        feature_block::{FeatureBlock, MetadataFeatureBlock},
+        feature::{Feature, MetadataFeature},
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         NftId, NftOutputBuilder,
     },
@@ -49,7 +49,7 @@ impl AccountHandle {
     /// println!(
     ///     "Transaction: {} Message sent: http://localhost:14265/api/v2/messages/{}",
     ///     transfer_result.transaction_id,
-    ///     transfer_result.message_id.expect("No message created yet")
+    ///     transfer_result.block_id.expect("No message created yet")
     /// );
     /// ```
     pub async fn mint_nfts(
@@ -76,12 +76,12 @@ impl AccountHandle {
                 }
             };
             let immutable_metadata = if let Some(immutable_metadata) = nft_options.immutable_metadata {
-                Some(FeatureBlock::Metadata(MetadataFeatureBlock::new(immutable_metadata)?))
+                Some(Feature::Metadata(MetadataFeature::new(immutable_metadata)?))
             } else {
                 None
             };
             let metadata = if let Some(metadata) = nft_options.metadata {
-                Some(FeatureBlock::Metadata(MetadataFeatureBlock::new(metadata)?))
+                Some(Feature::Metadata(MetadataFeature::new(metadata)?))
             } else {
                 None
             };
@@ -92,10 +92,10 @@ impl AccountHandle {
                     // Address which will own the nft
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
             if let Some(immutable_metadata) = immutable_metadata {
-                nft_builder = nft_builder.add_immutable_feature_block(immutable_metadata);
+                nft_builder = nft_builder.add_immutable_feature(immutable_metadata);
             }
             if let Some(metadata) = metadata {
-                nft_builder = nft_builder.add_feature_block(metadata);
+                nft_builder = nft_builder.add_feature(metadata);
             }
             outputs.push(nft_builder.finish_output()?);
         }

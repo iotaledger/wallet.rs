@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::output::{
+use iota_client::bee_block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder, Output, OutputId,
 };
@@ -95,7 +95,7 @@ impl AccountHandle {
                     Ok(res) => {
                         log::debug!(
                             "[OUTPUT_CONSOLIDATION] Consolidation transaction created: msg_id: {:?} tx_id: {:?}",
-                            res.message_id,
+                            res.block_id,
                             res.transaction_id
                         );
                         consolidation_results.push(res);

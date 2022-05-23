@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::finish_pow,
-    bee_message::{payload::Payload, MessageId},
+    bee_block::{payload::Payload, BlockId},
 };
 
 use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
@@ -15,7 +15,7 @@ impl AccountHandle {
     pub(crate) async fn submit_transaction_payload(
         &self,
         transaction_payload: TransactionPayload,
-    ) -> crate::Result<MessageId> {
+    ) -> crate::Result<BlockId> {
         log::debug!("[TRANSFER] send_payload");
         let account = self.read().await;
         #[cfg(feature = "events")]
@@ -39,23 +39,23 @@ impl AccountHandle {
             account_index,
             WalletEvent::TransferProgress(TransferProgressEvent::Broadcasting),
         );
-        let message_id = self.client.post_message(&message).await?;
-        log::debug!("[TRANSFER] submitted message {}", message_id);
+        let block_id = self.client.post_block(&message).await?;
+        log::debug!("[TRANSFER] submitted message {}", block_id);
         // spawn a thread which tries to get the message confirmed
         let client = self.client.clone();
         tokio::spawn(async move {
-            if let Ok(messages) = client.retry_until_included(&message_id, None, None).await {
+            if let Ok(messages) = client.retry_until_included(&block_id, None, None).await {
                 if let Some(confirmed_message) = messages.first() {
-                    if confirmed_message.0 != message_id {
+                    if confirmed_message.0 != block_id {
                         log::debug!(
                             "[TRANSFER] reattached {}, new message id {}",
-                            message_id,
+                            block_id,
                             confirmed_message.0
                         );
                     }
                 }
             }
         });
-        Ok(message_id)
+        Ok(block_id)
     }
 }

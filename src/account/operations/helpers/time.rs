@@ -3,7 +3,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use iota_client::bee_message::output::{
+use iota_client::bee_block::output::{
     unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
     Output, UnlockCondition,
 };
