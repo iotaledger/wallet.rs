@@ -38,6 +38,8 @@ import type {
     __RecoverAccountsPayload__,
     __EmitTestEventPayload__,
     __SetClientOptionsPayload__,
+    __IsStrongholdPasswordAvailablePayload__,
+    __ClearStrongholdPasswordPayload__,
 } from './accountManager';
 
 export type __AccountPayloadMethods__ =
@@ -73,6 +75,7 @@ export type __CallAccountMethodPayload__ = {
 export type __SendMessagePayload__ =
     | __BackupPayload__
     | __CallAccountMethodPayload__
+    | __ClearStrongholdPasswordPayload__
     | __CreateAccountPayload__
     | __DeleteStoragePayload__
     | __EmitTestEventPayload__
@@ -80,6 +83,7 @@ export type __SendMessagePayload__ =
     | __GetAccountPayload__
     | __GetAccountsPayload__
     | __GetNodeInfoPayload__
+    | __IsStrongholdPasswordAvailablePayload__
     | __RecoverAccountsPayload__
     | __RestoreBackupPayload__
     | __StartBackgroundSyncPayload__

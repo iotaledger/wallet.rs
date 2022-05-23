@@ -45,6 +45,14 @@ export type __EmitTestEventPayload__ = {
     payload: WalletEvent;
 };
 
+export type __ClearStrongholdPasswordPayload__ = {
+    cmd: 'ClearStrongholdPassword';
+};
+
+export type __IsStrongholdPasswordAvailablePayload__ = {
+    cmd: 'IsStrongholdPasswordAvailable';
+};
+
 export type __SetStrongholdPasswordPayload__ = {
     cmd: 'SetStrongholdPassword';
     payload: string;
