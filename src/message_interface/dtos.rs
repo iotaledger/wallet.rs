@@ -262,7 +262,7 @@ impl From<&Transaction> for TransactionDto {
 }
 
 /// Dto for an output with metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OutputDataDto {
     /// The output id
     #[serde(rename = "outputId")]

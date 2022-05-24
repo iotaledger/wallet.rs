@@ -34,7 +34,8 @@ impl EventEmitter {
         if events.is_empty() {
             // we could use a crate like strum or a macro to iterate over all values, but not sure if it's worth it
             for event_type in &[
-                WalletEventType::BalanceChange,
+                WalletEventType::NewOutput,
+                WalletEventType::SpentOutput,
                 WalletEventType::TransactionInclusion,
                 WalletEventType::TransferProgress,
                 WalletEventType::ConsolidationRequired,
@@ -55,7 +56,8 @@ impl EventEmitter {
     /// argument to each of them.
     pub fn emit(&self, account_index: u32, event: WalletEvent) {
         let event_type = match &event {
-            WalletEvent::BalanceChange(_) => WalletEventType::BalanceChange,
+            WalletEvent::NewOutput(_) => WalletEventType::NewOutput,
+            WalletEvent::SpentOutput(_) => WalletEventType::SpentOutput,
             WalletEvent::TransactionInclusion(_) => WalletEventType::TransactionInclusion,
             WalletEvent::TransferProgress(_) => WalletEventType::TransferProgress,
             WalletEvent::ConsolidationRequired => WalletEventType::ConsolidationRequired,
