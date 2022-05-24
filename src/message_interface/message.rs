@@ -125,7 +125,7 @@ pub enum Message {
     StartBackgroundSync {
         /// Sync options
         options: Option<SyncOptions>,
-        /// Interval
+        /// Interval in milliseconds
         interval_ms: Option<u64>,
     },
     /// Stop background syncing.
