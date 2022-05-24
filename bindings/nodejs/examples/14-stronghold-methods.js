@@ -10,14 +10,24 @@ async function run() {
         let isStrongholdUnlocked = await manager.isStrongholdPasswordAvailable();
         console.log('Stronghold unlocked: ', isStrongholdUnlocked)
 
-        await manager.clearStrongholdPassword();
-
+        await manager.setStrongholdPasswordClearInterval(1000);
+        // eslint-disable-next-line no-undef
+        setTimeout(
+            async () => {
+                isStrongholdUnlocked = await manager.isStrongholdPasswordAvailable();
+                console.log('Stronghold unlocked: ', isStrongholdUnlocked);
+            },
+            2000
+        )
         isStrongholdUnlocked = await manager.isStrongholdPasswordAvailable();
         console.log('Stronghold locked: ', !isStrongholdUnlocked)
     } catch (error) {
         console.log('Error: ' + error);
     }
-    process.exit(0);
+
+    setTimeout(
+        () => process.exit(0), 3000
+    )
 }
 
 run()
