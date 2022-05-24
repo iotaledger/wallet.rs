@@ -69,7 +69,7 @@ impl AccountBuilder {
     }
 
     /// Set the addresses, should only be used for accounts with an offline counterpart account from which the addresses
-    /// were exportet
+    /// were exported
     pub fn with_addresses(mut self, addresses: Vec<AccountAddress>) -> Self {
         self.addresses.replace(addresses);
         self
