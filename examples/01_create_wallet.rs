@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .snapshot_path(PathBuf::from("wallet.stronghold"))
-        .build();
+        .try_build()?;
     // Only required the first time, can also be generated with `manager.generate_mnemonic()?`
     let mnemonic = env::var("NONSECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
 

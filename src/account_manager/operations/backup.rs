@@ -44,7 +44,7 @@ impl AccountManager {
                 save_data_to_stronghold_backup(
                     self,
                     // If the SecretManager is not Stronghold we'll create a new one for the backup
-                    &mut StrongholdSecretManager::builder().build(),
+                    &mut StrongholdSecretManager::builder().try_build()?,
                     stronghold_password,
                     backup_path,
                     secret_manager_dto,
@@ -82,7 +82,7 @@ impl AccountManager {
             read_data_from_stronghold_backup(
                 self,
                 // If the SecretManager is not Stronghold we'll create a new one to load the backup
-                &mut StrongholdSecretManager::builder().build(),
+                &mut StrongholdSecretManager::builder().try_build()?,
                 &stronghold_password,
                 backup_path,
                 &mut accounts,
