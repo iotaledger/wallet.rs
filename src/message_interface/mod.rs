@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod account_method;
-mod dtos;
+pub mod dtos;
 mod message;
 mod message_handler;
 mod response;
