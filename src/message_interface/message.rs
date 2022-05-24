@@ -4,7 +4,6 @@
 use std::{
     fmt::{Debug, Formatter, Result},
     path::PathBuf,
-    time::Duration,
 };
 
 use iota_client::node_manager::node::NodeAuth;
@@ -117,7 +116,7 @@ pub enum Message {
     SetStrongholdPassword(String),
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetStrongholdPasswordClearInterval(Option<Duration>),
+    SetStrongholdPasswordClearInterval(Option<u64>),
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StoreMnemonic(String),
@@ -127,7 +126,7 @@ pub enum Message {
         /// Sync options
         options: Option<SyncOptions>,
         /// Interval
-        interval: Option<Duration>,
+        interval_ms: Option<u64>,
     },
     /// Stop background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -181,10 +180,10 @@ impl Debug for Message {
                 write!(f, "SetStrongholdPassword({:?})", duration)
             }
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
-            Message::StartBackgroundSync { options, interval } => write!(
+            Message::StartBackgroundSync { options, interval_ms } => write!(
                 f,
                 "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
-                options, interval
+                options, interval_ms
             ),
             Message::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]
