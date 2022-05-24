@@ -126,6 +126,13 @@ export class AccountManager {
         });
     }
 
+    async setStrongholdPasswordClearInterval(duration?: number): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'SetStrongholdPasswordClearInterval',
+            payload: duration,
+        });
+    }
+
     async generateMnemonic(): Promise<string> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GenerateMnemonic',

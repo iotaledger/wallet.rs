@@ -27,6 +27,7 @@ import type {
     __GetNodeInfoMessage__,
     __CreateAccountMessage__,
     __SetStrongholdPasswordMessage__,
+    __SetStrongholdPasswordClearIntervalMessage__,
     __StoreMnemonicMessage__,
     __BackupMessage__,
     __RestoreBackupMessage__,
@@ -90,5 +91,6 @@ export type __Message__ =
     | __StopBackgroundSyncMessage__
     | __SetClientOptionsMessage__
     | __SetStrongholdPasswordMessage__
+    | __SetStrongholdPasswordClearIntervalMessage__
     | __StoreMnemonicMessage__
     | __VerifyMnemonicMessage__;
