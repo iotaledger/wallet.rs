@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
     let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .snapshot_path(PathBuf::from("examples/offline_signing/offline_signing.stronghold"))
-        .build();
+        .try_build()?;
 
     // Load snapshot file
     secret_manager.read_stronghold_snapshot().await?;

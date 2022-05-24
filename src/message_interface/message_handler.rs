@@ -24,9 +24,8 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        message::{AccountToCreate, Message},
         dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
-        message_type::{AccountToCreate, MessageType},
+        message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,
     },
