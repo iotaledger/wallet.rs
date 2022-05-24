@@ -5,7 +5,6 @@ mod account_method;
 mod dtos;
 mod message;
 mod message_handler;
-mod message_type;
 mod response;
 
 use std::str::FromStr;
@@ -17,9 +16,8 @@ use tokio::sync::mpsc::unbounded_channel;
 pub use self::{
     account_method::AccountMethod,
     dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
-    message::Message,
+    message::{AccountToCreate, Message},
     message_handler::WalletMessageHandler,
-    message_type::{AccountToCreate, MessageType},
     response::Response,
 };
 #[cfg(feature = "events")]
@@ -73,10 +71,9 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     Ok(WalletMessageHandler::with_manager(manager))
 }
 
-pub async fn send_message(handle: &WalletMessageHandler, message_type: MessageType) -> Response {
+pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Response {
     let (message_tx, mut message_rx) = unbounded_channel();
-    let message = Message::new(message_type, message_tx);
-    handle.handle(message).await;
+    handle.handle(message, message_tx).await;
     message_rx.recv().await.unwrap()
 }
 
@@ -101,7 +98,7 @@ mod tests {
 
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, MessageType, Response};
+    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, Message, Response};
 
     #[tokio::test]
     async fn message_interface_create_account() {
@@ -142,8 +139,7 @@ mod tests {
             alias: None,
             coin_type: None,
         };
-        let response =
-            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
         match response {
             Response::Account(account) => {
                 let id = account.index;
@@ -192,7 +188,7 @@ mod tests {
             alias: Some("alias".to_string()),
             coin_type: None,
         };
-        let _ = message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let _ = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
 
         // send transaction
         let outputs = vec![
@@ -207,7 +203,7 @@ mod tests {
                 .unwrap(),
         ];
 
-        let transfer = MessageType::CallAccountMethod {
+        let transfer = Message::CallAccountMethod {
             account_id: "alias".into(),
             method: AccountMethod::SendTransfer { outputs, options: None },
         };
@@ -244,17 +240,16 @@ mod tests {
         // Set password and store mnemonic
         let _ = message_interface::send_message(
             &wallet_handle,
-            MessageType::SetStrongholdPassword("some_hopefully_secure_password".to_string()),
+            Message::SetStrongholdPassword("some_hopefully_secure_password".to_string()),
         )
         .await;
         let mnemonic = "acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast".to_string();
-        let _ = message_interface::send_message(&wallet_handle, MessageType::StoreMnemonic(mnemonic)).await;
+        let _ = message_interface::send_message(&wallet_handle, Message::StoreMnemonic(mnemonic)).await;
 
         // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
         // an address
         let account = AccountToCreate { ..Default::default() };
-        let response =
-            message_interface::send_message(&wallet_handle, MessageType::CreateAccount(Box::new(account))).await;
+        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
 
         match response {
             Response::Account(account) => {

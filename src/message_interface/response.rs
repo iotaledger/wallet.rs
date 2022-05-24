@@ -20,10 +20,10 @@ use crate::{
 #[serde(tag = "type", content = "payload")]
 pub enum Response {
     /// Response for
-    /// [`CreateAccount`](crate::message_interface::MessageType::CreateAccount),
-    /// [`GetAccount`](crate::message_interface::MessageType::GetAccount)
+    /// [`CreateAccount`](crate::message_interface::Message::CreateAccount),
+    /// [`GetAccount`](crate::message_interface::Message::GetAccount)
     Account(AccountDto),
-    /// Response for [`GetAccounts`](crate::message_interface::MessageType::GetAccounts)
+    /// Response for [`GetAccounts`](crate::message_interface::Message::GetAccounts)
     Accounts(Vec<AccountDto>),
     /// Response for [`ListAddresses`](crate::message_interface::AccountMethod::ListAddresses)
     Addresses(Vec<AccountAddress>),
@@ -63,28 +63,28 @@ pub enum Response {
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
     SentTransfers(Vec<TransferResult>),
     /// Response for
-    /// [`IsStrongholdPasswordAvailable`](crate::message_interface::MessageType::IsStrongholdPasswordAvailable)
+    /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),
     /// An error occurred.
     Error(Error),
     /// A panic occurred.
     Panic(String),
-    /// Response for [`GenerateMnemonic`](crate::message_interface::MessageType::GenerateMnemonic)
+    /// Response for [`GenerateMnemonic`](crate::message_interface::Message::GenerateMnemonic)
     GeneratedMnemonic(String),
-    /// Response for [`GetNodeInfo`](crate::message_interface::MessageType::GetNodeInfo)
+    /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
     /// Response for
-    /// [`Backup`](crate::message_interface::MessageType::Backup),
-    /// [`ClearStrongholdPassword`](crate::message_interface::MessageType::ClearStrongholdPassword),
-    /// [`RestoreBackup`](crate::message_interface::MessageType::RestoreBackup),
-    /// [`DeleteStorage`](crate::message_interface::MessageType::DeleteStorage),
-    /// [`VerifyMnemonic`](crate::message_interface::MessageType::VerifyMnemonic),
-    /// [`SetClientOptions`](crate::message_interface::MessageType::SetClientOptions),
-    /// [`SetStrongholdPassword`](crate::message_interface::MessageType::SetStrongholdPassword),
-    /// [`StoreMnemonic`](crate::message_interface::MessageType::StoreMnemonic),
-    /// [`StartBackgroundSync`](crate::message_interface::MessageType::StartBackgroundSync),
-    /// [`StopBackgroundSync`](crate::message_interface::MessageType::StopBackgroundSync),
-    /// [`EmitTestEvent`](crate::message_interface::MessageType::EmitTestEvent),
+    /// [`Backup`](crate::message_interface::Message::Backup),
+    /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
+    /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
+    /// [`DeleteStorage`](crate::message_interface::Message::DeleteStorage),
+    /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
+    /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
+    /// [`SetStrongholdPassword`](crate::message_interface::Message::SetStrongholdPassword),
+    /// [`StoreMnemonic`](crate::message_interface::Message::StoreMnemonic),
+    /// [`StartBackgroundSync`](crate::message_interface::Message::StartBackgroundSync),
+    /// [`StopBackgroundSync`](crate::message_interface::Message::StopBackgroundSync),
+    /// [`EmitTestEvent`](crate::message_interface::Message::EmitTestEvent),
     Ok(()),
 }
 

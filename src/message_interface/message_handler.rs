@@ -10,6 +10,7 @@ use std::{
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{Client, NodeInfoWrapper};
+use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
 
 #[cfg(feature = "events")]
@@ -20,8 +21,7 @@ use crate::{
     message_interface::{
         account_method::AccountMethod,
         dtos::{AccountBalanceDto, AccountDto},
-        message::Message,
-        message_type::{AccountToCreate, MessageType},
+        message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,
     },
@@ -86,26 +86,26 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&self, message: Message) {
-        log::debug!("Message: {:?}", message.message_type);
+    pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
+        log::debug!("Message: {:?}", message);
 
-        let response: Result<Response> = match message.message_type {
-            MessageType::CreateAccount(account) => {
+        let response: Result<Response> = match message {
+            Message::CreateAccount(account) => {
                 convert_async_panics(|| async { self.create_account(&account).await }).await
             }
-            MessageType::GetAccount(account_id) => {
+            Message::GetAccount(account_id) => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
             }
-            MessageType::GetAccounts => convert_async_panics(|| async { self.get_accounts().await }).await,
-            MessageType::CallAccountMethod { account_id, method } => {
+            Message::GetAccounts => convert_async_panics(|| async { self.get_accounts().await }).await,
+            Message::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(&account_id, &method).await }).await
             }
             #[cfg(feature = "stronghold")]
-            MessageType::Backup { destination, password } => {
+            Message::Backup { destination, password } => {
                 convert_async_panics(|| async { self.backup(destination.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "stronghold")]
-            MessageType::ClearStrongholdPassword => {
+            Message::ClearStrongholdPassword => {
                 convert_async_panics(|| async {
                     self.account_manager.clear_stronghold_password().await?;
                     Ok(Response::Ok(()))
@@ -113,14 +113,14 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "stronghold")]
-            MessageType::IsStrongholdPasswordAvailable => {
+            Message::IsStrongholdPasswordAvailable => {
                 convert_async_panics(|| async {
                     let is_available = self.account_manager.is_stronghold_password_available().await?;
                     Ok(Response::StrongholdPasswordIsAvailable(is_available))
                 })
                 .await
             }
-            MessageType::RecoverAccounts {
+            Message::RecoverAccounts {
                 account_gap_limit,
                 address_gap_limit,
             } => {
@@ -139,35 +139,35 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "stronghold")]
-            MessageType::RestoreBackup { source, password } => {
+            Message::RestoreBackup { source, password } => {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "storage")]
-            MessageType::DeleteStorage => {
+            Message::DeleteStorage => {
                 convert_async_panics(|| async {
                     self.account_manager.delete_storage().await?;
                     Ok(Response::Ok(()))
                 })
                 .await
             }
-            MessageType::GenerateMnemonic => convert_panics(|| {
+            Message::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()
                     .map(Response::GeneratedMnemonic)
             }),
-            MessageType::VerifyMnemonic(mut mnemonic) => convert_panics(|| {
+            Message::VerifyMnemonic(mut mnemonic) => convert_panics(|| {
                 self.account_manager.verify_mnemonic(&mnemonic)?;
                 mnemonic.zeroize();
                 Ok(Response::Ok(()))
             }),
-            MessageType::SetClientOptions(options) => {
+            Message::SetClientOptions(options) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
             }
-            MessageType::GetNodeInfo { url, auth } => {
+            Message::GetNodeInfo { url, auth } => {
                 convert_async_panics(|| async {
                     match url {
                         Some(url) => {
@@ -179,7 +179,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            MessageType::SetStrongholdPassword(mut password) => {
+            Message::SetStrongholdPassword(mut password) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_stronghold_password(&password).await?;
                     password.zeroize();
@@ -187,14 +187,14 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            MessageType::StoreMnemonic(mnemonic) => {
+            Message::StoreMnemonic(mnemonic) => {
                 convert_async_panics(|| async {
                     self.account_manager.store_mnemonic(mnemonic).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
             }
-            MessageType::StartBackgroundSync { options, interval } => {
+            Message::StartBackgroundSync { options, interval } => {
                 convert_async_panics(|| async {
                     self.account_manager
                         .start_background_syncing(options.clone(), interval)
@@ -203,7 +203,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            MessageType::StopBackgroundSync => {
+            Message::StopBackgroundSync => {
                 convert_async_panics(|| async {
                     self.account_manager.stop_background_syncing()?;
                     Ok(Response::Ok(()))
@@ -212,7 +212,7 @@ impl WalletMessageHandler {
             }
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            MessageType::EmitTestEvent(event) => {
+            Message::EmitTestEvent(event) => {
                 convert_async_panics(|| async {
                     self.account_manager.emit_test_event(event.clone()).await?;
                     Ok(Response::Ok(()))
@@ -228,7 +228,7 @@ impl WalletMessageHandler {
 
         log::debug!("Response: {:?}", response);
 
-        let _ = message.response_tx.send(response);
+        let _ = response_tx.send(response);
     }
 
     #[cfg(feature = "stronghold")]
