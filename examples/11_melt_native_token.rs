@@ -1,14 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 11_burn_native_token --release
+//! cargo run --example 11_melt_native_token --release
 // In this example we will burn an existing native token without a foundry
 // Rename `.env.example` to `.env` first
 
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::bee_message::output::TokenId;
+use iota_client::bee_block::output::TokenId;
 use iota_wallet::{account::SyncOptions, account_manager::AccountManager, Result, U256};
 
 #[tokio::main]
@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
 
     // Burn some of the circulating supply
     let burn_amount = U256::from(10);
-    let _ = account.burn_native_token((token_id, burn_amount), None).await?;
+    let _ = account.melt_native_token((token_id, burn_amount), None).await?;
 
     let sync_options = Some(SyncOptions {
         force_syncing: true,

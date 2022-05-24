@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::{Address, AliasAddress},
     output::{
         unlock_condition::AddressUnlockCondition, AliasId, BasicOutputBuilder, Output, OutputId, UnlockCondition,
@@ -68,7 +68,6 @@ impl AccountHandle {
 
         let basic_output = Output::Basic(
             BasicOutputBuilder::new_with_amount(alias_output.amount())?
-                .with_feature_blocks(alias_output.feature_blocks().clone())
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                     *alias_output.governor_address(),
                 )))

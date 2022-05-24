@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use iota_client::{
-    bee_message::output::{NftId, OutputId, TokenTag},
+    bee_block::output::{NftId, OutputId},
     request_funds_from_faucet,
 };
 use iota_wallet::{
@@ -130,7 +130,6 @@ async fn mint_and_melt_native_token() -> Result<()> {
 
     let native_token_options = NativeTokenOptions {
         account_address: Some(account_addresses[0].address().to_bech32()),
-        token_tag: TokenTag::new([0u8; 12]),
         circulating_supply,
         maximum_supply: U256::from(100),
         foundry_metadata: None,
@@ -224,9 +223,9 @@ async fn destroy_foundry() -> Result<()> {
 
     // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good
     // idea
-    let foundry_id = balance.foundries.first().unwrap().clone();
+    let foundry_id = *balance.foundries.first().unwrap();
 
-    let _ = account.destroy_foundry(foundry_id.clone(), None).await.unwrap();
+    let _ = account.destroy_foundry(foundry_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
@@ -265,7 +264,7 @@ async fn destroy_alias() -> Result<()> {
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's destroy the first alias we can find
-    let alias_id = balance.aliases.first().unwrap().clone();
+    let alias_id = *balance.aliases.first().unwrap();
     println!("alias_id -> {alias_id}");
     let _ = account.destroy_alias(alias_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;

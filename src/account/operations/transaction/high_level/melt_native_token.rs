@@ -6,12 +6,12 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::AliasAddress,
     output::{
         unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
-        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NftOutputBuilder, Output,
-        OutputId, SimpleTokenScheme, TokenId, TokenScheme, OUTPUT_COUNT_MAX,
+        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken,
+        NftOutputBuilder, Output, OutputId, SimpleTokenScheme, TokenId, TokenScheme, OUTPUT_COUNT_MAX,
     },
 };
 use primitive_types::U256;
@@ -55,7 +55,7 @@ impl AccountHandle {
         let token_id = native_token.0;
         let burn_token_amount = native_token.1;
 
-        let foundry_id = token_id.foundry_id();
+        let foundry_id = FoundryId::from(token_id);
         let alias_id = *foundry_id.alias_address().alias_id();
 
         let (existing_alias_output_data, existing_foundry_output) = self
@@ -83,7 +83,6 @@ impl AccountHandle {
                     FoundryOutputBuilder::new_with_minimum_storage_deposit(
                         byte_cost_config,
                         foundry_id.serial_number(),
-                        token_id.token_tag(),
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             *foundry_simple_ts.minted_tokens(),
                             foundry_simple_ts.melted_tokens() + burn_token_amount,

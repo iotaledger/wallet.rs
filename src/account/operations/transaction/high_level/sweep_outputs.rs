@@ -5,8 +5,8 @@ use std::{borrow::Borrow, collections::HashSet, pin::Pin, str::FromStr};
 
 use futures::{Future, FutureExt};
 use iota_client::{
-    api::ClientMessageBuilder,
-    bee_message::{
+    api::ClientBlockBuilder,
+    bee_block::{
         address::{Address, AliasAddress, NftAddress},
         output::{
             dto::OutputDto,
@@ -136,12 +136,12 @@ impl AccountHandle {
                 .chain(basic_outputs.into_iter())
                 .chain(nft_outputs.into_iter())
             {
-                if output_response.is_spent {
+                if output_response.metadata.is_spent {
                     continue;
                 }
 
-                let transaction_id = TransactionId::from_str(&output_response.transaction_id)?;
-                let output_id = OutputId::new(transaction_id, output_response.output_index)?;
+                let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+                let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
                 self.update_unspent_output(output_response.clone(), output_id, network_id)
                     .await?;
 
@@ -243,14 +243,13 @@ impl AccountHandle {
 
         let transfer_options = Some(TransferOptions {
             custom_inputs: Some(custom_inputs),
-            try_fetch_unfound_outputs: true,
             ..Default::default()
         });
 
         let transfer_result = self.send(custom_outputs, transfer_options).await?;
-        match &transfer_result.message_id {
-            Some(message_id) => {
-                let _ = self.client.retry_until_included(message_id, None, None).await?;
+        match &transfer_result.block_id {
+            Some(block_id) => {
+                let _ = self.client.retry_until_included(block_id, None, None).await?;
                 let _ = self.sync(None).await?;
             }
             None => return Err(Error::BurningFailed("Could not sweep address outputs".to_string())),
@@ -266,7 +265,7 @@ impl AccountHandle {
     ) -> crate::Result<Vec<OutputResponse>> {
         let alias_query_parameters = vec![QueryParameter::Governor(address.to_bech32())];
 
-        let alias_output_ids = self.client.aliases_output_ids(alias_query_parameters).await?;
+        let alias_output_ids = self.client.alias_output_ids(alias_query_parameters).await?;
         let output_responses = self.client.get_outputs(alias_output_ids).await?;
 
         Ok(output_responses)
@@ -278,10 +277,10 @@ impl AccountHandle {
             QueryParameter::Address(address.to_bech32()),
             QueryParameter::HasExpirationCondition(false),
             QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageDepositReturnCondition(false),
+            QueryParameter::HasStorageReturnCondition(false),
         ];
 
-        let basic_output_ids = self.client.output_ids(query_parameters.clone()).await?;
+        let basic_output_ids = self.client.basic_output_ids(query_parameters.clone()).await?;
         let output_responses = self.client.get_outputs(basic_output_ids).await?;
 
         Ok(output_responses)
@@ -293,10 +292,10 @@ impl AccountHandle {
             QueryParameter::Address(address.to_bech32()),
             QueryParameter::HasExpirationCondition(false),
             QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageDepositReturnCondition(false),
+            QueryParameter::HasStorageReturnCondition(false),
         ];
 
-        let nfts_output_ids = self.client.nfts_output_ids(query_parameters).await?;
+        let nfts_output_ids = self.client.nft_output_ids(query_parameters).await?;
         let output_responses = self.client.get_outputs(nfts_output_ids).await?;
 
         Ok(output_responses)
@@ -312,7 +311,7 @@ impl AccountHandle {
     ) -> crate::Result<()> {
         let mut account = self.write().await;
 
-        let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output_response.output, None)?;
+        let (amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
         // check if we know the transaction that created this output and if we created it (if we store incoming
         // transactions separated, then this check wouldn't be required)
         let remainder = {
@@ -327,7 +326,7 @@ impl AccountHandle {
         let output_data = OutputData {
             output_id,
             output,
-            is_spent: output_response.is_spent,
+            is_spent: output_response.metadata.is_spent,
             output_response,
             amount,
             address,
@@ -348,9 +347,9 @@ impl AccountHandle {
         let mut account = self.write().await;
 
         for output_response in output_responses.into_iter() {
-            let transaction_id = TransactionId::from_str(&output_response.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.output_index)?;
-            let (amount, address) = ClientMessageBuilder::get_output_amount_and_address(&output_response.output, None)?;
+            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
+            let (amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
             let remainder = {
@@ -363,7 +362,7 @@ impl AccountHandle {
             let output_data = OutputData {
                 output_id,
                 output: Output::try_from(&output_response.output)?,
-                is_spent: output_response.is_spent,
+                is_spent: output_response.metadata.is_spent,
                 output_response,
                 amount,
                 address,
@@ -378,14 +377,11 @@ impl AccountHandle {
     }
 
     async fn sweep_foundries(&self, hrp: &str, alias_address: &AliasAddress) -> crate::Result<Vec<TransactionId>> {
-        let foundries_query_parameters = vec![
-            QueryParameter::AliasAddress(Address::Alias(*alias_address).to_bech32(hrp)),
-            QueryParameter::HasExpirationCondition(false),
-            QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageDepositReturnCondition(false),
-        ];
+        let foundries_query_parameters = vec![QueryParameter::AliasAddress(
+            Address::Alias(*alias_address).to_bech32(hrp),
+        )];
 
-        let foundry_output_ids = self.client.foundries_output_ids(foundries_query_parameters).await?;
+        let foundry_output_ids = self.client.foundry_output_ids(foundries_query_parameters).await?;
         let output_responses = self.client.get_outputs(foundry_output_ids).await?;
         let mut foundry_ids = HashSet::new();
 
@@ -404,7 +400,6 @@ impl AccountHandle {
 
         let transfer_options = Some(TransferOptions {
             allow_burning: true,
-            try_fetch_unfound_outputs: true,
             ..Default::default()
         });
 

@@ -3,8 +3,8 @@
 
 use std::collections::HashSet;
 
-use iota_client::bee_message::{
-    output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, OUTPUT_COUNT_MAX},
+use iota_client::bee_block::{
+    output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme, OUTPUT_COUNT_MAX},
     payload::transaction::TransactionId,
 };
 
@@ -29,6 +29,8 @@ impl AccountHandle {
         let alias_id = *foundry_id.alias_address().alias_id();
         let (existing_alias_output_data, existing_foundry_output_data) =
             self.find_alias_and_foundry_output_data(alias_id, foundry_id).await?;
+
+        validate_empty_state(&existing_foundry_output_data.output)?;
 
         let custom_inputs = vec![
             existing_alias_output_data.output_id,
@@ -121,6 +123,8 @@ impl AccountHandle {
 ========
 >>>>>>>> 70ebd119 (Resolve some PR reviews):src/account/operations/transaction/high_level/destroy_foundry.rs
 
+                validate_empty_state(&foundry_output_data.output)?;
+
                 // To burn foundries we need the controlling alias to go into the inputs as well
                 if !included_aliases.contains(&alias_id) {
                     included_aliases.insert(alias_id);
@@ -172,9 +176,9 @@ impl AccountHandle {
 
             let transfer_result = self.send(outputs, options).await?;
             transaction_ids.push(transfer_result.transaction_id);
-            match transfer_result.message_id {
-                Some(message_id) => {
-                    let _ = self.client.retry_until_included(&message_id, None, None).await?;
+            match transfer_result.block_id {
+                Some(block_id) => {
+                    let _ = self.client.retry_until_included(&block_id, None, None).await?;
                     let sync_options = Some(SyncOptions {
                         force_syncing: true,
                         ..Default::default()
@@ -229,5 +233,23 @@ impl AccountHandle {
             .clone();
 
         Ok((existing_alias_output_data, existing_foundry_output_data))
+    }
+}
+
+fn validate_empty_state(output: &Output) -> crate::Result<()> {
+    match output {
+        Output::Foundry(foundry_output) => {
+            let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
+            if token_scheme.circulating_supply().is_zero() {
+                Ok(())
+            } else {
+                Err(Error::BurningFailed(
+                    "Foundry may still have tokens in circulation".to_string(),
+                ))
+            }
+        }
+        _ => Err(Error::BurningFailed(
+            "Invalid output type: expected foundry".to_string(),
+        )),
     }
 }

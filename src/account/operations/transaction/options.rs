@@ -19,8 +19,6 @@ pub struct TransactionOptions {
     pub custom_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
-    #[serde(rename = "tryFetchUnfoundOutputs", default)]
-    pub try_fetch_unfound_outputs: bool,
 }
 
 #[allow(clippy::enum_variant_names)]

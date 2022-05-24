@@ -40,12 +40,13 @@ pub struct NativeTokenOptions {
     pub foundry_metadata: Option<Vec<u8>>,
 }
 
-/// The result of a minting native token transfer, message_id is an option because submitting the transaction could fail
+/// The result of a minting native token transfer, block_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
-pub struct MintTokenTransactionResult {
+#[serde(rename_all = "camelCase")]
+pub struct MintTokenTransferResult {
     pub token_id: TokenId,
     pub transaction_id: TransactionId,
-    pub message_id: Option<BlockId>,
+    pub block_id: Option<BlockId>,
 }
 
 impl AccountHandle {
@@ -180,7 +181,7 @@ impl AccountHandle {
                 .map(|transfer_result| MintTokenTransactionResult {
                     token_id,
                     transaction_id: transfer_result.transaction_id,
-                    message_id: transfer_result.message_id,
+                    block_id: transfer_result.block_id,
                 })
         } else {
             unreachable!("We checked if it's an alias output before")

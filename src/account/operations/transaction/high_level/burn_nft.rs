@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_message::{
+use iota_client::bee_block::{
     address::{Address, NftAddress},
     output::{BasicOutputBuilder, NftId, Output, OutputId},
 };
