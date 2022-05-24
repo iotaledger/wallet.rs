@@ -38,7 +38,7 @@ pub enum Response {
     /// GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
-    Output(Box<Option<OutputDataDto>>),
+    Output(Option<Box<OutputDataDto>>),
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
