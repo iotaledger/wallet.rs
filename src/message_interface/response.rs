@@ -81,6 +81,8 @@ pub enum Response {
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
     /// [`SetStrongholdPassword`](crate::message_interface::Message::SetStrongholdPassword),
+    /// [`SetStrongholdPasswordClearInterval`](crate::message_interface::Message::
+    /// SetStrongholdPasswordClearInterval),
     /// [`StoreMnemonic`](crate::message_interface::Message::StoreMnemonic),
     /// [`StartBackgroundSync`](crate::message_interface::Message::StartBackgroundSync),
     /// [`StopBackgroundSync`](crate::message_interface::Message::StopBackgroundSync),

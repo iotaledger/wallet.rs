@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::time::Duration;
+
 use iota_client::secret::SecretManager;
 
 use crate::account_manager::AccountManager;
@@ -19,6 +21,14 @@ impl AccountManager {
                     }
                 }
             }
+        }
+        Ok(())
+    }
+
+    /// Sets the Stronghold password clear interval
+    pub async fn set_stronghold_password_clear_interval(&self, timeout: Option<Duration>) -> crate::Result<()> {
+        if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
+            stronghold.set_timeout(timeout).await;
         }
         Ok(())
     }

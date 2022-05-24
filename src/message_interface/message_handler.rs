@@ -187,6 +187,15 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::SetStrongholdPasswordClearInterval(duration) => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .set_stronghold_password_clear_interval(duration)
+                        .await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
             Message::StoreMnemonic(mnemonic) => {
                 convert_async_panics(|| async {
                     self.account_manager.store_mnemonic(mnemonic).await?;

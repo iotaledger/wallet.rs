@@ -115,6 +115,9 @@ pub enum Message {
     /// Set the stronghold password.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetStrongholdPassword(String),
+    /// Set the stronghold password clear interval.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    SetStrongholdPasswordClearInterval(Option<Duration>),
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StoreMnemonic(String),
@@ -174,6 +177,9 @@ impl Debug for Message {
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
+            Message::SetStrongholdPasswordClearInterval(duration) => {
+                write!(f, "SetStrongholdPassword({:?})", duration)
+            }
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
             Message::StartBackgroundSync { options, interval } => write!(
                 f,
@@ -208,24 +214,30 @@ impl Serialize for Message {
             Message::DeleteStorage => serializer.serialize_unit_variant("Message", 10, "DeleteStorage"),
             Message::SetClientOptions(_) => serializer.serialize_unit_variant("Message", 11, "SetClientOptions"),
             Message::GetNodeInfo { .. } => serializer.serialize_unit_variant("Message", 12, "GetNodeInfo"),
+            #[cfg(feature = "stronghold")]
             Message::SetStrongholdPassword(_) => {
                 serializer.serialize_unit_variant("Message", 13, "SetStrongholdPassword")
             }
-            Message::StoreMnemonic(_) => serializer.serialize_unit_variant("Message", 14, "StoreMnemonic"),
-            Message::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("Message", 15, "StartBackgroundSync")
+            #[cfg(feature = "stronghold")]
+            Message::SetStrongholdPasswordClearInterval(_) => {
+                serializer.serialize_unit_variant("Message", 14, "SetStrongholdPassword")
             }
-            Message::StopBackgroundSync => serializer.serialize_unit_variant("Message", 16, "StopBackgroundSync"),
+            #[cfg(feature = "stronghold")]
+            Message::StoreMnemonic(_) => serializer.serialize_unit_variant("Message", 15, "StoreMnemonic"),
+            Message::StartBackgroundSync { .. } => {
+                serializer.serialize_unit_variant("Message", 16, "StartBackgroundSync")
+            }
+            Message::StopBackgroundSync => serializer.serialize_unit_variant("Message", 17, "StopBackgroundSync"),
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
-            Message::EmitTestEvent(_) => serializer.serialize_unit_variant("Message", 17, "EmitTestEvent"),
+            Message::EmitTestEvent(_) => serializer.serialize_unit_variant("Message", 18, "EmitTestEvent"),
             #[cfg(feature = "stronghold")]
             Message::ClearStrongholdPassword => {
-                serializer.serialize_unit_variant("Message", 18, "ClearStrongholdPassword")
+                serializer.serialize_unit_variant("Message", 19, "ClearStrongholdPassword")
             }
             #[cfg(feature = "stronghold")]
             Message::IsStrongholdPasswordAvailable => {
-                serializer.serialize_unit_variant("Message", 19, "IsStrongholdPasswordAvailable")
+                serializer.serialize_unit_variant("Message", 20, "IsStrongholdPasswordAvailable")
             }
         }
     }

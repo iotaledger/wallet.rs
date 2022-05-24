@@ -23,7 +23,7 @@ async fn backup_and_restore() -> Result<()> {
     let mut stronghold_secmngr = StrongholdSecretManager::builder()
         .password(stronghold_password)
         .snapshot_path(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))
-        .build();
+        .try_build()?;
 
     stronghold_secmngr.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
 
@@ -51,7 +51,7 @@ async fn backup_and_restore() -> Result<()> {
 
     let stronghold_secmngr = StrongholdSecretManager::builder()
         .snapshot_path(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))
-        .build();
+        .try_build()?;
 
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")

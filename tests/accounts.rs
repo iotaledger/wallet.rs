@@ -267,7 +267,7 @@ async fn account_creation_stronghold() -> Result<()> {
         .snapshot_path(PathBuf::from(
             "test-storage/account_creation_stronghold/test.stronghold",
         ))
-        .build();
+        .try_build()?;
     stronghold_secret_manager.store_mnemonic(mnemonic.to_string()).await?;
     let secret_manager = SecretManager::Stronghold(stronghold_secret_manager);
 
