@@ -102,7 +102,7 @@ export type __StartBackgroundSyncMessage__ = {
     cmd: 'StartBackgroundSync';
     payload: {
         options?: AccountSyncOptions;
-        interval?: number;
+        intervalInMilliseconds?: number;
     };
 };
 

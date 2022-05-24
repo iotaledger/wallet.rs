@@ -126,10 +126,10 @@ export class AccountManager {
         });
     }
 
-    async setStrongholdPasswordClearInterval(duration?: number): Promise<void> {
+    async setStrongholdPasswordClearInterval(intervalInMilliseconds?: number): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPasswordClearInterval',
-            payload: duration,
+            payload: intervalInMilliseconds,
         });
     }
 
@@ -163,13 +163,13 @@ export class AccountManager {
 
     async startBackgroundSync(
         options?: AccountSyncOptions,
-        interval?: number,
+        intervalInMilliseconds?: number,
     ): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StartBackgroundSync',
             payload: {
                 options,
-                interval,
+                intervalInMilliseconds,
             },
         });
     }
