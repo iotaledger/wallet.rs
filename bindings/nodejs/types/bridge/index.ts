@@ -20,6 +20,7 @@ import type {
     __SendNftMethod__,
     __SendTransferMethod__,
     __TryCollectOutputsMethod__,
+    __SetAlias__,
 } from './account';
 import type {
     __GetAccountsMessage__,
@@ -61,6 +62,7 @@ export type __AccountMethod__ =
     | __SendNativeTokensMethod__
     | __SendNftMethod__
     | __SendTransferMethod__
+    | __SetAlias__
     | __SetCollectOutputsMethod__
     | __SyncAccountMethod__
     | __TryCollectOutputsMethod__;
