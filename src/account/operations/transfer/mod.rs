@@ -10,6 +10,7 @@ mod options;
 mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
+
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
@@ -97,7 +98,7 @@ impl AccountHandle {
         self.finish_transfer(outputs, options).await
     }
 
-    /// Separated function from send, so syncing isn't called recursiv with the consolidation function, which sends
+    /// Separated function from send, so syncing isn't called recursively with the consolidation function, which sends
     /// transfers
     pub async fn finish_transfer(
         &self,

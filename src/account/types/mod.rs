@@ -95,7 +95,7 @@ pub struct Transaction {
     pub block_id: Option<BlockId>,
     #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
-    // remove because we have a timestamp in the outputs?
+    // TODO: remove because we have a timestamp in the outputs?
     pub timestamp: u128,
     // network id to ignore outputs when set_client_options is used to switch to another network
     #[serde(rename = "networkId")]

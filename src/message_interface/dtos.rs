@@ -231,17 +231,20 @@ impl From<&Account> for AccountDto {
 /// Dto for a transaction with metadata
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct TransactionDto {
+    /// The transaction payload
     pub payload: TransactionPayloadDto,
+    /// BlockId when it got sent to the Tangle
     #[serde(rename = "blockId")]
     pub block_id: Option<BlockId>,
+    /// Inclusion state of the transaction
     #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
-    // remove because we have a timestamp in the outputs?
+    /// Timestamp
     pub timestamp: String,
-    // network id to ignore outputs when set_client_options is used to switch to another network
+    /// Network id to ignore outputs when set_client_options is used to switch to another network
     #[serde(rename = "networkId")]
     pub network_id: String,
-    // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
+    /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
 }
 
