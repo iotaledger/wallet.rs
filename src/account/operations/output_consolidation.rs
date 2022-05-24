@@ -7,22 +7,20 @@ use iota_client::bee_block::output::{
 };
 
 use crate::account::{
-    handle::AccountHandle,
-    operations::transfer::TransferResult,
-    types::{address::AddressWithUnspentOutputs, OutputData},
+    handle::AccountHandle, operations::transfer::TransferResult, types::address::AddressWithUnspentOutputs,
     TransferOptions,
 };
 
 impl AccountHandle {
     /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
-    pub(crate) async fn consolidate_outputs(self: &AccountHandle) -> crate::Result<Vec<TransferResult>> {
+    pub async fn consolidate_outputs(self: &AccountHandle, force: bool) -> crate::Result<Vec<TransferResult>> {
         let account = self.read().await;
         let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
         let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
             .addresses_with_unspent_outputs
             .iter()
-            .filter(|a| a.output_ids.len() >= output_consolidation_threshold)
+            .filter(|a| force || a.output_ids.len() >= output_consolidation_threshold)
             .collect();
 
         if addresses_that_need_consolidation.is_empty() {
@@ -32,7 +30,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
 
         // Get outputs for the consolidation
-        let mut outputs_to_consolidate: Vec<Vec<OutputData>> = Vec::new();
+        let mut outputs_to_consolidate = Vec::new();
         for address in addresses_that_need_consolidation {
             let mut unspent_outputs = Vec::new();
             for output_id in &address.output_ids {
@@ -50,7 +48,7 @@ impl AccountHandle {
                 }
             }
             // only consolidate if the unlocked outputs are >= output_consolidation_threshold
-            if unspent_outputs.len() >= output_consolidation_threshold {
+            if force || unspent_outputs.len() >= output_consolidation_threshold {
                 log::debug!(
                     "[OUTPUT_CONSOLIDATION] {} has {} unspent basic outputs with only an AddressUnlockCondition",
                     address.address.to_bech32(),

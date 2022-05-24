@@ -87,7 +87,7 @@ impl AccountHandle {
 
         // Only consolidates outputs for non ledger accounts, because they require approval from the user
         if options.automatic_output_consolidation && non_ledger_secret_manager {
-            self.consolidate_outputs().await?;
+            self.consolidate_outputs(false).await?;
         }
 
         // Only consolidates outputs for non ledger accounts, because they require approval from the user
