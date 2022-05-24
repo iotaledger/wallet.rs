@@ -69,46 +69,48 @@ impl AccountHandle {
     async fn output_id_and_nft_output(&self, nft_id: NftId) -> crate::Result<(OutputId, NftOutput)> {
         let account = self.read().await;
 
-        let (output_id, output_data) = account
+        let (output_id, nft_output) = account
             .unspent_outputs()
             .iter()
-            .find(|(&output_id, output_data)| match &output_data.output {
-                Output::Nft(nft_output) => nft_output.nft_id().or_from_output_id(output_id) == nft_id,
-                _ => false,
+            .find_map(|(&output_id, output_data)| match &output_data.output {
+                Output::Nft(nft_output) => {
+                    if nft_output.nft_id().or_from_output_id(output_id) == nft_id {
+                        Some((output_id, nft_output))
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
             })
             .ok_or(Error::NftNotFoundInUnspentOutputs)?;
 
-        let nft_output = match &output_data.output {
-            Output::Nft(nft_output) => nft_output.clone(),
-            _ => unreachable!("We already checked that it's an nft output"),
-        };
-
-        Ok((*output_id, nft_output))
+        Ok((output_id, nft_output.clone()))
     }
 
     async fn output_id_and_next_alias_output_state(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
         let account = self.read().await;
 
-        let (output_id, output_data) = account
+        let (output_id, alias_output) = account
             .unspent_outputs()
             .iter()
-            .find(|(&output_id, output_data)| match &output_data.output {
-                Output::Alias(alias_output) => alias_output.alias_id().or_from_output_id(output_id) == alias_id,
-                _ => false,
+            .find_map(|(&output_id, output_data)| match &output_data.output {
+                Output::Alias(alias_output) => {
+                    if alias_output.alias_id().or_from_output_id(output_id) == alias_id {
+                        Some((output_id, alias_output))
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
             })
             .ok_or_else(|| Error::BurningFailed("Alias output not found".to_string()))?;
-
-        let alias_output = match &output_data.output {
-            Output::Alias(alias_output) => alias_output,
-            _ => unreachable!("We already checked that it's an alias output"),
-        };
 
         let new_state_alias_output = AliasOutputBuilder::from(alias_output)
             .with_alias_id(alias_id)
             .with_state_index(alias_output.state_index() + 1)
             .finish()?;
 
-        Ok((*output_id, new_state_alias_output))
+        Ok((output_id, new_state_alias_output))
     }
 
     pub(crate) fn sweep_address_outputs<'a>(
@@ -198,7 +200,7 @@ impl AccountHandle {
             //  Fetch and burn all foundries we can find
             if let Address::Alias(alias_address) = &address.inner {
                 let _ = self
-                    .destroy_foundries(remainder_address.bech32_hrp(), alias_address)
+                    .sweep_foundries(remainder_address.bech32_hrp(), alias_address)
                     .await?;
             }
 
@@ -257,6 +259,7 @@ impl AccountHandle {
         Ok(transfer_result.transaction_id)
     }
 
+    /// Fetches alias outputs with `address` set as Governor unlock condition
     async fn fetch_governor_address_alias_outputs(
         &self,
         address: &AddressWrapper,
@@ -269,6 +272,7 @@ impl AccountHandle {
         Ok(output_responses)
     }
 
+    /// Fetches basic outputs with address unlock conditions only
     async fn fetch_address_basic_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
             QueryParameter::Address(address.to_bech32()),
@@ -283,6 +287,7 @@ impl AccountHandle {
         Ok(output_responses)
     }
 
+    /// Fetches nft outputs with address unlock conditions only
     async fn fetch_address_nft_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
             QueryParameter::Address(address.to_bech32()),
@@ -297,6 +302,8 @@ impl AccountHandle {
         Ok(output_responses)
     }
 
+    /// Update unspent output, this function is originally intended for updating recursively synced alias and nft
+    /// address output
     async fn update_unspent_output(
         &self,
         output_response: OutputResponse,
@@ -334,6 +341,8 @@ impl AccountHandle {
         Ok(())
     }
 
+    /// Update unspent outputs, this function is originally intended for updating recursively synced alias and nft
+    /// address outputs
     async fn update_unspent_outputs(&self, output_responses: Vec<OutputResponse>) -> crate::Result<()> {
         let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
@@ -368,7 +377,7 @@ impl AccountHandle {
         Ok(())
     }
 
-    async fn destroy_foundries(&self, hrp: &str, alias_address: &AliasAddress) -> crate::Result<Vec<TransactionId>> {
+    async fn sweep_foundries(&self, hrp: &str, alias_address: &AliasAddress) -> crate::Result<Vec<TransactionId>> {
         let foundries_query_parameters = vec![
             QueryParameter::AliasAddress(Address::Alias(*alias_address).to_bech32(hrp)),
             QueryParameter::HasExpirationCondition(false),
@@ -399,7 +408,7 @@ impl AccountHandle {
             ..Default::default()
         });
 
-        self.burn_foundries(foundry_ids, transfer_options).await
+        self.destroy_foundries(foundry_ids, transfer_options).await
     }
 }
 

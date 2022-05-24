@@ -12,12 +12,8 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Function to mint nft.
-    pub async fn burn_nft(
-        &self,
-        nft_id: NftId,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    /// Function to burn nft.
+    pub async fn burn_nft(&self, nft_id: NftId, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
         log::debug!("[TRANSFER] burn_nft");
 
         let address = self.get_sweep_remainder_address(&options).await?;
@@ -45,28 +41,28 @@ impl AccountHandle {
     async fn output_id_and_basic_output_for_nft(&self, nft_id: NftId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
 
-        let (output_id, output_data) = account
+        let (output_id, nft_output) = account
             .unspent_outputs()
             .iter()
-            .find(|(&output_id, output_data)| match &output_data.output {
-                Output::Nft(nft_output) => nft_output.nft_id().or_from_output_id(output_id) == nft_id,
-                _ => false,
+            .find_map(|(&output_id, output_data)| match &output_data.output {
+                Output::Nft(nft_output) => {
+                    if nft_output.nft_id().or_from_output_id(output_id) == nft_id {
+                        Some((output_id, nft_output))
+                    } else {
+                        None
+                    }
+                }
+                _ => None,
             })
             .ok_or(Error::NftNotFoundInUnspentOutputs)?;
 
-        let nft_output = match &output_data.output {
-            Output::Nft(nft_output) => nft_output,
-            _ => unreachable!("We already checked that it's an nft output"),
-        };
-
         let basic_output = Output::Basic(
             BasicOutputBuilder::new_with_amount(nft_output.amount())?
-                .with_feature_blocks(nft_output.feature_blocks().clone())
                 .with_unlock_conditions(nft_output.unlock_conditions().clone())
                 .with_native_tokens(nft_output.native_tokens().clone())
                 .finish()?,
         );
 
-        Ok((*output_id, basic_output))
+        Ok((output_id, basic_output))
     }
 }

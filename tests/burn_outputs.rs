@@ -88,7 +88,7 @@ async fn mint_and_burn_nft() -> Result<()> {
 
 #[ignore]
 #[tokio::test]
-async fn mint_and_burn_native_token() -> Result<()> {
+async fn mint_and_melt_native_token() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
@@ -149,7 +149,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     // Burn some of the circulating supply
     let burn_amount = U256::from(40);
     let _ = account
-        .burn_native_token((transfer_result.token_id, burn_amount), None)
+        .melt_native_token((transfer_result.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -164,7 +164,7 @@ async fn mint_and_burn_native_token() -> Result<()> {
     // The burn the rest of the supply
     let burn_amount = circulating_supply - burn_amount;
     let _ = account
-        .burn_native_token((transfer_result.token_id, burn_amount), None)
+        .melt_native_token((transfer_result.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -183,8 +183,8 @@ async fn mint_and_burn_native_token() -> Result<()> {
 
 #[ignore]
 #[tokio::test]
-async fn burn_foundry() -> Result<()> {
-    let storage_path = "test-storage/burn_foundry";
+async fn destroy_foundry() -> Result<()> {
+    let storage_path = "test-storage/destroy_foundry";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")
@@ -226,7 +226,7 @@ async fn burn_foundry() -> Result<()> {
     // idea
     let foundry_id = balance.foundries.first().unwrap().clone();
 
-    let _ = account.burn_foundry(foundry_id.clone(), None).await.unwrap();
+    let _ = account.destroy_foundry(foundry_id.clone(), None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
@@ -266,12 +266,6 @@ async fn destroy_alias() -> Result<()> {
 
     // Let's destroy the first alias we can find
     let alias_id = balance.aliases.first().unwrap().clone();
-    // let alias_id: [u8; AliasId::LENGTH] =
-    //     hex::decode("bd7f195319e3e9e3bb40f7877584944d2296b4d39c78e22b3105f9ef6dd4905e")
-    //         .unwrap()
-    //         .try_into()
-    //         .unwrap();
-    // let alias_id = AliasId::new(alias_id);
     println!("alias_id -> {alias_id}");
     let _ = account.destroy_alias(alias_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
