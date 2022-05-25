@@ -131,7 +131,7 @@ export type __SendTransferMethod__ = {
     };
 };
 
-export type __SetAlias__ = {
+export type __SetAliasMethod__ = {
     name: 'SetAlias';
     data: {
         alias: string;
