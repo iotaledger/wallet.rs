@@ -188,9 +188,9 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::SetStrongholdPasswordClearInterval(interval_ms) => {
+            Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
                 convert_async_panics(|| async {
-                    let duration = interval_ms.map(Duration::from_millis);
+                    let duration = interval_in_milliseconds.map(Duration::from_millis);
                     self.account_manager
                         .set_stronghold_password_clear_interval(duration)
                         .await?;
@@ -205,9 +205,12 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::StartBackgroundSync { options, interval_ms } => {
+            Message::StartBackgroundSync {
+                options,
+                interval_in_milliseconds,
+            } => {
                 convert_async_panics(|| async {
-                    let duration = interval_ms.map(Duration::from_millis);
+                    let duration = interval_in_milliseconds.map(Duration::from_millis);
                     self.account_manager
                         .start_background_syncing(options.clone(), duration)
                         .await?;

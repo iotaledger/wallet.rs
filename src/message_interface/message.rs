@@ -126,7 +126,8 @@ pub enum Message {
         /// Sync options
         options: Option<SyncOptions>,
         /// Interval in milliseconds
-        interval_ms: Option<u64>,
+        #[serde(rename = "intervalInMilliseconds")]
+        interval_in_milliseconds: Option<u64>,
     },
     /// Stop background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -176,14 +177,17 @@ impl Debug for Message {
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
-            Message::SetStrongholdPasswordClearInterval(duration) => {
-                write!(f, "SetStrongholdPassword({:?})", duration)
+            Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
+                write!(f, "SetStrongholdPassword({:?})", interval_in_milliseconds)
             }
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
-            Message::StartBackgroundSync { options, interval_ms } => write!(
+            Message::StartBackgroundSync {
+                options,
+                interval_in_milliseconds,
+            } => write!(
                 f,
                 "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
-                options, interval_ms
+                options, interval_in_milliseconds
             ),
             Message::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]
