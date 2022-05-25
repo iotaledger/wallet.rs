@@ -5,7 +5,7 @@ use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
     path::PathBuf,
-    time::Duration
+    time::Duration,
 };
 
 use backtrace::Backtrace;
@@ -190,10 +190,7 @@ impl WalletMessageHandler {
             }
             Message::SetStrongholdPasswordClearInterval(interval_ms) => {
                 convert_async_panics(|| async {
-                    let duration: Option<Duration> = match interval_ms {
-                        Some(interval_ms) => Some(Duration::from_millis(interval_ms)),
-                        None => None,
-                    };
+                    let duration = interval_ms.map(Duration::from_millis);
                     self.account_manager
                         .set_stronghold_password_clear_interval(duration)
                         .await?;
@@ -210,10 +207,7 @@ impl WalletMessageHandler {
             }
             Message::StartBackgroundSync { options, interval_ms } => {
                 convert_async_panics(|| async {
-                    let duration: Option<Duration> = match interval_ms {
-                        Some(interval_ms) => Some(Duration::from_millis(interval_ms)),
-                        None => None,
-                    };
+                    let duration = interval_ms.map(Duration::from_millis);
                     self.account_manager
                         .start_background_syncing(options.clone(), duration)
                         .await?;
