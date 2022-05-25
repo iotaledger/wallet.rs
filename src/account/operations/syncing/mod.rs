@@ -224,7 +224,7 @@ impl AccountHandle {
 
         // Add new synced outputs
         for output_data in unspent_outputs {
-            // Inser output, if it's unknown emit the NewOutputEvent
+            // Insert output, if it's unknown emit the NewOutputEvent
             if account
                 .outputs
                 .insert(output_data.output_id, output_data.clone())
