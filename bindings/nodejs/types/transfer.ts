@@ -1,18 +1,20 @@
 import type { ITaggedDataPayload } from '@iota/types';
 
-export type RemainderValueStrategy = {
-    ChangeAddress: {
-        strategy: 'ChangeAddress';
-        value: null;
-    };
-    ReuseAddress: {
-        strategy: 'ReuseAddress';
-        value: null;
-    };
-    AccountAddress: {
-        strategy: 'CustomAddress';
-        value: string;
-    };
+export type RemainderValueStrategy = ChangeAddress | ReuseAddress | AccountAddress
+
+type ChangeAddress = {
+    strategy: 'ChangeAddress';
+    value: null;
+};
+
+type ReuseAddress = {
+    strategy: 'ReuseAddress';
+    value: null;
+};
+
+type AccountAddress = {
+    strategy: 'CustomAddress';
+    value: string;
 };
 
 export interface NativeTokenOptions {
