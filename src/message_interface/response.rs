@@ -52,14 +52,6 @@ pub enum Response {
     /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
-    /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
-    /// [`PrepareMintNfts`](crate::message_interface::AccountMethod::PrepareMintNfts),
-    /// [`PrepareSendMicroTransaction`](crate::message_interface::AccountMethod::PrepareSendMicroTransaction),
-    /// [`PrepareSendNativeTokens`](crate::message_interface::AccountMethod::PrepareSendNativeTokens),
-    /// [`PrepareSendNft`](crate::message_interface::AccountMethod::PrepareSendNft),
-    /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
-    PreparedTransaction(PreparedTransactionDataDto),
-    /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<TransactionDto>),
