@@ -33,10 +33,9 @@ export interface NftOptions {
     metadata?: number[];
 }
 
-// TODO: Transfer & TransferOptions should probably be merged
 export interface TransferOptions {
-    remainderValueStrategy: RemainderValueStrategy;
+    remainderValueStrategy?: RemainderValueStrategy;
     taggedDataPayload?: ITaggedDataPayload;
-    skipSync: boolean;
+    skipSync?: boolean;
     customInputs?: string[];
 }
