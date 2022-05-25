@@ -1,4 +1,4 @@
-import type { INodeInfo } from '@iota/types';
+import type { INodeInfo, IRent } from '@iota/types';
 
 export enum Network {
     Mainnet,
@@ -19,11 +19,7 @@ interface NetworkInfo {
     localPow?: boolean;
     fallbackToLocalPow?: boolean;
     tipsInterval?: number;
-    rentStructure?: {
-        vByteCost?: number;
-        vByteFactorKey?: number;
-        vByteFactorData?: number;
-    };
+    rentStructure?: IRent
 }
 
 export type Node = {

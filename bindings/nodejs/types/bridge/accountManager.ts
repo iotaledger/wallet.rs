@@ -58,6 +58,11 @@ export type __SetStrongholdPasswordMessage__ = {
     payload: string;
 };
 
+export type __SetStrongholdPasswordClearIntervalMessage__ = {
+    cmd: 'SetStrongholdPasswordClearInterval';
+    payload?: number;
+};
+
 export type __GenerateMnemonicMessage__ = {
     cmd: 'GenerateMnemonic';
 };
@@ -97,7 +102,7 @@ export type __StartBackgroundSyncMessage__ = {
     cmd: 'StartBackgroundSync';
     payload: {
         options?: AccountSyncOptions;
-        interval?: number;
+        intervalInMilliseconds?: number;
     };
 };
 

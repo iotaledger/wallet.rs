@@ -4,7 +4,6 @@
 use std::{
     fmt::{Debug, Formatter, Result},
     path::PathBuf,
-    time::Duration,
 };
 
 use iota_client::node_manager::node::NodeAuth;
@@ -117,7 +116,7 @@ pub enum Message {
     SetStrongholdPassword(String),
     /// Set the stronghold password clear interval.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetStrongholdPasswordClearInterval(Option<Duration>),
+    SetStrongholdPasswordClearInterval(Option<u64>),
     /// Store a mnemonic into the Stronghold vault.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     StoreMnemonic(String),
@@ -126,8 +125,9 @@ pub enum Message {
     StartBackgroundSync {
         /// Sync options
         options: Option<SyncOptions>,
-        /// Interval
-        interval: Option<Duration>,
+        /// Interval in milliseconds
+        #[serde(rename = "intervalInMilliseconds")]
+        interval_in_milliseconds: Option<u64>,
     },
     /// Stop background syncing.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -177,14 +177,17 @@ impl Debug for Message {
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
-            Message::SetStrongholdPasswordClearInterval(duration) => {
-                write!(f, "SetStrongholdPassword({:?})", duration)
+            Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
+                write!(f, "SetStrongholdPassword({:?})", interval_in_milliseconds)
             }
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
-            Message::StartBackgroundSync { options, interval } => write!(
+            Message::StartBackgroundSync {
+                options,
+                interval_in_milliseconds,
+            } => write!(
                 f,
                 "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
-                options, interval
+                options, interval_in_milliseconds
             ),
             Message::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]

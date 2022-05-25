@@ -20,6 +20,7 @@ import type {
     __SendNftMethod__,
     __SendTransferMethod__,
     __TryCollectOutputsMethod__,
+    __SetAliasMethod__,
 } from './account';
 import type {
     __GetAccountsMessage__,
@@ -27,6 +28,7 @@ import type {
     __GetNodeInfoMessage__,
     __CreateAccountMessage__,
     __SetStrongholdPasswordMessage__,
+    __SetStrongholdPasswordClearIntervalMessage__,
     __StoreMnemonicMessage__,
     __BackupMessage__,
     __RestoreBackupMessage__,
@@ -60,6 +62,7 @@ export type __AccountMethod__ =
     | __SendNativeTokensMethod__
     | __SendNftMethod__
     | __SendTransferMethod__
+    | __SetAliasMethod__
     | __SetCollectOutputsMethod__
     | __SyncAccountMethod__
     | __TryCollectOutputsMethod__;
@@ -90,5 +93,6 @@ export type __Message__ =
     | __StopBackgroundSyncMessage__
     | __SetClientOptionsMessage__
     | __SetStrongholdPasswordMessage__
+    | __SetStrongholdPasswordClearIntervalMessage__
     | __StoreMnemonicMessage__
     | __VerifyMnemonicMessage__;

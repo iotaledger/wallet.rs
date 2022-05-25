@@ -48,6 +48,15 @@ export class Account {
         return this.meta.alias;
     }
 
+    async setAlias(alias: string): Promise<void> {
+        await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'SetAlias',
+            data: {
+                alias
+            }
+        })
+    }
+
     async getBalance(): Promise<AccountBalance> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,

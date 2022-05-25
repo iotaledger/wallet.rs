@@ -131,6 +131,13 @@ export type __SendTransferMethod__ = {
     };
 };
 
+export type __SetAliasMethod__ = {
+    name: 'SetAlias';
+    data: {
+        alias: string;
+    }
+}
+
 export type __TryCollectOutputsMethod__ = {
     name: 'TryCollectOutputs';
     data: {
