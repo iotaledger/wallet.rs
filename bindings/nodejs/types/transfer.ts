@@ -1,18 +1,20 @@
 import type { ITaggedDataPayload } from '@iota/types';
 
-export type RemainderValueStrategy = {
-    ChangeAddress: {
-        strategy: 'ChangeAddress';
-        value: null;
-    };
-    ReuseAddress: {
-        strategy: 'ReuseAddress';
-        value: null;
-    };
-    AccountAddress: {
-        strategy: 'CustomAddress';
-        value: string;
-    };
+export type RemainderValueStrategy = ChangeAddress | ReuseAddress | CustomAddress
+
+type ChangeAddress = {
+    strategy: 'ChangeAddress';
+    value: null;
+};
+
+type ReuseAddress = {
+    strategy: 'ReuseAddress';
+    value: null;
+};
+
+type CustomAddress = {
+    strategy: 'CustomAddress';
+    value: string;
 };
 
 export interface NativeTokenOptions {
@@ -31,10 +33,9 @@ export interface NftOptions {
     metadata?: number[];
 }
 
-// TODO: Transfer & TransferOptions should probably be merged
 export interface TransferOptions {
-    remainderValueStrategy: RemainderValueStrategy;
+    remainderValueStrategy?: RemainderValueStrategy;
     taggedDataPayload?: ITaggedDataPayload;
-    skipSync: boolean;
+    skipSync?: boolean;
     customInputs?: string[];
 }

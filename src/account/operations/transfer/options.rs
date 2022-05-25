@@ -11,6 +11,7 @@ use crate::account::types::address::AccountAddress;
 pub struct TransferOptions {
     #[serde(rename = "remainderValueStrategy", default)]
     pub remainder_value_strategy: RemainderValueStrategy,
+    #[serde(rename = "taggedDataPayload", default)]
     pub tagged_data_payload: Option<TaggedDataPayload>,
     #[serde(rename = "skipSync", default)]
     pub skip_sync: bool,
