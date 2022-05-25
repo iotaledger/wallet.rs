@@ -110,7 +110,6 @@ impl AccountManagerBuilder {
         #[cfg(feature = "storage")]
         {
             let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
-
             let (client_options, secret_manager) = match manager_builder {
                 Some(data) => {
                     // prioritise provided client_options and secret_manager over stored ones

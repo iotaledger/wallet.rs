@@ -22,8 +22,6 @@ pub mod error;
 /// The event module.
 pub mod events;
 
-// todo: add Stronghold support, refactor, check if it can't lock funds if it's stored with locked outputs and
-// transaction creation failed so they should be unlocked again and other edge cases
 #[cfg(feature = "storage")]
 /// The storage module.
 pub mod storage;

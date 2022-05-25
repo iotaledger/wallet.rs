@@ -1,15 +1,18 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
-    address::Address,
-    output::{
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+use iota_client::{
+    api::PreparedTransactionData,
+    bee_block::{
+        address::Address,
+        output::{
+            unlock_condition::{
+                AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+            },
+            BasicOutputBuilder,
         },
-        BasicOutputBuilder,
+        payload::milestone::MilestoneIndex,
     },
-    payload::milestone::MilestoneIndex,
 };
 use serde::{Deserialize, Serialize};
 
@@ -66,6 +69,20 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransferOptions>,
     ) -> crate::Result<TransferResult> {
+        let prepared_trasacton = self
+            .prepare_send_micro_transaction(addresses_with_micro_amount, options)
+            .await?;
+        self.sign_and_submit_transfer(prepared_trasacton).await
+    }
+
+    /// Function to prepare the transaction for
+    /// [AccountHandle.send_micro_transaction()](crate::account::handle::AccountHandle.send_micro_transaction)
+    pub async fn prepare_send_micro_transaction(
+        &self,
+        addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] prepare_send_micro_transaction");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
@@ -104,6 +121,7 @@ impl AccountHandle {
                     .finish_output()?,
             )
         }
-        self.send(outputs, options).await
+
+        self.sync_and_prepare_transaction(outputs, options).await
     }
 }

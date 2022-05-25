@@ -7,7 +7,7 @@ use iota_client::{
     api::PreparedTransactionData,
     bee_block::{
         input::INPUT_COUNT_RANGE,
-        output::{ByteCostConfig, Output, OUTPUT_COUNT_RANGE},
+        output::{Output, OUTPUT_COUNT_RANGE},
     },
     secret::types::InputSigningData,
 };
@@ -23,17 +23,19 @@ use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Get inputs and build the transaction essence
-    pub(crate) async fn prepare_transaction(
+    pub async fn prepare_transaction(
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
-        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSFER] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
+
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
+
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(byte_cost_config)?;
+            output.verify_storage_deposit(&byte_cost_config)?;
         }
 
         // validate amounts
@@ -117,7 +119,7 @@ impl AccountHandle {
         };
 
         let selected_transaction_data = self
-            .select_inputs(outputs, custom_inputs, remainder_address, byte_cost_config)
+            .select_inputs(outputs, custom_inputs, remainder_address, &byte_cost_config)
             .await?;
 
         let prepared_transaction_data = match self

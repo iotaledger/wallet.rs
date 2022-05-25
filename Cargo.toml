@@ -52,6 +52,22 @@ mnemonic = []
 name = "events"
 required-features = ["events"]
 
+[[example]]
+name = "0_generate_addresses"
+path = "examples/offline_signing/0_generate_addresses.rs"
+
+[[example]]
+name = "1_prepare_transaction"
+path = "examples/offline_signing/1_prepare_transaction.rs"
+
+[[example]]
+name = "2_sign_transaction"
+path = "examples/offline_signing/2_sign_transaction.rs"
+
+[[example]]
+name = "3_send_transaction"
+path = "examples/offline_signing/3_send_transaction.rs"
+
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]
 normal = ["backtrace"]

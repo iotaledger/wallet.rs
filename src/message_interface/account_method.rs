@@ -1,7 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::{Output, OutputId};
+use iota_client::{
+    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
+    bee_block::output::{dto::OutputDto, OutputId},
+};
 use serde::Deserialize;
 
 use crate::{
@@ -71,6 +74,47 @@ pub enum AccountMethod {
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
+    /// Prepare transaction.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareTransaction {
+        outputs: Vec<OutputDto>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare mint nft.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareMintNfts {
+        #[serde(rename = "nftOptions")]
+        nfts_options: Vec<NftOptions>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare send amount.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareSendAmount {
+        #[serde(rename = "addressWithAmount")]
+        addresses_with_amount: Vec<AddressWithAmountDto>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare send amount below minimum storage deposit.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareSendMicroTransaction {
+        #[serde(rename = "addressWithMicroAmount")]
+        addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare send native tokens.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareSendNativeTokens {
+        #[serde(rename = "addressNativeTokens")]
+        addresses_native_tokens: Vec<AddressNativeTokens>,
+        options: Option<TransferOptions>,
+    },
+    /// Prepare send nft.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareSendNft {
+        #[serde(rename = "addressAndNftId")]
+        addresses_nft_ids: Vec<AddressAndNftId>,
+        options: Option<TransferOptions>,
+    },
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
     /// consolidate outputs if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
@@ -112,8 +156,20 @@ pub enum AccountMethod {
     /// Send funds.
     /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
     SendTransfer {
-        outputs: Vec<Output>,
+        outputs: Vec<OutputDto>,
         options: Option<TransferOptions>,
+    },
+    /// Sign a prepared transaction.
+    /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
+    SignTransactionEssence {
+        #[serde(rename = "preparedTransactionData")]
+        prepared_transaction_data: PreparedTransactionDataDto,
+    },
+    /// Validate the transaction, submit it to a node and store it in the account.
+    /// Expected response: [`SentTransfer`](crate::message_interface::Response::SentTransfer)
+    SubmitAndStoreTransaction {
+        #[serde(rename = "signedTransactionData")]
+        signed_transaction_data: SignedTransactionDataDto,
     },
     /// Try to collect outputs.
     /// Expected response: [`SentTransfers`](crate::message_interface::Response::SentTransfers)

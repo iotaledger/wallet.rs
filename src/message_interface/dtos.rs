@@ -8,9 +8,15 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::bee_block::{
-    output::{AliasId, FoundryId, NftId, OutputId, TokenId},
-    payload::transaction::TransactionId,
+use crypto::keys::slip10::Chain;
+use iota_client::{
+    bee_block::{
+        address::dto::AddressDto,
+        output::{dto::OutputDto, AliasId, FoundryId, NftId, OutputId, TokenId},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        BlockId,
+    },
+    bee_rest_api::types::responses::OutputResponse,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -18,7 +24,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData, Transaction,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
+            OutputData, Transaction,
         },
         Account, AccountOptions,
     },
@@ -26,7 +33,7 @@ use crate::{
 };
 
 /// Dto for address with amount for `send_amount()`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -47,7 +54,7 @@ impl TryFrom<&AddressWithAmountDto> for AddressWithAmount {
 }
 
 /// Dto for address with amount for `send_micro_transaction()`
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithMicroAmountDto {
     /// Bech32 encoded address
     pub address: String,
@@ -76,7 +83,7 @@ impl TryFrom<&AddressWithMicroAmountDto> for AddressWithMicroAmount {
 }
 
 /// Dto for an account address with output_ids of unspent outputs.
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithUnspentOutputsDto {
     /// The address.
     #[serde(with = "crate::account::types::address_serde")]
@@ -107,7 +114,7 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
 
 /// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalanceDto {
     /// Total amount
     pub total: String,
@@ -147,7 +154,7 @@ impl From<&AccountBalance> for AccountBalanceDto {
 }
 
 /// Dto for an Account.
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AccountDto {
     /// The account index
     pub index: u32,
@@ -166,15 +173,15 @@ pub struct AccountDto {
     #[serde(rename = "addressesWithUnspentOutputs")]
     pub addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputsDto>,
     /// Outputs
-    pub outputs: HashMap<OutputId, OutputData>,
+    pub outputs: HashMap<OutputId, OutputDataDto>,
     /// Unspent outputs that are currently used as input for transactions
     #[serde(rename = "lockedOutputs")]
     pub locked_outputs: HashSet<OutputId>,
     /// Unspent outputs
     #[serde(rename = "unspentOutputs")]
-    pub unspent_outputs: HashMap<OutputId, OutputData>,
+    pub unspent_outputs: HashMap<OutputId, OutputDataDto>,
     /// Sent transactions
-    pub transactions: HashMap<TransactionId, Transaction>,
+    pub transactions: HashMap<TransactionId, TransactionDto>,
     /// Pending transactions
     #[serde(rename = "pendingTransactions")]
     pub pending_transactions: HashSet<TransactionId>,
@@ -196,12 +203,103 @@ impl From<&Account> for AccountDto {
                 .iter()
                 .map(AddressWithUnspentOutputsDto::from)
                 .collect(),
-            outputs: value.outputs().clone(),
+            outputs: value
+                .outputs()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .collect(),
             locked_outputs: value.locked_outputs().clone(),
-            unspent_outputs: value.unspent_outputs().clone(),
-            transactions: value.transactions().clone(),
+            unspent_outputs: value
+                .unspent_outputs()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .collect(),
+            transactions: value
+                .transactions()
+                .clone()
+                .into_iter()
+                .map(|(k, o)| (k, TransactionDto::from(&o)))
+                .collect(),
             pending_transactions: value.pending_transactions().clone(),
             account_options: *value.account_options(),
+        }
+    }
+}
+
+/// Dto for a transaction with metadata
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TransactionDto {
+    /// The transaction payload
+    pub payload: TransactionPayloadDto,
+    /// BlockId when it got sent to the Tangle
+    #[serde(rename = "blockId")]
+    pub block_id: Option<BlockId>,
+    /// Inclusion state of the transaction
+    #[serde(rename = "inclusionState")]
+    pub inclusion_state: InclusionState,
+    /// Timestamp
+    pub timestamp: String,
+    /// Network id to ignore outputs when set_client_options is used to switch to another network
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
+    pub incoming: bool,
+}
+
+impl From<&Transaction> for TransactionDto {
+    fn from(value: &Transaction) -> Self {
+        Self {
+            payload: TransactionPayloadDto::from(&value.payload),
+            block_id: value.block_id,
+            inclusion_state: value.inclusion_state,
+            timestamp: value.timestamp.to_string(),
+            network_id: value.network_id.to_string(),
+            incoming: value.incoming,
+        }
+    }
+}
+
+/// Dto for an output with metadata
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct OutputDataDto {
+    /// The output id
+    #[serde(rename = "outputId")]
+    pub output_id: OutputId,
+    /// The output response
+    #[serde(rename = "outputResponse")]
+    pub output_response: OutputResponse,
+    /// The actual Output
+    pub output: OutputDto,
+    /// The output amount
+    pub amount: String,
+    /// If an output is spent
+    #[serde(rename = "isSpent")]
+    pub is_spent: bool,
+    /// Associated account address.
+    pub address: AddressDto,
+    /// Network ID
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    /// Remainder
+    pub remainder: bool,
+    /// Bip32 path
+    pub chain: Option<Chain>,
+}
+
+impl From<&OutputData> for OutputDataDto {
+    fn from(value: &OutputData) -> Self {
+        Self {
+            output_id: value.output_id,
+            output_response: value.output_response.clone(),
+            output: OutputDto::from(&value.output),
+            amount: value.amount.to_string(),
+            is_spent: value.is_spent,
+            address: AddressDto::from(&value.address),
+            network_id: value.network_id.to_string(),
+            remainder: value.remainder,
+            chain: value.chain.clone(),
         }
     }
 }

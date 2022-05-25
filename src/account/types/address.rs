@@ -8,7 +8,7 @@ use iota_client::bee_block::{address::Address, output::OutputId};
 use serde::{Deserialize, Serialize};
 
 /// An account address.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 #[getset(get = "pub")]
 pub struct AccountAddress {
     /// The address.
@@ -27,7 +27,7 @@ pub struct AccountAddress {
 }
 
 /// An account address with unspent output_ids for unspent outputs.
-#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Getters, Setters, Clone, Serialize, Deserialize, Eq, PartialEq)]
 #[getset(get = "pub")]
 pub struct AddressWithUnspentOutputs {
     /// The address.
@@ -48,7 +48,7 @@ pub struct AddressWithUnspentOutputs {
 }
 
 /// An address and its network type.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct AddressWrapper {
     pub(crate) inner: Address,
     #[serde(rename = "bech32Hrp")]

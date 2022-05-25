@@ -4,7 +4,7 @@
 #[cfg(feature = "stronghold")]
 use iota_client::secret::SecretManager;
 use iota_client::{
-    api::{verify_semantic, PreparedTransactionData},
+    api::{PreparedTransactionData, SignedTransactionData},
     bee_block::{address::Address, unlock::Unlocks},
     secret::SecretManageExt,
 };
@@ -15,11 +15,11 @@ use crate::events::types::{TransferProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to sign a transaction essence
-    pub(crate) async fn sign_tx_essence(
+    pub async fn sign_transaction_essence(
         &self,
         prepared_transaction_data: &PreparedTransactionData,
-    ) -> crate::Result<TransactionPayload> {
-        log::debug!("[TRANSFER] sign_tx_essence");
+    ) -> crate::Result<SignedTransactionData> {
+        log::debug!("[TRANSFER] sign_transaction_essence");
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             self.read().await.index,
@@ -49,16 +49,11 @@ impl AccountHandle {
             input_addresses.push(address);
         }
 
-        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
-        verify_semantic(
-            &prepared_transaction_data.inputs_data,
-            &transaction_payload,
-            milestone_index,
-            local_time,
-        )?;
-
         log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
 
-        Ok(transaction_payload)
+        Ok(SignedTransactionData {
+            transaction_payload,
+            inputs_data: prepared_transaction_data.inputs_data.clone(),
+        })
     }
 }

@@ -9,7 +9,11 @@ use std::{
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
-use iota_client::{Client, NodeInfoWrapper};
+use iota_client::{
+    api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
+    bee_block::output::Output,
+    Client, NodeInfoWrapper,
+};
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
 
@@ -20,7 +24,7 @@ use crate::{
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto},
+        dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,
@@ -270,7 +274,9 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetOutput { output_id } => {
                 let output_data = account_handle.get_output(output_id).await;
-                Ok(Response::Output(Box::new(output_data)))
+                Ok(Response::Output(
+                    output_data.as_ref().map(OutputDataDto::from).map(Box::new),
+                ))
             }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
@@ -284,19 +290,23 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;
-                Ok(Response::Outputs(outputs))
+                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListUnspentOutputs => {
                 let outputs = account_handle.list_unspent_outputs().await?;
-                Ok(Response::Outputs(outputs))
+                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;
-                Ok(Response::Transactions(transactions))
+                Ok(Response::Transactions(
+                    transactions.iter().map(TransactionDto::from).collect(),
+                ))
             }
             AccountMethod::ListPendingTransactions => {
                 let transactions = account_handle.list_pending_transactions().await?;
-                Ok(Response::Transactions(transactions))
+                Ok(Response::Transactions(
+                    transactions.iter().map(TransactionDto::from).collect(),
+                ))
             }
             AccountMethod::MintNativeToken {
                 native_token_options,
@@ -320,6 +330,90 @@ impl WalletMessageHandler {
             AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.balance().await?,
             ))),
+            AccountMethod::PrepareMintNfts { nfts_options, options } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_mint_nfts(nfts_options.clone(), options.clone())
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendAmount {
+                addresses_with_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_amount(
+                            addresses_with_amount
+                                .iter()
+                                .map(AddressWithAmount::try_from)
+                                .collect::<Result<Vec<AddressWithAmount>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendMicroTransaction {
+                addresses_with_micro_amount,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_micro_transaction(
+                            addresses_with_micro_amount
+                                .iter()
+                                .map(AddressWithMicroAmount::try_from)
+                                .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendNativeTokens {
+                addresses_native_tokens,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_native_tokens(addresses_native_tokens.clone(), options.clone())
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareSendNft {
+                addresses_nft_ids,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_send_nft(addresses_nft_ids.clone(), options.clone())
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareTransaction { outputs, options } => {
+                convert_async_panics(|| async {
+                    let data = account_handle
+                        .prepare_transaction(
+                            outputs
+                                .iter()
+                                .map(|o| Ok(Output::try_from(o)?))
+                                .collect::<Result<Vec<Output>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
             AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.sync(options.clone()).await?,
             ))),
@@ -392,8 +486,41 @@ impl WalletMessageHandler {
             }
             AccountMethod::SendTransfer { outputs, options } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle.send(outputs.clone(), options.clone()).await?;
+                    let transfer = account_handle
+                        .send(
+                            outputs
+                                .iter()
+                                .map(|o| Ok(Output::try_from(o)?))
+                                .collect::<crate::Result<Vec<Output>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
                     Ok(Response::SentTransfer(transfer))
+                })
+                .await
+            }
+            AccountMethod::SignTransactionEssence {
+                prepared_transaction_data,
+            } => {
+                convert_async_panics(|| async {
+                    let signed_transaction_data = account_handle
+                        .sign_transaction_essence(&PreparedTransactionData::try_from(prepared_transaction_data)?)
+                        .await?;
+                    Ok(Response::SignedTransactionData(SignedTransactionDataDto::from(
+                        &signed_transaction_data,
+                    )))
+                })
+                .await
+            }
+            AccountMethod::SubmitAndStoreTransaction {
+                signed_transaction_data,
+            } => {
+                convert_async_panics(|| async {
+                    let signed_transaction_data = SignedTransactionData::try_from(signed_transaction_data)?;
+                    let transaction_result = account_handle
+                        .submit_and_store_transaction(signed_transaction_data)
+                        .await?;
+                    Ok(Response::SentTransfer(transaction_result))
                 })
                 .await
             }

@@ -14,9 +14,11 @@ pub(crate) mod submit_transaction;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
+    api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     bee_block::{
-        output::{ByteCostConfig, Output},
+        output::Output,
         payload::transaction::{TransactionId, TransactionPayload},
+        semantic::ConflictReason,
         BlockId,
     },
     secret::types::InputSigningData,
@@ -24,13 +26,16 @@ use iota_client::{
 use serde::Serialize;
 
 pub use self::options::{RemainderValueStrategy, TransferOptions};
-use crate::account::{
-    handle::AccountHandle,
-    operations::syncing::SyncOptions,
-    types::{InclusionState, Transaction},
-};
 #[cfg(feature = "events")]
 use crate::events::types::{TransferProgressEvent, WalletEvent};
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::syncing::SyncOptions,
+        types::{InclusionState, Transaction},
+    },
+    iota_client::Error,
+};
 
 /// The result of a transfer, block_id is an option because submitting the transaction could fail
 #[derive(Debug, Serialize)]
@@ -66,7 +71,8 @@ impl AccountHandle {
     /// }
     /// ```
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransferOptions>) -> crate::Result<TransferResult> {
-        // here to check before syncing, how to prevent duplicated verification (also in send_transfer())?
+        // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
+        // Checking it also here is good to return earlier if something is invalid
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
@@ -89,22 +95,31 @@ impl AccountHandle {
             }))
             .await?;
         }
-        self.send_transfer(outputs, options, &byte_cost_config).await
+        self.finish_transfer(outputs, options).await
     }
 
-    // Separated function from send, so syncing isn't called recursiv with the consolidation function, which sends
-    // transfers
-    pub async fn send_transfer(
+    /// Separated function from send, so syncing isn't called recursively with the consolidation function, which sends
+    /// transfers
+    pub async fn finish_transfer(
         &self,
         outputs: Vec<Output>,
         options: Option<TransferOptions>,
-        byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] send");
+        log::debug!("[TRANSFER] finish_transfer");
 
-        let prepared_transaction_data = self.prepare_transaction(outputs, options, byte_cost_config).await?;
+        let prepared_transaction_data = self.prepare_transaction(outputs, options).await?;
 
-        let transaction_payload = match self.sign_tx_essence(&prepared_transaction_data).await {
+        self.sign_and_submit_transfer(prepared_transaction_data).await
+    }
+
+    /// Sign a transaction, submit it to a node and store it in the account
+    pub async fn sign_and_submit_transfer(
+        &self,
+        prepared_transaction_data: PreparedTransactionData,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] sign_and_submit_transfer");
+
+        let signed_transaction_data = match self.sign_transaction_essence(&prepared_transaction_data).await {
             Ok(res) => res,
             Err(err) => {
                 // unlock outputs so they are available for a new transaction
@@ -113,8 +128,62 @@ impl AccountHandle {
             }
         };
 
+        self.submit_and_store_transaction(signed_transaction_data).await
+    }
+
+    /// Sync an account if not skipped in options and prepare the transaction
+    pub async fn sync_and_prepare_transaction(
+        &self,
+        outputs: Vec<Output>,
+        options: Option<TransferOptions>,
+    ) -> crate::Result<PreparedTransactionData> {
+        log::debug!("[TRANSFER] sync_and_prepare_transaction");
+        // sync account before sending a transaction
+        #[cfg(feature = "events")]
+        {
+            let account_index = self.read().await.index;
+            self.event_emitter.lock().await.emit(
+                account_index,
+                WalletEvent::TransferProgress(TransferProgressEvent::SyncingAccount),
+            );
+        }
+        if !options.clone().unwrap_or_default().skip_sync {
+            self.sync(Some(SyncOptions {
+                automatic_output_consolidation: false,
+                ..Default::default()
+            }))
+            .await?;
+        }
+
+        self.prepare_transaction(outputs, options).await
+    }
+
+    /// Validate the transaction, submit it to a node and store it in the account
+    pub async fn submit_and_store_transaction(
+        &self,
+        signed_transaction_data: SignedTransactionData,
+    ) -> crate::Result<TransferResult> {
+        log::debug!("[TRANSFER] submit_and_store_transaction");
+
+        // Validate transaction before sending and storing it
+        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+
+        let conflict = verify_semantic(
+            &signed_transaction_data.inputs_data,
+            &signed_transaction_data.transaction_payload,
+            milestone_index,
+            local_time,
+        )?;
+
+        if conflict != ConflictReason::None {
+            return Err(Error::TransactionSemantic(conflict).into());
+        }
+
         // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
-        let block_id = match self.submit_transaction_payload(transaction_payload.clone()).await {
+        let block_id = match self
+            .submit_transaction_payload(signed_transaction_data.transaction_payload.clone())
+            .await
+        {
             Ok(block_id) => Some(block_id),
             Err(err) => {
                 log::error!("Failed to submit_transaction_payload {}", err);
@@ -124,12 +193,12 @@ impl AccountHandle {
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
-        let transaction_id = transaction_payload.id();
+        let transaction_id = signed_transaction_data.transaction_payload.id();
         let mut account = self.write().await;
         account.transactions.insert(
             transaction_id,
             Transaction {
-                payload: transaction_payload,
+                payload: signed_transaction_data.transaction_payload,
                 block_id,
                 network_id,
                 timestamp: SystemTime::now()
@@ -151,6 +220,7 @@ impl AccountHandle {
             block_id,
         })
     }
+
     // unlock outputs
     async fn unlock_inputs(&self, inputs: Vec<InputSigningData>) -> crate::Result<()> {
         let mut account = self.write().await;

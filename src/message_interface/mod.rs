@@ -91,6 +91,7 @@ mod tests {
     use iota_client::bee_block::{
         address::Address,
         output::{
+            dto::OutputDto,
             unlock_condition::{AddressUnlockCondition, UnlockCondition},
             BasicOutputBuilder,
         },
@@ -191,8 +192,8 @@ mod tests {
         let _ = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
 
         // send transaction
-        let outputs = vec![
-            BasicOutputBuilder::new_with_amount(1_000_000)
+        let outputs = vec![OutputDto::from(
+            &BasicOutputBuilder::new_with_amount(1_000_000)
                 .unwrap()
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                     Address::try_from_bech32("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e")
@@ -201,7 +202,7 @@ mod tests {
                 )))
                 .finish_output()
                 .unwrap(),
-        ];
+        )];
 
         let transfer = Message::CallAccountMethod {
             account_id: "alias".into(),

@@ -3,15 +3,18 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-use iota_client::{bee_block::output::OutputId, NodeInfoWrapper};
+use iota_client::{
+    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
+    bee_block::output::OutputId,
+    NodeInfoWrapper,
+};
 use serde::Serialize;
 
 use crate::{
-    account::{
-        operations::transfer::TransferResult,
-        types::{address::AccountAddress, OutputData, Transaction},
+    account::{operations::transfer::TransferResult, types::address::AccountAddress},
+    message_interface::dtos::{
+        AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
     },
-    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
 
@@ -35,15 +38,27 @@ pub enum Response {
     /// GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
-    Output(Box<Option<OutputData>>),
+    Output(Option<Box<OutputDataDto>>),
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
-    Outputs(Vec<OutputData>),
+    Outputs(Vec<OutputDataDto>),
+    /// Response for
+    /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
+    /// [`PrepareMintNfts`](crate::message_interface::AccountMethod::PrepareMintNfts),
+    /// [`PrepareSendMicroTransaction`](crate::message_interface::AccountMethod::PrepareSendMicroTransaction),
+    /// [`PrepareSendNativeTokens`](crate::message_interface::AccountMethod::PrepareSendNativeTokens),
+    /// [`PrepareSendNft`](crate::message_interface::AccountMethod::PrepareSendNft),
+    /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
+    PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
-    Transactions(Vec<Transaction>),
+    Transactions(Vec<TransactionDto>),
+    /// Response for
+    /// [`SignTransaction`](crate::message_interface::AccountMethod::SignTransaction)
+    SignedTransactionData(SignedTransactionDataDto),
+    /// GenerateAddress response.
     /// Response for [`GenerateAddresses`](crate::message_interface::AccountMethod::GenerateAddresses)
     GeneratedAddress(Vec<AccountAddress>),
     /// Response for
@@ -58,6 +73,7 @@ pub enum Response {
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
     /// [`SendTransfer`](crate::message_interface::AccountMethod::SendTransfer)
+    /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransfer(TransferResult),
     /// Response for [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
@@ -103,7 +119,13 @@ impl Debug for Response {
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
             Response::Output(output) => write!(f, "Output({:?})", output),
             Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
+            Response::PreparedTransaction(transaction_data) => {
+                write!(f, "PreparedTransaction({:?})", transaction_data)
+            }
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
+            Response::SignedTransactionData(signed_transaction_data) => {
+                write!(f, "SignedTransactionData({:?})", signed_transaction_data)
+            }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
             Response::SentTransfer(transfer) => write!(f, "SentTransfer({:?})", transfer),

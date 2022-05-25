@@ -63,8 +63,6 @@ impl AccountHandle {
             log::debug!("[OUTPUT_CONSOLIDATION] no consolidation needed");
         }
 
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
-
         let mut consolidation_results = Vec::new();
         for outputs_on_one_address in outputs_to_consolidate {
             // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited)
@@ -79,14 +77,13 @@ impl AccountHandle {
                         .finish_output()?,
                 ];
                 match self
-                    .send_transfer(
+                    .finish_transfer(
                         consolidation_output,
                         Some(TransferOptions {
                             skip_sync: true,
                             custom_inputs: Some(outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()),
                             ..Default::default()
                         }),
-                        &byte_cost_config,
                     )
                     .await
                 {

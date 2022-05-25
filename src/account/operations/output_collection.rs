@@ -22,7 +22,7 @@ use crate::account::{
 };
 
 /// Enum to specify which outputs should be collected
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum OutputsToCollect {
     None = 0,
     MicroTransactions = 1,
@@ -347,7 +347,7 @@ impl AccountHandle {
             );
 
             match self
-                .send_transfer(
+                .finish_transfer(
                     outputs_to_send,
                     Some(TransferOptions {
                         skip_sync: true,
@@ -361,7 +361,6 @@ impl AccountHandle {
                         ),
                         ..Default::default()
                     }),
-                    &byte_cost_config,
                 )
                 .await
             {
