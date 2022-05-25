@@ -278,6 +278,10 @@ impl WalletMessageHandler {
                     output_data.as_ref().map(OutputDataDto::from).map(Box::new),
                 ))
             }
+            AccountMethod::GetTransaction { transaction_id } => {
+                let transaction_data = account_handle.get_transaction(transaction_id).await;
+                Ok(Response::Transaction(Box::new(transaction_data)))
+            }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(Response::Addresses(addresses))
