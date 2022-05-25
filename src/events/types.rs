@@ -21,13 +21,13 @@ pub struct Event {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum WalletEvent {
+    ConsolidationRequired,
+    #[cfg(feature = "ledger_nano")]
+    LedgerAddressGeneration(AddressData),
     NewOutput(NewOutputEvent),
     SpentOutput(SpentOutputEvent),
     TransactionInclusion(TransactionInclusionEvent),
     TransferProgress(TransferProgressEvent),
-    ConsolidationRequired,
-    #[cfg(feature = "ledger_nano")]
-    LedgerAddressGeneration(AddressData),
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
