@@ -51,6 +51,13 @@ export type __GetOutputsWithAdditionalUnlockConditionsMethod__ = {
     };
 };
 
+export type __GetTransactionMethod__ = {
+    name: 'GetTransaction';
+    data: {
+        transactionId: string;
+    };
+};
+
 export type __ListAddressesMethod__ = {
     name: 'ListAddresses';
 };
