@@ -1,6 +1,6 @@
 import type { ITaggedDataPayload } from '@iota/types';
 
-export type RemainderValueStrategy = ChangeAddress | ReuseAddress | AccountAddress
+export type RemainderValueStrategy = ChangeAddress | ReuseAddress | CustomAddress
 
 type ChangeAddress = {
     strategy: 'ChangeAddress';
@@ -12,7 +12,7 @@ type ReuseAddress = {
     value: null;
 };
 
-type AccountAddress = {
+type CustomAddress = {
     strategy: 'CustomAddress';
     value: string;
 };
