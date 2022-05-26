@@ -44,7 +44,7 @@ export interface AccountMeta {
     alias: string;
     publicAddresses: Address[];
     internalAddresses: Address[];
-    addressesWithBalance: Address[];
+    addressesWithUnspentOutputs: Address[];
     outputs: OutputsMap;
     lockedOutputs: Set<string>;
     unspentOutputs: OutputsMap;

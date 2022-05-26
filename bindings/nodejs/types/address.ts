@@ -26,7 +26,7 @@ export interface AddressWithUnspentOutputs extends AddressWithAmount {
 
 export interface AddressWithMicroAmount {
     address: string;
-    amount: number;
+    amount: string;
     returnAddress?: string;
     expiration?: number;
 }

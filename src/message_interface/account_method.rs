@@ -3,7 +3,10 @@
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::output::{dto::OutputDto, OutputId},
+    bee_block::{
+        output::{dto::OutputDto, OutputId},
+        payload::transaction::TransactionId,
+    },
 };
 use serde::Deserialize;
 
@@ -37,6 +40,12 @@ pub enum AccountMethod {
     GetOutputsWithAdditionalUnlockConditions {
         #[serde(rename = "outputsToCollect")]
         outputs_to_collect: OutputsToCollect,
+    },
+    /// Get the [`Transaction`](crate::account::types::Transaction) of a transaction stored in the account
+    /// Expected response: [`Transaction`](crate::message_interface::Response::Transaction)
+    GetTransaction {
+        #[serde(rename = "transactionId")]
+        transaction_id: TransactionId,
     },
     /// Expected response: [`Addresses`](crate::message_interface::Response::Addresses)
     /// List addresses.

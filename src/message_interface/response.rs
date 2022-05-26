@@ -52,6 +52,9 @@ pub enum Response {
     /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
+    /// [`GetTransaction`](crate::message_interface::AccountMethod::GetTransaction),
+    Transaction(Option<Box<TransactionDto>>),
+    /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
     Transactions(Vec<TransactionDto>),
@@ -122,6 +125,7 @@ impl Debug for Response {
             Response::PreparedTransaction(transaction_data) => {
                 write!(f, "PreparedTransaction({:?})", transaction_data)
             }
+            Response::Transaction(transaction) => write!(f, "Transaction({:?})", transaction),
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
             Response::SignedTransactionData(signed_transaction_data) => {
                 write!(f, "SignedTransactionData({:?})", signed_transaction_data)

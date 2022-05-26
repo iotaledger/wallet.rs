@@ -96,6 +96,19 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async getTransaction(transactionId: string): Promise<Transaction> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetTransaction',
+                data: {
+                    transactionId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
     async listAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
