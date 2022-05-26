@@ -26,8 +26,8 @@ use iota_client::{
 use crate::{
     account::{
         handle::AccountHandle,
-        types::{address::AddressWrapper, AccountAddress, OutputData},
-        AddressGenerationOptions, RemainderValueStrategy, TransferOptions,
+        types::{address::AddressWrapper, OutputData},
+        RemainderValueStrategy, TransferOptions,
     },
     Error,
 };
@@ -38,27 +38,11 @@ impl AccountHandle {
         &self,
         options: &Option<TransferOptions>,
     ) -> crate::Result<AddressWrapper> {
-        let gen_addr = async {
-            let result: crate::Result<AccountAddress> = Ok(self
-                .generate_addresses(
-                    1,
-                    Some(AddressGenerationOptions {
-                        internal: true,
-                        ..Default::default()
-                    }),
-                )
-                .await?
-                .first()
-                .ok_or_else(|| crate::Error::BurningFailed("Couldn't generate an address".to_string()))?
-                .clone());
-
-            result
-        };
-
         let address = match options {
-            None => gen_addr.await?.address,
+            None => self.generate_remainder_address().await?.address,
             Some(strategy) => match &strategy.remainder_value_strategy {
-                RemainderValueStrategy::ReuseAddress | RemainderValueStrategy::ChangeAddress => gen_addr.await?.address,
+                RemainderValueStrategy::ReuseAddress => self.generate_remainder_address().await?.address,
+                RemainderValueStrategy::ChangeAddress => self.generate_remainder_address().await?.address,
                 RemainderValueStrategy::CustomAddress(account_address) => account_address.address.clone(),
             },
         };
@@ -327,7 +311,7 @@ impl AccountHandle {
             output_id,
             output,
             is_spent: output_response.metadata.is_spent,
-            output_response,
+            metadata: output_response.metadata,
             amount,
             address,
             network_id,
@@ -363,7 +347,7 @@ impl AccountHandle {
                 output_id,
                 output: Output::try_from(&output_response.output)?,
                 is_spent: output_response.metadata.is_spent,
-                output_response,
+                metadata: output_response.metadata,
                 amount,
                 address,
                 network_id,

@@ -9,7 +9,7 @@ use std::env;
 
 use dotenv::dotenv;
 use iota_client::bee_block::output::TokenId;
-use iota_wallet::{account::SyncOptions, account_manager::AccountManager, Result, U256};
+use iota_wallet::{account_manager::AccountManager, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -37,14 +37,18 @@ async fn main() -> Result<()> {
 
     // Burn some of the circulating supply
     let burn_amount = U256::from(10);
-    let _ = account.melt_native_token((token_id, burn_amount), None).await?;
+    let transfer_result = account.melt_native_token((token_id, burn_amount), None).await?;
 
-    let sync_options = Some(SyncOptions {
-        force_syncing: true,
-        ..Default::default()
-    });
+    let _ = match transfer_result.block_id {
+        Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
+        None => {
+            return Err(iota_wallet::Error::BurningFailed(
+                "Melt native token transaction failed to submitted".to_string(),
+            ));
+        }
+    };
 
-    let balance = account.sync(sync_options).await?;
+    let balance = account.sync(None).await?;
 
     println!("-> {}", serde_json::to_string(&balance)?);
 
