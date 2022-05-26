@@ -1,5 +1,5 @@
 /**
- * This example generates a new address.
+ * This example gets a transaction with a given transaction ID.
  */
 const getUnlockedManager = require('./account-manager');
 
