@@ -197,7 +197,7 @@ impl AccountHandle {
                     account.unspent_outputs.remove(&output_id);
                     // Update spent data fields
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                        output_data.output_response.metadata.is_spent = true;
+                        output_data.metadata.is_spent = true;
                         output_data.is_spent = true;
                         #[cfg(feature = "events")]
                         {
@@ -218,7 +218,7 @@ impl AccountHandle {
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
             if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                output_data.output_response = output_response;
+                output_data.metadata = output_response.metadata;
             }
         }
 

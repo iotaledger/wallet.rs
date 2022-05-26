@@ -7,7 +7,7 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     api::ClientBlockBuilder,
     bee_block::{
-        output::{Output, OutputId},
+        output::{dto::OutputDto, Output, OutputId},
         payload::transaction::TransactionId,
     },
     bee_rest_api::types::responses::OutputResponse,
@@ -50,7 +50,7 @@ impl AccountHandle {
 
             outputs.push(OutputData {
                 output_id: OutputId::new(transaction_id, output_response.metadata.output_index)?,
-                output_response: output_response.clone(),
+                metadata: output_response.metadata.clone(),
                 output: Output::try_from(&output_response.output)?,
                 amount,
                 is_spent: output_response.metadata.is_spent,
@@ -89,7 +89,10 @@ impl AccountHandle {
                     Some(output_data) => {
                         output_data.is_spent = false;
                         unspent_outputs.push((output_id, output_data.clone()));
-                        loaded_outputs.push(output_data.output_response.clone());
+                        loaded_outputs.push(OutputResponse {
+                            metadata: output_data.metadata.clone(),
+                            output: OutputDto::from(&output_data.output),
+                        });
                         balance_from_known_outputs += output_data.amount
                     }
                     None => unknown_outputs.push(output_id),
