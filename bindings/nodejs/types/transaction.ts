@@ -10,8 +10,8 @@ export interface Transaction {
     payload: ITransactionPayload;
     blockId?: string;
     inclusionState: InclusionState;
-    timestamp: number;
-    networkId: number;
+    timestamp: string;
+    networkId: string;
     incoming: boolean;
 }
 
