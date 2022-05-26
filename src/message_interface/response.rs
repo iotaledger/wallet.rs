@@ -53,7 +53,7 @@ pub enum Response {
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`GetTransaction`](crate::message_interface::AccountMethod::GetTransaction),
-    Transaction(Box<Option<Transaction>>),
+    Transaction(Option<Box<TransactionDto>>),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
