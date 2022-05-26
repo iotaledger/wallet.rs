@@ -26,6 +26,11 @@ use crate::account::{
 };
 #[cfg(feature = "ledger_nano")]
 use crate::secret::SecretManager;
+#[cfg(feature = "events")]
+use crate::{
+    events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
+    message_interface::dtos::OutputDataDto,
+};
 
 impl AccountHandle {
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
@@ -123,7 +128,7 @@ impl AccountHandle {
     async fn update_account(
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
-        new_outputs: Vec<OutputData>,
+        unspent_outputs: Vec<OutputData>,
         transaction_sync_result: Option<TransactionSyncResult>,
         spent_outputs: Vec<OutputId>,
         spent_output_responses: Vec<OutputResponse>,
@@ -133,6 +138,9 @@ impl AccountHandle {
 
         let network_id = self.client.get_network_id().await?;
         let mut account = self.write().await;
+        #[cfg(feature = "events")]
+        let account_index = account.index;
+
         // update used field of the addresses
         for address_with_unspent_outputs in addresses_with_unspent_outputs.iter() {
             if address_with_unspent_outputs.internal {
@@ -191,6 +199,15 @@ impl AccountHandle {
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
                         output_data.output_response.metadata.is_spent = true;
                         output_data.is_spent = true;
+                        #[cfg(feature = "events")]
+                        {
+                            self.event_emitter.lock().await.emit(
+                                account_index,
+                                WalletEvent::SpentOutput(SpentOutputEvent {
+                                    output: OutputDataDto::from(&*output_data),
+                                }),
+                            );
+                        }
                     }
                 }
             }
@@ -206,10 +223,25 @@ impl AccountHandle {
         }
 
         // Add new synced outputs
-        for output in new_outputs {
-            account.outputs.insert(output.output_id, output.clone());
-            if !output.is_spent {
-                account.unspent_outputs.insert(output.output_id, output);
+        for output_data in unspent_outputs {
+            // Insert output, if it's unknown emit the NewOutputEvent
+            if account
+                .outputs
+                .insert(output_data.output_id, output_data.clone())
+                .is_none()
+            {
+                #[cfg(feature = "events")]
+                {
+                    self.event_emitter.lock().await.emit(
+                        account_index,
+                        WalletEvent::NewOutput(NewOutputEvent {
+                            output: OutputDataDto::from(&output_data),
+                        }),
+                    );
+                }
+            };
+            if !output_data.is_spent {
+                account.unspent_outputs.insert(output_data.output_id, output_data);
             }
         }
 
@@ -219,6 +251,16 @@ impl AccountHandle {
                 match transaction.inclusion_state {
                     InclusionState::Confirmed | InclusionState::Conflicting => {
                         account.pending_transactions.remove(&transaction.payload.id());
+                        #[cfg(feature = "events")]
+                        {
+                            self.event_emitter.lock().await.emit(
+                                account_index,
+                                WalletEvent::TransactionInclusion(TransactionInclusionEvent {
+                                    transaction_id: transaction.payload.id(),
+                                    inclusion_state: transaction.inclusion_state,
+                                }),
+                            );
+                        }
                     }
                     _ => {}
                 }
@@ -249,7 +291,6 @@ impl AccountHandle {
             log::debug!("[SYNC] storing account {} with new synced data", account.alias());
             self.save(Some(&account)).await?;
         }
-        // println!("{:#?}", account);
         Ok(())
     }
 }
