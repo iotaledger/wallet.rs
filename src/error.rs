@@ -105,7 +105,7 @@ pub enum Error {
     /// Minting failed
     #[error("minting failed {0}")]
     MintingFailed(String),
-    /// Minting failed
+    /// Burning failed
     #[error("burning failed {0}")]
     BurningFailed(String),
     /// Nft not found in unspent outputs
