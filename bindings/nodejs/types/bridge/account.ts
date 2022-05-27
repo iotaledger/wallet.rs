@@ -7,6 +7,7 @@ import type {
     AddressGenerationOptions,
 } from '../address';
 import type { OutputsToCollect, OutputData } from '../output';
+import type { PreparedTransaction } from '../transaction';
 import type {
     NativeTokenOptions,
     TransactionOptions,
@@ -90,6 +91,54 @@ export type __MintNativeTokenMethod__ = {
     };
 };
 
+export type __PrepareSendAmountMethod__ = {
+    name: 'PrepareSendAmount';
+    data: {
+        addressWithAmount: AddressWithAmount[];
+        options?: TransferOptions;
+    }
+}
+
+export type __PrepareSendMicroTransactionMethod__ = {
+    name: 'PrepareSendMicroTransaction';
+    data: {
+        addressWithMicroAmounts: AddressWithMicroAmount[];
+        options?: TransferOptions;
+    };
+};
+
+export type __PrepareSendNativeTokenMethod__ = {
+    name: 'PrepareSendNativeToken';
+    data: {
+        addressNativeTokens: AddressNativeTokens[];
+        options?: TransferOptions;
+    };
+};
+
+export type __PrepareSendNftMethod__ = {
+    name: 'PrepareSendNft';
+    data: {
+        addressNftIds: AddressNftId[];
+        options?: TransferOptions;
+    };
+};
+
+export type __PrepareMintNftsMethod__ = {
+    name: 'PrepareMintNfts';
+    data: {
+        nftOptions: NftOptions[];
+        options?: TransferOptions;
+    };
+};
+
+export type __PrepareTransactionMethod__ = {
+    name: 'PrepareTransaction';
+    data: {
+        outputs: OutputData[];
+        options?: TransferOptions;
+    }
+};
+
 export type __MintNftsMethod__ = {
     name: 'MintNfts';
     data: {
@@ -144,6 +193,20 @@ export type __SetAliasMethod__ = {
         alias: string;
     }
 }
+
+export type __SignTransactionEssence__ = {
+    name: 'SignTransactionEssence';
+    data: {
+        preparedTransactionData: PreparedTransaction;
+    };
+};
+
+export type __SubmitAndStoreTransactionMethod__ = {
+    name: 'SubmitAndStoreTransaction';
+    data: {
+        preparedTransactionData: PreparedTransaction;
+    };
+};
 
 export type __TryCollectOutputsMethod__ = {
     name: 'TryCollectOutputs';
