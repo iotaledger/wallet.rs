@@ -4,7 +4,12 @@
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     bee_block::{
-        output::{dto::OutputDto, OutputId},
+        output::{
+            dto::{NativeTokenDto, OutputDto},
+            feature::dto::FeatureDto,
+            unlock_condition::dto::UnlockConditionDto,
+            OutputId,
+        },
         payload::transaction::TransactionId,
     },
 };
@@ -23,6 +28,17 @@ use crate::{
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "name", content = "data")]
 pub enum AccountMethod {
+    /// Build a basic output.
+    /// Expected response: [`BuiltOutput`](crate::message_interface::Response::BuiltOutput)
+    BuildBasicOutput {
+        // If not provided, minimum storage deposit will be used
+        amount: Option<String>,
+        #[serde(rename = "nativeTokens")]
+        native_tokens: Option<Vec<NativeTokenDto>>,
+        #[serde(rename = "unlockConditions")]
+        unlock_conditions: Vec<UnlockConditionDto>,
+        features: Option<Vec<FeatureDto>>,
+    },
     /// Generate a new unused address.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
     GenerateAddresses {

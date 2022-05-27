@@ -27,6 +27,7 @@ use crate::{
         account_method::AccountMethod,
         dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
         message::{AccountToCreate, Message},
+        output_builder::build_basic_output,
         response::Response,
         AddressWithUnspentOutputsDto,
     },
@@ -268,6 +269,22 @@ impl WalletMessageHandler {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
+            AccountMethod::BuildBasicOutput {
+                amount,
+                native_tokens,
+                unlock_conditions,
+                features,
+            } => {
+                let output_dto = build_basic_output(
+                    account_handle.client,
+                    amount.clone(),
+                    native_tokens.clone(),
+                    unlock_conditions.to_vec(),
+                    features.clone(),
+                )
+                .await?;
+                Ok(Response::BuiltOutput(output_dto))
+            }
             AccountMethod::GenerateAddresses { amount, options } => {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(Response::GeneratedAddress(address))

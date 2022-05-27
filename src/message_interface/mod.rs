@@ -5,6 +5,7 @@ mod account_method;
 pub mod dtos;
 mod message;
 mod message_handler;
+mod output_builder;
 mod response;
 
 use std::str::FromStr;
