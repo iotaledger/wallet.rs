@@ -1733,6 +1733,23 @@ impl SyncedAccount {
                     participations.push(participation);
                 }
             }
+        } else {
+            // if no participations exist locally we try to get the latest participations from the latest transaction
+            // and add them
+            let messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
+            if let Some(message) = messages.last() {
+                if let Some(MessagePayload::Indexation(indexation_payload)) = &message.payload {
+                    if let Ok(read_participations) =
+                        crate::participation::types::Participations::from_bytes(&mut indexation_payload.data())
+                    {
+                        for participation in read_participations.participations {
+                            if !participations.iter().any(|p| p.event_id == participation.event_id) {
+                                participations.push(participation);
+                            }
+                        }
+                    }
+                }
+            }
         }
         // -1 because we will generate one output
         let max_inputs = match account.signer_type {
@@ -2467,10 +2484,10 @@ async fn perform_transfer(
         if let Ok(_messages) = client.retry_until_included(&message_id, None, None).await {
             confirmed = true;
         }
-        
+
         // drop client so it doesn't deadlock in syncing
         drop(client);
-        
+
         // Only sync account if the transaction got confirmed
         if confirmed {
             // Ignore result
