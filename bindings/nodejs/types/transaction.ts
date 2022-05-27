@@ -15,7 +15,7 @@ export interface Transaction {
     incoming: boolean;
 }
 
-export interface TransactionReceipt {
+export interface TransferResult {
     transactionId: string;
     blockId?: string;
 }
