@@ -121,12 +121,12 @@ Returns the [AccountsSynchronizer](#accountssynchronizer) to setup the process t
 
 ### internal_transaction(from_account_id, to_account_id, amount): WalletBlock
 
-Transactions an amount from an account to another.
+Transfers an amount from an account to another.
 
 | Param           | Type  | Default     | Description                                      |
 | --------------- | ----- | ----------- | ------------------------------------------------ |
-| from_account_id | `str` | `undefined` | The source of account id in the transactioning      |
-| to_account_id   | `str` | `undefined` | The destination of account id in the transactioning |
+| from_account_id | `str` | `undefined` | The source of account id in the transaction      |
+| to_account_id   | `str` | `undefined` | The destination of account id in the transaction |
 | amount          | `int` | `undefined` | The transaction amount                              |
 
 Returns the transaction's [WalletBlock](#walletblock).
@@ -433,13 +433,13 @@ Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to 
 
 ### transaction(transaction_obj): [WalletBlock](#walletblock)
 
-Transaction tokens.
+Transfer tokens.
 
 | Param        | Type                    | Default     | Description                  |
 | ------------ | ----------------------- | ----------- | ---------------------------- |
 | transaction_obj | `[Transaction](#transaction)` | `undefined` | The transaction we want to make |
 
-Returns the [WalletBlock](#walletblock) which makes the transactioning.
+Returns the [WalletBlock](#walletblock) which makes the transaction.
 
 ### retry(block_id): [WalletBlock](#walletblock)
 

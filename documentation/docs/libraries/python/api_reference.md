@@ -442,13 +442,13 @@ Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to 
 
 ### transfer(transfer_obj): [WalletBlock](#walletblock)
 
-Transaction tokens.
+Transfer tokens.
 
 | Param        | Type                    | Default     | Description                  |
 | ------------ | ----------------------- | ----------- | ---------------------------- |
-| transfer_obj | `[Transaction](#transfer)` | `undefined` | The transfer we want to make |
+| transfer_obj | `[Transaction](#transaction)` | `undefined` | The transfer we want to make |
 
-Returns the [WalletBlock](#walletblock) which makes the transfering.
+Returns the [WalletBlock](#walletblock) which makes the transaction.
 
 ### retry(block_id): [WalletBlock](#walletblock)
 

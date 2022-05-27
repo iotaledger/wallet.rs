@@ -158,7 +158,7 @@ Returns a promise resolving to an array of [SyncedAccount](#syncedaccount).
 
 ### internalTransaction(fromAccount, toAccount, amount)
 
-Transactions an amount from one sub-account to another.
+Transfers an amount from one sub-account to another.
 
 | Param       | Type                  | Default     | Description             |
 | ----------- | --------------------- | ----------- | ----------------------- |
