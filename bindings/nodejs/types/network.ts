@@ -11,7 +11,7 @@ export type Auth = {
     password?: string;
 };
 
-interface NetworkInfo {
+export interface NetworkInfo {
     network?: string;
     networkId?: number;
     bech32HRP?: string;
