@@ -13,7 +13,7 @@ use iota_client::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
 
 /// address with amount for `send_amount()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,10 +44,10 @@ impl AccountHandle {
     pub async fn send_amount(
         &self,
         addresses_with_amount: Vec<AddressWithAmount>,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
         let prepared_trasacton = self.prepare_send_amount(addresses_with_amount, options).await?;
-        self.sign_and_submit_transfer(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_trasacton).await
     }
 
     /// Function to prepare the transaction for
@@ -55,9 +55,9 @@ impl AccountHandle {
     pub async fn prepare_send_amount(
         &self,
         addresses_with_amount: Vec<AddressWithAmount>,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] prepare_send_amount");
+        log::debug!("[TRANSACTION] prepare_send_amount");
         let mut outputs = Vec::new();
         for address_with_amount in addresses_with_amount {
             outputs.push(

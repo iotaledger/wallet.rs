@@ -9,9 +9,9 @@ use iota_client::{
     secret::SecretManageExt,
 };
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransactionPayload};
+use crate::account::{handle::AccountHandle, operations::transaction::TransactionPayload};
 #[cfg(feature = "events")]
-use crate::events::types::{TransferProgressEvent, WalletEvent};
+use crate::events::types::{TransactionProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to sign a transaction essence
@@ -19,11 +19,11 @@ impl AccountHandle {
         &self,
         prepared_transaction_data: &PreparedTransactionData,
     ) -> crate::Result<SignedTransactionData> {
-        log::debug!("[TRANSFER] sign_transaction_essence");
+        log::debug!("[TRANSACTION] sign_transaction_essence");
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             self.read().await.index,
-            WalletEvent::TransferProgress(TransferProgressEvent::SigningTransaction),
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SigningTransaction),
         );
 
         // If we use stronghold we need to read the snapshot in case it hasn't been done already
@@ -49,7 +49,7 @@ impl AccountHandle {
             input_addresses.push(address);
         }
 
-        log::debug!("[TRANSFER] signed transaction: {:?}", transaction_payload);
+        log::debug!("[TRANSACTION] signed transaction: {:?}", transaction_payload);
 
         Ok(SignedTransactionData {
             transaction_payload,

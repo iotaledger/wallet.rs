@@ -178,7 +178,7 @@ mod tests {
 
         wallet_handle
             .listen(vec![], |event| {
-                if let WalletEvent::TransferProgress(event) = &event.event {
+                if let WalletEvent::TransactionProgress(event) = &event.event {
                     println!("Received event....: {:?}", event);
                 }
             })
@@ -204,12 +204,12 @@ mod tests {
                 .unwrap(),
         )];
 
-        let transfer = Message::CallAccountMethod {
+        let transaction = Message::CallAccountMethod {
             account_id: "alias".into(),
-            method: AccountMethod::SendTransfer { outputs, options: None },
+            method: AccountMethod::SendTransaction { outputs, options: None },
         };
 
-        let _response = message_interface::send_message(&wallet_handle, transfer).await;
+        let _response = message_interface::send_message(&wallet_handle, transaction).await;
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }
 

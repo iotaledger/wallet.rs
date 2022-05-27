@@ -14,8 +14,8 @@ use iota_wallet::{
         PreparedTransactionData as WalletPreparedTransactionData,
         TransactionConfirmationChangeEvent as WalletTransactionConfirmationChangeEvent,
         TransactionEvent as WalletTransactionEvent, TransactionIO as WalletTransactionIO,
-        TransactionReattachmentEvent as WalletTransactionReattachmentEvent, TransferProgress as WalletTransferProgress,
-        TransferProgressType as WalletTransferProgressType,
+        TransactionReattachmentEvent as WalletTransactionReattachmentEvent, TransactionProgress as WalletTransactionProgress,
+        TransactionProgressType as WalletTransactionProgressType,
     },
     StrongholdSnapshotStatus as SnapshotStatus, StrongholdStatus as StrongholdStatusWallet,
 };
@@ -42,7 +42,7 @@ pub fn migration_progress_type_enum_to_type(migration_type: &WalletMigrationProg
 }
 
 #[derive(Copy, Clone)]
-pub enum TransferProgressType {
+pub enum TransactionProgressType {
     SyncingAccount = 0,
     SelectingInputs = 1,
     GeneratingRemainderDepositAddress = 2,
@@ -52,17 +52,17 @@ pub enum TransferProgressType {
     Broadcasting = 6,
 }
 
-pub fn transfer_progress_type_enum_to_type(transfer_type: &WalletTransferProgressType) -> TransferProgressType {
-    match transfer_type {
-        WalletTransferProgressType::SyncingAccount { .. } => TransferProgressType::SyncingAccount,
-        WalletTransferProgressType::SelectingInputs { .. } => TransferProgressType::SelectingInputs,
-        WalletTransferProgressType::GeneratingRemainderDepositAddress { .. } => {
-            TransferProgressType::GeneratingRemainderDepositAddress
+pub fn transaction_progress_type_enum_to_type(transaction_type: &WalletTransactionProgressType) -> TransactionProgressType {
+    match transaction_type {
+        WalletTransactionProgressType::SyncingAccount { .. } => TransactionProgressType::SyncingAccount,
+        WalletTransactionProgressType::SelectingInputs { .. } => TransactionProgressType::SelectingInputs,
+        WalletTransactionProgressType::GeneratingRemainderDepositAddress { .. } => {
+            TransactionProgressType::GeneratingRemainderDepositAddress
         }
-        WalletTransferProgressType::PreparedTransaction { .. } => TransferProgressType::PreparedTransaction,
-        WalletTransferProgressType::SigningTransaction { .. } => TransferProgressType::SigningTransaction,
-        WalletTransferProgressType::PerformingPoW { .. } => TransferProgressType::PerformingPoW,
-        WalletTransferProgressType::Broadcasting { .. } => TransferProgressType::Broadcasting,
+        WalletTransactionProgressType::PreparedTransaction { .. } => TransactionProgressType::PreparedTransaction,
+        WalletTransactionProgressType::SigningTransaction { .. } => TransactionProgressType::SigningTransaction,
+        WalletTransactionProgressType::PerformingPoW { .. } => TransactionProgressType::PerformingPoW,
+        WalletTransactionProgressType::Broadcasting { .. } => TransactionProgressType::Broadcasting,
     }
 }
 
@@ -128,18 +128,18 @@ impl StrongholdStatusEvent {
     }
 }
 
-pub struct TransferProgress {
-    transfer_type: TransferProgressType,
-    event: WalletTransferProgressType,
+pub struct TransactionProgress {
+    transaction_type: TransactionProgressType,
+    event: WalletTransactionProgressType,
 }
 
-impl TransferProgress {
-    pub fn get_type(&self) -> TransferProgressType {
-        self.transfer_type
+impl TransactionProgress {
+    pub fn get_type(&self) -> TransactionProgressType {
+        self.transaction_type
     }
 
     pub fn as_prepared_transaction(&self) -> Result<PreparedTransactionData> {
-        if let WalletTransferProgressType::PreparedTransaction(data) = &self.event {
+        if let WalletTransactionProgressType::PreparedTransaction(data) = &self.event {
             Ok(data.into())
         } else {
             Err(anyhow!("wrong migration type"))
@@ -147,7 +147,7 @@ impl TransferProgress {
     }
 
     pub fn as_generating_remainder_deposit_address(&self) -> Result<AddressData> {
-        if let WalletTransferProgressType::GeneratingRemainderDepositAddress(data) = &self.event {
+        if let WalletTransactionProgressType::GeneratingRemainderDepositAddress(data) = &self.event {
             Ok(data.into())
         } else {
             Err(anyhow!("wrong migration type"))
@@ -246,16 +246,16 @@ impl core::fmt::Display for TransactionIO {
     }
 }
 
-impl From<WalletTransferProgressType> for TransferProgress {
-    fn from(progress_type: WalletTransferProgressType) -> Self {
+impl From<WalletTransactionProgressType> for TransactionProgress {
+    fn from(progress_type: WalletTransactionProgressType) -> Self {
         Self {
-            transfer_type: transfer_progress_type_enum_to_type(&progress_type),
+            transaction_type: transaction_progress_type_enum_to_type(&progress_type),
             event: progress_type,
         }
     }
 }
 
-impl core::fmt::Display for TransferProgress {
+impl core::fmt::Display for TransactionProgress {
     fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
         write!(f, "type={:?}", self.event)
     }
@@ -349,8 +349,8 @@ pub trait TransactionConfirmationChangeListener {
     fn on_confirmation_state_change(&self, event: WalletTransactionConfirmationChangeEvent);
 }
 
-pub trait TransferProgressListener {
-    fn on_transfer_progress(&self, event: WalletTransferProgress);
+pub trait TransactionProgressListener {
+    fn on_transaction_progress(&self, event: WalletTransactionProgress);
 }
 
 pub trait MigrationProgressListener {
@@ -426,17 +426,17 @@ impl EventManager {
         crate::block_on(async move { iota_wallet::event::remove_broadcast_listener(&event).await })
     }
 
-    pub fn subscribe_transfer_progress(cb: Box<dyn TransferProgressListener + Send + 'static>) -> EventId {
+    pub fn subscribe_transaction_progress(cb: Box<dyn TransactionProgressListener + Send + 'static>) -> EventId {
         crate::block_on(async move {
-            iota_wallet::event::on_transfer_progress(move |event| {
-                cb.on_transfer_progress(event.clone());
+            iota_wallet::event::on_transaction_progress(move |event| {
+                cb.on_transaction_progress(event.clone());
             })
             .await
         })
     }
 
-    pub fn remove_transfer_progress_listener(event: EventId) {
-        crate::block_on(async move { iota_wallet::event::remove_transfer_progress_listener(&event).await })
+    pub fn remove_transaction_progress_listener(event: EventId) {
+        crate::block_on(async move { iota_wallet::event::remove_transaction_progress_listener(&event).await })
     }
 
     pub fn subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId {

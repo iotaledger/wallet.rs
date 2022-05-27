@@ -27,7 +27,7 @@ pub enum WalletEvent {
     NewOutput(NewOutputEvent),
     SpentOutput(SpentOutputEvent),
     TransactionInclusion(TransactionInclusionEvent),
-    TransferProgress(TransferProgressEvent),
+    TransactionProgress(TransactionProgressEvent),
 }
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Hash)]
@@ -38,7 +38,7 @@ pub enum WalletEventType {
     NewOutput,
     SpentOutput,
     TransactionInclusion,
-    TransferProgress,
+    TransactionProgress,
 }
 
 impl TryFrom<&str> for WalletEventType {
@@ -52,7 +52,7 @@ impl TryFrom<&str> for WalletEventType {
             "NewOutput" => WalletEventType::NewOutput,
             "SpentOutput" => WalletEventType::SpentOutput,
             "TransactionInclusion" => WalletEventType::TransactionInclusion,
-            "TransferProgress" => WalletEventType::TransferProgress,
+            "TransactionProgress" => WalletEventType::TransactionProgress,
             _ => return Err(format!("invalid event type {}", value)),
         };
         Ok(event_type)
@@ -78,7 +78,7 @@ pub struct TransactionInclusionEvent {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub enum TransferProgressEvent {
+pub enum TransactionProgressEvent {
     /// Syncing account.
     SyncingAccount,
     /// Performing input selection.

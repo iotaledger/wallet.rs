@@ -7,14 +7,14 @@ use iota_client::bee_block::output::{
 };
 
 use crate::account::{
-    handle::AccountHandle, operations::transfer::TransferResult, types::address::AddressWithUnspentOutputs,
-    TransferOptions,
+    handle::AccountHandle, operations::transaction::TransactionResult, types::address::AddressWithUnspentOutputs,
+    TransactionOptions,
 };
 
 impl AccountHandle {
     /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
-    pub async fn consolidate_outputs(self: &AccountHandle, force: bool) -> crate::Result<Vec<TransferResult>> {
+    pub async fn consolidate_outputs(self: &AccountHandle, force: bool) -> crate::Result<Vec<TransactionResult>> {
         let account = self.read().await;
         let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
         let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
@@ -77,9 +77,9 @@ impl AccountHandle {
                         .finish_output()?,
                 ];
                 match self
-                    .finish_transfer(
+                    .finish_transaction(
                         consolidation_output,
-                        Some(TransferOptions {
+                        Some(TransactionOptions {
                             skip_sync: true,
                             custom_inputs: Some(outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()),
                             ..Default::default()

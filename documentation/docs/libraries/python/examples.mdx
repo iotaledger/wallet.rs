@@ -229,11 +229,11 @@ IOTA is based on _Unspent Transaction Output_ model. You can find a detailed exp
 ## Sending Tokens
 
 The process of sending tokens via _wallet.rs_ can be described as follows:
-1. Create instance of `iota_wallet.Transfer()` class with the following mandatory arguments: _amount_, _address_ and _remainder_value_strategy_ .
+1. Create instance of `iota_wallet.Transaction()` class with the following mandatory arguments: _amount_, _address_ and _remainder_value_strategy_ .
 The _remainder_value_strategy_ argument can be either:
    - `ReuseAddress`
    - `ChangeAddress`
-2. Once you have created an instance of `iota_wallet.Transfer()` , you can send the tokens using the `transfer()` function of the _Account_ instance.
+2. Once you have created an instance of `iota_wallet.Transaction()` , you can send the tokens using the `transfer()` function of the _Account_ instance.
 
 :::info
 We highly recommend that you sync the account information with the Tangle by running the `account.sync().execute()` method before doing anything with the account. This way you can ensure that you rely on the latest available information.

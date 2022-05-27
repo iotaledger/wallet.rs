@@ -17,7 +17,7 @@ use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions},
+    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
     Error,
 };
 
@@ -63,9 +63,9 @@ impl AccountHandle {
     pub async fn mint_native_token(
         &self,
         native_token_options: NativeTokenOptions,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] mint_native_token");
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] mint_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
@@ -175,9 +175,9 @@ impl AccountHandle {
     pub(crate) async fn get_or_create_alias_output(
         &self,
         controller_address: Address,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<AliasId> {
-        log::debug!("[TRANSFER] get_or_create_alias_output");
+        log::debug!("[TRANSACTION] get_or_create_alias_output");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account = self.read().await;
@@ -210,9 +210,9 @@ impl AccountHandle {
                         )))
                         .finish_output()?,
                 ];
-                let transfer_result = self.send(outputs, options).await?;
-                log::debug!("[TRANSFER] sent alias output");
-                if let Some(block_id) = transfer_result.block_id {
+                let transaction_result = self.send(outputs, options).await?;
+                log::debug!("[TRANSACTION] sent alias output");
+                if let Some(block_id) = transaction_result.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
                 } else {
                     self.sync_pending_transactions().await?;

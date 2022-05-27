@@ -7,7 +7,7 @@ use crate::{
     acc_manager::AccountSecretManager,
     address::Address,
     client_options::ClientOptions,
-    message::{Message, Transfer},
+    message::{Message, Transaction},
     sync::AccountSynchronizer,
     types::NodeInfoWrapper,
     Result,
@@ -122,8 +122,8 @@ impl Account {
         }
     }
 
-    pub fn transfer(&mut self, transfer: Transfer) -> Result<Message> {
-        let msg_res = crate::block_on(async move { self.handle.transfer(transfer.to_inner()).await });
+    pub fn transfer(&mut self, transaction: Transaction) -> Result<Message> {
+        let msg_res = crate::block_on(async move { self.handle.transfer(transaction.to_inner()).await });
 
         match msg_res {
             Err(e) => Err(anyhow!(e.to_string())),

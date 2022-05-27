@@ -46,7 +46,7 @@ async function run() {
     //
     // BalanceChange
     // TransactionInclusion
-    // TransferProgress
+    // TransactionProgress
     // ConsolidationRequired
     // LedgerAddressGeneration
 }

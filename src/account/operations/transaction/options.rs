@@ -8,7 +8,7 @@ use crate::account::types::address::AccountAddress;
 
 /// Options for value transfers
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct TransferOptions {
+pub struct TransactionOptions {
     #[serde(rename = "remainderValueStrategy", default)]
     pub remainder_value_strategy: RemainderValueStrategy,
     #[serde(rename = "taggedDataPayload", default)]

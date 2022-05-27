@@ -21,10 +21,10 @@ use crate::{
     account::{
         constants::DEFAULT_EXPIRATION_TIME,
         handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransferResult,
+        operations::transaction::{
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransactionResult,
         },
-        TransferOptions,
+        TransactionOptions,
     },
     Error, Result,
 };
@@ -70,12 +70,12 @@ impl AccountHandle {
     pub async fn send_native_tokens(
         &self,
         addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
         let prepared_trasacton = self
             .prepare_send_native_tokens(addresses_native_tokens, options)
             .await?;
-        self.sign_and_submit_transfer(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_trasacton).await
     }
 
     /// Function to prepare the transaction for
@@ -83,9 +83,9 @@ impl AccountHandle {
     pub async fn prepare_send_native_tokens(
         &self,
         addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] prepare_send_native_tokens");
+        log::debug!("[TRANSACTION] prepare_send_native_tokens");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;

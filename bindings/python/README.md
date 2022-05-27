@@ -119,17 +119,17 @@ Deletes an account.
 
 Returns the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
-### internal_transfer(from_account_id, to_account_id, amount): WalletBlock
+### internal_transaction(from_account_id, to_account_id, amount): WalletBlock
 
-Transfers an amount from an account to another.
+Transactions an amount from an account to another.
 
 | Param           | Type  | Default     | Description                                      |
 | --------------- | ----- | ----------- | ------------------------------------------------ |
-| from_account_id | `str` | `undefined` | The source of account id in the transfering      |
-| to_account_id   | `str` | `undefined` | The destination of account id in the transfering |
-| amount          | `int` | `undefined` | The transfer amount                              |
+| from_account_id | `str` | `undefined` | The source of account id in the transactioning      |
+| to_account_id   | `str` | `undefined` | The destination of account id in the transactioning |
+| amount          | `int` | `undefined` | The transaction amount                              |
 
-Returns the transfer's [WalletBlock](#walletblock).
+Returns the transaction's [WalletBlock](#walletblock).
 
 ### backup(destination, Stronghold_password): str
 
@@ -350,15 +350,15 @@ Set the initial address index to start syncing on each account.
 
 Syncs the accounts with the tangle.
 
-## Transfer
+## Transaction
 
-### constructor(amount, address, indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional), output_kind (optional)): [Transfer](#transfer)
+### constructor(amount, address, indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional), output_kind (optional)): [Transaction](#transaction)
 
-The _Transfer_ object used in [SyncedAccount](#syncedaccount)
+The _Transaction_ object used in [SyncedAccount](#syncedaccount)
 
 | Param                    | Type                        | Default           | Description                                                         |
 | ------------------------ | --------------------------- | ----------------- | ------------------------------------------------------------------- |
-| amount                   | `int`                       | `undefined`       | The amount to transfer                                              |
+| amount                   | `int`                       | `undefined`       | The amount to transaction                                              |
 | address                  | `str`                       | `undefined`       | The address to send                                                 |
 | indexation               | `[Indexation](#indexation)` | `null`            | The indexation payload                                              |
 | remainder_value_strategy | `str`                       | `_ChangeAddress_` | Should be _ReuseAddress_ or _ChangeAddress_                         |
@@ -431,15 +431,15 @@ Returns the Bech32 HRP string.
 
 Returns the [AccountSynchronizer](#accountsynchronizer) to setup the process to synchronize this account with the Tangle.
 
-### transfer(transfer_obj): [WalletBlock](#walletblock)
+### transaction(transaction_obj): [WalletBlock](#walletblock)
 
-Transfer tokens.
+Transaction tokens.
 
 | Param        | Type                    | Default     | Description                  |
 | ------------ | ----------------------- | ----------- | ---------------------------- |
-| transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
+| transaction_obj | `[Transaction](#transaction)` | `undefined` | The transaction we want to make |
 
-Returns the [WalletBlock](#walletblock) which makes the transfering.
+Returns the [WalletBlock](#walletblock) which makes the transactioning.
 
 ### retry(block_id): [WalletBlock](#walletblock)
 
@@ -746,9 +746,9 @@ Removes the Stronghold status change listener associated with the given identifi
 | ----- | ----------- | ----------- | ------------ |
 | [id]  | `list[int]` | `undefined` | The event id |
 
-### on_transfer_progress(callback): list[int]
+### on_transaction_progress(callback): list[int]
 
-Listen to transfer progress events.
+Listen to transaction progress events.
 
 | Param      | Type       | Default     | Description           |
 | ---------- | ---------- | ----------- | --------------------- |
@@ -756,9 +756,9 @@ Listen to transfer progress events.
 
 Returns the event id as list[int].
 
-### remove_transfer_progress_listener(list[int]): void
+### remove_transaction_progress_listener(list[int]): void
 
-Removes the transfer progress listener associated with the given identifier.
+Removes the transaction progress listener associated with the given identifier.
 
 | Param | Type        | Default     | Description  |
 | ----- | ----------- | ----------- | ------------ |

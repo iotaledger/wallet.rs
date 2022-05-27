@@ -36,7 +36,7 @@ impl AccountHandle {
     /// Generate addresses and stores them in the account
     /// ```ignore
     /// let public_addresses = account_handle.generate_addresses(2, None).await?;
-    /// // internal addresses are used for remainder outputs, if the RemainderValueStrategy for transfers is set to ChangeAddress
+    /// // internal addresses are used for remainder outputs, if the RemainderValueStrategy for transactions is set to ChangeAddress
     /// let internal_addresses = account_handle
     ///     .generate_addresses(
     ///         1,

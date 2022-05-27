@@ -7,7 +7,7 @@ pub(crate) mod builder;
 pub(crate) mod constants;
 /// A thread guard over an account, all account methods are called from here.
 pub(crate) mod handle;
-/// The account operations like address generation, syncing and creating transfers.
+/// The account operations like address generation, syncing and creating transactions.
 pub(crate) mod operations;
 /// Types used in an account and returned from methods.
 pub mod types;
@@ -28,7 +28,7 @@ pub use self::{
         address_generation::AddressGenerationOptions,
         output_collection::OutputsToCollect,
         syncing::SyncOptions,
-        transfer::{RemainderValueStrategy, TransferOptions},
+        transaction::{RemainderValueStrategy, TransactionOptions},
     },
 };
 

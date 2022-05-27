@@ -19,7 +19,7 @@ import type {
     __SendMicroTransactionMethod__,
     __SendNativeTokensMethod__,
     __SendNftMethod__,
-    __SendTransferMethod__,
+    __SendTransactionMethod__,
     __TryCollectOutputsMethod__,
     __SetAliasMethod__,
 } from './account';
@@ -63,7 +63,7 @@ export type __AccountMethod__ =
     | __SendMicroTransactionMethod__
     | __SendNativeTokensMethod__
     | __SendNftMethod__
-    | __SendTransferMethod__
+    | __SendTransactionMethod__
     | __SetAliasMethod__
     | __SetCollectOutputsMethod__
     | __SyncAccountMethod__

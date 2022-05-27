@@ -3,7 +3,7 @@
 The aim of this wallet is to have an improved version of [the current wallet](https://github.com/iotaledger/wallet.rs), by redesigning a few parts (most important, move away from blocks), to have it cleaner and better mainainable for the future.
 
 The wallet should consist of a core part which provides needed functionallity to generate addresses, get balance and send transactions, but which isn't affected by any extended functionallity.
-Via Rust features extendend functionallity will be available later, like having a database for the state, different secret_manager types (Stronghold, Ledger), being able to store events and high level functions like internal_transfers, which can be used to send a transfer from one account to another.
+Via Rust features extendend functionallity will be available later, like having a database for the state, different secret_manager types (Stronghold, Ledger), being able to store events and high level functions like internal_transactions, which can be used to send a transfer from one account to another.
 
 ## Account Manager
 
@@ -28,7 +28,7 @@ With the event feature, the wallet emits different events to which a user can li
 pub enum WalletEventType {
     BalanceChange,
     TransactionInclusion,
-    TransferProgress,
+    TransactionProgress,
     ConsolidationRequired,
     #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration,

@@ -6,12 +6,12 @@ export type EventType =
     | 'ConfirmationStateChange'
     | 'Reattachment'
     | 'Broadcast'
-    | 'TransferProgress';
+    | 'TransactionProgress';
 
 export enum WalletEvent {
     BalanceChange = 'BalanceChange',
     TransactionInclusion = 'TransactionInclusion',
-    TransferProgress = 'TransferProgress',
+    TransactionProgress = 'TransactionProgress',
     ConsolidationRequired = 'ConsolidationRequired',
     LedgerAddressGeneration = 'LedgerAddressGeneration',
 }

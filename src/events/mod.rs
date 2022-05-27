@@ -37,7 +37,7 @@ impl EventEmitter {
                 WalletEventType::NewOutput,
                 WalletEventType::SpentOutput,
                 WalletEventType::TransactionInclusion,
-                WalletEventType::TransferProgress,
+                WalletEventType::TransactionProgress,
                 WalletEventType::ConsolidationRequired,
                 #[cfg(feature = "ledger_nano")]
                 WalletEventType::LedgerAddressGeneration,
@@ -59,7 +59,7 @@ impl EventEmitter {
             WalletEvent::NewOutput(_) => WalletEventType::NewOutput,
             WalletEvent::SpentOutput(_) => WalletEventType::SpentOutput,
             WalletEvent::TransactionInclusion(_) => WalletEventType::TransactionInclusion,
-            WalletEvent::TransferProgress(_) => WalletEventType::TransferProgress,
+            WalletEvent::TransactionProgress(_) => WalletEventType::TransactionProgress,
             WalletEvent::ConsolidationRequired => WalletEventType::ConsolidationRequired,
             #[cfg(feature = "ledger_nano")]
             WalletEvent::LedgerAddressGeneration(_) => WalletEventType::LedgerAddressGeneration,
@@ -102,7 +102,7 @@ mod tests {
     use iota_client::bee_block::payload::transaction::TransactionId;
 
     use super::{
-        types::{TransactionInclusionEvent, TransferProgressEvent, WalletEvent, WalletEventType},
+        types::{TransactionInclusionEvent, TransactionProgressEvent, WalletEvent, WalletEventType},
         EventEmitter,
     };
     use crate::account::types::InclusionState;
@@ -120,11 +120,11 @@ mod tests {
         // listen to two events
         emitter.on(
             vec![
-                WalletEventType::TransferProgress,
+                WalletEventType::TransactionProgress,
                 WalletEventType::ConsolidationRequired,
             ],
             move |_name| {
-                // println!("TransferProgress or ConsolidationRequired: {:?}", name);
+                // println!("TransactionProgress or ConsolidationRequired: {:?}", name);
             },
         );
 
@@ -137,7 +137,10 @@ mod tests {
 
         // emit events
         emitter.emit(0, WalletEvent::ConsolidationRequired);
-        emitter.emit(0, WalletEvent::TransferProgress(TransferProgressEvent::SyncingAccount));
+        emitter.emit(
+            0,
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
+        );
         emitter.emit(
             0,
             WalletEvent::TransactionInclusion(TransactionInclusionEvent {

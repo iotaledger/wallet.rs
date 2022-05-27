@@ -36,7 +36,7 @@
   - [3db454e2](https://github.com/iotaledger/wallet.rs/commit/3db454e26131d5f8706e0b4ee0f4390a77416229) add GetBalance to API timeouts ([#667](https://github.com/iotaledger/wallet.rs/pull/667)) on 2021-07-19
 - Added `mqttDisabled` option to disable mqtt.
   - [349f8307](https://github.com/iotaledger/wallet.rs/commit/349f83074a378ca228dd86c3c975411de9b184fe) Add option to disable mqtt ([#665](https://github.com/iotaledger/wallet.rs/pull/665)) on 2021-06-22
-- Add optional OutputKind for transfers to enable the creation of dust allowance outputs.
+- Add optional OutputKind for transactions to enable the creation of dust allowance outputs.
   consolidateOutputs() has also an optional boolean to define if dust outputs should also get consolidated.
   - [6eea2a71](https://github.com/iotaledger/wallet.rs/commit/6eea2a71da14fb2e0ad2e0991d6bf07c07ce37e0) Add dust allowance outputs support ([#678](https://github.com/iotaledger/wallet.rs/pull/678)) on 2021-07-19
 
@@ -230,7 +230,7 @@
   - [9855cfa](https://github.com/iotaledger/wallet.rs/commit/9855cfa4ce7296d04d1c647c7f6ca1722784eb33) refactor(manager): `sync_accounts` gap_limit and address_index options ([#346](https://github.com/iotaledger/wallet.rs/pull/346)) on 2021-02-24
 - Move `transfer`, `retry`, `reattach`, `promote` APIs to the account object.
   - [8b808c8](https://github.com/iotaledger/wallet.rs/commit/8b808c80bbb7bc1e6b9858551880684a0400ab0c) refactor(sync): automatic sync before transfer/retry/reattach/promote ([#365](https://github.com/iotaledger/wallet.rs/pull/365)) on 2021-03-02
-- Added a `TransferProgress` event type, triggered on transfer steps progress.
+- Added a `TransactionProgress` event type, triggered on transfer steps progress.
   - [4c46aa6](https://github.com/iotaledger/wallet.rs/commit/4c46aa64ebf6168ca83360ca3df2fcd808103795) feat(transfer): add progress event ([#369](https://github.com/iotaledger/wallet.rs/pull/369)) on 2021-03-02
 
 ## \[0.0.4]
