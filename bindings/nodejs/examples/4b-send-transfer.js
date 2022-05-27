@@ -11,7 +11,7 @@ async function run() {
         console.log('Account:', account);
 
         //TODO: test this once outputs can be conveniently built
-        // const response = await account.SendTransaction([
+        // const response = await account.sendTransaction([
         //     {
         //         address,
         //         amount,
