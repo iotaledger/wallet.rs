@@ -1720,6 +1720,10 @@ impl SyncedAccount {
         // collect the transactions we need to make
 
         let account = self.account_handle.read().await;
+
+        // Bool is required to keep track of wheter we could get the participations from storage since if we would try
+        // to list_messages() in the else{} closure the mutex would still be locked which would result in a deadlock
+        let mut could_read_participations = false;
         if let Ok(read_participations) = crate::storage::get(&account.storage_path)
             .await?
             .lock()
@@ -1733,7 +1737,10 @@ impl SyncedAccount {
                     participations.push(participation);
                 }
             }
-        } else {
+            could_read_participations = true;
+        }
+
+        if !could_read_participations {
             // if no participations exist locally we try to get the latest participations from the latest transaction
             // and add them
             let messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
@@ -1751,6 +1758,7 @@ impl SyncedAccount {
                 }
             }
         }
+
         // -1 because we will generate one output
         let max_inputs = match account.signer_type {
             #[cfg(feature = "ledger-nano")]
