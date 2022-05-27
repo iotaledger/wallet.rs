@@ -1745,13 +1745,16 @@ impl SyncedAccount {
             // and add them
             let messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
             if let Some(message) = messages.last() {
-                if let Some(MessagePayload::Indexation(indexation_payload)) = &message.payload {
-                    if let Ok(read_participations) =
-                        crate::participation::types::Participations::from_bytes(&mut indexation_payload.data())
-                    {
-                        for participation in read_participations.participations {
-                            if !participations.iter().any(|p| p.event_id == participation.event_id) {
-                                participations.push(participation);
+                if let Some(MessagePayload::Transaction(transaction_payload)) = &message.payload {
+                    let TransactionEssence::Regular(essence) = &transaction_payload.essence();
+                    if let Some(Payload::Indexation(indexation_payload)) = essence.payload() {
+                        if let Ok(read_participations) =
+                            crate::participation::types::Participations::from_bytes(&mut indexation_payload.data())
+                        {
+                            for participation in read_participations.participations {
+                                if !participations.iter().any(|p| p.event_id == participation.event_id) {
+                                    participations.push(participation);
+                                }
                             }
                         }
                     }
