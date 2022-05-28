@@ -1,5 +1,6 @@
-import type { ITransactionEssence, ITransactionPayload } from '@iota/types';
-import type { RemainderValueStrategy } from './transfer';
+import type { IOutputMetadataResponse, ITransactionEssence, ITransactionPayload, OutputTypes } from '@iota/types';
+import type { Segment } from './output';
+import type { RemainderData } from './remainderData';
 
 enum InclusionState {
     Pending = 'Pending',
@@ -10,9 +11,15 @@ enum InclusionState {
 // TODO replace with IPreparedTransactionData from iota.rs once exposed in @iota/types
 export interface PreparedTransactionData {
     essence: ITransactionEssence;
-    // TODO replace with IInputSigningData from iota.rs once exposed in @iota/types
-    inputsData: any[];
-    remainder?: RemainderValueStrategy 
+    inputsData: InputsData[];
+    remainder?: RemainderData 
+}
+
+interface InputsData {
+    output: OutputTypes;
+    outputMetadata: IOutputMetadataResponse;
+    chain: Segment[];
+    bech32Address: string;
 }
 
 export interface Transaction {
