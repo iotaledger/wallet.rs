@@ -23,6 +23,7 @@ import type {
     PreparedTransactionData,
     Output,
 } from '../types';
+import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 
 export class Account {
     meta: AccountMeta;
@@ -454,8 +455,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    // TODO test what we get back
-    async signTransactionEssence(preparedTransactionData: PreparedTransactionData): Promise<any> {
+    async signTransactionEssence(preparedTransactionData: PreparedTransactionData): Promise<SignedTransactionEssence> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -468,7 +468,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async submitAndStoreTransaction(signedTransactionData: any): Promise<TransactionReceipt> {
+    async submitAndStoreTransaction(signedTransactionData: SignedTransactionEssence): Promise<TransactionReceipt> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
