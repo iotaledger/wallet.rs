@@ -20,7 +20,8 @@ import type {
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
     TransactionResult,
-    PreparedTransaction,
+    PreparedTransactionData,
+    Output,
 } from '../types';
 
 export class Account {
@@ -246,9 +247,9 @@ export class Account {
     }
 
     async prepareTransaction(
-        outputs: OutputData[],
+        outputs: Output[],
         options?: TransferOptions,
-    ): Promise<Transaction> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -265,7 +266,7 @@ export class Account {
     async prepareMintNfts(
         nftOptions: NftOptions[],
         options?: TransferOptions,
-    ): Promise<Transaction> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -282,7 +283,7 @@ export class Account {
     async prepareSendAmount(
         addressWithAmount: AddressWithAmount[],
         options?: TransferOptions,
-    ): Promise<any> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -299,7 +300,7 @@ export class Account {
     async prepareSendMicroTransaction(
         addressWithMicroAmounts: AddressWithMicroAmount[],
         options?: TransferOptions,
-    ): Promise<any> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -316,7 +317,7 @@ export class Account {
     async prepareSendNativeToken(
         addressNativeTokens: AddressNativeTokens[],
         options?: TransferOptions,
-    ): Promise<any> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -333,7 +334,7 @@ export class Account {
     async prepareSendNft(
         addressNftIds: AddressNftId[],
         options?: TransferOptions,
-    ): Promise<any> {
+    ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -420,7 +421,7 @@ export class Account {
     }
 
     async SendTransaction(
-        outputs: OutputData[],
+        outputs: Output[],
         transactionOptions?: TransactionOptions,
     ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
@@ -453,7 +454,8 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async signTransactionEssence(preparedTransactionData: PreparedTransaction): Promise<ITransactionPayload> {
+    // TODO test what we get back
+    async signTransactionEssence(preparedTransactionData: PreparedTransactionData): Promise<any> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -466,13 +468,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async submitAndStoreTransaction(preparedTransactionData: PreparedTransaction): Promise<TransactionReceipt> {
+    async submitAndStoreTransaction(signedTransactionData: any): Promise<TransactionReceipt> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'SubmitAndStoreTransaction',
                 data: {
-                    preparedTransactionData,
+                    signedTransactionData,
                 },
             },
         );

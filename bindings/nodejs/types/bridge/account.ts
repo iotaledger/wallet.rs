@@ -6,8 +6,8 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
 } from '../address';
-import type { OutputsToCollect, OutputData } from '../output';
-import type { PreparedTransaction } from '../transaction';
+import type { OutputsToCollect, Output } from '../output';
+import type { PreparedTransactionData } from '../transaction';
 import type {
     NativeTokenOptions,
     TransactionOptions,
@@ -134,7 +134,7 @@ export type __PrepareMintNftsMethod__ = {
 export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
-        outputs: OutputData[];
+        outputs: Output[];
         options?: TransferOptions;
     }
 };
@@ -182,7 +182,7 @@ export type __SendNftMethod__ = {
 export type __SendTransactionMethod__ = {
     name: 'SendTransaction';
     data: {
-        outputs: OutputData[];
+        outputs: Output[];
         options?: TransactionOptions;
     };
 };
@@ -194,17 +194,17 @@ export type __SetAliasMethod__ = {
     }
 }
 
-export type __SignTransactionEssence__ = {
+export type __SignTransactionEssenceMethod__ = {
     name: 'SignTransactionEssence';
     data: {
-        preparedTransactionData: PreparedTransaction;
+        preparedTransactionData: PreparedTransactionData;
     };
 };
 
 export type __SubmitAndStoreTransactionMethod__ = {
     name: 'SubmitAndStoreTransaction';
     data: {
-        preparedTransactionData: PreparedTransaction;
+        signedTransactionData: any;
     };
 };
 

@@ -7,7 +7,8 @@ enum InclusionState {
     Conflicting = 'Conflicting',
 }
 
-export interface PreparedTransaction {
+// TODO replace with IPreparedTransactionData from iota.rs once exposed in @iota/types
+export interface PreparedTransactionData {
     essence: ITransactionEssence;
     // TODO replace with IInputSigningData from iota.rs once exposed in @iota/types
     inputsData: any[];

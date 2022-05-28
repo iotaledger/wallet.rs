@@ -26,7 +26,7 @@ import type {
     __SendTransactionMethod__,
     __SetAliasMethod__,
     __SetCollectOutputsMethod__,
-    __SignTransactionEssence__,
+    __SignTransactionEssenceMethod__,
     __SubmitAndStoreTransactionMethod__,
     __SyncAccountMethod__,
     __TryCollectOutputsMethod__,
@@ -80,7 +80,7 @@ export type __AccountMethod__ =
     | __SendTransactionMethod__
     | __SetAliasMethod__
     | __SetCollectOutputsMethod__
-    | __SignTransactionEssence__
+    | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__
     | __SyncAccountMethod__
     | __TryCollectOutputsMethod__;
