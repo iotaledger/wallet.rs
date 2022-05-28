@@ -129,9 +129,9 @@ Useful [reference](https://medium.com/@harshagoli/hd-wallets-explained-from-high
 | --------------------------- | -------- | -------- | --------------------------------------------------------------------------------------- |
 | format(type: string):string | ✔        | function | Transaction timestamp in various formats.<br/> For example: MM-DD-YYYY, DD MM YYYY hh:mm:ss. |
 
-#### Transfer
+#### Transaction
 
-Transfer object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
+Transaction object required for creating a transaction. It allows end-users to specify the transaction amount and recipient address.
 
 :::info
 Currently, it is not possible to send multiple payloads as part of the block. That is why the _tag_ property is omitted from this interface. You can find more details in this [GitHub pull request](https://github.com/iotaledger/protocol-rfcs/pull/18#discussion_r468432794).
@@ -139,8 +139,8 @@ Currently, it is not possible to send multiple payloads as part of the block. Th
 
 | Property       | Required | Type               | Description                    |
 | -------------- | -------- | ------------------ | ------------------------------ |
-| amount         | ✔        | number             | Transfer amount.               |
-| address        | ✔        | string             | Transfer address.              |
+| amount         | ✔        | number             | Transaction amount.               |
+| address        | ✔        | string             | Transaction address.              |
 | indexation_key | ✘        | Indexation Payload | (Optional) Indexation payload. |
 
 
@@ -261,7 +261,7 @@ Currently, it is not possible to send multiple payloads as part of the block. Th
 | confirmed                                   | ✔                                                                      | boolean                                               | Determines if the transaction is confirmed.                                                                                                                                                                                                                                                                                      |
 | broadcasted                                 | ✔                                                                      | boolean                                               | Determines if the transaction was broadcasted to the network. This will be true if the transaction was fetched from the network or if the transaction was successfully broadcasted from the client itself. This property may only be required for clients with persistent storage. |
 | incoming                                    | ✔                                                                      | boolean                                               | Determines if the block is an incoming transaction or not.                                                                                                                                                                                                                                                                     |
-| value                                       | ✔                                                                      | number                                                | Block transfer value.                                                                                                                                                                                                                                                                                                          |
+| value                                       | ✔                                                                      | number                                                | Block transaction value.                                                                                                                                                                                                                                                                                                          |
 
 
 #### StorageAdapter
@@ -409,7 +409,7 @@ The following should be considered when implementing this method:
 
 #### select_inputs()
 
-Select inputs for funds transfer.
+Select inputs for transferring funds.
 
 :::info
 This method should only be used internally by [send()](#send). The input selection method should also ensure that the recipient address doesn't match the remainder address.
@@ -468,7 +468,7 @@ If you want to send a value transaction, please follow this process:
 
 | *Name*   | *Required* | *Type*   | *Description*    |
 | -------- | ---------- | -------- | ---------------- |
-| transfer | ✔          | Transfer | Transfer object. |
+| transfer | ✔          | Transaction | Transaction object. |
 
 
 ##### Returns

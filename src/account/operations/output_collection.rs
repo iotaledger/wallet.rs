@@ -16,9 +16,9 @@ use crate::account::{
     handle::AccountHandle,
     operations::{
         helpers::time::{can_output_be_unlocked_now, is_expired},
-        transfer::TransferResult,
+        transaction::TransactionResult,
     },
-    OutputData, TransferOptions,
+    OutputData, TransactionOptions,
 };
 
 /// Enum to specify which outputs should be collected
@@ -145,7 +145,7 @@ impl AccountHandle {
     pub async fn try_collect_outputs(
         &self,
         outputs_to_collect: OutputsToCollect,
-    ) -> crate::Result<Vec<TransferResult>> {
+    ) -> crate::Result<Vec<TransactionResult>> {
         log::debug!("[OUTPUT_COLLECTION] try_collect_outputs");
 
         let output_ids_to_collect = self
@@ -184,7 +184,7 @@ impl AccountHandle {
 
     /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
     /// from [`AccountHandle::get_unlockable_outputs_with_additional_unlock_conditions()`].
-    pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransferResult>> {
+    pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransactionResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
         self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
@@ -196,7 +196,7 @@ impl AccountHandle {
         &self,
         output_ids_to_collect: Vec<OutputId>,
         possible_additional_inputs: Vec<OutputData>,
-    ) -> crate::Result<Vec<TransferResult>> {
+    ) -> crate::Result<Vec<TransactionResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs_internal");
         let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
@@ -347,9 +347,9 @@ impl AccountHandle {
             );
 
             match self
-                .finish_transfer(
+                .finish_transaction(
                     outputs_to_send,
-                    Some(TransferOptions {
+                    Some(TransactionOptions {
                         skip_sync: true,
                         custom_inputs: Some(
                             outputs

@@ -32,11 +32,11 @@ async fn main() -> Result<()> {
         metadata: Some(b"some nft metadata".to_vec()),
     }];
 
-    let transfer_result = account.mint_nfts(nft_options, None).await?;
+    let transaction_result = account.mint_nfts(nft_options, None).await?;
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transfer_result.transaction_id,
-        transfer_result.block_id.expect("No block created yet")
+        transaction_result.transaction_id,
+        transaction_result.block_id.expect("No block created yet")
     );
     Ok(())
 }

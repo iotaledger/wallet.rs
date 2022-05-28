@@ -9,9 +9,9 @@ import type {
 import type { OutputsToCollect, OutputData } from '../output';
 import type {
     NativeTokenOptions,
-    TransferOptions,
+    TransactionOptions,
     NftOptions,
-} from '../transfer';
+} from '../transactionOptions';
 
 export type __SyncAccountMethod__ = {
     name: 'SyncAccount';
@@ -86,7 +86,7 @@ export type __MintNativeTokenMethod__ = {
     name: 'MintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -94,7 +94,7 @@ export type __MintNftsMethod__ = {
     name: 'MintNfts';
     data: {
         nftsOptions: NftOptions[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -102,7 +102,7 @@ export type __SendAmountMethod__ = {
     name: 'SendAmount';
     data: {
         addressWithAmount: AddressWithAmount[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -110,7 +110,7 @@ export type __SendMicroTransactionMethod__ = {
     name: 'SendMicroTransaction';
     data: {
         addressWithMicroAmount: AddressWithMicroAmount[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -118,7 +118,7 @@ export type __SendNativeTokensMethod__ = {
     name: 'SendNativeTokens';
     data: {
         addressNativeTokens: AddressNativeTokens[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -126,15 +126,15 @@ export type __SendNftMethod__ = {
     name: 'SendNft';
     data: {
         addressNftIds: AddressNftId[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
-export type __SendTransferMethod__ = {
-    name: 'SendTransfer';
+export type __SendTransactionMethod__ = {
+    name: 'SendTransaction';
     data: {
         outputs: OutputData[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
