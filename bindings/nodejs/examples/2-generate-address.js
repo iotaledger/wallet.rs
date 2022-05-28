@@ -14,8 +14,8 @@ async function run() {
         console.log('New address:', address);
 
         // It's also possible to generate multiple addresses
-        // const address2 = await account.generateAddresses(2);
-        // console.log('New address:', address2);
+        // const addresses = await account.generateAddresses(2);
+        // console.log('New addresses:', addresses);
 
         // Use the Chrysalis Faucet to send testnet tokens to your address:
         // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")

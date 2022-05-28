@@ -31,7 +31,7 @@ export interface OutputData {
     chain?: Segment[];
 }
 
-// TODO: this should be the same as bee_block::output::Output
+// TODO: this should be the same as bee_block::output::OutputDto
 export interface Output {
     type: OutputType;
     // TODO: specify the return type 
