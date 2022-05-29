@@ -13,12 +13,12 @@ categories = ["cryptography::cryptocurrencies"]
 
 [dependencies]
 async-trait = { version = "0.1.51", default-features = false }
-packable = { version = "0.3.2", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.3.3", default-features = false, features = [ "serde", "primitive-types" ] }
 backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "d00d7ae9a336996a10ed7f115c83dcf2f1a2e5a6", default-features = false, features = ["tls"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "69bf6d1a8f1c9bfd6800a7be399187068416fb91", default-features = false, features = ["tls"] }
 # Switch back when a new version got released
 # iota-crypto = { version = "0.11.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "c61d29253930105d0d589e54829b639427061e81",  default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
