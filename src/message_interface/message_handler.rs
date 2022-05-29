@@ -284,6 +284,12 @@ impl WalletMessageHandler {
                     output_data.as_ref().map(OutputDataDto::from).map(Box::new),
                 ))
             }
+            AccountMethod::GetTransaction { transaction_id } => {
+                let transaction = account_handle.get_transaction(transaction_id).await;
+                Ok(Response::Transaction(
+                    transaction.as_ref().map(TransactionDto::from).map(Box::new),
+                ))
+            }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;
                 Ok(Response::Addresses(addresses))
@@ -319,17 +325,17 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
             AccountMethod::MintNfts { nfts_options, options } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
-                    Ok(Response::SentTransfer(transfer))
+                    let transaction = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -428,7 +434,7 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .send_amount(
                             addresses_with_amount
                                 .iter()
@@ -437,7 +443,7 @@ impl WalletMessageHandler {
                             options.clone(),
                         )
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -446,7 +452,7 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .send_micro_transaction(
                             addresses_with_micro_amount
                                 .iter()
@@ -455,7 +461,7 @@ impl WalletMessageHandler {
                             options.clone(),
                         )
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -464,10 +470,10 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .send_native_tokens(addresses_native_tokens.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -476,10 +482,10 @@ impl WalletMessageHandler {
                 options,
             } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .send_nft(addresses_nft_ids.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -490,9 +496,9 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::SendTransfer { outputs, options } => {
+            AccountMethod::SendTransaction { outputs, options } => {
                 convert_async_panics(|| async {
-                    let transfer = account_handle
+                    let transaction = account_handle
                         .send(
                             outputs
                                 .iter()
@@ -501,7 +507,7 @@ impl WalletMessageHandler {
                             options.clone(),
                         )
                         .await?;
-                    Ok(Response::SentTransfer(transfer))
+                    Ok(Response::SentTransaction(transaction))
                 })
                 .await
             }
@@ -526,21 +532,21 @@ impl WalletMessageHandler {
                     let transaction_result = account_handle
                         .submit_and_store_transaction(signed_transaction_data)
                         .await?;
-                    Ok(Response::SentTransfer(transaction_result))
+                    Ok(Response::SentTransaction(transaction_result))
                 })
                 .await
             }
             AccountMethod::TryCollectOutputs { outputs_to_collect } => {
                 convert_async_panics(|| async {
-                    let transfer_results = account_handle.try_collect_outputs(*outputs_to_collect).await?;
-                    Ok(Response::SentTransfers(transfer_results))
+                    let transaction_results = account_handle.try_collect_outputs(*outputs_to_collect).await?;
+                    Ok(Response::SentTransactions(transaction_results))
                 })
                 .await
             }
             AccountMethod::CollectOutputs { output_ids_to_collect } => {
                 convert_async_panics(|| async {
-                    let transfer_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
-                    Ok(Response::SentTransfers(transfer_results))
+                    let transaction_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
+                    Ok(Response::SentTransactions(transaction_results))
                 })
                 .await
             }

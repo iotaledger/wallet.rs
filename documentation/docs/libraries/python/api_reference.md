@@ -128,7 +128,7 @@ Deletes an account.
 
 Returns the [AccountsSynchronizer](#accountssynchronizer) to setup the process to synchronize the accounts with the Tangle.
 
-### internal_transfer(from_account_id, to_account_id, amount): WalletBlock
+### internal_transaction(from_account_id, to_account_id, amount): WalletBlock
 
 Transfers an amount from an account to another.
 
@@ -359,11 +359,11 @@ Set the initial address index to start syncing on each account.
 
 Syncs the accounts with the tangle.
 
-## Transfer
+## Transaction
 
-### constructor(amount, address, indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional), output_kind (optional)): [Transfer](#transfer)
+### constructor(amount, address, indexation (optional), remainder_value_strategy (optional): str, skip_sync (optional), output_kind (optional)): [Transaction](#transfer)
 
-The _Transfer_ object used in [SyncedAccount](#syncedaccount)
+The _Transaction_ object used in [SyncedAccount](#syncedaccount)
 
 | Param                    | Type                        | Default           | Description                                                         |
 | ------------------------ | --------------------------- | ----------------- | ------------------------------------------------------------------- |
@@ -446,9 +446,9 @@ Transfer tokens.
 
 | Param        | Type                    | Default     | Description                  |
 | ------------ | ----------------------- | ----------- | ---------------------------- |
-| transfer_obj | `[Transfer](#transfer)` | `undefined` | The transfer we want to make |
+| transfer_obj | `[Transaction](#transaction)` | `undefined` | The transfer we want to make |
 
-Returns the [WalletBlock](#walletblock) which makes the transfering.
+Returns the [WalletBlock](#walletblock) which makes the transaction.
 
 ### retry(block_id): [WalletBlock](#walletblock)
 
@@ -755,7 +755,7 @@ Removes the Stronghold status change listener associated with the given identifi
 | ----- | ----------- | ----------- | ------------ |
 | [id]  | `list[int]` | `undefined` | The event id |
 
-### on_transfer_progress(callback): list[int]
+### on_transaction_progress(callback): list[int]
 
 Listen to transfer progress events.
 

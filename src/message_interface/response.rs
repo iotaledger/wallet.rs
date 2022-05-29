@@ -11,7 +11,7 @@ use iota_client::{
 use serde::Serialize;
 
 use crate::{
-    account::{operations::transfer::TransferResult, types::address::AccountAddress},
+    account::{operations::transaction::TransactionResult, types::address::AccountAddress},
     message_interface::dtos::{
         AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
     },
@@ -49,8 +49,11 @@ pub enum Response {
     /// [`PrepareSendMicroTransaction`](crate::message_interface::AccountMethod::PrepareSendMicroTransaction),
     /// [`PrepareSendNativeTokens`](crate::message_interface::AccountMethod::PrepareSendNativeTokens),
     /// [`PrepareSendNft`](crate::message_interface::AccountMethod::PrepareSendNft),
-    /// [`PrepareSendTransfer`](crate::message_interface::AccountMethod::PrepareSendTransfer)
+    /// [`PrepareSendTransaction`](crate::message_interface::AccountMethod::PrepareSendTransaction)
     PreparedTransaction(PreparedTransactionDataDto),
+    /// Response for
+    /// [`GetTransaction`](crate::message_interface::AccountMethod::GetTransaction),
+    Transaction(Option<Box<TransactionDto>>),
     /// Response for
     /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
     /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
@@ -72,12 +75,12 @@ pub enum Response {
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
-    /// [`SendTransfer`](crate::message_interface::AccountMethod::SendTransfer)
+    /// [`SendTransaction`](crate::message_interface::AccountMethod::SendTransaction)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
-    SentTransfer(TransferResult),
+    SentTransaction(TransactionResult),
     /// Response for [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
-    SentTransfers(Vec<TransferResult>),
+    SentTransactions(Vec<TransactionResult>),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),
@@ -122,14 +125,15 @@ impl Debug for Response {
             Response::PreparedTransaction(transaction_data) => {
                 write!(f, "PreparedTransaction({:?})", transaction_data)
             }
+            Response::Transaction(transaction) => write!(f, "Transaction({:?})", transaction),
             Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
             Response::SignedTransactionData(signed_transaction_data) => {
                 write!(f, "SignedTransactionData({:?})", signed_transaction_data)
             }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
-            Response::SentTransfer(transfer) => write!(f, "SentTransfer({:?})", transfer),
-            Response::SentTransfers(transfers) => write!(f, "SentTransfers({:?})", transfers),
+            Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
+            Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),
             Response::StrongholdPasswordIsAvailable(is_available) => {
                 write!(f, "StrongholdPasswordIsAvailable({:?})", is_available)
             }

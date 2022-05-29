@@ -78,7 +78,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         System.out.println("acc unspent addresses " + Arrays.toString(account.listUnspentAddresses()));
 
         try {
-            account.transfer(Transfer.builder(account.latestAddress().address(), 150, OutputKind.SIGNATURE_LOCKED_SINGLE).finish());
+            account.transaction(Transaction.builder(account.latestAddress().address(), 150, OutputKind.SIGNATURE_LOCKED_SINGLE).finish());
         } catch (WalletException e) {
             System.out.println(e.getMessage());
         }

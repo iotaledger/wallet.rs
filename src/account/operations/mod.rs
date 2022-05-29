@@ -17,5 +17,5 @@ pub(crate) mod output_collection;
 pub(crate) mod output_consolidation;
 /// The module for synchronization of an account
 pub(crate) mod syncing;
-/// The module for value transfers
-pub(crate) mod transfer;
+/// The module for transactions
+pub(crate) mod transaction;

@@ -15,20 +15,20 @@ use packable::bounded::TryIntoBoundedU16Error;
 
 use crate::account::{
     handle::AccountHandle,
-    operations::transfer::{RemainderValueStrategy, TransferOptions},
+    operations::transaction::{RemainderValueStrategy, TransactionOptions},
     AddressGenerationOptions,
 };
 #[cfg(feature = "events")]
-use crate::events::types::{AddressData, TransferProgressEvent, WalletEvent};
+use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Get inputs and build the transaction essence
     pub async fn prepare_transaction(
         &self,
         outputs: Vec<Output>,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] prepare_transaction");
+        log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
 
         let byte_cost_config = self.client.get_byte_cost_config().await?;
@@ -103,8 +103,8 @@ impl AccountHandle {
                             let account_index = self.read().await.index;
                             self.event_emitter.lock().await.emit(
                                 account_index,
-                                WalletEvent::TransferProgress(
-                                    TransferProgressEvent::GeneratingRemainderDepositAddress(AddressData {
+                                WalletEvent::TransactionProgress(
+                                    TransactionProgressEvent::GeneratingRemainderDepositAddress(AddressData {
                                         address: remainder_address.address.to_bech32(),
                                     }),
                                 ),
@@ -135,7 +135,7 @@ impl AccountHandle {
         };
 
         log::debug!(
-            "[TRANSFER] finished prepare_transaction in {:.2?}",
+            "[TRANSACTION] finished prepare_transaction in {:.2?}",
             prepare_transaction_start_time.elapsed()
         );
         Ok(prepared_transaction_data)

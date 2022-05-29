@@ -20,10 +20,10 @@ use crate::{
     account::{
         constants::DEFAULT_EXPIRATION_TIME,
         handle::AccountHandle,
-        operations::transfer::{
-            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransferResult,
+        operations::transaction::{
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransactionResult,
         },
-        TransferOptions,
+        TransactionOptions,
     },
     Error,
 };
@@ -56,23 +56,23 @@ impl AccountHandle {
     ///    expiration: None,
     /// }];
     ///
-    /// let transfer_result = account_handle.send_micro_transaction(outputs, None ).await?;
+    /// let transaction_result = account_handle.send_micro_transaction(outputs, None ).await?;
     ///
     /// println!(
     ///    "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-    ///    transfer_result.transaction_id,
-    ///    transfer_result.block_id.expect("No block created yet")
+    ///    transaction_result.transaction_id,
+    ///    transaction_result.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn send_micro_transaction(
         &self,
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
         let prepared_trasacton = self
             .prepare_send_micro_transaction(addresses_with_micro_amount, options)
             .await?;
-        self.sign_and_submit_transfer(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_trasacton).await
     }
 
     /// Function to prepare the transaction for
@@ -80,9 +80,9 @@ impl AccountHandle {
     pub async fn prepare_send_micro_transaction(
         &self,
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] prepare_send_micro_transaction");
+        log::debug!("[TRANSACTION] prepare_send_micro_transaction");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;

@@ -36,7 +36,7 @@ impl AccountHandle {
     /// Generate addresses and stores them in the account
     /// ```ignore
     /// let public_addresses = account_handle.generate_addresses(2, None).await?;
-    /// // internal addresses are used for remainder outputs, if the RemainderValueStrategy for transfers is set to ChangeAddress
+    /// // internal addresses are used for remainder outputs, if the RemainderValueStrategy for transactions is set to ChangeAddress
     /// let internal_addresses = account_handle
     ///     .generate_addresses(
     ///         1,
@@ -83,16 +83,65 @@ impl AccountHandle {
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
 
-        #[cfg(all(feature = "events", feature = "ledger_nano"))]
-        // If we don't sync, then we want to display the prompt on the ledger with the address. But the user needs to
-        // have it visible on the computer first, so we need to generate it without the prompt first
-        if !options.metadata.syncing {
-            match *self.secret_manager.read().await {
-                SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+        // If we use stronghold we need to read the snapshot in case it hasn't been done already
+        #[cfg(feature = "stronghold")]
+        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
+            stronghold_secret_manager.read_stronghold_snapshot().await?;
+        }
+
+        let addresses = match *self.secret_manager.read().await {
+            #[cfg(feature = "ledger_nano")]
+            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+                // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
+                // needs to have it visible on the computer first, so we need to generate it without the
+                // prompt first
+                if !options.metadata.syncing {
                     let mut changed_metadata = options.metadata.clone();
+                    // Change metadata so ledger will not show the prompt the first time
                     changed_metadata.syncing = true;
-                    let addresses = self
-                        .secret_manager
+                    let mut addresses = Vec::new();
+
+                    for address_index in address_range {
+                        #[cfg(feature = "events")]
+                        {
+                            // Generate without prompt to be able to display it
+                            let address = self
+                                .secret_manager
+                                .read()
+                                .await
+                                .generate_addresses(
+                                    account.coin_type,
+                                    account.index,
+                                    address_index..address_index + 1,
+                                    options.internal,
+                                    changed_metadata.clone(),
+                                )
+                                .await?;
+                            self.event_emitter.lock().await.emit(
+                                account.index,
+                                WalletEvent::LedgerAddressGeneration(AddressData {
+                                    address: address[0].to_bech32(bech32_hrp.clone()),
+                                }),
+                            );
+                        }
+                        // Generate with prompt so the user can verify
+                        let address = self
+                            .secret_manager
+                            .read()
+                            .await
+                            .generate_addresses(
+                                account.coin_type,
+                                account.index,
+                                address_index..address_index + 1,
+                                options.internal,
+                                options.metadata.clone(),
+                            )
+                            .await?;
+                        addresses.push(address[0]);
+                    }
+                    addresses
+                } else {
+                    self.secret_manager
                         .read()
                         .await
                         .generate_addresses(
@@ -100,41 +149,25 @@ impl AccountHandle {
                             account.index,
                             address_range.clone(),
                             options.internal,
-                            changed_metadata,
+                            options.metadata,
                         )
-                        .await?;
-                    for address in addresses {
-                        let address_wrapper = AddressWrapper::new(address, bech32_hrp.clone());
-                        self.event_emitter.lock().await.emit(
-                            account.index,
-                            WalletEvent::LedgerAddressGeneration(AddressData {
-                                address: address_wrapper.to_bech32(),
-                            }),
-                        );
-                    }
+                        .await?
                 }
-                _ => {}
-            };
-        }
-
-        // If we use stronghold we need to read the snapshot in case it hasn't been done already
-        #[cfg(feature = "stronghold")]
-        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
-            stronghold_secret_manager.read_stronghold_snapshot().await?;
-        }
-
-        let addresses = self
-            .secret_manager
-            .read()
-            .await
-            .generate_addresses(
-                account.coin_type,
-                account.index,
-                address_range,
-                options.internal,
-                options.metadata.clone(),
-            )
-            .await?;
+            }
+            _ => {
+                self.secret_manager
+                    .read()
+                    .await
+                    .generate_addresses(
+                        account.coin_type,
+                        account.index,
+                        address_range,
+                        options.internal,
+                        options.metadata.clone(),
+                    )
+                    .await?
+            }
+        };
 
         let generate_addresses: Vec<AccountAddress> = addresses
             .into_iter()

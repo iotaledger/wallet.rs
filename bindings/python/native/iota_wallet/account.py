@@ -100,12 +100,12 @@ class Account:
         )
 
     @ send_message_routine
-    def send_transfer(self, outputs, options=None):
+    def send_transaction(self, outputs, options=None):
         """Syncs the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
         return self._call_account_method(
-            'SendTransfer', {
+            'SendTransaction', {
                 'outputs': outputs,
                 'options': options,
             }

@@ -15,7 +15,7 @@ use std::{
 use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::{payload::TransactionPayload, unlock::Unlocks},
+    bee_block::payload::TransactionPayload,
     secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
 };
 use iota_wallet::Result;
@@ -42,7 +42,6 @@ async fn main() -> Result<()> {
     let unlocks = SecretManager::Stronghold(secret_manager)
         .sign_transaction_essence(&prepared_transaction_data)
         .await?;
-    let unlocks = Unlocks::new(unlocks)?;
     let signed_transaction = TransactionPayload::new(prepared_transaction_data.essence.clone(), unlocks)?;
 
     let signed_transaction_data = SignedTransactionData {

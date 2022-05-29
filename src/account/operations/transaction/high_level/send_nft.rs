@@ -14,7 +14,7 @@ use iota_client::{
 // use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, TransferOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
 
 /// Address and nft for `send_nft()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,21 +41,21 @@ impl AccountHandle {
     ///     nft_id: NftId::from_str("04f9b54d488d2e83a6c90db08ae4b39651bbba8a")?,
     /// }];
     ///
-    /// let transfer_result = account.send_nft(outputs, None).await?;
+    /// let transaction_result = account.send_nft(outputs, None).await?;
     ///
     /// println!(
     /// "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-    /// transfer_result.transaction_id,
-    /// transfer_result.block_id.expect("No block created yet")
+    /// transaction_result.transaction_id,
+    /// transaction_result.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn send_nft(
         &self,
         addresses_nft_ids: Vec<AddressAndNftId>,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
         let prepared_trasacton = self.prepare_send_nft(addresses_nft_ids, options).await?;
-        self.sign_and_submit_transfer(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_trasacton).await
     }
 
     /// Function to prepare the transaction for
@@ -63,9 +63,9 @@ impl AccountHandle {
     pub async fn prepare_send_nft(
         &self,
         addresses_nft_ids: Vec<AddressAndNftId>,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] prepare_send_nft");
+        log::debug!("[TRANSACTION] prepare_send_nft");
 
         let unspent_outputs = self.list_unspent_outputs().await?;
 
@@ -110,7 +110,7 @@ impl AccountHandle {
                 options.custom_inputs.replace(custom_inputs);
                 Some(options)
             }
-            None => Some(TransferOptions {
+            None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
                 ..Default::default()
             }),

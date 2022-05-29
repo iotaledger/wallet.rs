@@ -6,6 +6,7 @@ import type {
     __SetCollectOutputsMethod__,
     __GetOutputMethod__,
     __GetOutputsWithAdditionalUnlockConditionsMethod__,
+    __GetTransactionMethod__,
     __ListAddressesMethod__,
     __ListAddressesWithUnspentOutputsMethod__,
     __ListOutputsMethod__,
@@ -18,7 +19,7 @@ import type {
     __SendMicroTransactionMethod__,
     __SendNativeTokensMethod__,
     __SendNftMethod__,
-    __SendTransferMethod__,
+    __SendTransactionMethod__,
     __TryCollectOutputsMethod__,
     __SetAliasMethod__,
 } from './account';
@@ -49,6 +50,7 @@ export type __AccountMethod__ =
     | __GenerateAddressesMethod__
     | __GetOutputMethod__
     | __GetOutputsWithAdditionalUnlockConditionsMethod__
+    | __GetTransactionMethod__
     | __ListAddressesMethod__
     | __ListAddressesWithUnspentOutputsMethod__
     | __ListOutputsMethod__
@@ -61,7 +63,7 @@ export type __AccountMethod__ =
     | __SendMicroTransactionMethod__
     | __SendNativeTokensMethod__
     | __SendNftMethod__
-    | __SendTransferMethod__
+    | __SendTransactionMethod__
     | __SetAliasMethod__
     | __SetCollectOutputsMethod__
     | __SyncAccountMethod__

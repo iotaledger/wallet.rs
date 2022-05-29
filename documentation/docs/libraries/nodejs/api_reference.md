@@ -38,7 +38,7 @@ Supported event names:
 - ConfirmationStateChange
 - Reattachment
 - Broadcast
-- TransferProgress
+- TransactionProgress
 - MigrationProgress
 
 ## AccountManager
@@ -156,7 +156,7 @@ Synchronize all stored accounts with the Tangle.
 
 Returns a promise resolving to an array of [SyncedAccount](#syncedaccount).
 
-### internalTransfer(fromAccount, toAccount, amount)
+### internalTransaction(fromAccount, toAccount, amount)
 
 Transfers an amount from one sub-account to another.
 
@@ -383,9 +383,9 @@ Send funds to the given address.
 | ------- | ----------------- | ----------- | ----------------------------------------- |
 | address | `string`          | `null`      | The bech32 string of the transfer address |
 | amount  | `number`          | `undefined` | The transfer amount                       |
-| options | `TransferOptions` | `undefined` | The transfer options                      |
+| options | `TransactionOptions` | `undefined` | The transfer options                      |
 
-#### TransferOptions
+#### TransactionOptions
 
 | Param                  | Type                                   | Default                 | Description                                           |
 | ---------------------- | -------------------------------------- | ----------------------- | ----------------------------------------------------- |

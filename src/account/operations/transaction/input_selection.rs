@@ -13,7 +13,7 @@ use iota_client::{
 
 use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
-use crate::events::types::{TransferProgressEvent, WalletEvent};
+use crate::events::types::{TransactionProgressEvent, WalletEvent};
 impl AccountHandle {
     /// Selects inputs for a transaction and locks them in the account, so they don't get used again
     pub(crate) async fn select_inputs(
@@ -23,13 +23,13 @@ impl AccountHandle {
         remainder_address: Option<Address>,
         byte_cost_config: &ByteCostConfig,
     ) -> crate::Result<SelectedTransactionData> {
-        log::debug!("[TRANSFER] select_inputs");
-        // lock so the same inputs can't be selected in multiple transfers
+        log::debug!("[TRANSACTION] select_inputs");
+        // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             account.index,
-            WalletEvent::TransferProgress(TransferProgressEvent::SelectingInputs),
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
@@ -136,7 +136,7 @@ impl AccountHandle {
 
         // lock outputs so they don't get used by another transaction
         for output in &selected_transaction_data.inputs {
-            log::debug!("[TRANSFER] locking: {}", output.output_id()?);
+            log::debug!("[TRANSACTION] locking: {}", output.output_id()?);
             account.locked_outputs.insert(output.output_id()?);
         }
         Ok(selected_transaction_data)

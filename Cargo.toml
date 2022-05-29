@@ -11,19 +11,17 @@ license = "Apache-2.0"
 keywords = ["iota", "wallet", "transaction"]
 categories = ["cryptography::cryptocurrencies"]
 
-[package.metadata.docs.rs]
-all-features = true
-rustdoc-args = ["--cfg", "docsrs"]
-
 [dependencies]
 async-trait = { version = "0.1.51", default-features = false }
-packable = { version = "0.3.2", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.3.3", default-features = false, features = [ "serde", "primitive-types" ] }
 backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
 futures = { version = "0.3.17", default-features = false }
 getset = { version = "0.1.1", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "8d0c7b50c292576c4b5e47802362ced6afc30c61", default-features = false, features = ["tls"] }
-iota-crypto = { version = "0.10.0", default-features = false, features = ["std", "random", "sha", "pbkdf", "hmac", "bip39", "bip39-en", "chacha", "blake2b", "slip10"] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "69bf6d1a8f1c9bfd6800a7be399187068416fb91", default-features = false, features = ["tls"] }
+# Switch back when a new version got released
+# iota-crypto = { version = "0.11.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "c61d29253930105d0d589e54829b639427061e81",  default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.14", default-features = false }
 primitive-types = { version = "0.10.1", default-features = false }
 serde = { version = "1.0.137", default-features = false, features = ["derive"] }
@@ -48,9 +46,14 @@ message_interface = []
 events = []
 mnemonic = []
 
-[[example]]
-name = "events"
-required-features = ["events"]
+[profile.release]
+panic = "abort"
+
+[profile.production]
+codegen-units = 1
+inherits = "release"
+lto = true
+strip = "symbols"
 
 [[example]]
 name = "0_generate_addresses"
@@ -71,3 +74,11 @@ path = "examples/offline_signing/3_send_transaction.rs"
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]
 normal = ["backtrace"]
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[[example]]
+name = "events"
+required-features = ["events"]

@@ -23,7 +23,7 @@ pub enum Error {
     /// Tried to backup but storage file doesn't exist.
     #[error("storage file doesn't exist")]
     StorageDoesntExist,
-    /// Insufficient funds to send transfer.
+    /// Insufficient funds to send transaction.
     #[error("insufficient funds {0}/{1} available")]
     InsufficientFunds(u64, u64),
     /// Latest account is empty (doesn't have history and balance) - can't create account.

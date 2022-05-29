@@ -3,6 +3,8 @@
 
 use std::time::Instant;
 
+#[cfg(feature = "events")]
+use iota_client::api::PreparedTransactionDataDto;
 use iota_client::{
     api::{input_selection::types::SelectedTransactionData, PreparedTransactionData},
     bee_block::{
@@ -16,39 +18,27 @@ use iota_client::{
     secret::types::InputSigningData,
 };
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::TransactionOptions};
 #[cfg(feature = "events")]
-use crate::events::types::{PreparedTransactionEventData, TransactionIO, TransferProgressEvent, WalletEvent};
+use crate::events::types::{TransactionProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
     pub(crate) async fn build_transaction_essence(
         &self,
         selected_transaction_data: SelectedTransactionData,
-        options: Option<TransferOptions>,
+        options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSFER] build_transaction");
+        log::debug!("[TRANSACTION] build_transaction");
         let build_transaction_essence_start_time = Instant::now();
 
         let mut inputs_for_essence: Vec<Input> = Vec::new();
         let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
-        #[cfg(feature = "events")]
-        let mut inputs_for_event: Vec<TransactionIO> = Vec::new();
-        #[cfg(feature = "events")]
-        let mut outputs_for_event: Vec<TransactionIO> = Vec::new();
 
         for utxo in &selected_transaction_data.inputs {
             let input = Input::Utxo(UtxoInput::from(utxo.output_id()?));
             inputs_for_essence.push(input.clone());
             inputs_for_signing.push(utxo.clone());
-            #[cfg(feature = "events")]
-            {
-                inputs_for_event.push(TransactionIO {
-                    address: utxo.bech32_address.clone(),
-                    amount: utxo.output.amount(),
-                    remainder: None,
-                })
-            }
         }
 
         // Build transaction essence
@@ -71,27 +61,13 @@ impl AccountHandle {
                         break;
                     }
                 }
-                #[cfg(feature = "events")]
-                outputs_for_event.push(TransactionIO {
-                    address: address
-                        .expect("todo: update transaction events to new outputs")
-                        .to_bech32("iota"),
-                    amount: output.amount(),
-                    remainder: None,
-                })
             }
         }
         essence_builder = essence_builder.with_outputs(selected_transaction_data.outputs);
 
         // Optional add a tagged payload
-        #[cfg(feature = "events")]
-        let mut tagged_data: Option<String> = None;
         if let Some(options) = options {
             if let Some(tagged_data_payload) = &options.tagged_data_payload {
-                #[cfg(feature = "events")]
-                {
-                    tagged_data = Some(hex::encode(tagged_data_payload.data()));
-                }
                 essence_builder =
                     essence_builder.with_payload(Payload::TaggedData(Box::new(tagged_data_payload.clone())));
             }
@@ -100,28 +76,25 @@ impl AccountHandle {
         let essence = essence_builder.finish()?;
         let essence = TransactionEssence::Regular(essence);
 
+        let prepared_transaction_data = PreparedTransactionData {
+            essence,
+            inputs_data: inputs_for_signing,
+            remainder: selected_transaction_data.remainder,
+        };
         #[cfg(feature = "events")]
         {
             let account_index = self.read().await.index;
             self.event_emitter.lock().await.emit(
                 account_index,
-                WalletEvent::TransferProgress(TransferProgressEvent::PreparedTransaction(
-                    PreparedTransactionEventData {
-                        inputs: inputs_for_event,
-                        outputs: outputs_for_event,
-                        data: tagged_data,
-                    },
-                )),
+                WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransaction(Box::new(
+                    PreparedTransactionDataDto::from(&prepared_transaction_data),
+                ))),
             );
         }
         log::debug!(
-            "[TRANSFER] finished build_transaction in {:.2?}",
+            "[TRANSACTION] finished build_transaction in {:.2?}",
             build_transaction_essence_start_time.elapsed()
         );
-        Ok(PreparedTransactionData {
-            essence,
-            inputs_data: inputs_for_signing,
-            remainder: selected_transaction_data.remainder,
-        })
+        Ok(prepared_transaction_data)
     }
 }

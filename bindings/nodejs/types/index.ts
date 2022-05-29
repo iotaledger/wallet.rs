@@ -7,5 +7,5 @@ export * from './network';
 export * from './output';
 export * from './secretManager';
 export * from './transaction';
-export * from './transfer';
+export * from './transactionOptions';
 export * from './loggerConfig';

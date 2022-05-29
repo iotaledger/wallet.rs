@@ -16,7 +16,7 @@ use iota_client::{
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
         BlockId,
     },
-    bee_rest_api::types::responses::OutputResponse,
+    bee_rest_api::types::responses::OutputMetadataResponse,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -262,14 +262,13 @@ impl From<&Transaction> for TransactionDto {
 }
 
 /// Dto for an output with metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OutputDataDto {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
-    /// The output response
-    #[serde(rename = "outputResponse")]
-    pub output_response: OutputResponse,
+    /// The metadata of the output
+    pub metadata: OutputMetadataResponse,
     /// The actual Output
     pub output: OutputDto,
     /// The output amount
@@ -292,7 +291,7 @@ impl From<&OutputData> for OutputDataDto {
     fn from(value: &OutputData) -> Self {
         Self {
             output_id: value.output_id,
-            output_response: value.output_response.clone(),
+            metadata: value.metadata.clone(),
             output: OutputDto::from(&value.output),
             amount: value.amount.to_string(),
             is_spent: value.is_spent,

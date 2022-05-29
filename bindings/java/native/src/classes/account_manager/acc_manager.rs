@@ -275,10 +275,10 @@ impl AccountManager {
         }
     }
 
-    pub fn internal_transfer(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message> {
+    pub fn internal_transaction(&self, from_account_id: String, to_account_id: String, amount: u64) -> Result<Message> {
         match crate::block_on(async move {
             self.manager
-                .internal_transfer(from_account_id, to_account_id, NonZeroU64::new(amount).unwrap())
+                .internal_transaction(from_account_id, to_account_id, NonZeroU64::new(amount).unwrap())
                 .await
         }) {
             Err(e) => Err(anyhow!(e.to_string())),

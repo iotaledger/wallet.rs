@@ -17,7 +17,7 @@ use iota_client::{
         payload::transaction::TransactionPayload,
         BlockId,
     },
-    bee_rest_api::types::responses::OutputResponse,
+    bee_rest_api::types::responses::OutputMetadataResponse,
     secret::types::{InputSigningData, OutputMetadata},
 };
 use primitive_types::U256;
@@ -55,10 +55,7 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
-    // todo: remove OutputResponse and store metadata alone
-    /// The output response
-    #[serde(rename = "outputResponse")]
-    pub output_response: OutputResponse,
+    pub metadata: OutputMetadataResponse,
     /// The actual Output
     pub output: Output,
     // The output amount
@@ -79,8 +76,8 @@ pub struct OutputData {
 impl OutputData {
     pub fn input_signing_data(&self) -> crate::Result<InputSigningData> {
         Ok(InputSigningData {
-            output: Output::try_from(&self.output_response.output)?,
-            output_metadata: OutputMetadata::try_from(&self.output_response.metadata)?,
+            output: self.output.clone(),
+            output_metadata: OutputMetadata::try_from(&self.metadata)?,
             chain: self.chain.clone(),
             bech32_address: self.address.to_bech32("atoi"),
         })

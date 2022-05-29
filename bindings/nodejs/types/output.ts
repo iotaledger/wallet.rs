@@ -20,15 +20,15 @@ export interface OutputData {
     outputId: string;
     outputResponse: IOutputResponse;
     output: Output;
-    amount: number;
+    amount: string;
     isSpent: boolean;
     address: {
         type: AddressTypes;
         data: string;
     };
-    networkId: number;
+    networkId: string;
     remainder: boolean;
-    chain: Segment[];
+    chain?: Segment[];
 }
 
 export interface Output {
