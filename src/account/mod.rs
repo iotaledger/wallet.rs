@@ -73,22 +73,4 @@ pub struct Account {
     // Maybe pending transactions even additionally separated?
     #[serde(rename = "pendingTransactions")]
     pending_transactions: HashSet<TransactionId>,
-    /// Account options
-    // sync interval, output consolidation
-    #[serde(rename = "accountOptions")]
-    #[getset(get = "pub(crate)")]
-    account_options: AccountOptions,
-}
-
-/// Account options
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub struct AccountOptions {
-    /// Threshold for the amount of unspent outputs before they get consolidated (sent in a transaction to the account
-    /// itself)
-    #[serde(rename = "outputConsolidationThreshold")]
-    pub output_consolidation_threshold: usize,
-    #[serde(rename = "automaticOutputConsolidation")]
-    pub automatic_output_consolidation: bool,
-    // #[cfg(feature = "storage")]
-    // pub(crate) persist_events: bool,
 }
