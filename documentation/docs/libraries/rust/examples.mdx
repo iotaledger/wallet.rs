@@ -10,9 +10,9 @@ keywords:
 - backup
 ---
 import CodeBlock from '@theme/CodeBlock';
-import transfer from  '!!raw-loader!./../../../../examples/transfer.rs';
+import transaction from  '!!raw-loader!./../../../../examples/05_transaction.rs';
 import logger from  '!!raw-loader!./../../../../examples/logger.rs';
-import event from  '!!raw-loader!./../../../../examples/event.rs';
+import events from  '!!raw-loader!./../../../../examples/events.rs';
 
 You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples).
 You can list all available examples by running the following command:
@@ -84,7 +84,7 @@ You can see the full code for the example in the [`wallet.rs` repository](https:
 You use the following example to generate an account, and transfer funds. 
 
 <CodeBlock className="language-rust">
-  {transfer}
+  {transaction}
 </CodeBlock>
 
 ## Events example:
@@ -94,7 +94,7 @@ You use the following example to generate an account, and transfer funds.
 You can use the following example to fetch an existing _Account_ and listen to transaction events related to that _Account_ :
 
 <CodeBlock className="language-rust">
-  {event}
+  {events}
 </CodeBlock>
 
 ## Logger example:
