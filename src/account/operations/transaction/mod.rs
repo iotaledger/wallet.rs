@@ -178,6 +178,7 @@ impl AccountHandle {
         )?;
 
         if conflict != ConflictReason::None {
+            log::debug!("[TRANSACTION] conflict: {conflict:?}");
             return Err(Error::TransactionSemantic(conflict).into());
         }
 
