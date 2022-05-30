@@ -13,6 +13,9 @@ use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
     bee_block::output::Output,
+    message_interface::output_builder::{
+        build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
+    },
     Client, NodeInfoWrapper,
 };
 use tokio::sync::mpsc::UnboundedSender;
@@ -27,7 +30,6 @@ use crate::{
         account_method::AccountMethod,
         dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
         message::{AccountToCreate, Message},
-        output_builder::build_basic_output,
         response::Response,
         AddressWithUnspentOutputsDto,
     },
@@ -269,6 +271,32 @@ impl WalletMessageHandler {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
+            AccountMethod::BuildAliasOutput {
+                amount,
+                native_tokens,
+                alias_id,
+                state_index,
+                state_metadata,
+                foundry_counter,
+                unlock_conditions,
+                features,
+                immutable_features,
+            } => {
+                let output_dto = build_alias_output(
+                    &account_handle.client,
+                    amount.clone(),
+                    native_tokens.clone(),
+                    alias_id,
+                    *state_index,
+                    state_metadata.clone(),
+                    *foundry_counter,
+                    unlock_conditions.to_vec(),
+                    features.clone(),
+                    immutable_features.clone(),
+                )
+                .await?;
+                Ok(Response::BuiltOutput(output_dto))
+            }
             AccountMethod::BuildBasicOutput {
                 amount,
                 native_tokens,
@@ -276,11 +304,53 @@ impl WalletMessageHandler {
                 features,
             } => {
                 let output_dto = build_basic_output(
-                    account_handle.client,
+                    &account_handle.client,
                     amount.clone(),
                     native_tokens.clone(),
                     unlock_conditions.to_vec(),
                     features.clone(),
+                )
+                .await?;
+                Ok(Response::BuiltOutput(output_dto))
+            }
+            AccountMethod::BuildFoundryOutput {
+                amount,
+                native_tokens,
+                serial_number,
+                token_scheme,
+                unlock_conditions,
+                features,
+                immutable_features,
+            } => {
+                let output_dto = build_foundry_output(
+                    &account_handle.client,
+                    amount.clone(),
+                    native_tokens.clone(),
+                    *serial_number,
+                    token_scheme,
+                    unlock_conditions.to_vec(),
+                    features.clone(),
+                    immutable_features.clone(),
+                )
+                .await?;
+                Ok(Response::BuiltOutput(output_dto))
+            }
+            AccountMethod::BuildNftOutput {
+                amount,
+                native_tokens,
+                nft_id,
+                unlock_conditions,
+                features,
+                immutable_features,
+            } => {
+                let output_dto = build_nft_output(
+                    &account_handle.client,
+                    amount.clone(),
+                    native_tokens.clone(),
+                    nft_id,
+                    unlock_conditions.to_vec(),
+                    features.clone(),
+                    immutable_features.clone(),
                 )
                 .await?;
                 Ok(Response::BuiltOutput(output_dto))

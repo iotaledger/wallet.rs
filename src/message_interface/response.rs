@@ -33,7 +33,11 @@ pub enum Response {
     /// Response for
     /// [`ListAddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::ListAddressesWithUnspentOutputs)
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
-    /// Response for [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
+    /// Response for
+    /// [`BuildAliasOutput`](crate::message_interface::ClientMethod::BuildAliasOutput)
+    /// [`BuildBasicOutput`](crate::message_interface::ClientMethod::BuildBasicOutput)
+    /// [`BuildFoundryOutput`](crate::message_interface::ClientMethod::BuildFoundryOutput)
+    /// [`BuildNftOutput`](crate::message_interface::ClientMethod::BuildNftOutput)
     BuiltOutput(OutputDto),
     /// Response for
     /// [`GetOutputsWithAdditionalUnlockConditions`](crate::message_interface::AccountMethod::
