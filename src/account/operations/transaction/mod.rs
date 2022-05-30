@@ -179,6 +179,8 @@ impl AccountHandle {
 
         if conflict != ConflictReason::None {
             log::debug!("[TRANSACTION] conflict: {conflict:?}");
+            // unlock outputs so they are available for a new transaction
+            self.unlock_inputs(signed_transaction_data.inputs_data).await?;
             return Err(Error::TransactionSemantic(conflict).into());
         }
 
@@ -228,7 +230,12 @@ impl AccountHandle {
     async fn unlock_inputs(&self, inputs: Vec<InputSigningData>) -> crate::Result<()> {
         let mut account = self.write().await;
         for input_signing_data in &inputs {
-            account.locked_outputs.remove(&input_signing_data.output_id()?);
+            let output_id = input_signing_data.output_id()?;
+            account.locked_outputs.remove(&output_id);
+            log::debug!(
+                "[TRANSACTION] Unlocked output {} because of transaction error",
+                output_id
+            );
         }
         Ok(())
     }
