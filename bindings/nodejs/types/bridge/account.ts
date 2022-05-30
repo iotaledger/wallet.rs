@@ -7,6 +7,7 @@ import type {
     AddressGenerationOptions,
 } from '../address';
 import type { OutputsToCollect, Output } from '../output';
+import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../transaction';
 import type {
     NativeTokenOptions,
@@ -95,7 +96,7 @@ export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
     data: {
         addressWithAmount: AddressWithAmount[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     }
 }
 
@@ -103,7 +104,7 @@ export type __PrepareSendMicroTransactionMethod__ = {
     name: 'PrepareSendMicroTransaction';
     data: {
         addressWithMicroAmounts: AddressWithMicroAmount[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -111,7 +112,7 @@ export type __PrepareSendNativeTokenMethod__ = {
     name: 'PrepareSendNativeToken';
     data: {
         addressNativeTokens: AddressNativeTokens[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -119,7 +120,7 @@ export type __PrepareSendNftMethod__ = {
     name: 'PrepareSendNft';
     data: {
         addressNftIds: AddressNftId[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -127,7 +128,7 @@ export type __PrepareMintNftsMethod__ = {
     name: 'PrepareMintNfts';
     data: {
         nftOptions: NftOptions[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     };
 };
 
@@ -135,7 +136,7 @@ export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
         outputs: Output[];
-        options?: TransferOptions;
+        options?: TransactionOptions;
     }
 };
 
@@ -204,7 +205,7 @@ export type __SignTransactionEssenceMethod__ = {
 export type __SubmitAndStoreTransactionMethod__ = {
     name: 'SubmitAndStoreTransaction';
     data: {
-        signedTransactionData: any;
+        signedTransactionData: SignedTransactionEssence;
     };
 };
 
