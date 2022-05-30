@@ -336,6 +336,11 @@ impl AccountHandle {
                 }
             }
 
+            // If we still don't have enough amount we can't create the output
+            if new_amount < required_storage_deposit {
+                return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
+            }
+
             // Create output with collected values
             outputs_to_send.push(
                 BasicOutputBuilder::new_with_amount(new_amount)?
