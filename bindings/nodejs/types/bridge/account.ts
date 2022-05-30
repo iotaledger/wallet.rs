@@ -6,7 +6,9 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
 } from '../address';
-import type { OutputsToCollect, OutputData } from '../output';
+import type { OutputsToCollect, Output } from '../output';
+import type { SignedTransactionEssence } from '../signedTransactionEssence';
+import type { PreparedTransactionData } from '../transaction';
 import type {
     NativeTokenOptions,
     TransactionOptions,
@@ -90,6 +92,54 @@ export type __MintNativeTokenMethod__ = {
     };
 };
 
+export type __PrepareSendAmountMethod__ = {
+    name: 'PrepareSendAmount';
+    data: {
+        addressWithAmount: AddressWithAmount[];
+        options?: TransactionOptions;
+    }
+}
+
+export type __PrepareSendMicroTransactionMethod__ = {
+    name: 'PrepareSendMicroTransaction';
+    data: {
+        addressWithMicroAmounts: AddressWithMicroAmount[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareSendNativeTokenMethod__ = {
+    name: 'PrepareSendNativeToken';
+    data: {
+        addressNativeTokens: AddressNativeTokens[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareSendNftMethod__ = {
+    name: 'PrepareSendNft';
+    data: {
+        addressNftIds: AddressNftId[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareMintNftsMethod__ = {
+    name: 'PrepareMintNfts';
+    data: {
+        nftOptions: NftOptions[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareTransactionMethod__ = {
+    name: 'PrepareTransaction';
+    data: {
+        outputs: Output[];
+        options?: TransactionOptions;
+    }
+};
+
 export type __MintNftsMethod__ = {
     name: 'MintNfts';
     data: {
@@ -133,7 +183,7 @@ export type __SendNftMethod__ = {
 export type __SendTransactionMethod__ = {
     name: 'SendTransaction';
     data: {
-        outputs: OutputData[];
+        outputs: Output[];
         options?: TransactionOptions;
     };
 };
@@ -144,6 +194,20 @@ export type __SetAliasMethod__ = {
         alias: string;
     }
 }
+
+export type __SignTransactionEssenceMethod__ = {
+    name: 'SignTransactionEssence';
+    data: {
+        preparedTransactionData: PreparedTransactionData;
+    };
+};
+
+export type __SubmitAndStoreTransactionMethod__ = {
+    name: 'SubmitAndStoreTransaction';
+    data: {
+        signedTransactionData: SignedTransactionEssence;
+    };
+};
 
 export type __TryCollectOutputsMethod__ = {
     name: 'TryCollectOutputs';

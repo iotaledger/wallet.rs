@@ -20,7 +20,10 @@ import type {
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
     TransactionResult,
+    PreparedTransactionData,
+    Output,
 } from '../types';
+import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 
 export class Account {
     meta: AccountMeta;
@@ -244,6 +247,108 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async prepareTransaction(
+        outputs: Output[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareTransaction',
+                data: {
+                    outputs,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async prepareMintNfts(
+        nftOptions: NftOptions[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareMintNfts',
+                data: {
+                    nftOptions,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async prepareSendAmount(
+        addressWithAmount: AddressWithAmount[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareSendAmount',
+                data: {
+                    addressWithAmount,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async prepareSendMicroTransaction(
+        addressWithMicroAmounts: AddressWithMicroAmount[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareSendMicroTransaction',
+                data: {
+                    addressWithMicroAmounts,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async prepareSendNativeToken(
+        addressNativeTokens: AddressNativeTokens[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareSendNativeToken',
+                data: {
+                    addressNativeTokens,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async prepareSendNft(
+        addressNftIds: AddressNftId[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareSendNft',
+                data: {
+                    addressNftIds,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
     async sendAmount(
         addressesWithAmount: AddressWithAmount[],
         transactionOptions?: TransactionOptions,
@@ -317,7 +422,7 @@ export class Account {
     }
 
     async SendTransaction(
-        outputs: OutputData[],
+        outputs: Output[],
         transactionOptions?: TransactionOptions,
     ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
@@ -347,6 +452,32 @@ export class Account {
             },
         );
 
+        return JSON.parse(response).payload;
+    }
+
+    async signTransactionEssence(preparedTransactionData: PreparedTransactionData): Promise<SignedTransactionEssence> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'SignTransactionEssence',
+                data: {
+                    preparedTransactionData,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async submitAndStoreTransaction(signedTransactionData: SignedTransactionEssence): Promise<TransactionResult> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'SubmitAndStoreTransaction',
+                data: {
+                    signedTransactionData,
+                },
+            },
+        );
         return JSON.parse(response).payload;
     }
 }
