@@ -22,17 +22,9 @@ class SwiftAwait: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
     
-    func testCreateAccount() async throws {
-        let wallet = try! IotaWallet.Wallet()
-        
-        let request = "{\"cmd\": \"CreateAccount\", \"payload\": { \"clientOptions\": { \"node\": \"https://nodes.devnet.iota.org:443\" } }, \"secretManager\": { \"type\": \"Stronghold\" } }";
-        
-        let response = try! await wallet.sendMessage(request)
-        print("\(response)")
-    }
-    
-    func testManagerOptions() async throws {
+    func defaultManagerOptions() -> ManagerOptions {
         let secret_manager = #"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#
+        
         let client_options = """
         {
             "nodes":[
@@ -50,16 +42,31 @@ class SwiftAwait: XCTestCase {
         }
         """
         
-        let manager_options = ManagerOptions(storagePath: "teststorage", clientOptions: client_options, secretManager: secret_manager)
+        return ManagerOptions(storagePath: "teststorage", clientOptions: client_options, secretManager: secret_manager)
+    }
+    
+    func testCreateAccount() async throws {
+        let json = try JSONEncoder().encode(defaultManagerOptions())
+        let options = String(data: json, encoding: .utf8)!
+        let wallet = try! IotaWallet.Wallet(managerOptions: options)
         
-        let json = try JSONEncoder().encode(manager_options)
-        let manager_options_json = String(data: json, encoding: .utf8)!
+        let request = "{\"cmd\": \"CreateAccount\", \"payload\": {\"alias\": null, \"coin_type\": null} }";
         
-        let _ = try! IotaWallet.Wallet(managerOptions: manager_options_json)
+        let response = try! await wallet.sendMessage(request)
+        print("\(response)")
+    }
+    
+    func testManagerOptions() async throws {
+        let json = try JSONEncoder().encode(defaultManagerOptions())
+        let options = String(data: json, encoding: .utf8)!
+        let _ = try! IotaWallet.Wallet(managerOptions: options)
     }
     
     func testEvents() async throws {
-        let wallet = try! IotaWallet.Wallet()
+        let json = try JSONEncoder().encode(defaultManagerOptions())
+        let options = String(data: json, encoding: .utf8)!
+        let wallet = try! IotaWallet.Wallet(managerOptions: options)
+        
         let expectation = self.expectation(description: "TestEvents")
 
         try! wallet.listen([]) { (message: String?, error: Error?) in
