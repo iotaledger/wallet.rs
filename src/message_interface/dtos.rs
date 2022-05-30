@@ -27,7 +27,7 @@ use crate::{
             address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
             OutputData, Transaction,
         },
-        Account, AccountOptions,
+        Account,
     },
     AddressWithAmount, AddressWithMicroAmount,
 };
@@ -185,9 +185,6 @@ pub struct AccountDto {
     /// Pending transactions
     #[serde(rename = "pendingTransactions")]
     pub pending_transactions: HashSet<TransactionId>,
-    /// Account options
-    #[serde(rename = "accountOptions")]
-    pub account_options: AccountOptions,
 }
 
 impl From<&Account> for AccountDto {
@@ -223,7 +220,6 @@ impl From<&Account> for AccountDto {
                 .map(|(k, o)| (k, TransactionDto::from(&o)))
                 .collect(),
             pending_transactions: value.pending_transactions().clone(),
-            account_options: *value.account_options(),
         }
     }
 }

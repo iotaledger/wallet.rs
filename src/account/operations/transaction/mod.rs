@@ -29,7 +29,6 @@ use crate::events::types::{TransactionProgressEvent, WalletEvent};
 use crate::{
     account::{
         handle::AccountHandle,
-        operations::syncing::SyncOptions,
         types::{InclusionState, Transaction},
     },
     iota_client::Error,
@@ -91,11 +90,7 @@ impl AccountHandle {
             );
         }
         if !options.clone().unwrap_or_default().skip_sync {
-            self.sync(Some(SyncOptions {
-                automatic_output_consolidation: false,
-                ..Default::default()
-            }))
-            .await?;
+            self.sync(None).await?;
         }
         self.finish_transaction(outputs, options).await
     }
@@ -149,12 +144,9 @@ impl AccountHandle {
                 WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
             );
         }
+
         if !options.clone().unwrap_or_default().skip_sync {
-            self.sync(Some(SyncOptions {
-                automatic_output_consolidation: false,
-                ..Default::default()
-            }))
-            .await?;
+            self.sync(None).await?;
         }
 
         self.prepare_transaction(outputs, options).await

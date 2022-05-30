@@ -5,18 +5,35 @@ use iota_client::bee_block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder, Output, OutputId,
 };
+#[cfg(feature = "ledger_nano")]
+use iota_client::secret::SecretManager;
 
+#[cfg(feature = "ledger_nano")]
+use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 use crate::account::{
-    handle::AccountHandle, operations::transaction::TransactionResult, types::address::AddressWithUnspentOutputs,
-    TransactionOptions,
+    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle,
+    operations::transaction::TransactionResult, types::address::AddressWithUnspentOutputs, TransactionOptions,
 };
 
 impl AccountHandle {
     /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
-    pub async fn consolidate_outputs(self: &AccountHandle, force: bool) -> crate::Result<Vec<TransactionResult>> {
+    pub async fn consolidate_outputs(
+        self: &AccountHandle,
+        force: bool,
+        output_consolidation_threshold: Option<usize>,
+    ) -> crate::Result<Vec<TransactionResult>> {
         let account = self.read().await;
-        let output_consolidation_threshold = account.account_options.output_consolidation_threshold;
+        let output_consolidation_threshold = match output_consolidation_threshold {
+            Some(threshold) => threshold,
+            None => match *self.secret_manager.read().await {
+                #[cfg(feature = "ledger_nano")]
+                SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+                    DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
+                }
+                _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+            },
+        };
         let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
             .addresses_with_unspent_outputs
             .iter()

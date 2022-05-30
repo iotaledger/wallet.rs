@@ -20,8 +20,6 @@ use crate::account::{
     types::address::AddressWithUnspentOutputs,
     OutputData,
 };
-#[cfg(feature = "events")]
-use crate::events::types::WalletEvent;
 
 impl AccountHandle {
     /// Get the addresses that should be synced with the current known unspent output ids
@@ -93,12 +91,6 @@ impl AccountHandle {
     ) -> crate::Result<(Vec<AddressWithUnspentOutputs>, Vec<OutputId>)> {
         log::debug!("[SYNC] start get_address_output_ids");
         let address_output_ids_start_time = Instant::now();
-        let account = self.read().await;
-
-        #[cfg(feature = "events")]
-        let (account_index, consolidation_threshold) =
-            (account.index, account.account_options.output_consolidation_threshold);
-        drop(account);
 
         let mut addresses_with_outputs = Vec::new();
         // spent outputs or alias/nft/foundries that don't get synced anymore, because of other sync options
@@ -126,13 +118,6 @@ impl AccountHandle {
             let results = futures::future::try_join_all(tasks).await?;
             for res in results {
                 let (mut address, output_ids): (AddressWithUnspentOutputs, Vec<OutputId>) = res?;
-                #[cfg(feature = "events")]
-                if output_ids.len() > consolidation_threshold {
-                    self.event_emitter
-                        .lock()
-                        .await
-                        .emit(account_index, WalletEvent::ConsolidationRequired);
-                }
                 // only return addresses with outputs
                 if !output_ids.is_empty() {
                     // outputs we had before, but now not anymore, got spent or are alias/nft/foundries that don't get

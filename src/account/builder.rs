@@ -15,18 +15,15 @@ use iota_client::{
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-#[cfg(feature = "ledger_nano")]
-use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
-        constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
         handle::AccountHandle,
         types::{address::AddressWrapper, AccountAddress},
-        Account, AccountOptions,
+        Account,
     },
     ClientOptions, Error,
 };
@@ -191,13 +188,6 @@ impl AccountBuilder {
             }
         };
 
-        let consolidation_threshold = match *self.secret_manager.read().await {
-            #[cfg(feature = "ledger_nano")]
-            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
-                DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
-            }
-            _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
-        };
         let account = Account {
             index: account_index,
             coin_type: self.coin_type.unwrap_or_default() as u32,
@@ -210,11 +200,6 @@ impl AccountBuilder {
             unspent_outputs: HashMap::new(),
             transactions: HashMap::new(),
             pending_transactions: HashSet::new(),
-            // sync interval, output consolidation
-            account_options: AccountOptions {
-                output_consolidation_threshold: consolidation_threshold,
-                automatic_output_consolidation: true,
-            },
         };
         let account_handle = AccountHandle::new(
             account,
