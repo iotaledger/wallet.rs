@@ -24,8 +24,6 @@ use crate::account::{
     types::{address::AddressWithUnspentOutputs, InclusionState, OutputData},
     AccountBalance,
 };
-#[cfg(feature = "ledger_nano")]
-use crate::secret::SecretManager;
 #[cfg(feature = "events")]
 use crate::{
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
@@ -81,24 +79,6 @@ impl AccountHandle {
         // request possible spent outputs
         let (spent_output_responses, _already_known_balance, _loaded_output_responses) =
             self.get_outputs(spent_output_ids.clone(), true).await?;
-
-        let non_ledger_secret_manager = match *self.secret_manager.read().await {
-            #[cfg(feature = "ledger_nano")]
-            // don't automatically consolidate/collect outputs with ledger secret_managers, because they require
-            // approval from the user
-            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => false,
-            _ => true,
-        };
-
-        // Only consolidates outputs for non ledger accounts, because they require approval from the user
-        if options.automatic_output_consolidation && non_ledger_secret_manager {
-            self.consolidate_outputs(false).await?;
-        }
-
-        // Only consolidates outputs for non ledger accounts, because they require approval from the user
-        if non_ledger_secret_manager {
-            self.try_collect_outputs(options.try_collect_outputs).await?;
-        }
 
         // add a field to the sync options to also sync incoming transactions?
 
