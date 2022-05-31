@@ -5,7 +5,7 @@ use std::fmt::{Debug, Formatter, Result};
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::output::OutputId,
+    bee_block::output::{dto::OutputDto, OutputId},
     NodeInfoWrapper,
 };
 use serde::Serialize;
@@ -33,6 +33,12 @@ pub enum Response {
     /// Response for
     /// [`ListAddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::ListAddressesWithUnspentOutputs)
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
+    /// Response for
+    /// [`BuildAliasOutput`](crate::message_interface::ClientMethod::BuildAliasOutput)
+    /// [`BuildBasicOutput`](crate::message_interface::ClientMethod::BuildBasicOutput)
+    /// [`BuildFoundryOutput`](crate::message_interface::ClientMethod::BuildFoundryOutput)
+    /// [`BuildNftOutput`](crate::message_interface::ClientMethod::BuildNftOutput)
+    BuiltOutput(OutputDto),
     /// Response for
     /// [`GetOutputsWithAdditionalUnlockConditions`](crate::message_interface::AccountMethod::
     /// GetOutputsWithAdditionalUnlockConditions)
@@ -119,6 +125,7 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
+            Response::BuiltOutput(output) => write!(f, "BuiltOutput({:?})", output),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
             Response::Output(output) => write!(f, "Output({:?})", output),
             Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
