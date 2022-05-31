@@ -7,8 +7,12 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     api::ClientBlockBuilder,
     bee_block::{
+        input::Input,
         output::{dto::OutputDto, Output, OutputId},
-        payload::transaction::TransactionId,
+        payload::{
+            transaction::{TransactionEssence, TransactionId},
+            Payload, TransactionPayload,
+        },
     },
     bee_rest_api::types::responses::OutputResponse,
 };
@@ -114,5 +118,55 @@ impl AccountHandle {
             get_outputs_start_time.elapsed()
         );
         Ok((found_outputs, balance_from_known_outputs, loaded_outputs))
+    }
+
+    // Fetch and store transaction payload for `output_responses`
+    pub(crate) async fn store_transaction_payloads_for_output_responses(
+        &self,
+        output_responses: &Vec<OutputResponse>,
+    ) -> crate::Result<()> {
+        for output_response in output_responses {
+            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+            match self.client.get_included_block(&transaction_id).await {
+                Ok(block) => {
+                    // message.into_payload() would be nice to avoid having to clone
+                    if let Some(Payload::Transaction(transaction_payload)) = block.payload() {
+                        let inputs = self.get_inputs_for_transaction_payload(transaction_payload).await?;
+
+                        let mut account = self.write().await;
+                        let payload = transaction_payload.clone();
+                        let _ = account
+                            .unspent_output_transaction_payloads
+                            .insert(transaction_id, *payload);
+                        let _ = account.unspent_output_transaction_inputs.insert(transaction_id, inputs);
+                    }
+                }
+                // TODO: Confirm reason for failure
+                Err(e) => log::debug!("Unable to get blocks: {:?}", e),
+            }
+        }
+
+        Ok(())
+    }
+
+    // Fetch and store inputs for transaction payload
+    pub(crate) async fn get_inputs_for_transaction_payload(
+        &self,
+        transaction_payload: &TransactionPayload,
+    ) -> crate::Result<Vec<OutputResponse>> {
+        let TransactionEssence::Regular(essence) = transaction_payload.essence();
+        let mut output_ids = Vec::new();
+
+        for input in essence.inputs() {
+            if let Input::Utxo(input) = input {
+                output_ids.push(*input.output_id());
+            }
+        }
+
+        match self.client.get_outputs(output_ids).await {
+            Ok(output_responses) => Ok(output_responses),
+            // TODO: Find out how to determine if error means it's been pruned
+            Err(_) => Ok(Vec::new()),
+        }
     }
 }
