@@ -5,7 +5,7 @@ use crate::participation::response_types::{EventInformation, EventStatus};
 
 use serde::{Deserialize, Serialize};
 
-use std::{convert::TryInto, io::Read};
+use std::{collections::HashMap, convert::TryInto, io::Read};
 
 /// Particiapation index
 pub(crate) const PARTICIPATE: &str = "PARTICIPATE";
@@ -43,8 +43,11 @@ pub struct ParticipatingAccount {
     /// The index of the account
     #[serde(rename = "accountIndex")]
     pub account_index: usize,
-    /// The events the acount participates at the moment
+    /// The events the acount participates
     pub participations: Vec<Participation>,
+    #[serde(rename = "trackedParticipations")]
+    /// The events the acount participates at the moment with their amount
+    pub tracked_participations: HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
     /// Fund that are currently staking for assembly
     #[serde(rename = "assemblyStakedFunds")]
     pub assembly_staked_funds: u64,
@@ -168,4 +171,15 @@ mod tests {
 
         assert_eq!(participations, deserialized_participations);
     }
+}
+
+/// OutputStatusResponses to keep track of the data after outputs got spent
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OutputStatusResponses {
+    /// Spent outputs data
+    pub spent:
+        HashMap<iota_client::bee_message::output::OutputId, crate::participation::response_types::OutputStatusResponse>,
+    /// Unpent outputs data
+    pub unspent:
+        HashMap<iota_client::bee_message::output::OutputId, crate::participation::response_types::OutputStatusResponse>,
 }

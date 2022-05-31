@@ -1015,27 +1015,134 @@ impl AccountHandle {
             Ok(res) => res,
             Err(_) => Vec::new(),
         };
+
+        let mut read_participation_outputs = match crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .get_participation_outputs(*account.index())
+            .await
+        {
+            Ok(res) => res,
+            Err(_) => crate::participation::types::OutputStatusResponses {
+                spent: HashMap::new(),
+                unspent: HashMap::new(),
+            },
+        };
+
         let client = crate::client::get_client(&account.client_options).await?;
         let client = client.read().await;
         let node = client.get_node().await?;
 
-        let mut available_outputs: Vec<AddressOutput> = Vec::new();
-        let sent_messages = account.list_messages(0, 0, Some(MessageType::Confirmed)).await?;
+        let mut spent_outputs: Vec<AddressOutput> = Vec::new();
+        let mut unspent_outputs: Vec<AddressOutput> = Vec::new();
         for address in account.addresses() {
-            let address_outputs = address.available_outputs(&sent_messages);
-            available_outputs.extend(address_outputs.into_iter().cloned().collect::<Vec<AddressOutput>>());
+            for output in address.outputs().values() {
+                if output.is_spent {
+                    // Only request data for spent outputs if we haven't already
+                    if read_participation_outputs.spent.get(&output.id()?).is_none() {
+                        // output got spent, so we will update it with the data from when it was unspent, even though it
+                        // might haven't tracked the latest milestone, that's why we're also requesting it
+                        if let Some(unspent_output_data) = read_participation_outputs.unspent.get(&output.id()?) {
+                            read_participation_outputs
+                                .spent
+                                .insert(output.id()?, unspent_output_data.clone());
+                        } else {
+                            // If also not known in the unspent participations, we will add an empty one now, so we
+                            // don't request this output forever
+                            read_participation_outputs.spent.insert(
+                                output.id()?,
+                                crate::participation::response_types::OutputStatusResponse {
+                                    participations: HashMap::new(),
+                                },
+                            );
+                        }
+                        spent_outputs.push(output.clone());
+                    }
+                } else {
+                    unspent_outputs.push(output.clone())
+                }
+            }
         }
 
-        let (shimmer_staked_funds, assembly_staked_funds): (
+        let mut processed_outputs: HashSet<iota_client::bee_message::output::OutputId> = HashSet::new();
+
+        #[allow(clippy::type_complexity)]
+        let (_, _, mut tracked_participations, spent_output_status_responses): (
             u64,
             u64,
-            // HashMap<String, crate::participation::response_types::TrackedParticipation>,
+            HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
+            Vec<(
+                iota_client::bee_message::output::OutputId,
+                crate::participation::response_types::OutputStatusResponse,
+            )>,
         ) = crate::participation::account_helpers::get_outputs_participation(
-            available_outputs,
+            spent_outputs,
             node.clone(),
             assembly_event_id,
         )
         .await?;
+
+        for (old_output_id, _spent_output_status_response) in &spent_output_status_responses {
+            processed_outputs.insert(*old_output_id);
+        }
+
+        // Get unspent outputs separated, to know the correct staked funds
+        #[allow(clippy::type_complexity)]
+        let (shimmer_staked_funds, assembly_staked_funds, unspent_tracked_participations, output_status_responses): (
+            u64,
+            u64,
+            HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
+            Vec<(
+                iota_client::bee_message::output::OutputId,
+                crate::participation::response_types::OutputStatusResponse,
+            )>,
+        ) = crate::participation::account_helpers::get_outputs_participation(unspent_outputs, node.clone(), assembly_event_id).await?;
+        for (output_id, _output_status_response) in &output_status_responses {
+            processed_outputs.insert(*output_id);
+        }
+
+        // Update data with spent output data from read_participation_outputs
+        let mut stored_output_participation_data: HashMap<
+            String,
+            Vec<crate::participation::response_types::TrackedParticipation>,
+        > = HashMap::new();
+        for (output_id, output_status_response) in &read_participation_outputs.spent {
+            if !processed_outputs.contains(output_id) {
+                for (event_id, participation) in &output_status_response.participations {
+                    stored_output_participation_data
+                        .entry(event_id.to_string())
+                        .and_modify(|p| p.push(participation.clone()))
+                        .or_insert_with(|| vec![participation.clone()]);
+                }
+            }
+        }
+        for (event_id, participations) in stored_output_participation_data {
+            tracked_participations
+                .entry(event_id.to_string())
+                .and_modify(|p| p.extend(participations.clone()))
+                .or_insert_with(|| participations.to_vec());
+        }
+
+        // update read_participation_outputs
+        for (spent_output_id, spent_output_status_response) in spent_output_status_responses {
+            read_participation_outputs
+                .spent
+                .insert(spent_output_id, spent_output_status_response);
+        }
+        for (output_id, output_status_response) in output_status_responses {
+            read_participation_outputs
+                .unspent
+                .insert(output_id, output_status_response);
+        }
+
+        // Add the unspent tracked_participations so we have all together
+        for (event_id, participations) in unspent_tracked_participations {
+            tracked_participations
+                .entry(event_id.to_string())
+                .and_modify(|p| p.extend(participations.clone()))
+                .or_insert_with(|| participations.to_vec());
+        }
 
         let (shimmer_rewards, assembly_rewards, shimmer_rewards_below_minimum, assembly_rewards_below_minimum) =
             crate::participation::account_helpers::get_addresses_staking_rewards(
@@ -1045,9 +1152,18 @@ impl AccountHandle {
             )
             .await?;
 
+        // Save updated participation_outputs
+        crate::storage::get(&account.storage_path)
+            .await?
+            .lock()
+            .await
+            .save_participation_outputs(*account.index(), read_participation_outputs)
+            .await?;
+
         Ok(crate::participation::types::ParticipatingAccount {
             account_index: *account.index(),
             participations: read_participations,
+            tracked_participations,
             assembly_staked_funds,
             assembly_rewards_below_minimum,
             assembly_rewards,

@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::address::{Address, AddressOutput};
-use iota_client::node_manager::Node;
+use iota_client::{bee_message::output::OutputId, node_manager::Node};
+
+use std::collections::HashMap;
 
 // helper function to get the staked funds and participations
 pub(crate) async fn get_outputs_participation(
@@ -12,12 +14,16 @@ pub(crate) async fn get_outputs_participation(
 ) -> crate::Result<(
     u64,
     u64,
-    // HashMap<String, crate::participation::response_types::TrackedParticipation>,
+    HashMap<String, Vec<crate::participation::response_types::TrackedParticipation>>,
+    Vec<(OutputId, crate::participation::response_types::OutputStatusResponse)>,
 )> {
-    // let mut total_output_participation: HashMap<String, crate::participation::response_types::TrackedParticipation> =
-    //     HashMap::new();
+    let mut total_output_participation: HashMap<
+        String,
+        Vec<crate::participation::response_types::TrackedParticipation>,
+    > = HashMap::new();
     let shimmer_staked_funds = 0;
     let mut assembly_staked_funds = 0;
+    let mut output_participations = Vec::new();
 
     // We split the outputs into chunks so we don't get timeouts if we have thousands
     for output_ids_chunk in address_outputs.chunks(100).map(|x: &[AddressOutput]| x.to_vec()) {
@@ -39,20 +45,26 @@ pub(crate) async fn get_outputs_participation(
         for res in results {
             let (output, output_participation_res) = res;
             if let Ok(output_participation) = output_participation_res {
-                for (event_id, _participation) in output_participation.participations {
+                for (event_id, participation) in &output_participation.participations {
                     if event_id == assembly_event_id {
                         assembly_staked_funds += output.amount;
                     }
-                    // total_output_participation
-                    //     .entry(event_id)
-                    //     .and_modify(|p| p.amount += participation.amount)
-                    //     .or_insert_with(|| participation);
+                    total_output_participation
+                        .entry(event_id.to_string())
+                        .and_modify(|p| p.push(participation.clone()))
+                        .or_insert_with(|| vec![participation.clone()]);
                 }
+                output_participations.push((output.id()?, output_participation));
             }
         }
     }
 
-    Ok((shimmer_staked_funds, assembly_staked_funds))
+    Ok((
+        shimmer_staked_funds,
+        assembly_staked_funds,
+        total_output_participation,
+        output_participations,
+    ))
 }
 
 // helper function to get the rewards

@@ -1720,6 +1720,10 @@ impl SyncedAccount {
         // collect the transactions we need to make
 
         let account = self.account_handle.read().await;
+
+        // Bool is required to keep track of wheter we could get the participations from storage since if we would try
+        // to list_messages() in the else{} closure the mutex would still be locked which would result in a deadlock
+        let mut could_read_participations = false;
         if let Ok(read_participations) = crate::storage::get(&account.storage_path)
             .await?
             .lock()
@@ -1733,7 +1737,31 @@ impl SyncedAccount {
                     participations.push(participation);
                 }
             }
+            could_read_participations = true;
         }
+
+        if !could_read_participations {
+            // if no participations exist locally we try to get the latest participations from the latest transaction
+            // and add them
+            let messages = account.list_messages(0, 0, Some(MessageType::Sent)).await?;
+            if let Some(message) = messages.last() {
+                if let Some(MessagePayload::Transaction(transaction_payload)) = &message.payload {
+                    let TransactionEssence::Regular(essence) = &transaction_payload.essence();
+                    if let Some(Payload::Indexation(indexation_payload)) = essence.payload() {
+                        if let Ok(read_participations) =
+                            crate::participation::types::Participations::from_bytes(&mut indexation_payload.data())
+                        {
+                            for participation in read_participations.participations {
+                                if !participations.iter().any(|p| p.event_id == participation.event_id) {
+                                    participations.push(participation);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // -1 because we will generate one output
         let max_inputs = match account.signer_type {
             #[cfg(feature = "ledger-nano")]
@@ -2353,7 +2381,7 @@ async fn perform_transfer(
     }
 
     let client = crate::client::get_client(account_.client_options()).await?;
-    let client = client.read().await;
+    let client_ = client.read().await;
 
     // Check if we would let dust on an address behind or send new dust, which would make the tx unconfirmable
     let mut single_addresses = HashSet::new();
@@ -2366,7 +2394,7 @@ async fn perform_transfer(
             .filter(|d| d.1 == address)
             .map(|(amount, _, flag)| (*amount, *flag))
             .collect();
-        is_dust_allowed(&account_, &client, address, created_or_consumed_outputs).await?;
+        is_dust_allowed(&account_, &client_, address, created_or_consumed_outputs).await?;
     }
 
     // Build transaction essence
@@ -2441,18 +2469,48 @@ async fn perform_transfer(
     // Drop account so we don't lock it during PoW and submitting
     drop(account_);
 
-    let message = finish_pow(&client, Some(Payload::Transaction(Box::new(transaction)))).await?;
+    let message = finish_pow(&client_, Some(Payload::Transaction(Box::new(transaction)))).await?;
 
     log::debug!("[TRANSFER] submitting message {:#?}", message);
     transfer_obj
         .emit_event_if_needed(account_id, TransferProgressType::Broadcasting)
         .await;
 
-    let message_id = match client.post_message(&message).await {
+    let message_id = match client_.post_message(&message).await {
         Ok(message_id) => message_id,
         // Ignore errors from posting the message, the wallet will try to submit the message later during syncing again
         Err(_) => message.id().0,
     };
+
+    // drop the client ref so it doesn't lock the Message parsing
+    drop(client_);
+
+    let new_client = client.clone();
+    let new_account_handle = account_handle.clone();
+    // Spawn a thread to monitor the new sent transaction so the account gets updated faster
+    tokio::spawn(async move {
+        log::debug!("[TRANSFER] Checking confirmation for {}", message_id);
+        let client = new_client.read().await;
+        let mut confirmed = false;
+        if let Ok(_messages) = client.retry_until_included(&message_id, None, None).await {
+            confirmed = true;
+        }
+
+        // drop client so it doesn't deadlock in syncing
+        drop(client);
+
+        // Only sync account if the transaction got confirmed
+        if confirmed {
+            // Ignore result
+            let _ = new_account_handle
+                .sync()
+                .await
+                .steps(vec![AccountSynchronizeStep::SyncMessages])
+                .execute()
+                .await;
+        }
+        log::debug!("[TRANSFER] Checking confirmation for {} finished", message_id);
+    });
 
     let mut account_ = account_handle.write().await;
 
@@ -2483,9 +2541,6 @@ async fn perform_transfer(
         addresses_to_watch.push(addr.address().clone());
         account_.append_addresses(vec![addr]);
     }
-
-    // drop the  client ref so it doesn't lock the Message parsing
-    drop(client);
 
     let message = Message::from_iota_message(
         message_id,
