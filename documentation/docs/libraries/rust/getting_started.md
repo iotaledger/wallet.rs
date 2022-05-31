@@ -15,8 +15,6 @@ keywords:
 
 We recommend you update _Rust_ to the latest stable version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). The nightly version should be fine, but there is a chance some changes are not compatible.
 
- [_no_std_](https://docs.rust-embedded.org/book/intro/no-std.html) is not currently supported, but we are working on it, and we will provide it as a feature once the new implementation is ready.
-
 ### Dependencies
 
  [_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/) are required. In order to run the build process successfully using Cargo you may need install additional build tools on your system. 
@@ -64,7 +62,7 @@ To use the library, add this to your _Cargo.toml_ :
 
 ```
 [dependencies]
-iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" }
+iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop" }
 ```
 
 ### Initialisation
@@ -72,29 +70,54 @@ iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" 
 In order to use the library, you first need to create an _AccountManager_ :
 
 ```rust
-use iota_wallet::{account_manager::AccountManager, ClientOptions, secret::SecretManager};
 use std::path::PathBuf;
 
+use iota_wallet::{
+    account_manager::AccountManager,
+    secret::{stronghold::StrongholdSecretManager, SecretManager},
+    ClientOptions, Result,
+};
+
 #[tokio::main]
-async fn main() -> iota_wallet::Result<()> {
-    let storage_path: PathBuf = "./my-db".into();
+async fn main() -> Result<()> {
+    // Shouldn't be hardcoded in production
+    // mnemonic can be generated with `manager.generate_mnemonic()?` and will be the only way to recover your funds if
+    // you loose the stronghold file/password, so be sure to save it securely
+    let nonsecure_use_of_development_mnemonic = "endorse answer radar about source reunion marriage tag sausage weekend frost daring base attack because joke dream slender leisure group reason prepare broken river".to_string();
+    let stronghold_password = "some_hopefully_secure_password";
+
+    // Setup Stronghold secret_manager
+    let mut secret_manager = StrongholdSecretManager::builder()
+        .password(&stronghold_password)
+        .snapshot_path(PathBuf::from("wallet.stronghold"))
+        .build();
+
+    // The mnemonic only needs to be stored the first time
+    secret_manager
+        .store_mnemonic(nonsecure_use_of_development_mnemonic)
+        .await?;
+
+    // Create the account manager with the secret_manager and client options
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+
     let manager = AccountManager::builder()
-        .with_storage(&storage_path, None)?
+        .with_secret_manager(SecretManager::Stronghold(secret_manager))
+        .with_client_options(client_options)
         .finish()
         .await?;
-    manager.set_stronghold_password("password").await?;
-    // If no mnemonic is provided, then the Stronghold file is the only way for a backup
-    manager.store_mnemonic(SecretManager::Stronghold, None).await?;
-    let client_options = ClientOptions::new()
-        .with_node("https://api.lb-0.h.chrysalis-devnet.iota.cafe")?
-        .build()?;
+
+    // Create a new account, this will automatically generate an address
     let account = manager
-        .create_account(client_options)?
-        .secret_manager(SecretManager::Stronghold)
-        .initialise()
+        .create_account()
+        .with_alias("Alice".to_string())
+        .finish()
         .await?;
-    let address = account.generate_address().await?;
-    println!("Address: {}", address.address().to_bech32());
+
+    println!(
+        "Generated a new account with addresses {:?}",
+        account.list_addresses().await?
+    );
+
     Ok(())
 }
 ```

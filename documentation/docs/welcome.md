@@ -23,20 +23,14 @@ Use Stronghold to store account data of the `wallet.rs`. It integrates the best 
 
 With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, `Stronghold` will create and store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
-## IOTA 1.5 (Chrysalis) in a Nutshell
-The [Developer Guide to Chrysalis](https://wiki.iota.org/chrysalis-docs/introduction/what_is_chrysalis) explains all the main concepts behind the IOTA Chrysalis in detail.
-
-Please, see a summary of changes in comparison to IOTA 1.0 at [Chrysalis documentation](https://wiki.iota.org/chrysalis-docs/guides/overview).
-
 ## Testnet
-To join the Chrysalis public testnet checkout this [blog post](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). More information about Chrysalis components is available at the [Chrysalis documentation portal](https://chrysalis.docs.iota.org/).
+To join the public testnet checkout this [blog post](TODO: set working link). More information about Stardust components is available in the [tips repository](https://github.com/iotaledger/tips/pulls).
 
 ## Joining the Discussion
-If you want to get involved in discussions about this library, or you're looking for support, go to the #clients-discussion channel on [Discord](https://discord.iota.org).
+If you want to get involved in discussions about this library, or you're looking for support, go to the #wallet-library channel on [Discord](https://discord.iota.org).
 
 ## What You Will Find Here
 This documentation has four paths:
 1. The [Overview](overview.md): a detailed overview of the wallet library. 
 2. [Libraries](libraries/overview.md): all available programming languages and their resources.
-3. The [Specification](specification.md): a detailed explanation requirements and functionality.
 4. [Contribute](contribute.md): how you can work on the wallet software, get in touch, join the community and become part of the X-Team!

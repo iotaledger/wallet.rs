@@ -62,40 +62,9 @@ module.exports = {
               id: 'libraries/nodejs/examples',
               label: 'Examples'
             },
-            {
-              type: 'doc',
-              id: 'libraries/nodejs/api_reference',
-              label: 'API Reference'
-            },
-          ]
-        },
-        {
-          type: 'category',
-          label: 'Python',
-          items: [
-            {
-              type: 'doc',
-              id: 'libraries/python/getting_started',
-              label: 'Getting Started'
-            },
-            {
-              type: 'doc',
-              id: 'libraries/python/examples',
-              label: 'Examples'
-            },
-            {
-              type: 'doc',
-              id: 'libraries/python/api_reference',
-              label: 'API Reference'
-            },
           ]
         }
       ]
-    },
-    {
-      type: 'doc',
-      id: 'specification',
-      label: 'Specification',
     },
     {
       type: 'doc',
