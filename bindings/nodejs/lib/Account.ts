@@ -21,9 +21,9 @@ import type {
     AddressWithUnspentOutputs,
     TransactionResult,
     PreparedTransactionData,
-    Output,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
+import type { OutputTypes } from '@iota/types';
 
 export class Account {
     meta: AccountMeta;
@@ -55,9 +55,9 @@ export class Account {
         await this.messageHandler.callAccountMethod(this.meta.index, {
             name: 'SetAlias',
             data: {
-                alias
-            }
-        })
+                alias,
+            },
+        });
     }
 
     async getBalance(): Promise<AccountBalance> {
@@ -248,7 +248,7 @@ export class Account {
     }
 
     async prepareTransaction(
-        outputs: Output[],
+        outputs: OutputTypes[],
         options?: TransactionOptions,
     ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
@@ -422,7 +422,7 @@ export class Account {
     }
 
     async SendTransaction(
-        outputs: Output[],
+        outputs: OutputTypes[],
         transactionOptions?: TransactionOptions,
     ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
@@ -455,7 +455,9 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async signTransactionEssence(preparedTransactionData: PreparedTransactionData): Promise<SignedTransactionEssence> {
+    async signTransactionEssence(
+        preparedTransactionData: PreparedTransactionData,
+    ): Promise<SignedTransactionEssence> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -468,7 +470,9 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async submitAndStoreTransaction(signedTransactionData: SignedTransactionEssence): Promise<TransactionResult> {
+    async submitAndStoreTransaction(
+        signedTransactionData: SignedTransactionEssence,
+    ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

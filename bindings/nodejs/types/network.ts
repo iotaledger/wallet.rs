@@ -19,7 +19,7 @@ export interface NetworkInfo {
     localPow?: boolean;
     fallbackToLocalPow?: boolean;
     tipsInterval?: number;
-    rentStructure?: IRent
+    rentStructure?: IRent;
 }
 
 export type Node = {

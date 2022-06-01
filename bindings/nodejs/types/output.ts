@@ -1,4 +1,8 @@
-import type { AddressTypes, IOutputResponse } from '@iota/types';
+import type {
+    AddressTypes,
+    OutputTypes,
+    IOutputMetadataResponse,
+} from '@iota/types';
 
 export enum OutputsToCollect {
     None = 'None',
@@ -8,34 +12,26 @@ export enum OutputsToCollect {
     All = 'All',
 }
 
-enum OutputType {
-    Treasury = 'Treasury',
-    Basic = 'Basic',
-    Alias = 'Alias',
-    Foundry = 'Foundry',
-    Nft = 'Nft',
-}
-
+/** An output with metadata */
 export interface OutputData {
+    /** The output id */
     outputId: string;
-    outputResponse: IOutputResponse;
-    output: Output;
+    /** The metadata of the output */
+    metadata: IOutputMetadataResponse;
+    /** The actual Output */
+    output: OutputTypes;
+    /** The output amount */
     amount: string;
+    /** If an output is spent */
     isSpent: boolean;
-    address: {
-        type: AddressTypes;
-        data: string;
-    };
+    /** Associated account address */
+    address: AddressTypes;
+    /** Network ID */
     networkId: string;
+    /** Remainder */
     remainder: boolean;
+    /** Bip32 path */
     chain?: Segment[];
-}
-
-// TODO: this should be the same as bee_block::output::OutputDto
-export interface Output {
-    type: OutputType;
-    // TODO: specify the return type 
-    data: any;
 }
 
 export interface Segment {
