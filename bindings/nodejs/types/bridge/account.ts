@@ -34,7 +34,7 @@ export type __BuildFoundryOutputMethod__ = {
 
 export type __BuildNftOutputMethod__ = {
     name: 'BuildNftOutput';
-    date: BuildNftOutputData;
+    data: BuildNftOutputData;
 };
 
 export type __SyncAccountMethod__ = {

@@ -23,7 +23,7 @@ import type {
     PreparedTransactionData,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
-import type { OutputTypes } from '@iota/types';
+import type { BuildAliasOutputData, BuildBasicOutputData, BuildFoundryOutputData, BuildNftOutputData } from '../types/buildOutputData';
 
 export class Account {
     meta: AccountMeta;
@@ -33,6 +33,51 @@ export class Account {
         this.meta = accountMeta;
         this.messageHandler = messageHandler;
     }
+
+    async buildAliasOutput(data: BuildAliasOutputData): Promise<Output> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BuildAliasOutput',
+                data
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async buildBasicOutput(data: BuildBasicOutputData): Promise<Output> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BuildBasicOutput',
+                data
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async buildFoundryOutput(data: BuildFoundryOutputData): Promise<Output> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BuildFoundryOutput',
+                data
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async buildNftOutput(data: BuildNftOutputData): Promise<Output> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BuildNftOutput',
+                data
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+    
 
     async collectOutputs(outputIds: string[]): Promise<TransactionResult[]> {
         const resp = await this.messageHandler.callAccountMethod(
@@ -421,8 +466,8 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async SendTransaction(
-        outputs: OutputTypes[],
+    async sendTransaction(
+        outputs: Output[],
         transactionOptions?: TransactionOptions,
     ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
