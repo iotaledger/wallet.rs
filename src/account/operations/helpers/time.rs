@@ -77,10 +77,10 @@ pub(crate) fn can_output_be_unlocked_now(
                     let mut ms_expired = false;
                     let mut time_expired = false;
                     // 0 gets ignored
-                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
+                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() <= current_milestone {
                         ms_expired = true;
                     }
-                    if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
+                    if expiration.timestamp() == 0 || expiration.timestamp() <= current_time {
                         time_expired = true;
                     }
                     // Check if the address which can unlock the output now is in the account
@@ -95,7 +95,11 @@ pub(crate) fn can_output_be_unlocked_now(
                                     .iter()
                                     .any(|a| a.address.inner == *expiration.return_address()),
                         );
-                    } else {
+                        // Only if both conditions aren't met, the target address can unlock the output. If only one
+                        // condition is met, the output can't be unlocked by anyone.
+                    } else if (*expiration.milestone_index() == 0 || *expiration.milestone_index() > current_milestone)
+                        && (expiration.timestamp() == 0 || expiration.timestamp() > current_time)
+                    {
                         // check address unlock condition
                         let can_unlocked = if let Some(UnlockCondition::Address(address_unlock_condition)) =
                             unlock_conditions.get(AddressUnlockCondition::KIND)
@@ -113,6 +117,8 @@ pub(crate) fn can_output_be_unlocked_now(
                             false
                         };
                         can_be_unlocked.push(can_unlocked);
+                    } else {
+                        can_be_unlocked.push(false);
                     }
                 }
                 UnlockCondition::Timelock(timelock) => {
@@ -154,10 +160,10 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                     let mut ms_expired = false;
                     let mut time_expired = false;
                     // 0 gets ignored
-                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() < current_milestone {
+                    if *expiration.milestone_index() == 0 || *expiration.milestone_index() <= current_milestone {
                         ms_expired = true;
                     }
-                    if expiration.timestamp() == 0 || expiration.timestamp() < current_time {
+                    if expiration.timestamp() == 0 || expiration.timestamp() <= current_time {
                         time_expired = true;
                     }
                     // Check if the address which can unlock the output now is in the account
@@ -181,10 +187,10 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                     let mut ms_reached = false;
                     let mut time_reached = false;
                     // 0 gets ignored
-                    if *timelock.milestone_index() == 0 || *timelock.milestone_index() < current_milestone {
+                    if *timelock.milestone_index() == 0 || *timelock.milestone_index() <= current_milestone {
                         ms_reached = true;
                     }
-                    if timelock.timestamp() == 0 || timelock.timestamp() < current_time {
+                    if timelock.timestamp() == 0 || timelock.timestamp() <= current_time {
                         time_reached = true;
                     }
                     if !(ms_reached && time_reached) {

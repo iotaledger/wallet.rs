@@ -1,11 +1,13 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{hash_map::Entry, HashMap};
+use std::{collections::HashMap, ops::Deref};
 
 use iota_client::bee_block::output::{
-    unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, Output, UnlockCondition,
+    unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, NativeTokensBuilder, Output, TokenId,
+    UnlockCondition,
 };
+use primitive_types::U256;
 
 use crate::account::{handle::AccountHandle, types::AccountBalance, OutputsToCollect};
 
@@ -26,7 +28,7 @@ impl AccountHandle {
 
         let mut total_amount = 0;
         let mut required_storage_deposit = 0;
-        let mut total_native_tokens = HashMap::new();
+        let mut total_native_tokens = NativeTokensBuilder::new();
         let mut potentially_locked_outputs = HashMap::new();
         let mut aliases = Vec::new();
         let mut foundries = Vec::new();
@@ -41,8 +43,18 @@ impl AccountHandle {
             // Add alias and foundry outputs here because they can't have a [`StorageDepositReturnUnlockCondition`]
             // or time related unlock conditions
             match &output_data.output {
-                Output::Foundry(output) => foundries.push(output.id()),
+                Output::Foundry(output) => {
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    }
+                    foundries.push(output.id())
+                }
                 Output::Alias(output) => {
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    }
                     let alias_id = output.alias_id().or_from_output_id(output_data.output_id);
                     aliases.push(alias_id);
                 }
@@ -68,16 +80,7 @@ impl AccountHandle {
                         required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
                         // Add native tokens
                         if let Some(native_tokens) = output_data.output.native_tokens() {
-                            for native_token in native_tokens.iter() {
-                                match total_native_tokens.entry(*native_token.token_id()) {
-                                    Entry::Vacant(e) => {
-                                        e.insert(*native_token.amount());
-                                    }
-                                    Entry::Occupied(mut e) => {
-                                        *e.get_mut() += *native_token.amount();
-                                    }
-                                }
-                            }
+                            total_native_tokens.add_native_tokens(native_tokens.clone())?;
                         }
                     } else {
                         // if we have multiple unlock conditions for basic or nft outputs, then we might can't spend the
@@ -120,22 +123,19 @@ impl AccountHandle {
                                     output_data.output.amount()
                                 };
 
+                                // add nft_id for nft outputs
+                                if let Output::Nft(output) = &output_data.output {
+                                    let nft_id = output.nft_id().or_from_output_id(output_data.output_id);
+                                    nfts.push(nft_id);
+                                }
+
                                 // Add amount
                                 total_amount += amount;
                                 // Add storage deposit
                                 required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
                                 // Add native tokens
                                 if let Some(native_tokens) = output_data.output.native_tokens() {
-                                    for native_token in native_tokens.iter() {
-                                        match total_native_tokens.entry(*native_token.token_id()) {
-                                            Entry::Vacant(e) => {
-                                                e.insert(*native_token.amount());
-                                            }
-                                            Entry::Occupied(mut e) => {
-                                                *e.get_mut() += *native_token.amount();
-                                            }
-                                        }
-                                    }
+                                    total_native_tokens.add_native_tokens(native_tokens.clone())?;
                                 }
                             } else {
                                 // only add outputs that can't be locked now and at any point in the future
@@ -176,7 +176,11 @@ impl AccountHandle {
         Ok(AccountBalance {
             total: total_amount,
             available: total_amount - locked_amount,
-            native_tokens: total_native_tokens,
+            native_tokens: total_native_tokens
+                .deref()
+                .clone()
+                .into_iter()
+                .collect::<HashMap<TokenId, U256>>(),
             required_storage_deposit,
             aliases,
             foundries,
