@@ -1,5 +1,9 @@
 import type { AccountId } from '../account';
 import type {
+    __BuildAliasOutputMethod__,
+    __BuildBasicOutputMethod__,
+    __BuildFoundryOutputMethod__,
+    __BuildNftOutputMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
@@ -54,6 +58,10 @@ import type {
 } from './accountManager';
 
 export type __AccountMethod__ =
+    __BuildAliasOutputMethod__
+    | __BuildBasicOutputMethod__
+    | __BuildFoundryOutputMethod__
+    | __BuildNftOutputMethod__
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
     | __GetOutputMethod__
