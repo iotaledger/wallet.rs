@@ -1,4 +1,4 @@
-import type { Address } from './address';
+import type { Address, AddressWithUnspentOutputs } from './address';
 import type { OutputData } from './output';
 import type { Transaction } from './transaction';
 
@@ -44,25 +44,13 @@ export interface AccountMeta {
     alias: string;
     publicAddresses: Address[];
     internalAddresses: Address[];
-    addressesWithUnspentOutputs: Address[];
-    outputs: OutputsMap;
+    addressesWithUnspentOutputs: AddressWithUnspentOutputs[];
+    outputs: Map<string, OutputData>;
     lockedOutputs: Set<string>;
-    unspentOutputs: OutputsMap;
-    transactions: TransactionsMap;
+    unspentOutputs: Map<string, OutputData>;
+    transactions: Map<string, Transaction>;
     pendingTransactions: Set<string>;
-    accountOptions: {
-        outputConsolidationThreshold: number;
-        automaticOutputConsolidation: boolean;
-    };
 }
-
-export type OutputsMap = {
-    [outputId: string]: OutputData;
-};
-
-export type TransactionsMap = {
-    [transactionId: string]: Transaction;
-};
 
 export enum CoinType {
     IOTA = 4218,
