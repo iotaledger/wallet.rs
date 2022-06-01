@@ -102,7 +102,7 @@ export class AccountManager {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetNodeInfo',
             payload: { url, auth },
-        })
+        });
         return JSON.parse(response).payload;
     }
 
@@ -126,7 +126,9 @@ export class AccountManager {
         });
     }
 
-    async setStrongholdPasswordClearInterval(intervalInMilliseconds?: number): Promise<void> {
+    async setStrongholdPasswordClearInterval(
+        intervalInMilliseconds?: number,
+    ): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPasswordClearInterval',
             payload: intervalInMilliseconds,

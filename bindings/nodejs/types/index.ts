@@ -9,3 +9,4 @@ export * from './secretManager';
 export * from './transaction';
 export * from './transactionOptions';
 export * from './loggerConfig';
+export * from './preparedTransactionData';

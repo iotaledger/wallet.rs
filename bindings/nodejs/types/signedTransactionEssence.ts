@@ -1,7 +1,7 @@
-import type { ITransactionPayload } from '@iota/types'
-import type { InputsData } from './transaction'
+import type { ITransactionPayload } from '@iota/types';
+import type { InputSigningData } from './preparedTransactionData';
 
-export type SignedTransactionEssence = {
-    transactionPayload: ITransactionPayload,
-    inputsData: InputsData
+export interface SignedTransactionEssence {
+    transactionPayload: ITransactionPayload;
+    inputsData: InputSigningData;
 }

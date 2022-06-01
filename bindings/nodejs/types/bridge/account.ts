@@ -1,3 +1,4 @@
+import type { OutputTypes } from '@iota/types';
 import type { AccountSyncOptions } from '../account';
 import type {
     AddressWithAmount,
@@ -6,9 +7,9 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
 } from '../address';
-import type { OutputsToCollect, Output } from '../output';
+import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
-import type { PreparedTransactionData } from '../transaction';
+import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
     NativeTokenOptions,
     TransactionOptions,
@@ -97,8 +98,8 @@ export type __PrepareSendAmountMethod__ = {
     data: {
         addressWithAmount: AddressWithAmount[];
         options?: TransactionOptions;
-    }
-}
+    };
+};
 
 export type __PrepareSendMicroTransactionMethod__ = {
     name: 'PrepareSendMicroTransaction';
@@ -135,9 +136,9 @@ export type __PrepareMintNftsMethod__ = {
 export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
-        outputs: Output[];
+        outputs: OutputTypes[];
         options?: TransactionOptions;
-    }
+    };
 };
 
 export type __MintNftsMethod__ = {
@@ -183,7 +184,7 @@ export type __SendNftMethod__ = {
 export type __SendTransactionMethod__ = {
     name: 'SendTransaction';
     data: {
-        outputs: Output[];
+        outputs: OutputTypes[];
         options?: TransactionOptions;
     };
 };
@@ -192,8 +193,8 @@ export type __SetAliasMethod__ = {
     name: 'SetAlias';
     data: {
         alias: string;
-    }
-}
+    };
+};
 
 export type __SignTransactionEssenceMethod__ = {
     name: 'SignTransactionEssence';

@@ -7,7 +7,10 @@ export interface TransactionOptions {
     customInputs?: string[];
 }
 
-export type RemainderValueStrategy = ChangeAddress | ReuseAddress | CustomAddress
+export type RemainderValueStrategy =
+    | ChangeAddress
+    | ReuseAddress
+    | CustomAddress;
 
 type ChangeAddress = {
     strategy: 'ChangeAddress';
