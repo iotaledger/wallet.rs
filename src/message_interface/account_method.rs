@@ -139,6 +139,10 @@ pub enum AccountMethod {
     /// Returns all pending transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
     ListPendingTransactions,
+    /// Calculate the minimum required storage deposit for an output.
+    /// Expected response:
+    /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
+    MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint native token.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     MintNativeToken {

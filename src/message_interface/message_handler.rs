@@ -12,7 +12,7 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::output::Output,
+    bee_block::output::{ByteCost, Output},
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
     },
@@ -416,6 +416,19 @@ impl WalletMessageHandler {
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
                     Ok(Response::SentTransaction(transaction))
+                })
+                .await
+            }
+            AccountMethod::MinimumRequiredStorageDeposit { output } => {
+                convert_async_panics(|| async {
+                    let output = Output::try_from(output)?;
+                    let byte_cost_config = account_handle.client.get_byte_cost_config().await?;
+
+                    let minimum_storage_deposit = output.byte_cost(&byte_cost_config);
+
+                    Ok(Response::MinimumRequiredStorageDeposit(
+                        minimum_storage_deposit.to_string(),
+                    ))
                 })
                 .await
             }
