@@ -41,7 +41,6 @@ async fn account_ordering() -> Result<()> {
     Ok(())
 }
 
-
 #[tokio::test]
 async fn remove_latest_account() -> Result<()> {
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
@@ -84,7 +83,7 @@ async fn remove_latest_account() -> Result<()> {
 
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
-        manager.verify_integrity().await?;
+    manager.verify_integrity().await?;
     Ok(())
 }
 

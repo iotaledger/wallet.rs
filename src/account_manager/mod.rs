@@ -105,7 +105,7 @@ impl AccountManager {
             }
 
             #[cfg(feature = "storage")]
-                self.storage_manager
+            self.storage_manager
                 .lock()
                 .await
                 .remove_account(largest_account_index)
