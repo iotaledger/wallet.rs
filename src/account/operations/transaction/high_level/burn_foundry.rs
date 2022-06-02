@@ -10,21 +10,21 @@ use iota_client::bee_message::{
 
 use crate::{
     account::{
-        handle::AccountHandle, operations::transfer::TransferResult, types::OutputData, SyncOptions, TransferOptions,
+        handle::AccountHandle, operations::transaction::TransactionResult, types::OutputData, SyncOptions, TransactionOptions,
     },
     Error,
 };
 
 impl AccountHandle {
     /// Function to destroy foundry.
-    /// Native tokens in the foundry will be transfered to the controlling alias by default,
-    /// to burn native tokens in the foundry set `options.allow_burning` to true in `TransferOptions`
+    /// Native tokens in the foundry will be trasferred to the controlling alias by default,
+    /// to burn native tokens in the foundry set `options.allow_burning` to true in `TransactionOptions`
     pub async fn destroy_foundry(
         &self,
         foundry_id: FoundryId,
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] destroy_foundry");
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] destroy_foundry");
 
         let alias_id = *foundry_id.alias_address().alias_id();
         let (existing_alias_output_data, existing_foundry_output_data) =
@@ -77,23 +77,13 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
-    /// Destroy all foundries in the given set `foundry_ids`
-    pub async fn destroy_foundries(
+      /// Destroy all foundries in the given set `foundry_ids`
+      pub async fn destroy_foundries(
         &self,
         foundry_ids: HashSet<FoundryId>,
-<<<<<<< HEAD:src/account/operations/transaction/high_level/burn_foundry.rs
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
-        log::debug!("[TRANSFER] destroy_foundries");
-=======
-        options: Option<TransferOptions>,
     ) -> crate::Result<Vec<TransactionId>> {
-<<<<<<<< HEAD:src/account/operations/transaction/high_level/burn_foundry.rs
-        log::debug!("[TRANSFER] burn_foundries");
->>>>>>> 74560f74 (Fix destroy alias and refactor):src/account/operations/transfer/high_level/burn_foundry.rs
-========
-        log::debug!("[TRANSFER] destroy_foundries");
->>>>>>>> 70ebd119 (Resolve some PR reviews):src/account/operations/transaction/high_level/destroy_foundry.rs
+        log::debug!("[TRANSACTION] destroy_foundries");
 
         let mut transaction_ids = Vec::new();
         let foundries = foundry_ids.into_iter().collect::<Vec<_>>();
@@ -107,19 +97,8 @@ impl AccountHandle {
                 let alias_id = *foundry_id.alias_address().alias_id();
                 let (alias_output_data, foundry_output_data) =
                     self.find_alias_and_foundry_output_data(alias_id, *foundry_id).await?;
-<<<<<<<< HEAD:src/account/operations/transaction/high_level/burn_foundry.rs
-                existing_alias_and_foundry_output_data.push(alias_and_foundry_output_data);
-            }
-<<<<<<< HEAD:src/account/operations/transaction/high_level/burn_foundry.rs
-            None => Some(TransactionOptions {
-                custom_inputs: Some(custom_inputs),
-                ..Default::default()
-            }),
-        };
-=======
->>>>>>> 1ac57c05 (Recursively transfer alias and nft address outputs):src/account/operations/transfer/high_level/burn_foundry.rs
-========
->>>>>>>> 70ebd119 (Resolve some PR reviews):src/account/operations/transaction/high_level/destroy_foundry.rs
+
+                validate_empty_state(&foundry_output_data.output)?;
 
                 // To burn foundries we need the controlling alias to go into the inputs as well
                 if !included_aliases.contains(&alias_id) {
@@ -164,15 +143,15 @@ impl AccountHandle {
                     options.custom_inputs.replace(custom_inputs);
                     Some(options)
                 }
-                None => Some(TransferOptions {
+                None => Some(TransactionOptions {
                     custom_inputs: Some(custom_inputs),
                     ..Default::default()
                 }),
             };
 
-            let transfer_result = self.send(outputs, options).await?;
-            transaction_ids.push(transfer_result.transaction_id);
-            match transfer_result.message_id {
+            let transaction_result = self.send(outputs, options).await?;
+            transaction_ids.push(transaction_result.transaction_id);
+            match transaction_result.message_id {
                 Some(message_id) => {
                     let _ = self.client.retry_until_included(&message_id, None, None).await?;
                     let sync_options = Some(SyncOptions {

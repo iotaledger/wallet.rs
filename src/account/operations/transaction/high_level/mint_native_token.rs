@@ -19,7 +19,7 @@ use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
+    account::{handle::AccountHandle, TransactionOptions},
     Error,
 };
 
@@ -40,10 +40,11 @@ pub struct NativeTokenOptions {
     pub foundry_metadata: Option<Vec<u8>>,
 }
 
-/// The result of a minting native token transfer, block_id is an option because submitting the transaction could fail
+/// The result of a minting native token transaction, block_id is an option because submitting the transaction could
+/// fail
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MintTokenTransferResult {
+pub struct MintTokenTransactionResult {
     pub token_id: TokenId,
     pub transaction_id: TransactionId,
     pub block_id: Option<BlockId>,
@@ -178,10 +179,10 @@ impl AccountHandle {
             ];
             self.send(outputs, options)
                 .await
-                .map(|transfer_result| MintTokenTransactionResult {
+                .map(|transaction_result| MintTokenTransactionResult {
                     token_id,
-                    transaction_id: transfer_result.transaction_id,
-                    block_id: transfer_result.block_id,
+                    transaction_id: transaction_result.transaction_id,
+                    block_id: transaction_result.block_id,
                 })
         } else {
             unreachable!("We checked if it's an alias output before")
@@ -227,22 +228,21 @@ impl AccountHandle {
                         )))
                         .finish_output()?,
                 ];
-                let transfer_result = self.send(outputs, options).await?;
-                log::debug!("[TRANSFER] sent alias output");
-                if let Some(block_id) = transfer_result.block_id {
-                    self.client.retry_until_included(&block_id, None, None).await?;
-                } else {
-                    // Try to get the transaction confirmed
-                    for _ in 0..10 {
-                        self.sync_pending_transactions().await?;
-                        let balance = self.sync(None).await?;
-                        if !balance.aliases.is_empty() {
-                            return Ok(balance.aliases[0]);
-                        }
-                        tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    }
-                }
+                let transaction_result = self.send(outputs, options).await?;
 
+                log::debug!("[TRANSACTION] sent alias output");
+                if let Some(block_id) = transaction_result.block_id {
+                    self.client.retry_until_included(&block_id, None, None).await?;
+                }
+                // Try to get the transaction confirmed
+                for _ in 0..10 {
+                    let balance = self.sync(None).await?;
+                    if !balance.aliases.is_empty() {
+                        return Ok(balance.aliases[0]);
+                    }
+                    self.sync_pending_transactions().await?;
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
+                }
                 Err(Error::MintingFailed("Alias output creation took too long".to_string()))
             }
         }

@@ -16,7 +16,9 @@ use iota_client::bee_block::{
 };
 use primitive_types::U256;
 
-use crate::account::{handle::AccountHandle, operations::transfer::TransferResult, types::OutputData, TransferOptions};
+use crate::account::{
+    handle::AccountHandle, operations::transaction::TransactionResult, types::OutputData, TransactionOptions,
+};
 
 const NATIVE_TOKEN_OVERFLOW: &str = "NativeTokensOverflow";
 
@@ -47,9 +49,9 @@ impl AccountHandle {
     pub async fn melt_native_token(
         &self,
         native_token: (TokenId, U256),
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] melt_native_token");
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] melt_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let token_id = native_token.0;
@@ -105,9 +107,9 @@ impl AccountHandle {
     pub async fn burn_native_token(
         &self,
         native_token: (TokenId, U256),
-        options: Option<TransferOptions>,
-    ) -> crate::Result<TransferResult> {
-        log::debug!("[TRANSFER] burn_native_token");
+        options: Option<TransactionOptions>,
+    ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] burn_native_token");
         let token_id = native_token.0;
         let burn_token_amount = native_token.1;
 
@@ -123,7 +125,7 @@ impl AccountHandle {
                 options.allow_burning = true;
                 Some(options)
             }
-            None => Some(TransferOptions {
+            None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
                 allow_burning: true,
                 ..Default::default()

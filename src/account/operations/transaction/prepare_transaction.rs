@@ -15,7 +15,7 @@ use packable::bounded::TryIntoBoundedU16Error;
 
 use crate::account::{
     handle::AccountHandle,
-    operations::transfer::{RemainderValueStrategy, TransferOptions},
+    operations::transaction::{RemainderValueStrategy, TransactionOptions},
 };
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};

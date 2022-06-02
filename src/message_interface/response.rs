@@ -12,7 +12,7 @@ use serde::Serialize;
 
 use crate::{
     account::{
-        operations::transfer::{high_level::mint_native_token::MintTokenTransferResult, TransferResult},
+        operations::transaction::{high_level::mint_native_token::MintTokenTransactionResult, TransactionResult},
         types::address::AccountAddress,
     },
     message_interface::dtos::{
@@ -95,7 +95,7 @@ pub enum Response {
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionResult>),
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
-    MintTokenTransfer(MintTokenTransferResult),
+    MintTokenTransaction(MintTokenTransactionResult),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),
@@ -149,14 +149,11 @@ impl Debug for Response {
             }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
-<<<<<<< HEAD
             Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
             Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),
-=======
-            Response::SentTransfer(transfer) => write!(f, "SentTransfer({:?})", transfer),
-            Response::MintTokenTransfer(mint_transfer) => write!(f, "SentTransfer({:?})", mint_transfer),
-            Response::SentTransfers(transfers) => write!(f, "SentTransfers({:?})", transfers),
->>>>>>> 48132f1f (Fix message interface compilation error)
+            Response::MintTokenTransaction(mint_transaction) => {
+                write!(f, "MintTokenTransaction({:?})", mint_transaction)
+            }
             Response::StrongholdPasswordIsAvailable(is_available) => {
                 write!(f, "StrongholdPasswordIsAvailable({:?})", is_available)
             }

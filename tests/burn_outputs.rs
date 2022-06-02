@@ -8,7 +8,6 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
-    account::SyncOptions,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
@@ -50,7 +49,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
     let faucet_response = request_funds_from_faucet(
-        "http://faucet.localhost:14265/api/enqueue",
+        "http://localhost:14265/api/enqueue",
         &account_addresses[0].address().to_bech32(),
     )
     .await?;
@@ -63,9 +62,9 @@ async fn mint_and_burn_nft() -> Result<()> {
         metadata: Some(b"some nft metadata".to_vec()),
     }];
 
-    let transfer_result = account.mint_nfts(nft_options, None).await.unwrap();
+    let transaction_result = account.mint_nfts(nft_options, None).await.unwrap();
 
-    let output_id = OutputId::new(transfer_result.transaction_id, 0u16).unwrap();
+    let output_id = OutputId::new(transaction_result.transaction_id, 0u16).unwrap();
     let nft_id = NftId::from(output_id);
 
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -121,8 +120,11 @@ async fn mint_and_melt_native_token() -> Result<()> {
 
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
-    let faucet_response =
-        request_funds_from_faucet("http://localhost:14265", &account_addresses[0].address().to_bech32()).await?;
+    let faucet_response = request_funds_from_faucet(
+        "http://localhost:14265/api/enqueue",
+        &account_addresses[0].address().to_bech32(),
+    )
+    .await?;
 
     println!("{}", faucet_response);
 
@@ -135,20 +137,20 @@ async fn mint_and_melt_native_token() -> Result<()> {
         foundry_metadata: None,
     };
 
-    let transfer_result = account.mint_native_token(native_token_options, None).await.unwrap();
+    let transaction_result = account.mint_native_token(native_token_options, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
         .native_tokens
         .iter()
-        .find(|&token| *token.0 == transfer_result.token_id && *token.1 == circulating_supply);
+        .find(|&token| *token.0 == transaction_result.token_id && *token.1 == circulating_supply);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
     // Burn some of the circulating supply
     let burn_amount = U256::from(40);
     let _ = account
-        .melt_native_token((transfer_result.token_id, burn_amount), None)
+        .melt_native_token((transaction_result.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -156,14 +158,14 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|&token| (*token.0 == transfer_result.token_id) && (*token.1 == circulating_supply - burn_amount));
+        .find(|&token| (*token.0 == transaction_result.token_id) && (*token.1 == circulating_supply - burn_amount));
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
     // The burn the rest of the supply
     let burn_amount = circulating_supply - burn_amount;
     let _ = account
-        .melt_native_token((transfer_result.token_id, burn_amount), None)
+        .melt_native_token((transaction_result.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -171,7 +173,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|&token| *token.0 == transfer_result.token_id);
+        .find(|&token| *token.0 == transaction_result.token_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
 
@@ -214,11 +216,13 @@ async fn destroy_foundry() -> Result<()> {
     };
 
     let _account_addresses = account.generate_addresses(1, None).await.unwrap();
-    let sync_options = SyncOptions {
-        try_collect_outputs: iota_wallet::account::OutputsToCollect::All,
-        ..Default::default()
-    };
-    let balance = account.sync(Some(sync_options)).await.unwrap();
+
+    let _ = account
+        .try_collect_outputs(iota_wallet::account::OutputsToCollect::All)
+        .await
+        .unwrap();
+
+    let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good
@@ -259,7 +263,7 @@ async fn destroy_alias() -> Result<()> {
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
 
-    // let _account_addresses = account.generate_addresses(1, None).await.unwrap();
+    let _account_addresses = account.generate_addresses(1, None).await.unwrap();
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 

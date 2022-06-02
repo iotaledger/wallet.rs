@@ -27,7 +27,7 @@ use crate::{
     account::{
         handle::AccountHandle,
         types::{address::AddressWrapper, OutputData},
-        RemainderValueStrategy, TransferOptions,
+        RemainderValueStrategy, TransactionOptions,
     },
     Error,
 };
@@ -36,7 +36,7 @@ use crate::{
 impl AccountHandle {
     pub(crate) async fn get_sweep_remainder_address(
         &self,
-        options: &Option<TransferOptions>,
+        options: &Option<TransactionOptions>,
     ) -> crate::Result<AddressWrapper> {
         let address = match options {
             None => self.generate_remainder_address().await?.address,
@@ -225,13 +225,13 @@ impl AccountHandle {
         custom_inputs.append(&mut output_ids.into_iter().collect::<Vec<_>>());
         custom_outputs.append(&mut outputs.into_iter().collect::<Vec<_>>());
 
-        let transfer_options = Some(TransferOptions {
+        let transaction_options = Some(TransactionOptions {
             custom_inputs: Some(custom_inputs),
             ..Default::default()
         });
 
-        let transfer_result = self.send(custom_outputs, transfer_options).await?;
-        match &transfer_result.block_id {
+        let transaction_result = self.send(custom_outputs, transaction_options).await?;
+        match &transaction_result.block_id {
             Some(block_id) => {
                 let _ = self.client.retry_until_included(block_id, None, None).await?;
                 let _ = self.sync(None).await?;
@@ -239,7 +239,7 @@ impl AccountHandle {
             None => return Err(Error::BurningFailed("Could not sweep address outputs".to_string())),
         }
 
-        Ok(transfer_result.transaction_id)
+        Ok(transaction_result.transaction_id)
     }
 
     /// Fetches alias outputs with `address` set as Governor unlock condition
@@ -382,12 +382,12 @@ impl AccountHandle {
 
         self.update_unspent_outputs(output_responses).await?;
 
-        let transfer_options = Some(TransferOptions {
+        let transaction_options = Some(TransactionOptions {
             allow_burning: true,
             ..Default::default()
         });
 
-        self.destroy_foundries(foundry_ids, transfer_options).await
+        self.destroy_foundries(foundry_ids, transaction_options).await
     }
 }
 

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::types::address::AccountAddress;
 
-/// Options for value transfers
+/// Options for transactions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TransactionOptions {
     #[serde(rename = "remainderValueStrategy", default)]

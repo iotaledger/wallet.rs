@@ -85,7 +85,7 @@ async fn different_seed() -> Result<()> {
         .finish()
         .await?;
 
-    // Generating a new account needs to return an error, because the seed from the signer is different
+    // Generating a new account needs to return an error, because the seed from the secret_manager is different
     assert!(
         manager
             .create_account()
