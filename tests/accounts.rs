@@ -60,26 +60,48 @@ async fn remove_latest_account() -> Result<()> {
         .finish()
         .await?;
 
+    // create two accounts
     let first_account = manager.create_account().finish().await?;
     let second_account = manager.create_account().finish().await?;
-    let _ = manager.create_account().finish().await?;
 
-    assert!(manager.get_accounts().await.unwrap().len() == 3);
-    let _ = manager
+    assert!(manager.get_accounts().await.unwrap().len() == 2);
+    // remove `second_account`
+    let removed_account = manager
         .remove_latest_account()
         .await
-        .expect("cannot remove latest account");
+        .expect("cannot remove latest account")
+        .unwrap();
     let accounts = manager.get_accounts().await.unwrap();
-    assert!(accounts.len() == 2);
-
+    assert!(accounts.len() == 1);
     assert_eq!(
         *accounts.get(0).unwrap().read().await.index(),
         *first_account.read().await.index()
     );
     assert_eq!(
-        *accounts.get(1).unwrap().read().await.index(),
+        *removed_account.read().await.index(),
         *second_account.read().await.index()
     );
+
+    // remove `first_account`
+    let removed_account = manager
+        .remove_latest_account()
+        .await
+        .expect("cannot remove latest account")
+        .unwrap();
+    let accounts = manager.get_accounts().await.unwrap();
+    assert!(accounts.len() == 0);
+    assert_eq!(
+        *removed_account.read().await.index(),
+        *first_account.read().await.index()
+    );
+
+    // test remove with no accounts
+    let removed_account = manager
+        .remove_latest_account()
+        .await
+        .expect("cannot remove latest account");
+
+    assert!(!removed_account.is_some());
 
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
