@@ -89,7 +89,7 @@ async fn remove_latest_account() -> Result<()> {
         .expect("cannot remove latest account")
         .unwrap();
     let accounts = manager.get_accounts().await.unwrap();
-    assert!(accounts.len() == 0);
+    assert!(accounts.is_empty());
     assert_eq!(
         *removed_account.read().await.index(),
         *first_account.read().await.index()
@@ -101,7 +101,7 @@ async fn remove_latest_account() -> Result<()> {
         .await
         .expect("cannot remove latest account");
 
-    assert!(!removed_account.is_some());
+    assert!(removed_account.is_none());
 
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
