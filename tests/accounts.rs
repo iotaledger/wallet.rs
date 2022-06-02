@@ -41,6 +41,53 @@ async fn account_ordering() -> Result<()> {
     Ok(())
 }
 
+
+#[tokio::test]
+async fn remove_latest_account() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let mut manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_storage_path("test-storage/remove_latest_account")
+        .finish()
+        .await?;
+
+    let first_account = manager.create_account().finish().await?;
+    let second_account = manager.create_account().finish().await?;
+    let _ = manager.create_account().finish().await?;
+
+    assert!(manager.get_accounts().await.unwrap().len() == 3);
+    let _ = manager
+        .remove_latest_account()
+        .await
+        .expect("cannot remove latest account");
+    let accounts = manager.get_accounts().await.unwrap();
+    assert!(accounts.len() == 2);
+
+    assert_eq!(
+        *accounts.get(0).unwrap().read().await.index(),
+        *first_account.read().await.index()
+    );
+    assert_eq!(
+        *accounts.get(1).unwrap().read().await.index(),
+        *second_account.read().await.index()
+    );
+
+    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
+    #[cfg(debug_assertions)]
+        manager.verify_integrity().await?;
+    Ok(())
+}
+
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());

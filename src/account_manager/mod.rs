@@ -76,6 +76,45 @@ impl AccountManager {
         Ok(self.accounts.read().await.clone())
     }
 
+    /// Remove the latest account (account with the largest account index).
+    pub async fn remove_latest_account(&mut self) -> crate::Result<()> {
+        let mut accounts = self.accounts.write().await;
+
+        let mut largest_account_index_opt = None;
+        for account in accounts.iter() {
+            let account_index = *account.read().await.index();
+            if let Some(largest_account_index) = largest_account_index_opt {
+                if account_index > largest_account_index {
+                    largest_account_index_opt = Some(account_index);
+                }
+            } else {
+                largest_account_index_opt = Some(account_index)
+            }
+        }
+
+        if let Some(largest_account_index) = largest_account_index_opt {
+            let mut i = 0;
+            while i < accounts.len() {
+                if let Some(account) = accounts.get(i) {
+                    if *account.read().await.index() == largest_account_index {
+                        let _ = accounts.remove(i);
+                        break;
+                    }
+                }
+                i = i + 1;
+            }
+
+            #[cfg(feature = "storage")]
+                self.storage_manager
+                .lock()
+                .await
+                .remove_account(largest_account_index)
+                .await?;
+        }
+
+        Ok(())
+    }
+
     /// Get the [SecretManager]
     pub fn get_secret_manager(&self) -> Arc<RwLock<SecretManager>> {
         self.secret_manager.clone()
