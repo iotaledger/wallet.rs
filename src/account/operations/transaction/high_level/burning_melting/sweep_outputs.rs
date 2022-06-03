@@ -32,7 +32,6 @@ use crate::{
     Error,
 };
 
-#[allow(dead_code)]
 impl AccountHandle {
     pub(crate) async fn get_sweep_remainder_address(
         &self,
@@ -87,7 +86,7 @@ impl AccountHandle {
                 }
                 _ => None,
             })
-            .ok_or_else(|| Error::BurningFailed("Alias output not found".to_string()))?;
+            .ok_or_else(|| Error::BurningOrMeltingFailed("Alias output not found".to_string()))?;
 
         let new_state_alias_output = AliasOutputBuilder::from(alias_output)
             .with_alias_id(alias_id)
@@ -97,6 +96,8 @@ impl AccountHandle {
         Ok((output_id, new_state_alias_output))
     }
 
+    // Will send outputs without a storage deposit return, timelock or expiration unlock condition to a remainder
+    // address of the account
     pub(crate) fn sweep_address_outputs<'a>(
         &'a self,
         address: Address,
@@ -216,7 +217,7 @@ impl AccountHandle {
                 custom_outputs.push(Output::Nft(nft_output));
             }
             Address::Ed25519(_) => {
-                return Err(Error::BurningFailed(
+                return Err(Error::BurningOrMeltingFailed(
                     "Ed25519 address is not intended to be swept".to_string(),
                 ));
             }
@@ -236,7 +237,11 @@ impl AccountHandle {
                 let _ = self.client.retry_until_included(block_id, None, None).await?;
                 let _ = self.sync(None).await?;
             }
-            None => return Err(Error::BurningFailed("Could not sweep address outputs".to_string())),
+            None => {
+                return Err(Error::BurningOrMeltingFailed(
+                    "Could not sweep address outputs".to_string(),
+                ));
+            }
         }
 
         Ok(transaction_result.transaction_id)
@@ -376,7 +381,11 @@ impl AccountHandle {
                     let foundry_id = FoundryId::build(alias_address, foundry_output.serial_number, token_scheme.kind());
                     foundry_ids.insert(foundry_id);
                 }
-                _ => return Err(Error::BurningFailed("Unexpected non-foundry output".to_string())),
+                _ => {
+                    return Err(Error::BurningOrMeltingFailed(
+                        "Unexpected non-foundry output".to_string(),
+                    ));
+                }
             }
         }
 

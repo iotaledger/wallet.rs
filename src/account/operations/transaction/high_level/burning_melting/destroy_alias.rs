@@ -14,7 +14,9 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Function to destroy alias.
+    /// Function to destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+    /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+    /// sent to the governor address.
     pub async fn destroy_alias(
         &self,
         alias_id: AliasId,
@@ -49,6 +51,8 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
+    // Get the current output id for the alias and build a basic output with the amount, native tokens and
+    // governor address from the alias output.
     async fn output_id_and_basic_output_for_alias(&self, alias_id: AliasId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
 
@@ -59,7 +63,7 @@ impl AccountHandle {
                 Output::Alias(alias_output) => alias_output.alias_id().or_from_output_id(output_id) == alias_id,
                 _ => false,
             })
-            .ok_or_else(|| Error::BurningFailed("Alias output not found".to_string()))?;
+            .ok_or_else(|| Error::BurningOrMeltingFailed("Alias output not found".to_string()))?;
 
         let alias_output = match &output_data.output {
             Output::Alias(alias_output) => alias_output,

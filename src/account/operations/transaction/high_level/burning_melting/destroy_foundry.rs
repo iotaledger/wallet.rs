@@ -17,9 +17,8 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Function to destroy foundry.
-    /// Native tokens in the foundry will be transactioned to the controlling alias by default,
-    /// to burn native tokens in the foundry set `options.allow_burning` to true in `TransactionOptions`
+    /// Function to destroy a foundry output with a circulating supply of 0.
+    /// Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
     pub async fn destroy_foundry(
         &self,
         foundry_id: FoundryId,
@@ -51,24 +50,20 @@ impl AccountHandle {
 
         let outputs = match existing_alias_output_data.output {
             Output::Alias(alias_output) => {
-                // Amount in foundry can't be burned, only native tokens
                 let amount = existing_alias_output_data.amount + existing_foundry_output_data.amount;
-                let mut native_tokens = Vec::from_iter(alias_output.native_tokens().clone());
-                let burn_native_token_remainder = options.as_ref().map_or(false, |options| options.allow_burning);
-                if !burn_native_token_remainder {
-                    // Transfer native tokens from foundry to alias
-                    if let Output::Foundry(foundry_output) = existing_foundry_output_data.output {
-                        native_tokens.extend(foundry_output.native_tokens().clone())
-                    } else {
-                        unreachable!("We already checked output is a foundry");
-                    }
-                };
+                let mut native_tokens_builder = NativeTokensBuilder::from(alias_output.native_tokens().clone());
+                // Transfer native tokens from foundry to alias
+                if let Output::Foundry(foundry_output) = existing_foundry_output_data.output {
+                    native_tokens_builder.add_native_tokens(foundry_output.native_tokens().clone())?;
+                } else {
+                    unreachable!("We already checked output is a foundry");
+                }
                 // Create the new alias output with updated amount, state_index and native token if not burning foundry
                 // tokens
                 let alias_output = AliasOutputBuilder::from(&alias_output)
                     .with_alias_id(alias_id)
                     .with_amount(amount)?
-                    .with_native_tokens(native_tokens)
+                    .with_native_tokens(native_tokens_builder.finish()?)
                     .with_state_index(alias_output.state_index() + 1)
                     .finish()?;
 
@@ -81,6 +76,8 @@ impl AccountHandle {
     }
 
     /// Destroy all foundries in the given set `foundry_ids`
+    // TODO: allow destroying of multiple foundries of the same alias, currently only one foundry output per alias can
+    // be destroyed when calling it once
     pub async fn destroy_foundries(
         &self,
         foundry_ids: HashSet<FoundryId>,
@@ -110,22 +107,16 @@ impl AccountHandle {
 
                     // Alias output state transition
                     if let Output::Alias(alias_output) = alias_output_data.output {
-                        // Amount in foundry can't be burned, only native tokens
                         let amount = alias_output_data.amount + foundry_output_data.amount;
                         let mut native_tokens_builder = NativeTokensBuilder::from(alias_output.native_tokens().clone());
-                        let burn_native_token_remainder =
-                            options.as_ref().map_or(false, |options| options.allow_burning);
-                        if !burn_native_token_remainder {
-                            // Transfer native tokens from foundry to alias
-                            if let Output::Foundry(foundry_output) = foundry_output_data.output {
-                                native_tokens_builder.add_native_tokens(foundry_output.native_tokens().clone())?;
-                            } else {
-                                unreachable!("We already checked output is a foundry");
-                            }
-                        };
+                        // Transfer native tokens from foundry to alias
+                        if let Output::Foundry(foundry_output) = foundry_output_data.output {
+                            native_tokens_builder.add_native_tokens(foundry_output.native_tokens().clone())?;
+                        } else {
+                            unreachable!("We already checked output is a foundry");
+                        }
 
-                        // Create the new alias output with updated amount, state_index and native token if not burning
-                        // foundry tokens
+                        // Create the new alias output with updated amount, state_index and native token
                         let alias_output = AliasOutputBuilder::from(&alias_output)
                             .with_alias_id(alias_output.alias_id().or_from_output_id(alias_output_data.output_id))
                             .with_amount(amount)?
@@ -163,7 +154,7 @@ impl AccountHandle {
                     });
                     let _ = self.sync(sync_options).await?;
                 }
-                None => return Err(Error::BurningFailed("Could not burn foundries".to_string())),
+                None => return Err(Error::BurningOrMeltingFailed("Could not burn foundries".to_string())),
             }
         }
 
@@ -203,11 +194,11 @@ impl AccountHandle {
         }
 
         let existing_alias_output_data = existing_alias_output_data
-            .ok_or_else(|| Error::BurningFailed("Required alias output for foundry not found".to_string()))?
+            .ok_or_else(|| Error::BurningOrMeltingFailed("Required alias output for foundry not found".to_string()))?
             .clone();
 
         let existing_foundry_output_data = existing_foundry_output
-            .ok_or_else(|| Error::BurningFailed("Required foundry output not found".to_string()))?
+            .ok_or_else(|| Error::BurningOrMeltingFailed("Required foundry output not found".to_string()))?
             .clone();
 
         Ok((existing_alias_output_data, existing_foundry_output_data))
@@ -221,12 +212,12 @@ fn validate_empty_state(output: &Output) -> crate::Result<()> {
             if token_scheme.circulating_supply().is_zero() {
                 Ok(())
             } else {
-                Err(Error::BurningFailed(
+                Err(Error::BurningOrMeltingFailed(
                     "Foundry may still have tokens in circulation".to_string(),
                 ))
             }
         }
-        _ => Err(Error::BurningFailed(
+        _ => Err(Error::BurningOrMeltingFailed(
             "Invalid output type: expected foundry".to_string(),
         )),
     }

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! cargo run --example 11_melt_native_token --release
-// In this example we will burn an existing native token without a foundry
+// In this example we will melt an existing native token with its foundry
 // Rename `.env.example` to `.env` first
 
 use std::env;
@@ -27,6 +27,7 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
+    // TokenId and the foundry output which minted it, needs to be available in the account.
     let token_id: [u8; TokenId::LENGTH] = hex::decode(
         "08e5ec7dcdd641b0913ba52cd03ec9ea8b256ce2f6c59decf2ff8fa8857b9d724d0200000000000000000000000000000000",
     )
@@ -35,14 +36,14 @@ async fn main() -> Result<()> {
     .unwrap();
     let token_id = TokenId::new(token_id);
 
-    // Burn some of the circulating supply
-    let burn_amount = U256::from(10);
-    let transaction_result = account.melt_native_token((token_id, burn_amount), None).await?;
+    // Melt some of the circulating supply
+    let melt_amount = U256::from(10);
+    let transaction_result = account.melt_native_token((token_id, melt_amount), None).await?;
 
     let _ = match transaction_result.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
-            return Err(iota_wallet::Error::BurningFailed(
+            return Err(iota_wallet::Error::BurningOrMeltingFailed(
                 "Melt native token transaction failed to submitted".to_string(),
             ));
         }

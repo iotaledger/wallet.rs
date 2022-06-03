@@ -3,7 +3,7 @@
 
 use iota_client::bee_block::{
     address::{Address, NftAddress},
-    output::{BasicOutputBuilder, NftId, Output, OutputId},
+    output::{unlock_condition::UnlockCondition, BasicOutputBuilder, NftId, Output, OutputId},
 };
 
 use crate::{
@@ -12,7 +12,8 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Function to burn nft.
+    /// Function to burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+    /// deposit return, timelock or expiration unlock condition.
     pub async fn burn_nft(
         &self,
         nft_id: NftId,
@@ -42,6 +43,8 @@ impl AccountHandle {
         self.send(outputs, options).await
     }
 
+    // Get the current output id for the nft and build a basic output with the amount, native tokens and
+    // governor address from the nft output.
     async fn output_id_and_basic_output_for_nft(&self, nft_id: NftId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
 
@@ -60,9 +63,15 @@ impl AccountHandle {
             })
             .ok_or(Error::NftNotFoundInUnspentOutputs)?;
 
+        let address_unlock_condition = nft_output
+            .unlock_conditions()
+            .address()
+            .expect("Nft output needs to have an address unlock condition")
+            .clone();
+
         let basic_output = Output::Basic(
             BasicOutputBuilder::new_with_amount(nft_output.amount())?
-                .with_unlock_conditions(nft_output.unlock_conditions().clone())
+                .add_unlock_condition(UnlockCondition::Address(address_unlock_condition))
                 .with_native_tokens(nft_output.native_tokens().clone())
                 .finish()?,
         );

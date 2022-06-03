@@ -12,7 +12,9 @@ use serde::Serialize;
 
 use crate::{
     account::{
-        operations::transaction::{high_level::mint_native_token::MintTokenTransactionResult, TransactionResult},
+        operations::transaction::{
+            high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
+        },
         types::address::AccountAddress,
     },
     message_interface::dtos::{

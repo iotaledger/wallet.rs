@@ -45,7 +45,8 @@ struct StrippedOutputAggregate {
 }
 
 impl AccountHandle {
-    /// Function to melt native tokens
+    /// Function to melt native tokens. This happens with the foundry output which minted them, by increasing it's
+    /// `melted_tokens` field.
     pub async fn melt_native_token(
         &self,
         native_token: (TokenId, U256),
@@ -103,7 +104,8 @@ impl AccountHandle {
         }
     }
 
-    /// Function to burn native tokens
+    /// Function to burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+    /// the foundries `melted_tokens` field.
     pub async fn burn_native_token(
         &self,
         native_token: (TokenId, U256),
@@ -175,7 +177,9 @@ impl AccountHandle {
         drop(account);
 
         if basic_and_nft_selection.is_empty() && alias_selection.is_empty() && foundry_selection.is_empty() {
-            return Err(crate::Error::BurningFailed("Native token not found".to_string()));
+            return Err(crate::Error::BurningOrMeltingFailed(
+                "Native token not found".to_string(),
+            ));
         }
 
         let aggregate = {
@@ -198,7 +202,7 @@ impl AccountHandle {
                 basic_and_nft_aggregate.amount = basic_and_nft_aggregate
                     .amount
                     .checked_add(alias_and_foundry_aggregate.amount)
-                    .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+                    .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
                 basic_and_nft_aggregate
                     .custom_inputs
                     .extend(alias_and_foundry_aggregate.custom_inputs);
@@ -211,11 +215,11 @@ impl AccountHandle {
         };
 
         if aggregate.amount < burn_token_amount {
-            return Err(crate::Error::BurningFailed(
+            return Err(crate::Error::BurningOrMeltingFailed(
                 "Insufficient native token balance".to_string(),
             ));
         } else if aggregate.custom_inputs.len() > (OUTPUT_COUNT_MAX as usize) {
-            return Err(crate::Error::BurningFailed(
+            return Err(crate::Error::BurningOrMeltingFailed(
                 "Outputs for required amount exceed max allowed count; try a lower amount".to_string(),
             ));
         }
@@ -268,7 +272,7 @@ impl AccountHandle {
             aggregate.amount = aggregate
                 .amount
                 .checked_add(stripped_foundry_output.amount)
-                .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+                .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
 
             match aggregate.amount.cmp(&burn_token_amount) {
                 Ordering::Less => aggregate.outputs.push(stripped_foundry_output.output),
@@ -295,7 +299,7 @@ impl AccountHandle {
             aggregate.amount = aggregate
                 .amount
                 .checked_add(alias_aggregate.amount)
-                .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+                .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
             aggregate.custom_inputs.extend(alias_aggregate.custom_inputs);
             aggregate.outputs.extend(alias_aggregate.outputs);
         }
@@ -318,7 +322,7 @@ impl AccountHandle {
                 aggregate.amount = aggregate
                     .amount
                     .checked_add(amount)
-                    .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+                    .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
                 aggregate.custom_inputs.push(output_id);
                 aggregate.outputs.push(output);
 
@@ -360,7 +364,7 @@ fn strip_native_token_if_found(token_id: TokenId, output_data: &OutputData) -> c
             if *native_token.token_id() == token_id {
                 amount = amount
                     .checked_add(*native_token.amount())
-                    .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+                    .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
             } else {
                 not_to_be_stripped_native_tokens.push(native_token);
             }
@@ -376,6 +380,7 @@ fn strip_native_token_if_found(token_id: TokenId, output_data: &OutputData) -> c
 
     Ok(None)
 }
+
 /// Aggregate outputs with `token_id` that sum up to the required amount
 fn aggregate_stripped_outputs(
     token_id: TokenId,
@@ -397,7 +402,7 @@ fn aggregate_stripped_outputs(
         aggregate.amount = aggregate
             .amount
             .checked_add(stripped_output.amount)
-            .ok_or_else(|| crate::Error::BurningFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
+            .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
 
         match aggregate.amount.cmp(&burn_token_amount) {
             Ordering::Less => aggregate.outputs.push(stripped_output.output),
