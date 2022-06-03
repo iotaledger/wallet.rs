@@ -16,7 +16,7 @@ impl AccountManager {
         Ok(())
     }
 
-    /// Change the Stronghold password to another one and also update a loaded snapshot with it.
+    /// Change the Stronghold password to another one and also re-encrypt the values in the loaded snapshot with it.
     pub async fn change_stronghold_password(
         &self,
         password: &str,

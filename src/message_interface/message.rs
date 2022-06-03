@@ -60,7 +60,7 @@ pub enum Message {
         /// Stronghold file password.
         password: String,
     },
-    /// Change the Stronghold password to another one and also reencrypt the values in the loaded snapshot with it.
+    /// Change the Stronghold password to another one and also re-encrypt the values in the loaded snapshot with it.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     ChangeStrongholdPassword {
