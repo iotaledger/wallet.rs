@@ -11,16 +11,19 @@ impl AccountManager {
     /// Sets the Stronghold password
     pub async fn set_stronghold_password(&self, password: &str) -> crate::Result<()> {
         if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
-            stronghold.set_password(password).await;
-            let result = stronghold.read_stronghold_snapshot().await;
-            if let Err(err) = result {
-                // TODO: replace with actual error matching when updated to the new Stronghold version
-                if let iota_client::Error::StrongholdProcedureError(ref err_msg) = err {
-                    if !err_msg.contains("IOError") {
-                        return Err(err.into());
-                    }
-                }
-            }
+            stronghold.set_password(password).await?;
+        }
+        Ok(())
+    }
+
+    /// Change the Stronghold password to another one and also update a loaded snapshot with it.
+    pub async fn change_stronghold_password(
+        &self,
+        password: &str,
+        keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
+    ) -> crate::Result<()> {
+        if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
+            stronghold.change_password(password, keys_to_re_encrypt).await?;
         }
         Ok(())
     }
