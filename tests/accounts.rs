@@ -50,7 +50,7 @@ async fn remove_latest_account() -> Result<()> {
         .with_node_sync_disabled();
 
     let (third_account_index, forth_account_index) = {
-        // mnemonic without balance
+        // Mnemonic without balance.
         let secret_manager = MnemonicSecretManager::try_from_mnemonic(
             "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
         )?;
@@ -62,19 +62,19 @@ async fn remove_latest_account() -> Result<()> {
             .finish()
             .await?;
 
-        // create two accounts
+        // Create two accounts.
         let first_account = manager.create_account().finish().await?;
         let second_account = manager.create_account().finish().await?;
         assert!(manager.get_accounts().await.unwrap().len() == 2);
 
-        // remove `second_account`
+        // Remove `second_account`.
         let removed_account = manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account")
             .unwrap();
 
-        // check if the `second_account` was removed successfully
+        // Check if the `second_account` was removed successfully.
         let accounts = manager.get_accounts().await.unwrap();
         assert!(accounts.len() == 1);
         assert_eq!(
@@ -86,14 +86,14 @@ async fn remove_latest_account() -> Result<()> {
             *second_account.read().await.index()
         );
 
-        // remove `first_account`
+        // Remove `first_account`.
         let removed_account = manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account")
             .unwrap();
 
-        // check if the `first_account` was removed successfully
+        // Check if the `first_account` was removed successfully.
         let accounts = manager.get_accounts().await.unwrap();
         assert!(accounts.is_empty());
         assert_eq!(
@@ -101,7 +101,7 @@ async fn remove_latest_account() -> Result<()> {
             *first_account.read().await.index()
         );
 
-        // try remove another time, even if there is nothing to remove
+        // Try remove another time (even if there is nothing to remove).
         let removed_account = manager
             .remove_latest_account()
             .await
@@ -109,7 +109,7 @@ async fn remove_latest_account() -> Result<()> {
 
         assert!(removed_account.is_none());
 
-        // add two new accounts and return their index
+        // Add two new accounts and return their index.
 
         let third_account = manager.create_account().finish().await?;
         let fourth_account = manager.create_account().finish().await?;
@@ -121,6 +121,8 @@ async fn remove_latest_account() -> Result<()> {
 
         (third_account_index, fourth_account_index)
     };
+
+    // Restore dropped `AccountManager` from above.
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -135,6 +137,7 @@ async fn remove_latest_account() -> Result<()> {
 
     let accounts = manager.get_accounts().await.unwrap();
 
+    // Check if accounts with `third_account_index` and `forth_account_index` exist.
     assert!(accounts.len() == 2);
     assert_eq!(*accounts.get(0).unwrap().read().await.index(), third_account_index);
     assert_eq!(*accounts.get(1).unwrap().read().await.index(), forth_account_index);
