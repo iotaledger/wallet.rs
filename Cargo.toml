@@ -31,7 +31,7 @@ tokio = { version = "1.12.0", default-features = false }
 zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
 
 # storage
-# Can use upstream again once iOS support is merged
+# Can use upstream again once iOS support is merged (https://github.com/rust-rocksdb/rust-rocksdb/pull/637)
 # rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"], optional = true }
 rocksdb = { git = "https://github.com/iotaledger/rust-rocksdb", rev = "acbf6b80437589c6a00dd2686f92088e8949d56f", default-features = false, features = ["lz4"], optional = true }
 
