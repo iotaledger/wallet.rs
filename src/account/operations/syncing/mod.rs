@@ -31,8 +31,8 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
-    /// consolidate outputs if necessary.
+    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// if necessary.
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let options = options.unwrap_or_default();
         log::debug!("[SYNC] start syncing with {:?}", options);
