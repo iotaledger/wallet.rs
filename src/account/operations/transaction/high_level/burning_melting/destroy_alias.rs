@@ -26,8 +26,7 @@ impl AccountHandle {
 
         let address = self.get_sweep_remainder_address(&options).await?;
         self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), &address)
-            .await
-            .unwrap();
+            .await?;
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_alias(alias_id).await?;
 

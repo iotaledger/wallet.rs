@@ -14,7 +14,7 @@ use iota_client::{
                 dto::{AddressUnlockConditionDto, UnlockConditionDto},
                 AddressUnlockCondition,
             },
-            AliasId, AliasOutput, AliasOutputBuilder, FoundryId, NftId, NftOutput, Output, OutputId, TokenScheme,
+            AliasId, AliasOutput, AliasOutputBuilder, FoundryOutput, NftId, NftOutput, Output, OutputId,
             OUTPUT_COUNT_MAX,
         },
         payload::transaction::TransactionId,
@@ -377,9 +377,8 @@ impl AccountHandle {
         for output_response in &output_responses {
             match &output_response.output {
                 OutputDto::Foundry(foundry_output) => {
-                    let token_scheme: TokenScheme = foundry_output.token_scheme.borrow().try_into()?;
-                    let foundry_id = FoundryId::build(alias_address, foundry_output.serial_number, token_scheme.kind());
-                    foundry_ids.insert(foundry_id);
+                    let foundry_outut = FoundryOutput::try_from(foundry_output)?;
+                    foundry_ids.insert(foundry_outut.id());
                 }
                 _ => {
                     return Err(Error::BurningOrMeltingFailed(
@@ -391,12 +390,7 @@ impl AccountHandle {
 
         self.update_unspent_outputs(output_responses).await?;
 
-        let transaction_options = Some(TransactionOptions {
-            allow_burning: true,
-            ..Default::default()
-        });
-
-        self.destroy_foundries(foundry_ids, transaction_options).await
+        self.destroy_foundries(foundry_ids, None).await
     }
 }
 

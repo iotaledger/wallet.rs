@@ -3,7 +3,9 @@
 
 //! cargo run --example 12_burn_native_token --release
 // In this example we will burn an existing native token, this will not increase the melted supply in the foundry,
-// therefore the foundry output is also not required Rename `.env.example` to `.env` first
+// therefore the foundry output is also not required. But this will also make it impossible to destroy the foundry
+// output that minted it.
+// Rename `.env.example` to `.env` first
 
 use std::{env, str::FromStr};
 

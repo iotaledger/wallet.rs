@@ -205,6 +205,8 @@ impl AccountHandle {
     }
 }
 
+// A foundry output can only be destroyed if the circulating_supply is zero. If native tokens got burned, it can never
+// be destroyed.
 fn validate_empty_state(output: &Output) -> crate::Result<()> {
     match output {
         Output::Foundry(foundry_output) => {
@@ -213,7 +215,7 @@ fn validate_empty_state(output: &Output) -> crate::Result<()> {
                 Ok(())
             } else {
                 Err(Error::BurningOrMeltingFailed(
-                    "Foundry may still have tokens in circulation".to_string(),
+                    "Foundry still has native tokens in circulation".to_string(),
                 ))
             }
         }
