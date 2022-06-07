@@ -373,10 +373,13 @@ impl WalletMessageHandler {
                 force,
                 output_consolidation_threshold,
             } => {
-                let transaction_results = account_handle
-                    .consolidate_outputs(*force, *output_consolidation_threshold)
-                    .await?;
-                Ok(Response::SentTransactions(transaction_results))
+                convert_async_panics(|| async {
+                    let transaction_results = account_handle
+                        .consolidate_outputs(*force, *output_consolidation_threshold)
+                        .await?;
+                    Ok(Response::SentTransactions(transaction_results))
+                })
+                .await
             }
             AccountMethod::GenerateAddresses { amount, options } => {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
