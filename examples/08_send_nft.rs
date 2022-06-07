@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     let outputs = vec![AddressAndNftId {
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         // Replace with an NftId that is available in the account
-        nft_id: NftId::from_str("rms1zp8nkvmftvdq6dwsxxe9u2zl07ycptzerdyfznhqshh90hz7n6tpsk9ytgr")?,
+        nft_id: NftId::from_str("0xe192461b30098a5da889ef6abc9e8130bf3b2d980450fa9201e5df404121b932")?,
     }];
 
     let transaction_result = account.send_nft(outputs, None).await?;
