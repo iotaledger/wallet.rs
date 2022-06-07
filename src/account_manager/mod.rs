@@ -97,17 +97,18 @@ impl AccountManager {
                 if let Some(account) = accounts.get(i) {
                     if *account.read().await.index() == largest_account_index {
                         let _ = accounts.remove(i);
+
+                        #[cfg(feature = "storage")]
+                        self.storage_manager
+                            .lock()
+                            .await
+                            .remove_account(largest_account_index)
+                            .await?;
+
                         return Ok(());
                     }
                 }
             }
-
-            #[cfg(feature = "storage")]
-            self.storage_manager
-                .lock()
-                .await
-                .remove_account(largest_account_index)
-                .await?;
         }
 
         Ok(())
