@@ -71,7 +71,7 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     Ok(WalletMessageHandler::with_manager(manager))
 }
 
-pub async fn send_message(handle: &mut WalletMessageHandler, message: Message) -> Response {
+pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Response {
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
     message_rx.recv().await.unwrap()

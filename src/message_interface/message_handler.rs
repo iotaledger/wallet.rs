@@ -268,7 +268,7 @@ impl WalletMessageHandler {
     }
 
     async fn call_account_method(
-        &mut self,
+        &self,
         account_id: &AccountIdentifier,
         method: &AccountMethod,
     ) -> Result<Response> {
