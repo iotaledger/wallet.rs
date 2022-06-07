@@ -664,6 +664,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            AccountMethod::RemoveLatestAccount => {
+                convert_async_panics(|| async {
+                    self.account_manager.remove_latest_account().await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
         }
     }
 

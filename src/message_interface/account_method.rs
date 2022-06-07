@@ -269,4 +269,6 @@ pub enum AccountMethod {
         #[serde(rename = "outputsToCollect")]
         output_ids_to_collect: Vec<OutputId>,
     },
+    /// Removes the latest account (account with the largest account index).
+    RemoveLatestAccount,
 }
