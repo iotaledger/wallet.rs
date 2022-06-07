@@ -1,9 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 11_melt_native_token --release
-// In this example we will melt an existing native token with its foundry
-// Rename `.env.example` to `.env` first
+//! cargo run --example 12_burn_native_token --release
+// In this example we will burn an existing native token, this will not increase the melted supply in the foundry,
+// therefore the foundry output is also not required Rename `.env.example` to `.env` first
 
 use std::{env, str::FromStr};
 
@@ -23,33 +23,32 @@ async fn main() -> Result<()> {
     let account = manager.get_account("Alice").await?;
 
     let balance = account.balance().await?;
-    println!("Balance before melting:\n{balance:?}",);
+    println!("Balance before burning:\n{balance:?}",);
 
     // Set the stronghold password
     manager
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Replace with a TokenId that is available in the account, the foundry output whcih minted it, also needs to be
-    // available.
+    // Replace with a TokenId that is available in the account
     let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
 
-    // Melt some of the circulating supply
-    let melt_amount = U256::from(10);
-    let transaction_result = account.melt_native_token((token_id, melt_amount), None).await?;
+    // Burn a native token
+    let burn_amount = U256::from(1);
+    let transaction_result = account.burn_native_token((token_id, burn_amount), None).await?;
 
     let _ = match transaction_result.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "Melt native token transaction failed to submitted".to_string(),
+                "Burn native token transaction failed to submitted".to_string(),
             ));
         }
     };
 
     let balance = account.sync(None).await?;
 
-    println!("Balance after melting:\n{balance:?}",);
+    println!("Balance after burning:\n{balance:?}",);
 
     Ok(())
 }

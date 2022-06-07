@@ -1,15 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 11_melt_native_token --release
-// In this example we will melt an existing native token with its foundry
+//! cargo run --example 13_burn_nft --release
+// In this example we will burn an existing nft output
 // Rename `.env.example` to `.env` first
 
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::bee_block::output::TokenId;
-use iota_wallet::{account_manager::AccountManager, Result, U256};
+use iota_client::bee_block::output::NftId;
+use iota_wallet::{account_manager::AccountManager, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -23,33 +23,29 @@ async fn main() -> Result<()> {
     let account = manager.get_account("Alice").await?;
 
     let balance = account.balance().await?;
-    println!("Balance before melting:\n{balance:?}",);
+    println!("Balance before burning:\n{balance:?}",);
 
     // Set the stronghold password
     manager
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Replace with a TokenId that is available in the account, the foundry output whcih minted it, also needs to be
-    // available.
-    let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
-
-    // Melt some of the circulating supply
-    let melt_amount = U256::from(10);
-    let transaction_result = account.melt_native_token((token_id, melt_amount), None).await?;
+    // Replace with an NftId that is available in the account
+    let nft_id = NftId::from_str("0xe192461b30098a5da889ef6abc9e8130bf3b2d980450fa9201e5df404121b932")?;
+    let transaction_result = account.burn_nft(nft_id, None).await?;
 
     let _ = match transaction_result.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "Melt native token transaction failed to submitted".to_string(),
+                "Burn nft failed to submitted".to_string(),
             ));
         }
     };
 
     let balance = account.sync(None).await?;
 
-    println!("Balance after melting:\n{balance:?}",);
+    println!("Balance after burning:\n{balance:?}",);
 
     Ok(())
 }
