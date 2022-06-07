@@ -113,6 +113,20 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.backup(destination.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "stronghold")]
+            Message::ChangeStrongholdPassword {
+                mut password,
+                keys_to_re_encrypt,
+            } => {
+                convert_async_panics(|| async {
+                    self.account_manager
+                        .change_stronghold_password(&password, keys_to_re_encrypt)
+                        .await?;
+                    password.zeroize();
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "stronghold")]
             Message::ClearStrongholdPassword => {
                 convert_async_panics(|| async {
                     self.account_manager.clear_stronghold_password().await?;

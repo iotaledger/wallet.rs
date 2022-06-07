@@ -60,6 +60,14 @@ pub enum Message {
         /// Stronghold file password.
         password: String,
     },
+    /// Change the Stronghold password to another one and also re-encrypt the values in the loaded snapshot with it.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "stronghold")]
+    ChangeStrongholdPassword {
+        password: String,
+        #[serde(rename = "keysToReEncrypt")]
+        keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
+    },
     /// Clears the Stronghold password from memory.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
@@ -152,6 +160,15 @@ impl Debug for Message {
                 account_id, method
             ),
             #[cfg(feature = "stronghold")]
+            Message::ChangeStrongholdPassword {
+                password: _,
+                keys_to_re_encrypt,
+            } => write!(
+                f,
+                "ChangeStrongholdPassword{{ password: <omitted>, keys_to_re_encrypt: {:?} }}",
+                keys_to_re_encrypt
+            ),
+            #[cfg(feature = "stronghold")]
             Message::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
             #[cfg(feature = "stronghold")]
             Message::IsStrongholdPasswordAvailable => write!(f, "IsStrongholdPasswordAvailable"),
@@ -241,6 +258,10 @@ impl Serialize for Message {
             #[cfg(feature = "stronghold")]
             Message::IsStrongholdPasswordAvailable => {
                 serializer.serialize_unit_variant("Message", 20, "IsStrongholdPasswordAvailable")
+            }
+            #[cfg(feature = "stronghold")]
+            Message::ChangeStrongholdPassword { .. } => {
+                serializer.serialize_unit_variant("Message", 21, "ChangeStrongholdPassword")
             }
         }
     }

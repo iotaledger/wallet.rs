@@ -95,7 +95,9 @@ impl AccountManager {
         if let Some(mut new_secret_manager) = new_secret_manager {
             // Set password to restored secret manager
             if let SecretManager::Stronghold(stronghold) = &mut new_secret_manager {
-                stronghold.set_password(&stronghold_password).await;
+                if !stronghold.is_key_available().await {
+                    stronghold.set_password(&stronghold_password).await?;
+                }
             }
             *secret_manager = new_secret_manager;
         }
@@ -141,7 +143,9 @@ async fn save_data_to_stronghold_backup(
     backup_path: PathBuf,
     secret_manager_dto: SecretManagerDto,
 ) -> crate::Result<()> {
-    stronghold.set_password(&stronghold_password).await;
+    if !stronghold.is_key_available().await {
+        stronghold.set_password(&stronghold_password).await?;
+    }
 
     // Save current data to Stronghold
 
@@ -203,7 +207,9 @@ async fn read_data_from_stronghold_backup(
     accounts: &mut RwLockWriteGuard<'_, Vec<AccountHandle>>,
     new_secret_manager: &mut Option<SecretManager>,
 ) -> crate::Result<()> {
-    stronghold.set_password(stronghold_password).await;
+    if !stronghold.is_key_available().await {
+        stronghold.set_password(stronghold_password).await?;
+    }
     // Get current snapshot_path to set it again after the backup
     let current_snapshot_path = stronghold.snapshot_path.clone();
 
