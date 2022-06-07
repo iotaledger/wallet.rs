@@ -7,6 +7,15 @@ const { AccountManager } = require('@iota/wallet');
 async function run() {
     try {
         const manager = new AccountManager({
+            storagePath: './alice-database',
+            clientOptions: {
+                nodes: [
+                    {
+                        url: 'https://firefly.h.chrysalis-devnet.iota.cafe/',
+                    },
+                ],
+                localPow: true,
+            },
             secretManager: {
                 Stronghold: {},
             },
