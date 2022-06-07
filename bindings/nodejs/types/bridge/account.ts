@@ -7,7 +7,12 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
 } from '../address';
-import type { BuildAliasOutputData, BuildBasicOutputData, BuildFoundryOutputData, BuildNftOutputData } from '../buildOutputData';
+import type {
+    BuildAliasOutputData,
+    BuildBasicOutputData,
+    BuildFoundryOutputData,
+    BuildNftOutputData,
+} from '../buildOutputData';
 import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
@@ -19,7 +24,7 @@ import type {
 
 export type __BuildAliasOutputMethod__ = {
     name: 'BuildAliasOutput';
-    data: BuildAliasOutputData
+    data: BuildAliasOutputData;
 };
 
 export type __BuildBasicOutputMethod__ = {

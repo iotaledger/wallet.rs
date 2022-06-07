@@ -58,7 +58,7 @@ import type {
 } from './accountManager';
 
 export type __AccountMethod__ =
-    __BuildAliasOutputMethod__
+    | __BuildAliasOutputMethod__
     | __BuildBasicOutputMethod__
     | __BuildFoundryOutputMethod__
     | __BuildNftOutputMethod__

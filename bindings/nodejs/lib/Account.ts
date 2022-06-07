@@ -23,7 +23,19 @@ import type {
     PreparedTransactionData,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
-import type { BuildAliasOutputData, BuildBasicOutputData, BuildFoundryOutputData, BuildNftOutputData } from '../types/buildOutputData';
+import type {
+    BuildAliasOutputData,
+    BuildBasicOutputData,
+    BuildFoundryOutputData,
+    BuildNftOutputData,
+} from '../types/buildOutputData';
+import type {
+    IAliasOutput,
+    IBasicOutput,
+    IFoundryOutput,
+    INftOutput,
+    OutputTypes,
+} from '@iota/types';
 
 export class Account {
     meta: AccountMeta;
@@ -34,50 +46,51 @@ export class Account {
         this.messageHandler = messageHandler;
     }
 
-    async buildAliasOutput(data: BuildAliasOutputData): Promise<Output> {
+    async buildAliasOutput(data: BuildAliasOutputData): Promise<IAliasOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'BuildAliasOutput',
-                data
-            }
-        )
-        return JSON.parse(resp).payload
+                data,
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
-    async buildBasicOutput(data: BuildBasicOutputData): Promise<Output> {
+    async buildBasicOutput(data: BuildBasicOutputData): Promise<IBasicOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'BuildBasicOutput',
-                data
-            }
-        )
-        return JSON.parse(resp).payload
+                data,
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
-    async buildFoundryOutput(data: BuildFoundryOutputData): Promise<Output> {
+    async buildFoundryOutput(
+        data: BuildFoundryOutputData,
+    ): Promise<IFoundryOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'BuildFoundryOutput',
-                data
-            }
-        )
-        return JSON.parse(resp).payload
+                data,
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
-    async buildNftOutput(data: BuildNftOutputData): Promise<Output> {
+    async buildNftOutput(data: BuildNftOutputData): Promise<INftOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'BuildNftOutput',
-                data
-            }
-        )
-        return JSON.parse(resp).payload
+                data,
+            },
+        );
+        return JSON.parse(resp).payload;
     }
-    
 
     async collectOutputs(outputIds: string[]): Promise<TransactionResult[]> {
         const resp = await this.messageHandler.callAccountMethod(
@@ -467,7 +480,7 @@ export class Account {
     }
 
     async sendTransaction(
-        outputs: Output[],
+        outputs: OutputTypes[],
         transactionOptions?: TransactionOptions,
     ): Promise<TransactionResult> {
         const response = await this.messageHandler.callAccountMethod(
