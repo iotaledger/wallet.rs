@@ -94,7 +94,7 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&mut self, message: Message, response_tx: UnboundedSender<Response>) {
+    pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
