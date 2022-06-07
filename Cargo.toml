@@ -42,7 +42,7 @@ riker = { version = "0.4.2", default-features = false }
 slog = { version = "2.7.0", default-features = false }
 
 # ledger hardware wallets
-iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "8c239b13b80e169aaa19cde9cd825e8444be0973", default-features = false, optional = true }
+iota-ledger = { git = "https://github.com/iotaledger/ledger.rs", rev = "50d6d3eb2d6b31c11061016bd2f559c8366b7c46", default-features = false, optional = true }
 
 # migration
 bytemuck = { version = "1.5.1", default-features = false }
