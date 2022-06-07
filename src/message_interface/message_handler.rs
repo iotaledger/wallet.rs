@@ -369,6 +369,15 @@ impl WalletMessageHandler {
                 .await?;
                 Ok(Response::BuiltOutput(output_dto))
             }
+            AccountMethod::ConsolidateOutputs {
+                force,
+                output_consolidation_threshold,
+            } => {
+                let transaction_results = account_handle
+                    .consolidate_outputs(*force, *output_consolidation_threshold)
+                    .await?;
+                Ok(Response::SentTransactions(transaction_results))
+            }
             AccountMethod::GenerateAddresses { amount, options } => {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(Response::GeneratedAddress(address))

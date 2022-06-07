@@ -87,8 +87,10 @@ pub enum Response {
     /// [`SendTransaction`](crate::message_interface::AccountMethod::SendTransaction)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransaction(TransactionResult),
-    /// Response for [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
+    /// Response for
+    /// [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
+    /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionResult>),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
