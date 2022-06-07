@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
                         BasicOutputBuilder::new_with_amount(1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(
-                                    "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
+                                    "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu",
                                 )?
                                 .1,
                             )))

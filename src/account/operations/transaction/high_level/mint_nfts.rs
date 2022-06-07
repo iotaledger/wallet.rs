@@ -43,7 +43,7 @@ impl AccountHandle {
     ///         .try_into()
     ///         .unwrap();
     /// let nft_options = vec![NftOptions {
-    ///     address: Some("atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string()),
+    ///     address: Some("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string()),
     ///     immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
     ///     metadata: Some(b"some nft metadata".to_vec()),
     /// }];
