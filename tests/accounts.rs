@@ -55,7 +55,7 @@ async fn remove_latest_account() -> Result<()> {
             "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
         )?;
 
-        let mut manager = AccountManager::builder()
+        let manager = AccountManager::builder()
             .with_secret_manager(SecretManager::Mnemonic(secret_manager))
             .with_client_options(client_options.clone())
             .with_storage_path("test-storage/remove_latest_account")

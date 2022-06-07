@@ -77,7 +77,7 @@ impl AccountManager {
     }
 
     /// Removes the latest account (account with the largest account index).
-    pub async fn remove_latest_account(&mut self) -> crate::Result<()> {
+    pub async fn remove_latest_account(&self) -> crate::Result<()> {
         let mut accounts = self.accounts.write().await;
 
         let mut largest_account_index_opt = None;
