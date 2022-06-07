@@ -267,11 +267,7 @@ impl WalletMessageHandler {
         Ok(Response::Ok(()))
     }
 
-    async fn call_account_method(
-        &self,
-        account_id: &AccountIdentifier,
-        method: &AccountMethod,
-    ) -> Result<Response> {
+    async fn call_account_method(&self, account_id: &AccountIdentifier, method: &AccountMethod) -> Result<Response> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
