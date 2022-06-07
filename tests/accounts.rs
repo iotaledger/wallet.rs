@@ -49,7 +49,7 @@ async fn remove_latest_account() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let (third_account_index, forth_account_index) = {
+    let recreated_account_index = {
         // Mnemonic without balance.
         let secret_manager = MnemonicSecretManager::try_from_mnemonic(
             "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -100,17 +100,13 @@ async fn remove_latest_account() -> Result<()> {
         let accounts = manager.get_accounts().await.unwrap();
         assert!(accounts.is_empty());
 
-        // Add two new accounts and return their index.
+        // Recreate a new account and return their index.
 
-        let third_account = manager.create_account().finish().await?;
-        let fourth_account = manager.create_account().finish().await?;
+        let recreated_account = manager.create_account().finish().await?;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+        let recreated_account_index = *recreated_account.read().await.index();
 
-        assert_eq!(manager.get_accounts().await.unwrap().len(), 2);
-
-        let third_account_index = *third_account.read().await.index();
-        let fourth_account_index = *fourth_account.read().await.index();
-
-        (third_account_index, fourth_account_index)
+        recreated_account_index
     };
 
     // Restore dropped `AccountManager` from above.
@@ -128,10 +124,9 @@ async fn remove_latest_account() -> Result<()> {
 
     let accounts = manager.get_accounts().await.unwrap();
 
-    // Check if accounts with `third_account_index` and `forth_account_index` exist.
-    assert!(accounts.len() == 2);
-    assert_eq!(*accounts.get(0).unwrap().read().await.index(), third_account_index);
-    assert_eq!(*accounts.get(1).unwrap().read().await.index(), forth_account_index);
+    // Check if accounts with `recreated_account_index` exist.
+    assert_eq!(accounts.len(), 1);
+    assert_eq!(*accounts.get(0).unwrap().read().await.index(), recreated_account_index);
 
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
