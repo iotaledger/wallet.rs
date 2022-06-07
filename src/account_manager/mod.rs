@@ -93,15 +93,13 @@ impl AccountManager {
         }
 
         if let Some(largest_account_index) = largest_account_index_opt {
-            let mut i = 0;
-            while i < accounts.len() {
+            for i in 0..accounts.len() {
                 if let Some(account) = accounts.get(i) {
                     if *account.read().await.index() == largest_account_index {
                         let _ = accounts.remove(i);
                         return Ok(());
                     }
                 }
-                i += 1;
             }
 
             #[cfg(feature = "storage")]

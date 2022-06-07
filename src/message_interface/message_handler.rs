@@ -94,7 +94,7 @@ impl WalletMessageHandler {
     }
 
     /// Handles a message.
-    pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
+    pub async fn handle(&mut self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
@@ -267,7 +267,11 @@ impl WalletMessageHandler {
         Ok(Response::Ok(()))
     }
 
-    async fn call_account_method(&self, account_id: &AccountIdentifier, method: &AccountMethod) -> Result<Response> {
+    async fn call_account_method(
+        &mut self,
+        account_id: &AccountIdentifier,
+        method: &AccountMethod,
+    ) -> Result<Response> {
         let account_handle = self.account_manager.get_account(account_id.clone()).await?;
 
         match method {
@@ -647,6 +651,13 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let transaction_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
                     Ok(Response::SentTransactions(transaction_results))
+                })
+                .await
+            }
+            AccountMethod::RemoveLatestAccount => {
+                convert_async_panics(|| async {
+                    self.account_manager.remove_latest_account().await?;
+                    Ok(Response::Ok(()))
                 })
                 .await
             }
