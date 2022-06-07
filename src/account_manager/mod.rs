@@ -76,8 +76,8 @@ impl AccountManager {
         Ok(self.accounts.read().await.clone())
     }
 
-    /// Removes and returns the latest account (account with the largest account index).
-    pub async fn remove_latest_account(&mut self) -> crate::Result<Option<AccountHandle>> {
+    /// Removes the latest account (account with the largest account index).
+    pub async fn remove_latest_account(&mut self) -> crate::Result<()> {
         let mut accounts = self.accounts.write().await;
 
         let mut largest_account_index_opt = None;
@@ -97,7 +97,8 @@ impl AccountManager {
             while i < accounts.len() {
                 if let Some(account) = accounts.get(i) {
                     if *account.read().await.index() == largest_account_index {
-                        return Ok(Some(accounts.remove(i)));
+                        let _ = accounts.remove(i);
+                        return Ok(());
                     }
                 }
                 i += 1;
@@ -111,7 +112,7 @@ impl AccountManager {
                 .await?;
         }
 
-        Ok(None)
+        Ok(())
     }
 
     /// Get the [SecretManager]

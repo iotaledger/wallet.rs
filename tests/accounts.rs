@@ -64,15 +64,14 @@ async fn remove_latest_account() -> Result<()> {
 
         // Create two accounts.
         let first_account = manager.create_account().finish().await?;
-        let second_account = manager.create_account().finish().await?;
+        let _second_account = manager.create_account().finish().await?;
         assert!(manager.get_accounts().await.unwrap().len() == 2);
 
         // Remove `second_account`.
-        let removed_account = manager
+        let _ = manager
             .remove_latest_account()
             .await
-            .expect("cannot remove latest account")
-            .unwrap();
+            .expect("cannot remove latest account");
 
         // Check if the `second_account` was removed successfully.
         let accounts = manager.get_accounts().await.unwrap();
@@ -81,33 +80,25 @@ async fn remove_latest_account() -> Result<()> {
             *accounts.get(0).unwrap().read().await.index(),
             *first_account.read().await.index()
         );
-        assert_eq!(
-            *removed_account.read().await.index(),
-            *second_account.read().await.index()
-        );
 
         // Remove `first_account`.
-        let removed_account = manager
-            .remove_latest_account()
-            .await
-            .expect("cannot remove latest account")
-            .unwrap();
-
-        // Check if the `first_account` was removed successfully.
-        let accounts = manager.get_accounts().await.unwrap();
-        assert!(accounts.is_empty());
-        assert_eq!(
-            *removed_account.read().await.index(),
-            *first_account.read().await.index()
-        );
-
-        // Try remove another time (even if there is nothing to remove).
-        let removed_account = manager
+        let _ = manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account");
 
-        assert!(removed_account.is_none());
+        // Check if the `first_account` was removed successfully. All accounts should be removed.
+        let accounts = manager.get_accounts().await.unwrap();
+        assert!(accounts.is_empty());
+
+        // Try remove another time (even if there is nothing to remove).
+        let _ = manager
+            .remove_latest_account()
+            .await
+            .expect("cannot remove latest account");
+
+        let accounts = manager.get_accounts().await.unwrap();
+        assert!(accounts.is_empty());
 
         // Add two new accounts and return their index.
 
