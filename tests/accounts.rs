@@ -265,6 +265,38 @@ async fn account_first_address_exists() -> Result<()> {
 }
 
 #[tokio::test]
+async fn account_default_coin_type() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/account_default_coin_type").unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_storage_path("test-storage/account_default_coin_type")
+        .finish()
+        .await?;
+
+    let account = manager.create_account().finish().await?;
+
+    // Creating a new account with providing a coin type will use the Shimmer coin type with shimmer testnet bech32 hrp
+    assert_eq!(
+        &account.list_addresses().await?[0].address().to_bech32(),
+        // Address generated with bip32 path: [44, 4219, 0, 0, 0]
+        "rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm"
+    );
+
+    std::fs::remove_dir_all("test-storage/account_default_coin_type").unwrap_or(());
+    Ok(())
+}
+
+#[tokio::test]
 async fn account_coin_type_shimmer() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_coin_type_shimmer").unwrap_or(());
     let client_options = ClientOptions::new()
