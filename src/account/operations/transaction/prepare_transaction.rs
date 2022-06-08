@@ -16,7 +16,6 @@ use packable::bounded::TryIntoBoundedU16Error;
 use crate::account::{
     handle::AccountHandle,
     operations::transaction::{RemainderValueStrategy, TransactionOptions},
-    AddressGenerationOptions,
 };
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};
@@ -86,18 +85,7 @@ impl AccountHandle {
                         None
                     }
                     RemainderValueStrategy::ChangeAddress => {
-                        let remainder_address = self
-                            .generate_addresses(
-                                1,
-                                Some(AddressGenerationOptions {
-                                    internal: true,
-                                    ..Default::default()
-                                }),
-                            )
-                            .await?
-                            .first()
-                            .expect("Didn't generate an address")
-                            .clone();
+                        let remainder_address = self.generate_remainder_address().await?;
                         #[cfg(feature = "events")]
                         {
                             let account_index = self.read().await.index;
@@ -118,8 +106,16 @@ impl AccountHandle {
             None => None,
         };
 
+        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
+
         let selected_transaction_data = self
-            .select_inputs(outputs, custom_inputs, remainder_address, &byte_cost_config)
+            .select_inputs(
+                outputs,
+                custom_inputs,
+                remainder_address,
+                &byte_cost_config,
+                allow_burning,
+            )
             .await?;
 
         let prepared_transaction_data = match self

@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::types::address::AccountAddress;
 
-/// Options for value transfers
+/// Options for transactions
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TransactionOptions {
     #[serde(rename = "remainderValueStrategy", default)]
@@ -17,6 +17,8 @@ pub struct TransactionOptions {
     pub skip_sync: bool,
     #[serde(rename = "customInputs", default)]
     pub custom_inputs: Option<Vec<OutputId>>,
+    #[serde(rename = "allowBurning", default)]
+    pub allow_burning: bool,
 }
 
 #[allow(clippy::enum_variant_names)]

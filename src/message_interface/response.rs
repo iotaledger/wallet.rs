@@ -11,7 +11,12 @@ use iota_client::{
 use serde::Serialize;
 
 use crate::{
-    account::{operations::transaction::TransactionResult, types::address::AccountAddress},
+    account::{
+        operations::transaction::{
+            high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
+        },
+        types::address::AccountAddress,
+    },
     message_interface::dtos::{
         AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
     },
@@ -79,7 +84,6 @@ pub enum Response {
     Balance(AccountBalanceDto),
     /// Response for
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
-    /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
@@ -92,6 +96,8 @@ pub enum Response {
     /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionResult>),
+    /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
+    MintTokenTransaction(MintTokenTransactionResult),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),
@@ -147,6 +153,9 @@ impl Debug for Response {
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
             Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
             Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),
+            Response::MintTokenTransaction(mint_transaction) => {
+                write!(f, "MintTokenTransaction({:?})", mint_transaction)
+            }
             Response::StrongholdPasswordIsAvailable(is_available) => {
                 write!(f, "StrongholdPasswordIsAvailable({:?})", is_available)
             }
