@@ -215,7 +215,7 @@ fn validate_empty_state(output: &Output) -> crate::Result<()> {
                 Ok(())
             } else {
                 Err(Error::BurningOrMeltingFailed(
-                    "Foundry still has native tokens in circulation".to_string(),
+                    "Foundry still has native tokens in circulation or native tokens were burned".to_string(),
                 ))
             }
         }
