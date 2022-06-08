@@ -48,7 +48,7 @@ impl AccountHandle {
     /// will retry sending the transaction during syncing.
     /// ```ignore
     /// let outputs = vec![TransactionOutput {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///     address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
     ///     amount: 1_000_000,
     ///     output_kind: None,
     /// }];

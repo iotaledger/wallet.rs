@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
         .await?;
 
     let outputs = vec![AddressWithMicroAmount {
-        address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+        address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         amount: 1,
         return_address: None,
         expiration: None,

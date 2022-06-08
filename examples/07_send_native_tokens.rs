@@ -30,10 +30,10 @@ async fn main() -> Result<()> {
         .await?;
 
     let outputs = vec![AddressNativeTokens {
-        // todo update address and token id
-        address: "atoi1qqv5avetndkxzgr3jtrswdtz5ze6mag20s0jdqvzk4fwezve8q9vk92ryhu".to_string(),
+        address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         native_tokens: vec![(
-            TokenId::from_str("089292bbb5129efe5e9bd767aa0a789d475b37047d0100000000000000000000000000000000")?,
+            // Replace with a TokenId that is available in the account
+            TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?,
             U256::from(10),
         )],
         ..Default::default()
