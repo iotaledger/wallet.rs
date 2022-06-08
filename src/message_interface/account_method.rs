@@ -96,6 +96,13 @@ pub enum AccountMethod {
         #[serde(rename = "immutableFeatures")]
         immutable_features: Option<Vec<FeatureDto>>,
     },
+    /// Consolidate outputs.
+    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
+    ConsolidateOutputs {
+        force: bool,
+        #[serde(rename = "outputConsolidationThreshold")]
+        output_consolidation_threshold: Option<usize>,
+    },
     /// Generate a new unused address.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
     GenerateAddresses {
@@ -201,8 +208,8 @@ pub enum AccountMethod {
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
     },
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
-    /// consolidate outputs if necessary.
+    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     SyncAccount {
         /// Sync options
