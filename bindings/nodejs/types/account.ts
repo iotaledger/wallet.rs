@@ -12,20 +12,12 @@ export interface AccountBalance {
     total: string;
     available: string;
     requiredStorageDeposit: string;
-    nativeTokens: nativeTokensMap;
+    nativeTokens: Map<string, number>;
     nfts: string[];
     aliases: string[];
     foundries: string[];
-    potentiallyLockedOutputs: potentiallyLockedOutputsMap;
+    potentiallyLockedOutputs: Map<string, boolean>;
 }
-
-export type nativeTokensMap = {
-    [tokenId: string]: number;
-};
-
-export type potentiallyLockedOutputsMap = {
-    [outputId: string]: boolean;
-};
 
 export interface AccountSyncOptions {
     addresses?: string[];
