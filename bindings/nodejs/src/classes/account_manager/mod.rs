@@ -256,8 +256,11 @@ pub fn set_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined>
         let result = wrapper.account_manager.set_stronghold_password(password).await;
         let _ = sender.send(result);
     });
-    let _ = receiver.recv().unwrap();
-    Ok(cx.undefined())
+
+    match receiver.recv().unwrap() {
+        Ok(_) => Ok(cx.undefined()),
+        Err(e) => cx.throw_error(e.to_string()),
+    }
 }
 
 pub fn change_stronghold_password(mut cx: FunctionContext) -> JsResult<JsUndefined> {
