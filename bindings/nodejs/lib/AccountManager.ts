@@ -151,6 +151,12 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    async removeLatestAccount(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'RemoveLatestAccount',
+        })
+    }
+
     async restoreBackup(source: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',

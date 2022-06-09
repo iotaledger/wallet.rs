@@ -92,6 +92,10 @@ export type __VerifyMnemonicMessage__ = {
     payload: string;
 };
 
+export type __RemoveLatestAccountMessage__ = {
+    cmd: 'RemoveLatestAccount';
+}
+
 export type __RestoreBackupMessage__ = {
     cmd: 'RestoreBackup';
     payload: {
