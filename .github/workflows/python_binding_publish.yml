@@ -3,7 +3,7 @@ name: Build python binding wheels
 on:
   push:
     branches:
-      - main
+      - production
       - dev
     paths:
       - .github/workflows/python_binding_publish.yml

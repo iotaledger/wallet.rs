@@ -3,7 +3,7 @@ name: Covector
 on:
   push:
     branches:
-      - dev
+      - production
 
 jobs:
   version-or-publish:

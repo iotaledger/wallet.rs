@@ -3,7 +3,7 @@ name: Test coverage
 on:
   push:
     branches:
-      - main
+      - production
       - dev
   pull_request:
     branches:
