@@ -4,6 +4,7 @@ import type {
     __BuildBasicOutputMethod__,
     __BuildFoundryOutputMethod__,
     __BuildNftOutputMethod__,
+    __CollectOutputsMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
@@ -29,7 +30,6 @@ import type {
     __SendNftMethod__,
     __SendTransactionMethod__,
     __SetAliasMethod__,
-    __SetCollectOutputsMethod__,
     __SignTransactionEssenceMethod__,
     __SubmitAndStoreTransactionMethod__,
     __SyncAccountMethod__,
@@ -63,6 +63,7 @@ export type __AccountMethod__ =
     | __BuildBasicOutputMethod__
     | __BuildFoundryOutputMethod__
     | __BuildNftOutputMethod__
+    | __CollectOutputsMethod__
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
     | __GetOutputMethod__
@@ -88,7 +89,6 @@ export type __AccountMethod__ =
     | __SendNftMethod__
     | __SendTransactionMethod__
     | __SetAliasMethod__
-    | __SetCollectOutputsMethod__
     | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__
     | __SyncAccountMethod__

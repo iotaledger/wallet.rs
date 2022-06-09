@@ -59,7 +59,7 @@ export type __GetBalanceMethod__ = {
     name: 'GetBalance';
 };
 
-export type __SetCollectOutputsMethod__ = {
+export type __CollectOutputsMethod__ = {
     name: 'CollectOutputs';
     data: {
         outputIdsToCollect: string[];
