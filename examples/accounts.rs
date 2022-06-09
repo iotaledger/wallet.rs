@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
         "{}",
         request_funds_from_faucet(
             "http://localhost:14265/api/plugins/faucet/v1/enqueue",
-            &addresses[0].address().to_bech32()
+            &addresses[0].address()
         )
         .await?
     );

@@ -5,9 +5,12 @@ use std::collections::HashSet;
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
-    bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+    bee_block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -219,6 +222,7 @@ impl AccountHandle {
             .first()
             .ok_or(crate::Error::FailedToGetRemainder)?
             .clone();
+        let first_account_address = Address::try_from_bech32(first_account_address.address)?.1;
         drop(account);
 
         let mut collection_results = Vec::new();
@@ -246,7 +250,7 @@ impl AccountHandle {
                         nft_output.nft_id().or_from_output_id(output_data.output_id),
                     )?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        first_account_address.address.inner,
+                        first_account_address,
                     )));
                     // native tokens are added later
                     for feature in nft_output.features().iter() {
@@ -306,11 +310,8 @@ impl AccountHandle {
             } else {
                 Some(new_native_tokens.clone().finish()?)
             };
-            let required_storage_deposit = minimum_storage_deposit(
-                &byte_cost_config,
-                &first_account_address.address.inner,
-                &option_native_token,
-            )?;
+            let required_storage_deposit =
+                minimum_storage_deposit(&byte_cost_config, &first_account_address, &option_native_token)?;
             let mut additional_inputs = Vec::new();
 
             if new_amount < required_storage_deposit {
@@ -318,11 +319,8 @@ impl AccountHandle {
                 for output_data in &possible_additional_inputs {
                     // Recalculate every time, because new intputs can also add more native tokens, which would increase
                     // the storage deposit cost
-                    let required_storage_deposit = minimum_storage_deposit(
-                        &byte_cost_config,
-                        &first_account_address.address.inner,
-                        &option_native_token,
-                    )?;
+                    let required_storage_deposit =
+                        minimum_storage_deposit(&byte_cost_config, &first_account_address, &option_native_token)?;
                     if new_amount < required_storage_deposit {
                         new_amount += output_data.output.amount();
                         if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -345,7 +343,7 @@ impl AccountHandle {
             outputs_to_send.push(
                 BasicOutputBuilder::new_with_amount(new_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        first_account_address.address.inner,
+                        first_account_address,
                     )))
                     .with_native_tokens(new_native_tokens.finish()?)
                     .finish_output()?,

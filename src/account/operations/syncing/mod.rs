@@ -149,7 +149,7 @@ impl AccountHandle {
                         |a| (a.key_index, a.internal),
                     )
                     .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_string())
                     })?;
                 account.internal_addresses[position].used = true;
             } else {
@@ -163,7 +163,7 @@ impl AccountHandle {
                         |a| (a.key_index, a.internal),
                     )
                     .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
+                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_string())
                     })?;
                 account.public_addresses[position].used = true;
             }

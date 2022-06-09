@@ -6,6 +6,7 @@ use std::time::Instant;
 use iota_client::{
     api::PreparedTransactionData,
     bee_block::{
+        address::Address,
         input::INPUT_COUNT_RANGE,
         output::{Output, OUTPUT_COUNT_RANGE},
     },
@@ -93,18 +94,20 @@ impl AccountHandle {
                                 account_index,
                                 WalletEvent::TransactionProgress(
                                     TransactionProgressEvent::GeneratingRemainderDepositAddress(AddressData {
-                                        address: remainder_address.address.to_bech32(),
+                                        address: remainder_address.address.clone(),
                                     }),
                                 ),
                             );
                         }
-                        Some(remainder_address.address().inner)
+                        Some(remainder_address.address)
                     }
-                    RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
+                    RemainderValueStrategy::CustomAddress(address) => Some(address.address.to_string()),
                 }
             }
             None => None,
         };
+        let remainder_address =
+            remainder_address.map(|address| Address::try_from_bech32(address).expect("Invalid bech32 address").1);
 
         let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
 

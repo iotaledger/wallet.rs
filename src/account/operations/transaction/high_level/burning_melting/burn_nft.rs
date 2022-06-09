@@ -22,7 +22,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] burn_nft");
 
         let address = self.get_sweep_remainder_address(&options).await?;
-        self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), &address)
+        self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), address)
             .await?;
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_nft(nft_id).await?;

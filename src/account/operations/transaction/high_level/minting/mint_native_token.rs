@@ -84,14 +84,13 @@ impl AccountHandle {
         // the address needs to be from the account, because for the minting we need to sign transactions from it
         let controller_address = match &native_token_options.account_address {
             Some(bech32_address) => {
-                let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
-                if account_addresses
-                    .binary_search_by_key(&address, |address| address.address.inner)
-                    .is_err()
+                if !account_addresses
+                    .iter()
+                    .any(|address| &address.address == bech32_address)
                 {
                     return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
                 }
-                address
+                bech32_address.to_string()
             }
             None => {
                 account_addresses
@@ -99,9 +98,10 @@ impl AccountHandle {
                     // todo other error message
                     .ok_or(Error::FailedToGetRemainder)?
                     .address
-                    .inner
+                    .to_string()
             }
         };
+        let (_bech32_hrp, controller_address) = Address::try_from_bech32(controller_address)?;
 
         let alias_id = self
             .get_or_create_alias_output(controller_address, options.clone())

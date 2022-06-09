@@ -4,7 +4,7 @@
 use std::hash::Hash;
 
 use getset::{Getters, Setters};
-use iota_client::bee_block::{address::Address, output::OutputId};
+use iota_client::bee_block::output::OutputId;
 use serde::{Deserialize, Serialize};
 
 /// An account address.
@@ -12,8 +12,7 @@ use serde::{Deserialize, Serialize};
 #[getset(get = "pub")]
 pub struct AccountAddress {
     /// The address.
-    #[serde(with = "crate::account::types::address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub(crate) address: String,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
@@ -31,8 +30,7 @@ pub struct AccountAddress {
 #[getset(get = "pub")]
 pub struct AddressWithUnspentOutputs {
     /// The address.
-    #[serde(with = "crate::account::types::address_serde")]
-    pub(crate) address: AddressWrapper,
+    pub(crate) address: String,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     #[getset(set = "pub(crate)")]
@@ -45,46 +43,4 @@ pub struct AddressWithUnspentOutputs {
     /// Output ids
     #[serde(rename = "outputIds")]
     pub(crate) output_ids: Vec<OutputId>,
-}
-
-/// An address and its network type.
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
-pub struct AddressWrapper {
-    pub(crate) inner: Address,
-    #[serde(rename = "bech32Hrp")]
-    pub(crate) bech32_hrp: String,
-}
-
-impl AsRef<Address> for AddressWrapper {
-    fn as_ref(&self) -> &Address {
-        &self.inner
-    }
-}
-
-impl AddressWrapper {
-    /// Create a new address wrapper.
-    pub fn new(address: Address, bech32_hrp: String) -> Self {
-        Self {
-            inner: address,
-            bech32_hrp,
-        }
-    }
-
-    /// Encodes the address as bech32.
-    pub fn to_bech32(&self) -> String {
-        self.inner.to_bech32(&self.bech32_hrp)
-    }
-
-    /// Get the bech32 human readable part
-    pub fn bech32_hrp(&self) -> &str {
-        &self.bech32_hrp
-    }
-}
-/// Parses a bech32 address string.
-pub fn parse_bech32_address<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
-    let address = address.as_ref();
-    let mut tokens = address.split('1');
-    let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
-    let (_bech32_hrp, address) = Address::try_from_bech32(address)?;
-    Ok(AddressWrapper::new(address, hrp.to_string()))
 }

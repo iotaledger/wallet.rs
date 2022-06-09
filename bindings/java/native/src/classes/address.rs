@@ -45,7 +45,7 @@ impl Address {
     }
 
     pub fn readable(&self) -> String {
-        self.0.address().to_bech32()
+        self.0.address()
     }
 
     pub fn balance(&self) -> u64 {

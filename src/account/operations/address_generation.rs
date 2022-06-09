@@ -4,15 +4,13 @@
 #[cfg(feature = "stronghold")]
 use iota_client::secret::SecretManager;
 use iota_client::{
+    bee_block::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{GenerateAddressMetadata, SecretManage},
 };
 use serde::{Deserialize, Serialize};
 
-use crate::account::{
-    handle::AccountHandle,
-    types::address::{AccountAddress, AddressWrapper},
-};
+use crate::account::{handle::AccountHandle, types::address::AccountAddress};
 #[cfg(all(feature = "events", any(feature = "ledger_nano", feature = "ledger_nano")))]
 use crate::events::types::{AddressData, WalletEvent};
 
@@ -66,7 +64,7 @@ impl AccountHandle {
         // get bech32_hrp
         let bech32_hrp = {
             match account.public_addresses.first() {
-                Some(address) => address.address.bech32_hrp.to_string(),
+                Some(address) => Address::try_from_bech32(&address.address)?.0,
                 // Only when we create a new account we don't have the first address and need to get the information
                 // from the client Doesn't work for offline creating, should we use the network from the
                 // GenerateAddressMetadata instead to use `iota` or `atoi`?
@@ -173,7 +171,7 @@ impl AccountHandle {
             .into_iter()
             .enumerate()
             .map(|(index, address)| AccountAddress {
-                address: AddressWrapper::new(address, bech32_hrp.clone()),
+                address: address.to_bech32(bech32_hrp.clone()),
                 key_index: highest_current_index_plus_one + index as u32,
                 internal: options.internal,
                 used: false,

@@ -3,12 +3,9 @@
 
 /// Address types used in the account
 pub(crate) mod address;
-pub use address::{AccountAddress, AddressWithUnspentOutputs};
-/// Custom de/serialization for [`address::AddressWrapper`]
-pub(crate) mod address_serde;
-
 use std::{collections::HashMap, str::FromStr};
 
+pub use address::{AccountAddress, AddressWithUnspentOutputs};
 use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{

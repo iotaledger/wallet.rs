@@ -4,7 +4,7 @@
 use std::{ops::Deref, sync::Arc};
 
 use iota_client::{
-    bee_block::{output::OutputId, payload::transaction::TransactionId},
+    bee_block::{address::Address, output::OutputId, payload::transaction::TransactionId},
     secret::SecretManager,
     Client,
 };
@@ -165,13 +165,19 @@ impl AccountHandle {
         log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);
         let mut account = self.account.write().await;
         for address in &mut account.addresses_with_unspent_outputs {
-            address.address.bech32_hrp = bech32_hrp.clone();
+            address.address = Address::try_from_bech32(&address.address)?
+                .1
+                .to_bech32(bech32_hrp.clone());
         }
         for address in &mut account.public_addresses {
-            address.address.bech32_hrp = bech32_hrp.clone();
+            address.address = Address::try_from_bech32(&address.address)?
+                .1
+                .to_bech32(bech32_hrp.clone());
         }
         for address in &mut account.internal_addresses {
-            address.address.bech32_hrp = bech32_hrp.clone();
+            address.address = Address::try_from_bech32(&address.address)?
+                .1
+                .to_bech32(bech32_hrp.clone());
         }
         // Drop account before syncing because we locked it
         drop(account);

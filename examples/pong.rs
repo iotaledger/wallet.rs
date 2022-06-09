@@ -7,9 +7,12 @@
 // the first account (ping_account)
 
 use iota_client::{
-    bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder,
+    bee_block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder,
+        },
     },
     init_logger, request_funds_from_faucet,
 };
@@ -88,7 +91,7 @@ async fn main() -> Result<()> {
             "{}",
             request_funds_from_faucet(
                 "http://localhost:14265/api/plugins/faucet/v1/enqueue",
-                &addresses[0].address().to_bech32()
+                &addresses[0].address()
             )
             .await?
         );
@@ -107,7 +110,10 @@ async fn main() -> Result<()> {
                         // send one or two Mi for more different transactions
                         BasicOutputBuilder::new_with_amount(n * 1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                *ping_addresses_[address_index % amount_addresses].address().as_ref(),
+                                Address::try_from_bech32(
+                                    ping_addresses_[address_index % amount_addresses].address().to_string(),
+                                )?
+                                .1,
                             )))
                             .finish_output()?,
                     ];

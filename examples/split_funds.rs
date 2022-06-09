@@ -5,9 +5,12 @@
 
 use std::time::Instant;
 
-use iota_client::bee_block::output::{
-    unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder,
+use iota_client::bee_block::{
+    address::Address,
+    output::{
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        BasicOutputBuilder,
+    },
 };
 use iota_wallet::{
     account_manager::AccountManager,
@@ -49,7 +52,7 @@ async fn main() -> Result<()> {
     let addresses = account.generate_addresses(300, None).await?;
     let mut bech32_addresses = Vec::new();
     for ad in addresses {
-        bech32_addresses.push(ad.address().to_bech32());
+        bech32_addresses.push(ad.address().to_string());
     }
 
     let addresses = account.list_addresses().await?;
@@ -71,7 +74,9 @@ async fn main() -> Result<()> {
                 BasicOutputBuilder::new_with_amount(1_000_000)
                     .unwrap()
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        *a.address().as_ref(),
+                        Address::try_from_bech32(a.address().to_string())
+                            .expect("Invalid address")
+                            .1,
                     )))
                     .finish_output()
                     .unwrap()

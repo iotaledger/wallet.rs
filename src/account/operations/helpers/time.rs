@@ -3,9 +3,12 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use iota_client::bee_block::output::{
-    unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
-    Output, UnlockCondition,
+use iota_client::bee_block::{
+    address::Address,
+    output::{
+        unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
+        Output, UnlockCondition,
+    },
 };
 
 use crate::{
@@ -70,6 +73,9 @@ pub(crate) fn can_output_be_unlocked_now(
     current_milestone: u32,
 ) -> bool {
     let mut can_be_unlocked = Vec::new();
+    let bech32_hrp = Address::try_from_bech32(&account_addresses.first().expect("No address").address)
+        .expect("Invalid bech32 address")
+        .0;
     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
         for unlock_condition in unlock_conditions.iter() {
             match unlock_condition {
@@ -85,15 +91,14 @@ pub(crate) fn can_output_be_unlocked_now(
                     }
                     // Check if the address which can unlock the output now is in the account
                     if ms_expired && time_expired {
+                        let bech32_address = expiration.return_address().to_bech32(bech32_hrp.clone());
                         // compare return address with associated address first, but if that doesn't match we also need
                         // to check all account addresses, because the associated address
                         // can only be the unlock address or the storage deposit address and not both (unless they're
                         // the same, which would mean transaction to oneself)
                         can_be_unlocked.push(
                             output_data.address == *expiration.return_address()
-                                || account_addresses
-                                    .iter()
-                                    .any(|a| a.address.inner == *expiration.return_address()),
+                                || account_addresses.iter().any(|a| a.address == bech32_address),
                         );
                         // Only if both conditions aren't met, the target address can unlock the output. If only one
                         // condition is met, the output can't be unlocked by anyone.
@@ -104,15 +109,14 @@ pub(crate) fn can_output_be_unlocked_now(
                         let can_unlocked = if let Some(UnlockCondition::Address(address_unlock_condition)) =
                             unlock_conditions.get(AddressUnlockCondition::KIND)
                         {
+                            let bech32_address = address_unlock_condition.address().to_bech32(bech32_hrp.clone());
                             // compare address_unlock_condition address with associated address first, but if that
                             // doesn't match we also need to check all account addresses,
                             // because the associated address can only be the unlock address
                             // or the storage deposit address and not both (unless they're
                             // the same, which would mean transaction to oneself)
                             output_data.address == *address_unlock_condition.address()
-                                || account_addresses
-                                    .iter()
-                                    .any(|a| a.address.inner == *address_unlock_condition.address())
+                                || account_addresses.iter().any(|a| a.address == bech32_address)
                         } else {
                             false
                         };
@@ -173,9 +177,10 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                         // can only be the unlock address or the storage deposit address and not both (unless they're
                         // the same, which would mean transaction to oneself)
                         if output_data.address != *expiration.return_address()
-                            || !account_addresses
-                                .iter()
-                                .any(|a| a.address.inner == *expiration.return_address())
+                            || !account_addresses.iter().any(|a| {
+                                Address::try_from_bech32(&a.address).expect("invalid bech32 address").1
+                                    == *expiration.return_address()
+                            })
                         {
                             return false;
                         };

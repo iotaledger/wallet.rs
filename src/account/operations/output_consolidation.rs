@@ -68,7 +68,7 @@ impl AccountHandle {
             if force || unspent_outputs.len() >= output_consolidation_threshold {
                 log::debug!(
                     "[OUTPUT_CONSOLIDATION] {} has {} unspent basic outputs with only an AddressUnlockCondition",
-                    address.address.to_bech32(),
+                    address.address,
                     unspent_outputs.len()
                 );
                 outputs_to_consolidate.push(unspent_outputs);

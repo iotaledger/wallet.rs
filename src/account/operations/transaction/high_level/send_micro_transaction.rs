@@ -86,7 +86,8 @@ impl AccountHandle {
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
-        let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
+        let return_address =
+            Address::try_from_bech32(&account_addresses.first().ok_or(Error::FailedToGetRemainder)?.address)?.1;
 
         let (local_time, _) = self.get_time_and_milestone_checked().await?;
         let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
@@ -97,12 +98,8 @@ impl AccountHandle {
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
             // different native tokens require a differen storage deposit
-            let storage_deposit_amount = minimum_storage_deposit_basic_native_tokens(
-                &byte_cost_config,
-                &address,
-                &return_address.address.inner,
-                None,
-            )?;
+            let storage_deposit_amount =
+                minimum_storage_deposit_basic_native_tokens(&byte_cost_config, &address, &return_address, None)?;
 
             outputs.push(
                 // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount
@@ -110,7 +107,7 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the storage_deposit_amount back to the sender, so only the additional amount is sent
-                        StorageDepositReturnUnlockCondition::new(return_address.address.inner, storage_deposit_amount)?,
+                        StorageDepositReturnUnlockCondition::new(return_address, storage_deposit_amount)?,
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         address,

@@ -5,10 +5,7 @@ use getset::Getters;
 use iota_client::{api::PreparedTransactionDataDto, bee_block::payload::transaction::TransactionId};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    account::types::{address::AddressWrapper, InclusionState},
-    message_interface::dtos::OutputDataDto,
-};
+use crate::{account::types::InclusionState, message_interface::dtos::OutputDataDto};
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Event {
@@ -98,8 +95,7 @@ pub enum TransactionProgressEvent {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct AddressConsolidationNeeded {
     /// The associated address.
-    #[serde(with = "crate::account::types::address_serde")]
-    pub address: AddressWrapper,
+    pub address: String,
 }
 
 /// Address event data.

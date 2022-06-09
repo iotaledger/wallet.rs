@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
 
     let _address = account.generate_addresses(10, None).await?;
     for ad in _address {
-        println!("{}", ad.address().to_bech32());
+        println!("{}", ad.address());
     }
     let balance = account.sync(None).await?;
     println!("Balance: {:?}", balance);

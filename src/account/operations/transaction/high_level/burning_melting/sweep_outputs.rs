@@ -24,11 +24,7 @@ use iota_client::{
 };
 
 use crate::{
-    account::{
-        handle::AccountHandle,
-        types::{address::AddressWrapper, OutputData},
-        RemainderValueStrategy, TransactionOptions,
-    },
+    account::{handle::AccountHandle, types::OutputData, RemainderValueStrategy, TransactionOptions},
     Error,
 };
 
@@ -36,7 +32,7 @@ impl AccountHandle {
     pub(crate) async fn get_sweep_remainder_address(
         &self,
         options: &Option<TransactionOptions>,
-    ) -> crate::Result<AddressWrapper> {
+    ) -> crate::Result<String> {
         let address = match options {
             None => self.generate_remainder_address().await?.address,
             Some(strategy) => match &strategy.remainder_value_strategy {
@@ -101,14 +97,17 @@ impl AccountHandle {
     pub(crate) fn sweep_address_outputs<'a>(
         &'a self,
         address: Address,
-        remainder_address: &'a AddressWrapper,
+        remainder_bech32_address: String,
     ) -> Pin<Box<dyn Future<Output = crate::Result<Vec<TransactionId>>> + Send + 'a>> {
         async move {
-            let address = AddressWrapper::new(address, remainder_address.bech32_hrp().to_string());
+            let (bech32_hrp, remainder_address) = Address::try_from_bech32(&remainder_bech32_address)?;
+            let bech32_address = address.to_bech32(&bech32_hrp);
 
-            let alias_outputs = self.fetch_governor_address_alias_outputs(&address).await?;
-            let basic_outputs = self.fetch_address_basic_outputs(&address).await?;
-            let nft_outputs = self.fetch_address_nft_outputs(&address).await?;
+            let alias_outputs = self
+                .fetch_governor_address_alias_outputs(bech32_address.clone())
+                .await?;
+            let basic_outputs = self.fetch_address_basic_outputs(bech32_address.clone()).await?;
+            let nft_outputs = self.fetch_address_nft_outputs(bech32_address.clone()).await?;
 
             let mut output_ids = Vec::new();
             let mut outputs = Vec::new();
@@ -132,7 +131,7 @@ impl AccountHandle {
 
                 match &mut output_response.output {
                     OutputDto::Basic(output_dto) => {
-                        replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
+                        replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address);
                     }
                     OutputDto::Alias(alias_dto) => {
                         let mut alias_id: AliasId = alias_dto.alias_id.borrow().try_into()?;
@@ -141,10 +140,13 @@ impl AccountHandle {
                         }
                         // Recursively sweep alias address outputs
                         let txn_ids = self
-                            .sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), remainder_address)
+                            .sweep_address_outputs(
+                                Address::Alias(AliasAddress::new(alias_id)),
+                                remainder_bech32_address.clone(),
+                            )
                             .await?;
                         transaction_ids.extend(txn_ids);
-                        replace_unlock_conditions(&mut alias_dto.unlock_conditions, &remainder_address.inner);
+                        replace_unlock_conditions(&mut alias_dto.unlock_conditions, &remainder_address);
                     }
                     OutputDto::Nft(nft_dto) => {
                         let mut nft_id: NftId = nft_dto.nft_id.borrow().try_into()?;
@@ -153,10 +155,13 @@ impl AccountHandle {
                         }
                         // Recursively sweep nft address outputs
                         let txn_ids = self
-                            .sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), remainder_address)
+                            .sweep_address_outputs(
+                                Address::Nft(NftAddress::new(nft_id)),
+                                remainder_bech32_address.clone(),
+                            )
                             .await?;
                         transaction_ids.extend(txn_ids);
-                        replace_unlock_conditions(&mut nft_dto.unlock_conditions, &remainder_address.inner);
+                        replace_unlock_conditions(&mut nft_dto.unlock_conditions, &remainder_address);
                     }
                     // Didn't ask for treasury and foundry outputs
                     OutputDto::Treasury(_) | OutputDto::Foundry(_) => continue,
@@ -169,7 +174,7 @@ impl AccountHandle {
 
                 if output_ids.len() == (OUTPUT_COUNT_MAX - 1) as usize {
                     let transaction_id = self
-                        .send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
+                        .send_sweep_transaction(bech32_address.clone(), output_ids.drain(..), outputs.drain(..))
                         .await?;
                     transaction_ids.push(transaction_id);
                 }
@@ -177,16 +182,14 @@ impl AccountHandle {
 
             if !output_ids.is_empty() {
                 let transaction_id = self
-                    .send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
+                    .send_sweep_transaction(bech32_address.clone(), output_ids.drain(..), outputs.drain(..))
                     .await?;
                 transaction_ids.push(transaction_id);
             }
 
             //  Fetch and burn all foundries we can find
-            if let Address::Alias(alias_address) = &address.inner {
-                let _ = self
-                    .sweep_foundries(remainder_address.bech32_hrp(), alias_address)
-                    .await?;
+            if let Address::Alias(alias_address) = address {
+                let _ = self.sweep_foundries(&bech32_hrp, &alias_address).await?;
             }
 
             Ok(transaction_ids)
@@ -196,14 +199,14 @@ impl AccountHandle {
 
     pub(crate) async fn send_sweep_transaction(
         &self,
-        address: AddressWrapper,
+        address: String,
         output_ids: impl IntoIterator<Item = OutputId>,
         outputs: impl IntoIterator<Item = Output>,
     ) -> crate::Result<TransactionId> {
         let mut custom_inputs = Vec::new();
         let mut custom_outputs = Vec::new();
 
-        match address.inner {
+        match Address::try_from_bech32(address)?.1 {
             Address::Alias(alias_address) => {
                 let (output_id, alias_output) = self
                     .output_id_and_next_alias_output_state(*alias_address.alias_id())
@@ -248,11 +251,8 @@ impl AccountHandle {
     }
 
     /// Fetches alias outputs with `address` set as Governor unlock condition
-    async fn fetch_governor_address_alias_outputs(
-        &self,
-        address: &AddressWrapper,
-    ) -> crate::Result<Vec<OutputResponse>> {
-        let alias_query_parameters = vec![QueryParameter::Governor(address.to_bech32())];
+    async fn fetch_governor_address_alias_outputs(&self, address: String) -> crate::Result<Vec<OutputResponse>> {
+        let alias_query_parameters = vec![QueryParameter::Governor(address)];
 
         let alias_output_ids = self.client.alias_output_ids(alias_query_parameters).await?;
         let output_responses = self.client.get_outputs(alias_output_ids).await?;
@@ -261,9 +261,9 @@ impl AccountHandle {
     }
 
     /// Fetches basic outputs with address unlock conditions only
-    async fn fetch_address_basic_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
+    async fn fetch_address_basic_outputs(&self, address: String) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
-            QueryParameter::Address(address.to_bech32()),
+            QueryParameter::Address(address),
             QueryParameter::HasExpirationCondition(false),
             QueryParameter::HasTimelockCondition(false),
             QueryParameter::HasStorageReturnCondition(false),
@@ -276,9 +276,9 @@ impl AccountHandle {
     }
 
     /// Fetches nft outputs with address unlock conditions only
-    async fn fetch_address_nft_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
+    async fn fetch_address_nft_outputs(&self, address: String) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
-            QueryParameter::Address(address.to_bech32()),
+            QueryParameter::Address(address),
             QueryParameter::HasExpirationCondition(false),
             QueryParameter::HasTimelockCondition(false),
             QueryParameter::HasStorageReturnCondition(false),

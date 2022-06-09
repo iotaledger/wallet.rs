@@ -23,10 +23,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
-        types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
-            OutputData, Transaction,
-        },
+        types::{AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState, OutputData, Transaction},
         Account,
     },
     AddressWithAmount, AddressWithMicroAmount,
@@ -86,8 +83,7 @@ impl TryFrom<&AddressWithMicroAmountDto> for AddressWithMicroAmount {
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AddressWithUnspentOutputsDto {
     /// The address.
-    #[serde(with = "crate::account::types::address_serde")]
-    pub address: AddressWrapper,
+    pub address: String,
     /// The address key index.
     #[serde(rename = "keyIndex")]
     pub key_index: u32,

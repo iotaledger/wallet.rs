@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
         .await?;
 
     let address = account.generate_addresses(1, None).await?;
-    println!("Generated address: {}", address[0].address().to_bech32());
+    println!("Generated address: {}", address[0].address());
 
     Ok(())
 }

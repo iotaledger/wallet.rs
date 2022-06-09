@@ -79,15 +79,13 @@ impl AccountHandle {
         let mut outputs = Vec::new();
         for nft_options in nfts_options {
             let address = match nft_options.address {
-                Some(address) => Address::try_from_bech32(&address)?.1,
+                Some(address) => address,
                 // todo other error message
-                None => {
-                    account_addresses
-                        .first()
-                        .ok_or(Error::FailedToGetRemainder)?
-                        .address
-                        .inner
-                }
+                None => account_addresses
+                    .first()
+                    .ok_or(Error::FailedToGetRemainder)?
+                    .address
+                    .to_string(),
             };
             let immutable_metadata = if let Some(immutable_metadata) = nft_options.immutable_metadata {
                 Some(Feature::Metadata(MetadataFeature::new(immutable_metadata)?))
@@ -104,7 +102,9 @@ impl AccountHandle {
             let mut nft_builder =
                 NftOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone(), NftId::null())?
                     // Address which will own the nft
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                        Address::try_from_bech32(address)?.1,
+                    )));
             if let Some(immutable_metadata) = immutable_metadata {
                 nft_builder = nft_builder.add_immutable_feature(immutable_metadata);
             }

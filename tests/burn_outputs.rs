@@ -48,16 +48,13 @@ async fn mint_and_burn_nft() -> Result<()> {
 
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
-    let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/enqueue",
-        &account_addresses[0].address().to_bech32(),
-    )
-    .await?;
+    let faucet_response =
+        request_funds_from_faucet("http://localhost:14265/api/enqueue", &account_addresses[0].address()).await?;
 
     println!("{}", faucet_response);
 
     let nft_options = vec![NftOptions {
-        address: Some(account_addresses[0].address().to_bech32()),
+        address: Some(account_addresses[0].address().to_string()),
         immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
         metadata: Some(b"some nft metadata".to_vec()),
     }];
@@ -120,18 +117,15 @@ async fn mint_and_melt_native_token() -> Result<()> {
 
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
-    let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/enqueue",
-        &account_addresses[0].address().to_bech32(),
-    )
-    .await?;
+    let faucet_response =
+        request_funds_from_faucet("http://localhost:14265/api/enqueue", &account_addresses[0].address()).await?;
 
     println!("{}", faucet_response);
 
     let circulating_supply = U256::from(60);
 
     let native_token_options = NativeTokenOptions {
-        account_address: Some(account_addresses[0].address().to_bech32()),
+        account_address: Some(account_addresses[0].address().to_string()),
         circulating_supply,
         maximum_supply: U256::from(100),
         foundry_metadata: None,

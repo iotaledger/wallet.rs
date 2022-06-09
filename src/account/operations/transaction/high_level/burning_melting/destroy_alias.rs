@@ -25,7 +25,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] destroy_alias");
 
         let address = self.get_sweep_remainder_address(&options).await?;
-        self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), &address)
+        self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), address)
             .await?;
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_alias(alias_id).await?;

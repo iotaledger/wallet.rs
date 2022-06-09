@@ -20,11 +20,7 @@ use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
 use crate::storage::manager::StorageManagerHandle;
 use crate::{
-    account::{
-        handle::AccountHandle,
-        types::{address::AddressWrapper, AccountAddress},
-        Account,
-    },
+    account::{handle::AccountHandle, types::AccountAddress, Account},
     ClientOptions, Error,
 };
 
@@ -135,11 +131,13 @@ impl AccountBuilder {
                     let first_account_addresses = first_account.list_addresses().await?;
 
                     if first_account_public_address
-                        != first_account_addresses
-                            .first()
-                            .ok_or(Error::FailedToGetRemainder)?
-                            .address
-                            .inner
+                        != Address::try_from_bech32(
+                            &first_account_addresses
+                                .first()
+                                .ok_or(Error::FailedToGetRemainder)?
+                                .address,
+                        )?
+                        .1
                     {
                         return Err(Error::InvalidMnemonic(
                             "First account address used another seed".to_string(),
@@ -148,7 +146,7 @@ impl AccountBuilder {
 
                     // Get bech32_hrp from address
                     if let Some(address) = first_account_addresses.first() {
-                        bech32_hrp = Some(address.address.bech32_hrp.clone());
+                        bech32_hrp = Some(Address::try_from_bech32(&address.address)?.0);
                     }
                 }
 
@@ -178,7 +176,7 @@ impl AccountBuilder {
                 .await?;
 
                 let first_public_account_address = AccountAddress {
-                    address: AddressWrapper::new(first_public_address, bech32_hrp),
+                    address: first_public_address.to_bech32(bech32_hrp),
                     key_index: 0,
                     internal: false,
                     used: false,
