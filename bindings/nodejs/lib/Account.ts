@@ -251,13 +251,6 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async sync(options?: AccountSyncOptions): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SyncAccount',
-            data: options ?? {},
-        });
-    }
-
     async generateAddress(
         options?: AddressGenerationOptions,
     ): Promise<Address> {
@@ -555,5 +548,13 @@ export class Account {
             },
         );
         return JSON.parse(response).payload;
+    }
+
+    async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+        const resp = await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'SyncAccount',
+            data: options ?? {},
+        });
+        return JSON.parse(resp).payload
     }
 }
