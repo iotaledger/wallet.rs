@@ -10,8 +10,7 @@ const {
     sendMessage,
     messageHandlerNew,
     listen,
-    eventListenerNew,
-    removeEventListeners,
+    clearListeners,
     destroy,
 } = addon;
 
@@ -34,7 +33,6 @@ export {
     sendMessageAsync,
     messageHandlerNew,
     listen,
-    eventListenerNew,
-    removeEventListeners,
+    clearListeners,
     destroy,
 };

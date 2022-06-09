@@ -38,9 +38,8 @@ export class AccountManager {
             cmd: 'ChangeStrongholdPassword',
             payload: {
                 password,
-
-            }
-        })
+            },
+        });
     }
 
     async clearStrongholdPassword(): Promise<void> {
@@ -134,6 +133,10 @@ export class AccountManager {
         callback: (error: Error, result: string) => void,
     ): void {
         return this.messageHandler.listen(eventTypes, callback);
+    }
+
+    clearListeners(eventTypes: EventType[]): void {
+        return this.messageHandler.clearListeners(eventTypes);
     }
 
     // TODO: test this
