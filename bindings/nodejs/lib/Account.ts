@@ -234,17 +234,6 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async listUnspentOutputs(): Promise<OutputData[]> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'ListUnspentOutputs',
-            },
-        );
-
-        return JSON.parse(response).payload;
-    }
-
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -260,6 +249,17 @@ export class Account {
             this.meta.index,
             {
                 name: 'ListTransactions',
+            },
+        );
+
+        return JSON.parse(response).payload;
+    }
+
+    async listUnspentOutputs(): Promise<OutputData[]> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'ListUnspentOutputs',
             },
         );
 
@@ -313,23 +313,6 @@ export class Account {
             },
         );
 
-        return JSON.parse(response).payload;
-    }
-
-    async prepareTransaction(
-        outputs: OutputTypes[],
-        options?: TransactionOptions,
-    ): Promise<PreparedTransactionData> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'PrepareTransaction',
-                data: {
-                    outputs,
-                    options,
-                },
-            },
-        );
         return JSON.parse(response).payload;
     }
 
@@ -411,6 +394,23 @@ export class Account {
                 name: 'PrepareSendNft',
                 data: {
                     addressNftIds,
+                    options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+    
+    async prepareTransaction(
+        outputs: OutputTypes[],
+        options?: TransactionOptions,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareTransaction',
+                data: {
+                    outputs,
                     options,
                 },
             },

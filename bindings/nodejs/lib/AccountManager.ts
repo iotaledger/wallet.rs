@@ -190,20 +190,6 @@ export class AccountManager {
         });
     }
 
-    async storeMnemonic(mnemonic: string): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'StoreMnemonic',
-            payload: mnemonic,
-        });
-    }
-
-    async verifyMnemonic(mnemonic: string): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'VerifyMnemonic',
-            payload: mnemonic,
-        });
-    }
-
     async startBackgroundSync(
         options?: AccountSyncOptions,
         intervalInMilliseconds?: number,
@@ -220,6 +206,20 @@ export class AccountManager {
     async stopBackgroundSync(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StopBackgroundSync',
+        });
+    }
+
+    async storeMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'StoreMnemonic',
+            payload: mnemonic,
+        });
+    }
+
+    async verifyMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'VerifyMnemonic',
+            payload: mnemonic,
         });
     }
 }
