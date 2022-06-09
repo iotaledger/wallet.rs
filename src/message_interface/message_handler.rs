@@ -160,6 +160,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::RemoveLatestAccount => {
+                convert_async_panics(|| async {
+                    self.account_manager.remove_latest_account().await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
             #[cfg(feature = "stronghold")]
             Message::RestoreBackup { source, password } => {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
@@ -673,13 +680,6 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let transaction_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
                     Ok(Response::SentTransactions(transaction_results))
-                })
-                .await
-            }
-            AccountMethod::RemoveLatestAccount => {
-                convert_async_panics(|| async {
-                    self.account_manager.remove_latest_account().await?;
-                    Ok(Response::Ok(()))
                 })
                 .await
             }

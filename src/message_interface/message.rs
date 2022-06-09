@@ -98,6 +98,9 @@ pub enum Message {
         /// Stronghold file password.
         password: String,
     },
+    /// Removes the latest account (account with the largest account index).
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    RemoveLatestAccount,
     /// Deletes the storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
@@ -185,6 +188,7 @@ impl Debug for Message {
                 "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
                 account_gap_limit, address_gap_limit
             ),
+            Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
             Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
             #[cfg(feature = "storage")]
@@ -262,6 +266,9 @@ impl Serialize for Message {
             #[cfg(feature = "stronghold")]
             Message::ChangeStrongholdPassword { .. } => {
                 serializer.serialize_unit_variant("Message", 21, "ChangeStrongholdPassword")
+            }
+            Message::RemoveLatestAccount { .. } => {
+                serializer.serialize_unit_variant("Message", 22, "RemoveLatestAccount")
             }
         }
     }
