@@ -21,6 +21,7 @@ import type {
     AddressWithUnspentOutputs,
     TransactionResult,
     PreparedTransactionData,
+    OutputId,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -92,7 +93,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async collectOutputs(outputIds: string[]): Promise<TransactionResult[]> {
+    async collectOutputs(outputIds: OutputId[]): Promise<TransactionResult[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -129,7 +130,7 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async getOutput(outputId: string): Promise<OutputData> {
+    async getOutput(outputId: OutputId): Promise<OutputData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

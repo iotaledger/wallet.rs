@@ -1,5 +1,6 @@
+import type { INativeToken } from '@iota/types';
 import type { Address, AddressWithUnspentOutputs } from './address';
-import type { OutputData } from './output';
+import type { OutputData, OutputId } from './output';
 import type { Transaction } from './transaction';
 
 /**
@@ -12,20 +13,18 @@ export interface AccountBalance {
     total: string;
     available: string;
     requiredStorageDeposit: string;
-    nativeTokens: nativeTokensMap;
+    nativeTokens: INativeToken[];
     nfts: string[];
     aliases: string[];
     foundries: string[];
-    potentiallyLockedOutputs: potentiallyLockedOutputsMap;
+    potentiallyLockedOutputs: potentiallyLockedOutputs;
 }
 
-export type nativeTokensMap = {
-    [tokenId: string]: number;
-};
-
-export type potentiallyLockedOutputsMap = {
-    [outputId: string]: boolean;
-};
+/**
+ * Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+ * TimelockUnlockCondition or ExpirationUnlockCondition this can change at any time
+ */
+export type potentiallyLockedOutputs = [OutputId, boolean];
 
 export interface AccountSyncOptions {
     addresses?: string[];
