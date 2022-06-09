@@ -17,8 +17,10 @@ use serde::Deserialize;
 
 use crate::{
     account::operations::{
-        address_generation::AddressGenerationOptions, output_collection::OutputsToCollect, syncing::SyncOptions,
-        transaction::TransactionOptions,
+        address_generation::AddressGenerationOptions,
+        output_collection::OutputsToCollect,
+        syncing::SyncOptions,
+        transaction::{prepare_output::OutputOptionsDto, TransactionOptions},
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
     AddressAndNftId, AddressNativeTokens, NativeTokenOptions, NftOptions,
@@ -167,6 +169,12 @@ pub enum AccountMethod {
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
+    /// Prepare an output.
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
+    PrepareOutput {
+        options: OutputOptionsDto,
+        transaction_options: Option<TransactionOptions>,
+    },
     /// Prepare transaction.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareTransaction {

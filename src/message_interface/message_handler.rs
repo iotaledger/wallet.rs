@@ -12,7 +12,7 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::output::{ByteCost, Output},
+    bee_block::output::{dto::OutputDto, ByteCost, Output},
     constants::SHIMMER_TESTNET_BECH32_HRP,
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
@@ -25,7 +25,7 @@ use zeroize::Zeroize;
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{
-    account::types::AccountIdentifier,
+    account::{operations::transaction::prepare_output::OutputOptions, types::AccountIdentifier},
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
@@ -497,6 +497,18 @@ impl WalletMessageHandler {
                         .prepare_mint_nfts(nfts_options.clone(), options.clone())
                         .await?;
                     Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                })
+                .await
+            }
+            AccountMethod::PrepareOutput {
+                options,
+                transaction_options,
+            } => {
+                convert_async_panics(|| async {
+                    let output = account_handle
+                        .prepare_output(OutputOptions::try_from(options)?, transaction_options.clone())
+                        .await?;
+                    Ok(Response::BuiltOutput(OutputDto::from(&output)))
                 })
                 .await
             }
