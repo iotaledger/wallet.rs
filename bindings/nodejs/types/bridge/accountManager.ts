@@ -6,6 +6,26 @@ import type {
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions } from '../network';
 
+export type __BackupMessage__ = {
+    cmd: 'Backup';
+    payload: {
+        destination: string;
+        password: string;
+    };
+};
+
+export type __ChangeStrongholdPasswordMessage__ = {
+    cmd: 'ChangeStrongholdPassword';
+    payload: {
+        password: string;
+    }
+}
+
+export type __CreateAccountMessage__ = {
+    cmd: 'CreateAccount';
+    payload: CreateAccountPayload;
+};
+
 export type __GetAccountsMessage__ = {
     cmd: 'GetAccounts';
 };
@@ -21,11 +41,6 @@ export type __GetNodeInfoMessage__ = {
         url?: string;
         auth?: Auth;
     };
-};
-
-export type __CreateAccountMessage__ = {
-    cmd: 'CreateAccount';
-    payload: CreateAccountPayload;
 };
 
 export type __RecoverAccountsMessage__ = {
@@ -75,14 +90,6 @@ export type __StoreMnemonicMessage__ = {
 export type __VerifyMnemonicMessage__ = {
     cmd: 'VerifyMnemonic';
     payload: string;
-};
-
-export type __BackupMessage__ = {
-    cmd: 'Backup';
-    payload: {
-        destination: string;
-        password: string;
-    };
 };
 
 export type __RestoreBackupMessage__ = {

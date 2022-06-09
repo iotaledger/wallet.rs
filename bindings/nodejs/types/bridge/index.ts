@@ -37,6 +37,7 @@ import type {
 } from './account';
 import type {
     __BackupMessage__,
+    __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
     __CreateAccountMessage__,
     __DeleteStorageMessage__,
@@ -104,6 +105,7 @@ export type __CallAccountMethodMessage__ = {
 export type __Message__ =
     | __BackupMessage__
     | __CallAccountMethodMessage__
+    | __ChangeStrongholdPasswordMessage__
     | __ClearStrongholdPasswordMessage__
     | __CreateAccountMessage__
     | __DeleteStorageMessage__
