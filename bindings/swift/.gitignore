@@ -1,0 +1,5 @@
+target
+xcode/IotaWallet/iota_wallet/libiota_wallet.a
+
+# Xcode user settings
+xcuserdata/
