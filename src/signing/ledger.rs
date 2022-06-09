@@ -67,7 +67,7 @@ impl super::Signer for LedgerNanoSigner {
 
         log::info!("get_ledger");
         let (connected_, locked) =
-            match iota_ledger::get_ledger(crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
+            match iota_ledger::get_ledger(0x107a, crate::signing::ledger::HARDENED, is_simulator).map_err(Into::into) {
                 Ok(_) => (true, false),
                 Err(crate::Error::LedgerDongleLocked) => (true, true),
                 Err(_) => (false, false),
@@ -106,7 +106,7 @@ impl super::Signer for LedgerNanoSigner {
             log::info!("Interactive address display - not using address pool");
 
             // get ledger
-            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+            let ledger = iota_ledger::get_ledger(0x107a, bip32_account, self.is_simulator)?;
             /*
                         let compiled_for = match ledger.is_debug_app() {
                             true => Network::Testnet,
@@ -151,7 +151,7 @@ impl super::Signer for LedgerNanoSigner {
                     );
 
                     // get ledger
-                    let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+                    let ledger = iota_ledger::get_ledger(0x107a, bip32_account, self.is_simulator)?;
 
                     // generate first address to check if the ledger has the correct seed
                     let addr = ledger.get_first_address()?;
@@ -191,7 +191,7 @@ impl super::Signer for LedgerNanoSigner {
             }
 
             let count = 15;
-            let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+            let ledger = iota_ledger::get_ledger(0x107a, bip32_account, self.is_simulator)?;
             /*
                         let compiled_for = match ledger.is_debug_app() {
                             true => Network::Testnet,
@@ -241,7 +241,7 @@ impl super::Signer for LedgerNanoSigner {
         let _lock = self.mutex.lock().await;
 
         let bip32_account = *account.index() as u32 | HARDENED;
-        let ledger = iota_ledger::get_ledger(bip32_account, self.is_simulator)?;
+        let ledger = iota_ledger::get_ledger(0x107a, bip32_account, self.is_simulator)?;
         // let compiled_for = match ledger.is_debug_app() {
         // true => Network::Testnet,
         // false => Network::Mainnet,
