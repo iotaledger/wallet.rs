@@ -66,6 +66,14 @@ export type __CollectOutputsMethod__ = {
     };
 };
 
+export type __ConsolidateOutputsMethod__ = {
+    name: 'ConsolidateOutputs';
+    data: {
+        force: boolean;
+        outputConsolidationThreshold?: number;
+    }
+}
+
 export type __GetOutputMethod__ = {
     name: 'GetOutput';
     data: {

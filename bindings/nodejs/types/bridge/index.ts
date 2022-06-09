@@ -5,6 +5,7 @@ import type {
     __BuildFoundryOutputMethod__,
     __BuildNftOutputMethod__,
     __CollectOutputsMethod__,
+    __ConsolidateOutputsMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
@@ -64,6 +65,7 @@ export type __AccountMethod__ =
     | __BuildFoundryOutputMethod__
     | __BuildNftOutputMethod__
     | __CollectOutputsMethod__
+    | __ConsolidateOutputsMethod__
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
     | __GetOutputMethod__
