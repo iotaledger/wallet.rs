@@ -12,13 +12,15 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::dto::AddressDto,
-        output::{dto::OutputDto, AliasId, FoundryId, NftId, OutputId, TokenId},
+        output::{
+            dto::{NativeTokenDto, OutputDto},
+            AliasId, FoundryId, NftId, OutputId,
+        },
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
         BlockId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
 };
-use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -125,7 +127,7 @@ pub struct AccountBalanceDto {
     pub required_storage_deposit: String,
     /// Native tokens
     #[serde(rename = "nativeTokens")]
-    pub native_tokens: HashMap<TokenId, U256>,
+    pub native_tokens: Vec<NativeTokenDto>,
     /// Nfts
     pub nfts: Vec<NftId>,
     /// Aliases
@@ -135,7 +137,7 @@ pub struct AccountBalanceDto {
     /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
     /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
-    pub potentially_locked_outputs: HashMap<OutputId, bool>,
+    pub potentially_locked_outputs: Vec<(OutputId, bool)>,
 }
 
 impl From<&AccountBalance> for AccountBalanceDto {
@@ -144,11 +146,11 @@ impl From<&AccountBalance> for AccountBalanceDto {
             total: value.total.to_string(),
             available: value.available.to_string(),
             required_storage_deposit: value.required_storage_deposit.to_string(),
-            native_tokens: value.native_tokens.clone(),
+            native_tokens: value.native_tokens.iter().map(Into::into).collect::<_>(),
             nfts: value.nfts.clone(),
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),
-            potentially_locked_outputs: value.potentially_locked_outputs.clone(),
+            potentially_locked_outputs: value.potentially_locked_outputs.clone().into_iter().collect(),
         }
     }
 }

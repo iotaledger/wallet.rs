@@ -128,12 +128,12 @@ async fn mint_and_melt_native_token() -> Result<()> {
 
     println!("{}", faucet_response);
 
-    let circulating_supply = U256::from(60);
+    let circulating_supply = U256::from(60i32);
 
     let native_token_options = NativeTokenOptions {
         account_address: Some(account_addresses[0].address().to_bech32()),
         circulating_supply,
-        maximum_supply: U256::from(100),
+        maximum_supply: U256::from(100i32),
         foundry_metadata: None,
     };
 
@@ -143,22 +143,21 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|&token| *token.0 == transaction_result.token_id && *token.1 == circulating_supply);
+        .find(|token| *token.token_id() == transaction_result.token_id && *token.amount() == circulating_supply);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
     // Burn some of the circulating supply
-    let burn_amount = U256::from(40);
+    let burn_amount = U256::from(40i32);
     let _ = account
         .melt_native_token((transaction_result.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
-    let search = balance
-        .native_tokens
-        .iter()
-        .find(|&token| (*token.0 == transaction_result.token_id) && (*token.1 == circulating_supply - burn_amount));
+    let search = balance.native_tokens.iter().find(|token| {
+        (*token.token_id() == transaction_result.token_id) && (*token.amount() == circulating_supply - burn_amount)
+    });
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
@@ -173,7 +172,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|&token| *token.0 == transaction_result.token_id);
+        .find(|token| *token.token_id() == transaction_result.token_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
 
