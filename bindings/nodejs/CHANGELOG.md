@@ -1,5 +1,16 @@
 # Changelog
 
+## \[1.0.17]
+
+- Fixed message deserialization for old messages.
+  - [a058c766](https://github.com/iotaledger/wallet.rs/commit/a058c76620e1a0953713f386c0d4436536b442b5) Fix message deserialization for old messages ([#973](https://github.com/iotaledger/wallet.rs/pull/973)) on 2022-04-05
+- Return an error when calling `setStrongholdPassword()` with a wrong password.
+  - [c1b981f2](https://github.com/iotaledger/wallet.rs/commit/c1b981f2500978996cd269c3b7c82dac11fcbd05) Return an error when calling `setStrongholdPassword()` with a wrong password ([#1135](https://github.com/iotaledger/wallet.rs/pull/1135)) on 2022-06-08
+- Fixed creating RocksDB databases in paths containing Unicode characters on Windows
+  - [cd13b94c](https://github.com/iotaledger/wallet.rs/commit/cd13b94cb61087e5957d4229a8a5e816fa2a94f0) Update rust-rocksdb to fix Unicode paths on Windows ([#976](https://github.com/iotaledger/wallet.rs/pull/976)) on 2022-04-07
+- Fixed using RocksDB on Windows with processors that don't have support for `popcnt`
+  - [36eea0af](https://github.com/iotaledger/wallet.rs/commit/36eea0af4a6fcdd8dcb935ba2a72513142591c94) Update rust-rocksdb to fix illegal instruction on Windows ([#998](https://github.com/iotaledger/wallet.rs/pull/998)) on 2022-04-14
+
 ## \[1.0.16]
 
 - Fix generateAddress to always return an address with a new higher index than the last one.
