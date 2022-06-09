@@ -127,6 +127,13 @@ export type __MintNativeTokenMethod__ = {
     };
 };
 
+export type __MinimumRequiredStorageDepositMethod__ = {
+    name: 'MinimumRequiredStorageDeposit';
+    data: {
+        outputs: OutputTypes[]
+    }
+}
+
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
     data: {

@@ -119,17 +119,32 @@ export class Account {
         return JSON.parse(resp).payload
     }
 
-    getAlias(): string {
-        return this.meta.alias;
+    async generateAddress(
+        options?: AddressGenerationOptions,
+    ): Promise<Address> {
+        const addresses = await this.generateAddresses(1, options);
+        return addresses[0];
     }
 
-    async setAlias(alias: string): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SetAlias',
-            data: {
-                alias,
+    async generateAddresses(
+        amount: number,
+        options?: AddressGenerationOptions,
+    ): Promise<Address[]> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GenerateAddresses',
+                data: {
+                    amount,
+                    options,
+                },
             },
-        });
+        );
+        return JSON.parse(response).payload;
+    }
+
+    getAlias(): string {
+        return this.meta.alias;
     }
 
     async getBalance(): Promise<AccountBalance> {
@@ -251,29 +266,18 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async generateAddress(
-        options?: AddressGenerationOptions,
-    ): Promise<Address> {
-        const addresses = await this.generateAddresses(1, options);
-        return addresses[0];
-    }
-
-    async generateAddresses(
-        amount: number,
-        options?: AddressGenerationOptions,
-    ): Promise<Address[]> {
+    async minimumRequiredStorageDeposit(outputs: OutputTypes[]): Promise<string> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GenerateAddresses',
+                name: 'MinimumRequiredStorageDeposit',
                 data: {
-                    amount,
-                    options,
+                    outputs,
                 },
-            },
-        );
+            }
+        )
+        return JSON.parse(response).payload
 
-        return JSON.parse(response).payload;
     }
 
     async mintNativeToken(
@@ -504,20 +508,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async tryCollectOutputs(
-        outputsToCollect: OutputsToCollect,
-    ): Promise<TransactionResult[]> {
-        const response = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'TryCollectOutputs',
-                data: {
-                    outputsToCollect,
-                },
+    async setAlias(alias: string): Promise<void> {
+        await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'SetAlias',
+            data: {
+                alias,
             },
-        );
-
-        return JSON.parse(response).payload;
+        });
     }
 
     async signTransactionEssence(
@@ -556,5 +553,21 @@ export class Account {
             data: options ?? {},
         });
         return JSON.parse(resp).payload
+    }
+
+    async tryCollectOutputs(
+        outputsToCollect: OutputsToCollect,
+    ): Promise<TransactionResult[]> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'TryCollectOutputs',
+                data: {
+                    outputsToCollect,
+                },
+            },
+        );
+
+        return JSON.parse(response).payload;
     }
 }
