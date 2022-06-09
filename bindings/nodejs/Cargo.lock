@@ -149,7 +149,7 @@ checksum = "cf9ff0bbfd639f15c74af777d81383cf53efb7c93613f6cab67c6c11e05bbf8b"
 [[package]]
 name = "bee-block"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/bee?rev=146ce1011fd76f3d9f07390b002b29dd6762daf3#146ce1011fd76f3d9f07390b002b29dd6762daf3"
+source = "git+https://github.com/iotaledger/bee?rev=c67092169135df3ea67d874b00201d8ec3390599#c67092169135df3ea67d874b00201d8ec3390599"
 dependencies = [
  "bech32 0.8.1",
  "bee-pow",
@@ -162,7 +162,7 @@ dependencies = [
  "iota-crypto 0.10.0",
  "iterator-sorted",
  "packable",
- "prefix-hex 0.2.0",
+ "prefix-hex",
  "primitive-types",
  "serde 1.0.137",
  "serde-big-array",
@@ -173,7 +173,7 @@ dependencies = [
 [[package]]
 name = "bee-ledger"
 version = "0.7.0"
-source = "git+https://github.com/iotaledger/bee?rev=146ce1011fd76f3d9f07390b002b29dd6762daf3#146ce1011fd76f3d9f07390b002b29dd6762daf3"
+source = "git+https://github.com/iotaledger/bee?rev=c67092169135df3ea67d874b00201d8ec3390599#c67092169135df3ea67d874b00201d8ec3390599"
 dependencies = [
  "bee-block",
  "packable",
@@ -184,7 +184,7 @@ dependencies = [
 [[package]]
 name = "bee-pow"
 version = "0.2.0"
-source = "git+https://github.com/iotaledger/bee?rev=146ce1011fd76f3d9f07390b002b29dd6762daf3#146ce1011fd76f3d9f07390b002b29dd6762daf3"
+source = "git+https://github.com/iotaledger/bee?rev=c67092169135df3ea67d874b00201d8ec3390599#c67092169135df3ea67d874b00201d8ec3390599"
 dependencies = [
  "bee-ternary 0.6.0",
  "iota-crypto 0.10.0",
@@ -194,14 +194,13 @@ dependencies = [
 [[package]]
 name = "bee-rest-api"
 version = "0.2.2"
-source = "git+https://github.com/iotaledger/bee?rev=146ce1011fd76f3d9f07390b002b29dd6762daf3#146ce1011fd76f3d9f07390b002b29dd6762daf3"
+source = "git+https://github.com/iotaledger/bee?rev=c67092169135df3ea67d874b00201d8ec3390599#c67092169135df3ea67d874b00201d8ec3390599"
 dependencies = [
  "bee-block",
  "bee-ledger",
  "bee-pow",
  "multiaddr",
  "packable",
- "prefix-hex 0.4.0",
  "primitive-types",
  "serde 1.0.137",
  "serde_json",
@@ -1143,9 +1142,10 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "1.1.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8d0c7b50c292576c4b5e47802362ced6afc30c61#8d0c7b50c292576c4b5e47802362ced6afc30c61"
+source = "git+https://github.com/iotaledger/iota.rs?rev=a884558653aa99b9a638a938d95e282bd78c9496#a884558653aa99b9a638a938d95e282bd78c9496"
 dependencies = [
  "async-trait",
+ "backtrace",
  "bee-block",
  "bee-pow",
  "bee-rest-api",
@@ -1156,7 +1156,7 @@ dependencies = [
  "gloo-timers",
  "hex",
  "instant",
- "iota-crypto 0.10.0",
+ "iota-crypto 0.11.0",
  "iota-crypto 0.5.1",
  "iota-ledger",
  "iota_stronghold",
@@ -1202,8 +1202,19 @@ version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1689fd8524d3516d499a94267f593ba9c984e31762a278ef66ce60d6621d16ff"
 dependencies = [
- "aead",
  "bee-ternary 0.6.0",
+ "blake2",
+ "digest",
+ "ed25519-zebra",
+ "lazy_static",
+]
+
+[[package]]
+name = "iota-crypto"
+version = "0.11.0"
+source = "git+https://github.com/iotaledger/crypto.rs?rev=c61d29253930105d0d589e54829b639427061e81#c61d29253930105d0d589e54829b639427061e81"
+dependencies = [
+ "aead",
  "blake2",
  "chacha20poly1305",
  "digest",
@@ -1211,11 +1222,11 @@ dependencies = [
  "generic-array",
  "getrandom 0.2.5",
  "hmac",
- "lazy_static",
  "pbkdf2",
  "serde 1.0.137",
  "sha2",
  "unicode-normalization",
+ "zeroize",
 ]
 
 [[package]]
@@ -1247,7 +1258,7 @@ dependencies = [
  "getset",
  "hex",
  "iota-client",
- "iota-crypto 0.10.0",
+ "iota-crypto 0.11.0",
  "log",
  "packable",
  "primitive-types",
@@ -1736,9 +1747,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "packable"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a47762ff3c7cbf55a5b822ce505b97bbcf1617be780f71c3ee43c272dd4a1867"
+checksum = "3ba68b40fa9b816f4bba41799ace47d683ee7c1c8a93b0bf7c449c1acd35ecbe"
 dependencies = [
  "autocfg",
  "packable-derive",
@@ -1748,9 +1759,9 @@ dependencies = [
 
 [[package]]
 name = "packable-derive"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2ec4d652900dcba58871e8f421111f1459bee2d40fe0bb43df07008b17598b0"
+checksum = "49ac147a716456f01535d90ead1fa84341886a5ee764c86690937e59335c928d"
 dependencies = [
  "proc-macro-crate",
  "proc-macro-error",
@@ -1856,15 +1867,6 @@ dependencies = [
  "hex",
  "primitive-types",
  "uint",
-]
-
-[[package]]
-name = "prefix-hex"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a85165b6848fe5328066d5cb934dd5c88ff09674db6fcd018df68d9a542b2317"
-dependencies = [
- "hex",
 ]
 
 [[package]]

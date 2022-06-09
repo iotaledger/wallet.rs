@@ -33,6 +33,22 @@ export class AccountManager {
         });
     }
 
+    async changeStrongholdPassword(password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'ChangeStrongholdPassword',
+            payload: {
+                password,
+
+            }
+        })
+    }
+
+    async clearStrongholdPassword(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'ClearStrongholdPassword',
+        });
+    }
+
     /**
      * The coin type only needs to be set on the first account
      */
@@ -44,21 +60,6 @@ export class AccountManager {
         return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
-    // TODO: test this
-    async recoverAccounts(
-        accountGapLimit: number,
-        addressGapLimit: number,
-    ): Promise<Account[]> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'RecoverAccounts',
-            payload: {
-                accountGapLimit,
-                addressGapLimit,
-            },
-        });
-        return JSON.parse(response).payload;
-    }
-
     async deleteStorage(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'DeleteStorage',
@@ -67,6 +68,21 @@ export class AccountManager {
 
     destroy(): void {
         this.messageHandler.destroy();
+    }
+
+    // TODO: test this
+    async emitTestEvent(event: WalletEvent): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'EmitTestEvent',
+            payload: event,
+        });
+    }
+
+    async generateMnemonic(): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GenerateMnemonic',
+        });
+        return JSON.parse(response).payload;
     }
 
     async getAccount(accountId: AccountId): Promise<Account> {
@@ -106,17 +122,50 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async clearStrongholdPassword(): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'ClearStrongholdPassword',
-        });
-    }
-
     async isStrongholdPasswordAvailable(): Promise<boolean> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'IsStrongholdPasswordAvailable',
         });
         return JSON.parse(response).payload;
+    }
+
+    listen(
+        eventTypes: EventType[],
+        callback: (error: Error, result: string) => void,
+    ): void {
+        return this.messageHandler.listen(eventTypes, callback);
+    }
+
+    // TODO: test this
+    async recoverAccounts(
+        accountGapLimit: number,
+        addressGapLimit: number,
+    ): Promise<Account[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'RecoverAccounts',
+            payload: {
+                accountGapLimit,
+                addressGapLimit,
+            },
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async restoreBackup(source: string, password: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'RestoreBackup',
+            payload: {
+                source,
+                password,
+            },
+        });
+    }
+
+    async setClientOptions(options: ClientOptions): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'SetClientOptions',
+            payload: options,
+        });
     }
 
     async setStrongholdPassword(password: string): Promise<void> {
@@ -135,13 +184,6 @@ export class AccountManager {
         });
     }
 
-    async generateMnemonic(): Promise<string> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'GenerateMnemonic',
-        });
-        return JSON.parse(response).payload;
-    }
-
     async storeMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
@@ -153,13 +195,6 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',
             payload: mnemonic,
-        });
-    }
-
-    async setClientOptions(options: ClientOptions): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'SetClientOptions',
-            payload: options,
         });
     }
 
@@ -180,30 +215,5 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'StopBackgroundSync',
         });
-    }
-
-    async restoreBackup(source: string, password: string): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'RestoreBackup',
-            payload: {
-                source,
-                password,
-            },
-        });
-    }
-
-    // TODO: test this
-    async emitTestEvent(event: WalletEvent): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'EmitTestEvent',
-            payload: event,
-        });
-    }
-
-    listen(
-        eventTypes: EventType[],
-        callback: (error: Error, result: string) => void,
-    ): void {
-        return this.messageHandler.listen(eventTypes, callback);
     }
 }

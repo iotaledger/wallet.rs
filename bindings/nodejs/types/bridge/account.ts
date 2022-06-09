@@ -59,12 +59,20 @@ export type __GetBalanceMethod__ = {
     name: 'GetBalance';
 };
 
-export type __SetCollectOutputsMethod__ = {
+export type __CollectOutputsMethod__ = {
     name: 'CollectOutputs';
     data: {
         outputIdsToCollect: string[];
     };
 };
+
+export type __ConsolidateOutputsMethod__ = {
+    name: 'ConsolidateOutputs';
+    data: {
+        force: boolean;
+        outputConsolidationThreshold?: number;
+    }
+}
 
 export type __GetOutputMethod__ = {
     name: 'GetOutput';

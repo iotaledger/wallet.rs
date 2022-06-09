@@ -105,6 +105,20 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    async consolidateOutputs(force: boolean, outputConsolidationThreshold?: number): Promise<TransactionResult[]> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'ConsolidateOutputs',
+                data: {
+                    force,
+                    outputConsolidationThreshold,
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
     getAlias(): string {
         return this.meta.alias;
     }
@@ -235,13 +249,6 @@ export class Account {
         );
 
         return JSON.parse(response).payload;
-    }
-
-    async sync(options?: AccountSyncOptions): Promise<void> {
-        await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SyncAccount',
-            data: options ?? {},
-        });
     }
 
     async generateAddress(
@@ -541,5 +548,13 @@ export class Account {
             },
         );
         return JSON.parse(response).payload;
+    }
+
+    async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+        const resp = await this.messageHandler.callAccountMethod(this.meta.index, {
+            name: 'SyncAccount',
+            data: options ?? {},
+        });
+        return JSON.parse(resp).payload
     }
 }
