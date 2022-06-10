@@ -266,26 +266,7 @@ mod tests {
     async fn address_conversion_methods() {
         std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());
         let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
-        let client_options = r#"{
-            "nodes":[
-               {
-                  "url":"http://localhost:14265/",
-                  "auth":null,
-                  "disabled":false
-               },
-               {
-                  "url":"https://chrysalis-nodes.iota.cafe/",
-                  "auth":null,
-                  "disabled":false
-               }
-            ],
-            "localPow":true,
-            "apiTimeout":{
-               "secs":20,
-               "nanos":0
-            }
-         }"#
-        .to_string();
+        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#.to_string();
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
