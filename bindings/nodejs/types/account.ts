@@ -36,7 +36,7 @@ export interface AccountSyncOptions {
      */
     addressStartIndex?: number;
     /**
-     * Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 10
+     * Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 5
      * seconds. But if we change the client options, we need to resync, because the new node could be from a nother
      * network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
      * addresses. Default: false.
