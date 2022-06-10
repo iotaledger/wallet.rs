@@ -21,9 +21,26 @@ export type __ChangeStrongholdPasswordMessage__ = {
     }
 }
 
+export type __ClearStrongholdPasswordMessage__ = {
+    cmd: 'ClearStrongholdPassword';
+};
+
 export type __CreateAccountMessage__ = {
     cmd: 'CreateAccount';
     payload: CreateAccountPayload;
+};
+
+export type __DeleteStorageMessage__ = {
+    cmd: 'DeleteStorage';
+};
+
+export type __EmitTestEventMessage__ = {
+    cmd: 'EmitTestEvent';
+    payload: WalletEvent;
+};
+
+export type __GenerateMnemonicMessage__ = {
+    cmd: 'GenerateMnemonic';
 };
 
 export type __GetAccountsMessage__ = {
@@ -43,6 +60,10 @@ export type __GetNodeInfoMessage__ = {
     };
 };
 
+export type __IsStrongholdPasswordAvailableMessage__ = {
+    cmd: 'IsStrongholdPasswordAvailable';
+};
+
 export type __RecoverAccountsMessage__ = {
     cmd: 'RecoverAccounts';
     payload: {
@@ -51,46 +72,9 @@ export type __RecoverAccountsMessage__ = {
     };
 };
 
-export type __DeleteStorageMessage__ = {
-    cmd: 'DeleteStorage';
-};
-
-export type __EmitTestEventMessage__ = {
-    cmd: 'EmitTestEvent';
-    payload: WalletEvent;
-};
-
-export type __ClearStrongholdPasswordMessage__ = {
-    cmd: 'ClearStrongholdPassword';
-};
-
-export type __IsStrongholdPasswordAvailableMessage__ = {
-    cmd: 'IsStrongholdPasswordAvailable';
-};
-
-export type __SetStrongholdPasswordMessage__ = {
-    cmd: 'SetStrongholdPassword';
-    payload: string;
-};
-
-export type __SetStrongholdPasswordClearIntervalMessage__ = {
-    cmd: 'SetStrongholdPasswordClearInterval';
-    payload?: number;
-};
-
-export type __GenerateMnemonicMessage__ = {
-    cmd: 'GenerateMnemonic';
-};
-
-export type __StoreMnemonicMessage__ = {
-    cmd: 'StoreMnemonic';
-    payload: string;
-};
-
-export type __VerifyMnemonicMessage__ = {
-    cmd: 'VerifyMnemonic';
-    payload: string;
-};
+export type __RemoveLatestAccountMessage__ = {
+    cmd: 'RemoveLatestAccount';
+}
 
 export type __RestoreBackupMessage__ = {
     cmd: 'RestoreBackup';
@@ -105,6 +89,16 @@ export type __SetClientOptionsMessage__ = {
     payload: ClientOptions;
 };
 
+export type __SetStrongholdPasswordMessage__ = {
+    cmd: 'SetStrongholdPassword';
+    payload: string;
+};
+
+export type __SetStrongholdPasswordClearIntervalMessage__ = {
+    cmd: 'SetStrongholdPasswordClearInterval';
+    payload?: number;
+};
+
 export type __StartBackgroundSyncMessage__ = {
     cmd: 'StartBackgroundSync';
     payload: {
@@ -115,4 +109,14 @@ export type __StartBackgroundSyncMessage__ = {
 
 export type __StopBackgroundSyncMessage__ = {
     cmd: 'StopBackgroundSync';
+};
+
+export type __StoreMnemonicMessage__ = {
+    cmd: 'StoreMnemonic';
+    payload: string;
+};
+
+export type __VerifyMnemonicMessage__ = {
+    cmd: 'VerifyMnemonic';
+    payload: string;
 };

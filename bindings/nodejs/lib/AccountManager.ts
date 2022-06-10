@@ -151,6 +151,12 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    async removeLatestAccount(): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'RemoveLatestAccount',
+        })
+    }
+
     async restoreBackup(source: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
@@ -184,20 +190,6 @@ export class AccountManager {
         });
     }
 
-    async storeMnemonic(mnemonic: string): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'StoreMnemonic',
-            payload: mnemonic,
-        });
-    }
-
-    async verifyMnemonic(mnemonic: string): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'VerifyMnemonic',
-            payload: mnemonic,
-        });
-    }
-
     async startBackgroundSync(
         options?: AccountSyncOptions,
         intervalInMilliseconds?: number,
@@ -214,6 +206,20 @@ export class AccountManager {
     async stopBackgroundSync(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StopBackgroundSync',
+        });
+    }
+
+    async storeMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'StoreMnemonic',
+            payload: mnemonic,
+        });
+    }
+
+    async verifyMnemonic(mnemonic: string): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'VerifyMnemonic',
+            payload: mnemonic,
         });
     }
 }

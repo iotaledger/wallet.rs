@@ -42,23 +42,6 @@ export type __BuildNftOutputMethod__ = {
     data: BuildNftOutputData;
 };
 
-export type __SyncAccountMethod__ = {
-    name: 'SyncAccount';
-    data: AccountSyncOptions;
-};
-
-export type __GenerateAddressesMethod__ = {
-    name: 'GenerateAddresses';
-    data: {
-        amount: number;
-        options?: AddressGenerationOptions;
-    };
-};
-
-export type __GetBalanceMethod__ = {
-    name: 'GetBalance';
-};
-
 export type __CollectOutputsMethod__ = {
     name: 'CollectOutputs';
     data: {
@@ -73,6 +56,18 @@ export type __ConsolidateOutputsMethod__ = {
         outputConsolidationThreshold?: number;
     }
 }
+
+export type __GenerateAddressesMethod__ = {
+    name: 'GenerateAddresses';
+    data: {
+        amount: number;
+        options?: AddressGenerationOptions;
+    };
+};
+
+export type __GetBalanceMethod__ = {
+    name: 'GetBalance';
+};
 
 export type __GetOutputMethod__ = {
     name: 'GetOutput';
@@ -119,10 +114,33 @@ export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
 };
 
+export type __MinimumRequiredStorageDepositMethod__ = {
+    name: 'MinimumRequiredStorageDeposit';
+    data: {
+        outputs: OutputTypes[]
+    }
+}
+
 export type __MintNativeTokenMethod__ = {
     name: 'MintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
+        options?: TransactionOptions;
+    };
+};
+
+export type __MintNftsMethod__ = {
+    name: 'MintNfts';
+    data: {
+        nftsOptions: NftOptions[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareMintNftsMethod__ = {
+    name: 'PrepareMintNfts';
+    data: {
+        nftOptions: NftOptions[];
         options?: TransactionOptions;
     };
 };
@@ -159,26 +177,10 @@ export type __PrepareSendNftMethod__ = {
     };
 };
 
-export type __PrepareMintNftsMethod__ = {
-    name: 'PrepareMintNfts';
-    data: {
-        nftOptions: NftOptions[];
-        options?: TransactionOptions;
-    };
-};
-
 export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
         outputs: OutputTypes[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __MintNftsMethod__ = {
-    name: 'MintNfts';
-    data: {
-        nftsOptions: NftOptions[];
         options?: TransactionOptions;
     };
 };
@@ -242,6 +244,11 @@ export type __SubmitAndStoreTransactionMethod__ = {
     data: {
         signedTransactionData: SignedTransactionEssence;
     };
+};
+
+export type __SyncAccountMethod__ = {
+    name: 'SyncAccount';
+    data: AccountSyncOptions;
 };
 
 export type __TryCollectOutputsMethod__ = {

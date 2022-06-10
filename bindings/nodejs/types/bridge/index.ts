@@ -17,6 +17,7 @@ import type {
     __ListPendingTransactionsMethod__,
     __ListTransactionsMethod__,
     __ListUnspentOutputsMethod__,
+    __MinimumRequiredStorageDepositMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
     __PrepareMintNftsMethod__,
@@ -49,6 +50,7 @@ import type {
     __GetNodeInfoMessage__,
     __IsStrongholdPasswordAvailableMessage__,
     __RecoverAccountsMessage__,
+    __RemoveLatestAccountMessage__,
     __RestoreBackupMessage__,
     __SetClientOptionsMessage__,
     __SetStrongholdPasswordClearIntervalMessage__,
@@ -77,6 +79,7 @@ export type __AccountMethod__ =
     | __ListPendingTransactionsMethod__
     | __ListTransactionsMethod__
     | __ListUnspentOutputsMethod__
+    | __MinimumRequiredStorageDepositMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__
     | __PrepareMintNftsMethod__
@@ -118,6 +121,7 @@ export type __Message__ =
     | __GetNodeInfoMessage__
     | __IsStrongholdPasswordAvailableMessage__
     | __RecoverAccountsMessage__
+    | __RemoveLatestAccountMessage__
     | __RestoreBackupMessage__
     | __SetClientOptionsMessage__
     | __SetStrongholdPasswordClearIntervalMessage__
