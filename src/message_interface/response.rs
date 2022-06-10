@@ -109,6 +109,10 @@ pub enum Response {
     GeneratedMnemonic(String),
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
+    /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
+    Bech32ToHex(String),
+    /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
+    HexToBech32(String),
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
@@ -163,6 +167,8 @@ impl Debug for Response {
             Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
             Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
             Response::NodeInfo(info) => write!(f, "NodeInfo({:?})", info),
+            Response::Bech32ToHex(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
+            Response::HexToBech32(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),
             Response::Ok(()) => write!(f, "Ok(())"),
         }
     }

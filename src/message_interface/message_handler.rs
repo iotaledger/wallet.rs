@@ -13,10 +13,11 @@ use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
     bee_block::output::{ByteCost, Output},
+    constants::SHIMMER_TESTNET_BECH32_HRP,
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
     },
-    Client, NodeInfoWrapper,
+    utils, Client, NodeInfoWrapper,
 };
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
@@ -262,6 +263,15 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::Bech32ToHex(bech32) => {
+                convert_panics(|| Ok(Response::Bech32ToHex(utils::bech32_to_hex(&bech32)?)))
+            }
+            Message::HexToBech32 { hex, bech32_hrp } => convert_panics(|| {
+                Ok(Response::HexToBech32(utils::hex_to_bech32(
+                    &hex,
+                    &bech32_hrp.unwrap_or_else(|| SHIMMER_TESTNET_BECH32_HRP.into()),
+                )?))
+            }),
         };
 
         let response = match response {
