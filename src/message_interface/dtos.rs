@@ -137,7 +137,7 @@ pub struct AccountBalanceDto {
     /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
     /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
-    pub potentially_locked_outputs: Vec<(OutputId, bool)>,
+    pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }
 
 impl From<&AccountBalance> for AccountBalanceDto {
@@ -150,7 +150,7 @@ impl From<&AccountBalance> for AccountBalanceDto {
             nfts: value.nfts.clone(),
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),
-            potentially_locked_outputs: value.potentially_locked_outputs.clone().into_iter().collect(),
+            potentially_locked_outputs: value.potentially_locked_outputs.clone(),
         }
     }
 }

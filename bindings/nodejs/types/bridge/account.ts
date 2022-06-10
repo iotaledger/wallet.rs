@@ -13,7 +13,7 @@ import type {
     BuildFoundryOutputData,
     BuildNftOutputData,
 } from '../buildOutputData';
-import type { OutputId, OutputsToCollect } from '../output';
+import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
@@ -62,14 +62,14 @@ export type __GetBalanceMethod__ = {
 export type __SetCollectOutputsMethod__ = {
     name: 'CollectOutputs';
     data: {
-        outputIdsToCollect: OutputId[];
+        outputIdsToCollect: string[];
     };
 };
 
 export type __GetOutputMethod__ = {
     name: 'GetOutput';
     data: {
-        outputId: OutputId;
+        outputId: string;
     };
 };
 
