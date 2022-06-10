@@ -12,7 +12,7 @@ use iota_client::bee_block::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCost, NativeToken, NftId, Output,
+        BasicOutputBuilder, ByteCost, NativeToken, NftId, NftOutputBuilder, Output,
     },
     payload::milestone::MilestoneIndex,
 };
@@ -24,6 +24,7 @@ impl AccountHandle {
     /// Prepare an output
     /// If the amount is below the minimum required storage deposit, by default the remaining amount will automatically
     /// added with a StorageDepositReturn UnlockCondition
+    /// When the assets contain an nft_id, the nft output will be used, just with the address unlock conditions replaed
     pub async fn prepare_output(
         &self,
         options: OutputOptions,
@@ -33,81 +34,60 @@ impl AccountHandle {
 
         if let Some(assets) = &options.assets {
             if let Some(nft_id) = assets.nft_id {
-                return self.prepare_nft_output(options.clone(), nft_id).await;
+                return self
+                    .prepare_nft_output(options.clone(), transaction_options, nft_id)
+                    .await;
             }
         }
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         // We start building with minimum storage deposit, so we know the minimum required amount and can later replace
         // it, if needed
-        let mut basic_second_output_builder = BasicOutputBuilder::new_with_minimum_storage_deposit(
-            byte_cost_config.clone(),
-        )?
-        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-            Address::try_from_bech32(options.recipient_address.clone())?.1,
-        )));
+        let mut first_output_builder = BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                Address::try_from_bech32(options.recipient_address.clone())?.1,
+            )));
 
         if let Some(assets) = options.assets {
             if let Some(native_tokens) = assets.native_tokens {
-                basic_second_output_builder = basic_second_output_builder.with_native_tokens(native_tokens);
+                first_output_builder = first_output_builder.with_native_tokens(native_tokens);
             }
         }
 
         if let Some(features) = options.features {
             if let Some(tag) = features.tag {
-                basic_second_output_builder = basic_second_output_builder
+                first_output_builder = first_output_builder
                     .add_feature(Feature::Tag(TagFeature::new(hex::encode(tag).as_bytes().to_vec())?));
             }
             if let Some(metadata) = features.metadata {
-                basic_second_output_builder = basic_second_output_builder.add_feature(Feature::Metadata(
-                    MetadataFeature::new(hex::encode(metadata).as_bytes().to_vec())?,
-                ));
+                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
+                    hex::encode(metadata).as_bytes().to_vec(),
+                )?));
             }
         }
 
         if let Some(unlocks) = options.unlocks {
             if let Some(expiration) = unlocks.expiration {
-                // todo: move this in an own method
-                let remainder_address = match &transaction_options {
-                    Some(options) => {
-                        match &options.remainder_value_strategy {
-                            RemainderValueStrategy::ReuseAddress => {
-                                // select_inputs will select an address from the inputs if it's none
-                                None
-                            }
-                            RemainderValueStrategy::ChangeAddress => {
-                                let remainder_address = self.generate_remainder_address().await?;
-                                Some(remainder_address.address().inner)
-                            }
-                            RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
-                        }
-                    }
-                    None => None,
-                };
-                let remainder_address = match remainder_address {
-                    Some(address) => address,
-                    None => self.generate_remainder_address().await?.address().inner,
-                };
+                let remainder_address = self.get_remainder_address(transaction_options.clone()).await?;
 
-                basic_second_output_builder = basic_second_output_builder.add_unlock_condition(
-                    UnlockCondition::Expiration(ExpirationUnlockCondition::new(
+                first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Expiration(
+                    ExpirationUnlockCondition::new(
                         remainder_address,
                         MilestoneIndex::new(expiration.milestone_index.unwrap_or_default()),
                         expiration.unix_time.unwrap_or_default(),
-                    )?),
-                );
+                    )?,
+                ));
             }
             if let Some(timelock) = unlocks.timelock {
-                basic_second_output_builder = basic_second_output_builder.add_unlock_condition(
-                    UnlockCondition::Timelock(TimelockUnlockCondition::new(
+                first_output_builder =
+                    first_output_builder.add_unlock_condition(UnlockCondition::Timelock(TimelockUnlockCondition::new(
                         MilestoneIndex::new(timelock.milestone_index.unwrap_or_default()),
                         timelock.unix_time.unwrap_or_default(),
-                    )?),
-                );
+                    )?));
             }
         }
 
-        let first_output = basic_second_output_builder.finish()?;
+        let first_output = first_output_builder.finish()?;
 
         let mut second_output_builder = BasicOutputBuilder::from(&first_output);
 
@@ -122,33 +102,13 @@ impl AccountHandle {
                 // Gift return strategy doesn't need a change, since the amount is already the minimum storage
                 // deposit
                 if let ReturnStrategy::Return = storage_deposit.return_strategy.unwrap_or_default() {
-                    // todo: move this in an own method
-                    let remainder_address = match &transaction_options {
-                        Some(options) => {
-                            match &options.remainder_value_strategy {
-                                RemainderValueStrategy::ReuseAddress => {
-                                    // select_inputs will select an address from the inputs if it's none
-                                    None
-                                }
-                                RemainderValueStrategy::ChangeAddress => {
-                                    let remainder_address = self.generate_remainder_address().await?;
-                                    Some(remainder_address.address().inner)
-                                }
-                                RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
-                            }
-                        }
-                        None => None,
-                    };
-                    let remainder_address = match remainder_address {
-                        Some(address) => address,
-                        None => self.generate_remainder_address().await?.address().inner,
-                    };
+                    let remainder_address = self.get_remainder_address(transaction_options).await?;
 
                     // Calculate the amount to be returned
                     let minimum_storage_deposit_remainder =
                         BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                Address::try_from_bech32(options.recipient_address)?.1,
+                                Address::try_from_bech32(options.recipient_address.clone())?.1,
                             )))
                             .finish_output()?
                             .amount();
@@ -161,10 +121,27 @@ impl AccountHandle {
                     );
                 }
 
+                // Check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this
+                // output. If that's the case, this remaining amount will be added to the output, to still allow sending
+                // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
-                    todo!(
-                        "Get account balance and check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this output"
-                    )
+                    let balance = self.balance().await?;
+                    if let Ordering::Greater = balance.available.cmp(&first_output.amount()) {
+                        let balance_minus_output = balance.available - first_output.amount();
+                        // Calculate the amount for a basic output
+                        let minimum_required_storage_deposit =
+                            BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                    Address::try_from_bech32(options.recipient_address)?.1,
+                                )))
+                                .finish_output()?
+                                .amount();
+
+                        if balance_minus_output < minimum_required_storage_deposit {
+                            second_output_builder =
+                                second_output_builder.with_amount(first_output.amount() + balance_minus_output)?;
+                        }
+                    }
                 }
             }
         }
@@ -198,12 +175,198 @@ impl AccountHandle {
     }
 
     /// Prepare an nft output
-    async fn prepare_nft_output(&self, options: OutputOptions, _nft_id: NftId) -> crate::Result<Output> {
+    async fn prepare_nft_output(
+        &self,
+        options: OutputOptions,
+        transaction_options: Option<TransactionOptions>,
+        nft_id: NftId,
+    ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_nft_output {options:?}");
 
-        todo!("Implement prepare_nft_output");
-        // check if nft output is available in account
-        // add immutable fields
+        let unspent_outputs = self.list_unspent_outputs().await?;
+
+        // Find nft output from the inputs
+        let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
+            if let Output::Nft(nft_output) = &o.output {
+                nft_id == nft_output.nft_id().or_from_output_id(o.output_id)
+            } else {
+                false
+            }
+        }) {
+            if let Output::Nft(nft_output) = &nft_output_data.output {
+                NftOutputBuilder::from(nft_output)
+            } else {
+                unreachable!("We checked before if it's an nft output")
+            }
+        } else {
+            return Err(crate::Error::NftNotFoundInUnspentOutputs);
+        };
+
+        // Set new address unlock condition
+        first_output_builder = first_output_builder.with_unlock_conditions(vec![UnlockCondition::Address(
+            AddressUnlockCondition::new(Address::try_from_bech32(options.recipient_address.clone())?.1),
+        )]);
+
+        // from here basically the same as in `prepare_output()`, just with Nft outputs
+
+        let byte_cost_config = self.client.get_byte_cost_config().await?;
+
+        if let Some(assets) = options.assets {
+            if let Some(native_tokens) = assets.native_tokens {
+                first_output_builder = first_output_builder.with_native_tokens(native_tokens);
+            }
+        }
+
+        if let Some(features) = options.features {
+            if let Some(tag) = features.tag {
+                first_output_builder = first_output_builder
+                    .add_feature(Feature::Tag(TagFeature::new(hex::encode(tag).as_bytes().to_vec())?));
+            }
+            if let Some(metadata) = features.metadata {
+                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
+                    hex::encode(metadata).as_bytes().to_vec(),
+                )?));
+            }
+        }
+
+        if let Some(unlocks) = options.unlocks {
+            if let Some(expiration) = unlocks.expiration {
+                let remainder_address = self.get_remainder_address(transaction_options.clone()).await?;
+
+                first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Expiration(
+                    ExpirationUnlockCondition::new(
+                        remainder_address,
+                        MilestoneIndex::new(expiration.milestone_index.unwrap_or_default()),
+                        expiration.unix_time.unwrap_or_default(),
+                    )?,
+                ));
+            }
+            if let Some(timelock) = unlocks.timelock {
+                first_output_builder =
+                    first_output_builder.add_unlock_condition(UnlockCondition::Timelock(TimelockUnlockCondition::new(
+                        MilestoneIndex::new(timelock.milestone_index.unwrap_or_default()),
+                        timelock.unix_time.unwrap_or_default(),
+                    )?));
+            }
+        }
+
+        let first_output = first_output_builder.finish()?;
+
+        let mut second_output_builder = NftOutputBuilder::from(&first_output);
+
+        // Update the amount
+        match options.amount.cmp(&first_output.amount()) {
+            Ordering::Greater | Ordering::Equal => {
+                // if it's larger than the minimum storage deposit, just replace it
+                second_output_builder = second_output_builder.with_amount(options.amount)?;
+            }
+            Ordering::Less => {
+                let storage_deposit = options.storage_deposit.unwrap_or_default();
+                // Gift return strategy doesn't need a change, since the amount is already the minimum storage
+                // deposit
+                if let ReturnStrategy::Return = storage_deposit.return_strategy.unwrap_or_default() {
+                    let remainder_address = self.get_remainder_address(transaction_options).await?;
+
+                    // Calculate the amount to be returned
+                    let minimum_storage_deposit_remainder =
+                        BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                Address::try_from_bech32(options.recipient_address.clone())?.1,
+                            )))
+                            .finish_output()?
+                            .amount();
+
+                    second_output_builder = second_output_builder.add_unlock_condition(
+                        UnlockCondition::StorageDepositReturn(StorageDepositReturnUnlockCondition::new(
+                            remainder_address,
+                            minimum_storage_deposit_remainder,
+                        )?),
+                    );
+                }
+
+                // Check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this
+                // output. If that's the case, this remaining amount will be added to the output, to still allow sending
+                // it.
+                if storage_deposit.use_excess_if_low.unwrap_or_default() {
+                    let balance = self.balance().await?;
+                    if let Ordering::Greater = balance.available.cmp(&first_output.amount()) {
+                        let balance_minus_output = balance.available - first_output.amount();
+                        // Calculate the amount for a basic output
+                        let minimum_required_storage_deposit =
+                            BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                                    Address::try_from_bech32(options.recipient_address)?.1,
+                                )))
+                                .finish_output()?
+                                .amount();
+
+                        if balance_minus_output < minimum_required_storage_deposit {
+                            second_output_builder =
+                                second_output_builder.with_amount(first_output.amount() + balance_minus_output)?;
+                        }
+                    }
+                }
+            }
+        }
+
+        let second_output = second_output_builder.finish()?;
+
+        let required_storage_deposit = Output::Nft(second_output.clone()).byte_cost(&byte_cost_config);
+
+        let mut third_output_builder = NftOutputBuilder::from(&second_output);
+
+        // We might have added more unlock conditions, so we check the minimum storage deposit again and update the
+        // amounts if needed
+        if second_output.amount() < required_storage_deposit {
+            third_output_builder = third_output_builder.with_amount(required_storage_deposit)?;
+            // add newly added amount also to the storage deposit return unlock condition, if that was added
+            let new_sdr_amount = required_storage_deposit - options.amount;
+            if let Some(UnlockCondition::StorageDepositReturn(sdr)) = second_output
+                .unlock_conditions()
+                .get(StorageDepositReturnUnlockCondition::KIND)
+            {
+                // create a new sdr unlock_condition with the updated amount and replace it
+                let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
+                    StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount)?,
+                );
+                third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition)?;
+            }
+        }
+
+        // Build and return the final output
+        Ok(third_output_builder.finish_output()?)
+    }
+
+    // Get a remainder address based on transaction_options or use the first account address
+    async fn get_remainder_address(&self, transaction_options: Option<TransactionOptions>) -> crate::Result<Address> {
+        let remainder_address = match &transaction_options {
+            Some(options) => {
+                match &options.remainder_value_strategy {
+                    RemainderValueStrategy::ReuseAddress => {
+                        // select_inputs will select an address from the inputs if it's none
+                        None
+                    }
+                    RemainderValueStrategy::ChangeAddress => {
+                        let remainder_address = self.generate_remainder_address().await?;
+                        Some(remainder_address.address().inner)
+                    }
+                    RemainderValueStrategy::CustomAddress(address) => Some(address.address().inner),
+                }
+            }
+            None => None,
+        };
+        let remainder_address = match remainder_address {
+            Some(address) => address,
+            None => {
+                self.list_addresses()
+                    .await?
+                    .first()
+                    .ok_or(crate::Error::FailedToGetRemainder)?
+                    .address()
+                    .inner
+            }
+        };
+        Ok(remainder_address)
     }
 }
 
@@ -220,39 +383,39 @@ pub struct OutputOptions {
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Assets {
     #[serde(rename = "nativeToken")]
-    native_tokens: Option<Vec<NativeToken>>,
+    pub native_tokens: Option<Vec<NativeToken>>,
     #[serde(rename = "nftId")]
-    nft_id: Option<NftId>,
+    pub nft_id: Option<NftId>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Features {
-    tag: Option<String>,
-    metadata: Option<String>,
+    pub tag: Option<String>,
+    pub metadata: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Unlocks {
-    expiration: Option<Time>,
-    timelock: Option<Time>,
+    pub expiration: Option<Time>,
+    pub timelock: Option<Time>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Time {
     #[serde(rename = "milestoneIndex")]
-    milestone_index: Option<u32>,
+    pub milestone_index: Option<u32>,
     #[serde(rename = "unixTime")]
-    unix_time: Option<u32>,
+    pub unix_time: Option<u32>,
 }
 
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct StorageDeposit {
     #[serde(rename = "returnStrategy")]
-    return_strategy: Option<ReturnStrategy>,
+    pub return_strategy: Option<ReturnStrategy>,
     // If account has 2 Mi, min storage deposit is 1 Mi and one wants to send 1.5 Mi, it wouldn't be possible with a
     // 0.5 Mi remainder. To still send a transaction, the 0.5 can be added to the output automatically, if set to true
     #[serde(rename = "useExcessIfLow")]
-    use_excess_if_low: Option<bool>,
+    pub use_excess_if_low: Option<bool>,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]

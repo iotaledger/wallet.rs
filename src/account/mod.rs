@@ -28,7 +28,10 @@ pub use self::{
         address_generation::AddressGenerationOptions,
         output_collection::OutputsToCollect,
         syncing::SyncOptions,
-        transaction::{prepare_output::OutputOptions, RemainderValueStrategy, TransactionOptions},
+        transaction::{
+            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Time, Unlocks},
+            RemainderValueStrategy, TransactionOptions,
+        },
     },
 };
 
