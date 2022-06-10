@@ -80,6 +80,47 @@ class IotaWallet():
             }
         )
 
+    def change_stronghold_password(self, password, keys_to_re_encrypt):
+        """Change stronghold password.
+        """
+        return self._send_cmd_routine(
+            'ChangeStrongholdPassword', {
+                'password': password,
+                'keys_to_re_encrypt': keys_to_re_encrypt
+            }
+        )
+
+    def clear_stronghold_password(self):
+        """Clear stronghold password.
+        """
+        return self._send_cmd_routine(
+            'ClearStrongholdPassword'
+        )
+
+    def is_stronghold_password_available(self):
+        """Is stronghold password available.
+        """
+        return self._send_cmd_routine(
+            'IsStrongholdPasswordAvailable'
+        )
+
+    def recover_accounts(self, account_gap_limit, address_gap_limit):
+        """Recover accounts.
+        """
+        return self._send_cmd_routine(
+            'RecoverAccounts', {
+                'account_gap_limit': account_gap_limit,
+                'address_gap_limit': address_gap_limit
+            }
+        )
+
+    def remove_latest_account(self):
+        """Remove latest account.
+        """
+        return self._send_cmd_routine(
+            'RemoveLatestAccount'
+        )
+
     def restore_back(self, source, password):
         """Import accounts from storage.
         """
@@ -118,6 +159,53 @@ class IotaWallet():
         return self._send_cmd_routine(
             'SetClientOptions',
             client_options
+        )
+
+    def get_node_info(self, url, auth):
+        """Get node info.
+        """
+        return self._send_cmd_routine(
+            'GetNodeInfo', {
+                'url': url,
+                'auth': auth
+            }
+        )
+
+    def set_stronghold_password(self, password):
+        """Set stronghold password.
+        """
+        return self._send_cmd_routine(
+            'SetStrongholdPassword', {
+                'password': password
+            }
+        )
+
+    def set_stronghold_password_clear_interval(self, interval_in_milliseconds):
+        """Set stronghold password clear interval.
+        """
+        return self._send_cmd_routine(
+            'SetStrongholdPasswordClearInterval', {
+                'interval_in_milliseconds': interval_in_milliseconds
+            }
+        )
+
+    def store_memonic(self, mnemonic):
+        """Store memonic.
+        """
+        return self._send_cmd_routine(
+            'StoreMnemonic', {
+                'mnemonic': mnemonic
+            }
+        )
+
+    def start_background_sync(self, options, interval_in_milliseconds):
+        """Start background sync.
+        """
+        return self._send_cmd_routine(
+            'StartBackgroundSync', {
+                'options': options,
+                'interval_in_milliseconds': interval_in_milliseconds
+            }
         )
 
     def stop_background_sync(self):
