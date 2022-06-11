@@ -241,52 +241,12 @@ class Account:
             'GetBalance'
         )
 
-    def prepare_mint_nfts(self, nfts_options, options):
-        """Prepare mint nfts.
-        """
-        return self._call_account_method(
-            'PrepareMintNfts', {
-                'nfts_options': nfts_options,
-                'options': options
-            }
-        )
-
     def prepare_send_amount(self, addresses_with_amount, options):
         """Prepare send amount.
         """
         return self._call_account_method(
             'PrepareSendAmount', {
                 'addresses_with_amount': addresses_with_amount,
-                'options': options
-            }
-        )
-
-    def prepare_send_micro_transaction(self, addresses_with_micro_amount, options):
-        """Prepare send micro transaction.
-        """
-        return self._call_account_method(
-            'PrepareSendMicroTransaction', {
-                'addresses_with_micro_amount': addresses_with_micro_amount,
-                'options': options
-            }
-        )
-
-    def prepare_send_native_tokens(self, addresses_native_tokens, options):
-        """Prepare send native tokens.
-        """
-        return self._call_account_method(
-            'PrepareSendNativeTokens', {
-                'addresses_native_tokens': addresses_native_tokens,
-                'options': options
-            }
-        )
-
-    def prepare_send_nft(self, addresses_nft_ids, options):
-        """Prepare send nft.
-        """
-        return self._call_account_method(
-            'PrepareSendNft', {
-                'addresses_nft_ids': addresses_nft_ids,
                 'options': options
             }
         )

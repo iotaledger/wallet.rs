@@ -137,14 +137,6 @@ export type __MintNftsMethod__ = {
     };
 };
 
-export type __PrepareMintNftsMethod__ = {
-    name: 'PrepareMintNfts';
-    data: {
-        nftOptions: NftOptions[];
-        options?: TransactionOptions;
-    };
-};
-
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
     data: {
