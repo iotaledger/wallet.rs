@@ -69,6 +69,7 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] send_micro_transaction");
         let prepared_trasacton = self
             .prepare_send_micro_transaction(addresses_with_micro_amount, options)
             .await?;
@@ -77,12 +78,11 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_micro_transaction()](crate::account::handle::AccountHandle.send_micro_transaction)
-    pub async fn prepare_send_micro_transaction(
+    async fn prepare_send_micro_transaction(
         &self,
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSACTION] prepare_send_micro_transaction");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;

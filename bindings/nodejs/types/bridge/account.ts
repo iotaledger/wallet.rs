@@ -153,30 +153,6 @@ export type __PrepareSendAmountMethod__ = {
     };
 };
 
-export type __PrepareSendMicroTransactionMethod__ = {
-    name: 'PrepareSendMicroTransaction';
-    data: {
-        addressWithMicroAmounts: AddressWithMicroAmount[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __PrepareSendNativeTokenMethod__ = {
-    name: 'PrepareSendNativeToken';
-    data: {
-        addressNativeTokens: AddressNativeTokens[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __PrepareSendNftMethod__ = {
-    name: 'PrepareSendNft';
-    data: {
-        addressNftIds: AddressNftId[];
-        options?: TransactionOptions;
-    };
-};
-
 export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
@@ -217,8 +193,8 @@ export type __SendNftMethod__ = {
     };
 };
 
-export type __SendTransactionMethod__ = {
-    name: 'SendTransaction';
+export type __SendOutputsMethod__ = {
+    name: 'SendOutputs';
     data: {
         outputs: OutputTypes[];
         options?: TransactionOptions;

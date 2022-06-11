@@ -23,7 +23,7 @@ async function run() {
 
         console.log('Output built:', output)
 
-        const response = await account.sendTransaction([output]);
+        const response = await account.sendOutputs([output]);
 
         console.log(response);
 

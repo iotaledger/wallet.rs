@@ -412,12 +412,11 @@ class Account:
         )
 
     @ send_message_routine
-    def send_transaction(self, outputs, options=None):
-        """Syncs the account by fetching new information from the nodes.
-           Will also retry pending transactions and consolidate outputs if necessary.
+    def send_outputs(self, outputs, options=None):
+        """Send outputs in a transaction.
         """
         return self._call_account_method(
-            'SendTransaction', {
+            'SendOutputs', {
                 'outputs': outputs,
                 'options': options,
             }

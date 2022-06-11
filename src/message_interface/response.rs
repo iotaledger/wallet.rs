@@ -59,11 +59,7 @@ pub enum Response {
     Outputs(Vec<OutputDataDto>),
     /// Response for
     /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
-    /// [`PrepareMintNfts`](crate::message_interface::AccountMethod::PrepareMintNfts),
-    /// [`PrepareSendMicroTransaction`](crate::message_interface::AccountMethod::PrepareSendMicroTransaction),
-    /// [`PrepareSendNativeTokens`](crate::message_interface::AccountMethod::PrepareSendNativeTokens),
-    /// [`PrepareSendNft`](crate::message_interface::AccountMethod::PrepareSendNft),
-    /// [`PrepareSendTransaction`](crate::message_interface::AccountMethod::PrepareSendTransaction)
+    /// [`PrepareTransaction`](crate::message_interface::AccountMethod::PrepareTransaction)
     PreparedTransaction(PreparedTransactionDataDto),
     /// Response for
     /// [`GetTransaction`](crate::message_interface::AccountMethod::GetTransaction),
@@ -88,7 +84,7 @@ pub enum Response {
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
-    /// [`SendTransaction`](crate::message_interface::AccountMethod::SendTransaction)
+    /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransaction(TransactionResult),
     /// Response for

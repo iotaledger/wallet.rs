@@ -20,17 +20,13 @@ import type {
     __MinimumRequiredStorageDepositMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
-    __PrepareMintNftsMethod__,
     __PrepareSendAmountMethod__,
-    __PrepareSendMicroTransactionMethod__,
-    __PrepareSendNativeTokenMethod__,
-    __PrepareSendNftMethod__,
     __PrepareTransactionMethod__,
     __SendAmountMethod__,
     __SendMicroTransactionMethod__,
     __SendNativeTokensMethod__,
     __SendNftMethod__,
-    __SendTransactionMethod__,
+    __SendOutputsMethod__,
     __SetAliasMethod__,
     __SignTransactionEssenceMethod__,
     __SubmitAndStoreTransactionMethod__,
@@ -84,17 +80,13 @@ export type __AccountMethod__ =
     | __MinimumRequiredStorageDepositMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__
-    | __PrepareMintNftsMethod__
     | __PrepareSendAmountMethod__
-    | __PrepareSendMicroTransactionMethod__
-    | __PrepareSendNativeTokenMethod__
-    | __PrepareSendNftMethod__
     | __PrepareTransactionMethod__
     | __SendAmountMethod__
     | __SendMicroTransactionMethod__
     | __SendNativeTokensMethod__
     | __SendNftMethod__
-    | __SendTransactionMethod__
+    | __SendOutputsMethod__
     | __SetAliasMethod__
     | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__

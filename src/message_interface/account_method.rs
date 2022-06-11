@@ -181,39 +181,11 @@ pub enum AccountMethod {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptions>,
     },
-    /// Prepare mint nft.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareMintNfts {
-        #[serde(rename = "nftOptions")]
-        nfts_options: Vec<NftOptions>,
-        options: Option<TransactionOptions>,
-    },
     /// Prepare send amount.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareSendAmount {
         #[serde(rename = "addressWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare send amount below minimum storage deposit.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendMicroTransaction {
-        #[serde(rename = "addressWithMicroAmount")]
-        addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare send native tokens.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendNativeTokens {
-        #[serde(rename = "addressNativeTokens")]
-        addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare send nft.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendNft {
-        #[serde(rename = "addressAndNftId")]
-        addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
     },
     /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
@@ -254,9 +226,9 @@ pub enum AccountMethod {
     /// Set the alias of the account.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetAlias { alias: String },
-    /// Send funds.
+    /// Send outputs in a transaction.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
-    SendTransaction {
+    SendOutputs {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptions>,
     },

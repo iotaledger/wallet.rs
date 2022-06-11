@@ -80,7 +80,7 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_native_tokens()](crate::account::handle::AccountHandle.send_native_tokens)
-    pub async fn prepare_send_native_tokens(
+    async fn prepare_send_native_tokens(
         &self,
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,

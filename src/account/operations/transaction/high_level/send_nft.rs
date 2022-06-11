@@ -60,7 +60,7 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_nft()](crate::account::handle::AccountHandle.send_nft)
-    pub async fn prepare_send_nft(
+    async fn prepare_send_nft(
         &self,
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,

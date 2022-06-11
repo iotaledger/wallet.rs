@@ -66,7 +66,7 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.mint_nfts()](crate::account::handle::AccountHandle.mint_nfts)
-    pub async fn prepare_mint_nfts(
+    async fn prepare_mint_nfts(
         &self,
         nfts_options: Vec<NftOptions>,
         options: Option<TransactionOptions>,
