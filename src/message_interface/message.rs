@@ -149,9 +149,10 @@ pub enum Message {
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
     /// Transforms bech32 to hex
-    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    /// Expected response: [`Bech32ToHex`](crate::message_interface::Response::Bech32ToHex)
     Bech32ToHex(String),
     /// Transforms a hex encoded address to a bech32 encoded address
+    /// Expected response: [`HexToBech32`](crate::message_interface::Response::HexToBech32)
     HexToBech32 {
         /// Hex encoded bech32 address
         hex: String,
