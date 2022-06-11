@@ -21,10 +21,12 @@ use serde::{Deserialize, Serialize};
 use crate::account::{handle::AccountHandle, operations::transaction::RemainderValueStrategy, TransactionOptions};
 
 impl AccountHandle {
-    /// Prepare an output
+    /// Prepare an output for sending
     /// If the amount is below the minimum required storage deposit, by default the remaining amount will automatically
-    /// added with a StorageDepositReturn UnlockCondition
-    /// When the assets contain an nft_id, the nft output will be used, just with the address unlock conditions replaed
+    /// added with a StorageDepositReturn UnlockCondition, when setting the ReturnStrategy to `gift`, the full minimum
+    /// required storage deposit will be send to the recipient.
+    /// When the assets contain an nft_id, the data from the
+    /// exisiting nft output will be used, just with the address unlock conditions replaced
     pub async fn prepare_output(
         &self,
         options: OutputOptions,
