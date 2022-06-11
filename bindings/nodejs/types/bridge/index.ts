@@ -39,6 +39,7 @@ import type {
 } from './account';
 import type {
     __BackupMessage__,
+    __Bech32ToHex__,
     __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
     __CreateAccountMessage__,
@@ -48,6 +49,7 @@ import type {
     __GetAccountMessage__,
     __GetAccountsMessage__,
     __GetNodeInfoMessage__,
+    __HexToBech32__,
     __IsStrongholdPasswordAvailableMessage__,
     __RecoverAccountsMessage__,
     __RemoveLatestAccountMessage__,
@@ -109,6 +111,7 @@ export type __CallAccountMethodMessage__ = {
 
 export type __Message__ =
     | __BackupMessage__
+    | __Bech32ToHex__
     | __CallAccountMethodMessage__
     | __ChangeStrongholdPasswordMessage__
     | __ClearStrongholdPasswordMessage__
@@ -119,6 +122,7 @@ export type __Message__ =
     | __GetAccountMessage__
     | __GetAccountsMessage__
     | __GetNodeInfoMessage__
+    | __HexToBech32__
     | __IsStrongholdPasswordAvailableMessage__
     | __RecoverAccountsMessage__
     | __RemoveLatestAccountMessage__

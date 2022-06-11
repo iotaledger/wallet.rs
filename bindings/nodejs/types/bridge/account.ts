@@ -54,8 +54,8 @@ export type __ConsolidateOutputsMethod__ = {
     data: {
         force: boolean;
         outputConsolidationThreshold?: number;
-    }
-}
+    };
+};
 
 export type __GenerateAddressesMethod__ = {
     name: 'GenerateAddresses';
@@ -117,9 +117,9 @@ export type __ListUnspentOutputsMethod__ = {
 export type __MinimumRequiredStorageDepositMethod__ = {
     name: 'MinimumRequiredStorageDeposit';
     data: {
-        outputs: OutputTypes[]
-    }
-}
+        outputs: OutputTypes[];
+    };
+};
 
 export type __MintNativeTokenMethod__ = {
     name: 'MintNativeToken';
