@@ -83,20 +83,10 @@ impl AccountHandle {
                 }
             }) {
                 if let Output::Nft(nft_output) = &nft_output_data.output {
-                    // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
-                    // updated address unlock conditions
-                    let mut nft_builder =
-                        NftOutputBuilder::new_with_amount(nft_output.amount(), address_and_nft_id.nft_id)?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
-                    for native_token in nft_output.native_tokens().iter() {
-                        nft_builder = nft_builder.add_native_token(native_token.clone());
-                    }
-                    for feature in nft_output.features().iter() {
-                        nft_builder = nft_builder.add_feature(feature.clone());
-                    }
-                    for immutable_feature in nft_output.immutable_features().iter() {
-                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
-                    }
+                    // Set the nft id and new address unlock condition
+                    let nft_builder = NftOutputBuilder::from(nft_output)
+                        .with_nft_id(address_and_nft_id.nft_id)
+                        .with_unlock_conditions(vec![UnlockCondition::Address(AddressUnlockCondition::new(address))]);
                     outputs.push(nft_builder.finish_output()?);
                     // Add custom input
                     custom_inputs.push(nft_output_data.output_id);

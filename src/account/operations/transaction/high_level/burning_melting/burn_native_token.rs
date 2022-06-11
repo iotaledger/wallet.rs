@@ -291,9 +291,9 @@ impl AccountHandle {
                                 let alias_output = AliasOutputBuilder::from(alias_output)
                                     .with_alias_id(alias_output.alias_id().or_from_output_id(*output_id))
                                     .with_state_index(alias_output.state_index() + 1)
-                                    .finish()?;
+                                    .finish_output()?;
                                 aggregate.custom_inputs.push(*output_id);
-                                aggregate.outputs.push(Output::Alias(alias_output));
+                                aggregate.outputs.push(alias_output);
 
                                 return Ok(true);
                             }
