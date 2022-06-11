@@ -148,6 +148,18 @@ pub enum Message {
     #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
+    /// Transforms bech32 to hex
+    /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
+    Bech32ToHex(String),
+    /// Transforms a hex encoded address to a bech32 encoded address
+    /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
+    HexToBech32 {
+        /// Hex encoded bech32 address
+        hex: String,
+        /// Human readable part
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
+    },
 }
 
 // Custom Debug implementation to not log secrets
@@ -214,6 +226,10 @@ impl Debug for Message {
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
             Message::EmitTestEvent(event) => write!(f, "EmitTestEvent({:?})", event),
+            Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({:?})", bech32_address),
+            Message::HexToBech32 { hex, bech32_hrp } => {
+                write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
+            }
         }
     }
 }
@@ -270,6 +286,8 @@ impl Serialize for Message {
             Message::RemoveLatestAccount { .. } => {
                 serializer.serialize_unit_variant("Message", 22, "RemoveLatestAccount")
             }
+            Message::Bech32ToHex(_) => serializer.serialize_unit_variant("Message", 23, "Bech32ToHex"),
+            Message::HexToBech32 { .. } => serializer.serialize_unit_variant("Message", 24, "HexToBech32"),
         }
     }
 }

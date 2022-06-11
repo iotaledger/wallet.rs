@@ -14,12 +14,17 @@ export type __BackupMessage__ = {
     };
 };
 
+export type __Bech32ToHex__ = {
+    cmd: 'Bech32ToHex';
+    payload: string;
+};
+
 export type __ChangeStrongholdPasswordMessage__ = {
     cmd: 'ChangeStrongholdPassword';
     payload: {
         password: string;
-    }
-}
+    };
+};
 
 export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'ClearStrongholdPassword';
@@ -60,6 +65,14 @@ export type __GetNodeInfoMessage__ = {
     };
 };
 
+export type __HexToBech32__ = {
+    cmd: 'HexToBech32';
+    payload: {
+        hex: string;
+        bech32Hrp?: string;
+    };
+};
+
 export type __IsStrongholdPasswordAvailableMessage__ = {
     cmd: 'IsStrongholdPasswordAvailable';
 };
@@ -74,7 +87,7 @@ export type __RecoverAccountsMessage__ = {
 
 export type __RemoveLatestAccountMessage__ = {
     cmd: 'RemoveLatestAccount';
-}
+};
 
 export type __RestoreBackupMessage__ = {
     cmd: 'RestoreBackup';

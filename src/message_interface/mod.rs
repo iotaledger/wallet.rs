@@ -261,4 +261,50 @@ mod tests {
         }
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
     }
+
+    #[tokio::test]
+    async fn address_conversion_methods() {
+        std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#.to_string();
+
+        let options = ManagerOptions {
+            #[cfg(feature = "storage")]
+            storage_path: Some("test-storage/address_conversion_methods".to_string()),
+            client_options: Some(client_options),
+            secret_manager: Some(secret_manager),
+        };
+
+        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+
+        let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
+        let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
+
+        let response =
+            message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into())).await;
+
+        match response {
+            Response::HexAddress(hex) => {
+                assert_eq!(hex, hex_address);
+            }
+            response_type => panic!("Unexpected response type: {:?}", response_type),
+        }
+
+        let response = message_interface::send_message(
+            &wallet_handle,
+            Message::HexToBech32 {
+                hex: hex_address.into(),
+                bech32_hrp: None,
+            },
+        )
+        .await;
+
+        match response {
+            Response::Bech32Address(bech32) => {
+                assert_eq!(bech32, bech32_address);
+            }
+            response_type => panic!("Unexpected response type: {:?}", response_type),
+        }
+        std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());
+    }
 }

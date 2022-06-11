@@ -33,14 +33,24 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Transform a bech32 encoded address to a hex encoded address
+     */
+    async bech32ToHex(bech32Address: string): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'Bech32ToHex',
+            payload: bech32Address,
+        });
+        return JSON.parse(response).payload;
+    }
+
     async changeStrongholdPassword(password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'ChangeStrongholdPassword',
             payload: {
                 password,
-
-            }
-        })
+            },
+        });
     }
 
     async clearStrongholdPassword(): Promise<void> {
@@ -122,6 +132,19 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
+     * is provided, the AccountManager will attempt to retrieve it from the
+     * NodeInfo. If this does not succeed, it will default to the Shimmer testnet bech32Hrp.
+     */
+    async hexToBech32(hex: string, bech32Hrp?: string): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'HexToBech32',
+            payload: { hex, bech32Hrp },
+        });
+        return JSON.parse(response).payload;
+    }
+
     async isStrongholdPasswordAvailable(): Promise<boolean> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'IsStrongholdPasswordAvailable',
@@ -154,7 +177,7 @@ export class AccountManager {
     async removeLatestAccount(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'RemoveLatestAccount',
-        })
+        });
     }
 
     async restoreBackup(source: string, password: string): Promise<void> {

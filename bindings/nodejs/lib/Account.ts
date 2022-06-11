@@ -105,7 +105,10 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async consolidateOutputs(force: boolean, outputConsolidationThreshold?: number): Promise<TransactionResult[]> {
+    async consolidateOutputs(
+        force: boolean,
+        outputConsolidationThreshold?: number,
+    ): Promise<TransactionResult[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -113,10 +116,10 @@ export class Account {
                 data: {
                     force,
                     outputConsolidationThreshold,
-                }
-            }
-        )
-        return JSON.parse(resp).payload
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async generateAddress(
@@ -266,7 +269,9 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async minimumRequiredStorageDeposit(outputs: OutputTypes[]): Promise<string> {
+    async minimumRequiredStorageDeposit(
+        outputs: OutputTypes[],
+    ): Promise<string> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -274,10 +279,9 @@ export class Account {
                 data: {
                     outputs,
                 },
-            }
-        )
-        return JSON.parse(response).payload
-
+            },
+        );
+        return JSON.parse(response).payload;
     }
 
     async mintNativeToken(
@@ -400,7 +404,7 @@ export class Account {
         );
         return JSON.parse(response).payload;
     }
-    
+
     async prepareTransaction(
         outputs: OutputTypes[],
         options?: TransactionOptions,
@@ -548,11 +552,14 @@ export class Account {
     }
 
     async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
-        const resp = await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SyncAccount',
-            data: options ?? {},
-        });
-        return JSON.parse(resp).payload
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'SyncAccount',
+                data: options ?? {},
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async tryCollectOutputs(
