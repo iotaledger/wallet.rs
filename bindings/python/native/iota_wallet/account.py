@@ -45,7 +45,7 @@ class Account:
         return self._call_account_method(
             'BuildAliasOutput', {
                 'amount': amount,
-                'native_tokens':      native_tokens,
+                'native_tokens': native_tokens,
                 'alias_id': alias_id,
                 'state_index': state_index,
                 'state_metadata': state_metadata,
