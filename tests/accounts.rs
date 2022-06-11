@@ -68,7 +68,7 @@ async fn remove_latest_account() -> Result<()> {
         assert!(manager.get_accounts().await.unwrap().len() == 2);
 
         // Remove `second_account`.
-        let _ = manager
+        manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account");
@@ -82,7 +82,7 @@ async fn remove_latest_account() -> Result<()> {
         );
 
         // Remove `first_account`.
-        let _ = manager
+        manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account");
@@ -92,7 +92,7 @@ async fn remove_latest_account() -> Result<()> {
         assert!(accounts.is_empty());
 
         // Try remove another time (even if there is nothing to remove).
-        let _ = manager
+        manager
             .remove_latest_account()
             .await
             .expect("cannot remove latest account");

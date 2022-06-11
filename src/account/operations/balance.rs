@@ -1,13 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, ops::Deref};
+use std::collections::HashMap;
 
 use iota_client::bee_block::output::{
-    unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, NativeTokensBuilder, Output, TokenId,
-    UnlockCondition,
+    unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, NativeTokensBuilder, Output, UnlockCondition,
 };
-use primitive_types::U256;
 
 use crate::account::{handle::AccountHandle, types::AccountBalance, OutputsToCollect};
 
@@ -176,11 +174,7 @@ impl AccountHandle {
         Ok(AccountBalance {
             total: total_amount,
             available: total_amount - locked_amount,
-            native_tokens: total_native_tokens
-                .deref()
-                .clone()
-                .into_iter()
-                .collect::<HashMap<TokenId, U256>>(),
+            native_tokens: total_native_tokens.finish()?,
             required_storage_deposit,
             aliases,
             foundries,

@@ -4,15 +4,12 @@
 pub(crate) mod builder;
 pub(crate) mod operations;
 
-use std::{
-    collections::hash_map::Entry,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
-use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
+use iota_client::{bee_block::output::NativeTokensBuilder, secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -183,21 +180,31 @@ impl AccountManager {
 
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance { ..Default::default() };
+        let mut balance: AccountBalance = Default::default();
+
         let accounts = self.accounts.read().await;
+        let mut total_native_tokens = NativeTokensBuilder::new();
         for account in accounts.iter() {
             let account_balance = account.balance().await?;
             balance.total += account_balance.total;
             balance.available += account_balance.available;
-            // todo set other values
+            balance.required_storage_deposit += account_balance.required_storage_deposit;
+            balance.nfts.extend(account_balance.nfts.into_iter());
+            balance.aliases.extend(account_balance.aliases.into_iter());
+            balance.foundries.extend(account_balance.foundries.into_iter());
+            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
         }
+        balance.native_tokens = total_native_tokens.finish()?;
+
         Ok(balance)
     }
 
     /// Sync all accounts
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance { ..Default::default() };
+        let mut balance: AccountBalance = Default::default();
+
         let accounts = self.accounts.read().await;
+        let mut total_native_tokens = NativeTokensBuilder::new();
         for account in accounts.iter() {
             let account_balance = account.sync(options.clone()).await?;
             balance.total += account_balance.total;
@@ -206,17 +213,10 @@ impl AccountManager {
             balance.nfts.extend(account_balance.nfts.into_iter());
             balance.aliases.extend(account_balance.aliases.into_iter());
             balance.foundries.extend(account_balance.foundries.into_iter());
-            for (token_id, amount) in account_balance.native_tokens {
-                match balance.native_tokens.entry(token_id) {
-                    Entry::Vacant(e) => {
-                        e.insert(amount);
-                    }
-                    Entry::Occupied(mut e) => {
-                        *e.get_mut() += amount;
-                    }
-                }
-            }
+            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
         }
+        balance.native_tokens = total_native_tokens.finish()?;
+
         Ok(balance)
     }
 

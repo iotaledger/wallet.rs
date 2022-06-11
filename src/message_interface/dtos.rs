@@ -12,13 +12,15 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::dto::AddressDto,
-        output::{dto::OutputDto, AliasId, FoundryId, NftId, OutputId, TokenId},
+        output::{
+            dto::{NativeTokenDto, OutputDto},
+            AliasId, FoundryId, NftId, OutputId,
+        },
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
         BlockId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
 };
-use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -125,7 +127,7 @@ pub struct AccountBalanceDto {
     pub required_storage_deposit: String,
     /// Native tokens
     #[serde(rename = "nativeTokens")]
-    pub native_tokens: HashMap<TokenId, U256>,
+    pub native_tokens: Vec<NativeTokenDto>,
     /// Nfts
     pub nfts: Vec<NftId>,
     /// Aliases
@@ -144,7 +146,7 @@ impl From<&AccountBalance> for AccountBalanceDto {
             total: value.total.to_string(),
             available: value.available.to_string(),
             required_storage_deposit: value.required_storage_deposit.to_string(),
-            native_tokens: value.native_tokens.clone(),
+            native_tokens: value.native_tokens.iter().map(Into::into).collect::<_>(),
             nfts: value.nfts.clone(),
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),
