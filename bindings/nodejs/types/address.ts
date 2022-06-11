@@ -1,5 +1,4 @@
 import type { Network } from './network';
-import type { OutputId } from './output';
 
 export enum AddressType {
     Ed25519 = 'Ed25519',
@@ -22,7 +21,7 @@ export interface AddressWithAmount {
 export interface AddressWithUnspentOutputs extends AddressWithAmount {
     keyIndex: number;
     internal: boolean;
-    outputIds: OutputId[];
+    outputIds: string[];
 }
 
 export interface AddressWithMicroAmount {

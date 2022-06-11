@@ -21,7 +21,7 @@ pub struct SyncOptions {
     #[serde(rename = "forceSyncing", default)]
     pub force_syncing: bool,
     /// Checks pending transactions and promotes/reattaches them if necessary.
-    #[serde(rename = "syncTransactions", default = "default_sync_pending_transactions")]
+    #[serde(rename = "syncPendingTransactions", default = "default_sync_pending_transactions")]
     pub sync_pending_transactions: bool,
     /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
