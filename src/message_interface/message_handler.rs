@@ -263,9 +263,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            Message::Bech32ToHex(bech32) => {
-                convert_panics(|| Ok(Response::Bech32ToHex(utils::bech32_to_hex(&bech32)?)))
-            }
+            Message::Bech32ToHex(bech32) => convert_panics(|| Ok(Response::HexAddress(utils::bech32_to_hex(&bech32)?))),
             Message::HexToBech32 { hex, bech32_hrp } => {
                 convert_async_panics(|| async {
                     let bech32_hrp = match bech32_hrp {
@@ -276,7 +274,7 @@ impl WalletMessageHandler {
                         },
                     };
 
-                    Ok(Response::HexToBech32(utils::hex_to_bech32(&hex, &bech32_hrp)?))
+                    Ok(Response::Bech32Address(utils::hex_to_bech32(&hex, &bech32_hrp)?))
                 })
                 .await
             }

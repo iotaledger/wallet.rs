@@ -284,7 +284,7 @@ mod tests {
             message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into())).await;
 
         match response {
-            Response::Bech32ToHex(hex) => {
+            Response::HexAddress(hex) => {
                 assert_eq!(hex, hex_address);
             }
             response_type => panic!("Unexpected response type: {:?}", response_type),
@@ -300,7 +300,7 @@ mod tests {
         .await;
 
         match response {
-            Response::HexToBech32(bech32) => {
+            Response::Bech32Address(bech32) => {
                 assert_eq!(bech32, bech32_address);
             }
             response_type => panic!("Unexpected response type: {:?}", response_type),
