@@ -272,7 +272,7 @@ class Account:
         )
 
     def prepare_send_native_tokens(self, addresses_native_tokens, options):
-        """Prepare send mative tokens.
+        """Prepare send native tokens.
         """
         return self._call_account_method(
             'PrepareSendNativeTokens', {
