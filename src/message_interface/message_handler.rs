@@ -266,12 +266,20 @@ impl WalletMessageHandler {
             Message::Bech32ToHex(bech32) => {
                 convert_panics(|| Ok(Response::Bech32ToHex(utils::bech32_to_hex(&bech32)?)))
             }
-            Message::HexToBech32 { hex, bech32_hrp } => convert_panics(|| {
-                Ok(Response::HexToBech32(utils::hex_to_bech32(
-                    &hex,
-                    &bech32_hrp.unwrap_or_else(|| SHIMMER_TESTNET_BECH32_HRP.into()),
-                )?))
-            }),
+            Message::HexToBech32 { hex, bech32_hrp } => {
+                convert_async_panics(|| async {
+                    let bech32_hrp = match bech32_hrp {
+                        Some(bech32_hrp) => bech32_hrp,
+                        None => match self.account_manager.get_node_info().await {
+                            Ok(node_info_wrapper) => node_info_wrapper.node_info.protocol.bech32_hrp,
+                            Err(_) => SHIMMER_TESTNET_BECH32_HRP.into(),
+                        },
+                    };
+
+                    Ok(Response::HexToBech32(utils::hex_to_bech32(&hex, &bech32_hrp)?))
+                })
+                .await
+            }
         };
 
         let response = match response {

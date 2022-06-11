@@ -133,8 +133,9 @@ export class AccountManager {
     }
 
     /**
-     * Transform hex encoded address to bech32 encoded address. If no
-     * bech32Hrp is provided the Shimmer testnet bech32Hrp is used.
+     * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
+     * is provided, the AccountManager will attempt to retrieve it from the
+     * NodeInfo. If this does not succeed, it will default to the Shimmer testnet bech32Hrp.
      */
     async hexToBech32(hex: string, bech32Hrp?: string): Promise<string> {
         const response = await this.messageHandler.sendMessage({
