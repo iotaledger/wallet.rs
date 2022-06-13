@@ -1193,9 +1193,9 @@ checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
 
 [[package]]
 name = "hidapi"
-version = "1.3.0"
+version = "1.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d6f5e247bc66f3255d755e96d9d43f6b191f4e182072b811d55584ff58c510f"
+checksum = "38b1717343691998deb81766bfcd1dce6df0d5d6c37070b5a3de2bb6d39f7822"
 dependencies = [
  "cc",
  "libc",
@@ -1558,7 +1558,7 @@ dependencies = [
 [[package]]
 name = "iota-ledger"
 version = "0.1.0"
-source = "git+https://github.com/iotaledger/ledger.rs?rev=8c239b13b80e169aaa19cde9cd825e8444be0973#8c239b13b80e169aaa19cde9cd825e8444be0973"
+source = "git+https://github.com/iotaledger/ledger.rs?rev=50d6d3eb2d6b31c11061016bd2f559c8366b7c46#50d6d3eb2d6b31c11061016bd2f559c8366b7c46"
 dependencies = [
  "bech32 0.7.3",
  "enum-iterator",
@@ -1567,7 +1567,6 @@ dependencies = [
  "ledger-apdu",
  "ledger-transport",
  "ledger-transport-hid",
- "ledger-transport-tcp",
  "log",
  "serde 1.0.130",
  "thiserror",
@@ -1719,12 +1718,12 @@ checksum = "830d08ce1d1d941e6b30645f1a0eb5643013d835ce3779a5fc208261dbe10f55"
 [[package]]
 name = "ledger-apdu"
 version = "0.8.0"
-source = "git+https://github.com/iotaledger/ledger-rs?rev=2b0a4807e38313b08e55ac8c703f6bc4193503f0#2b0a4807e38313b08e55ac8c703f6bc4193503f0"
+source = "git+https://github.com/iotaledger/ledger-rs?rev=e3e519a3562c4917ad311547ea3f4dbdee5d44ae#e3e519a3562c4917ad311547ea3f4dbdee5d44ae"
 
 [[package]]
 name = "ledger-transport"
 version = "0.8.0"
-source = "git+https://github.com/iotaledger/ledger-rs?rev=2b0a4807e38313b08e55ac8c703f6bc4193503f0#2b0a4807e38313b08e55ac8c703f6bc4193503f0"
+source = "git+https://github.com/iotaledger/ledger-rs?rev=e3e519a3562c4917ad311547ea3f4dbdee5d44ae#e3e519a3562c4917ad311547ea3f4dbdee5d44ae"
 dependencies = [
  "byteorder",
  "futures",
@@ -1732,7 +1731,6 @@ dependencies = [
  "lazy_static",
  "ledger-apdu",
  "ledger-transport-hid",
- "ledger-transport-tcp",
  "serde 1.0.130",
  "thiserror",
  "trait-async",
@@ -1743,7 +1741,7 @@ dependencies = [
 [[package]]
 name = "ledger-transport-hid"
 version = "0.8.0"
-source = "git+https://github.com/iotaledger/ledger-rs?rev=2b0a4807e38313b08e55ac8c703f6bc4193503f0#2b0a4807e38313b08e55ac8c703f6bc4193503f0"
+source = "git+https://github.com/iotaledger/ledger-rs?rev=e3e519a3562c4917ad311547ea3f4dbdee5d44ae#e3e519a3562c4917ad311547ea3f4dbdee5d44ae"
 dependencies = [
  "byteorder",
  "cfg-if 0.1.10",
@@ -1754,18 +1752,6 @@ dependencies = [
  "libc",
  "log",
  "nix",
- "thiserror",
-]
-
-[[package]]
-name = "ledger-transport-tcp"
-version = "0.0.1"
-source = "git+https://github.com/iotaledger/ledger-rs?rev=2b0a4807e38313b08e55ac8c703f6bc4193503f0#2b0a4807e38313b08e55ac8c703f6bc4193503f0"
-dependencies = [
- "hex",
- "ledger-apdu",
- "log",
- "serde 1.0.130",
  "thiserror",
 ]
 
@@ -1784,9 +1770,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.108"
+version = "0.2.126"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8521a1b57e76b1ec69af7599e75e38e7b7fad6610f037db8c79b127201b5d119"
+checksum = "349d5a591cd28b49e1d1037471617a32ddcda5731b99419008085f72d5a53836"
 
 [[package]]
 name = "libloading"
@@ -1960,15 +1946,14 @@ dependencies = [
 
 [[package]]
 name = "nix"
-version = "0.17.0"
+version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+checksum = "8f17df307904acd05aa8e32e97bb20f2a0df1728bbc2d771ae8f9a90463441e9"
 dependencies = [
  "bitflags",
- "cc",
- "cfg-if 0.1.10",
+ "cfg-if 1.0.0",
  "libc",
- "void",
+ "memoffset 0.6.4",
 ]
 
 [[package]]
@@ -3315,12 +3300,6 @@ name = "version_check"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
-
-[[package]]
-name = "void"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
 name = "walkdir"
