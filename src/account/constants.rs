@@ -15,8 +15,5 @@ pub(crate) const PARALLEL_REQUESTS_AMOUNT: usize = 500;
 /// this is done to prevent unnecessary simultaneous synchronizations
 pub(crate) const MIN_SYNC_INTERVAL: u128 = 3000;
 
-/// Max allowed difference between the local time and latest milestone time, 5 minutes in seconds
-pub(crate) const FIVE_MINUTES_IN_SECONDS: u32 = 300;
-
 // Default expiration time for [ExpirationUnlockCondition] when sending native tokens, one day in seconds
 pub(crate) const DEFAULT_EXPIRATION_TIME: u32 = 86400;

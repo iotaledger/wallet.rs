@@ -42,7 +42,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_COLLECTION] get_unlockable_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
+        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
 
         // Get outputs for the collect
         let mut output_ids_to_collect: HashSet<OutputId> = HashSet::new();
@@ -198,7 +198,7 @@ impl AccountHandle {
         possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<TransactionResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs_internal");
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
+        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let mut outputs_to_collect = Vec::new();
