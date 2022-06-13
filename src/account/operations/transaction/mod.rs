@@ -5,6 +5,7 @@ mod build_transaction;
 pub(crate) mod high_level;
 mod input_selection;
 mod options;
+pub(crate) mod prepare_output;
 mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;

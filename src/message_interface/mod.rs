@@ -206,7 +206,7 @@ mod tests {
 
         let transaction = Message::CallAccountMethod {
             account_id: "alias".into(),
-            method: AccountMethod::SendTransaction { outputs, options: None },
+            method: AccountMethod::SendOutputs { outputs, options: None },
         };
 
         let _response = message_interface::send_message(&wallet_handle, transaction).await;
