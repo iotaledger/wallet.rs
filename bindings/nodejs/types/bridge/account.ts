@@ -13,6 +13,7 @@ import type {
     BuildFoundryOutputData,
     BuildNftOutputData,
 } from '../buildOutputData';
+import type { OutputOptions } from '../outputOptions';
 import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
@@ -136,6 +137,14 @@ export type __MintNftsMethod__ = {
         options?: TransactionOptions;
     };
 };
+
+export type __PrepareOutputMethod__ = {
+    name: 'PrepareOutput';
+    data: {
+        options: OutputOptions;
+        transactionOptions?: TransactionOptions
+    }
+}
 
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';

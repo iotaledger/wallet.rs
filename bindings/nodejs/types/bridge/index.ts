@@ -20,6 +20,7 @@ import type {
     __MinimumRequiredStorageDepositMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
+    __PrepareOutputMethod__,
     __PrepareSendAmountMethod__,
     __PrepareTransactionMethod__,
     __SendAmountMethod__,
@@ -80,6 +81,7 @@ export type __AccountMethod__ =
     | __MinimumRequiredStorageDepositMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__
+    | __PrepareOutputMethod__
     | __PrepareSendAmountMethod__
     | __PrepareTransactionMethod__
     | __SendAmountMethod__

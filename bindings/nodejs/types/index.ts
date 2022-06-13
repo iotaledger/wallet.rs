@@ -5,6 +5,7 @@ export * from './bridge';
 export * from './event';
 export * from './network';
 export * from './output';
+export * from './outputOptions';
 export * from './secretManager';
 export * from './transaction';
 export * from './transactionOptions';

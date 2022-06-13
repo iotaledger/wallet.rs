@@ -21,6 +21,7 @@ import type {
     AddressWithUnspentOutputs,
     TransactionResult,
     PreparedTransactionData,
+    OutputOptions,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -318,6 +319,23 @@ export class Account {
         );
 
         return JSON.parse(response).payload;
+    }
+
+    async prepareOutput(
+        options: OutputOptions,
+        transactionOptions?: TransactionOptions,
+    ): Promise<OutputData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'PrepareOutput',
+                data: {
+                    options,
+                    transactionOptions
+                }
+            }
+        )
+        return JSON.parse(response).payload
     }
 
     async prepareSendAmount(
