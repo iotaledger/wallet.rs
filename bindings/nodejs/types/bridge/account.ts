@@ -13,7 +13,8 @@ import type {
     BuildFoundryOutputData,
     BuildNftOutputData,
 } from '../buildOutputData';
-import type { OutputOptions, OutputsToCollect } from '../output';
+import type { OutputOptions } from '../outputOptions';
+import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {

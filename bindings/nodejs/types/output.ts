@@ -2,7 +2,6 @@ import type {
     AddressTypes,
     OutputTypes,
     IOutputMetadataResponse,
-    INativeToken,
 } from '@iota/types';
 
 export enum OutputsToCollect {
@@ -35,46 +34,7 @@ export interface OutputData {
     chain?: Segment[];
 }
 
-export interface OutputOptions {
-    recipientAddress: string;
-    amount: string;
-    assets?: Assets;
-    features?: Features;
-    unlocks?: Unlocks;
-    storageDeposit?: StorageDeposit
-}
-
-interface Assets {
-    nativeTokens?: INativeToken[];
-    nftId?: string;
-}
-
-interface Features {
-    tag?: string;
-    metadata?: string;
-}
-
-interface Unlocks {
-    expiration?: Time;
-    timelock?: Time;
-}
-
 export interface Segment {
     hardened: boolean;
     bs: number[];
-}
-
-interface StorageDeposit {
-    returnStrategy?: ReturnStrategy
-    useExcessIfLow?: boolean;
-}
-
-interface Time {
-    milestoneIndex?: number;
-    unixTime?: string;
-}
-
-enum ReturnStrategy {
-    Return = 'Return',
-    Gift = 'Gift',
 }
