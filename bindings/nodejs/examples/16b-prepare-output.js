@@ -1,5 +1,5 @@
 /**
- * This example prepares a transaction, calculates it storage deposit and sends it.
+ * This example builds an output.
  */
 
 const getUnlockedManager = require('./account-manager');
