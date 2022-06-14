@@ -21,7 +21,7 @@ impl AccountManager {
     ) -> crate::Result<Vec<AccountHandle>> {
         log::debug!("[recover_accounts]");
         let start_time = Instant::now();
-        let mut max_account_index_to_keep = 0u32;
+        let mut max_account_index_to_keep = None;
 
         // Search for addresses in current accounts
         for account_handle in self.accounts.read().await.iter() {
@@ -30,8 +30,13 @@ impl AccountManager {
                 account_handle.search_addresses_with_funds(address_gap_limit).await?;
             }
             let account_index = *account_handle.read().await.index();
-            if account_index > max_account_index_to_keep {
-                max_account_index_to_keep = account_index;
+            match max_account_index_to_keep {
+                Some(max_account_index) => {
+                    if account_index > max_account_index {
+                        max_account_index_to_keep = Some(account_index);
+                    }
+                }
+                None => max_account_index_to_keep = Some(account_index),
             }
         }
 
@@ -59,8 +64,15 @@ impl AccountManager {
                 let (account_index, account_balance): (u32, AccountBalance) = res?;
                 total_account_balances += account_balance.total;
 
-                if account_balance.total != 0 && account_index > max_account_index_to_keep {
-                    max_account_index_to_keep = account_index;
+                if account_balance.total != 0 {
+                    match max_account_index_to_keep {
+                        Some(max_account_index) => {
+                            if account_index > max_account_index {
+                                max_account_index_to_keep = Some(account_index);
+                            }
+                        }
+                        None => max_account_index_to_keep = Some(account_index),
+                    }
                 }
             }
 
@@ -75,9 +87,15 @@ impl AccountManager {
         let mut new_accounts = Vec::new();
         for account_handle in accounts.iter() {
             let account_index = *account_handle.read().await.index();
-            if account_index <= max_account_index_to_keep {
-                new_accounts.push((account_index, account_handle.clone()));
-            } else {
+            let mut keep_account = false;
+            if let Some(max_account_index_to_keep) = max_account_index_to_keep {
+                if account_index <= max_account_index_to_keep {
+                    new_accounts.push((account_index, account_handle.clone()));
+                    keep_account = true;
+                }
+            }
+
+            if !keep_account {
                 // accounts are stored during syncing, delete the empty accounts again
                 #[cfg(feature = "storage")]
                 {
