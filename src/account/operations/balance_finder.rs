@@ -73,7 +73,7 @@ impl AccountHandle {
             latest_balance.replace(balance.clone());
 
             // break if we didn't find more balance with the new addresses
-            if balance.total <= latest_balance.clone().unwrap_or_default().total {
+            if balance.total <= latest_balance.as_ref().map_or(&AccountBalance::default(), |v| v).total {
                 break;
             }
         }
