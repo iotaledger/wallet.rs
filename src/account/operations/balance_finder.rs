@@ -37,7 +37,7 @@ impl AccountHandle {
             (highest_public_address_index, highest_internal_address_index)
         };
 
-        let mut latest_balance = 0;
+        let mut latest_balance: Option<AccountBalance> = None;
         loop {
             // generate public and internal addresses
             let addresses = self
@@ -70,21 +70,18 @@ impl AccountHandle {
                 }))
                 .await?;
 
+            latest_balance.replace(balance.clone());
+
             // break if we didn't find more balance with the new addresses
-            if balance.total <= latest_balance {
+            if balance.total <= latest_balance.clone().unwrap_or_default().total {
                 break;
             }
-            latest_balance = balance.total;
         }
 
         self.clean_account_after_recovery(highest_public_address_index, highest_internal_address_index)
             .await;
 
-        self.sync(Some(SyncOptions {
-            force_syncing: true,
-            ..Default::default()
-        }))
-        .await
+        Ok(latest_balance.unwrap_or_default())
     }
 
     /// During search_addresses_with_funds we created new addresses that don't have funds, so we remove them again
@@ -123,12 +120,17 @@ impl AccountHandle {
             .collect();
         let new_latest_internal_index =
             cmp::max(highest_internal_index_with_balance, old_highest_internal_address_index);
-        account.internal_addresses = account
-            .internal_addresses
-            .clone()
-            .into_iter()
-            .filter(|a| a.key_index <= new_latest_internal_index)
-            .collect();
+        // For internal addresses we don't leave an empty address, that's only required for the public address
+        account.internal_addresses = if new_latest_internal_index == 0 {
+            Vec::new()
+        } else {
+            account
+                .internal_addresses
+                .clone()
+                .into_iter()
+                .filter(|a| a.key_index <= new_latest_internal_index)
+                .collect()
+        };
         self.clone()
     }
 }
