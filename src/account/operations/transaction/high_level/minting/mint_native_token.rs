@@ -121,6 +121,12 @@ impl AccountHandle {
         drop(account);
 
         if let Output::Alias(alias_output) = &existing_alias_output.output {
+            // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
+            let new_alias_output_builder = AliasOutputBuilder::from(alias_output)
+                .with_alias_id(alias_id)
+                .with_state_index(alias_output.state_index() + 1)
+                .with_foundry_counter(alias_output.foundry_counter() + 1);
+
             // create foundry output with minted native tokens
             let foundry_id = FoundryId::build(
                 &AliasAddress::new(alias_id),
@@ -128,24 +134,6 @@ impl AccountHandle {
                 SimpleTokenScheme::KIND,
             );
             let token_id = TokenId::from(foundry_id);
-
-            // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
-            let mut new_alias_output_builder =
-                AliasOutputBuilder::new_with_amount(existing_alias_output.amount, alias_id)?
-                    .with_state_index(alias_output.state_index() + 1)
-                    .with_foundry_counter(alias_output.foundry_counter() + 1)
-                    .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                        StateControllerAddressUnlockCondition::new(controller_address),
-                    ))
-                    .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                        controller_address,
-                    )));
-            for feature in alias_output.features().iter() {
-                new_alias_output_builder = new_alias_output_builder.add_feature(feature.clone());
-            }
-            for immutable_feature in alias_output.immutable_features().iter() {
-                new_alias_output_builder = new_alias_output_builder.add_immutable_feature(immutable_feature.clone());
-            }
 
             let outputs = vec![
                 new_alias_output_builder.finish_output()?,
