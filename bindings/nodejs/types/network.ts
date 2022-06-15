@@ -57,7 +57,7 @@ export interface ClientOptions {
  */
 export interface NodeInfoWrapper {
     /** The returned nodeinfo */
-    nodeinfo: INodeInfo;
+    nodeInfo: INodeInfo;
     /** The url from the node which returned the nodeinfo */
     url: string;
 }
