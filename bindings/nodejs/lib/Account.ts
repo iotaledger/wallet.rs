@@ -324,7 +324,7 @@ export class Account {
     async prepareOutput(
         options: OutputOptions,
         transactionOptions?: TransactionOptions,
-    ): Promise<OutputData> {
+    ): Promise<OutputTypes> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
