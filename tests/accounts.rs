@@ -158,31 +158,39 @@ async fn account_alias_already_exists() -> Result<()> {
         .with_alias("Alice".to_string())
         .finish()
         .await?;
-    assert!(&manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("ALICE".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("ALICE".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
     // Other alias works
-    assert!(&manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_ok());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_ok()
+    );
 
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
     Ok(())
@@ -318,12 +326,14 @@ async fn account_coin_type_shimmer() -> Result<()> {
         .finish()
         .await?;
     // Creating a new account with a different coin type fails
-    assert!(manager
-        .create_account()
-        .with_coin_type(IOTA_COIN_TYPE)
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        manager
+            .create_account()
+            .with_coin_type(IOTA_COIN_TYPE)
+            .finish()
+            .await
+            .is_err()
+    );
 
     std::fs::remove_dir_all("test-storage/account_coin_type_shimmer").unwrap_or(());
     Ok(())
@@ -351,12 +361,14 @@ async fn account_coin_type_iota() -> Result<()> {
     let _account = manager.create_account().with_coin_type(IOTA_COIN_TYPE).finish().await?;
     let _account = manager.create_account().with_coin_type(IOTA_COIN_TYPE).finish().await?;
     // Creating a new account with a different coin type fails
-    assert!(manager
-        .create_account()
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        manager
+            .create_account()
+            .with_coin_type(SHIMMER_COIN_TYPE)
+            .finish()
+            .await
+            .is_err()
+    );
 
     std::fs::remove_dir_all("test-storage/account_coin_type_iota").unwrap_or(());
     Ok(())
