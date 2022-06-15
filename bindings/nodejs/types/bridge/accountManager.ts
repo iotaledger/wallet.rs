@@ -35,8 +35,8 @@ export type __CreateAccountMessage__ = {
     payload: CreateAccountPayload;
 };
 
-export type __DeleteStorageMessage__ = {
-    cmd: 'DeleteStorage';
+export type __DeleteAccountsAndDatabaseMessage__ = {
+    cmd: 'DeleteAccountsAndDatabase';
 };
 
 export type __EmitTestEventMessage__ = {

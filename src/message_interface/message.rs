@@ -104,7 +104,7 @@ pub enum Message {
     /// Deletes the storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
-    DeleteStorage,
+    DeleteAccountsAndDatabase,
     /// Generates a new mnemonic.
     /// Expected response: [`GeneratedMnemonic`](crate::message_interface::Response::GeneratedMnemonic)
     GenerateMnemonic,
@@ -204,7 +204,7 @@ impl Debug for Message {
             #[cfg(feature = "stronghold")]
             Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
             #[cfg(feature = "storage")]
-            Message::DeleteStorage => write!(f, "DeleteStorage"),
+            Message::DeleteAccountsAndDatabase => write!(f, "DeleteAccountsAndDatabase"),
             Message::GenerateMnemonic => write!(f, "GenerateMnemonic"),
             Message::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
@@ -251,7 +251,9 @@ impl Serialize for Message {
             Message::RestoreBackup { .. } => serializer.serialize_unit_variant("Message", 7, "RestoreBackup"),
             Message::GenerateMnemonic => serializer.serialize_unit_variant("Message", 8, "GenerateMnemonic"),
             Message::VerifyMnemonic(_) => serializer.serialize_unit_variant("Message", 9, "VerifyMnemonic"),
-            Message::DeleteStorage => serializer.serialize_unit_variant("Message", 10, "DeleteStorage"),
+            Message::DeleteAccountsAndDatabase => {
+                serializer.serialize_unit_variant("Message", 10, "DeleteAccountsAndDatabase")
+            }
             Message::SetClientOptions(_) => serializer.serialize_unit_variant("Message", 11, "SetClientOptions"),
             Message::GetNodeInfo { .. } => serializer.serialize_unit_variant("Message", 12, "GetNodeInfo"),
             #[cfg(feature = "stronghold")]
