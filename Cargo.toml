@@ -1,47 +1,43 @@
 [package]
 name = "iota-wallet"
 version = "0.2.0"
-authors = ["IOTA Stiftung"]
+authors = [ "IOTA Stiftung" ]
 edition = "2021"
 description = "A stateful package for IOTA value transactions"
 documentation = "https://wiki.iota.org/wallet.rs/welcome"
 homepage = "https://www.iota.org/"
 repository = "https://github.com/iotaledger/wallet.rs"
 license = "Apache-2.0"
-keywords = ["iota", "wallet", "transaction"]
-categories = ["cryptography::cryptocurrencies"]
+keywords = [ "iota", "wallet", "transaction" ]
+categories = [ "cryptography::cryptocurrencies" ]
 
 [dependencies]
-async-trait = { version = "0.1.51", default-features = false }
-packable = { version = "0.3.3", default-features = false, features = [ "serde", "primitive-types" ] }
-backtrace = { version = "0.3.62", default-features = false, features = ["std"] }
-futures = { version = "0.3.17", default-features = false }
-getset = { version = "0.1.1", default-features = false }
+async-trait = { version = "0.1.56", default-features = false }
+backtrace = { version = "0.3.65", default-features = false, features = [ "std" ] }
+futures = { version = "0.3.21", default-features = false }
+getset = { version = "0.1.2", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "e59cac7ab73b8e5ce7a6bfe286fb56827c49ca2e", default-features = false, features = ["message_interface", "tls"] }
-# Switch back when a new version got released
-# iota-crypto = { version = "0.11.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
-iota-crypto = { git = "https://github.com/iotaledger/crypto.rs", rev = "c61d29253930105d0d589e54829b639427061e81",  default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
-log = { version = "0.4.14", default-features = false, features = ["release_max_level_off"] }
-primitive-types = { version = "0.10.1", default-features = false }
-serde = { version = "1.0.137", default-features = false, features = ["derive"] }
-serde_json = { version = "1.0.68", default-features = false }
-thiserror = { version = "1.0.29", default-features = false }
-tokio = { version = "1.12.0", default-features = false }
-zeroize = { version = "1.2.0", default-features = false, features = ["zeroize_derive"] }
-
-# storage
-rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = ["lz4"], optional = true }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "a532ca939a0c36b7583b03ea55426292e8bb26cf", default-features = false, features = [ "message_interface", "tls" ] }
+iota-crypto = { version = "0.12.1", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+log = { version = "0.4.17", default-features = false, features = [ "release_max_level_off" ] }
+packable = { version = "0.4.0", default-features = false, features = [ "serde", "primitive-types" ] }
+primitive-types = { version = "0.11.1", default-features = false }
+rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = [ "lz4" ], optional = true }
+serde = { version = "1.0.137", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.81", default-features = false }
+thiserror = { version = "1.0.31", default-features = false }
+tokio = { version = "1.19.2", default-features = false }
+zeroize = { version = "1.5.5", default-features = false, features = [ "zeroize_derive" ] }
 
 [dev-dependencies]
 dotenv = { version =  "0.15.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
-default = ["mnemonic", "storage", "stronghold"]
-ledger_nano = ["iota-client/ledger_nano"]
-stronghold = ["iota-client/stronghold"]
-storage = ["rocksdb"]
+default = [ "mnemonic", "storage", "stronghold" ]
+ledger_nano = [ "iota-client/ledger_nano" ]
+stronghold = [ "iota-client/stronghold" ]
+storage = [ "rocksdb" ]
 message_interface = []
 events = []
 mnemonic = []
