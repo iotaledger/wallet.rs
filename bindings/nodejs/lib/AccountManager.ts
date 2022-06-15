@@ -70,9 +70,9 @@ export class AccountManager {
         return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
-    async deleteStorage(): Promise<void> {
+    async deleteAccountsAndDatabase(): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'DeleteStorage',
+            cmd: 'DeleteAccountsAndDatabase',
         });
     }
 

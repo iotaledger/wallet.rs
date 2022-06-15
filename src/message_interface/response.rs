@@ -113,7 +113,7 @@ pub enum Response {
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
     /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
-    /// [`DeleteStorage`](crate::message_interface::Message::DeleteStorage),
+    /// [`DeleteAccountsAndDatabase`](crate::message_interface::Message::DeleteAccountsAndDatabase),
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
     /// [`SetStrongholdPassword`](crate::message_interface::Message::SetStrongholdPassword),

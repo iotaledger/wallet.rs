@@ -12,7 +12,7 @@ async function run() {
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
         console.log('Backup created at:', path);
 
-        await manager.deleteStorage();
+        await manager.deleteAccountsAndDatabase();
 
         console.log('Successfully created backup');
     } catch (error) {

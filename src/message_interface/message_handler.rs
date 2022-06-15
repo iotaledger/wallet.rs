@@ -173,9 +173,9 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "storage")]
-            Message::DeleteStorage => {
+            Message::DeleteAccountsAndDatabase => {
                 convert_async_panics(|| async {
-                    self.account_manager.delete_storage().await?;
+                    self.account_manager.delete_accounts_and_database().await?;
                     Ok(Response::Ok(()))
                 })
                 .await
