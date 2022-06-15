@@ -253,7 +253,7 @@ pub enum AccountMethod {
     /// Collect outputs.
     /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
     CollectOutputs {
-        #[serde(rename = "outputsToCollect")]
+        #[serde(rename = "outputIdsToCollect")]
         output_ids_to_collect: Vec<OutputId>,
     },
 }
