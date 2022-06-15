@@ -78,8 +78,8 @@ impl AccountHandle {
                                     }
                                     LedgerInclusionStateDto::Conflicting => {
                                         log::debug!("[SYNC] conflicting transaction {}", transaction_id);
-                                        // try to get the included block, because maybe only this attachment is conflicting
-                                        // because it got confirmed in another block
+                                        // try to get the included block, because maybe only this attachment is
+                                        // conflicting because it got confirmed in another block
                                         if let Ok(included_block) =
                                             self.client.get_included_block(&transaction.payload.id()).await
                                         {
@@ -91,9 +91,9 @@ impl AccountHandle {
                                                 &mut spent_output_ids,
                                             );
                                         } else {
-                                            // if we didn't get the included block it means that it got pruned, an input was
-                                            // spent in another transaction or there is another conflict reason we check the
-                                            // inputs because some of them could still be unspent
+                                            // if we didn't get the included block it means that it got pruned, an
+                                            // input was spent in another transaction or there is another conflict
+                                            // reason, we check the inputs because some of them could still be unspent
                                             let TransactionEssence::Regular(essence) = transaction.payload.essence();
                                             for input in essence.inputs() {
                                                 if let Input::Utxo(input) = input {
@@ -106,9 +106,9 @@ impl AccountHandle {
                                                             output_ids_to_unlock.push(*input.output_id());
                                                         }
                                                     } else {
-                                                        // if we didn't get the output it could be because it got already spent
-                                                        // and pruned, even if that's not the case we well get it again during
-                                                        // next syncing
+                                                        // if we didn't get the output it could be because it got
+                                                        // already spent and pruned, even if that's not the case we
+                                                        // well get it again during next syncing
                                                         spent_output_ids.push(*input.output_id());
                                                     }
                                                 }
