@@ -141,8 +141,9 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let vec: Vec<Handle<JsValue>> = js_arr_handle.to_vec(&mut cx)?;
     let mut event_types = vec![];
     for event_string in vec {
-        let event_type = event_string.downcast::<JsString, FunctionContext>(&mut cx).unwrap();
-        let wallet_event_type = WalletEventType::try_from(event_type.value(&mut cx).as_str()).unwrap();
+        let event_type = event_string.downcast_or_throw::<JsString, FunctionContext>(&mut cx)?;
+        let wallet_event_type =
+            WalletEventType::try_from(event_type.value(&mut cx).as_str()).or_else(|e| cx.throw_error(e))?;
         event_types.push(wallet_event_type);
     }
 
@@ -157,6 +158,33 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
                 .listen(event_types, move |event_data| {
                     call_event_callback(&channel, event_data.clone(), callback.clone())
                 })
+                .await;
+        } else {
+            panic!("Message handler got destroyed")
+        }
+    });
+
+    Ok(cx.undefined())
+}
+
+pub fn clear_listeners(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let js_arr_handle: Handle<JsArray> = cx.argument(0)?;
+    let vec: Vec<Handle<JsValue>> = js_arr_handle.to_vec(&mut cx)?;
+    let mut event_types = vec![];
+    for event_string in vec {
+        let event_type = event_string.downcast_or_throw::<JsString, FunctionContext>(&mut cx)?;
+        let wallet_event_type =
+            WalletEventType::try_from(event_type.value(&mut cx).as_str()).or_else(|e| cx.throw_error(e))?;
+        event_types.push(wallet_event_type);
+    }
+
+    let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(1)?.0);
+
+    crate::RUNTIME.spawn(async move {
+        if let Some(message_handler) = &*message_handler.read().await {
+            message_handler
+                .wallet_message_handler
+                .clear_listeners(event_types)
                 .await;
         } else {
             panic!("Message handler got destroyed")

@@ -238,6 +238,13 @@ impl AccountManager {
         emitter.on(events, handler);
     }
 
+    #[cfg(feature = "events")]
+    /// Remove wallet event listeners, empty vec will remove all listeners
+    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
+        let mut emitter = self.event_emitter.lock().await;
+        emitter.clear(events);
+    }
+
     /// Generates a new random mnemonic.
     pub fn generate_mnemonic(&self) -> crate::Result<String> {
         Ok(Client::generate_mnemonic()?)

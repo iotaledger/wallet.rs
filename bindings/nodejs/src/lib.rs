@@ -27,6 +27,7 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("destroy", message_handler::destroy)?;
 
     cx.export_function("listen", message_handler::listen)?;
+    cx.export_function("clearListeners", message_handler::clear_listeners)?;
 
     cx.export_function("initLogger", init_logger)?;
     Ok(())

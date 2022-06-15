@@ -159,6 +159,10 @@ export class AccountManager {
         return this.messageHandler.listen(eventTypes, callback);
     }
 
+    clearListeners(eventTypes: EventType[]): void {
+        return this.messageHandler.clearListeners(eventTypes);
+    }
+
     // TODO: test this
     async recoverAccounts(
         accountGapLimit: number,
