@@ -13,7 +13,7 @@ async function run() {
         const alice = await manager.getAccount('Alice');
         bob = await manager.getAccount('Bob');
 
-        manager.listen(['NewOutput'], handleNewOutput)
+        manager.listen(['NewOutput'], handleNewOutputOfBob)
 
         const recipientAddress = bob.meta.publicAddresses[0].address
         const amount = '1000000';
@@ -42,7 +42,7 @@ async function run() {
     }
 }
 
-async function handleNewOutput(err, data) {
+async function handleNewOutputOfBob(err, data) {
     console.log('Output received:', data)
     const event = JSON.parse(data)
     if (event.accountIndex === bob.meta.index) {
