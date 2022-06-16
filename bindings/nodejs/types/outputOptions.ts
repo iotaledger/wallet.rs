@@ -31,7 +31,7 @@ interface StorageDeposit {
 
 interface Time {
     milestoneIndex?: number;
-    unixTime?: string;
+    unixTime?: number;
 }
 
 enum ReturnStrategy {
