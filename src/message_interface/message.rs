@@ -64,7 +64,10 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     ChangeStrongholdPassword {
-        password: String,
+        #[serde(rename = "currentPassword")]
+        current_password: String,
+        #[serde(rename = "newPassword")]
+        new_password: String,
         #[serde(rename = "keysToReEncrypt")]
         keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
     },
@@ -176,11 +179,12 @@ impl Debug for Message {
             ),
             #[cfg(feature = "stronghold")]
             Message::ChangeStrongholdPassword {
-                password: _,
+                current_password: _,
+                new_password: _,
                 keys_to_re_encrypt,
             } => write!(
                 f,
-                "ChangeStrongholdPassword{{ password: <omitted>, keys_to_re_encrypt: {:?} }}",
+                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted>, keys_to_re_encrypt: {:?} }}",
                 keys_to_re_encrypt
             ),
             #[cfg(feature = "stronghold")]

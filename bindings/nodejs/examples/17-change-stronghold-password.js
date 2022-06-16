@@ -10,7 +10,7 @@ async function run() {
     try {
         const manager = await getUnlockedManager();
 
-        await manager.changeStrongholdPassword(NEW_PASSWORD)
+        await manager.changeStrongholdPassword(process.env.SH_PASSWORD, NEW_PASSWORD)
         await sendAmountIfManagerUnlocked(manager)
 
         await manager.clearStrongholdPassword()
@@ -20,7 +20,7 @@ async function run() {
         await sendAmountIfManagerUnlocked(manager)
 
         // Reverts to original password
-        await manager.changeStrongholdPassword(process.env.SH_PASSWORD)
+        await manager.changeStrongholdPassword(NEW_PASSWORD, process.env.SH_PASSWORD)
     } catch (error) {
         console.log('Error: ' + error);
     }
