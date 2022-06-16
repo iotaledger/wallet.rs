@@ -23,7 +23,7 @@ async function run() {
                 amount,
                 unlocks: {
                     expiration: {
-                        unixTime: new Date().getSeconds() + 15000
+                        unixTime: Math.round(new Date().getTime() / 1000) + 15000
                     }
                 }
             },
@@ -31,6 +31,11 @@ async function run() {
 
         const resp = await alice.sendOutputs([outputData])
         console.log('Transaction is sent', resp)
+
+        // Sync account to get the output event
+        setTimeout(async () => {
+            await bob.sync();
+        }, 10000)
     } catch (error) {
         console.log('Error: ' + error);
     }
@@ -38,13 +43,13 @@ async function run() {
 
 async function handleNewOutput(err, data) {
     console.log('Output received:', data)
-    setTimeout(async () => {
-        const event = JSON.parse(data)
+    const event = JSON.parse(data)
+    if (event.accountIndex == bob.meta.index) {
         const outputId = event.event.NewOutput.output.outputId
         await bob.sync()
         const resp = await bob.collectOutputs([outputId])
         console.log('Output has been collected in the following transaction:', resp)
         process.exit(0)
-    }, 10000)
+    }
 }
 run();
