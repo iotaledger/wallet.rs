@@ -16,7 +16,6 @@ use crate::events::EventEmitter;
 use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
-        operations::syncing::SyncOptions,
         types::{
             address::{AccountAddress, AddressWithUnspentOutputs},
             OutputData, Transaction,
@@ -147,43 +146,6 @@ impl AccountHandle {
                 self.storage_manager.lock().await.save_account(&account).await
             }
         }
-    }
-
-    // Set the alias for the account
-    pub async fn set_alias(&self, alias: &str) -> Result<()> {
-        let mut account = self.write().await;
-        account.alias = alias.to_string();
-        #[cfg(feature = "storage")]
-        self.save(Some(&account)).await?;
-        Ok(())
-    }
-
-    // Should only be called from the AccountManager so all accounts are on the same state
-    pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> Result<()> {
-        self.client = client;
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
-        log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);
-        let mut account = self.account.write().await;
-        for address in &mut account.addresses_with_unspent_outputs {
-            address.address.bech32_hrp = bech32_hrp.clone();
-        }
-        for address in &mut account.public_addresses {
-            address.address.bech32_hrp = bech32_hrp.clone();
-        }
-        for address in &mut account.internal_addresses {
-            address.address.bech32_hrp = bech32_hrp.clone();
-        }
-        // Drop account before syncing because we locked it
-        drop(account);
-        // after we set the new client options we should sync the account because the network could have changed
-        // we sync with all addresses, because otherwise the balance wouldn't get updated if an address doesn't has
-        // balance also in the new network
-        self.sync(Some(SyncOptions {
-            force_syncing: true,
-            ..Default::default()
-        }))
-        .await?;
-        Ok(())
     }
 }
 

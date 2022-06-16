@@ -54,7 +54,7 @@ impl AccountHandle {
     ) -> crate::Result<Vec<AccountAddress>> {
         let options = options.unwrap_or_default();
         log::debug!("[ADDRESS GENERATION] generating {} addresses", amount);
-        let mut account = self.write().await;
+        let account = self.read().await;
 
         // get the highest index for the public or internal addresses
         let highest_current_index_plus_one = if options.internal {
@@ -180,18 +180,10 @@ impl AccountHandle {
             })
             .collect();
 
-        // add addresses to the account
-        if options.internal {
-            account.internal_addresses.extend(generate_addresses.clone());
-        } else {
-            account.public_addresses.extend(generate_addresses.clone());
-        };
+        drop(account);
+        self.update_account_addresses(options.internal, generate_addresses.clone())
+            .await?;
 
-        #[cfg(feature = "storage")]
-        {
-            log::debug!("[ADDRESS GENERATION] storing account {}", account.index());
-            self.save(Some(&account)).await?;
-        }
         Ok(generate_addresses)
     }
 

@@ -329,42 +329,6 @@ impl AccountHandle {
         Ok(())
     }
 
-    /// Update unspent outputs, this function is originally intended for updating recursively synced alias and nft
-    /// address outputs
-    async fn update_unspent_outputs(&self, output_responses: Vec<OutputResponse>) -> crate::Result<()> {
-        let network_id = self.client.get_network_id().await?;
-        let mut account = self.write().await;
-
-        for output_response in output_responses.into_iter() {
-            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
-            let (amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
-            // check if we know the transaction that created this output and if we created it (if we store incoming
-            // transactions separated, then this check wouldn't be required)
-            let remainder = {
-                match account.transactions.get(&transaction_id) {
-                    Some(tx) => !tx.incoming,
-                    None => false,
-                }
-            };
-
-            let output_data = OutputData {
-                output_id,
-                output: Output::try_from(&output_response.output)?,
-                is_spent: output_response.metadata.is_spent,
-                metadata: output_response.metadata,
-                amount,
-                address,
-                network_id,
-                remainder,
-                chain: None,
-            };
-            account.unspent_outputs.entry(output_id).or_insert(output_data);
-        }
-
-        Ok(())
-    }
-
     async fn sweep_foundries(&self, hrp: &str, alias_address: &AliasAddress) -> crate::Result<Vec<TransactionId>> {
         let foundries_query_parameters = vec![QueryParameter::AliasAddress(
             Address::Alias(*alias_address).to_bech32(hrp),
