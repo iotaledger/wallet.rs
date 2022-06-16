@@ -40,7 +40,7 @@ import type {
     __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
     __CreateAccountMessage__,
-    __DeleteStorageMessage__,
+    __DeleteAccountsAndDatabaseMessage__,
     __EmitTestEventMessage__,
     __GenerateMnemonicMessage__,
     __GetAccountMessage__,
@@ -110,7 +110,7 @@ export type __Message__ =
     | __ChangeStrongholdPasswordMessage__
     | __ClearStrongholdPasswordMessage__
     | __CreateAccountMessage__
-    | __DeleteStorageMessage__
+    | __DeleteAccountsAndDatabaseMessage__
     | __EmitTestEventMessage__
     | __GenerateMnemonicMessage__
     | __GetAccountMessage__

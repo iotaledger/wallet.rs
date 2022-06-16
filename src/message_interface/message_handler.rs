@@ -94,6 +94,12 @@ impl WalletMessageHandler {
         self.account_manager.listen(events, handler).await;
     }
 
+    #[cfg(feature = "events")]
+    /// Remove wallet event listeners, empty vec will remove all listeners
+    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
+        self.account_manager.clear_listeners(events).await;
+    }
+
     /// Handles a message.
     pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
@@ -173,9 +179,9 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "storage")]
-            Message::DeleteStorage => {
+            Message::DeleteAccountsAndDatabase => {
                 convert_async_panics(|| async {
-                    self.account_manager.delete_storage().await?;
+                    self.account_manager.delete_accounts_and_database().await?;
                     Ok(Response::Ok(()))
                 })
                 .await

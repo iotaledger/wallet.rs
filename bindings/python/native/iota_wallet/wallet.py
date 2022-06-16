@@ -131,11 +131,11 @@ class IotaWallet():
             }
         )
 
-    def delete_storage(self):
-        """Deletes the storage.
+    def delete_accounts_and_database(self):
+        """Deletes the accounts and database.
         """
         return self._send_cmd_routine(
-            'DeleteStorage'
+            'DeleteAccountsAndDatabase'
         )
 
     def generate_mnemonic(self):

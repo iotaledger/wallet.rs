@@ -70,9 +70,9 @@ export class AccountManager {
         return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
-    async deleteStorage(): Promise<void> {
+    async deleteAccountsAndDatabase(): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'DeleteStorage',
+            cmd: 'DeleteAccountsAndDatabase',
         });
     }
 
@@ -157,6 +157,10 @@ export class AccountManager {
         callback: (error: Error, result: string) => void,
     ): void {
         return this.messageHandler.listen(eventTypes, callback);
+    }
+
+    clearListeners(eventTypes: EventType[]): void {
+        return this.messageHandler.clearListeners(eventTypes);
     }
 
     // TODO: test this

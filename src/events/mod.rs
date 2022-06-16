@@ -52,6 +52,18 @@ impl EventEmitter {
         }
     }
 
+    /// Removes handlers for each given `WalletEventType`.
+    /// If no `WalletEventType` is given, handlers will be removed for all event types.
+    pub fn clear(&mut self, events: Vec<WalletEventType>) {
+        // if no event is provided handlers are removed for all event types
+        if events.is_empty() {
+            self.handlers.clear();
+        }
+        for event in events {
+            self.handlers.remove(&event);
+        }
+    }
+
     /// Invokes all listeners of `event`, passing a reference to `payload` as an
     /// argument to each of them.
     pub fn emit(&self, account_index: u32, event: WalletEvent) {
@@ -153,6 +165,40 @@ mod tests {
         );
 
         assert_eq!(3, event_counter.load(Ordering::SeqCst));
+
+        // remove handlers of single event
+        emitter.clear(vec![WalletEventType::ConsolidationRequired]);
+        // emit event of removed type
+        emitter.emit(0, WalletEvent::ConsolidationRequired);
+
+        assert_eq!(3, event_counter.load(Ordering::SeqCst));
+
+        // remove handlers of all events
+        emitter.clear(vec![]);
+        // emit events
+        emitter.emit(
+            0,
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
+        );
+        emitter.emit(
+            0,
+            WalletEvent::TransactionInclusion(TransactionInclusionEvent {
+                transaction_id: TransactionId::from_str(
+                    "0x2289d9981fb23cc5f4f6c2742685eeb480f8476089888aa886a18232bad81989",
+                )
+                .expect("Invalid tx id"),
+                inclusion_state: InclusionState::Confirmed,
+            }),
+        );
+        assert_eq!(3, event_counter.load(Ordering::SeqCst));
+
+        // listen to a single event
+        let event_counter_clone = Arc::clone(&event_counter);
+        emitter.on(vec![WalletEventType::ConsolidationRequired], move |_name| {
+            // println!("Any event: {:?}", name);
+            event_counter_clone.fetch_add(1, Ordering::SeqCst);
+        });
+
         for _ in 0..1_000_000 {
             emitter.emit(0, WalletEvent::ConsolidationRequired);
         }

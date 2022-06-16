@@ -5,6 +5,7 @@ import {
     sendMessageAsync,
     messageHandlerNew,
     listen,
+    clearListeners,
     destroy,
 } from './bindings';
 import type {
@@ -51,6 +52,10 @@ export class MessageHandler {
         callback: (error: Error, result: string) => void,
     ): void {
         return listen(eventTypes, callback, this.messageHandler);
+    }
+
+    clearListeners(eventTypes: EventType[]): void {
+        return clearListeners(eventTypes, this.messageHandler);
     }
 
     destroy(): void {

@@ -238,6 +238,13 @@ impl AccountManager {
         emitter.on(events, handler);
     }
 
+    #[cfg(feature = "events")]
+    /// Remove wallet event listeners, empty vec will remove all listeners
+    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
+        let mut emitter = self.event_emitter.lock().await;
+        emitter.clear(events);
+    }
+
     /// Generates a new random mnemonic.
     pub fn generate_mnemonic(&self) -> crate::Result<String> {
         Ok(Client::generate_mnemonic()?)
@@ -259,8 +266,10 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Deletes the accounts and database folder.
     #[cfg(feature = "storage")]
-    pub async fn delete_storage(&self) -> crate::Result<()> {
+    pub async fn delete_accounts_and_database(&self) -> crate::Result<()> {
+        self.accounts.write().await.clear();
         std::fs::remove_dir_all(self.storage_options.storage_path.clone())?;
         Ok(())
     }

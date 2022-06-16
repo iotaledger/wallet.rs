@@ -4,9 +4,12 @@
 use std::str::FromStr;
 
 use iota_wallet::{
-    account::{Assets, OutputOptions},
+    account::{Assets, Features, OutputOptions},
     account_manager::AccountManager,
-    iota_client::bee_block::output::{NativeToken, NftId, TokenId},
+    iota_client::bee_block::output::{
+        unlock_condition::{StorageDepositReturnUnlockCondition, UnlockCondition},
+        NativeToken, NftId, TokenId,
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result, U256,
 };
@@ -49,6 +52,14 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.amount(), 234000);
     // address and sdr unlock condition
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    if let UnlockCondition::StorageDepositReturn(sdr) = output
+        .unlock_conditions()
+        .unwrap()
+        .get(StorageDepositReturnUnlockCondition::KIND)
+        .unwrap()
+    {
+        assert_eq!(sdr.amount(), 233500);
+    }
 
     let output = account
         .prepare_output(
@@ -91,6 +102,82 @@ async fn output_preparation() -> Result<()> {
     // only address condition
     assert_eq!(output.unlock_conditions().unwrap().len(), 1);
     assert_eq!(output.native_tokens().unwrap().first(), Some(&native_token));
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                amount: 300000,
+                assets: None,
+                features: Some(Features {
+                    metadata: Some("Hello world".to_string()),
+                    tag: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    assert_eq!(output.amount(), 300000);
+    // only address condition
+    assert_eq!(output.unlock_conditions().unwrap().len(), 1);
+    // metadata feature
+    assert_eq!(output.features().unwrap().len(), 1);
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                amount: 213000,
+                assets: None,
+                features: Some(Features {
+                    metadata: Some("Hello world".to_string()),
+                    tag: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    assert_eq!(output.amount(), 426000);
+    // address and storage deposit unlock condition, because of the metadata feature block, 213000 is not enough for the
+    // required storage deposit
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    // metadata feature
+    assert_eq!(output.features().unwrap().len(), 1);
+
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                amount: 1,
+                assets: None,
+                features: Some(Features {
+                    metadata: Some("Hello world".to_string()),
+                    tag: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    assert_eq!(output.amount(), 241000);
+    if let UnlockCondition::StorageDepositReturn(sdr) = output
+        .unlock_conditions()
+        .unwrap()
+        .get(StorageDepositReturnUnlockCondition::KIND)
+        .unwrap()
+    {
+        assert_eq!(sdr.amount(), 240999);
+    }
+    // address and storage deposit unlock condition, because of the metadata feature block, 213000 is not enough for the
+    // required storage deposit
+    assert_eq!(output.unlock_conditions().unwrap().len(), 2);
+    // metadata feature
+    assert_eq!(output.features().unwrap().len(), 1);
 
     // only works if the nft for this NftId is available in the account
     if let Ok(output) = account
