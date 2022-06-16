@@ -37,14 +37,14 @@ async function run() {
 }
 
 async function handleNewOutput(err, data) {
+    console.log('Output received:', data)
     setTimeout(async () => {
-        console.log('Output received:', data)
         const event = JSON.parse(data)
         const outputId = event.event.NewOutput.output.outputId
-        console.log(outputId)
+        await bob.sync()
         const resp = await bob.collectOutputs([outputId])
         console.log('Output has been collected in the following transaction:', resp)
         process.exit(0)
-    }, 15000)
+    }, 10000)
 }
 run();
