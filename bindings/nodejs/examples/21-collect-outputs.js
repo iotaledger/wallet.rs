@@ -6,6 +6,7 @@ const getUnlockedManager = require('./account-manager');
 
 let manager
 let bob
+
 async function run() {
     try {
         manager = await getUnlockedManager();
@@ -44,7 +45,7 @@ async function run() {
 async function handleNewOutput(err, data) {
     console.log('Output received:', data)
     const event = JSON.parse(data)
-    if (event.accountIndex == bob.meta.index) {
+    if (event.accountIndex === bob.meta.index) {
         const outputId = event.event.NewOutput.output.outputId
         await bob.sync()
         const resp = await bob.collectOutputs([outputId])
