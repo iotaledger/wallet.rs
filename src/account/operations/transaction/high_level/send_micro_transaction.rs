@@ -89,7 +89,6 @@ impl AccountHandle {
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
         let (local_time, _) = self.client.get_time_and_milestone_checked().await?;
-        let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
 
         let mut outputs = Vec::new();
         for address_with_amount in addresses_with_micro_amount {
@@ -103,6 +102,11 @@ impl AccountHandle {
                 &return_address.address.inner,
                 None,
             )?;
+
+            let expiration_time = match address_with_amount.expiration {
+                Some(expiration_time) => local_time + expiration_time,
+                None => local_time as u32 + DEFAULT_EXPIRATION_TIME,
+            };
 
             outputs.push(
                 // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount

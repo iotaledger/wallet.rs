@@ -139,14 +139,10 @@ pub(crate) fn can_output_be_unlocked_forever_from_now_on(
                     }
                     // Check if the address which can unlock the output now is in the account
                     if ms_expired && time_expired {
-                        // compare return address with associated address first, but if that doesn't match we also need
-                        // to check all account addresses, because the associated address
-                        // can only be the unlock address or the storage deposit address and not both (unless they're
-                        // the same, which would mean transaction to oneself)
-                        if output_data.address != *expiration.return_address()
-                            || !account_addresses
-                                .iter()
-                                .any(|a| a.address.inner == *expiration.return_address())
+                        // compare return address with the account addresses
+                        if !account_addresses
+                            .iter()
+                            .any(|a| a.address.inner == *expiration.return_address())
                         {
                             return false;
                         };
