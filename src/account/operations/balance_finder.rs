@@ -70,12 +70,12 @@ impl AccountHandle {
                 }))
                 .await?;
 
-            latest_balance.replace(balance.clone());
-
             // break if we didn't find more balance with the new addresses
             if balance.total <= latest_balance.as_ref().map_or(&AccountBalance::default(), |v| v).total {
+                latest_balance.replace(balance);
                 break;
             }
+            latest_balance.replace(balance);
         }
 
         self.clean_account_after_recovery(highest_public_address_index, highest_internal_address_index)
