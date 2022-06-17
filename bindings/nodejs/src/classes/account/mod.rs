@@ -628,24 +628,18 @@ pub fn send_to_many(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
     for js_value in vec {
         let js_object = js_value.downcast::<JsObject, FunctionContext>(&mut cx).unwrap();
-        let address = js_object
-            .get(&mut cx, "address")?
-            .downcast::<JsString, FunctionContext>(&mut cx)
-            .or_throw(&mut cx)?;
-        let amount = js_object
-            .get(&mut cx, "amount")?
-            .downcast::<JsNumber, FunctionContext>(&mut cx)
-            .or_throw(&mut cx)?;
-        let output_kind = match js_object
-            .get(&mut cx, "outputKind")?
-            .downcast::<JsString, FunctionContext>(&mut cx)
-        {
-            Ok(value) => OutputKind::from_str(&value.value(&mut cx)).ok(),
+        let address = js_object.get::<JsString, _, _>(&mut cx, "address")?.value(&mut cx);
+        let amount = js_object.get::<JsNumber, _, _>(&mut cx, "amount")?.value(&mut cx);
+        let output_kind = match js_object.get_opt::<JsString, _, _>(&mut cx, "outputKind")? {
+            Some(value) => {
+                let value = &*value.downcast_or_throw::<JsString, _>(&mut cx)?;
+                OutputKind::from_str(&value.value(&mut cx)).ok()
+            }
             _ => None,
         };
         outputs.push(TransferOutput::new(
-            parse_address(address.value(&mut cx)).expect("invalid address format"),
-            NonZeroU64::new(amount.value(&mut cx) as u64).expect("amount can't be zero"),
+            parse_address(address).expect("invalid address format"),
+            NonZeroU64::new(amount as u64).expect("amount can't be zero"),
             output_kind,
         ));
     }
