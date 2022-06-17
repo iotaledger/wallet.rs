@@ -71,7 +71,7 @@ impl AccountHandle {
                 .await?;
 
             // break if we didn't find more balance with the new addresses
-            if balance.total <= latest_balance.as_ref().map_or(&AccountBalance::default(), |v| v).total {
+            if balance.total <= latest_balance.as_ref().map_or(0, |v| v.total) {
                 latest_balance.replace(balance);
                 break;
             }
