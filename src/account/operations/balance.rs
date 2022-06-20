@@ -3,9 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::bee_block::output::{
-    unlock_condition::StorageDepositReturnUnlockCondition, ByteCost, NativeTokensBuilder, Output, UnlockCondition,
-};
+use iota_client::bee_block::output::{ByteCost, NativeTokensBuilder, Output};
 
 use crate::account::{handle::AccountHandle, types::AccountBalance, OutputsToCollect};
 
@@ -111,9 +109,7 @@ impl AccountHandle {
                                 // If output has a StorageDepositReturnUnlockCondition, the amount of it should be
                                 // subtracted, because this part needs to be sent back
                                 let amount = if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                                    if let Some(UnlockCondition::StorageDepositReturn(sdr)) =
-                                        unlock_conditions.get(StorageDepositReturnUnlockCondition::KIND)
-                                    {
+                                    if let Some(sdr) = unlock_conditions.storage_deposit_return() {
                                         if account_addresses
                                             .iter()
                                             .any(|a| a.address.inner == *sdr.return_address())

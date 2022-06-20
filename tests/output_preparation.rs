@@ -6,10 +6,7 @@ use std::str::FromStr;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions},
     account_manager::AccountManager,
-    iota_client::bee_block::output::{
-        unlock_condition::{StorageDepositReturnUnlockCondition, UnlockCondition},
-        NativeToken, NftId, TokenId,
-    },
+    iota_client::bee_block::output::{NativeToken, NftId, TokenId},
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result, U256,
 };
@@ -52,14 +49,8 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.amount(), 234000);
     // address and sdr unlock condition
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);
-    if let UnlockCondition::StorageDepositReturn(sdr) = output
-        .unlock_conditions()
-        .unwrap()
-        .get(StorageDepositReturnUnlockCondition::KIND)
-        .unwrap()
-    {
-        assert_eq!(sdr.amount(), 233500);
-    }
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 233500);
 
     let output = account
         .prepare_output(
@@ -165,14 +156,9 @@ async fn output_preparation() -> Result<()> {
         )
         .await?;
     assert_eq!(output.amount(), 241000);
-    if let UnlockCondition::StorageDepositReturn(sdr) = output
-        .unlock_conditions()
-        .unwrap()
-        .get(StorageDepositReturnUnlockCondition::KIND)
-        .unwrap()
-    {
-        assert_eq!(sdr.amount(), 240999);
-    }
+    let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
+    assert_eq!(sdr.amount(), 240999);
+
     // address and storage deposit unlock condition, because of the metadata feature block, 213000 is not enough for the
     // required storage deposit
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);

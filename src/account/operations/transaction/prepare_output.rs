@@ -168,10 +168,7 @@ impl AccountHandle {
                 third_output_builder =
                     third_output_builder.with_amount(min_storage_deposit_return_amount + options.amount)?;
             }
-            if let Some(UnlockCondition::StorageDepositReturn(sdr)) = second_output
-                .unlock_conditions()
-                .get(StorageDepositReturnUnlockCondition::KIND)
-            {
+            if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
                     StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount)?,
@@ -337,10 +334,7 @@ impl AccountHandle {
                 third_output_builder =
                     third_output_builder.with_amount(min_storage_deposit_return_amount + options.amount)?;
             }
-            if let Some(UnlockCondition::StorageDepositReturn(sdr)) = second_output
-                .unlock_conditions()
-                .get(StorageDepositReturnUnlockCondition::KIND)
-            {
+            if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
                     StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount)?,
