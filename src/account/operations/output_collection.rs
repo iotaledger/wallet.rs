@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
 };
@@ -67,10 +67,7 @@ impl AccountHandle {
                             {
                                 match outputs_to_collect {
                                     OutputsToCollect::MicroTransactions => {
-                                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) = basic_output
-                                            .unlock_conditions()
-                                            .get(StorageDepositReturnUnlockCondition::KIND)
-                                        {
+                                        if let Some(sdr) = basic_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != basic_output.amount() {
                                                 output_ids_to_collect.insert(output_data.output_id);
@@ -105,10 +102,7 @@ impl AccountHandle {
                             {
                                 match outputs_to_collect {
                                     OutputsToCollect::MicroTransactions => {
-                                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) = nft_output
-                                            .unlock_conditions()
-                                            .get(StorageDepositReturnUnlockCondition::KIND)
-                                        {
+                                        if let Some(sdr) = nft_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != nft_output.amount() {
                                                 output_ids_to_collect.insert(output_data.output_id);
@@ -270,9 +264,7 @@ impl AccountHandle {
                     let mut storage_deposit = false;
                     let mut return_amount = 0;
                     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) =
-                            unlock_conditions.get(StorageDepositReturnUnlockCondition::KIND)
-                        {
+                        if let Some(sdr) = unlock_conditions.storage_deposit_return() {
                             storage_deposit = true;
                             return_amount = sdr.amount();
                             // create return output

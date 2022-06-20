@@ -1,17 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::{
-    unlock_condition::{AddressUnlockCondition, ExpirationUnlockCondition},
-    Output, UnlockCondition,
-};
+use iota_client::bee_block::output::{Output, UnlockCondition};
 
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
 
 // Check if an output has an expired ExpirationUnlockCondition
 pub(crate) fn is_expired(output: &Output, current_time: u32, current_milestone: u32) -> bool {
     if let Some(unlock_conditions) = output.unlock_conditions() {
-        if let Some(UnlockCondition::Expiration(expiration)) = unlock_conditions.get(ExpirationUnlockCondition::KIND) {
+        if let Some(expiration) = unlock_conditions.expiration() {
             let mut ms_expired = false;
             let mut time_expired = false;
             // 0 gets ignored
@@ -72,9 +69,7 @@ pub(crate) fn can_output_be_unlocked_now(
                         && (expiration.timestamp() == 0 || expiration.timestamp() > current_time)
                     {
                         // check address unlock condition
-                        let can_unlocked = if let Some(UnlockCondition::Address(address_unlock_condition)) =
-                            unlock_conditions.get(AddressUnlockCondition::KIND)
-                        {
+                        let can_unlocked = if let Some(address_unlock_condition) = unlock_conditions.address() {
                             // compare address_unlock_condition address with associated address first, but if that
                             // doesn't match we also need to check all account addresses,
                             // because the associated address can only be the unlock address
