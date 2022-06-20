@@ -11,7 +11,6 @@ use iota_client::{
             },
             BasicOutputBuilder, NativeToken, TokenId,
         },
-        payload::milestone::MilestoneIndex,
     },
 };
 use primitive_types::U256;
@@ -91,7 +90,7 @@ impl AccountHandle {
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
-        let (local_time, _) = self.client.get_time_and_milestone_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         let mut outputs = Vec::new();
         for address_with_amount in addresses_native_tokens {
@@ -108,7 +107,7 @@ impl AccountHandle {
 
             let expiration_time = match address_with_amount.expiration {
                 Some(expiration_time) => local_time + expiration_time,
-                None => local_time as u32 + DEFAULT_EXPIRATION_TIME,
+                None => local_time + DEFAULT_EXPIRATION_TIME,
             };
 
             outputs.push(
@@ -130,8 +129,6 @@ impl AccountHandle {
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         address,
-                        // 0 means it's ignored during validation
-                        MilestoneIndex::new(0),
                         expiration_time,
                     )?))
                     .finish_output()?,

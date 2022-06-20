@@ -9,7 +9,6 @@ use iota_client::bee_block::{
         },
         BasicOutputBuilder, ByteCost, ByteCostConfig, NativeToken, OutputAmount, TokenId,
     },
-    payload::milestone::MilestoneIndex,
 };
 use primitive_types::U256;
 
@@ -35,9 +34,8 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
         ))
         .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
             *return_address,
-            // Both 0 would be invalid, so we just use 1
-            MilestoneIndex::new(1),
-            0,
+            // 0 would be invalid
+            1,
         )?));
     if let Some(native_tokens) = native_tokens {
         basic_output_builder = basic_output_builder.with_native_tokens(
