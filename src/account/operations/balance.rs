@@ -17,6 +17,7 @@ impl AccountHandle {
             .get_unlockable_outputs_with_additional_unlock_conditions(OutputsToCollect::All)
             .await?;
 
+        let account_addresses = self.list_addresses().await?;
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
@@ -113,7 +114,16 @@ impl AccountHandle {
                                     if let Some(UnlockCondition::StorageDepositReturn(sdr)) =
                                         unlock_conditions.get(StorageDepositReturnUnlockCondition::KIND)
                                     {
-                                        output_data.output.amount() - sdr.amount()
+                                        if account_addresses
+                                            .iter()
+                                            .any(|a| a.address.inner == *sdr.return_address())
+                                        {
+                                            // sending to ourself, we get the full amount
+                                            output_data.output.amount()
+                                        } else {
+                                            // Sending to someone else
+                                            output_data.output.amount() - sdr.amount()
+                                        }
                                     } else {
                                         output_data.output.amount()
                                     }
