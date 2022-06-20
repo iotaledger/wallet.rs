@@ -212,6 +212,19 @@ impl AccountHandle {
         let mut output_ids = client
             .basic_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
             .await?;
+        // TODO: update when https://github.com/iotaledger/inx-indexer/issues/33 gets fixed or if that's not happening, send requests in parallel
+        // Get outputs where the address is in the storage deposit return unlock condition
+        let sdr_output_ids = client
+            .basic_output_ids(vec![QueryParameter::StorageReturnAddress(address.address.to_bech32())])
+            .await?;
+        output_ids.extend(sdr_output_ids.into_iter());
+        // Get outputs where the address is in the expiration unlock condition
+        let expiration_output_ids = client
+            .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(
+                address.address.to_bech32(),
+            )])
+            .await?;
+        output_ids.extend(expiration_output_ids.into_iter());
 
         if sync_options.sync_aliases_and_nfts {
             // Get nft outputs
@@ -219,6 +232,10 @@ impl AccountHandle {
                 .nft_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
                 .await?;
             output_ids.extend(nft_output_ids.clone().into_iter());
+
+            // TODO: handle nft outputs with expiration or storage deposit return unlock conditions: https://github.com/iotaledger/wallet.rs/issues/1198
+            // Note: if the nft output can't be unlocked by the account, the outputs that can be controlled by it,
+            // should also not be added to the account balance and available for inputs
 
             // get basic outputs that can be controlled by an nft output
             let (mut nft_output_responses, _already_known_balance, loaded_output_responses) =
