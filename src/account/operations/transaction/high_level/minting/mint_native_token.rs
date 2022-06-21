@@ -85,7 +85,7 @@ impl AccountHandle {
         let controller_address = match &native_token_options.account_address {
             Some(bech32_address) => {
                 let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
-                if account_addresses.iter().any(|addr| addr.address.inner == address) {
+                if !account_addresses.iter().any(|addr| addr.address.inner == address) {
                     return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
                 }
                 address
