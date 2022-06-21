@@ -208,65 +208,138 @@ impl AccountHandle {
         address: AddressWithUnspentOutputs,
         sync_options: &SyncOptions,
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
-        // Get basic outputs
-        let mut output_ids = client
-            .basic_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
-            .await?;
-        // TODO: update when https://github.com/iotaledger/inx-indexer/issues/33 gets fixed or if that's not happening, send requests in parallel
-        // Get outputs where the address is in the storage deposit return unlock condition
-        let sdr_output_ids = client
-            .basic_output_ids(vec![QueryParameter::StorageReturnAddress(address.address.to_bech32())])
-            .await?;
-        output_ids.extend(sdr_output_ids.into_iter());
-        // Get outputs where the address is in the expiration unlock condition
-        let expiration_output_ids = client
-            .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(
-                address.address.to_bech32(),
-            )])
-            .await?;
-        output_ids.extend(expiration_output_ids.into_iter());
+        // let mut tasks = Vec::new();
+        let client_1 = client.clone();
+        let client_2 = client.clone();
+        let client_3 = client.clone();
+        let bech32_address = address.address.to_bech32();
+        let bech32_address_1 = bech32_address.clone();
+        let bech32_address_2 = bech32_address.clone();
+        let bech32_address_3 = bech32_address.clone();
+        use futures::FutureExt;
+        let mut tasks = vec![
+            // Get basic outputs
+            async move {
+                tokio::spawn(async move {
+                    let output_ids = client_1
+                        .basic_output_ids(vec![QueryParameter::Address(bech32_address_1)])
+                        .await?;
+                    crate::Result::Ok(output_ids)
+                })
+                .await
+            }
+            .boxed(),
+            // Get outputs where the address is in the storage deposit return unlock condition
+            async move {
+                tokio::spawn(async move {
+                    let output_ids = client_2
+                        .basic_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address_2)])
+                        .await?;
+                    crate::Result::Ok(output_ids)
+                })
+                .await
+            }
+            .boxed(),
+            // Get outputs where the address is in the expiration unlock condition
+            async move {
+                tokio::spawn(async move {
+                    let output_ids = client_3
+                        .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_3)])
+                        .await?;
+                    crate::Result::Ok(output_ids)
+                })
+                .await
+            }
+            .boxed(),
+        ];
 
         if sync_options.sync_aliases_and_nfts {
-            // Get nft outputs
-            let nft_output_ids = client
-                .nft_output_ids(vec![QueryParameter::Address(address.address.to_bech32())])
-                .await?;
-            output_ids.extend(nft_output_ids.clone().into_iter());
+            // nfts
+            let client_4 = client.clone();
+            let account_handle = self.clone();
+            let bech32_address_4 = bech32_address.clone();
+            let bech32_hrp = address.address.bech32_hrp.clone();
+            tasks.push(
+                async move {
+                    tokio::spawn(async move {
+                        let mut output_ids = Vec::new();
+                        // Get nft outputs
+                        let nft_output_ids = client_4
+                            .nft_output_ids(vec![QueryParameter::Address(bech32_address_4.clone())])
+                            .await?;
+                        output_ids.extend(nft_output_ids.clone().into_iter());
 
-            // TODO: handle nft outputs with expiration or storage deposit return unlock conditions: https://github.com/iotaledger/wallet.rs/issues/1198
-            // Note: if the nft output can't be unlocked by the account, the outputs that can be controlled by it,
-            // should also not be added to the account balance and available for inputs
+                        // Get outputs where the address is in the storage deposit return unlock condition
+                        let nft_output_ids = client_4
+                            .nft_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address_4.clone())])
+                            .await?;
+                        output_ids.extend(nft_output_ids.clone().into_iter());
 
-            // get basic outputs that can be controlled by an nft output
-            let (mut nft_output_responses, _already_known_balance, loaded_output_responses) =
-                self.get_outputs(nft_output_ids, false).await?;
-            nft_output_responses.extend(loaded_output_responses.into_iter());
-            let nft_basic_output_ids =
-                get_basic_outputs_for_nft_outputs(client, nft_output_responses, address.address.bech32_hrp.clone())
-                    .await?;
-            output_ids.extend(nft_basic_output_ids.into_iter());
+                        // Get outputs where the address is in the expiration unlock condition
+                        let nft_output_ids = client_4
+                            .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_4)])
+                            .await?;
+                        output_ids.extend(nft_output_ids.clone().into_iter());
 
-            // Get alias outputs
-            let alias_output_ids = client
-                .alias_output_ids(vec![
-                    QueryParameter::StateController(address.address.to_bech32()),
-                    QueryParameter::Governor(address.address.to_bech32()),
-                ])
-                .await?;
-            output_ids.extend(alias_output_ids.clone().into_iter());
+                        // get basic outputs that can be controlled by an nft output
+                        let (mut nft_output_responses, _already_known_balance, loaded_output_responses) =
+                            account_handle.get_outputs(nft_output_ids, false).await?;
+                        nft_output_responses.extend(loaded_output_responses.into_iter());
+                        let nft_basic_output_ids =
+                            get_basic_outputs_for_nft_outputs(&client_4, nft_output_responses, bech32_hrp).await?;
+                        output_ids.extend(nft_basic_output_ids.into_iter());
+                        crate::Result::Ok(output_ids)
+                    })
+                    .await
+                }
+                .boxed(),
+            );
 
-            // get possible foundries and basic outputs that can be controlled by an alias outputs
-            let (mut alias_output_responses, _already_known_balance, loaded_output_responses) =
-                self.get_outputs(alias_output_ids, false).await?;
-            alias_output_responses.extend(loaded_output_responses.into_iter());
-            let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
-                client,
-                alias_output_responses,
-                address.address.bech32_hrp.clone(),
-            )
-            .await?;
-            output_ids.extend(alias_foundry_and_basic_output_ids.into_iter());
+            // aliases
+            let client_5 = client.clone();
+            let bech32_address_5 = bech32_address.clone();
+            let account_handle = self.clone();
+            let bech32_hrp = address.address.bech32_hrp.clone();
+            tasks.push(
+                async move {
+                    tokio::spawn(async move {
+                        let mut output_ids = Vec::new();
+                        // Get alias outputs
+                        let alias_output_ids = client_5
+                            .alias_output_ids(vec![
+                                QueryParameter::StateController(bech32_address_5.clone()),
+                                QueryParameter::Governor(bech32_address_5),
+                            ])
+                            .await?;
+                        output_ids.extend(alias_output_ids.clone().into_iter());
+
+                        // get possible foundries and basic outputs that can be controlled by an alias outputs
+                        let (mut alias_output_responses, _already_known_balance, loaded_output_responses) =
+                            account_handle.get_outputs(alias_output_ids, false).await?;
+                        alias_output_responses.extend(loaded_output_responses.into_iter());
+                        let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
+                            &client_5,
+                            alias_output_responses,
+                            bech32_hrp,
+                        )
+                        .await?;
+                        output_ids.extend(alias_foundry_and_basic_output_ids.into_iter());
+                        crate::Result::Ok(output_ids)
+                    })
+                    .await
+                }
+                .boxed(),
+            );
         }
+
+        // Get all results
+        let mut output_ids = Vec::new();
+        let results = futures::future::try_join_all(tasks).await?;
+        for res in results {
+            let found_output_ids = res?;
+            output_ids.extend(found_output_ids.into_iter());
+        }
+
         Ok((address, output_ids))
     }
 }
