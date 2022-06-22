@@ -209,44 +209,43 @@ impl AccountHandle {
         address: AddressWithUnspentOutputs,
         sync_options: &SyncOptions,
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
-        let client_1 = client.clone();
-        let client_2 = client.clone();
-        let client_3 = client.clone();
-        let bech32_address = address.address.to_bech32();
-        let bech32_address_1 = bech32_address.clone();
-        let bech32_address_2 = bech32_address.clone();
-        let bech32_address_3 = bech32_address.clone();
+        let bech32_address_ = &address.address.to_bech32();
 
         let mut tasks = vec![
             // Get basic outputs
             async move {
+                let bech32_address = bech32_address_.to_string();
+                let client = client.clone();
                 tokio::spawn(async move {
-                    let output_ids = client_1
-                        .basic_output_ids(vec![QueryParameter::Address(bech32_address_1)])
-                        .await?;
-                    crate::Result::Ok(output_ids)
+                    client
+                        .basic_output_ids(vec![QueryParameter::Address(bech32_address)])
+                        .await
+                        .map_err(From::from)
                 })
                 .await
             }
             .boxed(),
             // Get outputs where the address is in the storage deposit return unlock condition
             async move {
+                let bech32_address = bech32_address_.to_string();
+                let client = client.clone();
                 tokio::spawn(async move {
-                    let output_ids = client_2
-                        .basic_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address_2)])
-                        .await?;
-                    crate::Result::Ok(output_ids)
+                    client
+                        .basic_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address)])
+                        .await
+                        .map_err(From::from)
                 })
                 .await
             }
             .boxed(),
             // Get outputs where the address is in the expiration unlock condition
             async move {
+                let bech32_address = bech32_address_.to_string();
+                let client = client.clone();
                 tokio::spawn(async move {
-                    let output_ids = client_3
-                        .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_3)])
-                        .await?;
-                    crate::Result::Ok(output_ids)
+                    client
+                        .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address)])
+                        .await.map_err(From::from)
                 })
                 .await
             }
@@ -255,29 +254,31 @@ impl AccountHandle {
 
         if sync_options.sync_aliases_and_nfts {
             // nfts
-            let client_4 = client.clone();
             let account_handle = self.clone();
-            let bech32_address_4 = bech32_address.clone();
             let bech32_hrp = address.address.bech32_hrp.clone();
             tasks.push(
                 async move {
+                    let bech32_address = bech32_address_.to_string();
+                    let client = client.clone();
                     tokio::spawn(async move {
                         let mut output_ids = Vec::new();
                         // Get nft outputs
-                        let nft_output_ids = client_4
-                            .nft_output_ids(vec![QueryParameter::Address(bech32_address_4.clone())])
+                        let nft_output_ids = client
+                            .nft_output_ids(vec![QueryParameter::Address(bech32_address.to_string())])
                             .await?;
                         output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // Get outputs where the address is in the storage deposit return unlock condition
-                        let nft_output_ids = client_4
-                            .nft_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address_4.clone())])
+                        let nft_output_ids = client
+                            .nft_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address.to_string())])
                             .await?;
                         output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // Get outputs where the address is in the expiration unlock condition
-                        let nft_output_ids = client_4
-                            .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_4)])
+                        let nft_output_ids = client
+                            .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(
+                                bech32_address.to_string(),
+                            )])
                             .await?;
                         output_ids.extend(nft_output_ids.clone().into_iter());
 
@@ -286,9 +287,9 @@ impl AccountHandle {
                             account_handle.get_outputs(nft_output_ids, false).await?;
                         nft_output_responses.extend(loaded_output_responses.into_iter());
                         let nft_basic_output_ids =
-                            get_basic_outputs_for_nft_outputs(&client_4, nft_output_responses, bech32_hrp).await?;
+                            get_basic_outputs_for_nft_outputs(&client, nft_output_responses, bech32_hrp).await?;
                         output_ids.extend(nft_basic_output_ids.into_iter());
-                        crate::Result::Ok(output_ids)
+                        Ok(output_ids)
                     })
                     .await
                 }
@@ -296,19 +297,19 @@ impl AccountHandle {
             );
 
             // aliases
-            let client_5 = client.clone();
-            let bech32_address_5 = bech32_address.clone();
             let account_handle = self.clone();
             let bech32_hrp = address.address.bech32_hrp.clone();
             tasks.push(
                 async move {
+                    let bech32_address = bech32_address_.to_string();
+                    let client = client.clone();
                     tokio::spawn(async move {
                         let mut output_ids = Vec::new();
                         // Get alias outputs
-                        let alias_output_ids = client_5
+                        let alias_output_ids = client
                             .alias_output_ids(vec![
-                                QueryParameter::StateController(bech32_address_5.clone()),
-                                QueryParameter::Governor(bech32_address_5),
+                                QueryParameter::StateController(bech32_address.to_string()),
+                                QueryParameter::Governor(bech32_address.to_string()),
                             ])
                             .await?;
                         output_ids.extend(alias_output_ids.clone().into_iter());
@@ -318,7 +319,7 @@ impl AccountHandle {
                             account_handle.get_outputs(alias_output_ids, false).await?;
                         alias_output_responses.extend(loaded_output_responses.into_iter());
                         let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
-                            &client_5,
+                            &client,
                             alias_output_responses,
                             bech32_hrp,
                         )
