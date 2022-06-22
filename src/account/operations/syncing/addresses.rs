@@ -245,7 +245,8 @@ impl AccountHandle {
                 tokio::spawn(async move {
                     client
                         .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address)])
-                        .await.map_err(From::from)
+                        .await
+                        .map_err(From::from)
                 })
                 .await
             }
