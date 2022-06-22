@@ -44,11 +44,12 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async changeStrongholdPassword(password: string): Promise<void> {
+    async changeStrongholdPassword(currentPassword: string, newPassword: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'ChangeStrongholdPassword',
             payload: {
-                password,
+                currentPassword,
+                newPassword,
             },
         });
     }

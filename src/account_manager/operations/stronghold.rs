@@ -19,11 +19,13 @@ impl AccountManager {
     /// Change the Stronghold password to another one and also re-encrypt the values in the loaded snapshot with it.
     pub async fn change_stronghold_password(
         &self,
-        password: &str,
+        current_password: &str,
+        new_password: &str,
         keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
     ) -> crate::Result<()> {
         if let SecretManager::Stronghold(stronghold) = &mut *self.secret_manager.write().await {
-            stronghold.change_password(password, keys_to_re_encrypt).await?;
+            stronghold.set_password(current_password).await?;
+            stronghold.change_password(new_password, keys_to_re_encrypt).await?;
         }
         Ok(())
     }

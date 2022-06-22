@@ -22,7 +22,8 @@ export type __Bech32ToHex__ = {
 export type __ChangeStrongholdPasswordMessage__ = {
     cmd: 'ChangeStrongholdPassword';
     payload: {
-        password: string;
+        currentPassword: string;
+        newPassword: string;
     };
 };
 

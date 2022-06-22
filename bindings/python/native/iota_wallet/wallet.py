@@ -85,7 +85,8 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'ChangeStrongholdPassword', {
-                'password': password,
+                'current_password': password,
+                'new_password': password,
                 'keys_to_re_encrypt': keys_to_re_encrypt
             }
         )
