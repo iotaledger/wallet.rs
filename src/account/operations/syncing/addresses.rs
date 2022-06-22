@@ -3,6 +3,7 @@
 
 use std::{collections::HashSet, str::FromStr, time::Instant};
 
+use futures::FutureExt;
 use iota_client::{
     bee_block::{
         address::{Address, AliasAddress, NftAddress},
@@ -208,7 +209,6 @@ impl AccountHandle {
         address: AddressWithUnspentOutputs,
         sync_options: &SyncOptions,
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
-        // let mut tasks = Vec::new();
         let client_1 = client.clone();
         let client_2 = client.clone();
         let client_3 = client.clone();
@@ -216,7 +216,7 @@ impl AccountHandle {
         let bech32_address_1 = bech32_address.clone();
         let bech32_address_2 = bech32_address.clone();
         let bech32_address_3 = bech32_address.clone();
-        use futures::FutureExt;
+
         let mut tasks = vec![
             // Get basic outputs
             async move {
