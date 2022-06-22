@@ -5,7 +5,10 @@ use std::collections::HashMap;
 
 use iota_client::bee_block::output::{ByteCost, NativeTokensBuilder, Output};
 
-use crate::account::{handle::AccountHandle, types::AccountBalance, OutputsToCollect};
+use crate::account::{
+    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
+    types::AccountBalance, OutputsToCollect,
+};
 
 impl AccountHandle {
     /// Get the AccountBalance
@@ -21,7 +24,7 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
-        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         let mut total_amount = 0;
         let mut required_storage_deposit = 0;
@@ -95,15 +98,13 @@ impl AccountHandle {
                         if output_can_be_unlocked_now {
                             // check if output can be unlocked always from now on, in that case it should be added to
                             // the total amount
-                            let output_can_be_unlocked_now_and_in_future =
-                                crate::account::operations::helpers::time::can_output_be_unlocked_forever_from_now_on(
-                                    // We use the addresses with unspent outputs, because other addresses of the
-                                    // account without unspent outputs can't be related to this output
-                                    &account.addresses_with_unspent_outputs,
-                                    output_data,
-                                    local_time as u32,
-                                    milestone_index,
-                                );
+                            let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
+                                // We use the addresses with unspent outputs, because other addresses of the
+                                // account without unspent outputs can't be related to this output
+                                &account.addresses_with_unspent_outputs,
+                                output_data,
+                                local_time,
+                            );
 
                             if output_can_be_unlocked_now_and_in_future {
                                 // If output has a StorageDepositReturnUnlockCondition, the amount of it should be

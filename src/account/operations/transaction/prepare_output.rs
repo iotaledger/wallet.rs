@@ -14,7 +14,6 @@ use iota_client::bee_block::{
         },
         BasicOutputBuilder, ByteCost, NativeToken, NftId, NftOutputBuilder, Output,
     },
-    payload::milestone::MilestoneIndex,
 };
 use serde::{Deserialize, Serialize};
 
@@ -68,23 +67,17 @@ impl AccountHandle {
         }
 
         if let Some(unlocks) = options.unlocks {
-            if let Some(expiration) = unlocks.expiration {
+            if let Some(expiration_unix_time) = unlocks.expiration_unix_time {
                 let remainder_address = self.get_remainder_address(transaction_options.clone()).await?;
 
                 first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Expiration(
-                    ExpirationUnlockCondition::new(
-                        remainder_address,
-                        MilestoneIndex::new(expiration.milestone_index.unwrap_or_default()),
-                        expiration.unix_time.unwrap_or_default(),
-                    )?,
+                    ExpirationUnlockCondition::new(remainder_address, expiration_unix_time)?,
                 ));
             }
-            if let Some(timelock) = unlocks.timelock {
-                first_output_builder =
-                    first_output_builder.add_unlock_condition(UnlockCondition::Timelock(TimelockUnlockCondition::new(
-                        MilestoneIndex::new(timelock.milestone_index.unwrap_or_default()),
-                        timelock.unix_time.unwrap_or_default(),
-                    )?));
+            if let Some(timelock_unix_time) = unlocks.timelock_unix_time {
+                first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Timelock(
+                    TimelockUnlockCondition::new(timelock_unix_time)?,
+                ));
             }
         }
 
@@ -236,23 +229,17 @@ impl AccountHandle {
         }
 
         if let Some(unlocks) = options.unlocks {
-            if let Some(expiration) = unlocks.expiration {
+            if let Some(expiration_unix_time) = unlocks.expiration_unix_time {
                 let remainder_address = self.get_remainder_address(transaction_options.clone()).await?;
 
                 first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Expiration(
-                    ExpirationUnlockCondition::new(
-                        remainder_address,
-                        MilestoneIndex::new(expiration.milestone_index.unwrap_or_default()),
-                        expiration.unix_time.unwrap_or_default(),
-                    )?,
+                    ExpirationUnlockCondition::new(remainder_address, expiration_unix_time)?,
                 ));
             }
-            if let Some(timelock) = unlocks.timelock {
-                first_output_builder =
-                    first_output_builder.add_unlock_condition(UnlockCondition::Timelock(TimelockUnlockCondition::new(
-                        MilestoneIndex::new(timelock.milestone_index.unwrap_or_default()),
-                        timelock.unix_time.unwrap_or_default(),
-                    )?));
+            if let Some(timelock_unix_time) = unlocks.timelock_unix_time {
+                first_output_builder = first_output_builder.add_unlock_condition(UnlockCondition::Timelock(
+                    TimelockUnlockCondition::new(timelock_unix_time)?,
+                ));
             }
         }
 
@@ -406,16 +393,10 @@ pub struct Features {
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Unlocks {
-    pub expiration: Option<Time>,
-    pub timelock: Option<Time>,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
-pub struct Time {
-    #[serde(rename = "milestoneIndex")]
-    pub milestone_index: Option<u32>,
-    #[serde(rename = "unixTime")]
-    pub unix_time: Option<u32>,
+    #[serde(rename = "expirationUnixTime")]
+    pub expiration_unix_time: Option<u32>,
+    #[serde(rename = "timelockUnixTime")]
+    pub timelock_unix_time: Option<u32>,
 }
 
 #[derive(Debug, Default, Clone, Eq, PartialEq, Serialize, Deserialize)]

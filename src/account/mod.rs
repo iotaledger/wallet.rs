@@ -29,7 +29,7 @@ pub use self::{
         output_collection::OutputsToCollect,
         syncing::SyncOptions,
         transaction::{
-            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Time, Unlocks},
+            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
             RemainderValueStrategy, TransactionOptions,
         },
     },
