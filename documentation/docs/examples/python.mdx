@@ -1,5 +1,4 @@
 ---
-title: Examples
 description: Official IOTA Wallet Library Software Python examples.
 image: /img/logo/wallet_light.png
 keywords:
@@ -11,16 +10,18 @@ keywords:
 - reference
 ---
 import CodeBlock from '@theme/CodeBlock';
-import create_account_manager from  '!!raw-loader!./../../../../bindings/python/examples/1a_create_account_manager.py';
-import b_create_account from  '!!raw-loader!./../../../../bindings/python/examples/1b_create_account.py';
-import generate_address from  '!!raw-loader!./../../../../bindings/python/examples/2_generate_address.py';
-import check_balance from  '!!raw-loader!./../../../../bindings/python/examples/3_check_balance.py';
-import send from  '!!raw-loader!./../../../../bindings/python/examples/4_send.py';
-import b_list_messages from  '!!raw-loader!./../../../../bindings/python/examples/4b_list_messages.py';
-import backup from  '!!raw-loader!./../../../../bindings/python/examples/5_backup.py';
-import restore from  '!!raw-loader!./../../../../bindings/python/examples/6_restore.py';
-import b_event_simple_event from  '!!raw-loader!./../../../../bindings/python/examples/7b_event_simple_event.py';
-import event_queue from  '!!raw-loader!./../../../../bindings/python/examples/7_event_queue.py';
+import create_account_manager from '!!raw-loader!./../../../bindings/python/examples/1a_create_account_manager.py';
+import b_create_account from '!!raw-loader!./../../../bindings/python/examples/1b_create_account.py';
+import generate_address from '!!raw-loader!./../../../bindings/python/examples/2_generate_address.py';
+import check_balance from '!!raw-loader!./../../../bindings/python/examples/3_check_balance.py';
+import send from '!!raw-loader!./../../../bindings/python/examples/4_send.py';
+import b_list_messages from '!!raw-loader!./../../../bindings/python/examples/4b_list_messages.py';
+import backup from '!!raw-loader!./../../../bindings/python/examples/5_backup.py';
+import restore from '!!raw-loader!./../../../bindings/python/examples/6_restore.py';
+import b_event_simple_event from '!!raw-loader!./../../../bindings/python/examples/7b_event_simple_event.py';
+import event_queue from '!!raw-loader!./../../../bindings/python/examples/7_event_queue.py';
+
+# Examples in Python
 
 In this section, you can find several examples that use the python binding of the `wallet.rs` library. You can also find examples of the code in the `/bindings/python/examples` folder of the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
 
@@ -72,7 +73,7 @@ The `wallet.rs` library uses a model of individual accounts to separate individu
 
 Each account is related to a specific IOTA network (mainnet or devnet), which is referenced by node properties such as node url. In this example, it is the `Chrysalis` testnet balancer.
 
-For more information about _client_options_ , please refer to the [Wallet Python API Reference](api_reference.md#clientoptions) section.
+For more information about _client_options_ , please refer to the [Wallet Python API Reference](../reference/python.md#clientoptions) section.
 
 <CodeBlock className="language-python">
   {b_create_account}
@@ -334,11 +335,11 @@ You can find detailed information about messages and payloads in the [Developer 
 
 ### Reattachments
 
-If you need to reattach a message, you should use the [`iota_wallet.promote(account_id, message_id)`](api_reference.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](api_reference.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your _account_id_ and _message_id_ as arguments.
+If you need to reattach a message, you should use the [`iota_wallet.promote(account_id, message_id)`](../reference/python.md#promoteaccount_id-message_id-walletmessagewalletmessage) or [`iota_wallet.reattach(account_id, message_id)`](../reference/python.md#reattachmessage_id-walletmessagewalletmessage) methods, sending your _account_id_ and _message_id_ as arguments.
 
 ### List of Messages (transactions)
 
-You can query for a list of all particular messages (transactions) related to the given account using [ `account.list_messages()` ](api_reference.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [ `account.message_count()` ](api_reference.md#message_countmessage_type-optional-int) method.
+You can query for a list of all particular messages (transactions) related to the given account using [ `account.list_messages()` ](../reference/python.md#list_messagescount-from-message_type-optional-listwalletmessagewalletmessage) method, and the related [ `account.message_count()` ](../reference/python.md#message_countmessage_type-optional-int) method.
 
 You can use those methods to check whether a message is confirmed, broadcast, etc. You should always _Sync_ the account with the Tangle before checking the confirmation status.
 

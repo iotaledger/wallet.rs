@@ -7,7 +7,7 @@ keywords:
 - jar
 - maven
 - environment variable
-- reference
+- getting started
 ---
 # Getting Started with Java
 
@@ -56,7 +56,7 @@ You can find the generated binaries in `wallet.rs/bindings/java/target/release`.
 
 Compiling for Android requires additional compilation instructions.
 
-You can find these instructions in the [Android development](android_development) section.
+You can find these instructions in [Getting Started with Java for Android](java_for_android.md).
 :::
 
 ### Step 2: Creating the Java Archive
@@ -91,7 +91,7 @@ After running one of these commands, you can find the jar file at `wallet.rs/bin
 
 ## Usage
 
-You can find more information on using the `wallet.rs` library's java binding in the [examples section](examples.md).
+You can find more information on using the `wallet.rs` library's java binding in the [examples section](../examples/java.md).
 
 ### Gradle
 
@@ -110,7 +110,7 @@ mvn exec:exec
 
 ## API Reference
 
-You can find the references for the binding's API in the [Java API Reference](api_reference) section.
+You can find the references for the binding's API in the [Java API Reference](../reference/java.mdx) section.
 
 ## Limitations
 

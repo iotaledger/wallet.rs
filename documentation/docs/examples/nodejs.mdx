@@ -1,5 +1,4 @@
 ---
-title: Examples
 description: Official IOTA Wallet Library Software Node.js examples.
 image: /img/logo/wallet_light.png
 keywords:
@@ -13,13 +12,15 @@ keywords:
 - reference
 ---
 import CodeBlock from '@theme/CodeBlock';
-import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/1-create-account.js';
-import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/2-generate-address.js';
-import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/3-check-balance.js';
-import send from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/4-send.js';
-import backup from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/5-backup.js';
-import restore from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/6-restore.js';
-import events from  '!!raw-loader!./../../../../bindings/nodejs/examples/binding_examples/7-events.js';
+import create_account from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/1-create-account.js';
+import generate_address from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/2-generate-address.js';
+import check_balance from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/3-check-balance.js';
+import send from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/4-send.js';
+import backup from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/5-backup.js';
+import restore from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/6-restore.js';
+import events from '!!raw-loader!./../../../bindings/nodejs/examples/binding_examples/7-events.js';
+
+# Examples in Node.js
 
 In this section, you will go over several examples that use the node.js binding of the `wallet.rs` library. You can also find examples of the code in the `/bindings/nodejs/examples` folder of the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/nodejs/examples).
 
@@ -80,7 +81,7 @@ Once you have created the backend storage, you can create individual accounts fo
 
 Each account is related to a specific IOTA network (mainnet and devnet), which is referenced by node properties such as node url. In this example, it is on the `Chrysalis` devnet balancer.
 
-You can refer to the [Wallet NodeJs API Reference](api_reference.md) for more information about _clientOptions_ .
+You can refer to the [Wallet Node.js API Reference](../reference/nodejs.md) for more information about _clientOptions_ .
 
 #### Alias
 
@@ -99,9 +100,9 @@ You can do this using `account.sync()`.`account.sync()` is performed automatical
 
 Once an account has been created, you can retrieve an instance using the following methods: 
 
-- [`AccountManager.getAccount(accountId)` ](api_reference.md#getaccountaccountid).
-- [`AccountManager.getAccountByAlias(alias)` ](api_reference.md#getaccountbyaliasalias).
-- [`AccountManager.getAccounts()` .](api_reference.md#getaccounts).
+- [`AccountManager.getAccount(accountId)` ](../reference/nodejs.md#getaccountaccountid).
+- [`AccountManager.getAccountByAlias(alias)` ](../reference/nodejs.md#getaccountbyaliasalias).
+- [`AccountManager.getAccounts()` .](../reference/nodejs.md#getaccounts).
 
 The most common methods of _account_ instance are:
 
@@ -232,4 +233,4 @@ data: {
 
 You can then use the _accountId_ to identify the account via `AccountManager.getAccount(accountId)`.
 
-Read more about Events in the [API reference](api_reference.md#addeventlistenerevent-cb).
+Read more about Events in the [API reference](../reference/nodejs.md#addeventlistenerevent-cb).

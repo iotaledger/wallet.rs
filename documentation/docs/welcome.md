@@ -12,6 +12,7 @@ keywords:
 - java
 - reference
 ---
+
 # Welcome
 
 Welcome to the official IOTA Wallet Library Software documentation. You can use our documentation to help streamline integrating an IOTA Wallet into your applications. If you want to learn more about the IOTA client libraries, you can check out our [blog post](https://blog.iota.org/the-new-iota-client-libraries-harder-better-faster-stronger/) on how they work.
@@ -43,11 +44,3 @@ You can also read our [Chrysalis documentation](https://wiki.iota.org/chrysalis-
 ## Testnet
 
 To join the Chrysalis public devnet, check out our [blog post](https://blog.iota.org/chrysalis-phase-2-testnet-out-now/). You can also learn more about the different Chrysalis components in our [Chrysalis documentation portal](https://wiki.iota.org/chrysalis-docs/welcome/).
-
-## What You Will Find Here
-
-This documentation has four paths:
-1. The [Overview](overview.md): a detailed overview of the wallet library. 
-2. [Libraries](libraries/overview.md): all available programming languages and their resources.
-3. The [Specification](specification.md): a detailed explanation requirements and functionality.
-4. [Contribute](contribute.md): how you can work on the wallet software, get in touch, join the community and become part of the X-Team!

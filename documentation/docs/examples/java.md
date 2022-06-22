@@ -10,7 +10,8 @@ keywords:
 - client
 - reference
 ---
-# Examples
+
+# Examples in Java
 
 This section will guide you through several examples using the Java binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/java/examples/java-app` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/java/examples/java-app).
 

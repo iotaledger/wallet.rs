@@ -6,9 +6,9 @@ keywords:
 - install
 - pip
 - unpack
-- reference
+- getting started
 ---
-# Getting Started with IOTA Wallet Python Binding
+# Getting Started with Python
 
 ## Security
 
@@ -55,7 +55,7 @@ To use the _iota_wallet_ you will need to add an import statement:
 import iota_wallet
 ```
 
-If you'd like more information on the _iota_wallet_ , you can print the documentation using the following snippet:
+If you'd like more information on the _iota_wallet_, you can print the documentation using the following snippet:
 
 ```python
 print(iota_wallet.__doc__)

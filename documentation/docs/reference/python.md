@@ -8,11 +8,11 @@ keywords:
 - type
 - reference
 ---
-# API Reference
+# Python API Reference
 
 :::info
 The following APIs will throw an exception if an error occurs.
-For all the optional values, the default values are the same as the ones in the [Rust API](../rust/api_reference.md).
+For all optional values, the default values are the same as in the [Rust API](rust.md).
 :::
 
 ## init_logger(config)

@@ -6,7 +6,7 @@ keywords:
 - install
 - cargo
 - system environment variables
-- explanation
+- getting started
 ---
 # Getting Started with Rust
 
