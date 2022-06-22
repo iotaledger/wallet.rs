@@ -7,6 +7,13 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
 } from '../address';
+import type {
+    BuildAliasOutputData,
+    BuildBasicOutputData,
+    BuildFoundryOutputData,
+    BuildNftOutputData,
+} from '../buildOutputData';
+import type { OutputOptions } from '../outputOptions';
 import type { OutputsToCollect } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
@@ -16,9 +23,39 @@ import type {
     NftOptions,
 } from '../transactionOptions';
 
-export type __SyncAccountMethod__ = {
-    name: 'SyncAccount';
-    data: AccountSyncOptions;
+export type __BuildAliasOutputMethod__ = {
+    name: 'BuildAliasOutput';
+    data: BuildAliasOutputData;
+};
+
+export type __BuildBasicOutputMethod__ = {
+    name: 'BuildBasicOutput';
+    data: BuildBasicOutputData;
+};
+
+export type __BuildFoundryOutputMethod__ = {
+    name: 'BuildFoundryOutput';
+    data: BuildFoundryOutputData;
+};
+
+export type __BuildNftOutputMethod__ = {
+    name: 'BuildNftOutput';
+    data: BuildNftOutputData;
+};
+
+export type __CollectOutputsMethod__ = {
+    name: 'CollectOutputs';
+    data: {
+        outputIdsToCollect: string[];
+    };
+};
+
+export type __ConsolidateOutputsMethod__ = {
+    name: 'ConsolidateOutputs';
+    data: {
+        force: boolean;
+        outputConsolidationThreshold?: number;
+    };
 };
 
 export type __GenerateAddressesMethod__ = {
@@ -31,13 +68,6 @@ export type __GenerateAddressesMethod__ = {
 
 export type __GetBalanceMethod__ = {
     name: 'GetBalance';
-};
-
-export type __SetCollectOutputsMethod__ = {
-    name: 'CollectOutputs';
-    data: {
-        outputIdsToCollect: string[];
-    };
 };
 
 export type __GetOutputMethod__ = {
@@ -85,6 +115,13 @@ export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
 };
 
+export type __MinimumRequiredStorageDepositMethod__ = {
+    name: 'MinimumRequiredStorageDeposit';
+    data: {
+        outputs: OutputTypes[];
+    };
+};
+
 export type __MintNativeTokenMethod__ = {
     name: 'MintNativeToken';
     data: {
@@ -92,6 +129,22 @@ export type __MintNativeTokenMethod__ = {
         options?: TransactionOptions;
     };
 };
+
+export type __MintNftsMethod__ = {
+    name: 'MintNfts';
+    data: {
+        nftsOptions: NftOptions[];
+        options?: TransactionOptions;
+    };
+};
+
+export type __PrepareOutputMethod__ = {
+    name: 'PrepareOutput';
+    data: {
+        options: OutputOptions;
+        transactionOptions?: TransactionOptions
+    }
+}
 
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
@@ -101,50 +154,10 @@ export type __PrepareSendAmountMethod__ = {
     };
 };
 
-export type __PrepareSendMicroTransactionMethod__ = {
-    name: 'PrepareSendMicroTransaction';
-    data: {
-        addressWithMicroAmounts: AddressWithMicroAmount[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __PrepareSendNativeTokenMethod__ = {
-    name: 'PrepareSendNativeToken';
-    data: {
-        addressNativeTokens: AddressNativeTokens[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __PrepareSendNftMethod__ = {
-    name: 'PrepareSendNft';
-    data: {
-        addressNftIds: AddressNftId[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __PrepareMintNftsMethod__ = {
-    name: 'PrepareMintNfts';
-    data: {
-        nftOptions: NftOptions[];
-        options?: TransactionOptions;
-    };
-};
-
 export type __PrepareTransactionMethod__ = {
     name: 'PrepareTransaction';
     data: {
         outputs: OutputTypes[];
-        options?: TransactionOptions;
-    };
-};
-
-export type __MintNftsMethod__ = {
-    name: 'MintNfts';
-    data: {
-        nftsOptions: NftOptions[];
         options?: TransactionOptions;
     };
 };
@@ -181,8 +194,8 @@ export type __SendNftMethod__ = {
     };
 };
 
-export type __SendTransactionMethod__ = {
-    name: 'SendTransaction';
+export type __SendOutputsMethod__ = {
+    name: 'SendOutputs';
     data: {
         outputs: OutputTypes[];
         options?: TransactionOptions;
@@ -208,6 +221,11 @@ export type __SubmitAndStoreTransactionMethod__ = {
     data: {
         signedTransactionData: SignedTransactionEssence;
     };
+};
+
+export type __SyncAccountMethod__ = {
+    name: 'SyncAccount';
+    data: AccountSyncOptions;
 };
 
 export type __TryCollectOutputsMethod__ = {

@@ -64,7 +64,10 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     ChangeStrongholdPassword {
-        password: String,
+        #[serde(rename = "currentPassword")]
+        current_password: String,
+        #[serde(rename = "newPassword")]
+        new_password: String,
         #[serde(rename = "keysToReEncrypt")]
         keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
     },
@@ -98,10 +101,13 @@ pub enum Message {
         /// Stronghold file password.
         password: String,
     },
+    /// Removes the latest account (account with the largest account index).
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    RemoveLatestAccount,
     /// Deletes the storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "storage")]
-    DeleteStorage,
+    DeleteAccountsAndDatabase,
     /// Generates a new mnemonic.
     /// Expected response: [`GeneratedMnemonic`](crate::message_interface::Response::GeneratedMnemonic)
     GenerateMnemonic,
@@ -145,6 +151,18 @@ pub enum Message {
     #[cfg(feature = "events")]
     #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
+    /// Transforms bech32 to hex
+    /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
+    Bech32ToHex(String),
+    /// Transforms a hex encoded address to a bech32 encoded address
+    /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
+    HexToBech32 {
+        /// Hex encoded bech32 address
+        hex: String,
+        /// Human readable part
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
+    },
 }
 
 // Custom Debug implementation to not log secrets
@@ -161,11 +179,12 @@ impl Debug for Message {
             ),
             #[cfg(feature = "stronghold")]
             Message::ChangeStrongholdPassword {
-                password: _,
+                current_password: _,
+                new_password: _,
                 keys_to_re_encrypt,
             } => write!(
                 f,
-                "ChangeStrongholdPassword{{ password: <omitted>, keys_to_re_encrypt: {:?} }}",
+                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted>, keys_to_re_encrypt: {:?} }}",
                 keys_to_re_encrypt
             ),
             #[cfg(feature = "stronghold")]
@@ -185,10 +204,11 @@ impl Debug for Message {
                 "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
                 account_gap_limit, address_gap_limit
             ),
+            Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
             Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
             #[cfg(feature = "storage")]
-            Message::DeleteStorage => write!(f, "DeleteStorage"),
+            Message::DeleteAccountsAndDatabase => write!(f, "DeleteAccountsAndDatabase"),
             Message::GenerateMnemonic => write!(f, "GenerateMnemonic"),
             Message::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
@@ -210,6 +230,10 @@ impl Debug for Message {
             #[cfg(feature = "events")]
             #[cfg(debug_assertions)]
             Message::EmitTestEvent(event) => write!(f, "EmitTestEvent({:?})", event),
+            Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({:?})", bech32_address),
+            Message::HexToBech32 { hex, bech32_hrp } => {
+                write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
+            }
         }
     }
 }
@@ -231,7 +255,9 @@ impl Serialize for Message {
             Message::RestoreBackup { .. } => serializer.serialize_unit_variant("Message", 7, "RestoreBackup"),
             Message::GenerateMnemonic => serializer.serialize_unit_variant("Message", 8, "GenerateMnemonic"),
             Message::VerifyMnemonic(_) => serializer.serialize_unit_variant("Message", 9, "VerifyMnemonic"),
-            Message::DeleteStorage => serializer.serialize_unit_variant("Message", 10, "DeleteStorage"),
+            Message::DeleteAccountsAndDatabase => {
+                serializer.serialize_unit_variant("Message", 10, "DeleteAccountsAndDatabase")
+            }
             Message::SetClientOptions(_) => serializer.serialize_unit_variant("Message", 11, "SetClientOptions"),
             Message::GetNodeInfo { .. } => serializer.serialize_unit_variant("Message", 12, "GetNodeInfo"),
             #[cfg(feature = "stronghold")]
@@ -263,6 +289,11 @@ impl Serialize for Message {
             Message::ChangeStrongholdPassword { .. } => {
                 serializer.serialize_unit_variant("Message", 21, "ChangeStrongholdPassword")
             }
+            Message::RemoveLatestAccount { .. } => {
+                serializer.serialize_unit_variant("Message", 22, "RemoveLatestAccount")
+            }
+            Message::Bech32ToHex(_) => serializer.serialize_unit_variant("Message", 23, "Bech32ToHex"),
+            Message::HexToBech32 { .. } => serializer.serialize_unit_variant("Message", 24, "HexToBech32"),
         }
     }
 }

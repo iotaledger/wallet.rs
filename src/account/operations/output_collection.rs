@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
 };
@@ -42,7 +42,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_COLLECTION] get_unlockable_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         // Get outputs for the collect
         let mut output_ids_to_collect: HashSet<OutputId> = HashSet::new();
@@ -61,16 +61,12 @@ impl AccountHandle {
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
                                     output,
-                                    local_time as u32,
-                                    milestone_index,
+                                    local_time,
                                 )
                             {
                                 match outputs_to_collect {
                                     OutputsToCollect::MicroTransactions => {
-                                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) = basic_output
-                                            .unlock_conditions()
-                                            .get(StorageDepositReturnUnlockCondition::KIND)
-                                        {
+                                        if let Some(sdr) = basic_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != basic_output.amount() {
                                                 output_ids_to_collect.insert(output_data.output_id);
@@ -99,16 +95,12 @@ impl AccountHandle {
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
                                     output,
-                                    local_time as u32,
-                                    milestone_index,
+                                    local_time,
                                 )
                             {
                                 match outputs_to_collect {
                                     OutputsToCollect::MicroTransactions => {
-                                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) = nft_output
-                                            .unlock_conditions()
-                                            .get(StorageDepositReturnUnlockCondition::KIND)
-                                        {
+                                        if let Some(sdr) = nft_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != nft_output.amount() {
                                                 output_ids_to_collect.insert(output_data.output_id);
@@ -198,7 +190,7 @@ impl AccountHandle {
         possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<TransactionResult>> {
         log::debug!("[OUTPUT_COLLECTION] collect_outputs_internal");
-        let (local_time, milestone_index) = self.get_time_and_milestone_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let mut outputs_to_collect = Vec::new();
@@ -260,7 +252,7 @@ impl AccountHandle {
 
                 // if expired, we can send everything to us
                 // todo: check again if the expired address is in the account
-                if is_expired(&output_data.output, local_time as u32, milestone_index) {
+                if is_expired(&output_data.output, local_time) {
                     new_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         new_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -270,9 +262,7 @@ impl AccountHandle {
                     let mut storage_deposit = false;
                     let mut return_amount = 0;
                     if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                        if let Some(UnlockCondition::StorageDepositReturn(sdr)) =
-                            unlock_conditions.get(StorageDepositReturnUnlockCondition::KIND)
-                        {
+                        if let Some(sdr) = unlock_conditions.storage_deposit_return() {
                             storage_deposit = true;
                             return_amount = sdr.amount();
                             // create return output

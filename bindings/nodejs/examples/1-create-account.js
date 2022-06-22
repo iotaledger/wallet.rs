@@ -48,7 +48,6 @@ async function createAccountManager() {
 
     const manager = new AccountManager(accountManagerOptions);
     await manager.storeMnemonic(process.env.MNEMONIC);
-    await manager.setStrongholdPassword(process.env.SH_PASSWORD);
     return manager;
 }
 

@@ -37,7 +37,7 @@ impl AccountHandle {
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let outputs = vec![AddressAndNftId {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///     address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
     ///     nft_id: NftId::from_str("04f9b54d488d2e83a6c90db08ae4b39651bbba8a")?,
     /// }];
     ///
@@ -60,7 +60,7 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_nft()](crate::account::handle::AccountHandle.send_nft)
-    pub async fn prepare_send_nft(
+    async fn prepare_send_nft(
         &self,
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
@@ -83,20 +83,10 @@ impl AccountHandle {
                 }
             }) {
                 if let Output::Nft(nft_output) = &nft_output_data.output {
-                    // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
-                    // updated address unlock conditions
-                    let mut nft_builder =
-                        NftOutputBuilder::new_with_amount(nft_output.amount(), address_and_nft_id.nft_id)?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
-                    for native_token in nft_output.native_tokens().iter() {
-                        nft_builder = nft_builder.add_native_token(native_token.clone());
-                    }
-                    for feature in nft_output.features().iter() {
-                        nft_builder = nft_builder.add_feature(feature.clone());
-                    }
-                    for immutable_feature in nft_output.immutable_features().iter() {
-                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
-                    }
+                    // Set the nft id and new address unlock condition
+                    let nft_builder = NftOutputBuilder::from(nft_output)
+                        .with_nft_id(address_and_nft_id.nft_id)
+                        .with_unlock_conditions(vec![UnlockCondition::Address(AddressUnlockCondition::new(address))]);
                     outputs.push(nft_builder.finish_output()?);
                     // Add custom input
                     custom_inputs.push(nft_output_data.output_id);

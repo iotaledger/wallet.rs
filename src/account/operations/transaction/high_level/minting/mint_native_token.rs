@@ -12,12 +12,14 @@ use iota_client::bee_block::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
         SimpleTokenScheme, TokenId, TokenScheme,
     },
+    payload::transaction::TransactionId,
+    BlockId,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
+    account::{handle::AccountHandle, TransactionOptions},
     Error,
 };
 
@@ -36,6 +38,16 @@ pub struct NativeTokenOptions {
     /// Foundry metadata
     #[serde(rename = "foundryMetadata")]
     pub foundry_metadata: Option<Vec<u8>>,
+}
+
+/// The result of a minting native token transaction, block_id is an option because submitting the transaction could
+/// fail
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MintTokenTransactionResult {
+    pub token_id: TokenId,
+    pub transaction_id: TransactionId,
+    pub block_id: Option<BlockId>,
 }
 
 impl AccountHandle {
@@ -64,7 +76,7 @@ impl AccountHandle {
         &self,
         native_token_options: NativeTokenOptions,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<MintTokenTransactionResult> {
         log::debug!("[TRANSACTION] mint_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
@@ -73,10 +85,7 @@ impl AccountHandle {
         let controller_address = match &native_token_options.account_address {
             Some(bech32_address) => {
                 let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
-                if account_addresses
-                    .binary_search_by_key(&address, |address| address.address.inner)
-                    .is_err()
-                {
+                if !account_addresses.iter().any(|addr| addr.address.inner == address) {
                     return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
                 }
                 address
@@ -109,6 +118,12 @@ impl AccountHandle {
         drop(account);
 
         if let Output::Alias(alias_output) = &existing_alias_output.output {
+            // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
+            let new_alias_output_builder = AliasOutputBuilder::from(alias_output)
+                .with_alias_id(alias_id)
+                .with_state_index(alias_output.state_index() + 1)
+                .with_foundry_counter(alias_output.foundry_counter() + 1);
+
             // create foundry output with minted native tokens
             let foundry_id = FoundryId::build(
                 &AliasAddress::new(alias_id),
@@ -116,24 +131,6 @@ impl AccountHandle {
                 SimpleTokenScheme::KIND,
             );
             let token_id = TokenId::from(foundry_id);
-
-            // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
-            let mut new_alias_output_builder =
-                AliasOutputBuilder::new_with_amount(existing_alias_output.amount, alias_id)?
-                    .with_state_index(alias_output.state_index() + 1)
-                    .with_foundry_counter(alias_output.foundry_counter() + 1)
-                    .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                        StateControllerAddressUnlockCondition::new(controller_address),
-                    ))
-                    .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                        controller_address,
-                    )));
-            for feature in alias_output.features().iter() {
-                new_alias_output_builder = new_alias_output_builder.add_feature(feature.clone());
-            }
-            for immutable_feature in alias_output.immutable_features().iter() {
-                new_alias_output_builder = new_alias_output_builder.add_immutable_feature(immutable_feature.clone());
-            }
 
             let outputs = vec![
                 new_alias_output_builder.finish_output()?,
@@ -165,13 +162,19 @@ impl AccountHandle {
                     .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
                     .finish_output()?,
             ];
-            self.send(outputs, options).await
+            self.send(outputs, options)
+                .await
+                .map(|transaction_result| MintTokenTransactionResult {
+                    token_id,
+                    transaction_id: transaction_result.transaction_id,
+                    block_id: transaction_result.block_id,
+                })
         } else {
             unreachable!("We checked if it's an alias output before")
         }
     }
 
-    // Get an existing alias output or create a new one
+    /// Get an existing alias output or create a new one
     pub(crate) async fn get_or_create_alias_output(
         &self,
         controller_address: Address,
@@ -211,23 +214,20 @@ impl AccountHandle {
                         .finish_output()?,
                 ];
                 let transaction_result = self.send(outputs, options).await?;
+
                 log::debug!("[TRANSACTION] sent alias output");
                 if let Some(block_id) = transaction_result.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
-                } else {
-                    self.sync_pending_transactions().await?;
                 }
-
                 // Try to get the transaction confirmed
                 for _ in 0..10 {
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                    self.sync_pending_transactions().await?;
                     let balance = self.sync(None).await?;
                     if !balance.aliases.is_empty() {
                         return Ok(balance.aliases[0]);
                     }
+                    self.sync_pending_transactions().await?;
+                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 }
-
                 Err(Error::MintingFailed("Alias output creation took too long".to_string()))
             }
         }

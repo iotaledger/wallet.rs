@@ -11,7 +11,6 @@ use iota_client::{
             },
             BasicOutputBuilder,
         },
-        payload::milestone::MilestoneIndex,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -50,7 +49,7 @@ impl AccountHandle {
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let outputs = vec![AddressWithMicroAmount{
-    ///    address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///    address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
     ///    amount: 1,
     ///    return_address: None,
     ///    expiration: None,
@@ -69,6 +68,7 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<TransactionResult> {
+        log::debug!("[TRANSACTION] send_micro_transaction");
         let prepared_trasacton = self
             .prepare_send_micro_transaction(addresses_with_micro_amount, options)
             .await?;
@@ -77,19 +77,17 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_micro_transaction()](crate::account::handle::AccountHandle.send_micro_transaction)
-    pub async fn prepare_send_micro_transaction(
+    async fn prepare_send_micro_transaction(
         &self,
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSACTION] prepare_send_micro_transaction");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
-        let (local_time, _) = self.get_time_and_milestone_checked().await?;
-        let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
+        let local_time = self.client.get_time_checked().await?;
 
         let mut outputs = Vec::new();
         for address_with_amount in addresses_with_micro_amount {
@@ -104,6 +102,11 @@ impl AccountHandle {
                 None,
             )?;
 
+            let expiration_time = match address_with_amount.expiration {
+                Some(expiration_time) => local_time + expiration_time,
+                None => local_time + DEFAULT_EXPIRATION_TIME,
+            };
+
             outputs.push(
                 // Add address_and_amount.amount+storage_deposit_amount, so receiver can get address_and_amount.amount
                 BasicOutputBuilder::new_with_amount(address_with_amount.amount + storage_deposit_amount)?
@@ -114,8 +117,6 @@ impl AccountHandle {
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         address,
-                        // 0 means it's ignored during validation
-                        MilestoneIndex::new(0),
                         expiration_time,
                     )?))
                     .finish_output()?,

@@ -26,7 +26,7 @@ const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_
 async fn main() -> Result<()> {
     let outputs = vec![AddressWithAmount {
         // Address to which we want to send the amount.
-        address: "rms1qruzprxum2934lr3p77t96pzlecxv8pjzvtjrzdcgh2f5exa22n6ga0vm69".to_string(),
+        address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         // The amount to send.
         amount: 1_000_000,
     }];

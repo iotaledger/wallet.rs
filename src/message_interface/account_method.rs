@@ -17,8 +17,10 @@ use serde::Deserialize;
 
 use crate::{
     account::operations::{
-        address_generation::AddressGenerationOptions, output_collection::OutputsToCollect, syncing::SyncOptions,
-        transaction::TransactionOptions,
+        address_generation::AddressGenerationOptions,
+        output_collection::OutputsToCollect,
+        syncing::SyncOptions,
+        transaction::{prepare_output::OutputOptionsDto, TransactionOptions},
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
     AddressAndNftId, AddressNativeTokens, NativeTokenOptions, NftOptions,
@@ -96,6 +98,13 @@ pub enum AccountMethod {
         #[serde(rename = "immutableFeatures")]
         immutable_features: Option<Vec<FeatureDto>>,
     },
+    /// Consolidate outputs.
+    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
+    ConsolidateOutputs {
+        force: bool,
+        #[serde(rename = "outputConsolidationThreshold")]
+        output_consolidation_threshold: Option<usize>,
+    },
     /// Generate a new unused address.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
     GenerateAddresses {
@@ -160,17 +169,16 @@ pub enum AccountMethod {
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
+    /// Prepare an output.
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
+    PrepareOutput {
+        options: OutputOptionsDto,
+        transaction_options: Option<TransactionOptions>,
+    },
     /// Prepare transaction.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareTransaction {
         outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare mint nft.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareMintNfts {
-        #[serde(rename = "nftOptions")]
-        nfts_options: Vec<NftOptions>,
         options: Option<TransactionOptions>,
     },
     /// Prepare send amount.
@@ -180,29 +188,8 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
-    /// Prepare send amount below minimum storage deposit.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendMicroTransaction {
-        #[serde(rename = "addressWithMicroAmount")]
-        addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare send native tokens.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendNativeTokens {
-        #[serde(rename = "addressNativeTokens")]
-        addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransactionOptions>,
-    },
-    /// Prepare send nft.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareSendNft {
-        #[serde(rename = "addressAndNftId")]
-        addresses_nft_ids: Vec<AddressAndNftId>,
-        options: Option<TransactionOptions>,
-    },
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
-    /// consolidate outputs if necessary.
+    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     SyncAccount {
         /// Sync options
@@ -239,9 +226,9 @@ pub enum AccountMethod {
     /// Set the alias of the account.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetAlias { alias: String },
-    /// Send funds.
+    /// Send outputs in a transaction.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
-    SendTransaction {
+    SendOutputs {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptions>,
     },
@@ -266,7 +253,7 @@ pub enum AccountMethod {
     /// Collect outputs.
     /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
     CollectOutputs {
-        #[serde(rename = "outputsToCollect")]
+        #[serde(rename = "outputIdsToCollect")]
         output_ids_to_collect: Vec<OutputId>,
     },
 }

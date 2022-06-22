@@ -3,16 +3,17 @@
 
 //! cargo run --example threads --release
 
-// In this example we will try to send transactions from multiple threads simultaneously
+// In this example we will spam transactions from multiple threads simultaneously to our own address
 
-use iota_client::bee_block::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder,
-    },
+use std::env;
+
+use dotenv::dotenv;
+use iota_client::bee_block::output::{
+    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+    BasicOutputBuilder,
 };
 use iota_wallet::{
+    account::TransactionOptions,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
@@ -24,9 +25,10 @@ async fn main() -> Result<()> {
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();
 
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
-    )?;
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+    let mnemonic = env::var("NONSECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(&mnemonic)?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -48,36 +50,49 @@ async fn main() -> Result<()> {
         }
     };
 
-    let _address = account.generate_addresses(10, None).await?;
-    for ad in _address {
-        println!("{}", ad.address().to_bech32());
-    }
+    // One address gets generated during account creation
+    let address = account.list_addresses().await?[0].address().clone();
+    println!("{}", address.to_bech32());
+
     let balance = account.sync(None).await?;
     println!("Balance: {:?}", balance);
 
+    if balance.available == 0 {
+        panic!("Account has no available balance");
+    }
+
     for _ in 0..1000 {
         let mut threads = Vec::new();
-        for n in 0..5 {
+        for n in 0..10 {
             let account_ = account.clone();
+            let address_ = *address.as_ref();
+
             threads.push(async move {
                 tokio::spawn(async move {
                     // send transaction
                     let outputs = vec![
                         BasicOutputBuilder::new_with_amount(1_000_000)?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                Address::try_from_bech32(
-                                    "atoi1qz8wq4ln6sn68hvgwp9r26dw3emdlg7at0mrtmhz709zwwcxvpp46xx2cmj",
-                                )?
-                                .1,
-                            )))
-                            .finish_output()?,
+                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address_)))
+                            .finish_output()?;
+                        // amount of outputs in the transaction (one additional output might be added for the remaining amount)
+                        1
                     ];
-                    let res = account_.send(outputs, None).await?;
-                    println!(
-                        "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
-                        n,
-                        res.block_id.expect("No block created yet")
-                    );
+                    // Skip sync here, we already synced before and don't need to do it again for every transaction
+                    let res = account_
+                        .send(
+                            outputs,
+                            Some(TransactionOptions {
+                                skip_sync: true,
+                                ..Default::default()
+                            }),
+                        )
+                        .await?;
+                    if let Some(block_id) = res.block_id {
+                        println!(
+                            "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
+                            n, block_id
+                        );
+                    }
                     iota_wallet::Result::Ok(n)
                 })
                 .await
@@ -86,16 +101,13 @@ async fn main() -> Result<()> {
 
         let results = futures::future::try_join_all(threads).await?;
         for thread in results {
-            match thread {
-                Ok(res) => println!("{}", res),
-                Err(e) => println!("{}", e),
+            if let Err(e) = thread {
+                println!("{e}");
+                // Sync when getting an error, because that's probably when no outputs are available anymore
+                println!("Syncing account...");
+                account.sync(None).await?;
             }
         }
-        println!("sleep");
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
-    // wait until user press enter so background tasks keep running
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input).unwrap();
     Ok(())
 }

@@ -60,6 +60,16 @@ async fn backup_and_restore() -> Result<()> {
         .finish()
         .await?;
 
+    // Wrong password fails
+    restore_manager
+        .restore_backup(
+            PathBuf::from("test-storage/backup_and_restore/backup.stronghold"),
+            "wrong password".to_string(),
+        )
+        .await
+        .unwrap_err();
+
+    // Correct password works, even after trying with a wrong one before
     restore_manager
         .restore_backup(
             PathBuf::from("test-storage/backup_and_restore/backup.stronghold"),

@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    bee_block::{output::OutputId, payload::transaction::TransactionId},
+    bee_block::{output::OutputId, payload::transaction::TransactionId, Block, BlockId},
     bee_rest_api::types::responses::OutputResponse,
 };
 
@@ -31,8 +31,23 @@ use crate::{
 };
 
 impl AccountHandle {
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions and
-    /// consolidate outputs if necessary.
+    /// Retries (promotes or reattaches) a block for provided block id until it's included (referenced by a
+    /// milestone). This function is re-exported from the client library and default interval is as defined in iota.rs.
+    /// Returns the included block at first position and additional reattached blocks
+    pub async fn retry_until_included(
+        &self,
+        block_id: &BlockId,
+        interval: Option<u64>,
+        max_attempts: Option<u64>,
+    ) -> crate::Result<Vec<(BlockId, Block)>> {
+        Ok(self
+            .client
+            .retry_until_included(block_id, interval, max_attempts)
+            .await?)
+    }
+
+    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// if necessary.
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let options = options.unwrap_or_default();
         log::debug!("[SYNC] start syncing with {:?}", options);

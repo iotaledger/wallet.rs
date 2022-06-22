@@ -14,7 +14,7 @@ export enum OutputsToCollect {
 
 /** An output with metadata */
 export interface OutputData {
-    /** The output id */
+    /** The identifier of an Output */
     outputId: string;
     /** The metadata of the output */
     metadata: IOutputMetadataResponse;

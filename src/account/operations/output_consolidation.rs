@@ -3,7 +3,7 @@
 
 use iota_client::bee_block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, Output, OutputId,
+    BasicOutputBuilder, NativeTokensBuilder, Output,
 };
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::SecretManager;
@@ -85,20 +85,34 @@ impl AccountHandle {
             // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited)
             // and is <= max inputs
             for outputs in outputs_on_one_address.chunks(16) {
-                let output_sum = outputs.iter().map(|o| o.amount).sum();
+                let mut total_amount = 0;
+                let mut custom_inputs = Vec::with_capacity(16);
+                let mut total_native_tokens = NativeTokensBuilder::new();
+                for output_data in outputs {
+                    total_amount += output_data.amount;
+
+                    custom_inputs.push(output_data.output_id);
+
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    };
+                }
+
                 let consolidation_output = vec![
-                    BasicOutputBuilder::new_with_amount(output_sum)?
+                    BasicOutputBuilder::new_with_amount(total_amount)?
                         .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                             outputs[0].address,
                         )))
+                        .with_native_tokens(total_native_tokens.finish()?)
                         .finish_output()?,
                 ];
+
                 match self
                     .finish_transaction(
                         consolidation_output,
                         Some(TransactionOptions {
                             skip_sync: true,
-                            custom_inputs: Some(outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()),
+                            custom_inputs: Some(custom_inputs),
                             ..Default::default()
                         }),
                     )

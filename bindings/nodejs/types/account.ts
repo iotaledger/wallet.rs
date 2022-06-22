@@ -1,4 +1,5 @@
-import type { Address } from './address';
+import type { INativeToken } from '@iota/types';
+import type { Address, AddressWithUnspentOutputs } from './address';
 import type { OutputData } from './output';
 import type { Transaction } from './transaction';
 
@@ -12,30 +13,39 @@ export interface AccountBalance {
     total: string;
     available: string;
     requiredStorageDeposit: string;
-    nativeTokens: nativeTokensMap;
+    nativeTokens: INativeToken[];
     nfts: string[];
     aliases: string[];
     foundries: string[];
-    potentiallyLockedOutputs: potentiallyLockedOutputsMap;
+    /**
+     * Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
+     * TimelockUnlockCondition or ExpirationUnlockCondition this can change at any time
+     */
+    potentiallyLockedOutputs: { [outputId: string]: boolean };
 }
 
-export type nativeTokensMap = {
-    [tokenId: string]: number;
-};
-
-export type potentiallyLockedOutputsMap = {
-    [outputId: string]: boolean;
-};
-
 export interface AccountSyncOptions {
+    /**
+     * Specific Bech32 encoded addresses of the account to sync, if addresses are provided,
+     * then `address_start_index` will be ignored
+     */
     addresses?: string[];
+    /**
+     * Address index from which to start syncing addresses. 0 by default, using a higher index will be faster because
+     * addresses with a lower index will be skipped, but could result in a wrong balance for that reason
+     */
     addressStartIndex?: number;
-    automaticOutputConsolidation?: boolean;
+    /**
+     * Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 5
+     * seconds. But if we change the client options, we need to resync, because the new node could be from a nother
+     * network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
+     * addresses. Default: false.
+     */
     forceSyncing?: boolean;
+    /** Checks pending transactions and promotes/reattaches them if necessary.  Default: true. */
     syncPendingTransactions?: boolean;
+    /** Specifies if only basic outputs should be synced or also alias and nft outputs. Default: true. */
     syncAliasesAndNfts?: boolean;
-    tryCollectOutputs?: boolean;
-    outputConsolidationThreshold?: number;
 }
 
 export interface AccountMeta {
@@ -44,25 +54,15 @@ export interface AccountMeta {
     alias: string;
     publicAddresses: Address[];
     internalAddresses: Address[];
-    addressesWithUnspentOutputs: Address[];
-    outputs: OutputsMap;
+    addressesWithUnspentOutputs: AddressWithUnspentOutputs[];
+    outputs: { [outputId: string]: OutputData };
+    /** Output IDs of unspent outputs that are currently used as input for transactions */
     lockedOutputs: Set<string>;
-    unspentOutputs: OutputsMap;
-    transactions: TransactionsMap;
+    unspentOutputs: { [outputId: string]: OutputData };
+    transactions: { [transactionId: string]: Transaction };
+    /** Transaction IDs of pending transactions */
     pendingTransactions: Set<string>;
-    accountOptions: {
-        outputConsolidationThreshold: number;
-        automaticOutputConsolidation: boolean;
-    };
 }
-
-export type OutputsMap = {
-    [outputId: string]: OutputData;
-};
-
-export type TransactionsMap = {
-    [transactionId: string]: Transaction;
-};
 
 export enum CoinType {
     IOTA = 4218,

@@ -105,6 +105,9 @@ pub enum Error {
     /// Minting failed
     #[error("minting failed {0}")]
     MintingFailed(String),
+    /// Burning or melting failed
+    #[error("burning or melting failed {0}")]
+    BurningOrMeltingFailed(String),
     /// Nft not found in unspent outputs
     #[error("nft not found in unspent outputs")]
     NftNotFoundInUnspentOutputs,
@@ -197,6 +200,7 @@ impl serde::Serialize for Error {
             Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
             Self::AddressNotFoundInAccount(_) => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
             Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
+            Self::BurningOrMeltingFailed(_) => serialize_variant(self, serializer, "BurningOrMeltingFailed"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
             Self::StdThreadJoinError => serialize_variant(self, serializer, "StdThreadJoinError"),

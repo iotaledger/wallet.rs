@@ -5,6 +5,7 @@ mod build_transaction;
 pub(crate) mod high_level;
 mod input_selection;
 mod options;
+pub(crate) mod prepare_output;
 mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
@@ -48,7 +49,7 @@ impl AccountHandle {
     /// will retry sending the transaction during syncing.
     /// ```ignore
     /// let outputs = vec![TransactionOutput {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///     address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
     ///     amount: 1_000_000,
     ///     output_kind: None,
     /// }];
@@ -160,12 +161,11 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] submit_and_store_transaction");
 
         // Validate transaction before sending and storing it
-        let (local_time, milestone_index) = self.client.get_time_and_milestone_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         let conflict = verify_semantic(
             &signed_transaction_data.inputs_data,
             &signed_transaction_data.transaction_payload,
-            milestone_index,
             local_time,
         )?;
 

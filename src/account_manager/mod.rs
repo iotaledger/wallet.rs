@@ -4,15 +4,12 @@
 pub(crate) mod builder;
 pub(crate) mod operations;
 
-use std::{
-    collections::hash_map::Entry,
-    sync::{
-        atomic::{AtomicUsize, Ordering},
-        Arc,
-    },
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
 };
 
-use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
+use iota_client::{bee_block::output::NativeTokensBuilder, secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -74,6 +71,44 @@ impl AccountManager {
     /// Get all accounts
     pub async fn get_accounts(&self) -> crate::Result<Vec<AccountHandle>> {
         Ok(self.accounts.read().await.clone())
+    }
+
+    /// Removes the latest account (account with the largest account index).
+    pub async fn remove_latest_account(&self) -> crate::Result<()> {
+        let mut accounts = self.accounts.write().await;
+
+        let mut largest_account_index_opt = None;
+        for account in accounts.iter() {
+            let account_index = *account.read().await.index();
+            if let Some(largest_account_index) = largest_account_index_opt {
+                if account_index > largest_account_index {
+                    largest_account_index_opt = Some(account_index);
+                }
+            } else {
+                largest_account_index_opt = Some(account_index)
+            }
+        }
+
+        if let Some(largest_account_index) = largest_account_index_opt {
+            for i in 0..accounts.len() {
+                if let Some(account) = accounts.get(i) {
+                    if *account.read().await.index() == largest_account_index {
+                        let _ = accounts.remove(i);
+
+                        #[cfg(feature = "storage")]
+                        self.storage_manager
+                            .lock()
+                            .await
+                            .remove_account(largest_account_index)
+                            .await?;
+
+                        return Ok(());
+                    }
+                }
+            }
+        }
+
+        Ok(())
     }
 
     /// Get the [SecretManager]
@@ -145,21 +180,31 @@ impl AccountManager {
 
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance { ..Default::default() };
+        let mut balance: AccountBalance = Default::default();
+
         let accounts = self.accounts.read().await;
+        let mut total_native_tokens = NativeTokensBuilder::new();
         for account in accounts.iter() {
             let account_balance = account.balance().await?;
             balance.total += account_balance.total;
             balance.available += account_balance.available;
-            // todo set other values
+            balance.required_storage_deposit += account_balance.required_storage_deposit;
+            balance.nfts.extend(account_balance.nfts.into_iter());
+            balance.aliases.extend(account_balance.aliases.into_iter());
+            balance.foundries.extend(account_balance.foundries.into_iter());
+            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
         }
+        balance.native_tokens = total_native_tokens.finish()?;
+
         Ok(balance)
     }
 
     /// Sync all accounts
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
-        let mut balance = AccountBalance { ..Default::default() };
+        let mut balance: AccountBalance = Default::default();
+
         let accounts = self.accounts.read().await;
+        let mut total_native_tokens = NativeTokensBuilder::new();
         for account in accounts.iter() {
             let account_balance = account.sync(options.clone()).await?;
             balance.total += account_balance.total;
@@ -168,17 +213,10 @@ impl AccountManager {
             balance.nfts.extend(account_balance.nfts.into_iter());
             balance.aliases.extend(account_balance.aliases.into_iter());
             balance.foundries.extend(account_balance.foundries.into_iter());
-            for (token_id, amount) in account_balance.native_tokens {
-                match balance.native_tokens.entry(token_id) {
-                    Entry::Vacant(e) => {
-                        e.insert(amount);
-                    }
-                    Entry::Occupied(mut e) => {
-                        *e.get_mut() += amount;
-                    }
-                }
-            }
+            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
         }
+        balance.native_tokens = total_native_tokens.finish()?;
+
         Ok(balance)
     }
 
@@ -198,6 +236,13 @@ impl AccountManager {
     {
         let mut emitter = self.event_emitter.lock().await;
         emitter.on(events, handler);
+    }
+
+    #[cfg(feature = "events")]
+    /// Remove wallet event listeners, empty vec will remove all listeners
+    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
+        let mut emitter = self.event_emitter.lock().await;
+        emitter.clear(events);
     }
 
     /// Generates a new random mnemonic.
@@ -221,8 +266,10 @@ impl AccountManager {
         Ok(())
     }
 
+    /// Deletes the accounts and database folder.
     #[cfg(feature = "storage")]
-    pub async fn delete_storage(&self) -> crate::Result<()> {
+    pub async fn delete_accounts_and_database(&self) -> crate::Result<()> {
+        self.accounts.write().await.clear();
         std::fs::remove_dir_all(self.storage_options.storage_path.clone())?;
         Ok(())
     }

@@ -42,6 +42,99 @@ async fn account_ordering() -> Result<()> {
 }
 
 #[tokio::test]
+async fn remove_latest_account() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
+
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    let recreated_account_index = {
+        // Mnemonic without balance.
+        let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+        )?;
+
+        let manager = AccountManager::builder()
+            .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+            .with_client_options(client_options.clone())
+            .with_storage_path("test-storage/remove_latest_account")
+            .finish()
+            .await?;
+
+        // Create two accounts.
+        let first_account = manager.create_account().finish().await?;
+        let _second_account = manager.create_account().finish().await?;
+        assert!(manager.get_accounts().await.unwrap().len() == 2);
+
+        // Remove `second_account`.
+        manager
+            .remove_latest_account()
+            .await
+            .expect("cannot remove latest account");
+
+        // Check if the `second_account` was removed successfully.
+        let accounts = manager.get_accounts().await.unwrap();
+        assert!(accounts.len() == 1);
+        assert_eq!(
+            *accounts.get(0).unwrap().read().await.index(),
+            *first_account.read().await.index()
+        );
+
+        // Remove `first_account`.
+        manager
+            .remove_latest_account()
+            .await
+            .expect("cannot remove latest account");
+
+        // Check if the `first_account` was removed successfully. All accounts should be removed.
+        let accounts = manager.get_accounts().await.unwrap();
+        assert!(accounts.is_empty());
+
+        // Try remove another time (even if there is nothing to remove).
+        manager
+            .remove_latest_account()
+            .await
+            .expect("cannot remove latest account");
+
+        let accounts = manager.get_accounts().await.unwrap();
+        assert!(accounts.is_empty());
+
+        // Recreate a new account and return their index.
+
+        let recreated_account = manager.create_account().finish().await?;
+        assert_eq!(manager.get_accounts().await.unwrap().len(), 1);
+        let recreated_account_index = *recreated_account.read().await.index();
+
+        recreated_account_index
+    };
+
+    // Restore dropped `AccountManager` from above.
+
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options.clone())
+        .with_storage_path("test-storage/remove_latest_account")
+        .finish()
+        .await?;
+
+    let accounts = manager.get_accounts().await.unwrap();
+
+    // Check if accounts with `recreated_account_index` exist.
+    assert_eq!(accounts.len(), 1);
+    assert_eq!(*accounts.get(0).unwrap().read().await.index(), recreated_account_index);
+
+    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
+    #[cfg(debug_assertions)]
+    manager.verify_integrity().await?;
+    Ok(())
+}
+
+#[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
     let client_options = ClientOptions::new()
@@ -168,6 +261,38 @@ async fn account_first_address_exists() -> Result<()> {
     assert_eq!(account.list_addresses().await?.first().unwrap().internal(), &false);
 
     std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
+    Ok(())
+}
+
+#[tokio::test]
+async fn account_default_coin_type() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/account_default_coin_type").unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_storage_path("test-storage/account_default_coin_type")
+        .finish()
+        .await?;
+
+    let account = manager.create_account().finish().await?;
+
+    // Creating a new account with providing a coin type will use the Shimmer coin type with shimmer testnet bech32 hrp
+    assert_eq!(
+        &account.list_addresses().await?[0].address().to_bech32(),
+        // Address generated with bip32 path: [44, 4219, 0, 0, 0]
+        "rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm"
+    );
+
+    std::fs::remove_dir_all("test-storage/account_default_coin_type").unwrap_or(());
     Ok(())
 }
 

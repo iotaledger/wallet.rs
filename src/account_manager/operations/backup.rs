@@ -68,28 +68,25 @@ impl AccountManager {
 
         let mut secret_manager = self.secret_manager.as_ref().write().await;
         let mut new_secret_manager = None;
-        if let SecretManager::Stronghold(stronghold) = &mut *secret_manager {
-            read_data_from_stronghold_backup(
-                self,
-                stronghold,
-                &stronghold_password,
-                backup_path,
-                &mut accounts,
-                &mut new_secret_manager,
-            )
-            .await?;
+        // Get the current snapshot path if set
+        let snapshot_path = if let SecretManager::Stronghold(stronghold) = &mut *secret_manager {
+            stronghold.snapshot_path.clone()
         } else {
-            read_data_from_stronghold_backup(
-                self,
-                // If the SecretManager is not Stronghold we'll create a new one to load the backup
-                &mut StrongholdSecretManager::builder().try_build()?,
-                &stronghold_password,
-                backup_path,
-                &mut accounts,
-                &mut new_secret_manager,
-            )
-            .await?;
-        }
+            None
+        };
+
+        // We'll create a new stronghold to load the backup
+        let mut new_stronghold = StrongholdSecretManager::builder().try_build()?;
+        new_stronghold.snapshot_path = snapshot_path;
+        read_data_from_stronghold_backup(
+            self,
+            &mut new_stronghold,
+            &stronghold_password,
+            backup_path,
+            &mut accounts,
+            &mut new_secret_manager,
+        )
+        .await?;
 
         // Update secret manager
         if let Some(mut new_secret_manager) = new_secret_manager {

@@ -14,14 +14,14 @@ pub struct SyncOptions {
     /// addresses with a lower index will be skipped, but could result in a wrong balance for that reason
     #[serde(rename = "addressStartIndex", default = "default_address_start_index")]
     pub address_start_index: u32,
-    /// Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 10
+    /// Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 5
     /// seconds. But if we change the client options, we need to resync, because the new node could be from a nother
     /// network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
     /// addresses.
     #[serde(rename = "forceSyncing", default)]
     pub force_syncing: bool,
     /// Checks pending transactions and promotes/reattaches them if necessary.
-    #[serde(rename = "syncTransactions", default = "default_sync_pending_transactions")]
+    #[serde(rename = "syncPendingTransactions", default = "default_sync_pending_transactions")]
     pub sync_pending_transactions: bool,
     /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]

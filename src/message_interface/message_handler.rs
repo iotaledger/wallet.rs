@@ -12,11 +12,12 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::output::{ByteCost, Output},
+    bee_block::output::{dto::OutputDto, ByteCost, Output},
+    constants::SHIMMER_TESTNET_BECH32_HRP,
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
     },
-    Client, NodeInfoWrapper,
+    utils, Client, NodeInfoWrapper,
 };
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
@@ -24,7 +25,7 @@ use zeroize::Zeroize;
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{
-    account::types::AccountIdentifier,
+    account::{operations::transaction::prepare_output::OutputOptions, types::AccountIdentifier},
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
@@ -93,6 +94,12 @@ impl WalletMessageHandler {
         self.account_manager.listen(events, handler).await;
     }
 
+    #[cfg(feature = "events")]
+    /// Remove wallet event listeners, empty vec will remove all listeners
+    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
+        self.account_manager.clear_listeners(events).await;
+    }
+
     /// Handles a message.
     pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
@@ -114,14 +121,16 @@ impl WalletMessageHandler {
             }
             #[cfg(feature = "stronghold")]
             Message::ChangeStrongholdPassword {
-                mut password,
+                mut current_password,
+                mut new_password,
                 keys_to_re_encrypt,
             } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .change_stronghold_password(&password, keys_to_re_encrypt)
+                        .change_stronghold_password(&current_password, &new_password, keys_to_re_encrypt)
                         .await?;
-                    password.zeroize();
+                    current_password.zeroize();
+                    new_password.zeroize();
                     Ok(Response::Ok(()))
                 })
                 .await
@@ -160,14 +169,21 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::RemoveLatestAccount => {
+                convert_async_panics(|| async {
+                    self.account_manager.remove_latest_account().await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
             #[cfg(feature = "stronghold")]
             Message::RestoreBackup { source, password } => {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
             }
             #[cfg(feature = "storage")]
-            Message::DeleteStorage => {
+            Message::DeleteAccountsAndDatabase => {
                 convert_async_panics(|| async {
-                    self.account_manager.delete_storage().await?;
+                    self.account_manager.delete_accounts_and_database().await?;
                     Ok(Response::Ok(()))
                 })
                 .await
@@ -252,6 +268,21 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     self.account_manager.emit_test_event(event.clone()).await?;
                     Ok(Response::Ok(()))
+                })
+                .await
+            }
+            Message::Bech32ToHex(bech32) => convert_panics(|| Ok(Response::HexAddress(utils::bech32_to_hex(&bech32)?))),
+            Message::HexToBech32 { hex, bech32_hrp } => {
+                convert_async_panics(|| async {
+                    let bech32_hrp = match bech32_hrp {
+                        Some(bech32_hrp) => bech32_hrp,
+                        None => match self.account_manager.get_node_info().await {
+                            Ok(node_info_wrapper) => node_info_wrapper.node_info.protocol.bech32_hrp,
+                            Err(_) => SHIMMER_TESTNET_BECH32_HRP.into(),
+                        },
+                    };
+
+                    Ok(Response::Bech32Address(utils::hex_to_bech32(&hex, &bech32_hrp)?))
                 })
                 .await
             }
@@ -369,6 +400,18 @@ impl WalletMessageHandler {
                 .await?;
                 Ok(Response::BuiltOutput(output_dto))
             }
+            AccountMethod::ConsolidateOutputs {
+                force,
+                output_consolidation_threshold,
+            } => {
+                convert_async_panics(|| async {
+                    let transaction_results = account_handle
+                        .consolidate_outputs(*force, *output_consolidation_threshold)
+                        .await?;
+                    Ok(Response::SentTransactions(transaction_results))
+                })
+                .await
+            }
             AccountMethod::GenerateAddresses { amount, options } => {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(Response::GeneratedAddress(address))
@@ -429,7 +472,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
-                    Ok(Response::SentTransaction(transaction))
+                    Ok(Response::MintTokenTransaction(transaction))
                 })
                 .await
             }
@@ -456,12 +499,15 @@ impl WalletMessageHandler {
             AccountMethod::GetBalance => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.balance().await?,
             ))),
-            AccountMethod::PrepareMintNfts { nfts_options, options } => {
+            AccountMethod::PrepareOutput {
+                options,
+                transaction_options,
+            } => {
                 convert_async_panics(|| async {
-                    let data = account_handle
-                        .prepare_mint_nfts(nfts_options.clone(), options.clone())
+                    let output = account_handle
+                        .prepare_output(OutputOptions::try_from(options)?, transaction_options.clone())
                         .await?;
-                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
+                    Ok(Response::BuiltOutput(OutputDto::from(&output)))
                 })
                 .await
             }
@@ -478,48 +524,6 @@ impl WalletMessageHandler {
                                 .collect::<Result<Vec<AddressWithAmount>>>()?,
                             options.clone(),
                         )
-                        .await?;
-                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
-                })
-                .await
-            }
-            AccountMethod::PrepareSendMicroTransaction {
-                addresses_with_micro_amount,
-                options,
-            } => {
-                convert_async_panics(|| async {
-                    let data = account_handle
-                        .prepare_send_micro_transaction(
-                            addresses_with_micro_amount
-                                .iter()
-                                .map(AddressWithMicroAmount::try_from)
-                                .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
-                            options.clone(),
-                        )
-                        .await?;
-                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
-                })
-                .await
-            }
-            AccountMethod::PrepareSendNativeTokens {
-                addresses_native_tokens,
-                options,
-            } => {
-                convert_async_panics(|| async {
-                    let data = account_handle
-                        .prepare_send_native_tokens(addresses_native_tokens.clone(), options.clone())
-                        .await?;
-                    Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
-                })
-                .await
-            }
-            AccountMethod::PrepareSendNft {
-                addresses_nft_ids,
-                options,
-            } => {
-                convert_async_panics(|| async {
-                    let data = account_handle
-                        .prepare_send_nft(addresses_nft_ids.clone(), options.clone())
                         .await?;
                     Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
                 })
@@ -610,7 +614,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::SendTransaction { outputs, options } => {
+            AccountMethod::SendOutputs { outputs, options } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .send(

@@ -11,7 +11,6 @@ use iota_client::{
             },
             BasicOutputBuilder, NativeToken, TokenId,
         },
-        payload::milestone::MilestoneIndex,
     },
 };
 use primitive_types::U256;
@@ -53,7 +52,7 @@ impl AccountHandle {
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let outputs = vec![AddressNativeTokens {
-    ///     address: "atoi1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluehe53e".to_string(),
+    ///     address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
     ///     native_tokens: vec![(
     ///         TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
     ///         U256::from(50),
@@ -80,7 +79,7 @@ impl AccountHandle {
 
     /// Function to prepare the transaction for
     /// [AccountHandle.send_native_tokens()](crate::account::handle::AccountHandle.send_native_tokens)
-    pub async fn prepare_send_native_tokens(
+    async fn prepare_send_native_tokens(
         &self,
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
@@ -91,8 +90,7 @@ impl AccountHandle {
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
-        let (local_time, _) = self.get_time_and_milestone_checked().await?;
-        let expiration_time = local_time as u32 + DEFAULT_EXPIRATION_TIME;
+        let local_time = self.client.get_time_checked().await?;
 
         let mut outputs = Vec::new();
         for address_with_amount in addresses_native_tokens {
@@ -106,6 +104,11 @@ impl AccountHandle {
                 &return_address.address.inner,
                 Some(address_with_amount.native_tokens.clone()),
             )?;
+
+            let expiration_time = match address_with_amount.expiration {
+                Some(expiration_time) => local_time + expiration_time,
+                None => local_time + DEFAULT_EXPIRATION_TIME,
+            };
 
             outputs.push(
                 BasicOutputBuilder::new_with_amount(storage_deposit_amount)?
@@ -126,8 +129,6 @@ impl AccountHandle {
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         address,
-                        // 0 means it's ignored during validation
-                        MilestoneIndex::new(0),
                         expiration_time,
                     )?))
                     .finish_output()?,

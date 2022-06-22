@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
@@ -30,10 +30,26 @@ pub(crate) async fn new_storage_manager(
     encryption_key: Option<[u8; 32]>,
     storage: Box<dyn StorageAdapter + Send + Sync + 'static>,
 ) -> crate::Result<StorageManagerHandle> {
-    let storage = Storage {
+    let mut storage = Storage {
         inner: storage,
         encryption_key,
     };
+    // Get the db version or set it
+    let db_schema_version = storage.get(DATABASE_SCHEMA_VERSION_KEY).await.ok();
+    if let Some(db_schema_version) = db_schema_version {
+        let db_schema_version = u8::from_str(&db_schema_version)
+            .map_err(|_| crate::Error::Storage("Invalid db_schema_version".to_string()))?;
+        if db_schema_version != DATABASE_SCHEMA_VERSION {
+            return Err(crate::Error::Storage(format!(
+                "Unsupported database schema version {db_schema_version}"
+            )));
+        }
+    } else {
+        storage
+            .set(DATABASE_SCHEMA_VERSION_KEY, DATABASE_SCHEMA_VERSION)
+            .await?;
+    };
+
     let account_indexes = match storage.get(ACCOUNTS_INDEXATION_KEY).await {
         Ok(account_indexes) => serde_json::from_str(&account_indexes)?,
         Err(_) => Vec::new(),
