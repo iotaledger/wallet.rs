@@ -947,6 +947,7 @@ A dict with the following key:value pairs.
 node = {
     'url': string,
     'auth': [NodeAuth](#nodeauth) (optional),
+    'disabled': bool,
 }
 ```
 

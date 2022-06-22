@@ -54,12 +54,12 @@ module.exports = {
     },
     {
       type: 'category',
-      label: 'Key Concepts',
+      label: 'Explanations',
       items:[
         {
           type: 'doc',
           label: 'The Library in a Nutshell',
-          id: 'key_concepts/nutshell',
+          id: 'explanations/nutshell',
         }
       ]
     },
