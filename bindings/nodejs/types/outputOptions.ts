@@ -20,18 +20,13 @@ interface Features {
 }
 
 interface Unlocks {
-    expiration?: Time;
-    timelock?: Time;
+    expirationUnixTime?: number;
+    timelockUnixTime?: number;
 }
 
 interface StorageDeposit {
     returnStrategy?: ReturnStrategy
     useExcessIfLow?: boolean;
-}
-
-interface Time {
-    milestoneIndex?: number;
-    unixTime?: number;
 }
 
 enum ReturnStrategy {
