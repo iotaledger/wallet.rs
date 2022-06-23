@@ -73,7 +73,9 @@ pub struct SpentOutputEvent {
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq, Serialize, Deserialize)]
 pub struct TransactionInclusionEvent {
+    #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
+    #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
 }
 
