@@ -416,9 +416,9 @@ impl WalletMessageHandler {
                 let address = account_handle.generate_addresses(*amount, options.clone()).await?;
                 Ok(Response::GeneratedAddress(address))
             }
-            AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_collect } => {
+            AccountMethod::GetOutputsWithAdditionalUnlockConditions { outputs_to_claim } => {
                 let output_ids = account_handle
-                    .get_unlockable_outputs_with_additional_unlock_conditions(*outputs_to_collect)
+                    .get_unlockable_outputs_with_additional_unlock_conditions(*outputs_to_claim)
                     .await?;
                 Ok(Response::OutputIds(output_ids))
             }
@@ -654,16 +654,16 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::TryCollectOutputs { outputs_to_collect } => {
+            AccountMethod::TryClaimOutputs { outputs_to_claim } => {
                 convert_async_panics(|| async {
-                    let transaction_results = account_handle.try_collect_outputs(*outputs_to_collect).await?;
+                    let transaction_results = account_handle.try_claim_outputs(*outputs_to_claim).await?;
                     Ok(Response::SentTransactions(transaction_results))
                 })
                 .await
             }
-            AccountMethod::CollectOutputs { output_ids_to_collect } => {
+            AccountMethod::ClaimOutputs { output_ids_to_claim } => {
                 convert_async_panics(|| async {
-                    let transaction_results = account_handle.collect_outputs(output_ids_to_collect.to_vec()).await?;
+                    let transaction_results = account_handle.claim_outputs(output_ids_to_claim.to_vec()).await?;
                     Ok(Response::SentTransactions(transaction_results))
                 })
                 .await

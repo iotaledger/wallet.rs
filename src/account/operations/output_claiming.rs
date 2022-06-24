@@ -21,9 +21,9 @@ use crate::account::{
     OutputData, TransactionOptions,
 };
 
-/// Enum to specify which outputs should be collected
+/// Enum to specify which outputs should be claimed
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub enum OutputsToCollect {
+pub enum OutputsToClaim {
     None = 0,
     MicroTransactions = 1,
     NativeTokens = 2,
@@ -37,15 +37,15 @@ impl AccountHandle {
     /// [`AddressUnlockCondition`] unlock condition, for additional inputs
     pub async fn get_unlockable_outputs_with_additional_unlock_conditions(
         &self,
-        outputs_to_collect: OutputsToCollect,
+        outputs_to_claim: OutputsToClaim,
     ) -> crate::Result<Vec<OutputId>> {
-        log::debug!("[OUTPUT_COLLECTION] get_unlockable_outputs_with_additional_unlock_conditions");
+        log::debug!("[OUTPUT_CLAIMING] get_unlockable_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
         let local_time = self.client.get_time_checked().await?;
 
-        // Get outputs for the collect
-        let mut output_ids_to_collect: HashSet<OutputId> = HashSet::new();
+        // Get outputs for the claim
+        let mut output_ids_to_claim: HashSet<OutputId> = HashSet::new();
         for (output_id, output_data) in &account.unspent_outputs {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
@@ -64,22 +64,22 @@ impl AccountHandle {
                                     local_time,
                                 )
                             {
-                                match outputs_to_collect {
-                                    OutputsToCollect::MicroTransactions => {
+                                match outputs_to_claim {
+                                    OutputsToClaim::MicroTransactions => {
                                         if let Some(sdr) = basic_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != basic_output.amount() {
-                                                output_ids_to_collect.insert(output_data.output_id);
+                                                output_ids_to_claim.insert(output_data.output_id);
                                             }
                                         }
                                     }
-                                    OutputsToCollect::NativeTokens => {
+                                    OutputsToClaim::NativeTokens => {
                                         if !basic_output.native_tokens().is_empty() {
-                                            output_ids_to_collect.insert(output_data.output_id);
+                                            output_ids_to_claim.insert(output_data.output_id);
                                         }
                                     }
-                                    OutputsToCollect::All => {
-                                        output_ids_to_collect.insert(output_data.output_id);
+                                    OutputsToClaim::All => {
+                                        output_ids_to_claim.insert(output_data.output_id);
                                     }
                                     _ => {}
                                 }
@@ -98,22 +98,22 @@ impl AccountHandle {
                                     local_time,
                                 )
                             {
-                                match outputs_to_collect {
-                                    OutputsToCollect::MicroTransactions => {
+                                match outputs_to_claim {
+                                    OutputsToClaim::MicroTransactions => {
                                         if let Some(sdr) = nft_output.unlock_conditions().storage_deposit_return() {
                                             // Only micro transaction if not the same
                                             if sdr.amount() != nft_output.amount() {
-                                                output_ids_to_collect.insert(output_data.output_id);
+                                                output_ids_to_claim.insert(output_data.output_id);
                                             }
                                         }
                                     }
-                                    OutputsToCollect::NativeTokens => {
+                                    OutputsToClaim::NativeTokens => {
                                         if !nft_output.native_tokens().is_empty() {
-                                            output_ids_to_collect.insert(output_data.output_id);
+                                            output_ids_to_claim.insert(output_data.output_id);
                                         }
                                     }
-                                    OutputsToCollect::Nfts | OutputsToCollect::All => {
-                                        output_ids_to_collect.insert(output_data.output_id);
+                                    OutputsToClaim::Nfts | OutputsToClaim::All => {
+                                        output_ids_to_claim.insert(output_data.output_id);
                                     }
                                     _ => {}
                                 }
@@ -127,31 +127,27 @@ impl AccountHandle {
             }
         }
         log::debug!(
-            "[OUTPUT_COLLECTION] available outputs to collect: {}",
-            output_ids_to_collect.len()
+            "[OUTPUT_CLAIMING] available outputs to claim: {}",
+            output_ids_to_claim.len()
         );
-        Ok(output_ids_to_collect.into_iter().collect())
+        Ok(output_ids_to_claim.into_iter().collect())
     }
 
-    /// Try to collect basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub async fn try_collect_outputs(
-        &self,
-        outputs_to_collect: OutputsToCollect,
-    ) -> crate::Result<Vec<TransactionResult>> {
-        log::debug!("[OUTPUT_COLLECTION] try_collect_outputs");
+    /// Try to claim basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
+    pub async fn try_claim_outputs(&self, outputs_to_claim: OutputsToClaim) -> crate::Result<Vec<TransactionResult>> {
+        log::debug!("[OUTPUT_CLAIMING] try_claim_outputs");
 
-        let output_ids_to_collect = self
-            .get_unlockable_outputs_with_additional_unlock_conditions(outputs_to_collect)
+        let output_ids_to_claim = self
+            .get_unlockable_outputs_with_additional_unlock_conditions(outputs_to_claim)
             .await?;
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
-        self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
-            .await
+        self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
     }
 
     /// Get basic outputs that have only one unlock condition which is [AddressUnlockCondition], so they can be used as
     /// additional inputs
     pub async fn get_basic_outputs_for_additional_inputs(&self) -> crate::Result<Vec<OutputData>> {
-        log::debug!("[OUTPUT_COLLECTION] get_basic_outputs_for_additional_inputs");
+        log::debug!("[OUTPUT_CLAIMING] get_basic_outputs_for_additional_inputs");
         let account = self.read().await;
 
         // Get basic outputs only with AddressUnlockCondition and no other unlock condition
@@ -170,39 +166,38 @@ impl AccountHandle {
                 }
             }
         }
-        log::debug!("[OUTPUT_COLLECTION] available basic outputs: {}", basic_outputs.len());
+        log::debug!("[OUTPUT_CLAIMING] available basic outputs: {}", basic_outputs.len());
         Ok(basic_outputs)
     }
 
-    /// Try to collect basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
+    /// Try to claim basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
     /// from [`AccountHandle::get_unlockable_outputs_with_additional_unlock_conditions()`].
-    pub async fn collect_outputs(&self, output_ids_to_collect: Vec<OutputId>) -> crate::Result<Vec<TransactionResult>> {
-        log::debug!("[OUTPUT_COLLECTION] collect_outputs");
+    pub async fn claim_outputs(&self, output_ids_to_claim: Vec<OutputId>) -> crate::Result<Vec<TransactionResult>> {
+        log::debug!("[OUTPUT_CLAIMING] claim_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
-        self.collect_outputs_internal(output_ids_to_collect, basic_outputs)
-            .await
+        self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
     }
 
-    /// Try to collect basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub(crate) async fn collect_outputs_internal(
+    /// Try to claim basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
+    pub(crate) async fn claim_outputs_internal(
         &self,
-        output_ids_to_collect: Vec<OutputId>,
+        output_ids_to_claim: Vec<OutputId>,
         possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<TransactionResult>> {
-        log::debug!("[OUTPUT_COLLECTION] collect_outputs_internal");
+        log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
         let local_time = self.client.get_time_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
-        let mut outputs_to_collect = Vec::new();
+        let mut outputs_to_claim = Vec::new();
         let account = self.read().await;
-        for output_id in output_ids_to_collect {
+        for output_id in output_ids_to_claim {
             if let Some(output_data) = account.unspent_outputs.get(&output_id) {
-                outputs_to_collect.push(output_data.clone());
+                outputs_to_claim.push(output_data.clone());
             }
         }
 
-        if outputs_to_collect.is_empty() {
-            // No outputs to collect, return
+        if outputs_to_claim.is_empty() {
+            // No outputs to claim, return
             return Ok(Vec::new());
         }
 
@@ -213,7 +208,7 @@ impl AccountHandle {
             .clone();
         drop(account);
 
-        let mut collection_results = Vec::new();
+        let mut claim_results = Vec::new();
         // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited) and
         // is <= max inputs
         //
@@ -221,7 +216,7 @@ impl AccountHandle {
         // conditions might require more outputs or maybe more additional inputs are required for the storage deposit
         // amount, that's why I set it to 5 now, because even with duplicated output amount it will be low
         // enough then
-        for outputs in outputs_to_collect.chunks(5) {
+        for outputs in outputs_to_claim.chunks(5) {
             let mut outputs_to_send = Vec::new();
             // Amount we get with the storage deposit return amounts already subtracted
             let mut new_amount = 0;
@@ -331,7 +326,7 @@ impl AccountHandle {
                 return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
             }
 
-            // Create output with collected values
+            // Create output with claimed values
             outputs_to_send.push(
                 BasicOutputBuilder::new_with_amount(new_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
@@ -361,16 +356,16 @@ impl AccountHandle {
             {
                 Ok(res) => {
                     log::debug!(
-                        "[OUTPUT_COLLECTION] Collection transaction created: block_id: {:?} tx_id: {:?}",
+                        "[OUTPUT_CLAIMING] Claiming transaction created: block_id: {:?} tx_id: {:?}",
                         res.block_id,
                         res.transaction_id
                     );
-                    collection_results.push(res);
+                    claim_results.push(res);
                 }
-                Err(e) => log::debug!("Output collection error: {}", e),
+                Err(e) => log::debug!("Output claim error: {}", e),
             };
         }
 
-        Ok(collection_results)
+        Ok(claim_results)
     }
 }

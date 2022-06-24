@@ -48,7 +48,7 @@ async function handleNewOutputOfBob(err, data) {
     if (event.accountIndex === bob.meta.index) {
         const outputId = event.event.NewOutput.output.outputId
         await bob.sync()
-        const resp = await bob.collectOutputs([outputId])
+        const resp = await bob.claimOutputs([outputId])
         console.log('Output has been collected in the following transaction:', resp)
         process.exit(0)
     }

@@ -136,12 +136,12 @@ class Account:
             }
         )
 
-    def get_outputs_with_additional_unlock_conditions(self, outputs_to_collect):
+    def get_outputs_with_additional_unlock_conditions(self, outputs_to_claim):
         """Get outputs with additional unlock conditions.
         """
         return self._call_account_method(
             'GetOutputsWithAdditionalUnlockConditions', {
-                'outputs_to_collect': outputs_to_collect
+                'outputs_to_claim': outputs_to_claim
             }
         )
 
@@ -351,22 +351,22 @@ class Account:
             }
         )
 
-    def try_collect_outputs(self, outputs_to_collect):
-        """Try to collect outputs.
+    def try_claim_outputs(self, outputs_to_claim):
+        """Try to claim outputs.
         """
         return self._call_account_method(
-            'TryCollectOutputs', {
-                'outputs_to_collect': outputs_to_collect
+            'TryClaimOutputs', {
+                'outputs_to_claim': outputs_to_claim
 
             }
         )
 
-    def collect_outputs(self, output_ids_to_collect):
-        """Collect outputs.
+    def claim_outputs(self, output_ids_to_claim):
+        """Claim outputs.
         """
         return self._call_account_method(
-            'CollectOutputs', {
-                'output_ids_to_collect': output_ids_to_collect
+            'ClaimOutputs', {
+                'output_ids_to_claim': output_ids_to_claim
 
             }
         )

@@ -18,7 +18,7 @@ use serde::Deserialize;
 use crate::{
     account::operations::{
         address_generation::AddressGenerationOptions,
-        output_collection::OutputsToCollect,
+        output_claiming::OutputsToClaim,
         syncing::SyncOptions,
         transaction::{prepare_output::OutputOptionsDto, TransactionOptions},
     },
@@ -120,8 +120,8 @@ pub enum AccountMethod {
     /// Get outputs with additional unlock conditions
     /// Expected response: [`OutputIds`](crate::message_interface::Response::OutputIds)
     GetOutputsWithAdditionalUnlockConditions {
-        #[serde(rename = "outputsToCollect")]
-        outputs_to_collect: OutputsToCollect,
+        #[serde(rename = "outputsToClaim")]
+        outputs_to_claim: OutputsToClaim,
     },
     /// Get the [`Transaction`](crate::account::types::Transaction) of a transaction stored in the account
     /// Expected response: [`Transaction`](crate::message_interface::Response::Transaction)
@@ -244,16 +244,16 @@ pub enum AccountMethod {
         #[serde(rename = "signedTransactionData")]
         signed_transaction_data: SignedTransactionDataDto,
     },
-    /// Try to collect outputs.
+    /// Try to claim outputs.
     /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
-    TryCollectOutputs {
-        #[serde(rename = "outputsToCollect")]
-        outputs_to_collect: OutputsToCollect,
+    TryClaimOutputs {
+        #[serde(rename = "outputsToClaim")]
+        outputs_to_claim: OutputsToClaim,
     },
-    /// Collect outputs.
+    /// Claim outputs.
     /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
-    CollectOutputs {
-        #[serde(rename = "outputIdsToCollect")]
-        output_ids_to_collect: Vec<OutputId>,
+    ClaimOutputs {
+        #[serde(rename = "outputIdsToClaim")]
+        output_ids_to_claim: Vec<OutputId>,
     },
 }

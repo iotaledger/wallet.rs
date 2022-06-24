@@ -4,7 +4,7 @@ import type {
     __BuildBasicOutputMethod__,
     __BuildFoundryOutputMethod__,
     __BuildNftOutputMethod__,
-    __CollectOutputsMethod__,
+    __ClaimOutputsMethod__,
     __ConsolidateOutputsMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
@@ -32,7 +32,7 @@ import type {
     __SignTransactionEssenceMethod__,
     __SubmitAndStoreTransactionMethod__,
     __SyncAccountMethod__,
-    __TryCollectOutputsMethod__,
+    __TryClaimOutputsMethod__,
 } from './account';
 import type {
     __BackupMessage__,
@@ -65,7 +65,7 @@ export type __AccountMethod__ =
     | __BuildBasicOutputMethod__
     | __BuildFoundryOutputMethod__
     | __BuildNftOutputMethod__
-    | __CollectOutputsMethod__
+    | __ClaimOutputsMethod__
     | __ConsolidateOutputsMethod__
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
@@ -93,7 +93,7 @@ export type __AccountMethod__ =
     | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__
     | __SyncAccountMethod__
-    | __TryCollectOutputsMethod__;
+    | __TryClaimOutputsMethod__;
 
 export type __CallAccountMethodMessage__ = {
     cmd: 'CallAccountMethod';

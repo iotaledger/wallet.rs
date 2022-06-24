@@ -217,7 +217,7 @@ async fn destroy_foundry() -> Result<()> {
     let _account_addresses = account.generate_addresses(1, None).await.unwrap();
 
     let _ = account
-        .try_collect_outputs(iota_wallet::account::OutputsToCollect::All)
+        .try_claim_outputs(iota_wallet::account::OutputsToClaim::All)
         .await
         .unwrap();
 
