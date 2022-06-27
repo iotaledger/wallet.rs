@@ -4,7 +4,7 @@ import type {
     IOutputMetadataResponse,
 } from '@iota/types';
 
-export enum OutputsToCollect {
+export enum OutputsToClaim {
     None = 'None',
     MicroTransactions = 'MicroTransactions',
     NativeTokens = 'NativeTokens',

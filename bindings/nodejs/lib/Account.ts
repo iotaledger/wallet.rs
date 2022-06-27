@@ -7,7 +7,7 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
-    OutputsToCollect,
+    OutputsToClaim,
     OutputData,
     Transaction,
     NativeTokenOptions,
@@ -93,13 +93,13 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async collectOutputs(outputIds: string[]): Promise<TransactionResult[]> {
+    async claimOutputs(outputIds: string[]): Promise<TransactionResult[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'CollectOutputs',
+                name: 'ClaimOutputs',
                 data: {
-                    outputIdsToCollect: outputIds,
+                    outputIdsToClaim: outputIds,
                 },
             },
         );
@@ -176,14 +176,14 @@ export class Account {
     }
 
     async getOutputsWithAdditionalUnlockConditions(
-        outputs: OutputsToCollect,
+        outputs: OutputsToClaim,
     ): Promise<string[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'GetOutputsWithAdditionalUnlockConditions',
                 data: {
-                    outputsToCollect: outputs,
+                    outputsToClaim: outputs,
                 },
             },
         );
@@ -512,15 +512,15 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async tryCollectOutputs(
-        outputsToCollect: OutputsToCollect,
+    async tryClaimOutputs(
+        outputsToClaim: OutputsToClaim,
     ): Promise<TransactionResult[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'TryCollectOutputs',
+                name: 'TryClaimOutputs',
                 data: {
-                    outputsToCollect,
+                    outputsToClaim,
                 },
             },
         );

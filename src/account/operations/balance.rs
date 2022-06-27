@@ -7,7 +7,7 @@ use iota_client::bee_block::output::{ByteCost, NativeTokensBuilder, Output};
 
 use crate::account::{
     handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    types::AccountBalance, OutputsToCollect,
+    types::AccountBalance, OutputsToClaim,
 };
 
 impl AccountHandle {
@@ -15,7 +15,7 @@ impl AccountHandle {
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
         log::debug!("[BALANCE] get balance");
         let unlockable_outputs_with_multiple_unlock_conditions = self
-            .get_unlockable_outputs_with_additional_unlock_conditions(OutputsToCollect::All)
+            .get_unlockable_outputs_with_additional_unlock_conditions(OutputsToClaim::All)
             .await?;
 
         let account_addresses = self.list_addresses().await?;

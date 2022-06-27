@@ -1,5 +1,5 @@
 /**
- * This example sends IOTA tokens with an expiration date and collects them.
+ * This example sends IOTA tokens with an expiration date and claims them.
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -48,8 +48,8 @@ async function handleNewOutputOfBob(err, data) {
     if (event.accountIndex === bob.meta.index) {
         const outputId = event.event.NewOutput.output.outputId
         await bob.sync()
-        const resp = await bob.collectOutputs([outputId])
-        console.log('Output has been collected in the following transaction:', resp)
+        const resp = await bob.claimOutputs([outputId])
+        console.log('Output has been claimed in the following transaction:', resp)
         process.exit(0)
     }
 }

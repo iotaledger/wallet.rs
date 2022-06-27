@@ -14,7 +14,7 @@ import type {
     BuildNftOutputData,
 } from '../buildOutputData';
 import type { OutputOptions } from '../outputOptions';
-import type { OutputsToCollect } from '../output';
+import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
@@ -43,10 +43,10 @@ export type __BuildNftOutputMethod__ = {
     data: BuildNftOutputData;
 };
 
-export type __CollectOutputsMethod__ = {
-    name: 'CollectOutputs';
+export type __ClaimOutputsMethod__ = {
+    name: 'ClaimOutputs';
     data: {
-        outputIdsToCollect: string[];
+        outputIdsToClaim: string[];
     };
 };
 
@@ -80,7 +80,7 @@ export type __GetOutputMethod__ = {
 export type __GetOutputsWithAdditionalUnlockConditionsMethod__ = {
     name: 'GetOutputsWithAdditionalUnlockConditions';
     data: {
-        outputsToCollect: OutputsToCollect;
+        outputsToClaim: OutputsToClaim;
     };
 };
 
@@ -228,9 +228,9 @@ export type __SyncAccountMethod__ = {
     data: AccountSyncOptions;
 };
 
-export type __TryCollectOutputsMethod__ = {
-    name: 'TryCollectOutputs';
+export type __TryClaimOutputsMethod__ = {
+    name: 'TryClaimOutputs';
     data: {
-        outputsToCollect: OutputsToCollect;
+        outputsToClaim: OutputsToClaim;
     };
 };

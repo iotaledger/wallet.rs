@@ -88,8 +88,8 @@ pub enum Response {
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransaction(TransactionResult),
     /// Response for
-    /// [`TryCollectOutputs`](crate::message_interface::AccountMethod::TryCollectOutputs),
-    /// [`CollectOutputs`](crate::message_interface::AccountMethod::CollectOutputs)
+    /// [`TryClaimOutputs`](crate::message_interface::AccountMethod::TryClaimOutputs),
+    /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionResult>),
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),

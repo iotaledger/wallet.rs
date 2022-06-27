@@ -26,7 +26,7 @@ pub use self::{
     handle::AccountHandle,
     operations::{
         address_generation::AddressGenerationOptions,
-        output_collection::OutputsToCollect,
+        output_claiming::OutputsToClaim,
         syncing::SyncOptions,
         transaction::{
             prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
