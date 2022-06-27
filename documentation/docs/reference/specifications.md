@@ -10,7 +10,7 @@ keywords:
 - types
 - reference
 ---
-# Wallet Library Spec
+# Wallet Library Specifications
 
 ## Introduction
 

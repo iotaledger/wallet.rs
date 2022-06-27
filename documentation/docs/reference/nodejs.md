@@ -8,7 +8,7 @@ keywords:
 - type
 - reference
 ---
-# API Reference
+# Node.js API Reference
 
 ## initLogger(config: LogOptions)
 

@@ -10,128 +10,125 @@
  */
 
 module.exports = {
-  docs: [{
-    type: 'doc',
-    id: 'welcome',
-  },
-  {
-    type: 'doc',
-    id: 'overview',
-  },
-  {
-    type: 'category',
-    label: 'Libraries',
-    collapsed: false,
-    items: [{
+  docs: [
+    {
       type: 'doc',
-      id: 'libraries/overview',
+      label: 'Welcome',
+      id: 'welcome',
+    },
+    {
+      type: 'doc',
       label: 'Overview',
+      id: 'overview',
     },
     {
-      type: 'category',
-      label: 'Rust',
-      items: [
+      type:'category',
+      label: 'Getting Started',
+      items:[
         {
-          type: 'doc',
-          id: 'libraries/rust/getting_started',
-          label: 'Getting Started'
+          type:'doc',
+          label: 'Rust',
+          id:'getting_started/rust'
         },
         {
-          type: 'doc',
-          id: 'libraries/rust/examples',
-          label: 'Examples'
+          type:'doc',
+          label: 'Node.js',
+          id:'getting_started/nodejs'
         },
         {
-          type: 'doc',
-          id: 'libraries/rust/api_reference',
-          label: 'API Reference'
+          type:'doc',
+          label: 'Python',
+          id:'getting_started/python'
+        },
+        {
+          type:'doc',
+          label: 'Java',
+          id:'getting_started/java'
+        },
+        {
+          type:'doc',
+          label: 'Java for Android',
+          id:'getting_started/java_for_android'
         },
       ]
     },
     {
       type: 'category',
-      label: 'Node.js',
-      items: [
+      label: 'Explanations',
+      items:[
         {
           type: 'doc',
-          id: 'libraries/nodejs/getting_started',
-          label: 'Getting Started'
-        },
-        {
-          type: 'doc',
-          id: 'libraries/nodejs/examples',
-          label: 'Examples'
-        },
-        {
-          type: 'doc',
-          id: 'libraries/nodejs/api_reference',
-          label: 'API Reference'
-        },
+          label: 'The Library in a Nutshell',
+          id: 'explanations/nutshell',
+        }
       ]
     },
     {
       type: 'category',
-      label: 'Python',
-      items: [
+      label: 'Examples',
+      items:[
         {
-          type: 'doc',
-          id: 'libraries/python/getting_started',
-          label: 'Getting Started'
+          type:'doc',
+          label: 'Rust',
+          id:'examples/rust'
         },
         {
-          type: 'doc',
-          id: 'libraries/python/examples',
-          label: 'Examples'
+          type:'doc',
+          label: 'Node.js',
+          id:'examples/nodejs'
         },
         {
-          type: 'doc',
-          id: 'libraries/python/api_reference',
-          label: 'API Reference'
+          type:'doc',
+          label: 'Python',
+          id:'examples/python'
+        },
+        {
+          type:'doc',
+          label: 'Java',
+          id:'examples/java'
         },
       ]
     },
     {
-      type: 'category',
-      label: 'Java',
-      items: [
+      type:'category',
+      label: 'Reference',
+      items:[
         {
-          type: 'doc',
-          id: 'libraries/java/getting_started',
-          label: 'Getting Started'
+          type:'doc',
+          label: 'Library Specifications',
+          id:'reference/specifications'
         },
         {
-          type: 'doc',
-          id: 'libraries/java/android_development',
-          label: 'Android'
+          type:'doc',
+          label: 'Rust API',
+          id:'reference/rust'
         },
         {
-          type: 'doc',
-          id: 'libraries/java/examples',
-          label: 'Examples'
+          type:'doc',
+          label: 'Node.js API',
+          id:'reference/nodejs'
         },
         {
-          type: 'doc',
-          id: 'libraries/java/api_reference',
-          label: 'API Reference'
+          type:'doc',
+          label: 'Python API',
+          id:'reference/python'
+        },
+        {
+          type:'doc',
+          label: 'Java API',
+          id:'reference/java'
         },
       ]
+    },
+    {
+      type: 'doc',
+      id: 'troubleshooting',
+      label: 'Troubleshooting'
+    },
+    {
+      type: 'doc',
+      id: 'contribute',
+      label: 'Contribute',
     }
-    ]
-  },
-  {
-    type: 'doc',
-    id: 'specification',
-    label: 'Specification',
-  },
-  {
-    type: 'doc',
-    id: 'troubleshooting',
-    label: 'Troubleshooting'
-  },
-  {
-    type: 'doc',
-    id: 'contribute',
-    label: 'Contribute',
-  }
   ]
 };

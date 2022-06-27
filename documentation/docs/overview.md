@@ -9,6 +9,7 @@ keywords:
 - value transactions
 - explanation
 ---
+
 # Overview
 
 The wallet library is a stateful package with a standardized interface for developers to build applications involving IOTA value transactions. It provides abstractions to handle IOTA payments and can optionally interact with the [IOTA Stronghold enclave](https://github.com/iotaledger/stronghold.rs/) for seed handling, seed storage, and state backup. 

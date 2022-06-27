@@ -7,8 +7,10 @@ keywords:
 - android
 - cross
 - compile
+- getting started
 ---
-# Android development
+
+# Getting Started with Java for Android
 
 Android development requires a more specific environment setup. In this tutorial we will guide you through the various ways to build an APK with `wallet.rs` capabilities.
 
@@ -18,7 +20,7 @@ The first part of this tutorial shows you how to install the required tools for 
 Since Android development mainly uses Gradle, we will use that for this tutorial
 :::
 
-## Setup by compiling
+## Setup by Compiling
 
 Compiling an Android app comes with the added task of building for multiple different device architectures.
 In this tutorial we mention the following 2 variables:
@@ -26,7 +28,8 @@ In this tutorial we mention the following 2 variables:
 
 These variables are used to generate correct binaries during cross compilation and linking.
 
-#### List of target Devices
+#### List of Target Devices
+
 `$ARCH` and -> `$TARGET` related to each other in the following manner: 
 - `armeabi-v7a` -> `armv7-linux-androideabi`
 - `arm64-v8a` -> `aarch64-linux-android`
@@ -35,13 +38,13 @@ These variables are used to generate correct binaries during cross compilation a
 
 When building an app, you as a developer must decide for how many architectures you make an APK for. Binaries need to be generated for each architecture.
 
-The android-app example has a [build.gradle](../../../../bindings/java/examples/android-app/build.gradle) file that shows the enabled list in a variable called `archTriplets`. You can disable and enable them, as long as you have at least one. (This file will also automatically compile our binaries when we run gradle. Feel free to use it in your project!)
+The android-app example has a [build.gradle](../../../bindings/java/examples/android-app/build.gradle) file that shows the enabled list in a variable called `archTriplets`. You can disable and enable them, as long as you have at least one. (This file will also automatically compile our binaries when we run gradle. Feel free to use it in your project!)
 
 We will use `archTriplets` for the enabled list of device targets during this tutorial.
 
 ## Prerequisite
 
-- Dependencies indicated in the [Getting started](getting_started.md) Prerequisite section
+- Dependencies indicated in the [Prerequisites](./java.md#prerequisites) section of Getting Started with Android.
 - Android NDK or Android Studio with NDK installed (If you extract make sure to make it executable `chmod -R +x android-ndk-VERSION` )
 
 In order to cross compile the binaries for Android; we need the following target toolchains: (Or all of the enabled `archTriplets`) 
@@ -61,9 +64,9 @@ Example: `export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/{A_VERSION_NUMBER}`
 If you dont have `ANDROID_HOME`; Usually found at `/home/user/Android`. Make sure you have installed Android correctly.
 Attempt to run `android` on your terminal. If this command does not open the Android SDK Manager, then your path is not configured correctly.
 
-## 1. Generating the java files
+## 1. Generating the Java Files
 
-### 1.1 Compiling a binary
+### 1.1 Compiling Binaries
 
 In order to generate the Java source files; we need to run cargo manually once. 
 
@@ -73,18 +76,18 @@ This step will require you to run `cargo build --release` in `wallet.rs/bindings
 This step is simplifying the process by running an unnecesary build (We compile here for our current system). If you have a working environment already, you can run cargo with a `--target=$TARGET` to save time later on.
 :::
 
-### 1.2 Creating the jar
+### 1.2 Creating the `jar` File
 Afterwards, you need to run `./gradlew jar` in `wallet.rs/bindings/java` in order to generate the jar file.
 
 The jar will be found at `wallet.rs/bindings/java/native/build/libs/native.jar`
 
-## 2. Build the app
+## 2. Building the App
 
 Building the actual app can be done through two different ways. Using Android Studio and by manual linking. 
 
 The following 2 Sections describe both methods. 
 
-#### Cross compile note
+#### Cross-compiling
 
 In order to build on windows, we need to add android triplets to our VCPKG and use that during compilation. 
 [TODO]
@@ -94,7 +97,7 @@ If you wish to use Android Studio in Windows, first make the android target bina
 
 Afterwards you need to comment out all `archTriplets` in `build.gradle` in order for you not to regenerate them (and fail on Windows).
 
-### 2.1 Android studio
+### 2.1 Android Studio
 
 Load the project under the `wallet.rs/bindings/java` folder in Android studio.
 
@@ -105,9 +108,9 @@ ndk.dir=I\:\\Path\\To\\AndroidSDK\\ndk\\VERSION
 
 If youre on linux/wsl, just run the app. On other platforms see the `Setup/Cross compile note` before running.
 
-### 2.2 Manual linking
+### 2.2 Manual Linking
 
-#### Preparing your terminal/environment
+#### Preparing Your Environment
 
 Add the standalone toolchain to the search path.
 
@@ -117,7 +120,8 @@ Replace `{OS}` with your OS name; on Linux this would be called `linux-x86_64`, 
 
 These toolchains can alternatively be prepended to the cargo command as well, but we wont discuss that in this tutorial.
 
-#### Setting Cargo config
+#### Setting Up the Cargo Config
+
 In order to compile the binaries for the various Android targets, we need to specify the targets to rust.
 
 Create or update the following file: `~/.cargo/config`.
@@ -140,7 +144,8 @@ linker = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-lin
 ar = "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android-ar"
 ```
 
-#### Generating the binaries
+#### Generating the Binaries
+
 Now we need to generate binaries for all the enabled targets inside your `build.gradle` `archTriplets`.
 The easiest way is to use the gradle build system. Using the `build.gradle` inside `examples/android-app`, we automatically build all enabled targets after running the following:
 ```
@@ -161,7 +166,7 @@ Example: `cargo build --target aarch64-linux-android --release`
 
 Example: `cp $ANDROID_NDK_HOME/sources/cxx-stl/llvm-libc++/libs/arm64-v8a/libc++_shared.so examples/android-app/src/main/libs/arm64-v8a`
 
-#### Building your app
+#### Building Your App
 
 Assemble your android app with gradle using:
 ```
@@ -169,7 +174,7 @@ cd wallet.rs/bindings/java
 ./gradlew aR
 ```
 
-#### Signing your app
+#### Signing Your App
 
 1. prepare a signing keystore; we will call it `signed_ks.jks`
 > How to make: https://developer.android.com/studio/publish/app-signing#generate-key
@@ -187,7 +192,7 @@ For example:
 - `adb install -r --fastdeploy examples/android-app/android-app-release-signed.apk`
 - `adb shell am monitor`
 
-## Using pre-generated binaries
+## Using Pre-Generated Binaries
 
 It is very likely you dont want or need to compile by yourself. That is why we provide precompiled binaries found on our release page [here](https://github.com/iotaledger/wallet.rs/releases). The Java releases are tagged with `android-binding-vX.Y.Z`. 
 
@@ -212,10 +217,12 @@ root_app/src/main/
       libiota_wallet_java.so
 ```
 
-### Android studio 
+### Android Studio 
+
 Then using Android Studio, add the native.jar to your project by right clicking -> Add As Library... -> Select your Android app Module and press OK.
 
 ### Manual
+
 Add the jar to your `build.gradle` dependencies section using; for example: `implementation files('src\\main\\libs\\native.jar')`
 
 :::info

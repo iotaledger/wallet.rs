@@ -8,7 +8,7 @@ keywords:
 - crate
 - reference
 ---
-# API Reference
+# Rust API Reference
 
 If you would like to explore the implementation in more depth, you can generate docs for the whole crate by running the  following command:
 
