@@ -11,6 +11,8 @@ pub(crate) mod handle;
 pub(crate) mod operations;
 /// Types used in an account and returned from methods.
 pub mod types;
+/// Methods to update the account state.
+pub(crate) mod update;
 
 use std::collections::{HashMap, HashSet};
 

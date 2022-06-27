@@ -6,29 +6,15 @@ pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
 
-use std::{
-    str::FromStr,
-    time::{Instant, SystemTime, UNIX_EPOCH},
-};
+use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    bee_block::{output::OutputId, payload::transaction::TransactionId, Block, BlockId},
+    bee_block::{Block, BlockId},
     bee_rest_api::types::responses::OutputResponse,
 };
 
 pub use self::options::SyncOptions;
-use crate::account::{
-    constants::MIN_SYNC_INTERVAL,
-    handle::AccountHandle,
-    operations::syncing::transactions::TransactionSyncResult,
-    types::{address::AddressWithUnspentOutputs, InclusionState, OutputData},
-    AccountBalance,
-};
-#[cfg(feature = "events")]
-use crate::{
-    events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
-    message_interface::dtos::OutputDataDto,
-};
+use crate::account::{constants::MIN_SYNC_INTERVAL, handle::AccountHandle, AccountBalance};
 
 impl AccountHandle {
     /// Retries (promotes or reattaches) a block for provided block id until it's included (referenced by a
@@ -70,14 +56,6 @@ impl AccountHandle {
             return self.balance().await;
         }
 
-        // sync transactions first so we maybe get confirmed outputs in the syncing process later
-        // do we want a field in SyncOptions so it can be skipped?
-        let transaction_sync_result = if options.sync_pending_transactions {
-            Some(self.sync_pending_transactions().await?)
-        } else {
-            None
-        };
-
         // one could skip addresses to sync, to sync faster (should we only add a field to the sync option to only sync
         // specific addresses?)
         let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
@@ -101,12 +79,16 @@ impl AccountHandle {
         self.update_account(
             addresses_with_unspent_outputs_and_outputs,
             output_data,
-            transaction_sync_result,
             spent_output_ids,
             spent_output_responses,
             &options,
         )
         .await?;
+
+        // Sync transactions after updating account with outputs, so we can use them to check the transaction status
+        if options.sync_pending_transactions {
+            self.sync_pending_transactions().await?;
+        };
 
         let account_balance = self.balance().await?;
         // update last_synced mutex
@@ -117,175 +99,5 @@ impl AccountHandle {
         *last_synced = time_now;
         log::debug!("[SYNC] finished syncing in {:.2?}", syc_start_time.elapsed());
         Ok(account_balance)
-    }
-
-    /// Update account with newly synced data
-    async fn update_account(
-        &self,
-        addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
-        unspent_outputs: Vec<OutputData>,
-        transaction_sync_result: Option<TransactionSyncResult>,
-        spent_outputs: Vec<OutputId>,
-        spent_output_responses: Vec<OutputResponse>,
-        options: &SyncOptions,
-    ) -> crate::Result<()> {
-        log::debug!("[SYNC] Update account with new synced data");
-
-        let network_id = self.client.get_network_id().await?;
-        let mut account = self.write().await;
-        #[cfg(feature = "events")]
-        let account_index = account.index;
-
-        // update used field of the addresses
-        for address_with_unspent_outputs in addresses_with_unspent_outputs.iter() {
-            if address_with_unspent_outputs.internal {
-                let position = account
-                    .internal_addresses
-                    .binary_search_by_key(
-                        &(
-                            address_with_unspent_outputs.key_index,
-                            address_with_unspent_outputs.internal,
-                        ),
-                        |a| (a.key_index, a.internal),
-                    )
-                    .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
-                    })?;
-                account.internal_addresses[position].used = true;
-            } else {
-                let position = account
-                    .public_addresses
-                    .binary_search_by_key(
-                        &(
-                            address_with_unspent_outputs.key_index,
-                            address_with_unspent_outputs.internal,
-                        ),
-                        |a| (a.key_index, a.internal),
-                    )
-                    .map_err(|_| {
-                        crate::Error::AddressNotFoundInAccount(address_with_unspent_outputs.address.to_bech32())
-                    })?;
-                account.public_addresses[position].used = true;
-            }
-        }
-
-        // Update addresses_with_unspent_outputs
-        // get all addresses with balance that we didn't sync because their index is below the address_start_index of
-        // the options
-        account.addresses_with_unspent_outputs = account
-            .addresses_with_unspent_outputs
-            .iter()
-            .filter(|a| a.key_index < options.address_start_index)
-            .cloned()
-            .collect();
-        // then add all synced addresses with balance, all other addresses that had balance before will then be removed
-        // from this list
-        account
-            .addresses_with_unspent_outputs
-            .extend(addresses_with_unspent_outputs);
-
-        // Update spent outputs
-        for output_id in spent_outputs {
-            if let Some(output) = account.outputs.get(&output_id) {
-                // Could also be outputs from other networks after we switched the node, so we check that first
-                if output.network_id == network_id {
-                    account.unspent_outputs.remove(&output_id);
-                    // Update spent data fields
-                    if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                        output_data.metadata.is_spent = true;
-                        output_data.is_spent = true;
-                        #[cfg(feature = "events")]
-                        {
-                            self.event_emitter.lock().await.emit(
-                                account_index,
-                                WalletEvent::SpentOutput(SpentOutputEvent {
-                                    output: OutputDataDto::from(&*output_data),
-                                }),
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        // Update output_response if it got spent to include the new metadata
-        for output_response in spent_output_responses {
-            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
-            if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                output_data.metadata = output_response.metadata;
-            }
-        }
-
-        // Add new synced outputs
-        for output_data in unspent_outputs {
-            // Insert output, if it's unknown emit the NewOutputEvent
-            if account
-                .outputs
-                .insert(output_data.output_id, output_data.clone())
-                .is_none()
-            {
-                #[cfg(feature = "events")]
-                {
-                    self.event_emitter.lock().await.emit(
-                        account_index,
-                        WalletEvent::NewOutput(NewOutputEvent {
-                            output: OutputDataDto::from(&output_data),
-                        }),
-                    );
-                }
-            };
-            if !output_data.is_spent {
-                account.unspent_outputs.insert(output_data.output_id, output_data);
-            }
-        }
-
-        // Update data from synced transactions
-        if let Some(transaction_sync_result) = transaction_sync_result {
-            for transaction in transaction_sync_result.updated_transactions {
-                match transaction.inclusion_state {
-                    InclusionState::Confirmed | InclusionState::Conflicting => {
-                        account.pending_transactions.remove(&transaction.payload.id());
-                        #[cfg(feature = "events")]
-                        {
-                            self.event_emitter.lock().await.emit(
-                                account_index,
-                                WalletEvent::TransactionInclusion(TransactionInclusionEvent {
-                                    transaction_id: transaction.payload.id(),
-                                    inclusion_state: transaction.inclusion_state,
-                                }),
-                            );
-                        }
-                    }
-                    _ => {}
-                }
-                account.transactions.insert(transaction.payload.id(), transaction);
-            }
-
-            for output_to_unlock in transaction_sync_result.spent_output_ids {
-                if let Some(output) = account.outputs.get_mut(&output_to_unlock) {
-                    output.is_spent = true;
-                }
-                account.locked_outputs.remove(&output_to_unlock);
-                account.unspent_outputs.remove(&output_to_unlock);
-                log::debug!("[SYNC] Unlocked spent output {}", output_to_unlock);
-            }
-            for output_to_unlock in transaction_sync_result.output_ids_to_unlock {
-                if let Some(output) = account.outputs.get_mut(&output_to_unlock) {
-                    output.is_spent = true;
-                }
-                account.locked_outputs.remove(&output_to_unlock);
-                log::debug!(
-                    "[SYNC] Unlocked unspent output {} because of a conflicting transaction",
-                    output_to_unlock
-                );
-            }
-        }
-        #[cfg(feature = "storage")]
-        {
-            log::debug!("[SYNC] storing account {} with new synced data", account.alias());
-            self.save(Some(&account)).await?;
-        }
-        Ok(())
     }
 }
