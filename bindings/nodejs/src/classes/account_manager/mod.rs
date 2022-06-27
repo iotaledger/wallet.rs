@@ -44,7 +44,7 @@ fn js_value_to_account_id(cx: &mut FunctionContext, value: Handle<JsValue>) -> N
             Ok(id.into())
         }
         Err(_) => {
-            let index: JsNumber = *value.downcast_or_throw(cx)?;
+            let index: Handle<JsNumber> = value.downcast_or_throw(cx)?;
             Ok((index.value(cx) as usize).into())
         }
     }
