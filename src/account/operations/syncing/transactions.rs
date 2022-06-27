@@ -261,7 +261,7 @@ async fn process_transaction_with_unknown_state(
     }
     // If only a part of the inputs got spent, then it couldn't happen with this transaction, so it's conflicting
     if all_inputs_spent {
-        transaction.inclusion_state = InclusionState::UnkownPruned;
+        transaction.inclusion_state = InclusionState::UnknownPruned;
     } else {
         transaction.inclusion_state = InclusionState::Conflicting;
     }

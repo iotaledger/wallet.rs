@@ -4,7 +4,7 @@ enum InclusionState {
     Pending = 'Pending',
     Confirmed = 'Confirmed',
     Conflicting = 'Conflicting',
-    UnkownPruned = 'UnkownPruned',
+    UnknownPruned = 'UnknownPruned',
 }
 
 export interface Transaction {

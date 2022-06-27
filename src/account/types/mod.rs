@@ -121,7 +121,7 @@ pub enum InclusionState {
     Pending,
     Confirmed,
     Conflicting,
-    UnkownPruned,
+    UnknownPruned,
 }
 
 /// The output kind enum.

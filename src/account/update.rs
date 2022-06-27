@@ -178,7 +178,7 @@ impl AccountHandle {
 
         for transaction in updated_transactions {
             match transaction.inclusion_state {
-                InclusionState::Confirmed | InclusionState::Conflicting | InclusionState::UnkownPruned => {
+                InclusionState::Confirmed | InclusionState::Conflicting | InclusionState::UnknownPruned => {
                     let transaction_id = transaction.payload.id();
                     account.pending_transactions.remove(&transaction_id);
                     log::debug!(
