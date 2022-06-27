@@ -3,10 +3,7 @@
 
 use std::time::Instant;
 
-use crate::{
-    account::handle::AccountHandle,
-    account_manager::{AccountBalance, AccountManager},
-};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager};
 
 impl AccountManager {
     /// Find accounts with unspent outputs
@@ -27,7 +24,7 @@ impl AccountManager {
         for account_handle in self.accounts.read().await.iter() {
             // If the gap limit is 0, there is no need to search for funds
             if address_gap_limit > 0 {
-                account_handle.search_addresses_with_funds(address_gap_limit).await?;
+                account_handle.search_addresses_with_outputs(address_gap_limit).await?;
             }
             let account_index = *account_handle.read().await.index();
             match max_account_index_to_keep {
@@ -43,28 +40,29 @@ impl AccountManager {
         loop {
             log::debug!("[recover_accounts] generating {account_gap_limit} new accounts");
 
-            // Generate account with addresses and get their balance in parallel
+            // Generate account with addresses and get their outputs in parallel
             let mut tasks = Vec::new();
             for _ in 0..account_gap_limit {
                 let mut new_account = self.create_account();
                 tasks.push(async move {
                     tokio::spawn(async move {
                         let new_account = new_account.finish().await?;
-                        let account_balance = new_account.search_addresses_with_funds(address_gap_limit).await?;
+                        let account_outputs_count =
+                            new_account.search_addresses_with_outputs(address_gap_limit).await?;
                         let account_index = *new_account.read().await.index();
-                        Ok((account_index, account_balance))
+                        Ok((account_index, account_outputs_count))
                     })
                     .await
                 });
             }
 
-            let results: Vec<crate::Result<(u32, AccountBalance)>> = futures::future::try_join_all(tasks).await?;
-            let mut total_account_balances = 0;
+            let results: Vec<crate::Result<(u32, usize)>> = futures::future::try_join_all(tasks).await?;
+            let mut total_account_outputs_count = 0;
             for res in results {
-                let (account_index, account_balance): (u32, AccountBalance) = res?;
-                total_account_balances += account_balance.total;
+                let (account_index, outputs_count): (u32, usize) = res?;
+                total_account_outputs_count += outputs_count;
 
-                if account_balance.total != 0 {
+                if outputs_count != 0 {
                     match max_account_index_to_keep {
                         Some(max_account_index) => {
                             if account_index > max_account_index {
@@ -76,13 +74,13 @@ impl AccountManager {
                 }
             }
 
-            // If all accounts in this round have no balance, we break
-            if total_account_balances == 0 {
+            // If all accounts in this round have no outputs, we break
+            if total_account_outputs_count == 0 {
                 break;
             }
         }
 
-        // remove accounts without balance
+        // remove accounts without outputs
         let mut accounts = self.accounts.write().await;
         let mut new_accounts = Vec::new();
         for account_handle in accounts.iter() {

@@ -8,22 +8,21 @@ use iota_client::secret::GenerateAddressMetadata;
 use crate::account::{
     handle::AccountHandle,
     operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
-    types::AccountBalance,
 };
 
 impl AccountHandle {
-    /// Search addresses with funds
-    /// `address_gap_limit` defines how many addresses without balance will be checked in each account, if an address
-    /// has balance, the counter is reset
-    /// Addresses that got crated during this operation and have a higher key_index than the latest one with balance,
+    /// Search addresses with unspent outputs
+    /// `address_gap_limit` defines how many addresses without outputs will be checked in each account, if an address
+    /// has outputs, the counter is reset
+    /// Addresses that got crated during this operation and have a higher key_index than the latest one with outputs,
     /// will be removed again, to keep the account size smaller
-    pub(crate) async fn search_addresses_with_funds(
+    pub(crate) async fn search_addresses_with_outputs(
         self: &AccountHandle,
         address_gap_limit: u32,
-    ) -> crate::Result<AccountBalance> {
-        log::debug!("[search_addresses_with_funds]");
+    ) -> crate::Result<usize> {
+        log::debug!("[search_addresses_with_outputs]");
 
-        // store the length so we can remove addresses with higher indexes later if they don't have balance
+        // store the length so we can remove addresses with higher indexes later if they don't have outputs
         let (highest_public_address_index, highest_internal_address_index) = {
             let account = self.read().await;
             let highest_public_address_index = match account.public_addresses.last() {
@@ -37,7 +36,7 @@ impl AccountHandle {
             (highest_public_address_index, highest_internal_address_index)
         };
 
-        let mut latest_balance: Option<AccountBalance> = None;
+        let mut latest_outputs_count = 0;
         loop {
             // generate public and internal addresses
             let addresses = self
@@ -58,34 +57,35 @@ impl AccountHandle {
             )
             .await?;
 
-            let balance = self
-                .sync(Some(SyncOptions {
-                    force_syncing: true,
-                    // skip previous addresses
-                    address_start_index: match addresses.first() {
-                        Some(address) => address.key_index,
-                        None => 0,
-                    },
-                    ..Default::default()
-                }))
-                .await?;
+            self.sync(Some(SyncOptions {
+                force_syncing: true,
+                // skip previous addresses
+                address_start_index: match addresses.first() {
+                    Some(address) => address.key_index,
+                    None => 0,
+                },
+                ..Default::default()
+            }))
+            .await?;
 
-            // break if we didn't find more balance with the new addresses
-            if balance.total <= latest_balance.as_ref().map_or(0, |v| v.total) {
-                latest_balance.replace(balance);
+            let output_count = self.read().await.unspent_outputs.len();
+
+            // break if we didn't find more outputs with the new addresses
+            if output_count <= latest_outputs_count {
+                latest_outputs_count = output_count;
                 break;
             }
-            latest_balance.replace(balance);
+            latest_outputs_count = output_count;
         }
 
         self.clean_account_after_recovery(highest_public_address_index, highest_internal_address_index)
             .await;
 
-        Ok(latest_balance.unwrap_or_default())
+        Ok(latest_outputs_count)
     }
 
-    /// During search_addresses_with_funds we created new addresses that don't have funds, so we remove them again
-    /// addresses_len was before we generated new addresses in search_addresses_with_funds
+    /// During search_addresses_with_outputs we created new addresses that don't have funds, so we remove them again
+    /// addresses_len was before we generated new addresses in search_addresses_with_outputs
     async fn clean_account_after_recovery(
         &self,
         old_highest_public_address_index: u32,
@@ -96,22 +96,22 @@ impl AccountHandle {
             .addresses_with_unspent_outputs()
             .iter()
             .filter(|a| a.amount != 0);
-        let highest_public_index_with_balance = addresses_with_unspent_outputs
+        let highest_public_index_with_outputs = addresses_with_unspent_outputs
             .clone()
             .filter(|a| !a.internal)
             .map(|a| a.key_index)
             .max()
             // We want to have at least one address
             .unwrap_or(0);
-        let highest_internal_index_with_balance = addresses_with_unspent_outputs
+        let highest_internal_index_with_outputs = addresses_with_unspent_outputs
             .filter(|a| a.internal)
             .map(|a| a.key_index)
             .max()
             .unwrap_or(0);
 
         // The new highest index should be either the old one before we searched for funds or if we found addresses with
-        // funds the highest index from an address with balance
-        let new_latest_public_index = cmp::max(highest_public_index_with_balance, old_highest_public_address_index);
+        // funds the highest index from an address with outputs
+        let new_latest_public_index = cmp::max(highest_public_index_with_outputs, old_highest_public_address_index);
         account.public_addresses = account
             .public_addresses
             .clone()
@@ -119,7 +119,7 @@ impl AccountHandle {
             .filter(|a| a.key_index <= new_latest_public_index)
             .collect();
         let new_latest_internal_index =
-            cmp::max(highest_internal_index_with_balance, old_highest_internal_address_index);
+            cmp::max(highest_internal_index_with_outputs, old_highest_internal_address_index);
         // For internal addresses we don't leave an empty address, that's only required for the public address
         account.internal_addresses = if new_latest_internal_index == 0 {
             Vec::new()
