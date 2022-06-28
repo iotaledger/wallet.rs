@@ -200,7 +200,7 @@ fn filter_inputs(
             current_time,
         );
 
-        // Outputs that could get unlocked in the future will not be inluded
+        // Outputs that could get unlocked in the future will not be included
         if !output_can_be_unlocked_now_and_in_future {
             continue;
         }
