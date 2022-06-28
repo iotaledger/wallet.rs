@@ -71,9 +71,9 @@ impl AccountManager {
         let mut new_secret_manager = None;
         // Get the current snapshot path if set
         let snapshot_path = if let SecretManager::Stronghold(stronghold) = &mut *secret_manager {
-            Some(stronghold.snapshot_path.clone())
+            stronghold.snapshot_path.clone()
         } else {
-            None
+            PathBuf::from("wallet.stronghold")
         };
 
         // We'll create a new stronghold to load the backup
