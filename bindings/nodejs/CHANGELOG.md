@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.0]
+
+- Release the version of wallet.rs compatible with the latest Stardust developments.
+  - [6063bfaf](https://github.com/iotaledger/wallet.rs/commit/6063bfaf650318e6489923421f3c6372f8337698) chore: release latest to npm ([#1212](https://github.com/iotaledger/wallet.rs/pull/1212)) on 2022-06-28
+
 ## \[1.0.4]
 
 - Use default target features from `rustc` to determine SSE inclusion for RocksDB
