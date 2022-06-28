@@ -138,7 +138,7 @@ fn filter_inputs(
     let mut available_outputs_signing_data = Vec::new();
     for output_data in available_outputs {
         // Don't use outputs that are already used in other transactions
-        if !locked_outputs.contains(&output_data.output_id) {
+        if locked_outputs.contains(&output_data.output_id) {
             continue;
         }
 
