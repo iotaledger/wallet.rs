@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::bee_block::output::{ByteCost, NativeTokensBuilder, Output};
+use iota_client::bee_block::output::{unlock_condition::UnlockCondition, ByteCost, NativeTokensBuilder, Output};
 
 use crate::account::{
     handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
@@ -61,12 +61,11 @@ impl AccountHandle {
                 _ => {
                     // If there is only an [AddressUnlockCondition], then we can spend the output at any time without
                     // restrictions
-                    if output_data
+                    if let [UnlockCondition::Address(_)] = output_data
                         .output
                         .unlock_conditions()
-                        .expect("no unlock_conditions")
-                        .len()
-                        == 1
+                        .expect("Output needs to have unlock conditions")
+                        .as_ref()
                     {
                         // add nft_id for nft outputs
                         if let Output::Nft(output) = &output_data.output {
