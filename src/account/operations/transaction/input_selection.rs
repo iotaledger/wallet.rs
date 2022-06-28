@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
+use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
     api::input_selection::{try_select_inputs, types::SelectedTransactionData},
@@ -73,10 +73,10 @@ impl AccountHandle {
         let current_time = self.client.get_time_checked().await?;
         let available_outputs_signing_data = filter_inputs(
             &account.addresses_with_unspent_outputs,
-            account.unspent_outputs.values().collect(),
+            account.unspent_outputs.values(),
             current_time,
             &outputs,
-            account.locked_outputs.clone(),
+            &account.locked_outputs,
         )?;
 
         let selected_transaction_data = match try_select_inputs(
@@ -118,7 +118,7 @@ impl AccountHandle {
 /// Note: this is only for the default input selection, it's still possible to send these outputs by using
 /// `claim_outputs` or providing their OutputId's in the custom_inputs
 ///
-/// Some examples for which outputs should be inluded in the inputs to select from:
+/// Some examples for which outputs should be included in the inputs to select from:
 /// | Unlock conditions                                   | Include in inputs |
 /// | --------------------------------------------------- | ----------------- |
 /// | [Address]                                           | yes               |
@@ -130,14 +130,17 @@ impl AccountHandle {
 /// | [Address, StorageDepositReturn, expired Expiration] | yes               |
 fn filter_inputs(
     addresses_with_unspent_outputs: &[AddressWithUnspentOutputs],
-    available_outputs: Vec<&OutputData>,
+    available_outputs: Values<OutputId, OutputData>,
     current_time: u32,
     outputs: &[Output],
-    locked_outputs: HashSet<OutputId>,
+    locked_outputs: &HashSet<OutputId>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
     for output_data in available_outputs {
-        if !locked_outputs.contains(&output_data.output_id) {}
+        // Don't use outputs that are already used in other transactions
+        if !locked_outputs.contains(&output_data.output_id) {
+            continue;
+        }
 
         match &output_data.output {
             Output::Nft(nft_input) => {
