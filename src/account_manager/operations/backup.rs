@@ -45,7 +45,7 @@ impl AccountManager {
                 save_data_to_stronghold_backup(
                     self,
                     // If the SecretManager is not Stronghold we'll create a new one for the backup
-                    &mut StrongholdSecretManager::builder().try_build()?,
+                    &mut StrongholdSecretManager::builder().try_build(backup_path.clone())?,
                     stronghold_password,
                     backup_path,
                     secret_manager_dto,
@@ -71,14 +71,13 @@ impl AccountManager {
         let mut new_secret_manager = None;
         // Get the current snapshot path if set
         let snapshot_path = if let SecretManager::Stronghold(stronghold) = &mut *secret_manager {
-            stronghold.snapshot_path.clone()
+            Some(stronghold.snapshot_path.clone())
         } else {
             None
         };
 
         // We'll create a new stronghold to load the backup
-        let mut new_stronghold = StrongholdSecretManager::builder().try_build()?;
-        new_stronghold.snapshot_path = snapshot_path;
+        let mut new_stronghold = StrongholdSecretManager::builder().try_build(snapshot_path)?;
         read_data_from_stronghold_backup(
             self,
             &mut new_stronghold,
@@ -191,7 +190,7 @@ async fn save_data_to_stronghold_backup(
     let current_snapshot_path = stronghold.snapshot_path.clone();
 
     // Save backup to backup_path
-    stronghold.snapshot_path = Some(backup_path);
+    stronghold.snapshot_path = backup_path;
     stronghold.write_stronghold_snapshot().await?;
 
     // Reset snapshot_path
@@ -217,7 +216,7 @@ async fn read_data_from_stronghold_backup(
     let current_snapshot_path = stronghold.snapshot_path.clone();
 
     // Read backup
-    stronghold.snapshot_path = Some(backup_path.to_path_buf());
+    stronghold.snapshot_path = backup_path.to_path_buf();
     stronghold.read_stronghold_snapshot().await?;
 
     // Set snapshot_path back
@@ -292,10 +291,8 @@ async fn read_data_from_stronghold_backup(
         **accounts = restored_account_handles;
     }
 
-    // If we have a snapshot_path, write stronghold so it's available the next time we start
-    if stronghold.snapshot_path.is_some() {
-        stronghold.write_stronghold_snapshot().await?;
-    }
+    // Write stronghold so it's available the next time we start
+    stronghold.write_stronghold_snapshot().await?;
 
     Ok(())
 }
