@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.1]
+
+- Added default features to cargo.toml
+  - [faeec649](https://github.com/iotaledger/wallet.rs/commit/faeec6492406d84753abaa115cbf57bc9a6856f1) fix: add features upon release ([#1218](https://github.com/iotaledger/wallet.rs/pull/1218)) on 2022-06-28
+
 ## \[2.0.0]
 
 - Release the version of wallet.rs compatible with the latest Stardust developments.
