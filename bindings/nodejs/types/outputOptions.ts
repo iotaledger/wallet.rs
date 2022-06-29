@@ -9,27 +9,27 @@ export interface OutputOptions {
     storageDeposit?: StorageDeposit
 }
 
-interface Assets {
+export interface Assets {
     nativeTokens?: INativeToken[];
     nftId?: string;
 }
 
-interface Features {
+export interface Features {
     tag?: string;
     metadata?: string;
 }
 
-interface Unlocks {
+export interface Unlocks {
     expirationUnixTime?: number;
     timelockUnixTime?: number;
 }
 
-interface StorageDeposit {
+export interface StorageDeposit {
     returnStrategy?: ReturnStrategy
     useExcessIfLow?: boolean;
 }
 
-enum ReturnStrategy {
+export enum ReturnStrategy {
     Return = 'Return',
     Gift = 'Gift',
 }

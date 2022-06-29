@@ -48,7 +48,7 @@ export interface AddressGenerationOptions {
     metadata: GenerateAddressMetadata;
 }
 
-interface GenerateAddressMetadata {
+export interface GenerateAddressMetadata {
     syncing: boolean;
     network: Network;
 }

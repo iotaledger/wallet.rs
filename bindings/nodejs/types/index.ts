@@ -4,12 +4,12 @@ export * from './address';
 export * from './bridge';
 export * from './buildOutputData';
 export * from './event';
+export * from './loggerConfig'
 export * from './network';
 export * from './output';
 export * from './outputOptions';
+export * from './preparedTransactionData';
 export * from './secretManager';
 export * from './signedTransactionEssence';
 export * from './transaction';
 export * from './transactionOptions';
-export * from './loggerConfig';
-export * from './preparedTransactionData';
