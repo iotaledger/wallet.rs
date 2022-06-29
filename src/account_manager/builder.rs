@@ -3,11 +3,16 @@
 
 #[cfg(any(feature = "storage", feature = "stronghold"))]
 use std::path::PathBuf;
-use std::sync::{atomic::AtomicUsize, Arc};
+use std::sync::{
+    atomic::{AtomicU32, AtomicUsize},
+    Arc,
+};
 
 use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{Mutex, RwLock};
+#[cfg(feature = "events")]
+use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 #[cfg(feature = "storage")]
 use crate::account::handle::AccountHandle;
@@ -184,7 +189,7 @@ impl AccountManagerBuilder {
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
-                coin_type: Arc::new(Mutex::new(coin_type)),
+                coin_type: Arc::new(AtomicU32::new(coin_type)),
                 secret_manager,
                 #[cfg(feature = "events")]
                 event_emitter,
@@ -200,7 +205,7 @@ impl AccountManagerBuilder {
                 self.client_options
                     .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
             )),
-            coin_type: Arc::new(Mutex::new(
+            coin_type: Arc::new(AtomicU32::new(
                 self.coin_type
                     .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
             )),

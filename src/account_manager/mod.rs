@@ -5,12 +5,14 @@ pub(crate) mod builder;
 pub(crate) mod operations;
 
 use std::sync::{
-    atomic::{AtomicUsize, Ordering},
+    atomic::{AtomicU32, AtomicUsize, Ordering},
     Arc,
 };
 
 use iota_client::{bee_block::output::NativeTokensBuilder, secret::SecretManager, Client, NodeInfoWrapper};
-use tokio::sync::{Mutex, RwLock};
+#[cfg(feature = "events")]
+use tokio::sync::Mutex;
+use tokio::sync::RwLock;
 
 use self::builder::AccountManagerBuilder;
 #[cfg(feature = "storage")]
@@ -37,7 +39,7 @@ pub struct AccountManager {
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
-    pub(crate) coin_type: Arc<Mutex<u32>>,
+    pub(crate) coin_type: Arc<AtomicU32>,
     pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
@@ -59,7 +61,7 @@ impl AccountManager {
         AccountBuilder::new(
             self.accounts.clone(),
             self.client_options.clone(),
-            self.coin_type.clone(),
+            self.coin_type.load(Ordering::Relaxed),
             self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),

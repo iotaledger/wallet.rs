@@ -3,7 +3,7 @@
 
 #[cfg(feature = "events")]
 use std::sync::Arc;
-use std::{path::PathBuf, str::FromStr};
+use std::{path::PathBuf, str::FromStr, sync::atomic::Ordering};
 
 use iota_client::{
     db::DatabaseProvider,
@@ -157,7 +157,7 @@ async fn save_data_to_stronghold_backup(
         .insert(CLIENT_OPTIONS_KEY.as_bytes(), client_options.as_bytes())
         .await?;
 
-    let coin_type = account_manager.coin_type.lock().await;
+    let coin_type = account_manager.coin_type.load(Ordering::Relaxed);
     stronghold
         .insert(COIN_TYPE_KEY.as_bytes(), &coin_type.to_le_bytes())
         .await?;
@@ -247,7 +247,7 @@ async fn read_data_from_stronghold_backup(
                 .try_into()
                 .map_err(|_| crate::Error::BackupError("Invalid coin_type"))?,
         );
-        *account_manager.coin_type.lock().await = coin_type;
+        account_manager.coin_type.store(coin_type, Ordering::Relaxed);
         log::debug!("[restore_backup] restored coin_type: {coin_type}");
     }
 
