@@ -17,7 +17,7 @@
     "install": "prebuild-install --tag-prefix nodejs-binding-v || npm run rebuild",
     "test": "cargo test"
   },
-  "author": "Antoni Dikov <antoni.dikov@iota.org>",
+  "author": "IOTA Foundation <contact@iota.org>",
   "license": "Apache-2.0",
   "dependencies": {
     "cargo-cp-artifact": "^0.1.5",
