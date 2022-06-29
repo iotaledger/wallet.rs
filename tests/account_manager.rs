@@ -175,7 +175,6 @@ async fn shimmer_coin_type() -> Result<()> {
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/shimmer_coin_type")
         .finish()
         .await?;
