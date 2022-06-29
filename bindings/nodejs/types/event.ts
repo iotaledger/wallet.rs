@@ -1,17 +1,18 @@
 export type EventType =
     | '*'
     | 'ErrorThrown'
-    | 'BalanceChange'
-    | 'NewTransaction'
-    | 'ConfirmationStateChange'
-    | 'Reattachment'
-    | 'Broadcast'
+    | 'ConsolidationRequired'
+    | 'LedgerAddressGeneration'
+    | 'NewOutput'
+    | 'SpentOutput'
+    | 'TransactionInclusion'
     | 'TransactionProgress';
 
 export enum WalletEvent {
-    BalanceChange = 'BalanceChange',
-    TransactionInclusion = 'TransactionInclusion',
-    TransactionProgress = 'TransactionProgress',
     ConsolidationRequired = 'ConsolidationRequired',
     LedgerAddressGeneration = 'LedgerAddressGeneration',
+    NewOutput = 'NewOutput',
+    SpentOutput = 'SpentOutput',
+    TransactionInclusion = 'TransactionInclusion',
+    TransactionProgress = 'TransactionProgress',
 }
