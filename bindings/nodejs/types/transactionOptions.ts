@@ -12,17 +12,17 @@ export type RemainderValueStrategy =
     | ReuseAddress
     | CustomAddress;
 
-type ChangeAddress = {
+export type ChangeAddress = {
     strategy: 'ChangeAddress';
     value: null;
 };
 
-type ReuseAddress = {
+export type ReuseAddress = {
     strategy: 'ReuseAddress';
     value: null;
 };
 
-type CustomAddress = {
+export type CustomAddress = {
     strategy: 'CustomAddress';
     value: string;
 };

@@ -1,6 +1,6 @@
 import type { ITransactionPayload } from '@iota/types';
 
-enum InclusionState {
+export enum InclusionState {
     Pending = 'Pending',
     Confirmed = 'Confirmed',
     Conflicting = 'Conflicting',
