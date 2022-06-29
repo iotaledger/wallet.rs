@@ -18,11 +18,8 @@ async fn main() -> Result<()> {
 
     let address = account.list_addresses().await?;
 
-    let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/plugins/faucet/v1/enqueue",
-        &address[0].address().to_bech32(),
-    )
-    .await?;
+    let faucet_response =
+        request_funds_from_faucet("http://localhost:8091/api/enqueue", &address[0].address().to_bech32()).await?;
 
     println!("{}", faucet_response);
 
