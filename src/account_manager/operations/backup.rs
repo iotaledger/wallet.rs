@@ -24,6 +24,7 @@ use crate::{
 };
 
 pub(crate) const CLIENT_OPTIONS_KEY: &str = "client_options";
+pub(crate) const COIN_TYPE_KEY: &str = "coin_type";
 pub(crate) const SECRET_MANAGER_KEY: &str = "secret_manager";
 pub(crate) const ACCOUNTS_KEY: &str = "accounts";
 pub(crate) const BACKUP_SCHEMA_VERSION_KEY: &str = "backup_schema_version";
@@ -156,6 +157,11 @@ async fn save_data_to_stronghold_backup(
         .insert(CLIENT_OPTIONS_KEY.as_bytes(), client_options.as_bytes())
         .await?;
 
+    let coin_type = account_manager.coin_type.lock().await;
+    stronghold
+        .insert(COIN_TYPE_KEY.as_bytes(), &coin_type.to_le_bytes())
+        .await?;
+
     // Only store secret_managers that aren't SecretManagerDto::Mnemonic, because there the Seed can't be serialized, so
     // we can't create the SecretManager again
     match secret_manager_dto {
@@ -231,6 +237,18 @@ async fn read_data_from_stronghold_backup(
         let client_options: ClientOptions = serde_json::from_str(&client_options_string)?;
         *account_manager.client_options.write().await = client_options;
         log::debug!("[restore_backup] restored client_options");
+    }
+
+    // Get coin_type
+    let coin_type = stronghold.get(COIN_TYPE_KEY.as_bytes()).await?;
+    if let Some(coin_type_bytes) = coin_type {
+        let coin_type = u32::from_le_bytes(
+            coin_type_bytes
+                .try_into()
+                .map_err(|_| crate::Error::BackupError("Invalid coin_type"))?,
+        );
+        *account_manager.coin_type.lock().await = coin_type;
+        log::debug!("[restore_backup] restored coin_type: {coin_type}");
     }
 
     // Get secret_manager
