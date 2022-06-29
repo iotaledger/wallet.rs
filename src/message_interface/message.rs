@@ -65,8 +65,6 @@ pub enum Message {
         current_password: String,
         #[serde(rename = "newPassword")]
         new_password: String,
-        #[serde(rename = "keysToReEncrypt")]
-        keys_to_re_encrypt: Option<Vec<Vec<u8>>>,
     },
     /// Clears the Stronghold password from memory.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -182,11 +180,9 @@ impl Debug for Message {
             Message::ChangeStrongholdPassword {
                 current_password: _,
                 new_password: _,
-                keys_to_re_encrypt,
             } => write!(
                 f,
-                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted>, keys_to_re_encrypt: {:?} }}",
-                keys_to_re_encrypt
+                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted> }}",
             ),
             #[cfg(feature = "stronghold")]
             Message::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
