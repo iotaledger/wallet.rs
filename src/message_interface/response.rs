@@ -27,6 +27,8 @@ use crate::{
     Error,
 };
 
+type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputResponse>);
+
 /// The response message.
 #[derive(Serialize)]
 #[serde(tag = "type", content = "payload")]
@@ -88,7 +90,7 @@ pub enum Response {
     LedgerStatus(LedgerStatus),
     /// Response for
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
-    IncomingTransactionData(Option<Box<(TransactionId, (TransactionPayloadDto, Vec<OutputResponse>))>>),
+    IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
     /// Response for
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
