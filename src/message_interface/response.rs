@@ -7,7 +7,11 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::output::{dto::OutputDto, OutputId},
+    bee_block::{
+        output::{dto::OutputDto, OutputId},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+    },
+    bee_rest_api::types::responses::OutputResponse,
     NodeInfoWrapper,
 };
 use serde::Serialize;
@@ -83,6 +87,9 @@ pub enum Response {
     #[cfg(feature = "ledger_nano")]
     LedgerStatus(LedgerStatus),
     /// Response for
+    /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
+    IncomingTransactionData(Option<Box<(TransactionId, (TransactionPayloadDto, Vec<OutputResponse>))>>),
+    /// Response for
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
@@ -155,6 +162,9 @@ impl Debug for Response {
             }
             Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
+            Response::IncomingTransactionData(transaction_data) => {
+                write!(f, "IncomingTransactionData({:?})", transaction_data)
+            }
             Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
             Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),
             Response::MintTokenTransaction(mint_transaction) => {
