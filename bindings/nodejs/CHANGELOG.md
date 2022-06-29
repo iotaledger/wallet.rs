@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.0]
+
+- Pre-release of the Stardust bindings of Wallet.rs for Node.JS
+  - [615f60e4](https://github.com/iotaledger/wallet.rs/commit/615f60e44f3ff4eac0270e458a42f2c28355ae04) chore: prerelease on npm ([#1228](https://github.com/iotaledger/wallet.rs/pull/1228)) on 2022-06-29
+
 ## \[2.0.1]
 
 - Added default features to cargo.toml
