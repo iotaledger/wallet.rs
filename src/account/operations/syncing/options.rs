@@ -20,12 +20,20 @@ pub struct SyncOptions {
     /// addresses.
     #[serde(rename = "forceSyncing", default)]
     pub force_syncing: bool,
+    /// Try to sync transactions from incoming outputs with their inputs. Some data may not be obtained if it has been
+    /// pruned.
+    #[serde(rename = "syncIncomingTransactions", default = "default_sync_incoming_transactions")]
+    pub sync_incoming_transactions: bool,
     /// Checks pending transactions and promotes/reattaches them if necessary.
     #[serde(rename = "syncPendingTransactions", default = "default_sync_pending_transactions")]
     pub sync_pending_transactions: bool,
     /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
     pub sync_aliases_and_nfts: bool,
+}
+
+fn default_sync_incoming_transactions() -> bool {
+    false
 }
 
 fn default_sync_pending_transactions() -> bool {
@@ -44,9 +52,10 @@ impl Default for SyncOptions {
     fn default() -> Self {
         Self {
             addresses: Vec::new(),
-            address_start_index: 0,
-            sync_pending_transactions: true,
-            sync_aliases_and_nfts: true,
+            address_start_index: default_address_start_index(),
+            sync_incoming_transactions: default_sync_incoming_transactions(),
+            sync_pending_transactions: default_sync_pending_transactions(),
+            sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
             force_syncing: false,
         }
     }

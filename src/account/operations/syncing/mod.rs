@@ -73,7 +73,14 @@ impl AccountHandle {
         let (spent_output_responses, _already_known_balance, _loaded_output_responses) =
             self.get_outputs(spent_output_ids.clone(), true).await?;
 
-        // add a field to the sync options to also sync incoming transactions?
+        if options.sync_incoming_transactions {
+            let transaction_ids = output_data
+                .iter()
+                .map(|output| *output.output_id.transaction_id())
+                .collect();
+            // Request and store transaction payload for newly received unspent outputs
+            self.request_incoming_transaction_data(transaction_ids).await?;
+        }
 
         // updates account with balances, output ids, outputs
         self.update_account(

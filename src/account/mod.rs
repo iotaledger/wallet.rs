@@ -85,10 +85,8 @@ pub struct Account {
     // Maybe pending transactions even additionally separated?
     #[serde(rename = "pendingTransactions")]
     pending_transactions: HashSet<TransactionId>,
-    /// Transaction payloads for received unspent outputs, for easy retrieval of reciever addresses
-    #[serde(rename = "unspentOutputTransactionPayloads")]
-    unspent_output_transaction_payloads: HashMap<TransactionId, TransactionPayload>,
-    /// Outputs for inputs used in newly received transactions, for easy retrieval of sender addresses
-    #[serde(rename = "unspentOutputTransactionInputs")]
-    unspent_output_transaction_inputs: HashMap<TransactionId, Vec<OutputResponse>>,
+    /// Transaction payloads for received outputs with inputs when not pruned before syncing, can be used to determine
+    /// the sender address/es
+    #[serde(rename = "incomingTransactions")]
+    incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>,
 }

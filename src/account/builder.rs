@@ -185,8 +185,7 @@ impl AccountBuilder {
             unspent_outputs: HashMap::new(),
             transactions: HashMap::new(),
             pending_transactions: HashSet::new(),
-            unspent_output_transaction_payloads: HashMap::new(),
-            unspent_output_transaction_inputs: HashMap::new(),
+            incoming_transactions: HashMap::new(),
         };
 
         let account_handle = AccountHandle::new(
