@@ -17,7 +17,6 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<TransactionResult> {
         log::debug!("[TRANSACTION] melt_native_token");
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
 
         let token_id = native_token.0;
         let melt_token_amount = native_token.1;
@@ -44,7 +43,6 @@ impl AccountHandle {
             let outputs = vec![
                 alias_output,
                 FoundryOutputBuilder::from(&existing_foundry_output)
-                    .with_minimum_storage_deposit(byte_cost_config)
                     .with_token_scheme(TokenScheme::Simple(SimpleTokenScheme::new(
                         *token_scheme.minted_tokens(),
                         token_scheme.melted_tokens() + melt_token_amount,
