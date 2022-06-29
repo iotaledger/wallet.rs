@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.1.0]
+
+- Exports all types, interfaces and enums.
+  - [590a3ddb](https://github.com/iotaledger/wallet.rs/commit/590a3ddbab215d02c9e3970cf934eabe3050032c) feat: export all types ([#1223](https://github.com/iotaledger/wallet.rs/pull/1223)) on 2022-06-29
+
 ## \[2.0.1]
 
 - Added default features to cargo.toml
