@@ -24,9 +24,10 @@ use crate::{account_manager::AccountManager, ClientOptions};
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.
 pub struct AccountManagerBuilder {
+    client_options: Option<ClientOptions>,
+    coin_type: Option<u32>,
     #[cfg(feature = "storage")]
     storage_options: Option<StorageOptions>,
-    client_options: Option<ClientOptions>,
     #[serde(default, skip_serializing, skip_deserializing)]
     pub(crate) secret_manager: Option<Arc<RwLock<SecretManager>>>,
 }
@@ -36,7 +37,6 @@ pub struct AccountManagerBuilder {
 pub struct StorageOptions {
     pub(crate) storage_path: PathBuf,
     pub(crate) storage_file_name: Option<String>,
-    // storage: ManagerStorage,
     pub(crate) storage_encryption_key: Option<[u8; 32]>,
     pub(crate) manager_store: ManagerStorage,
 }
@@ -62,9 +62,15 @@ impl AccountManagerBuilder {
         }
     }
 
-    /// Set the IOTA client options.
+    /// Set the client options for the core nodes.
     pub fn with_client_options(mut self, client_options: ClientOptions) -> Self {
         self.client_options.replace(client_options);
+        self
+    }
+
+    /// Set the coin type for the account manager. Registered coin types can be found at https://github.com/satoshilabs/slips/blob/master/slip-0044.md.
+    pub fn with_coin_type(mut self, coin_type: u32) -> Self {
+        self.coin_type.replace(coin_type);
         self
     }
 
@@ -110,7 +116,7 @@ impl AccountManagerBuilder {
         #[cfg(feature = "storage")]
         {
             let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
-            let (client_options, secret_manager) = match manager_builder {
+            let (client_options, secret_manager, coin_type) = match manager_builder {
                 Some(data) => {
                     // prioritise provided client_options and secret_manager over stored ones
                     let client_options = match self.client_options {
@@ -125,7 +131,13 @@ impl AccountManagerBuilder {
                             .secret_manager
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     };
-                    (client_options, secret_manager)
+                    let coin_type = match self.coin_type {
+                        Some(coin_type) => coin_type,
+                        None => data
+                            .coin_type
+                            .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
+                    };
+                    (client_options, secret_manager, coin_type)
                 }
                 // If no account manager data exist, we will set it
                 None => {
@@ -136,6 +148,8 @@ impl AccountManagerBuilder {
                             .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
                         self.secret_manager
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
+                        self.coin_type
+                            .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                     )
                 }
             };
@@ -172,6 +186,7 @@ impl AccountManagerBuilder {
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
+                coin_type,
                 secret_manager,
                 #[cfg(feature = "events")]
                 event_emitter,
@@ -187,6 +202,9 @@ impl AccountManagerBuilder {
                 self.client_options
                     .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
             )),
+            coin_type: self
+                .coin_type
+                .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
             secret_manager: self
                 .secret_manager
                 .ok_or(crate::Error::MissingParameter("secret_manager"))?,

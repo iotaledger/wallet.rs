@@ -23,9 +23,6 @@ use crate::{
 pub struct AccountToCreate {
     /// The account alias.
     pub alias: Option<String>,
-    /// The account coin type.
-    #[serde(rename = "coinType")]
-    pub coin_type: Option<u32>,
 }
 
 /// The messages that can be sent to the actor.

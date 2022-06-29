@@ -71,5 +71,4 @@ export enum CoinType {
 
 export interface CreateAccountPayload {
     alias?: string;
-    coinType?: CoinType;
 }

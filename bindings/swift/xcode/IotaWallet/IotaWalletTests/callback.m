@@ -24,7 +24,7 @@
     
     XCTAssert(wallet, @"%@", [error localizedDescription]);
     
-    NSString *message = @"{\"cmd\": \"CreateAccount\", \"payload\": { \"clientOptions\": { \"node\": \"https://nodes.devnet.iota.org:443\" } }, \"secretManager\": { \"type\": \"Stronghold\" } }";
+    NSString *message = @"{\"cmd\": \"CreateAccount\", \"payload\": { \"clientOptions\": { \"node\": \"https://nodes.devnet.iota.org:443\" } }, \"coinType\": 4219, \"secretManager\": { \"type\": \"Stronghold\" } }";
     
     XCTestExpectation *expectation = [self expectationWithDescription:@"CreateAccount"];
     [wallet sendMessage:message completion:^(NSString * _Nullable message, NSError * _Nullable error) {

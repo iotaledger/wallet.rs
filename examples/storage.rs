@@ -7,8 +7,9 @@ use std::time::Instant;
 
 use iota_wallet::{
     account_manager::AccountManager,
+    iota_client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
-    Result,
+    ClientOptions, Result,
 };
 
 #[tokio::main]
@@ -17,8 +18,14 @@ async fn main() -> Result<()> {
         "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
     )?;
 
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_node_sync_disabled();
+
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("wallet-database")
         .finish()
         .await?;

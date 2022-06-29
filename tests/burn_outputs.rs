@@ -9,6 +9,7 @@ use iota_client::{
 };
 use iota_wallet::{
     account_manager::AccountManager,
+    iota_client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
 };
@@ -30,6 +31,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path(storage_path)
         .finish()
         .await
@@ -102,6 +104,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path(storage_path)
         .finish()
         .await
@@ -198,6 +201,7 @@ async fn destroy_foundry() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path(storage_path)
         .finish()
         .await
@@ -256,6 +260,7 @@ async fn destroy_alias() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 

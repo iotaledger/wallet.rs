@@ -39,6 +39,7 @@ pub struct AccountManager {
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
+    pub(crate) coin_type: u32,
     pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     #[cfg(feature = "events")]
     pub(crate) event_emitter: Arc<Mutex<EventEmitter>>,
@@ -60,6 +61,7 @@ impl AccountManager {
         AccountBuilder::new(
             self.accounts.clone(),
             self.client_options.clone(),
+            self.coin_type,
             self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),

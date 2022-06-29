@@ -11,6 +11,7 @@ class SwiftAwait: XCTestCase {
     struct ManagerOptions: Codable {
         var storagePath: String?
         var clientOptions: String?
+        var coinType: Int?
         var secretManager: String?
     }
 
@@ -42,7 +43,7 @@ class SwiftAwait: XCTestCase {
         }
         """
         
-        return ManagerOptions(storagePath: "teststorage", clientOptions: client_options, secretManager: secret_manager)
+        return ManagerOptions(storagePath: "teststorage", clientOptions: client_options, coinType: 4219, secretManager: secret_manager)
     }
     
     func testCreateAccount() async throws {
