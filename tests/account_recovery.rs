@@ -5,6 +5,7 @@
 
 use iota_wallet::{
     account_manager::AccountManager,
+    iota_client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
@@ -25,6 +26,7 @@ async fn account_recovery_empty() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/account_recovery_empty")
         .finish()
         .await?;
@@ -52,6 +54,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 
@@ -86,6 +89,7 @@ async fn account_recovery_with_balance() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 
@@ -123,6 +127,7 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 

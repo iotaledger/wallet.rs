@@ -30,6 +30,8 @@ pub struct ManagerOptions {
     storage_path: Option<String>,
     #[serde(rename = "clientOptions")]
     client_options: Option<String>,
+    #[serde(rename = "coinType")]
+    pub coin_type: Option<u32>,
     #[serde(rename = "secretManager", serialize_with = "secret_manager_serialize")]
     secret_manager: Option<String>,
 }
@@ -63,6 +65,10 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
             builder = builder.with_client_options(ClientOptions::new().from_json(&client_options)?);
         }
 
+        if let Some(coin_type) = options.coin_type {
+            builder = builder.with_coin_type(coin_type);
+        }
+
         builder.finish().await?
     } else {
         AccountManager::builder().finish().await?
@@ -94,13 +100,16 @@ pub async fn clear_listeners(handle: &WalletMessageHandler, events: Vec<WalletEv
 
 #[cfg(test)]
 mod tests {
-    use iota_client::bee_block::{
-        address::Address,
-        output::{
-            dto::OutputDto,
-            unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            BasicOutputBuilder,
+    use iota_client::{
+        bee_block::{
+            address::Address,
+            output::{
+                dto::OutputDto,
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                BasicOutputBuilder,
+            },
         },
+        constants::SHIMMER_COIN_TYPE,
     };
 
     #[cfg(feature = "events")]
@@ -136,16 +145,14 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_create_account".to_string()),
             client_options: Some(client_options),
+            coin_type: Some(SHIMMER_COIN_TYPE),
             secret_manager: Some(secret_manager),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // create an account
-        let account = AccountToCreate {
-            alias: None,
-            coin_type: None,
-        };
+        let account = AccountToCreate { alias: None };
         let response = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
         match response {
             Response::Account(account) => {
@@ -177,6 +184,7 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_events".to_string()),
             client_options: Some(client_options),
+            coin_type: Some(SHIMMER_COIN_TYPE),
             secret_manager: Some(secret_manager),
         };
 
@@ -193,7 +201,6 @@ mod tests {
         // create an account
         let account = AccountToCreate {
             alias: Some("alias".to_string()),
-            coin_type: None,
         };
         let _ = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
 
@@ -239,6 +246,7 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_stronghold".to_string()),
             client_options: Some(client_options),
+            coin_type: Some(SHIMMER_COIN_TYPE),
             secret_manager: Some(secret_manager),
         };
 
@@ -278,6 +286,7 @@ mod tests {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/address_conversion_methods".to_string()),
             client_options: Some(client_options),
+            coin_type: Some(SHIMMER_COIN_TYPE),
             secret_manager: Some(secret_manager),
         };
 

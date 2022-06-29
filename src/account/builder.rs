@@ -8,7 +8,7 @@ use std::{
 
 use iota_client::{
     bee_block::address::Address,
-    constants::{SHIMMER_COIN_TYPE, SHIMMER_TESTNET_BECH32_HRP},
+    constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
@@ -33,7 +33,7 @@ pub struct AccountBuilder {
     addresses: Option<Vec<AccountAddress>>,
     alias: Option<String>,
     client_options: Arc<RwLock<ClientOptions>>,
-    coin_type: Option<u32>,
+    coin_type: u32,
     secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
     #[cfg(feature = "events")]
@@ -47,6 +47,7 @@ impl AccountBuilder {
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
         client_options: Arc<RwLock<ClientOptions>>,
+        coin_type: u32,
         secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
@@ -55,7 +56,7 @@ impl AccountBuilder {
             addresses: None,
             alias: None,
             client_options,
-            coin_type: None,
+            coin_type,
             secret_manager,
             accounts,
             #[cfg(feature = "events")]
@@ -78,13 +79,6 @@ impl AccountBuilder {
         self
     }
 
-    /// Set the coin type, only useful for the first account, later accounts need to have the same coin type, to prevent
-    /// issues with signing
-    pub fn with_coin_type(mut self, coin_type: u32) -> Self {
-        self.coin_type.replace(coin_type);
-        self
-    }
-
     /// Build the Account and add it to the accounts from AccountManager
     /// Also generates the first address of the account and if it's not the first account, the address for the first
     /// account will also be generated and compared, so no accounts get generated with different seeds
@@ -104,13 +98,8 @@ impl AccountBuilder {
         for account_handle in accounts.iter() {
             let account = account_handle.read().await;
             let existing_coin_type = account.coin_type;
-            if let Some(provided_coin_type) = &self.coin_type {
-                if &existing_coin_type != provided_coin_type {
-                    return Err(Error::InvalidCoinType(*provided_coin_type, existing_coin_type));
-                }
-            } else {
-                // If coin type is None we will set it
-                self.coin_type.replace(existing_coin_type);
+            if existing_coin_type != self.coin_type {
+                return Err(Error::InvalidCoinType(self.coin_type, existing_coin_type));
             }
             if account.alias().to_lowercase() == account_alias.to_lowercase() {
                 return Err(Error::AccountAliasAlreadyExists);
@@ -170,12 +159,8 @@ impl AccountBuilder {
                     }
                 };
 
-                let first_public_address = get_first_public_address(
-                    &self.secret_manager,
-                    self.coin_type.unwrap_or(SHIMMER_COIN_TYPE) as u32,
-                    account_index,
-                )
-                .await?;
+                let first_public_address =
+                    get_first_public_address(&self.secret_manager, self.coin_type, account_index).await?;
 
                 let first_public_account_address = AccountAddress {
                     address: AddressWrapper::new(first_public_address, bech32_hrp),
@@ -190,7 +175,7 @@ impl AccountBuilder {
 
         let account = Account {
             index: account_index,
-            coin_type: self.coin_type.unwrap_or(SHIMMER_COIN_TYPE) as u32,
+            coin_type: self.coin_type,
             alias: account_alias,
             public_addresses: addresses,
             internal_addresses: Vec::new(),

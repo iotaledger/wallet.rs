@@ -113,6 +113,7 @@ async fn main() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 

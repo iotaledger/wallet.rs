@@ -13,7 +13,6 @@ async function run() {
         // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',
-            coinType: CoinType.IOTA,
         });
         console.log('Account created:', account);
 
@@ -38,6 +37,7 @@ async function createAccountManager() {
             ],
             localPow: true,
         },
+        coinType: CoinType.Shimmer,
         secretManager: {
             Stronghold: {
                 snapshotPath: `./wallet.stronghold`,

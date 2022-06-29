@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 
 use iota_client::{
+    constants::SHIMMER_COIN_TYPE,
     node_manager::node::{Node, NodeDto, Url},
     secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
 };
@@ -30,6 +31,7 @@ async fn backup_and_restore() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_client_options(client_options.clone())
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/backup_and_restore/1")
         .finish()
         .await?;
@@ -57,6 +59,7 @@ async fn backup_and_restore() -> Result<()> {
         .with_storage_path("test-storage/backup_and_restore/2")
         .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 
@@ -114,6 +117,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options.clone())
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/backup_and_restore_mnemonic_secret_manager/1")
         .finish()
         .await?;
@@ -144,6 +148,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore_mnemonic_secret_manager/2")
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
         .finish()
         .await?;

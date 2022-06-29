@@ -6,7 +6,10 @@ use std::str::FromStr;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions},
     account_manager::AccountManager,
-    iota_client::bee_block::output::{NativeToken, NftId, TokenId},
+    iota_client::{
+        bee_block::output::{NativeToken, NftId, TokenId},
+        constants::SHIMMER_COIN_TYPE,
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result, U256,
 };
@@ -27,6 +30,7 @@ async fn output_preparation() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/output_preparation")
         .finish()
         .await?;
