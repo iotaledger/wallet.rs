@@ -1,12 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
-    address::AliasAddress,
-    output::{
-        unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
-        AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
-    },
+use iota_client::bee_block::output::{
+    AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
 };
 use primitive_types::U256;
 
@@ -38,33 +34,23 @@ impl AccountHandle {
             })?;
 
         if let Output::Alias(alias_output) = &existing_alias_output_data.output {
-            // Amount can't be burned, only native tokens
-            let amount = existing_alias_output_data.amount + existing_foundry_output.amount();
             // Create the new alias output with updated amount and state_index
             let alias_output = AliasOutputBuilder::from(alias_output)
                 .with_alias_id(alias_id)
-                .with_amount(amount)?
                 .with_state_index(alias_output.state_index() + 1)
-                .finish()?;
+                .finish_output()?;
 
-            let TokenScheme::Simple(foundry_simple_ts) = existing_foundry_output.token_scheme();
+            let TokenScheme::Simple(token_scheme) = existing_foundry_output.token_scheme();
             let outputs = vec![
-                Output::Alias(alias_output),
-                Output::Foundry(
-                    FoundryOutputBuilder::new_with_minimum_storage_deposit(
-                        byte_cost_config,
-                        foundry_id.serial_number(),
-                        TokenScheme::Simple(SimpleTokenScheme::new(
-                            *foundry_simple_ts.minted_tokens(),
-                            foundry_simple_ts.melted_tokens() + melt_token_amount,
-                            *foundry_simple_ts.maximum_supply(),
-                        )?),
-                    )?
-                    .add_unlock_condition(UnlockCondition::ImmutableAliasAddress(
-                        ImmutableAliasAddressUnlockCondition::new(AliasAddress::from(alias_id)),
-                    ))
-                    .finish()?,
-                ),
+                alias_output,
+                FoundryOutputBuilder::from(&existing_foundry_output)
+                    .with_minimum_storage_deposit(byte_cost_config)
+                    .with_token_scheme(TokenScheme::Simple(SimpleTokenScheme::new(
+                        *token_scheme.minted_tokens(),
+                        token_scheme.melted_tokens() + melt_token_amount,
+                        *token_scheme.maximum_supply(),
+                    )?))
+                    .finish_output()?,
             ];
             // Input selection will detect that we're melting native tokens and add the required inputs if available
             self.send(outputs, options).await
