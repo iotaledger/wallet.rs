@@ -212,6 +212,19 @@ impl AccountHandle {
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
         let bech32_address_ = &address.address.to_bech32();
 
+        // Only sync outputs with basic unlock conditions and only `AddressUnlockCondition`
+        if sync_options.sync_only_most_basic_outputs {
+            let output_ids = client
+                .basic_output_ids(vec![
+                    QueryParameter::Address(bech32_address_.to_string()),
+                    QueryParameter::HasExpirationCondition(false),
+                    QueryParameter::HasTimelockCondition(false),
+                    QueryParameter::HasStorageReturnCondition(false),
+                ])
+                .await?;
+            return Ok((address, output_ids));
+        }
+
         let mut tasks = vec![
             // Get basic outputs
             async move {

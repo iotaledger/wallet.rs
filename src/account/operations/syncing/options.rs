@@ -30,6 +30,13 @@ pub struct SyncOptions {
     /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
     pub sync_aliases_and_nfts: bool,
+    /// Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
+    /// `sync_aliases_and_nfts`
+    #[serde(
+        rename = "syncOnlyMostBasicOutputs",
+        default = "default_sync_only_most_basic_outputs"
+    )]
+    pub sync_only_most_basic_outputs: bool,
 }
 
 fn default_sync_incoming_transactions() -> bool {
@@ -44,6 +51,10 @@ fn default_sync_aliases_and_nfts() -> bool {
     true
 }
 
+fn default_sync_only_most_basic_outputs() -> bool {
+    false
+}
+
 fn default_address_start_index() -> u32 {
     0
 }
@@ -56,6 +67,7 @@ impl Default for SyncOptions {
             sync_incoming_transactions: default_sync_incoming_transactions(),
             sync_pending_transactions: default_sync_pending_transactions(),
             sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
+            sync_only_most_basic_outputs: default_sync_only_most_basic_outputs(),
             force_syncing: false,
         }
     }
