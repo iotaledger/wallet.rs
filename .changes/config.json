@@ -31,6 +31,9 @@
           "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[4]' message_interface"
         },
         {
+          "command": "tsc"
+        },
+        {
           "command": "cat Cargo.toml"
         }
       ],
