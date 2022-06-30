@@ -15,11 +15,9 @@ use crate::{
         operations::transaction::{
             high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
         },
-        types::address::AccountAddress,
+        types::{address::AccountAddress, OutputDataDto},
     },
-    message_interface::dtos::{
-        AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
-    },
+    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, TransactionDto},
     Error,
 };
 

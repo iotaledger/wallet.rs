@@ -12,8 +12,8 @@ use std::{collections::HashMap, str::FromStr};
 use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
-        address::Address,
-        output::{AliasId, FoundryId, NativeTokens, NftId, Output, OutputId},
+        address::{dto::AddressDto, Address},
+        output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId},
         payload::transaction::TransactionPayload,
         BlockId,
     },
@@ -95,6 +95,48 @@ impl OutputData {
             chain: self.chain.clone(),
             bech32_address: self.address.to_bech32("atoi"),
         })
+    }
+}
+
+/// Dto for an output with metadata
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct OutputDataDto {
+    /// The output id
+    #[serde(rename = "outputId")]
+    pub output_id: OutputId,
+    /// The metadata of the output
+    pub metadata: OutputMetadataResponse,
+    /// The actual Output
+    pub output: OutputDto,
+    /// The output amount
+    pub amount: String,
+    /// If an output is spent
+    #[serde(rename = "isSpent")]
+    pub is_spent: bool,
+    /// Associated account address.
+    pub address: AddressDto,
+    /// Network ID
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    /// Remainder
+    pub remainder: bool,
+    /// Bip32 path
+    pub chain: Option<Chain>,
+}
+
+impl From<&OutputData> for OutputDataDto {
+    fn from(value: &OutputData) -> Self {
+        Self {
+            output_id: value.output_id,
+            metadata: value.metadata.clone(),
+            output: OutputDto::from(&value.output),
+            amount: value.amount.to_string(),
+            is_spent: value.is_spent,
+            address: AddressDto::from(&value.address),
+            network_id: value.network_id.to_string(),
+            remainder: value.remainder,
+            chain: value.chain.clone(),
+        }
     }
 }
 

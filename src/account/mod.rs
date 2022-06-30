@@ -35,6 +35,7 @@ pub use self::{
             RemainderValueStrategy, TransactionOptions,
         },
     },
+    types::OutputDataDto,
 };
 
 /// An Account.

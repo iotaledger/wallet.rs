@@ -9,8 +9,8 @@ impl AccountManager {
     /// Get the ledger nano status
     pub async fn get_ledger_status(&self) -> crate::Result<LedgerStatus> {
         match &*self.secret_manager.read().await {
-            SecretManager::LedgerNano(stronghold) | SecretManager::LedgerNanoSimulator(stronghold) => {
-                Ok(stronghold.get_ledger_status().await)
+            SecretManager::LedgerNano(ledger) | SecretManager::LedgerNanoSimulator(ledger) => {
+                Ok(ledger.get_ledger_status().await)
             }
             _ => Err(iota_client::Error::SecretManagerMismatch.into()),
         }

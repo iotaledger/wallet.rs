@@ -25,11 +25,14 @@ use zeroize::Zeroize;
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{
-    account::{operations::transaction::prepare_output::OutputOptions, types::AccountIdentifier},
+    account::{
+        operations::transaction::prepare_output::OutputOptions,
+        types::{AccountIdentifier, OutputDataDto},
+    },
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
+        dtos::{AccountBalanceDto, AccountDto, TransactionDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,

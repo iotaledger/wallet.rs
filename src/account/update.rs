@@ -21,10 +21,9 @@ use crate::account::{
 };
 #[cfg(feature = "events")]
 use crate::{
+    account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
-    message_interface::dtos::OutputDataDto,
 };
-
 impl AccountHandle {
     // Set the alias for the account
     pub async fn set_alias(&self, alias: &str) -> crate::Result<()> {
