@@ -46,6 +46,9 @@ export interface AccountSyncOptions {
     syncPendingTransactions?: boolean;
     /** Specifies if only basic outputs should be synced or also alias and nft outputs. Default: true. */
     syncAliasesAndNfts?: boolean;
+    /** Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
+     * `syncAliasesAndNfts`. Default: false. */
+    syncOnlyMostBasicOutputs?: boolean;
 }
 
 export interface AccountMeta {
