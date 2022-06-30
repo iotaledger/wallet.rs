@@ -452,7 +452,7 @@ impl WalletMessageHandler {
                 let transaction_data = account_handle.get_incoming_transaction_data(transaction_id).await;
                 match transaction_data {
                     Some((transaction_payload, inputs)) => Ok(Response::IncomingTransactionData(Some(Box::new((
-                        transaction_payload.id(),
+                        transaction_id,
                         (TransactionPayloadDto::from(&transaction_payload), inputs),
                     ))))),
                     None => Ok(Response::IncomingTransactionData(None)),
