@@ -225,7 +225,9 @@ export type __SubmitAndStoreTransactionMethod__ = {
 
 export type __SyncAccountMethod__ = {
     name: 'SyncAccount';
-    data: AccountSyncOptions;
+    data: {
+        options?: AccountSyncOptions;
+    }
 };
 
 export type __TryClaimOutputsMethod__ = {
