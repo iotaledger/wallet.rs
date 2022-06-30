@@ -1,5 +1,11 @@
 # Changelog
 
+## \[2.0.2-alpha.1]
+
+- Added coinType to account manager
+  Added typescript declaration files to the package
+  - [4918c237](https://github.com/iotaledger/wallet.rs/commit/4918c2377b1569d82034197f121df74fef2c583b) fix: added new file to trigger covector release ([#1240](https://github.com/iotaledger/wallet.rs/pull/1240)) on 2022-06-30
+
 ## \[2.0.2-alpha.0]
 
 - Pre-release of the Stardust bindings of Wallet.rs for Node.JS

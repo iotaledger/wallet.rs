@@ -1,6 +1,7 @@
 {
   "tag": "alpha",
   "changes": [
-    ".changes/pre-release.md"
+    ".changes/pre-release.md",
+    ".changes/typescript-declarations.md"
   ]
 }
