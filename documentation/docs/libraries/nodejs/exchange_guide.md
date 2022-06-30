@@ -11,7 +11,12 @@ keywords:
 - explanation
 ---
 import CodeBlock from '@theme/CodeBlock';
-import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/1-create-account.js';
+import generate_mnemonic from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/1-generate-mnemonic.js';
+import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/2-create-account.js';
+import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/3-generate-address.js';
+import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/4-check-balance.js';
+import listen_events from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/5-listen-events.js';
+import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/6-send-amount.js';
 
 # Exchange Guide
 
@@ -85,13 +90,23 @@ You can read more about [backup and security in this guide](./backup_security).
 
 ```bash
 npm install @iota/wallet dotenv
-touch .env
 ```
+
+#### 1.1 Generate a mnemonic
+
+<CodeBlock className="language-javascript">
+  {generate_mnemonic}
+</CodeBlock>
 
 Then, input your password to the `.env` file like this:
 
 ```bash
+touch .env
+```
+
+```bash
 SH_PASSWORD="here is your super secure password"
+MNEMONIC="here is your super secure 24 word mnemonic, it's only needed here the first time"
 ```
 
 Once you have everything needed to use the `wallet.rs` library, it is necessary to initialize the `AccountManager` instance with a secret manager(`Stronghold` by default) and client options.
@@ -102,9 +117,9 @@ Manage your password with the utmost care.
 
 :::
 
-By default the Stronghold file will be called `wallet.stronghold`. It is needed to generate a seed (derived from the mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.
+By default the Stronghold file will be called `wallet.stronghold`. It will store the seed (derived from the mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.
 
-One of the key principles behind the `stronghold` is that no one can get a seed out of it, so you should also backup the mnemonic (24 words) in a secure place. You deal with all the accounts purely via the `AccountManager` instance where all complexities are hidden under the hood and are dealt with securely.
+One of the key principles behind the `stronghold` is that no one can get a seed out of it, so you should also backup the mnemonic (24 words) in a secure place, because there is no way to recover it from the `.stronghold` file. You deal with all the accounts purely via the `AccountManager` instance where all complexities are hidden under the hood and are dealt with securely.
 
 :::note
 
@@ -112,24 +127,17 @@ Keep the `stronghold` password and the `stronghold` database on separate devices
 
 :::
 
+#### 1.2 Create an account
+
 Import the Wallet Library and create an account manager:
 
 <CodeBlock className="language-javascript">
   {create_account}
 </CodeBlock>
 
-Once the stronghold storage is created, it is not needed to generate the seed any longer (`manager.storeMnemonic(SignerType.Stronghold, manager.generateMnemonic())`). It has already been saved in the storage together with all account information.
-
 ### 2. Create an Account For a User
 
-Once the backend storage is created, individual accounts for individual users can be created:
-
-```javascript
-    let account = await manager.createAccount({
-        alias: user_id,  // an unique id from your existing user
-        clientOptions: { node: 'https://api.lb-0.h.chrysalis-devnet.iota.cafe/', localPow: false }
-    })
-```
+Once the backend storage is created, individual accounts for individual users can be created.
 
 Each account is related to a specific IOTA network (mainnet/devnet) which is referenced by a node property, such as node url (in this example, the Chrysalis devnet balancer).
 
@@ -141,7 +149,6 @@ Once an account has been created, you get an instance of it using `AccountManage
 
 The most common methods of `account` instance include:
 
-* `account.alias()` - returns an alias of the given account.
 * `account.listAddresses()` - returns list of addresses related to the account.
 * `account.generateAddress()` - generate a new address for the address index incremented by 1.
 * `account.balance()` - returns the balance for the given account.
@@ -149,6 +156,10 @@ The most common methods of `account` instance include:
 
 ### 3. Generate a User Address to Deposit Funds
 `Wallet.rs` is a stateful library which means it caches all relevant information in storage to provide performance benefits while dealing with, potentially, many accounts/addresses.
+
+<CodeBlock className="language-javascript">
+  {create_account}
+</CodeBlock>
 
 Every account can have multiple addresses. Addresses are represented by an `index` which is incremented (by 1) every time a new address is created. The addresses are accessible via `account.listAddress()`: 
 
@@ -166,24 +177,23 @@ Addresses are of two types, `internal` and `public` (external):
 * Internal addresses (`internal=true`) are called `change` addresses and are used to send the excess funds to them.
 * The approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
 
-### 4. Listen to Events
+### 4. Check the Account Balance
+
+Get the available account balance across all addresses of the given account:
+
+<CodeBlock className="language-javascript">
+  {check_balance}
+</CodeBlock>
+
+### 5. Listen to Events
 
 The `Wallet.rs` library supports several events for listening. As soon as the given event occurs (which usually happens during syncing), a provided callback is triggered.
 
 Below is an example for listening to new output events:
 
-```javascript
-    const callback = function(err, data) {
-        if(err) console.log("err:", err)
-         const event = JSON.parse(data)
-        console.log("Event for account:", event.accountIndex)
-        console.log("data:", event.event)
-    }
-
-    //Adds a new event handler for `NewOutput` with a callback in the form of (err, data) => {}.
-    manager.listen(['NewOutput'], callback)
-
-```
+<CodeBlock className="language-javascript">
+  {listen_events}
+</CodeBlock>
 
 Example output:
 
@@ -204,45 +214,15 @@ data: {
 
 `accountId` can then be used to identify the given account via `AccountManager.getAccount(accountId)`.
 
-<!-- TODO -->
-<!-- For further reference, you can read more about events in the [API reference](https://wiki.iota.org/wallet.rs/libraries/nodejs/api_reference#addeventlistenerevent-cb). -->
-
-### 5. Check the Account Balance
-
-Get the available account balance across all addresses of the given account:
-
-```javascript
-    // Sync account to get latest state from the network
-    console.log('syncing...')
-    const synced = await account.sync()
-    console.log('synced!')
-    let balance = account.balance().available
-    console.log('available balance', balance)
-```
-
 ### 6. Enable Withdrawals
 
 Sending coins:
 
-```javascript
-    console.log('syncing...')
-    const synced = await account.sync()
-    console.log('available balance', account.balance().available)
+<CodeBlock className="language-javascript">
+  {send_amount}
+</CodeBlock>
 
-    const address = 'atoi1qzt0nhsf38nh6rs4p6zs5knqp6psgha9wsv74uajqgjmwc75ugupx3y7x0r'
-    const amount = 1000000 // Amount in IOTA: 1000000 == 1 MIOTA
-
-    const transaction_result = await account.sendAmount([
-            {
-                address,
-                amount,
-            },
-    ]);
-
-    console.log("Check your message on https://explorer.iota.org/chrysalis/block/", transaction_result.id)
-```
-
-The full function signature is `Account.send(address, amount[, options])`.
+The full function signature is `Account.sendAmount(outputs[, options])`.
 
 Default options are fine and successful; however, additional options can be provided, such as `remainderValueStrategy`:
 

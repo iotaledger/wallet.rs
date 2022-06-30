@@ -2,7 +2,7 @@
  * This example creates a new random mnemonic
  */
 
-const { AccountManager } = require('@iota/wallet');
+const { AccountManager, CoinType } = require('@iota/wallet');
 
 async function run() {
     try {
@@ -11,6 +11,7 @@ async function run() {
             clientOptions: {
                 nodes: ['http://localhost:14265'],
             },
+            coinType: CoinType.Shimmer,
             secretManager: "Placeholder",
         });
         
