@@ -24,6 +24,7 @@ export class MessageHandler {
         const messageOptions = {
             storagePath: options?.storagePath,
             clientOptions: JSON.stringify(options?.clientOptions),
+            coinType: options?.coinType,
             secretManager: JSON.stringify(options?.secretManager),
         };
 

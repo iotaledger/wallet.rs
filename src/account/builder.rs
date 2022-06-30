@@ -115,12 +115,12 @@ impl AccountBuilder {
             None => {
                 let mut bech32_hrp = None;
                 if let Some(first_account) = accounts.first() {
-                    let coin_type = *first_account.read().await.coin_type();
+                    let first_account_coin_type = *first_account.read().await.coin_type();
                     // Generate the first address of the first account and compare it to the stored address from the
                     // first account to prevent having multiple accounts created with different
                     // seeds
                     let first_account_public_address =
-                        get_first_public_address(&self.secret_manager, coin_type, 0).await?;
+                        get_first_public_address(&self.secret_manager, first_account_coin_type, 0).await?;
                     let first_account_addresses = first_account.list_addresses().await?;
 
                     if first_account_public_address

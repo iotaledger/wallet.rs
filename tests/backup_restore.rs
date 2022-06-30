@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use iota_client::{
-    constants::SHIMMER_COIN_TYPE,
+    constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
     node_manager::node::{Node, NodeDto, Url},
     secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
 };
@@ -59,7 +59,8 @@ async fn backup_and_restore() -> Result<()> {
         .with_storage_path("test-storage/backup_and_restore/2")
         .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
-        .with_coin_type(SHIMMER_COIN_TYPE)
+        // Build with a different coin type, to check if it gets replaced by the one from the backup
+        .with_coin_type(IOTA_COIN_TYPE)
         .finish()
         .await?;
 
@@ -81,6 +82,10 @@ async fn backup_and_restore() -> Result<()> {
         .await?;
 
     // Validate restored data
+
+    // Restored coin type is used
+    let new_account = restore_manager.create_account().finish().await?;
+    assert_eq!(new_account.read().await.coin_type(), &SHIMMER_COIN_TYPE);
 
     // compare restored client options
     let client_options = restore_manager.get_client_options().await;
@@ -148,7 +153,8 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore_mnemonic_secret_manager/2")
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_coin_type(SHIMMER_COIN_TYPE)
+        // Build with a different coin type, to check if it gets replaced by the one from the backup
+        .with_coin_type(IOTA_COIN_TYPE)
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
         .finish()
         .await?;
@@ -161,6 +167,10 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
         .await?;
 
     // Validate restored data
+
+    // Restored coin type is used
+    let new_account = restore_manager.create_account().finish().await?;
+    assert_eq!(new_account.read().await.coin_type(), &SHIMMER_COIN_TYPE);
 
     // compare restored client options
     let client_options = restore_manager.get_client_options().await;
