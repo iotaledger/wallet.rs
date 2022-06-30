@@ -16,7 +16,8 @@ async function run() {
         console.log('Addresses before:', addressObject);
 
         // Always sync before calling getBalance()
-        const synced = await account.sync();
+        // todo: also ignore outputs with sdr/expiration/timelock?
+        const synced = await account.sync({syncAliasesAndNfts: false});
         console.log('Syncing... - ', synced);
 
         console.log('Available balance', await account.getBalance());
