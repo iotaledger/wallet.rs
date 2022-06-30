@@ -67,12 +67,12 @@ async function run() {
 
     // Possible Event Types:
     //
-    // SpentOutput
-    // NewOutput
-    // TransactionInclusion
-    // TransactionProgress
     // ConsolidationRequired
     // LedgerAddressGeneration
+    // NewOutput
+    // SpentOutput
+    // TransactionInclusion
+    // TransactionProgress
 }
 
 run();
