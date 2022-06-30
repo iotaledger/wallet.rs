@@ -2,4 +2,4 @@
 "nodejs-binding": patch
 ---
 
-Pre-release of the Stardust bindings of Wallet.rs for Node.JS
+Added typescript declaration files to the package
