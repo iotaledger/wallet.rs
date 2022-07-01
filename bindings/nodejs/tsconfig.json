@@ -2,6 +2,7 @@
     "compilerOptions": {
         "lib": ["es2019", "DOM"],
         "declaration": true,
+        "declarationMap": true,
         "target": "es2019",
         "module": "commonjs",
         "sourceMap": true,
