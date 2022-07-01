@@ -8,18 +8,25 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::bee_block::{
-    output::{dto::NativeTokenDto, AliasId, FoundryId, NftId, OutputId},
-    payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-    BlockId,
+use crypto::keys::slip10::Chain;
+use iota_client::{
+    bee_block::{
+        address::dto::AddressDto,
+        output::{
+            dto::{NativeTokenDto, OutputDto},
+            AliasId, FoundryId, NftId, OutputId,
+        },
+        payload::transaction::TransactionId,
+    },
+    bee_rest_api::types::responses::OutputMetadataResponse,
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
-            OutputDataDto, Transaction,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData,
+            TransactionDto,
         },
         Account,
     },
@@ -218,35 +225,44 @@ impl From<&Account> for AccountDto {
     }
 }
 
-/// Dto for a transaction with metadata
+/// Dto for an output with metadata
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct TransactionDto {
-    /// The transaction payload
-    pub payload: TransactionPayloadDto,
-    /// BlockId when it got sent to the Tangle
-    #[serde(rename = "blockId")]
-    pub block_id: Option<BlockId>,
-    /// Inclusion state of the transaction
-    #[serde(rename = "inclusionState")]
-    pub inclusion_state: InclusionState,
-    /// Timestamp
-    pub timestamp: String,
-    /// Network id to ignore outputs when set_client_options is used to switch to another network
+pub struct OutputDataDto {
+    /// The output id
+    #[serde(rename = "outputId")]
+    pub output_id: OutputId,
+    /// The metadata of the output
+    pub metadata: OutputMetadataResponse,
+    /// The actual Output
+    pub output: OutputDto,
+    /// The output amount
+    pub amount: String,
+    /// If an output is spent
+    #[serde(rename = "isSpent")]
+    pub is_spent: bool,
+    /// Associated account address.
+    pub address: AddressDto,
+    /// Network ID
     #[serde(rename = "networkId")]
     pub network_id: String,
-    /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
-    pub incoming: bool,
+    /// Remainder
+    pub remainder: bool,
+    /// Bip32 path
+    pub chain: Option<Chain>,
 }
 
-impl From<&Transaction> for TransactionDto {
-    fn from(value: &Transaction) -> Self {
+impl From<&OutputData> for OutputDataDto {
+    fn from(value: &OutputData) -> Self {
         Self {
-            payload: TransactionPayloadDto::from(&value.payload),
-            block_id: value.block_id,
-            inclusion_state: value.inclusion_state,
-            timestamp: value.timestamp.to_string(),
+            output_id: value.output_id,
+            metadata: value.metadata.clone(),
+            output: OutputDto::from(&value.output),
+            amount: value.amount.to_string(),
+            is_spent: value.is_spent,
+            address: AddressDto::from(&value.address),
             network_id: value.network_id.to_string(),
-            incoming: value.incoming,
+            remainder: value.remainder,
+            chain: value.chain.clone(),
         }
     }
 }

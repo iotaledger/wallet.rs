@@ -29,10 +29,9 @@ use crate::events::types::{TransactionProgressEvent, WalletEvent};
 use crate::{
     account::{
         handle::AccountHandle,
-        types::{InclusionState, Transaction},
+        types::{InclusionState, Transaction, TransactionDto},
     },
     iota_client::Error,
-    message_interface::dtos::TransactionDto,
 };
 
 /// The result of a transaction, block_id is an option because submitting the transaction could fail
