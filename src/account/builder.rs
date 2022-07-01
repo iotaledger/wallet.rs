@@ -149,12 +149,10 @@ impl AccountBuilder {
                         // information from the client Doesn't work for offline creating, should
                         // we use the network from the GenerateAddressMetadata instead to use
                         // `iota` or `atoi`?
-                        None => {
-                            client
-                                .get_bech32_hrp()
-                                .await
-                                .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string())
-                        }
+                        None => client
+                            .get_bech32_hrp()
+                            .await
+                            .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
                     }
                 };
 
