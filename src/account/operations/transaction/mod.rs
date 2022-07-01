@@ -16,7 +16,7 @@ use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     bee_block::{
         output::Output,
-        payload::transaction::{TransactionId, TransactionPayload},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         semantic::ConflictReason,
         BlockId,
     },
@@ -40,7 +40,7 @@ use crate::{
 pub struct TransactionResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
-    pub transaction: TransactionPayload,
+    pub transaction: TransactionPayloadDto,
     #[serde(rename = "blockId")]
     pub block_id: Option<BlockId>,
 }
@@ -216,7 +216,7 @@ impl AccountHandle {
         }
         Ok(TransactionResult {
             transaction_id,
-            transaction,
+            transaction: TransactionPayloadDto::from(&transaction),
             block_id,
         })
     }
