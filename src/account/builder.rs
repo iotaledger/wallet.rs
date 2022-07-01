@@ -150,11 +150,10 @@ impl AccountBuilder {
                         // we use the network from the GenerateAddressMetadata instead to use
                         // `iota` or `atoi`?
                         None => {
-                            let bech32_hrp = client
+                            client
                                 .get_bech32_hrp()
                                 .await
-                                .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
-                            bech32_hrp
+                                .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string())
                         }
                     }
                 };
