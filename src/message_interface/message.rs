@@ -116,6 +116,7 @@ pub enum Message {
     SetClientOptions(Box<ClientOptions>),
     /// Get the ledger status
     /// Expected response: [`LedgerStatus`](crate::message_interface::Response::LedgerStatus)
+    #[cfg(feature = "ledger_nano")]
     GetLedgerStatus,
     /// Get the node information
     /// Expected response: [`NodeInfo`](crate::message_interface::Response::NodeInfo)
