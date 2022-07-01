@@ -1,5 +1,11 @@
 # Changelog
 
+## \[2.0.2-alpha.2]
+
+- Added coinType to account manager
+  Added typescript declaration files to the package
+  - [617f6868](https://github.com/iotaledger/wallet.rs/commit/617f68685d759455ce25690b3ca73983b3d9a631) fix: add yarn before tsc ([#1248](https://github.com/iotaledger/wallet.rs/pull/1248)) on 2022-07-01
+
 ## \[2.0.2-alpha.1]
 
 - Added coinType to account manager
