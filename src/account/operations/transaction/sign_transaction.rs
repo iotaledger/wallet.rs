@@ -39,8 +39,8 @@ impl AccountHandle {
         match &*self.secret_manager.read().await {
             SecretManager::LedgerNano(ledger) | SecretManager::LedgerNanoSimulator(ledger) => {
                 let ledger_status = ledger.get_ledger_status().await;
-                if let Some(buffer_size) = ledger_status.buffer_size {
-                    if needs_blind_signing(&prepared_transaction_data, buffer_size) {
+                if let Some(buffer_size) = ledger_status.buffer_size() {
+                    if needs_blind_signing(prepared_transaction_data, buffer_size) {
                         self.event_emitter.lock().await.emit(
                             self.read().await.index,
                             WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransactionEssenceHash(

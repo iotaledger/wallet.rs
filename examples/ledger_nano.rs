@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    println!("{:?}", manager.get_ledger_status().await);
+    println!("{:?}", manager.get_ledger_status().await?);
 
     // Get account or create a new one
     let account_alias = "ledger";
@@ -48,7 +48,9 @@ async fn main() -> Result<()> {
         }
     };
 
-    let _address = account.generate_addresses(5, None).await?;
+    let _address = account.generate_addresses(1, None).await?;
+
+    println!("{:?}", _address);
 
     let addresses = account.list_addresses().await?;
     println!("Addresses: {}", addresses.len());
@@ -57,9 +59,6 @@ async fn main() -> Result<()> {
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
-
-    let addresses_with_unspent_outputs = account.list_addresses_with_unspent_outputs().await?;
-    println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
     // send transaction
     let outputs = vec![AddressWithAmount {
