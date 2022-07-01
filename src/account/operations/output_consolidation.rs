@@ -121,7 +121,7 @@ impl AccountHandle {
                     Ok(res) => {
                         log::debug!(
                             "[OUTPUT_CONSOLIDATION] Consolidation transaction created: block_id: {:?} tx_id: {:?}",
-                            res.block_id,
+                            res.transaction.block_id,
                             res.transaction_id
                         );
                         consolidation_results.push(res);

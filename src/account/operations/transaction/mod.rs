@@ -16,9 +16,8 @@ use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     bee_block::{
         output::Output,
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
+        payload::transaction::{TransactionId, TransactionPayload},
         semantic::ConflictReason,
-        BlockId,
     },
     secret::types::InputSigningData,
 };
@@ -33,6 +32,7 @@ use crate::{
         types::{InclusionState, Transaction},
     },
     iota_client::Error,
+    message_interface::dtos::TransactionDto,
 };
 
 /// The result of a transaction, block_id is an option because submitting the transaction could fail
@@ -40,9 +40,7 @@ use crate::{
 pub struct TransactionResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
-    pub transaction: TransactionPayloadDto,
-    #[serde(rename = "blockId")]
-    pub block_id: Option<BlockId>,
+    pub transaction: TransactionDto,
 }
 
 impl AccountHandle {
@@ -191,33 +189,32 @@ impl AccountHandle {
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
-        let transaction = signed_transaction_data.transaction_payload;
-        let transaction_id = transaction.id();
+        let transaction_id = signed_transaction_data.transaction_payload.id();
+        let transaction = Transaction {
+            payload: signed_transaction_data.transaction_payload,
+            block_id,
+            network_id,
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_millis(),
+            inclusion_state: InclusionState::Pending,
+            incoming: false,
+        };
+        let transaction_dto = TransactionDto::from(&transaction);
         let mut account = self.write().await;
-        account.transactions.insert(
-            transaction_id,
-            Transaction {
-                payload: transaction.clone(),
-                block_id,
-                network_id,
-                timestamp: SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("Time went backwards")
-                    .as_millis(),
-                inclusion_state: InclusionState::Pending,
-                incoming: false,
-            },
-        );
+
+        account.transactions.insert(transaction_id, transaction);
         account.pending_transactions.insert(transaction_id);
         #[cfg(feature = "storage")]
         {
             log::debug!("[TRANSACTION] storing account {}", account.index());
             self.save(Some(&account)).await?;
         }
+
         Ok(TransactionResult {
             transaction_id,
-            transaction: TransactionPayloadDto::from(&transaction),
-            block_id,
+            transaction: transaction_dto,
         })
     }
 

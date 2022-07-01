@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
     let alias_id = AliasId::from_str("0x57f1bafae0ef43190597a0dfe72ef1477b769560203c1854c6fb427c486e6530")?;
     let transaction_result = account.destroy_alias(alias_id, None).await?;
 
-    let _ = match transaction_result.block_id {
+    let _ = match transaction_result.transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(

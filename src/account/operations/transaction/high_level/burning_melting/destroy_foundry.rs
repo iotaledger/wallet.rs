@@ -145,7 +145,7 @@ impl AccountHandle {
 
             let transaction_result = self.send(outputs, options).await?;
             transaction_ids.push(transaction_result.transaction_id);
-            match transaction_result.block_id {
+            match transaction_result.transaction.block_id {
                 Some(block_id) => {
                     let _ = self.client.retry_until_included(&block_id, None, None).await?;
                     let sync_options = Some(SyncOptions {
