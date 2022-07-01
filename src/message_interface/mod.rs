@@ -208,15 +208,11 @@ mod tests {
         let outputs = vec![OutputDto::from(
             &BasicOutputBuilder::new_with_amount(1_000_000)
                 .unwrap()
-                .add_unlock_condition(
-                    UnlockCondition::Address(
-                        AddressUnlockCondition::new(
-                            Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")
-                                .unwrap()
-                                .1,
-                        ),
-                    ),
-                )
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                    Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")
+                        .unwrap()
+                        .1,
+                )))
                 .finish_output()
                 .unwrap(),
         )];
