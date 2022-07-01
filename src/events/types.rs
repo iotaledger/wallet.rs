@@ -85,8 +85,8 @@ pub enum TransactionProgressEvent {
     GeneratingRemainderDepositAddress(AddressData),
     /// Prepared transaction.
     PreparedTransaction(Box<PreparedTransactionDataDto>),
-    /// Prepared transaction essence hash, required for blindsigning with a ledger nano
-    PreparedTransactionEssenceHash([u8; 32]),
+    /// Prepared transaction essence hash hex encoded, required for blindsigning with a ledger nano
+    PreparedTransactionEssenceHash(String),
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.
