@@ -48,12 +48,9 @@ async fn main() -> Result<()> {
         }
     };
 
-    let _address = account.generate_addresses(1, None).await?;
+    let address = account.generate_addresses(1, None).await?;
 
-    println!("{:?}", _address);
-
-    let addresses = account.list_addresses().await?;
-    println!("Addresses: {}", addresses.len());
+    println!("{:?}", address);
 
     let now = Instant::now();
     let balance = account.sync(None).await?;

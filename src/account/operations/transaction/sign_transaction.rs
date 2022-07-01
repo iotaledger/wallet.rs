@@ -36,28 +36,27 @@ impl AccountHandle {
         }
 
         #[cfg(all(feature = "events", feature = "ledger_nano"))]
-        match &*self.secret_manager.read().await {
-            SecretManager::LedgerNano(ledger) | SecretManager::LedgerNanoSimulator(ledger) => {
-                let ledger_status = ledger.get_ledger_status().await;
-                if let Some(buffer_size) = ledger_status.buffer_size() {
-                    if needs_blind_signing(prepared_transaction_data, buffer_size) {
-                        self.event_emitter.lock().await.emit(
-                            self.read().await.index,
-                            WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransactionEssenceHash(
-                                hex::encode(prepared_transaction_data.essence.hash()),
-                            )),
-                        );
-                    } else {
-                        self.event_emitter.lock().await.emit(
-                            self.read().await.index,
-                            WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransaction(Box::new(
-                                PreparedTransactionDataDto::from(prepared_transaction_data),
-                            ))),
-                        );
-                    }
+        if let SecretManager::LedgerNano(ledger) | SecretManager::LedgerNanoSimulator(ledger) =
+            &*self.secret_manager.read().await
+        {
+            let ledger_status = ledger.get_ledger_status().await;
+            if let Some(buffer_size) = ledger_status.buffer_size() {
+                if needs_blind_signing(prepared_transaction_data, buffer_size) {
+                    self.event_emitter.lock().await.emit(
+                        self.read().await.index,
+                        WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransactionEssenceHash(
+                            hex::encode(prepared_transaction_data.essence.hash()),
+                        )),
+                    );
+                } else {
+                    self.event_emitter.lock().await.emit(
+                        self.read().await.index,
+                        WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransaction(Box::new(
+                            PreparedTransactionDataDto::from(prepared_transaction_data),
+                        ))),
+                    );
                 }
             }
-            _ => {}
         }
 
         let unlocks = self
