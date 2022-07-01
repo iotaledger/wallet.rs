@@ -208,6 +208,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "ledger_nano")]
             Message::GetLedgerStatus => {
                 convert_async_panics(|| async {
                     let ledger_status = self.account_manager.get_ledger_status().await?;
