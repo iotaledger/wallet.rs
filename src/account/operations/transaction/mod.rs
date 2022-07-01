@@ -40,6 +40,7 @@ use crate::{
 pub struct TransactionResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
+    pub transaction: TransactionPayload,
     #[serde(rename = "blockId")]
     pub block_id: Option<BlockId>,
 }
@@ -190,12 +191,13 @@ impl AccountHandle {
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
-        let transaction_id = signed_transaction_data.transaction_payload.id();
+        let transaction = signed_transaction_data.transaction_payload;
+        let transaction_id = transaction.id();
         let mut account = self.write().await;
         account.transactions.insert(
             transaction_id,
             Transaction {
-                payload: signed_transaction_data.transaction_payload,
+                payload: transaction.clone(),
                 block_id,
                 network_id,
                 timestamp: SystemTime::now()
@@ -214,6 +216,7 @@ impl AccountHandle {
         }
         Ok(TransactionResult {
             transaction_id,
+            transaction,
             block_id,
         })
     }

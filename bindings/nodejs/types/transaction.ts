@@ -18,5 +18,6 @@ export interface Transaction {
 
 export interface TransactionResult {
     transactionId: string;
+    transaction: ITransactionPayload;
     blockId?: string;
 }
