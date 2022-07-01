@@ -208,6 +208,13 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::GetLedgerStatus => {
+                convert_async_panics(|| async {
+                    let ledger_status = self.account_manager.get_ledger_status().await?;
+                    Ok(Response::LedgerStatus(ledger_status))
+                })
+                .await
+            }
             Message::GetNodeInfo { url, auth } => {
                 convert_async_panics(|| async {
                     match url {
