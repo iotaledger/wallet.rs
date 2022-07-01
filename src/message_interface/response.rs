@@ -3,6 +3,8 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
+#[cfg(feature = "ledger_nano")]
+use iota_client::secret::LedgerStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     bee_block::output::{dto::OutputDto, OutputId},
@@ -15,11 +17,9 @@ use crate::{
         operations::transaction::{
             high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
         },
-        types::address::AccountAddress,
+        types::{address::AccountAddress, OutputDataDto},
     },
-    message_interface::dtos::{
-        AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto, TransactionDto,
-    },
+    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, TransactionDto},
     Error,
 };
 
@@ -78,6 +78,10 @@ pub enum Response {
     /// [`GetBalance`](crate::message_interface::AccountMethod::GetBalance),
     /// [`SyncAccount`](crate::message_interface::AccountMethod::SyncAccount)
     Balance(AccountBalanceDto),
+    /// Response for
+    /// [`GetLedgerStatus`](crate::message_interface::Message::GetLedgerStatus),
+    #[cfg(feature = "ledger_nano")]
+    LedgerStatus(LedgerStatus),
     /// Response for
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
@@ -162,6 +166,8 @@ impl Debug for Response {
             Response::Error(error) => write!(f, "Error({:?})", error),
             Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
             Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
+            #[cfg(feature = "ledger_nano")]
+            Response::LedgerStatus(ledger_status) => write!(f, "LedgerStatus({:?})", ledger_status),
             Response::NodeInfo(info) => write!(f, "NodeInfo({:?})", info),
             Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
             Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),

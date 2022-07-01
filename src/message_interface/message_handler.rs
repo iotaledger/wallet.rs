@@ -25,11 +25,14 @@ use zeroize::Zeroize;
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{
-    account::{operations::transaction::prepare_output::OutputOptions, types::AccountIdentifier},
+    account::{
+        operations::transaction::prepare_output::OutputOptions,
+        types::{AccountIdentifier, OutputDataDto},
+    },
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
+        dtos::{AccountBalanceDto, AccountDto, TransactionDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,
@@ -202,6 +205,14 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
                     Ok(Response::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "ledger_nano")]
+            Message::GetLedgerStatus => {
+                convert_async_panics(|| async {
+                    let ledger_status = self.account_manager.get_ledger_status().await?;
+                    Ok(Response::LedgerStatus(ledger_status))
                 })
                 .await
             }
