@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.2-alpha.1]
+
+- Added typescript declaration files to the package
+  - [4918c237](https://github.com/iotaledger/wallet.rs/commit/4918c2377b1569d82034197f121df74fef2c583b) fix: added new file to trigger covector release ([#1240](https://github.com/iotaledger/wallet.rs/pull/1240)) on 2022-06-30
+  - [617f6868](https://github.com/iotaledger/wallet.rs/commit/617f68685d759455ce25690b3ca73983b3d9a631) fix: add yarn before tsc ([#1248](https://github.com/iotaledger/wallet.rs/pull/1248)) on 2022-07-01
+  - [205caf99](https://github.com/iotaledger/wallet.rs/commit/205caf99c90d0f5376fa253d9bfae5f10aab3d77) fix: trigger covector ([#1250](https://github.com/iotaledger/wallet.rs/pull/1250)) on 2022-07-01
+
 ## \[2.0.2-alpha.2]
 
 - Added coinType to account manager
