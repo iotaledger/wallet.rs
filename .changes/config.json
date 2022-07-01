@@ -31,7 +31,10 @@
           "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[4]' message_interface"
         },
         {
-          "command": "yarn --ignore-scripts && tsc"
+          "command": "yarn --ignore-scripts"
+        },
+        {
+          "command": "tsc"
         },
         {
           "command": "cat Cargo.toml"
