@@ -22,6 +22,9 @@
           "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[1]' events"
         },
         {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[2]' ledger_nano"
+        },
+        {
           "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[2]' storage"
         },
         {

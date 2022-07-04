@@ -1,3 +1,7 @@
+export interface LedgerNanoSecretManager{}
+
+export interface LedgerNanoSimulatorLedgerNanoSecretManager{}
+
 export interface MnemonicSecretManager {
     Mnemonic: string;
 }
@@ -9,4 +13,4 @@ export interface StrongholdSecretManager {
     };
 }
 
-export type SecretManager = MnemonicSecretManager | StrongholdSecretManager;
+export type SecretManager = LedgerNanoSecretManager | LedgerNanoSimulatorLedgerNanoSecretManager | MnemonicSecretManager | StrongholdSecretManager;

@@ -133,6 +133,13 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    async getLedgerStatus(): Promise<NodeInfoWrapper> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GetLedgerStatus',
+        });
+        return JSON.parse(response).payload;
+    }
+
     /**
      * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
      * is provided, the AccountManager will attempt to retrieve it from the
