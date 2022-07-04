@@ -30,12 +30,12 @@ use crate::events::types::{Event, WalletEventType};
 use crate::{
     account::{
         operations::transaction::prepare_output::OutputOptions,
-        types::{AccountIdentifier, OutputDataDto},
+        types::{AccountIdentifier, TransactionDto},
     },
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto, TransactionDto},
+        dtos::{AccountBalanceDto, AccountDto, OutputDataDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,

@@ -232,7 +232,7 @@ impl AccountHandle {
         });
 
         let transaction_result = self.send(custom_outputs, transaction_options).await?;
-        match &transaction_result.block_id {
+        match &transaction_result.transaction.block_id {
             Some(block_id) => {
                 let _ = self.client.retry_until_included(block_id, None, None).await?;
                 let _ = self.sync(None).await?;

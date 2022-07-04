@@ -14,7 +14,7 @@ use iota_client::{
     bee_block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId},
-        payload::transaction::TransactionPayload,
+        payload::transaction::{dto::TransactionPayloadDto, TransactionPayload},
         BlockId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
@@ -155,6 +155,39 @@ pub struct Transaction {
     pub network_id: u64,
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
+}
+
+/// Dto for a transaction with metadata
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct TransactionDto {
+    /// The transaction payload
+    pub payload: TransactionPayloadDto,
+    /// BlockId when it got sent to the Tangle
+    #[serde(rename = "blockId")]
+    pub block_id: Option<BlockId>,
+    /// Inclusion state of the transaction
+    #[serde(rename = "inclusionState")]
+    pub inclusion_state: InclusionState,
+    /// Timestamp
+    pub timestamp: String,
+    /// Network id to ignore outputs when set_client_options is used to switch to another network
+    #[serde(rename = "networkId")]
+    pub network_id: String,
+    /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
+    pub incoming: bool,
+}
+
+impl From<&Transaction> for TransactionDto {
+    fn from(value: &Transaction) -> Self {
+        Self {
+            payload: TransactionPayloadDto::from(&value.payload),
+            block_id: value.block_id,
+            inclusion_state: value.inclusion_state,
+            timestamp: value.timestamp.to_string(),
+            network_id: value.network_id.to_string(),
+            incoming: value.incoming,
+        }
+    }
 }
 
 /// Possible InclusionStates for transactions

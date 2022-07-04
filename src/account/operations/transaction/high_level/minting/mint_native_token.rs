@@ -167,7 +167,7 @@ impl AccountHandle {
                 .map(|transaction_result| MintTokenTransactionResult {
                     token_id,
                     transaction_id: transaction_result.transaction_id,
-                    block_id: transaction_result.block_id,
+                    block_id: transaction_result.transaction.block_id,
                 })
         } else {
             unreachable!("We checked if it's an alias output before")
@@ -216,7 +216,7 @@ impl AccountHandle {
                 let transaction_result = self.send(outputs, options).await?;
 
                 log::debug!("[TRANSACTION] sent alias output");
-                if let Some(block_id) = transaction_result.block_id {
+                if let Some(block_id) = transaction_result.transaction.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
                 }
                 // Try to get the transaction confirmed

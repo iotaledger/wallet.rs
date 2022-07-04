@@ -18,5 +18,5 @@ export interface Transaction {
 
 export interface TransactionResult {
     transactionId: string;
-    blockId?: string;
+    transaction: Transaction;
 }
