@@ -37,48 +37,10 @@ impl AccountManager {
             }
         }
 
-        loop {
-            log::debug!("[recover_accounts] generating {account_gap_limit} new accounts");
-
-            // Generate account with addresses and get their outputs in parallel
-            let mut tasks = Vec::new();
-            for _ in 0..account_gap_limit {
-                let mut new_account = self.create_account();
-                tasks.push(async move {
-                    tokio::spawn(async move {
-                        let new_account = new_account.finish().await?;
-                        let account_outputs_count =
-                            new_account.search_addresses_with_outputs(address_gap_limit).await?;
-                        let account_index = *new_account.read().await.index();
-                        Ok((account_index, account_outputs_count))
-                    })
-                    .await
-                });
-            }
-
-            let results: Vec<crate::Result<(u32, usize)>> = futures::future::try_join_all(tasks).await?;
-            let mut total_account_outputs_count = 0;
-            for res in results {
-                let (account_index, outputs_count): (u32, usize) = res?;
-                total_account_outputs_count += outputs_count;
-
-                if outputs_count != 0 {
-                    match max_account_index_to_keep {
-                        Some(max_account_index) => {
-                            if account_index > max_account_index {
-                                max_account_index_to_keep = Some(account_index);
-                            }
-                        }
-                        None => max_account_index_to_keep = Some(account_index),
-                    }
-                }
-            }
-
-            // If all accounts in this round have no outputs, we break
-            if total_account_outputs_count == 0 {
-                break;
-            }
-        }
+        // Don't return possible errors here already, because we would then still have empty accounts
+        let new_accounts_discovery_result = self
+            .search_new_accounts(account_gap_limit, address_gap_limit, &mut max_account_index_to_keep)
+            .await;
 
         // remove accounts without outputs
         let mut accounts = self.accounts.write().await;
@@ -106,7 +68,63 @@ impl AccountManager {
         *accounts = new_accounts.into_iter().map(|(_, acc)| acc).collect();
         drop(accounts);
 
+        // Handle result after cleaning up the empty accounts
+        new_accounts_discovery_result?;
+
         log::debug!("[recover_accounts] finished in {:?}", start_time.elapsed());
         Ok(self.accounts.read().await.clone())
+    }
+
+    /// Generate new accounts and search for unspent outputs
+    async fn search_new_accounts(
+        &self,
+        account_gap_limit: u32,
+        address_gap_limit: u32,
+        max_account_index_to_keep: &mut Option<u32>,
+    ) -> crate::Result<()> {
+        loop {
+            log::debug!("[recover_accounts] generating {account_gap_limit} new accounts");
+
+            // Generate account with addresses and get their outputs in parallel
+            let mut tasks = Vec::new();
+            for _ in 0..account_gap_limit {
+                let mut new_account = self.create_account();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        let new_account = new_account.finish().await?;
+                        let account_outputs_count =
+                            new_account.search_addresses_with_outputs(address_gap_limit).await?;
+                        let account_index = *new_account.read().await.index();
+                        Ok((account_index, account_outputs_count))
+                    })
+                    .await
+                });
+            }
+
+            let results: Vec<crate::Result<(u32, usize)>> = futures::future::try_join_all(tasks).await?;
+            let mut total_account_outputs_count = 0;
+            for res in results {
+                let (account_index, outputs_count): (u32, usize) = res?;
+                total_account_outputs_count += outputs_count;
+
+                if outputs_count != 0 {
+                    match *max_account_index_to_keep {
+                        Some(max_account_index) => {
+                            if account_index > max_account_index {
+                                *max_account_index_to_keep = Some(account_index);
+                            }
+                        }
+                        None => *max_account_index_to_keep = Some(account_index),
+                    }
+                }
+            }
+
+            // If all accounts in this round have no outputs, we break
+            if total_account_outputs_count == 0 {
+                break;
+            }
+        }
+
+        Ok(())
     }
 }
