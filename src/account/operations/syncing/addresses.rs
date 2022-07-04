@@ -175,6 +175,7 @@ impl AccountHandle {
                     tokio::spawn(async move {
                         let (output_responses, already_known_balance, _loaded_output_responses) =
                             account_handle.get_outputs(address.output_ids.clone(), false).await?;
+
                         let outputs = account_handle
                             .output_response_to_output_data(output_responses, &address)
                             .await?;

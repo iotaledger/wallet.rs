@@ -12,7 +12,10 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::output::{dto::OutputDto, ByteCost, Output},
+    bee_block::{
+        output::{dto::OutputDto, ByteCost, Output},
+        payload::transaction::dto::TransactionPayloadDto,
+    },
     constants::SHIMMER_TESTNET_BECH32_HRP,
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
@@ -444,6 +447,16 @@ impl WalletMessageHandler {
                 Ok(Response::Transaction(
                     transaction.as_ref().map(TransactionDto::from).map(Box::new),
                 ))
+            }
+            AccountMethod::GetIncomingTransactionData { transaction_id } => {
+                let transaction_data = account_handle.get_incoming_transaction_data(transaction_id).await;
+                match transaction_data {
+                    Some((transaction_payload, inputs)) => Ok(Response::IncomingTransactionData(Some(Box::new((
+                        *transaction_id,
+                        (TransactionPayloadDto::from(&transaction_payload), inputs),
+                    ))))),
+                    None => Ok(Response::IncomingTransactionData(None)),
+                }
             }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;

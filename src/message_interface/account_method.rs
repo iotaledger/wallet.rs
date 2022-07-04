@@ -129,6 +129,13 @@ pub enum AccountMethod {
         #[serde(rename = "transactionId")]
         transaction_id: TransactionId,
     },
+    /// Get the transaction with inputs of an incoming transaction stored in the account
+    /// List might not be complete, if the node pruned the data already
+    /// Expected response: [`IncomingTransactionData`](crate::message_interface::Response::IncomingTransactionData)
+    GetIncomingTransactionData {
+        #[serde(rename = "transactionId")]
+        transaction_id: TransactionId,
+    },
     /// Expected response: [`Addresses`](crate::message_interface::Response::Addresses)
     /// List addresses.
     ListAddresses,

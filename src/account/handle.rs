@@ -4,7 +4,11 @@
 use std::{ops::Deref, sync::Arc};
 
 use iota_client::{
-    bee_block::{output::OutputId, payload::transaction::TransactionId},
+    bee_block::{
+        output::OutputId,
+        payload::transaction::{TransactionId, TransactionPayload},
+    },
+    bee_rest_api::types::responses::OutputResponse,
     secret::SecretManager,
     Client,
 };
@@ -76,6 +80,16 @@ impl AccountHandle {
     pub async fn get_transaction(&self, transaction_id: &TransactionId) -> Option<Transaction> {
         let account = self.read().await;
         account.transactions().get(transaction_id).cloned()
+    }
+
+    /// Get the transaction with inputs of an incoming transaction stored in the account
+    /// List might not be complete, if the node pruned the data already
+    pub async fn get_incoming_transaction_data(
+        &self,
+        transaction_id: &TransactionId,
+    ) -> Option<(TransactionPayload, Vec<OutputResponse>)> {
+        let account = self.read().await;
+        account.incoming_transactions().get(transaction_id).cloned()
     }
 
     /// Returns all addresses of the account
