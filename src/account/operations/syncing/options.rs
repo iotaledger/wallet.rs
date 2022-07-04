@@ -3,6 +3,13 @@
 
 use serde::{Deserialize, Serialize};
 
+const DEFAULT_ADDRESS_START_INDEX: u32 = 0;
+const DEFAULT_FORCE_SYNCING: bool = false;
+const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = false;
+const DEFAULT_SYNC_INCOMING_TRANSACTIONS: bool = false;
+const DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS: bool = false;
+const DEFAULT_SYNC_PENDING_TRANSACTIONS: bool = true;
+
 /// The synchronization options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncOptions {
@@ -39,24 +46,28 @@ pub struct SyncOptions {
     pub sync_only_most_basic_outputs: bool,
 }
 
-fn default_sync_incoming_transactions() -> bool {
-    false
+fn default_address_start_index() -> u32 {
+    DEFAULT_ADDRESS_START_INDEX
 }
 
-fn default_sync_pending_transactions() -> bool {
-    true
+fn default_force_syncing() -> bool {
+    DEFAULT_FORCE_SYNCING
 }
 
 fn default_sync_aliases_and_nfts() -> bool {
-    true
+    DEFAULT_SYNC_ALIASES_AND_NFTS
+}
+
+fn default_sync_incoming_transactions() -> bool {
+    DEFAULT_SYNC_INCOMING_TRANSACTIONS
 }
 
 fn default_sync_only_most_basic_outputs() -> bool {
-    false
+    DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS
 }
 
-fn default_address_start_index() -> u32 {
-    0
+fn default_sync_pending_transactions() -> bool {
+    DEFAULT_SYNC_PENDING_TRANSACTIONS
 }
 
 impl Default for SyncOptions {
@@ -68,7 +79,7 @@ impl Default for SyncOptions {
             sync_pending_transactions: default_sync_pending_transactions(),
             sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
             sync_only_most_basic_outputs: default_sync_only_most_basic_outputs(),
-            force_syncing: false,
+            force_syncing: default_force_syncing(),
         }
     }
 }
