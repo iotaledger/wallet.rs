@@ -3,6 +3,13 @@
 
 use serde::{Deserialize, Serialize};
 
+const DEFAULT_ADDRESS_START_INDEX: u32 = 0;
+const DEFAULT_FORCE_SYNCING: bool = false;
+const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = false;
+const DEFAULT_SYNC_INCOMING_TRANSACTIONS: bool = false;
+const DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS: bool = false;
+const DEFAULT_SYNC_PENDING_TRANSACTIONS: bool = true;
+
 /// The synchronization options
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SyncOptions {
@@ -30,22 +37,37 @@ pub struct SyncOptions {
     /// Specifies if only basic outputs should be synced or also alias and nft outputs
     #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
     pub sync_aliases_and_nfts: bool,
-}
-
-fn default_sync_incoming_transactions() -> bool {
-    false
-}
-
-fn default_sync_pending_transactions() -> bool {
-    true
-}
-
-fn default_sync_aliases_and_nfts() -> bool {
-    true
+    /// Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
+    /// `sync_aliases_and_nfts`
+    #[serde(
+        rename = "syncOnlyMostBasicOutputs",
+        default = "default_sync_only_most_basic_outputs"
+    )]
+    pub sync_only_most_basic_outputs: bool,
 }
 
 fn default_address_start_index() -> u32 {
-    0
+    DEFAULT_ADDRESS_START_INDEX
+}
+
+fn default_force_syncing() -> bool {
+    DEFAULT_FORCE_SYNCING
+}
+
+fn default_sync_aliases_and_nfts() -> bool {
+    DEFAULT_SYNC_ALIASES_AND_NFTS
+}
+
+fn default_sync_incoming_transactions() -> bool {
+    DEFAULT_SYNC_INCOMING_TRANSACTIONS
+}
+
+fn default_sync_only_most_basic_outputs() -> bool {
+    DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS
+}
+
+fn default_sync_pending_transactions() -> bool {
+    DEFAULT_SYNC_PENDING_TRANSACTIONS
 }
 
 impl Default for SyncOptions {
@@ -56,7 +78,8 @@ impl Default for SyncOptions {
             sync_incoming_transactions: default_sync_incoming_transactions(),
             sync_pending_transactions: default_sync_pending_transactions(),
             sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
-            force_syncing: false,
+            sync_only_most_basic_outputs: default_sync_only_most_basic_outputs(),
+            force_syncing: default_force_syncing(),
         }
     }
 }
