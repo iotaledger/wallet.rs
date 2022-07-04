@@ -13,29 +13,28 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::{dto::AddressDto, Address},
-        output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId},
+        output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId, TokenId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
     secret::types::{InputSigningData, OutputMetadata},
 };
+use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalance {
-    /// Total amount
-    pub total: u64,
-    /// Balance that can currently be spend
-    pub available: u64,
+    #[serde(rename = "baseCoin")]
+    pub base_coin: BaseCoin,
     /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
     /// Native tokens
     #[serde(rename = "nativeTokens")]
-    pub native_tokens: NativeTokens,
+    pub native_tokens: Vec<NativeTokensBalance>,
     /// Nfts
     pub nfts: Vec<NftId>,
     /// Aliases
@@ -48,21 +47,37 @@ pub struct AccountBalance {
     pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }
 
-impl Default for AccountBalance {
+/// Base coin fields for [`AccountBalance`]
+#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+pub struct BaseCoin {
+    /// Total amount
+    pub total: u64,
+    /// Balance that can currently be spend
+    pub available: u64,
+}
+
+/// Base coin fields for [`AccountBalance`]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct NativeTokensBalance {
+    /// Total amount
+    #[serde(rename = "tokenId")]
+    pub token_id: TokenId,
+    /// Total amount
+    pub total: U256,
+    /// Balance that can currently be spend
+    pub available: U256,
+}
+
+impl Default for NativeTokensBalance {
     fn default() -> Self {
-        AccountBalance {
-            total: u64::default(),
-            available: u64::default(),
-            required_storage_deposit: u64::default(),
-            // unwrap is safe since this is infallible with empty vec
-            native_tokens: NativeTokens::new(vec![]).unwrap(),
-            nfts: Vec::default(),
-            aliases: Vec::default(),
-            foundries: Vec::default(),
-            potentially_locked_outputs: HashMap::default(),
+        Self {
+            token_id: TokenId::null(),
+            total: U256::from(0u8),
+            available: U256::from(0u8),
         }
     }
 }
+
 /// An output with metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct OutputData {

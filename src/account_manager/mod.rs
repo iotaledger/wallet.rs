@@ -9,7 +9,7 @@ use std::sync::{
     Arc,
 };
 
-use iota_client::{bee_block::output::NativeTokensBuilder, secret::SecretManager, Client, NodeInfoWrapper};
+use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -26,7 +26,10 @@ use crate::events::{
 use crate::storage::manager::StorageManagerHandle;
 use crate::{
     account::{
-        builder::AccountBuilder, handle::AccountHandle, operations::syncing::SyncOptions, types::AccountBalance,
+        builder::AccountBuilder,
+        handle::AccountHandle,
+        operations::{balance::add_balances, syncing::SyncOptions},
+        types::AccountBalance,
     },
     ClientOptions,
 };
@@ -182,42 +185,30 @@ impl AccountManager {
 
     /// Get the balance of all accounts added together
     pub async fn balance(&self) -> crate::Result<AccountBalance> {
-        let mut balance: AccountBalance = Default::default();
-
         let accounts = self.accounts.read().await;
-        let mut total_native_tokens = NativeTokensBuilder::new();
+
+        let mut balances = Vec::new();
         for account in accounts.iter() {
             let account_balance = account.balance().await?;
-            balance.total += account_balance.total;
-            balance.available += account_balance.available;
-            balance.required_storage_deposit += account_balance.required_storage_deposit;
-            balance.nfts.extend(account_balance.nfts.into_iter());
-            balance.aliases.extend(account_balance.aliases.into_iter());
-            balance.foundries.extend(account_balance.foundries.into_iter());
-            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
+            balances.push(account_balance);
         }
-        balance.native_tokens = total_native_tokens.finish()?;
+
+        let balance = add_balances(balances)?;
 
         Ok(balance)
     }
 
     /// Sync all accounts
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
-        let mut balance: AccountBalance = Default::default();
-
         let accounts = self.accounts.read().await;
-        let mut total_native_tokens = NativeTokensBuilder::new();
+
+        let mut balances = Vec::new();
         for account in accounts.iter() {
             let account_balance = account.sync(options.clone()).await?;
-            balance.total += account_balance.total;
-            balance.available += account_balance.available;
-            balance.required_storage_deposit += account_balance.required_storage_deposit;
-            balance.nfts.extend(account_balance.nfts.into_iter());
-            balance.aliases.extend(account_balance.aliases.into_iter());
-            balance.foundries.extend(account_balance.foundries.into_iter());
-            total_native_tokens.add_native_tokens(account_balance.native_tokens)?;
+            balances.push(account_balance);
         }
-        balance.native_tokens = total_native_tokens.finish()?;
+
+        let balance = add_balances(balances)?;
 
         Ok(balance)
     }
