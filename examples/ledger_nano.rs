@@ -25,7 +25,7 @@ async fn main() -> Result<()> {
     let secret_manager = LedgerSecretManager::new(true);
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::LedgerNanoSimulator(secret_manager))
+        .with_secret_manager(SecretManager::LedgerNano(secret_manager))
         .with_storage_path("ledger_nano_walletdb")
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
