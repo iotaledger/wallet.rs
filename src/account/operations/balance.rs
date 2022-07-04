@@ -43,20 +43,28 @@ impl AccountHandle {
             // Add alias and foundry outputs here because they can't have a [`StorageDepositReturnUnlockCondition`]
             // or time related unlock conditions
             match &output_data.output {
-                Output::Foundry(output) => {
-                    // Add native tokens
-                    if let Some(native_tokens) = output_data.output.native_tokens() {
-                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
-                    }
-                    foundries.push(output.id())
-                }
                 Output::Alias(output) => {
+                    // Add amount
+                    total_amount += output_data.output.amount();
+                    // Add storage deposit
+                    required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
                     let alias_id = output.alias_id().or_from_output_id(output_data.output_id);
                     aliases.push(alias_id);
+                }
+                Output::Foundry(output) => {
+                    // Add amount
+                    total_amount += output_data.output.amount();
+                    // Add storage deposit
+                    required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
+                    // Add native tokens
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    }
+                    foundries.push(output.id())
                 }
                 _ => {
                     // If there is only an [AddressUnlockCondition], then we can spend the output at any time without
@@ -87,9 +95,6 @@ impl AccountHandle {
 
                         let output_can_be_unlocked_now =
                             unlockable_outputs_with_multiple_unlock_conditions.contains(&output_data.output_id);
-                        if !output_can_be_unlocked_now {
-                            potentially_locked_outputs.insert(output_data.output_id, false);
-                        }
 
                         // For outputs that are expired or have a timelock unlock condition, but no expiration unlock
                         // condition and we then can unlock them, then they can never be not available for us anymore
@@ -146,7 +151,20 @@ impl AccountHandle {
                                 potentially_locked_outputs.insert(output_data.output_id, true);
                             }
                         } else {
-                            potentially_locked_outputs.insert(output_data.output_id, false);
+                            // Don't add expired outputs that can't ever be unlocked by us
+                            if let Some(expiration) = output_data
+                                .output
+                                .unlock_conditions()
+                                .expect("Output needs to have unlock conditions")
+                                .expiration()
+                            {
+                                // Not expired, could get unlockable when it's expired, so we insert it
+                                if local_time < expiration.timestamp() {
+                                    potentially_locked_outputs.insert(output_data.output_id, false);
+                                }
+                            } else {
+                                potentially_locked_outputs.insert(output_data.output_id, false);
+                            }
                         }
                     }
                 }
