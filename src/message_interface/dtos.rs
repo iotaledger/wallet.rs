@@ -12,6 +12,7 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::dto::AddressDto,
+        dto::U256Dto,
         output::{
             dto::{OutputDto, TokenIdDto},
             AliasId, FoundryId, NftId, OutputId,
@@ -20,7 +21,6 @@ use iota_client::{
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
 };
-use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -307,24 +307,5 @@ impl From<&OutputData> for OutputDataDto {
             remainder: value.remainder,
             chain: value.chain.clone(),
         }
-    }
-}
-
-// TODO: import from bee when available: https://github.com/iotaledger/bee/pull/1454
-/// Describes a U256.
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
-pub struct U256Dto(pub String);
-
-impl From<&U256> for U256Dto {
-    fn from(value: &U256) -> Self {
-        Self(prefix_hex::encode(*value))
-    }
-}
-
-impl TryFrom<&U256Dto> for U256 {
-    type Error = prefix_hex::Error;
-
-    fn try_from(value: &U256Dto) -> Result<Self, Self::Error> {
-        prefix_hex::decode(&value.0)
     }
 }
