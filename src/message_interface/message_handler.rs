@@ -354,7 +354,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::OutputDto(output_dto))
+                Ok(Response::Output(output_dto))
             }
             AccountMethod::BuildBasicOutput {
                 amount,
@@ -370,7 +370,7 @@ impl WalletMessageHandler {
                     features.clone(),
                 )
                 .await?;
-                Ok(Response::OutputDto(output_dto))
+                Ok(Response::Output(output_dto))
             }
             AccountMethod::BuildFoundryOutput {
                 amount,
@@ -392,7 +392,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::OutputDto(output_dto))
+                Ok(Response::Output(output_dto))
             }
             AccountMethod::BuildNftOutput {
                 amount,
@@ -412,7 +412,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::OutputDto(output_dto))
+                Ok(Response::Output(output_dto))
             }
             AccountMethod::ConsolidateOutputs {
                 force,
@@ -438,14 +438,14 @@ impl WalletMessageHandler {
             }
             AccountMethod::GetOutput { output_id } => {
                 let output_data = account_handle.get_output(output_id).await;
-                Ok(Response::Output(
+                Ok(Response::OutputData(
                     output_data.as_ref().map(OutputDataDto::from).map(Box::new),
                 ))
             }
             AccountMethod::GetFoundryOutput { token_id } => {
                 let token_id = TokenId::try_from(token_id)?;
                 let output = account_handle.get_foundry_output(token_id).await?;
-                Ok(Response::OutputDto(OutputDto::from(&output)))
+                Ok(Response::Output(OutputDto::from(&output)))
             }
             AccountMethod::GetTransaction { transaction_id } => {
                 let transaction = account_handle.get_transaction(transaction_id).await;
@@ -475,11 +475,11 @@ impl WalletMessageHandler {
             }
             AccountMethod::ListOutputs => {
                 let outputs = account_handle.list_outputs().await?;
-                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
+                Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListUnspentOutputs => {
                 let outputs = account_handle.list_unspent_outputs().await?;
-                Ok(Response::Outputs(outputs.iter().map(OutputDataDto::from).collect()))
+                Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;
@@ -536,7 +536,7 @@ impl WalletMessageHandler {
                     let output = account_handle
                         .prepare_output(OutputOptions::try_from(options)?, transaction_options.clone())
                         .await?;
-                    Ok(Response::OutputDto(OutputDto::from(&output)))
+                    Ok(Response::Output(OutputDto::from(&output)))
                 })
                 .await
             }

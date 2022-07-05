@@ -31,7 +31,7 @@ use crate::{
 #[serde(tag = "name", content = "data")]
 pub enum AccountMethod {
     /// Build an AliasOutput.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     #[allow(missing_docs)]
     BuildAliasOutput {
         // If not provided, minimum storage deposit will be used
@@ -53,7 +53,7 @@ pub enum AccountMethod {
         immutable_features: Option<Vec<FeatureDto>>,
     },
     /// Build a BasicOutput.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     #[allow(missing_docs)]
     BuildBasicOutput {
         // If not provided, minimum storage deposit will be used
@@ -65,7 +65,7 @@ pub enum AccountMethod {
         features: Option<Vec<FeatureDto>>,
     },
     /// Build a FoundryOutput.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     #[allow(missing_docs)]
     BuildFoundryOutput {
         // If not provided, minimum storage deposit will be used
@@ -83,7 +83,7 @@ pub enum AccountMethod {
         immutable_features: Option<Vec<FeatureDto>>,
     },
     /// Build an NftOutput.
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     #[allow(missing_docs)]
     BuildNftOutput {
         // If not provided, minimum storage deposit will be used
@@ -112,13 +112,13 @@ pub enum AccountMethod {
         options: Option<AddressGenerationOptions>,
     },
     /// Get the [`OutputData`](crate::account::types::OutputData) of an output stored in the account
-    /// Expected response: [`Output`](crate::message_interface::Response::Output)
+    /// Expected response: [`OutputData`](crate::message_interface::Response::OutputData)
     GetOutput {
         #[serde(rename = "outputId")]
         output_id: OutputId,
     },
     /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
-    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
     GetFoundryOutput {
         #[serde(rename = "tokenId")]
         token_id: TokenIdDto,
@@ -150,10 +150,10 @@ pub enum AccountMethod {
     /// [`AddressesWithUnspentOutputs`](crate::message_interface::Response::AddressesWithUnspentOutputs)
     ListAddressesWithUnspentOutputs,
     /// Returns all outputs of the account
-    /// Expected response: [`Outputs`](crate::message_interface::Response::Outputs)
+    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
     ListOutputs,
     /// Returns all unspent outputs of the account
-    /// Expected response: [`Outputs`](crate::message_interface::Response::Outputs)
+    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
     ListUnspentOutputs,
     /// Returns all transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
