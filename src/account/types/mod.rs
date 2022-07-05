@@ -27,6 +27,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalance {
+    /// Total and available amount of the base coin
     #[serde(rename = "baseCoin")]
     pub base_coin: BaseCoin,
     /// Current required storage deposit amount
@@ -56,10 +57,10 @@ pub struct BaseCoin {
     pub available: u64,
 }
 
-/// Base coin fields for [`AccountBalance`]
+/// Native tokens fields for [`AccountBalance`]
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct NativeTokensBalance {
-    /// Total amount
+    /// Token id
     #[serde(rename = "tokenId")]
     pub token_id: TokenId,
     /// Total amount

@@ -146,7 +146,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| *token.token_id() == transaction.token_id && *token.amount() == circulating_supply);
+        .find(|token| token.token_id == transaction.token_id && token.available == circulating_supply);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
@@ -159,7 +159,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance.native_tokens.iter().find(|token| {
-        (*token.token_id() == transaction.token_id) && (*token.amount() == circulating_supply - burn_amount)
+        (token.token_id == transaction.token_id) && (token.available == circulating_supply - burn_amount)
     });
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
@@ -175,7 +175,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| *token.token_id() == transaction.token_id);
+        .find(|token| token.token_id == transaction.token_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
 

@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
     let balance = account.sync(None).await?;
     println!("Balance: {:?}", balance);
 
-    if balance.available == 0 {
+    if balance.base_coin.available == 0 {
         panic!("Account has no available balance");
     }
 

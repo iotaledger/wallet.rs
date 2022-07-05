@@ -13,20 +13,21 @@ use iota_client::{
     bee_block::{
         address::dto::AddressDto,
         output::{
-            dto::{NativeTokenDto, OutputDto},
+            dto::{OutputDto, TokenIdDto},
             AliasId, FoundryId, NftId, OutputId,
         },
         payload::transaction::TransactionId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
 };
+use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData,
-            TransactionDto,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, BaseCoin,
+            NativeTokensBalance, OutputData, TransactionDto,
         },
         Account,
     },
@@ -113,20 +114,59 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
     }
 }
 
-/// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
-/// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub struct AccountBalanceDto {
+/// Base coin fields for [`AccountBalance`]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct BaseCoinDto {
     /// Total amount
     pub total: String,
     /// Balance that can currently be spend
     pub available: String,
+}
+
+impl From<&BaseCoin> for BaseCoinDto {
+    fn from(value: &BaseCoin) -> Self {
+        Self {
+            total: value.total.to_string(),
+            available: value.available.to_string(),
+        }
+    }
+}
+
+/// Base coin fields for [`AccountBalanceDto`]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct NativeTokensBalanceDto {
+    /// Token id
+    #[serde(rename = "tokenId")]
+    pub token_id: TokenIdDto,
+    /// Total amount
+    pub total: U256Dto,
+    /// Balance that can currently be spend
+    pub available: U256Dto,
+}
+
+impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
+    fn from(value: &NativeTokensBalance) -> Self {
+        Self {
+            token_id: TokenIdDto::from(&value.token_id),
+            total: U256Dto::from(&value.total),
+            available: U256Dto::from(&value.available),
+        }
+    }
+}
+
+/// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
+/// [`crate::account::handle::AccountHandle::balance()`].
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct AccountBalanceDto {
+    /// Total and available amount of the base coin
+    #[serde(rename = "baseCoin")]
+    pub base_coin: BaseCoinDto,
     /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: String,
     /// Native tokens
     #[serde(rename = "nativeTokens")]
-    pub native_tokens: Vec<NativeTokenDto>,
+    pub native_tokens: Vec<NativeTokensBalanceDto>,
     /// Nfts
     pub nfts: Vec<NftId>,
     /// Aliases
@@ -142,10 +182,13 @@ pub struct AccountBalanceDto {
 impl From<&AccountBalance> for AccountBalanceDto {
     fn from(value: &AccountBalance) -> Self {
         Self {
-            total: value.total.to_string(),
-            available: value.available.to_string(),
+            base_coin: BaseCoinDto::from(&value.base_coin),
             required_storage_deposit: value.required_storage_deposit.to_string(),
-            native_tokens: value.native_tokens.iter().map(Into::into).collect::<_>(),
+            native_tokens: value
+                .native_tokens
+                .iter()
+                .map(NativeTokensBalanceDto::from)
+                .collect::<_>(),
             nfts: value.nfts.clone(),
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),
@@ -264,5 +307,24 @@ impl From<&OutputData> for OutputDataDto {
             remainder: value.remainder,
             chain: value.chain.clone(),
         }
+    }
+}
+
+// TODO: import from bee when available: https://github.com/iotaledger/bee/pull/1454
+/// Describes a U256.
+#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
+pub struct U256Dto(pub String);
+
+impl From<&U256> for U256Dto {
+    fn from(value: &U256) -> Self {
+        Self(prefix_hex::encode(*value))
+    }
+}
+
+impl TryFrom<&U256Dto> for U256 {
+    type Error = prefix_hex::Error;
+
+    fn try_from(value: &U256Dto) -> Result<Self, Self::Error> {
+        prefix_hex::decode(&value.0)
     }
 }
