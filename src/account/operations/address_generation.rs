@@ -88,7 +88,7 @@ impl AccountHandle {
 
         let addresses = match *self.secret_manager.read().await {
             #[cfg(feature = "ledger_nano")]
-            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+            SecretManager::LedgerNano(_) => {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first

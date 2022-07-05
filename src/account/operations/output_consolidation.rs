@@ -28,9 +28,7 @@ impl AccountHandle {
             Some(threshold) => threshold,
             None => match *self.secret_manager.read().await {
                 #[cfg(feature = "ledger_nano")]
-                SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
-                    DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD
-                }
+                SecretManager::LedgerNano(_) => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
                 _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
             },
         };

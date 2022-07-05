@@ -8,9 +8,7 @@ use crate::account_manager::AccountManager;
 impl AccountManager {
     /// Get the ledger nano status
     pub async fn get_ledger_status(&self) -> crate::Result<LedgerStatus> {
-        if let SecretManager::LedgerNano(ledger) | SecretManager::LedgerNanoSimulator(ledger) =
-            &*self.secret_manager.read().await
-        {
+        if let SecretManager::LedgerNano(ledger) = &*self.secret_manager.read().await {
             Ok(ledger.get_ledger_status().await)
         } else {
             Err(iota_client::Error::SecretManagerMismatch.into())
