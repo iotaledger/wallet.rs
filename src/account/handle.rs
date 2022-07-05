@@ -88,6 +88,7 @@ impl AccountHandle {
                 }
             }
         }
+        drop(account);
 
         // Foundry was not found in the account, try to get it from the node
         let foundry_output_id = self.client.foundry_output_id(foundry_id).await?;
