@@ -116,14 +116,14 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
 
 /// Base coin fields for [`AccountBalance`]
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct BaseCoinDto {
+pub struct BaseCoinBalanceDto {
     /// Total amount
     pub total: String,
-    /// Balance that can currently be spend
+    /// Balance that can currently be spent
     pub available: String,
 }
 
-impl From<&BaseCoin> for BaseCoinDto {
+impl From<&BaseCoin> for BaseCoinBalanceDto {
     fn from(value: &BaseCoin) -> Self {
         Self {
             total: value.total.to_string(),
@@ -140,7 +140,7 @@ pub struct NativeTokensBalanceDto {
     pub token_id: TokenIdDto,
     /// Total amount
     pub total: U256Dto,
-    /// Balance that can currently be spend
+    /// Balance that can currently be spent
     pub available: U256Dto,
 }
 
@@ -160,7 +160,7 @@ impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
 pub struct AccountBalanceDto {
     /// Total and available amount of the base coin
     #[serde(rename = "baseCoin")]
-    pub base_coin: BaseCoinDto,
+    pub base_coin: BaseCoinBalanceDto,
     /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: String,
@@ -182,7 +182,7 @@ pub struct AccountBalanceDto {
 impl From<&AccountBalance> for AccountBalanceDto {
     fn from(value: &AccountBalance) -> Self {
         Self {
-            base_coin: BaseCoinDto::from(&value.base_coin),
+            base_coin: BaseCoinBalanceDto::from(&value.base_coin),
             required_storage_deposit: value.required_storage_deposit.to_string(),
             native_tokens: value
                 .native_tokens

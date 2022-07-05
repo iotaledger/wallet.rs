@@ -53,7 +53,7 @@ pub struct AccountBalance {
 pub struct BaseCoin {
     /// Total amount
     pub total: u64,
-    /// Balance that can currently be spend
+    /// Balance that can currently be spent
     pub available: u64,
 }
 
@@ -65,7 +65,7 @@ pub struct NativeTokensBalance {
     pub token_id: TokenId,
     /// Total amount
     pub total: U256,
-    /// Balance that can currently be spend
+    /// Balance that can currently be spent
     pub available: U256,
 }
 
