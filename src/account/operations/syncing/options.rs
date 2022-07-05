@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_ADDRESS_START_INDEX: u32 = 0;
 const DEFAULT_FORCE_SYNCING: bool = false;
-const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = false;
+const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = true;
 const DEFAULT_SYNC_INCOMING_TRANSACTIONS: bool = false;
 const DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS: bool = false;
 const DEFAULT_SYNC_PENDING_TRANSACTIONS: bool = true;
