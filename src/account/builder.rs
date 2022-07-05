@@ -149,13 +149,10 @@ impl AccountBuilder {
                         // information from the client Doesn't work for offline creating, should
                         // we use the network from the GenerateAddressMetadata instead to use
                         // `iota` or `atoi`?
-                        None => {
-                            let bech32_hrp = client
-                                .get_bech32_hrp()
-                                .await
-                                .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
-                            bech32_hrp
-                        }
+                        None => client
+                            .get_bech32_hrp()
+                            .await
+                            .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
                     }
                 };
 
@@ -185,7 +182,9 @@ impl AccountBuilder {
             unspent_outputs: HashMap::new(),
             transactions: HashMap::new(),
             pending_transactions: HashSet::new(),
+            incoming_transactions: HashMap::new(),
         };
+
         let account_handle = AccountHandle::new(
             account,
             client,

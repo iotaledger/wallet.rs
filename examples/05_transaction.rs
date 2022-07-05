@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
         transaction_result.transaction_id,
-        transaction_result.block_id.expect("No block created yet")
+        transaction_result.transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

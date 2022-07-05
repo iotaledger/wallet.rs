@@ -5,11 +5,7 @@ use getset::Getters;
 use iota_client::{api::PreparedTransactionDataDto, bee_block::payload::transaction::TransactionId};
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    account::types::{address::AddressWrapper, InclusionState},
-    message_interface::dtos::OutputDataDto,
-};
-
+use crate::account::types::{address::AddressWrapper, InclusionState, OutputDataDto};
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Event {
     /// Associated account index.
@@ -89,6 +85,8 @@ pub enum TransactionProgressEvent {
     GeneratingRemainderDepositAddress(AddressData),
     /// Prepared transaction.
     PreparedTransaction(Box<PreparedTransactionDataDto>),
+    /// Prepared transaction essence hash hex encoded, required for blindsigning with a ledger nano
+    PreparedTransactionEssenceHash(String),
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.

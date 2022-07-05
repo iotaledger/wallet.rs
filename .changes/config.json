@@ -16,7 +16,25 @@
           "command": "false || dasel put object -f Cargo.toml '.dependencies.iota-wallet' -t string -t string git='https://github.com/iotaledger/wallet.rs' rev=$GITHUB_SHA"
         },
         {
-          "command": "dasel put document -f Cargo.toml '.dependencies.iota-wallet.features' '[\"mnemonic\", \"events\", \"storage\", \"stronghold\", \"message_interface\"]'"
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[0]' mnemonic"
+        },
+        {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[1]' events"
+        },
+        {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[2]' ledger_nano"
+        },
+        {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[3]' storage"
+        },
+        {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[4]' stronghold"
+        },
+        {
+          "command": "dasel put string -f Cargo.toml '.dependencies.iota-wallet.features.[5]' message_interface"
+        },
+        {
+          "command": "yarn --ignore-scripts"
         },
         {
           "command": "tsc"

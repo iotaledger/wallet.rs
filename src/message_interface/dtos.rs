@@ -16,8 +16,7 @@ use iota_client::{
             dto::{NativeTokenDto, OutputDto},
             AliasId, FoundryId, NftId, OutputId,
         },
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-        BlockId,
+        payload::transaction::TransactionId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
 };
@@ -26,8 +25,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, InclusionState,
-            OutputData, Transaction,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData,
+            TransactionDto,
         },
         Account,
     },
@@ -222,39 +221,6 @@ impl From<&Account> for AccountDto {
                 .map(|(k, o)| (k, TransactionDto::from(&o)))
                 .collect(),
             pending_transactions: value.pending_transactions().clone(),
-        }
-    }
-}
-
-/// Dto for a transaction with metadata
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct TransactionDto {
-    /// The transaction payload
-    pub payload: TransactionPayloadDto,
-    /// BlockId when it got sent to the Tangle
-    #[serde(rename = "blockId")]
-    pub block_id: Option<BlockId>,
-    /// Inclusion state of the transaction
-    #[serde(rename = "inclusionState")]
-    pub inclusion_state: InclusionState,
-    /// Timestamp
-    pub timestamp: String,
-    /// Network id to ignore outputs when set_client_options is used to switch to another network
-    #[serde(rename = "networkId")]
-    pub network_id: String,
-    /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
-    pub incoming: bool,
-}
-
-impl From<&Transaction> for TransactionDto {
-    fn from(value: &Transaction) -> Self {
-        Self {
-            payload: TransactionPayloadDto::from(&value.payload),
-            block_id: value.block_id,
-            inclusion_state: value.inclusion_state,
-            timestamp: value.timestamp.to_string(),
-            network_id: value.network_id.to_string(),
-            incoming: value.incoming,
         }
     }
 }

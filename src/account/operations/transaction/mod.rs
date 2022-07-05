@@ -18,7 +18,6 @@ use iota_client::{
         output::Output,
         payload::transaction::{TransactionId, TransactionPayload},
         semantic::ConflictReason,
-        BlockId,
     },
     secret::types::InputSigningData,
 };
@@ -30,7 +29,7 @@ use crate::events::types::{TransactionProgressEvent, WalletEvent};
 use crate::{
     account::{
         handle::AccountHandle,
-        types::{InclusionState, Transaction},
+        types::{InclusionState, Transaction, TransactionDto},
     },
     iota_client::Error,
 };
@@ -40,8 +39,7 @@ use crate::{
 pub struct TransactionResult {
     #[serde(rename = "transactionId")]
     pub transaction_id: TransactionId,
-    #[serde(rename = "blockId")]
-    pub block_id: Option<BlockId>,
+    pub transaction: TransactionDto,
 }
 
 impl AccountHandle {
@@ -191,30 +189,31 @@ impl AccountHandle {
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
         let transaction_id = signed_transaction_data.transaction_payload.id();
+        let transaction = Transaction {
+            payload: signed_transaction_data.transaction_payload,
+            block_id,
+            network_id,
+            timestamp: SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_millis(),
+            inclusion_state: InclusionState::Pending,
+            incoming: false,
+        };
+        let transaction_dto = TransactionDto::from(&transaction);
         let mut account = self.write().await;
-        account.transactions.insert(
-            transaction_id,
-            Transaction {
-                payload: signed_transaction_data.transaction_payload,
-                block_id,
-                network_id,
-                timestamp: SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("Time went backwards")
-                    .as_millis(),
-                inclusion_state: InclusionState::Pending,
-                incoming: false,
-            },
-        );
+
+        account.transactions.insert(transaction_id, transaction);
         account.pending_transactions.insert(transaction_id);
         #[cfg(feature = "storage")]
         {
             log::debug!("[TRANSACTION] storing account {}", account.index());
             self.save(Some(&account)).await?;
         }
+
         Ok(TransactionResult {
             transaction_id,
-            block_id,
+            transaction: transaction_dto,
         })
     }
 

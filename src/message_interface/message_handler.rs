@@ -12,7 +12,10 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::output::{dto::OutputDto, ByteCost, Output},
+    bee_block::{
+        output::{dto::OutputDto, ByteCost, Output},
+        payload::transaction::dto::TransactionPayloadDto,
+    },
     constants::SHIMMER_TESTNET_BECH32_HRP,
     message_interface::output_builder::{
         build_alias_output, build_basic_output, build_foundry_output, build_nft_output,
@@ -25,11 +28,14 @@ use zeroize::Zeroize;
 #[cfg(feature = "events")]
 use crate::events::types::{Event, WalletEventType};
 use crate::{
-    account::{operations::transaction::prepare_output::OutputOptions, types::AccountIdentifier},
+    account::{
+        operations::transaction::prepare_output::OutputOptions,
+        types::{AccountIdentifier, TransactionDto},
+    },
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto, OutputDataDto, TransactionDto},
+        dtos::{AccountBalanceDto, AccountDto, OutputDataDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,
@@ -202,6 +208,14 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     self.account_manager.set_client_options(*options.clone()).await?;
                     Ok(Response::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "ledger_nano")]
+            Message::GetLedgerStatus => {
+                convert_async_panics(|| async {
+                    let ledger_status = self.account_manager.get_ledger_status().await?;
+                    Ok(Response::LedgerStatus(ledger_status))
                 })
                 .await
             }
@@ -433,6 +447,16 @@ impl WalletMessageHandler {
                 Ok(Response::Transaction(
                     transaction.as_ref().map(TransactionDto::from).map(Box::new),
                 ))
+            }
+            AccountMethod::GetIncomingTransactionData { transaction_id } => {
+                let transaction_data = account_handle.get_incoming_transaction_data(transaction_id).await;
+                match transaction_data {
+                    Some((transaction_payload, inputs)) => Ok(Response::IncomingTransactionData(Some(Box::new((
+                        *transaction_id,
+                        (TransactionPayloadDto::from(&transaction_payload), inputs),
+                    ))))),
+                    None => Ok(Response::IncomingTransactionData(None)),
+                }
             }
             AccountMethod::ListAddresses => {
                 let addresses = account_handle.list_addresses().await?;

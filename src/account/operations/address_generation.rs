@@ -70,14 +70,11 @@ impl AccountHandle {
                 // Only when we create a new account we don't have the first address and need to get the information
                 // from the client Doesn't work for offline creating, should we use the network from the
                 // GenerateAddressMetadata instead to use `iota` or `atoi`?
-                None => {
-                    let bech32_hrp = self
-                        .client
-                        .get_bech32_hrp()
-                        .await
-                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
-                    bech32_hrp
-                }
+                None => self
+                    .client
+                    .get_bech32_hrp()
+                    .await
+                    .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
             }
         };
 
@@ -91,7 +88,7 @@ impl AccountHandle {
 
         let addresses = match *self.secret_manager.read().await {
             #[cfg(feature = "ledger_nano")]
-            SecretManager::LedgerNano(_) | SecretManager::LedgerNanoSimulator(_) => {
+            SecretManager::LedgerNano(_) => {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first

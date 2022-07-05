@@ -357,7 +357,7 @@ impl AccountHandle {
                 Ok(res) => {
                     log::debug!(
                         "[OUTPUT_CLAIMING] Claiming transaction created: block_id: {:?} tx_id: {:?}",
-                        res.block_id,
+                        res.transaction.block_id,
                         res.transaction_id
                     );
                     claim_results.push(res);

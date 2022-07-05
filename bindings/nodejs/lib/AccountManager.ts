@@ -14,6 +14,7 @@ import type {
     ClientOptions,
     AccountSyncOptions,
     WalletEvent,
+    LedgerStatus,
 } from '../types';
 
 export class AccountManager {
@@ -129,6 +130,13 @@ export class AccountManager {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetNodeInfo',
             payload: { url, auth },
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async getLedgerStatus(): Promise<LedgerStatus> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'GetLedgerStatus',
         });
         return JSON.parse(response).payload;
     }

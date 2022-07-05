@@ -175,6 +175,7 @@ impl AccountHandle {
                     tokio::spawn(async move {
                         let (output_responses, already_known_balance, _loaded_output_responses) =
                             account_handle.get_outputs(address.output_ids.clone(), false).await?;
+
                         let outputs = account_handle
                             .output_response_to_output_data(output_responses, &address)
                             .await?;
@@ -210,6 +211,19 @@ impl AccountHandle {
         sync_options: &SyncOptions,
     ) -> crate::Result<(AddressWithUnspentOutputs, Vec<OutputId>)> {
         let bech32_address_ = &address.address.to_bech32();
+
+        // Only sync outputs with basic unlock conditions and only `AddressUnlockCondition`
+        if sync_options.sync_only_most_basic_outputs {
+            let output_ids = client
+                .basic_output_ids(vec![
+                    QueryParameter::Address(bech32_address_.to_string()),
+                    QueryParameter::HasExpirationCondition(false),
+                    QueryParameter::HasTimelockCondition(false),
+                    QueryParameter::HasStorageReturnCondition(false),
+                ])
+                .await?;
+            return Ok((address, output_ids));
+        }
 
         let mut tasks = vec![
             // Get basic outputs

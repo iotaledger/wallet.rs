@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
                             }),
                         )
                         .await?;
-                    if let Some(block_id) = res.block_id {
+                    if let Some(block_id) = res.transaction.block_id {
                         println!(
                             "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
                             n, block_id

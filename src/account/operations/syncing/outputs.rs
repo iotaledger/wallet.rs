@@ -7,10 +7,15 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     api::ClientBlockBuilder,
     bee_block::{
+        input::Input,
         output::{dto::OutputDto, Output, OutputId},
-        payload::transaction::TransactionId,
+        payload::{
+            transaction::{TransactionEssence, TransactionId},
+            Payload, TransactionPayload,
+        },
     },
     bee_rest_api::types::responses::OutputResponse,
+    Client,
 };
 
 use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
@@ -115,4 +120,71 @@ impl AccountHandle {
         );
         Ok((found_outputs, balance_from_known_outputs, loaded_outputs))
     }
+
+    // Try to get transactions and inputs for received outputs
+    // Because the transactions and outputs are pruned, we might can not get them anymore, in that case errors are not
+    // returned
+    pub(crate) async fn request_incoming_transaction_data(
+        &self,
+        transaction_ids: Vec<TransactionId>,
+    ) -> crate::Result<()> {
+        let transactions = self.read().await.transactions.clone();
+        let incoming_transactions = self.read().await.incoming_transactions.clone();
+
+        let mut tasks = Vec::new();
+
+        for transaction_id in transaction_ids {
+            // Don't request known transactions again
+            if transactions.contains_key(&transaction_id) || incoming_transactions.contains_key(&transaction_id) {
+                continue;
+            }
+
+            let client = self.client.clone();
+            tasks.push(async move {
+                tokio::spawn(async move {
+                    match client.get_included_block(&transaction_id).await {
+                        Ok(block) => {
+                            if let Some(Payload::Transaction(transaction_payload)) = block.payload().as_ref() {
+                                let inputs = get_inputs_for_transaction_payload(&client, transaction_payload).await?;
+                                Ok(Some((transaction_id, (*transaction_payload.clone(), inputs))))
+                            } else {
+                                Ok(None)
+                            }
+                        }
+                        Err(iota_client::Error::NotFound) => Ok(None),
+                        Err(e) => Err(crate::Error::ClientError(e.into())),
+                    }
+                })
+                .await
+            });
+        }
+
+        let results = futures::future::try_join_all(tasks).await?;
+        // Update account with new transactions
+        let mut account = self.write().await;
+        for res in results {
+            if let Some((transaction_id, transaction_data)) = res? {
+                account.incoming_transactions.insert(transaction_id, transaction_data);
+            }
+        }
+
+        Ok(())
+    }
+}
+
+// Try to fetch the inputs of the transaction
+pub(crate) async fn get_inputs_for_transaction_payload(
+    client: &Client,
+    transaction_payload: &TransactionPayload,
+) -> crate::Result<Vec<OutputResponse>> {
+    let TransactionEssence::Regular(essence) = transaction_payload.essence();
+    let mut output_ids = Vec::new();
+
+    for input in essence.inputs() {
+        if let Input::Utxo(input) = input {
+            output_ids.push(*input.output_id());
+        }
+    }
+
+    client.try_get_outputs(output_ids).await.map_err(|e| e.into())
 }

@@ -1,11 +1,14 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(all(feature = "events", feature = "ledger_nano"))]
+use iota_client::api::PreparedTransactionDataDto;
+#[cfg(all(feature = "events", feature = "ledger_nano"))]
+use iota_client::secret::ledger_nano::needs_blind_signing;
 #[cfg(feature = "stronghold")]
 use iota_client::secret::SecretManager;
 use iota_client::{
     api::{PreparedTransactionData, SignedTransactionData},
-    bee_block::address::Address,
     secret::SecretManageExt,
 };
 
@@ -32,6 +35,28 @@ impl AccountHandle {
             stronghold_secret_manager.read_stronghold_snapshot().await?;
         }
 
+        #[cfg(all(feature = "events", feature = "ledger_nano"))]
+        if let SecretManager::LedgerNano(ledger) = &*self.secret_manager.read().await {
+            let ledger_status = ledger.get_ledger_status().await;
+            if let Some(buffer_size) = ledger_status.buffer_size() {
+                if needs_blind_signing(prepared_transaction_data, buffer_size) {
+                    self.event_emitter.lock().await.emit(
+                        self.read().await.index,
+                        WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransactionEssenceHash(
+                            hex::encode(prepared_transaction_data.essence.hash()),
+                        )),
+                    );
+                } else {
+                    self.event_emitter.lock().await.emit(
+                        self.read().await.index,
+                        WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransaction(Box::new(
+                            PreparedTransactionDataDto::from(prepared_transaction_data),
+                        ))),
+                    );
+                }
+            }
+        }
+
         let unlocks = self
             .secret_manager
             .read()
@@ -40,13 +65,6 @@ impl AccountHandle {
             .await?;
 
         let transaction_payload = TransactionPayload::new(prepared_transaction_data.essence.clone(), unlocks)?;
-
-        // Validate signature after signing. The hashed public key needs to match the input address
-        let mut input_addresses = Vec::new();
-        for input_signing_data in &prepared_transaction_data.inputs_data {
-            let (_bech32_hrp, address) = Address::try_from_bech32(&input_signing_data.bech32_address)?;
-            input_addresses.push(address);
-        }
 
         log::debug!("[TRANSACTION] signed transaction: {:?}", transaction_payload);
 

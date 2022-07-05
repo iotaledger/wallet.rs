@@ -58,6 +58,10 @@ export type __GetAccountMessage__ = {
     payload: AccountId;
 };
 
+export type __GetLedgerStatusMessage__ = {
+    cmd: 'GetLedgerStatus';
+};
+
 export type __GetNodeInfoMessage__ = {
     cmd: 'GetNodeInfo';
     payload: {

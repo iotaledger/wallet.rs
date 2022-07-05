@@ -17,7 +17,13 @@ pub(crate) mod update;
 use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
-use iota_client::bee_block::{output::OutputId, payload::transaction::TransactionId};
+use iota_client::{
+    bee_block::{
+        output::OutputId,
+        payload::{transaction::TransactionId, TransactionPayload},
+    },
+    bee_rest_api::types::responses::OutputResponse,
+};
 use serde::{Deserialize, Serialize};
 
 use self::types::{
@@ -35,6 +41,7 @@ pub use self::{
             RemainderValueStrategy, TransactionOptions,
         },
     },
+    types::OutputDataDto,
 };
 
 /// An Account.
@@ -78,4 +85,8 @@ pub struct Account {
     // Maybe pending transactions even additionally separated?
     #[serde(rename = "pendingTransactions")]
     pending_transactions: HashSet<TransactionId>,
+    /// Transaction payloads for received outputs with inputs when not pruned before syncing, can be used to determine
+    /// the sender address/es
+    #[serde(rename = "incomingTransactions")]
+    incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>,
 }
