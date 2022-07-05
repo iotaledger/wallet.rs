@@ -13,7 +13,7 @@ use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
     bee_block::{
-        output::{dto::OutputDto, ByteCost, Output},
+        output::{dto::OutputDto, ByteCost, Output, TokenId},
         payload::transaction::dto::TransactionPayloadDto,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
@@ -354,7 +354,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::BuiltOutput(output_dto))
+                Ok(Response::OutputDto(output_dto))
             }
             AccountMethod::BuildBasicOutput {
                 amount,
@@ -370,7 +370,7 @@ impl WalletMessageHandler {
                     features.clone(),
                 )
                 .await?;
-                Ok(Response::BuiltOutput(output_dto))
+                Ok(Response::OutputDto(output_dto))
             }
             AccountMethod::BuildFoundryOutput {
                 amount,
@@ -392,7 +392,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::BuiltOutput(output_dto))
+                Ok(Response::OutputDto(output_dto))
             }
             AccountMethod::BuildNftOutput {
                 amount,
@@ -412,7 +412,7 @@ impl WalletMessageHandler {
                     immutable_features.clone(),
                 )
                 .await?;
-                Ok(Response::BuiltOutput(output_dto))
+                Ok(Response::OutputDto(output_dto))
             }
             AccountMethod::ConsolidateOutputs {
                 force,
@@ -441,6 +441,11 @@ impl WalletMessageHandler {
                 Ok(Response::Output(
                     output_data.as_ref().map(OutputDataDto::from).map(Box::new),
                 ))
+            }
+            AccountMethod::GetFoundryOutput { token_id } => {
+                let token_id = TokenId::try_from(token_id)?;
+                let output = account_handle.get_foundry_output(token_id).await?;
+                Ok(Response::OutputDto(OutputDto::from(&output)))
             }
             AccountMethod::GetTransaction { transaction_id } => {
                 let transaction = account_handle.get_transaction(transaction_id).await;
@@ -531,7 +536,7 @@ impl WalletMessageHandler {
                     let output = account_handle
                         .prepare_output(OutputOptions::try_from(options)?, transaction_options.clone())
                         .await?;
-                    Ok(Response::BuiltOutput(OutputDto::from(&output)))
+                    Ok(Response::OutputDto(OutputDto::from(&output)))
                 })
                 .await
             }

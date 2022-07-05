@@ -5,7 +5,7 @@ use std::{ops::Deref, sync::Arc};
 
 use iota_client::{
     bee_block::{
-        output::OutputId,
+        output::{FoundryId, Output, OutputId, TokenId},
         payload::transaction::{TransactionId, TransactionPayload},
     },
     bee_rest_api::types::responses::OutputResponse,
@@ -74,6 +74,26 @@ impl AccountHandle {
     pub async fn get_output(&self, output_id: &OutputId) -> Option<OutputData> {
         let account = self.read().await;
         account.outputs().get(output_id).cloned()
+    }
+
+    /// Get the [`Output`] that minted a native token by the token ID. First try to get it
+    /// from the account, if it isn't in the account try to get it from the node
+    pub async fn get_foundry_output(&self, native_token_id: TokenId) -> Result<Output> {
+        let account = self.read().await;
+        let foundry_id = FoundryId::from(native_token_id);
+        for output_data in account.outputs().values() {
+            if let Output::Foundry(foundry_output) = &output_data.output {
+                if foundry_output.id() == foundry_id {
+                    return Ok(output_data.output.clone());
+                }
+            }
+        }
+
+        // Foundry was not found in the account, try to get it from the node
+        let foundry_output_id = self.client.foundry_output_id(foundry_id).await?;
+        let output_response = self.client.get_output(&foundry_output_id).await?;
+
+        Ok(Output::try_from(&output_response.output)?)
     }
 
     /// Get the [`Transaction`] of a transaction stored in the account

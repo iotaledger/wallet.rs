@@ -175,6 +175,23 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get a foundry output by native token ID. It will try to get the foundry from
+     * the account, if it isn't in the account it will try to get it from the node
+     */
+    async getFoundryOutput(tokenId: string): Promise<IFoundryOutput> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetFoundryOutput',
+                data: {
+                    tokenId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
     async getOutputsWithAdditionalUnlockConditions(
         outputs: OutputsToClaim,
     ): Promise<string[]> {
@@ -331,11 +348,11 @@ export class Account {
                 name: 'PrepareOutput',
                 data: {
                     options,
-                    transactionOptions
-                }
-            }
-        )
-        return JSON.parse(response).payload
+                    transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
     }
 
     async prepareSendAmount(
@@ -354,7 +371,7 @@ export class Account {
         );
         return JSON.parse(response).payload;
     }
-    
+
     async prepareTransaction(
         outputs: OutputTypes[],
         options?: TransactionOptions,
@@ -507,7 +524,7 @@ export class Account {
             {
                 name: 'SyncAccount',
                 data: {
-                    options: options ?? {}
+                    options: options ?? {},
                 },
             },
         );

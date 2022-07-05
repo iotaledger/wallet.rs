@@ -5,7 +5,7 @@ use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     bee_block::{
         output::{
-            dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenSchemeDto},
+            dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
             feature::dto::FeatureDto,
             unlock_condition::dto::UnlockConditionDto,
             OutputId,
@@ -31,7 +31,7 @@ use crate::{
 #[serde(tag = "name", content = "data")]
 pub enum AccountMethod {
     /// Build an AliasOutput.
-    /// Expected response: [`BuiltOutput`](crate::message_interface::Response::BuiltOutput)
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     #[allow(missing_docs)]
     BuildAliasOutput {
         // If not provided, minimum storage deposit will be used
@@ -53,7 +53,7 @@ pub enum AccountMethod {
         immutable_features: Option<Vec<FeatureDto>>,
     },
     /// Build a BasicOutput.
-    /// Expected response: [`BuiltOutput`](crate::message_interface::Response::BuiltOutput)
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     #[allow(missing_docs)]
     BuildBasicOutput {
         // If not provided, minimum storage deposit will be used
@@ -65,7 +65,7 @@ pub enum AccountMethod {
         features: Option<Vec<FeatureDto>>,
     },
     /// Build a FoundryOutput.
-    /// Expected response: [`BuiltOutput`](crate::message_interface::Response::BuiltOutput)
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     #[allow(missing_docs)]
     BuildFoundryOutput {
         // If not provided, minimum storage deposit will be used
@@ -83,7 +83,7 @@ pub enum AccountMethod {
         immutable_features: Option<Vec<FeatureDto>>,
     },
     /// Build an NftOutput.
-    /// Expected response: [`BuiltOutput`](crate::message_interface::Response::BuiltOutput)
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     #[allow(missing_docs)]
     BuildNftOutput {
         // If not provided, minimum storage deposit will be used
@@ -116,6 +116,12 @@ pub enum AccountMethod {
     GetOutput {
         #[serde(rename = "outputId")]
         output_id: OutputId,
+    },
+    /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
+    GetFoundryOutput {
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
     },
     /// Get outputs with additional unlock conditions
     /// Expected response: [`OutputIds`](crate::message_interface::Response::OutputIds)
@@ -177,7 +183,7 @@ pub enum AccountMethod {
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     GetBalance,
     /// Prepare an output.
-    /// Expected response: [`Output`](crate::message_interface::Response::Output)
+    /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     PrepareOutput {
         options: OutputOptionsDto,
         transaction_options: Option<TransactionOptions>,

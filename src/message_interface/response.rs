@@ -49,7 +49,9 @@ pub enum Response {
     /// [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
     /// [`BuildFoundryOutput`](crate::message_interface::AccountMethod::BuildFoundryOutput)
     /// [`BuildNftOutput`](crate::message_interface::AccountMethod::BuildNftOutput)
-    BuiltOutput(OutputDto),
+    /// [`GetFoundryOutput`](crate::message_interface::AccountMethod::GetFoundryOutput)
+    /// [`PrepareOutput`](crate::message_interface::AccountMethod::PrepareOutput)
+    OutputDto(OutputDto),
     /// Response for
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::AccountMethod::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit(String),
@@ -149,7 +151,7 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
-            Response::BuiltOutput(output) => write!(f, "BuiltOutput({:?})", output),
+            Response::OutputDto(output) => write!(f, "OutputDto({:?})", output),
             Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
             Response::Output(output) => write!(f, "Output({:?})", output),

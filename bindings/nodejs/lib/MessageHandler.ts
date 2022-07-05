@@ -32,11 +32,13 @@ export class MessageHandler {
     }
 
     async sendMessage(message: __Message__): Promise<string> {
-        return sendMessageAsync(JSON.stringify(message), this.messageHandler)
-            .catch((error) => {
-                const _error = JSON.parse(error);
-                return Promise.reject(_error.payload);
-            });
+        return sendMessageAsync(
+            JSON.stringify(message),
+            this.messageHandler,
+        ).catch((error) => {
+            const _error = JSON.parse(error);
+            return Promise.reject(_error.payload);
+        });
     }
 
     async callAccountMethod(
