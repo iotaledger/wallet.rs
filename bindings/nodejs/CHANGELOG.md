@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.2-alpha.2]
+
+- - Fix syncing account logic for bug around new accounts
+- Add syncing option for only basic outputs with AddressUnlockCondition
+- Return entire transaction object on send
+- Add option to sync incoming transactions
+- Add Ledger nano support for NodeJS bindings
+- [461b5f75](https://github.com/iotaledger/wallet.rs/commit/461b5f757d0db64454442a8293d436ae334d14af) chore: add new changelog file ([#1262](https://github.com/iotaledger/wallet.rs/pull/1262)) on 2022-07-05
+
 ## \[2.0.2-alpha.1]
 
 - Added typescript declaration files to the package
