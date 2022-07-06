@@ -161,31 +161,39 @@ async fn account_alias_already_exists() -> Result<()> {
         .with_alias("Alice".to_string())
         .finish()
         .await?;
-    assert!(&manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("alice".to_string())
-        .finish()
-        .await
-        .is_err());
-    assert!(&manager
-        .create_account()
-        .with_alias("ALICE".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("alice".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("ALICE".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
     // Other alias works
-    assert!(&manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_ok());
+    assert!(
+        &manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_ok()
+    );
 
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
     Ok(())

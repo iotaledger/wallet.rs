@@ -45,7 +45,9 @@ impl AccountManager {
                 save_data_to_stronghold_backup(
                     self,
                     // If the SecretManager is not Stronghold we'll create a new one for the backup
-                    &mut StrongholdSecretManager::builder().try_build(backup_path.clone())?,
+                    &mut StrongholdSecretManager::builder()
+                        .password(&stronghold_password)
+                        .try_build(backup_path.clone())?,
                     stronghold_password,
                     backup_path,
                     secret_manager_dto,
@@ -77,11 +79,12 @@ impl AccountManager {
         };
 
         // We'll create a new stronghold to load the backup
-        let mut new_stronghold = StrongholdSecretManager::builder().try_build(snapshot_path)?;
+        let mut new_stronghold = StrongholdSecretManager::builder()
+            .password(&stronghold_password)
+            .try_build(snapshot_path)?;
         read_data_from_stronghold_backup(
             self,
             &mut new_stronghold,
-            &stronghold_password,
             backup_path,
             &mut accounts,
             &mut new_secret_manager,
@@ -140,10 +143,6 @@ async fn save_data_to_stronghold_backup(
     backup_path: PathBuf,
     secret_manager_dto: SecretManagerDto,
 ) -> crate::Result<()> {
-    if !stronghold.is_key_available().await {
-        stronghold.set_password(&stronghold_password).await?;
-    }
-
     // Save current data to Stronghold
 
     // Set backup_schema_version
@@ -204,14 +203,10 @@ async fn save_data_to_stronghold_backup(
 async fn read_data_from_stronghold_backup(
     account_manager: &AccountManager,
     stronghold: &mut StrongholdAdapter,
-    stronghold_password: &str,
     backup_path: PathBuf,
     accounts: &mut RwLockWriteGuard<'_, Vec<AccountHandle>>,
     new_secret_manager: &mut Option<SecretManager>,
 ) -> crate::Result<()> {
-    if !stronghold.is_key_available().await {
-        stronghold.set_password(stronghold_password).await?;
-    }
     // Get current snapshot_path to set it again after the backup
     let current_snapshot_path = stronghold.snapshot_path.clone();
 
