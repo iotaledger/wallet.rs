@@ -29,7 +29,9 @@ use zeroize::Zeroize;
 use crate::events::types::{Event, WalletEventType};
 use crate::{
     account::{
-        operations::transaction::prepare_output::OutputOptions,
+        operations::transaction::{
+            high_level::minting::mint_native_token::MintTokenTransactionDto, prepare_output::OutputOptions,
+        },
         types::{AccountIdentifier, TransactionDto},
     },
     account_manager::AccountManager,
@@ -498,7 +500,9 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .mint_native_token(native_token_options.clone(), options.clone())
                         .await?;
-                    Ok(Response::MintTokenTransaction(transaction))
+                    Ok(Response::MintTokenTransaction(MintTokenTransactionDto::from(
+                        &transaction,
+                    )))
                 })
                 .await
             }

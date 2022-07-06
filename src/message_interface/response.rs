@@ -18,7 +18,7 @@ use serde::Serialize;
 
 use crate::{
     account::{
-        operations::transaction::high_level::minting::mint_native_token::MintTokenTransaction,
+        operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
         types::{address::AccountAddress, TransactionDto},
     },
     message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto},
@@ -104,7 +104,7 @@ pub enum Response {
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionDto>),
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
-    MintTokenTransaction(MintTokenTransaction),
+    MintTokenTransaction(MintTokenTransactionDto),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),

@@ -36,8 +36,8 @@ async fn main() -> Result<()> {
     let transaction = account.mint_native_token(native_token_options, None).await?;
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transaction.transaction_id,
-        transaction.block_id.expect("No block created yet")
+        transaction.transaction.transaction_id,
+        transaction.transaction.block_id.expect("No block created yet")
     );
     Ok(())
 }

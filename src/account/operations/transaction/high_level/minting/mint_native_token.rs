@@ -12,14 +12,16 @@ use iota_client::bee_block::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
         SimpleTokenScheme, TokenId, TokenScheme,
     },
-    payload::transaction::TransactionId,
-    BlockId,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, TransactionOptions},
+    account::{
+        handle::AccountHandle,
+        types::{Transaction, TransactionDto},
+        TransactionOptions,
+    },
     Error,
 };
 
@@ -46,8 +48,24 @@ pub struct NativeTokenOptions {
 #[serde(rename_all = "camelCase")]
 pub struct MintTokenTransaction {
     pub token_id: TokenId,
-    pub transaction_id: TransactionId,
-    pub block_id: Option<BlockId>,
+    pub transaction: Transaction,
+}
+
+/// Dto for MintTokenTransaction
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MintTokenTransactionDto {
+    pub token_id: TokenId,
+    pub transaction: TransactionDto,
+}
+
+impl From<&MintTokenTransaction> for MintTokenTransactionDto {
+    fn from(value: &MintTokenTransaction) -> Self {
+        Self {
+            token_id: value.token_id,
+            transaction: TransactionDto::from(&value.transaction),
+        }
+    }
 }
 
 impl AccountHandle {
@@ -164,11 +182,7 @@ impl AccountHandle {
             ];
             self.send(outputs, options)
                 .await
-                .map(|transaction| MintTokenTransaction {
-                    token_id,
-                    transaction_id: transaction.transaction_id,
-                    block_id: transaction.block_id,
-                })
+                .map(|transaction| MintTokenTransaction { token_id, transaction })
         } else {
             unreachable!("We checked if it's an alias output before")
         }

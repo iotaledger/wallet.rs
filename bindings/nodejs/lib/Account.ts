@@ -288,7 +288,7 @@ export class Account {
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
         transactionOptions?: TransactionOptions,
-    ): Promise<Transaction> {
+    ): Promise<MintTokenTransaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

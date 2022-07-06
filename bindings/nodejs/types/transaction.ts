@@ -16,3 +16,8 @@ export interface Transaction {
     networkId: string;
     incoming: boolean;
 }
+
+export interface MintTokenTransaction {
+    tokenId: string;
+    transaction: Transaction;
+}
