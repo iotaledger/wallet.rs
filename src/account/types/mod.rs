@@ -29,7 +29,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 pub struct AccountBalance {
     /// Total and available amount of the base coin
     #[serde(rename = "baseCoin")]
-    pub base_coin: BaseCoin,
+    pub base_coin: BaseCoinBalance,
     /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: u64,
@@ -50,7 +50,7 @@ pub struct AccountBalance {
 
 /// Base coin fields for [`AccountBalance`]
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
-pub struct BaseCoin {
+pub struct BaseCoinBalance {
     /// Total amount
     pub total: u64,
     /// Balance that can currently be spent

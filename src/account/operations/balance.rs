@@ -9,7 +9,7 @@ use primitive_types::U256;
 use crate::account::{
     handle::AccountHandle,
     operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    types::{AccountBalance, BaseCoin, NativeTokensBalance},
+    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance},
     OutputsToClaim,
 };
 
@@ -223,7 +223,7 @@ impl AccountHandle {
         }
 
         Ok(AccountBalance {
-            base_coin: BaseCoin {
+            base_coin: BaseCoinBalance {
                 total: total_amount,
                 available: total_amount - locked_amount,
             },

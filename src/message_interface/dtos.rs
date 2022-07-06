@@ -26,7 +26,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, BaseCoin,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, BaseCoinBalance,
             NativeTokensBalance, OutputData, TransactionDto,
         },
         Account,
@@ -123,8 +123,8 @@ pub struct BaseCoinBalanceDto {
     pub available: String,
 }
 
-impl From<&BaseCoin> for BaseCoinBalanceDto {
-    fn from(value: &BaseCoin) -> Self {
+impl From<&BaseCoinBalance> for BaseCoinBalanceDto {
+    fn from(value: &BaseCoinBalance) -> Self {
         Self {
             total: value.total.to_string(),
             available: value.available.to_string(),
