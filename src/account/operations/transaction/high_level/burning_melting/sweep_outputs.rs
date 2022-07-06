@@ -231,8 +231,8 @@ impl AccountHandle {
             ..Default::default()
         });
 
-        let transaction_result = self.send(custom_outputs, transaction_options).await?;
-        match &transaction_result.transaction.block_id {
+        let transaction = self.send(custom_outputs, transaction_options).await?;
+        match &transaction.block_id {
             Some(block_id) => {
                 let _ = self.client.retry_until_included(block_id, None, None).await?;
                 let _ = self.sync(None).await?;
@@ -244,7 +244,7 @@ impl AccountHandle {
             }
         }
 
-        Ok(transaction_result.transaction_id)
+        Ok(transaction.transaction_id)
     }
 
     /// Fetches alias outputs with `address` set as Governor unlock condition

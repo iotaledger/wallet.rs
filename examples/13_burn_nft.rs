@@ -32,9 +32,9 @@ async fn main() -> Result<()> {
 
     // Replace with an NftId that is available in the account
     let nft_id = NftId::from_str("0xe192461b30098a5da889ef6abc9e8130bf3b2d980450fa9201e5df404121b932")?;
-    let transaction_result = account.burn_nft(nft_id, None).await?;
+    let transaction = account.burn_nft(nft_id, None).await?;
 
-    let _ = match transaction_result.transaction.block_id {
+    let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(

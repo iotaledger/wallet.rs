@@ -7,18 +7,14 @@ use iota_client::bee_block::{
 };
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
     Error,
 };
 
 impl AccountHandle {
     /// Function to burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
     /// deposit return, timelock or expiration unlock condition.
-    pub async fn burn_nft(
-        &self,
-        nft_id: NftId,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    pub async fn burn_nft(&self, nft_id: NftId, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_nft");
 
         let address = self.get_sweep_remainder_address(&options).await?;

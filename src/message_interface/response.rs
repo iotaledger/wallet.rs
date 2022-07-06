@@ -18,9 +18,7 @@ use serde::Serialize;
 
 use crate::{
     account::{
-        operations::transaction::{
-            high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
-        },
+        operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
         types::{address::AccountAddress, TransactionDto},
     },
     message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto},
@@ -101,14 +99,14 @@ pub enum Response {
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
     /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
-    SentTransaction(TransactionResult),
+    SentTransaction(TransactionDto),
     /// Response for
     /// [`TryClaimOutputs`](crate::message_interface::AccountMethod::TryClaimOutputs),
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
-    SentTransactions(Vec<TransactionResult>),
+    SentTransactions(Vec<TransactionDto>),
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
-    MintTokenTransaction(MintTokenTransactionResult),
+    MintTokenTransaction(MintTokenTransactionDto),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),

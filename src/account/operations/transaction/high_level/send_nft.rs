@@ -14,7 +14,7 @@ use iota_client::{
 // use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
 
 /// Address and nft for `send_nft()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,19 +41,19 @@ impl AccountHandle {
     ///     nft_id: NftId::from_str("04f9b54d488d2e83a6c90db08ae4b39651bbba8a")?,
     /// }];
     ///
-    /// let transaction_result = account.send_nft(outputs, None).await?;
+    /// let transaction = account.send_nft(outputs, None).await?;
     ///
     /// println!(
     /// "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-    /// transaction_result.transaction_id,
-    /// transaction_result.block_id.expect("No block created yet")
+    /// transaction.transaction_id,
+    /// transaction.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn send_nft(
         &self,
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         let prepared_trasacton = self.prepare_send_nft(addresses_nft_ids, options).await?;
         self.sign_and_submit_transaction(prepared_trasacton).await
     }

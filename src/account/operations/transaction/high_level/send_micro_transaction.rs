@@ -20,7 +20,7 @@ use crate::{
         constants::DEFAULT_EXPIRATION_TIME,
         handle::AccountHandle,
         operations::transaction::{
-            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransactionResult,
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, Transaction,
         },
         TransactionOptions,
     },
@@ -55,19 +55,19 @@ impl AccountHandle {
     ///    expiration: None,
     /// }];
     ///
-    /// let transaction_result = account_handle.send_micro_transaction(outputs, None ).await?;
+    /// let transaction = account_handle.send_micro_transaction(outputs, None ).await?;
     ///
     /// println!(
     ///    "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-    ///    transaction_result.transaction_id,
-    ///    transaction_result.block_id.expect("No block created yet")
+    ///    transaction.transaction_id,
+    ///    transaction.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn send_micro_transaction(
         &self,
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] send_micro_transaction");
         let prepared_trasacton = self
             .prepare_send_micro_transaction(addresses_with_micro_amount, options)

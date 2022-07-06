@@ -31,12 +31,12 @@ async fn main() -> Result<()> {
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         amount: 1_000_000,
     }];
-    let transaction_result = account.send_amount(outputs, None).await?;
+    let transaction = account.send_amount(outputs, None).await?;
 
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transaction_result.transaction_id,
-        transaction_result.transaction.block_id.expect("No block created yet")
+        transaction.transaction_id,
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

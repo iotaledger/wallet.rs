@@ -21,7 +21,7 @@ use crate::{
         constants::DEFAULT_EXPIRATION_TIME,
         handle::AccountHandle,
         operations::transaction::{
-            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, TransactionResult,
+            high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, Transaction,
         },
         TransactionOptions,
     },
@@ -60,9 +60,9 @@ impl AccountHandle {
     ///     ..Default::default()
     /// }];
     ///
-    /// let res = account_handle.send_native_tokens(outputs, None).await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(block_id) = res.0 {
+    /// let tx = account_handle.send_native_tokens(outputs, None).await?;
+    /// println!("Transaction created: {}", tx.transaction_id);
+    /// if let Some(block_id) = tx.block_id {
     ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
@@ -70,7 +70,7 @@ impl AccountHandle {
         &self,
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         let prepared_trasacton = self
             .prepare_send_native_tokens(addresses_native_tokens, options)
             .await?;

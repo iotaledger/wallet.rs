@@ -14,14 +14,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    bee_block::{
-        output::Output,
-        payload::transaction::{TransactionId, TransactionPayload},
-        semantic::ConflictReason,
-    },
+    bee_block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason},
     secret::types::InputSigningData,
 };
-use serde::Serialize;
 
 pub use self::options::{RemainderValueStrategy, TransactionOptions};
 #[cfg(feature = "events")]
@@ -29,18 +24,10 @@ use crate::events::types::{TransactionProgressEvent, WalletEvent};
 use crate::{
     account::{
         handle::AccountHandle,
-        types::{InclusionState, Transaction, TransactionDto},
+        types::{InclusionState, Transaction},
     },
     iota_client::Error,
 };
-
-/// The result of a transaction, block_id is an option because submitting the transaction could fail
-#[derive(Debug, Serialize)]
-pub struct TransactionResult {
-    #[serde(rename = "transactionId")]
-    pub transaction_id: TransactionId,
-    pub transaction: TransactionDto,
-}
 
 impl AccountHandle {
     /// Send a transaction, if sending a block fails, the function will return None for the block_id, but the wallet
@@ -52,7 +39,7 @@ impl AccountHandle {
     ///     output_kind: None,
     /// }];
     ///
-    /// let res = account_handle
+    /// let tx = account_handle
     ///     .send(
     ///         outputs,
     ///         Some(TransactionOptions {
@@ -61,16 +48,12 @@ impl AccountHandle {
     ///         }),
     ///     )
     ///     .await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(block_id) = res.0 {
+    /// println!("Transaction created: {}", tx.transaction_id);
+    /// if let Some(block_id) = tx.block_id {
     ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
-    pub async fn send(
-        &self,
-        outputs: Vec<Output>,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    pub async fn send(&self, outputs: Vec<Output>, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
         // Checking it also here is good to return earlier if something is invalid
         let byte_cost_config = self.client.get_byte_cost_config().await?;
@@ -100,7 +83,7 @@ impl AccountHandle {
         &self,
         outputs: Vec<Output>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] finish_transaction");
 
         let prepared_transaction_data = self.prepare_transaction(outputs, options).await?;
@@ -112,7 +95,7 @@ impl AccountHandle {
     pub async fn sign_and_submit_transaction(
         &self,
         prepared_transaction_data: PreparedTransactionData,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] sign_and_submit_transaction");
 
         let signed_transaction_data = match self.sign_transaction_essence(&prepared_transaction_data).await {
@@ -155,7 +138,7 @@ impl AccountHandle {
     pub async fn submit_and_store_transaction(
         &self,
         signed_transaction_data: SignedTransactionData,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] submit_and_store_transaction");
 
         // Validate transaction before sending and storing it
@@ -190,6 +173,7 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let transaction_id = signed_transaction_data.transaction_payload.id();
         let transaction = Transaction {
+            transaction_id: signed_transaction_data.transaction_payload.id(),
             payload: signed_transaction_data.transaction_payload,
             block_id,
             network_id,
@@ -200,10 +184,10 @@ impl AccountHandle {
             inclusion_state: InclusionState::Pending,
             incoming: false,
         };
-        let transaction_dto = TransactionDto::from(&transaction);
+
         let mut account = self.write().await;
 
-        account.transactions.insert(transaction_id, transaction);
+        account.transactions.insert(transaction_id, transaction.clone());
         account.pending_transactions.insert(transaction_id);
         #[cfg(feature = "storage")]
         {
@@ -211,10 +195,7 @@ impl AccountHandle {
             self.save(Some(&account)).await?;
         }
 
-        Ok(TransactionResult {
-            transaction_id,
-            transaction: transaction_dto,
-        })
+        Ok(transaction)
     }
 
     // unlock outputs

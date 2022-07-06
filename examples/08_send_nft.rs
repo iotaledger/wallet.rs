@@ -32,12 +32,12 @@ async fn main() -> Result<()> {
         nft_id: NftId::from_str("0xe192461b30098a5da889ef6abc9e8130bf3b2d980450fa9201e5df404121b932")?,
     }];
 
-    let transaction_result = account.send_nft(outputs, None).await?;
+    let transaction = account.send_nft(outputs, None).await?;
 
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transaction_result.transaction_id,
-        transaction_result.transaction.block_id.expect("No block created yet")
+        transaction.transaction_id,
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

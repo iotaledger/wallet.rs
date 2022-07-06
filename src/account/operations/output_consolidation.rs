@@ -11,8 +11,10 @@ use iota_client::secret::SecretManager;
 #[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 use crate::account::{
-    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle,
-    operations::transaction::TransactionResult, types::address::AddressWithUnspentOutputs, TransactionOptions,
+    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+    handle::AccountHandle,
+    types::{address::AddressWithUnspentOutputs, Transaction},
+    TransactionOptions,
 };
 
 impl AccountHandle {
@@ -22,7 +24,7 @@ impl AccountHandle {
         self: &AccountHandle,
         force: bool,
         output_consolidation_threshold: Option<usize>,
-    ) -> crate::Result<Vec<TransactionResult>> {
+    ) -> crate::Result<Vec<Transaction>> {
         let account = self.read().await;
         let output_consolidation_threshold = match output_consolidation_threshold {
             Some(threshold) => threshold,
@@ -116,13 +118,13 @@ impl AccountHandle {
                     )
                     .await
                 {
-                    Ok(res) => {
+                    Ok(tx) => {
                         log::debug!(
                             "[OUTPUT_CONSOLIDATION] Consolidation transaction created: block_id: {:?} tx_id: {:?}",
-                            res.transaction.block_id,
-                            res.transaction_id
+                            tx.block_id,
+                            tx.transaction_id
                         );
-                        consolidation_results.push(res);
+                        consolidation_results.push(tx);
                     }
                     Err(e) => log::debug!("Consolidation error: {}", e),
                 };

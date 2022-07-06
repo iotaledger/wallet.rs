@@ -14,10 +14,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::account::{
     handle::AccountHandle,
-    operations::{
-        helpers::time::{can_output_be_unlocked_now, is_expired},
-        transaction::TransactionResult,
-    },
+    operations::helpers::time::{can_output_be_unlocked_now, is_expired},
+    types::Transaction,
     OutputData, TransactionOptions,
 };
 
@@ -134,7 +132,7 @@ impl AccountHandle {
     }
 
     /// Try to claim basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub async fn try_claim_outputs(&self, outputs_to_claim: OutputsToClaim) -> crate::Result<Vec<TransactionResult>> {
+    pub async fn try_claim_outputs(&self, outputs_to_claim: OutputsToClaim) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] try_claim_outputs");
 
         let output_ids_to_claim = self
@@ -172,7 +170,7 @@ impl AccountHandle {
 
     /// Try to claim basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
     /// from [`AccountHandle::get_unlockable_outputs_with_additional_unlock_conditions()`].
-    pub async fn claim_outputs(&self, output_ids_to_claim: Vec<OutputId>) -> crate::Result<Vec<TransactionResult>> {
+    pub async fn claim_outputs(&self, output_ids_to_claim: Vec<OutputId>) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
         self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
@@ -183,7 +181,7 @@ impl AccountHandle {
         &self,
         output_ids_to_claim: Vec<OutputId>,
         possible_additional_inputs: Vec<OutputData>,
-    ) -> crate::Result<Vec<TransactionResult>> {
+    ) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
         let local_time = self.client.get_time_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
@@ -354,13 +352,13 @@ impl AccountHandle {
                 )
                 .await
             {
-                Ok(res) => {
+                Ok(tx) => {
                     log::debug!(
                         "[OUTPUT_CLAIMING] Claiming transaction created: block_id: {:?} tx_id: {:?}",
-                        res.transaction.block_id,
-                        res.transaction_id
+                        tx.block_id,
+                        tx.transaction_id
                     );
-                    claim_results.push(res);
+                    claim_results.push(tx);
                 }
                 Err(e) => log::debug!("Output claim error: {}", e),
             };
