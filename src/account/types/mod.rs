@@ -13,7 +13,7 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::{dto::AddressDto, Address},
-        output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId, TokenId},
+        output::{dto::OutputDto, AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
