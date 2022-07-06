@@ -64,9 +64,9 @@ async fn mint_and_burn_nft() -> Result<()> {
         metadata: Some(b"some nft metadata".to_vec()),
     }];
 
-    let transaction_result = account.mint_nfts(nft_options, None).await.unwrap();
+    let transaction = account.mint_nfts(nft_options, None).await.unwrap();
 
-    let output_id = OutputId::new(transaction_result.transaction_id, 0u16).unwrap();
+    let output_id = OutputId::new(transaction.transaction_id, 0u16).unwrap();
     let nft_id = NftId::from(output_id);
 
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -140,26 +140,26 @@ async fn mint_and_melt_native_token() -> Result<()> {
         foundry_metadata: None,
     };
 
-    let transaction_result = account.mint_native_token(native_token_options, None).await.unwrap();
+    let transaction = account.mint_native_token(native_token_options, None).await.unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| *token.token_id() == transaction_result.token_id && *token.amount() == circulating_supply);
+        .find(|token| *token.token_id() == transaction.token_id && *token.amount() == circulating_supply);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
     // Burn some of the circulating supply
     let burn_amount = U256::from(40i32);
     let _ = account
-        .melt_native_token((transaction_result.token_id, burn_amount), None)
+        .melt_native_token((transaction.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();
     let search = balance.native_tokens.iter().find(|token| {
-        (*token.token_id() == transaction_result.token_id) && (*token.amount() == circulating_supply - burn_amount)
+        (*token.token_id() == transaction.token_id) && (*token.amount() == circulating_supply - burn_amount)
     });
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
@@ -167,7 +167,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     // The burn the rest of the supply
     let burn_amount = circulating_supply - burn_amount;
     let _ = account
-        .melt_native_token((transaction_result.token_id, burn_amount), None)
+        .melt_native_token((transaction.token_id, burn_amount), None)
         .await
         .unwrap();
     tokio::time::sleep(Duration::new(15, 0)).await;
@@ -175,7 +175,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
     let search = balance
         .native_tokens
         .iter()
-        .find(|token| *token.token_id() == transaction_result.token_id);
+        .find(|token| *token.token_id() == transaction.token_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
 

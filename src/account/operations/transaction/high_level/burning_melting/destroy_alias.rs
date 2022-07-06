@@ -9,7 +9,7 @@ use iota_client::bee_block::{
 };
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
     Error,
 };
 
@@ -21,7 +21,7 @@ impl AccountHandle {
         &self,
         alias_id: AliasId,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_alias");
 
         let address = self.get_sweep_remainder_address(&options).await?;

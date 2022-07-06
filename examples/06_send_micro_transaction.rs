@@ -33,12 +33,12 @@ async fn main() -> Result<()> {
         expiration: None,
     }];
 
-    let transaction_result = account.send_micro_transaction(outputs, None).await?;
+    let transaction = account.send_micro_transaction(outputs, None).await?;
 
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transaction_result.transaction_id,
-        transaction_result.transaction.block_id.expect("No block created yet")
+        transaction.transaction_id,
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

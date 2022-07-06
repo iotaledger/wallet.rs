@@ -13,7 +13,7 @@ use iota_client::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
 
 /// address with amount for `send_amount()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,9 +35,9 @@ impl AccountHandle {
     ///     amount: 1_000_000,
     /// }];
     ///
-    /// let res = account_handle.send_amount(outputs, None ).await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(block_id) = res.0 {
+    /// let tx = account_handle.send_amount(outputs, None ).await?;
+    /// println!("Transaction created: {}", tx.transaction_id);
+    /// if let Some(block_id) = tx.block_id {
     ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
@@ -45,7 +45,7 @@ impl AccountHandle {
         &self,
         addresses_with_amount: Vec<AddressWithAmount>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         let prepared_trasacton = self.prepare_send_amount(addresses_with_amount, options).await?;
         self.sign_and_submit_transaction(prepared_trasacton).await
     }

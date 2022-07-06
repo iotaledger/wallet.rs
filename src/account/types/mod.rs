@@ -14,7 +14,7 @@ use iota_client::{
     bee_block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, AliasId, FoundryId, NativeTokens, NftId, Output, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionPayload},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
     bee_rest_api::types::responses::OutputMetadataResponse,
@@ -148,8 +148,10 @@ pub struct Transaction {
     pub block_id: Option<BlockId>,
     #[serde(rename = "inclusionState")]
     pub inclusion_state: InclusionState,
-    // TODO: remove because we have a timestamp in the outputs?
+    // Transaction creation time
     pub timestamp: u128,
+    #[serde(rename = "transactionId")]
+    pub transaction_id: TransactionId,
     // network id to ignore outputs when set_client_options is used to switch to another network
     #[serde(rename = "networkId")]
     pub network_id: u64,

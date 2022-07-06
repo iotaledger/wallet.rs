@@ -39,12 +39,12 @@ async fn main() -> Result<()> {
         ..Default::default()
     }];
 
-    let transaction_result = account.send_native_tokens(outputs, None).await?;
+    let transaction = account.send_native_tokens(outputs, None).await?;
 
     println!(
         "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        transaction_result.transaction_id,
-        transaction_result.transaction.block_id.expect("No block created yet")
+        transaction.transaction_id,
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

@@ -36,9 +36,9 @@ async fn main() -> Result<()> {
 
     // Melt some of the circulating supply
     let melt_amount = U256::from(10);
-    let transaction_result = account.melt_native_token((token_id, melt_amount), None).await?;
+    let transaction = account.melt_native_token((token_id, melt_amount), None).await?;
 
-    let _ = match transaction_result.transaction.block_id {
+    let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(

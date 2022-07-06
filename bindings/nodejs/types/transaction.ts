@@ -12,11 +12,7 @@ export interface Transaction {
     blockId?: string;
     inclusionState: InclusionState;
     timestamp: string;
+    transactionId: string;
     networkId: string;
     incoming: boolean;
-}
-
-export interface TransactionResult {
-    transactionId: string;
-    transaction: Transaction;
 }
