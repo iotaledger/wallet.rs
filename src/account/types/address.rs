@@ -40,8 +40,6 @@ pub struct AddressWithUnspentOutputs {
     /// Determines if an address is a public or an internal (change) address.
     #[getset(set = "pub(crate)")]
     pub(crate) internal: bool,
-    /// Amount
-    pub(crate) amount: u64,
     /// Output ids
     #[serde(rename = "outputIds")]
     pub(crate) output_ids: Vec<OutputId>,

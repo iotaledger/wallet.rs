@@ -70,7 +70,7 @@ impl AccountHandle {
             self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
-        let (spent_output_responses, _already_known_balance, _loaded_output_responses) =
+        let (spent_output_responses, _loaded_output_responses) =
             self.get_outputs(spent_output_ids.clone(), true).await?;
 
         if options.sync_incoming_transactions {

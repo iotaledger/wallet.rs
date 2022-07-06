@@ -95,7 +95,7 @@ impl AccountHandle {
         let addresses_with_unspent_outputs = account
             .addresses_with_unspent_outputs()
             .iter()
-            .filter(|a| a.amount != 0);
+            .filter(|a| !a.output_ids.is_empty());
         let highest_public_index_with_outputs = addresses_with_unspent_outputs
             .clone()
             .filter(|a| !a.internal)
