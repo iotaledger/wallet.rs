@@ -19,7 +19,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
-    Transaction,
+    MintTokenTransaction,
     PreparedTransactionData,
     OutputOptions,
 } from '../types';
