@@ -19,6 +19,7 @@ impl AccountHandle {
     pub(crate) async fn search_addresses_with_outputs(
         self: &AccountHandle,
         address_gap_limit: u32,
+        mut sync_options: Option<SyncOptions>,
     ) -> crate::Result<usize> {
         log::debug!("[search_addresses_with_outputs]");
 
@@ -57,16 +58,29 @@ impl AccountHandle {
             )
             .await?;
 
-            self.sync(Some(SyncOptions {
-                force_syncing: true,
-                // skip previous addresses
-                address_start_index: match addresses.first() {
-                    Some(address) => address.key_index,
-                    None => 0,
-                },
-                ..Default::default()
-            }))
-            .await?;
+            // Overwrite or set force_syncing and address_start_index so it's working correctly and doesn't send
+            // duplicated requests
+            let sync_options = match &mut sync_options {
+                Some(sync_options) => {
+                    sync_options.force_syncing = true;
+                    sync_options.address_start_index = match addresses.first() {
+                        Some(address) => address.key_index,
+                        None => 0,
+                    };
+                    Some(sync_options.clone())
+                }
+                None => Some(SyncOptions {
+                    force_syncing: true,
+                    // skip previous addresses
+                    address_start_index: match addresses.first() {
+                        Some(address) => address.key_index,
+                        None => 0,
+                    },
+                    ..Default::default()
+                }),
+            };
+
+            self.sync(sync_options).await?;
 
             let output_count = self.read().await.unspent_outputs.len();
 

@@ -107,13 +107,14 @@ class IotaWallet():
             'IsStrongholdPasswordAvailable'
         )
 
-    def recover_accounts(self, account_gap_limit, address_gap_limit):
+    def recover_accounts(self, account_gap_limit, address_gap_limit, sync_options):
         """Recover accounts.
         """
         return self._send_cmd_routine(
             'RecoverAccounts', {
                 'account_gap_limit': account_gap_limit,
                 'address_gap_limit': address_gap_limit
+                'sync_options': sync_options
             }
         )
 

@@ -87,6 +87,7 @@ export type __RecoverAccountsMessage__ = {
     payload: {
         accountGapLimit: number;
         addressGapLimit: number;
+        syncOptions?: AccountSyncOptions;
     };
 };
 
