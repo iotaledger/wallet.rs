@@ -95,8 +95,6 @@ pub struct AddressWithUnspentOutputsDto {
     pub key_index: u32,
     /// Determines if an address is a public or an internal (change) address.
     pub internal: bool,
-    /// Amount
-    pub amount: String,
     /// Output ids
     #[serde(rename = "outputIds")]
     pub output_ids: Vec<OutputId>,
@@ -108,7 +106,6 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
             address: value.address.clone(),
             key_index: value.key_index,
             internal: value.internal,
-            amount: value.amount.to_string(),
             output_ids: value.output_ids.clone(),
         }
     }

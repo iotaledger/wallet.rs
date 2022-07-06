@@ -75,11 +75,10 @@ impl AccountHandle {
         &self,
         output_ids: Vec<OutputId>,
         spent_outputs: bool,
-    ) -> crate::Result<(Vec<OutputResponse>, u64, Vec<OutputResponse>)> {
+    ) -> crate::Result<(Vec<OutputResponse>, Vec<OutputResponse>)> {
         log::debug!("[SYNC] start get_outputs");
         let get_outputs_start_time = Instant::now();
         let mut found_outputs = Vec::new();
-        let mut balance_from_known_outputs = 0;
         let mut loaded_outputs = Vec::new();
         // For spent outputs we want to try to fetch all, so we can update them locally
         if spent_outputs {
@@ -98,7 +97,6 @@ impl AccountHandle {
                             metadata: output_data.metadata.clone(),
                             output: OutputDto::from(&output_data.output),
                         });
-                        balance_from_known_outputs += output_data.amount
                     }
                     None => unknown_outputs.push(output_id),
                 }
@@ -118,7 +116,7 @@ impl AccountHandle {
             "[SYNC] finished get_outputs in {:.2?}",
             get_outputs_start_time.elapsed()
         );
-        Ok((found_outputs, balance_from_known_outputs, loaded_outputs))
+        Ok((found_outputs, loaded_outputs))
     }
 
     // Try to get transactions and inputs for received outputs
