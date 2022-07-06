@@ -29,8 +29,10 @@ export type CustomAddress = {
 
 export interface NativeTokenOptions {
     accountAddress?: string;
-    circulatingSupply: number;
-    maximumSupply: number;
+    /** Hex encoded number */
+    circulatingSupply: string;
+    /** Hex encoded number */
+    maximumSupply: string;
     foundryMetadata?: number[];
 }
 

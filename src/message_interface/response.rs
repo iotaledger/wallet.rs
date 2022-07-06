@@ -49,7 +49,9 @@ pub enum Response {
     /// [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
     /// [`BuildFoundryOutput`](crate::message_interface::AccountMethod::BuildFoundryOutput)
     /// [`BuildNftOutput`](crate::message_interface::AccountMethod::BuildNftOutput)
-    BuiltOutput(OutputDto),
+    /// [`GetFoundryOutput`](crate::message_interface::AccountMethod::GetFoundryOutput)
+    /// [`PrepareOutput`](crate::message_interface::AccountMethod::PrepareOutput)
+    Output(OutputDto),
     /// Response for
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::AccountMethod::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit(String),
@@ -58,11 +60,11 @@ pub enum Response {
     /// GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
-    Output(Option<Box<OutputDataDto>>),
+    OutputData(Option<Box<OutputDataDto>>),
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
-    Outputs(Vec<OutputDataDto>),
+    OutputsData(Vec<OutputDataDto>),
     /// Response for
     /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
     /// [`PrepareTransaction`](crate::message_interface::AccountMethod::PrepareTransaction)
@@ -149,11 +151,11 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
-            Response::BuiltOutput(output) => write!(f, "BuiltOutput({:?})", output),
+            Response::Output(output) => write!(f, "Output({:?})", output),
             Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
-            Response::Output(output) => write!(f, "Output({:?})", output),
-            Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
+            Response::OutputData(output) => write!(f, "OutputData({:?})", output),
+            Response::OutputsData(outputs) => write!(f, "OutputsData{:?}", outputs),
             Response::PreparedTransaction(transaction_data) => {
                 write!(f, "PreparedTransaction({:?})", transaction_data)
             }

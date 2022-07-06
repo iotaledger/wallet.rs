@@ -6,7 +6,7 @@ export interface OutputOptions {
     assets?: Assets;
     features?: Features;
     unlocks?: Unlocks;
-    storageDeposit?: StorageDeposit
+    storageDeposit?: StorageDeposit;
 }
 
 export interface Assets {
@@ -25,7 +25,7 @@ export interface Unlocks {
 }
 
 export interface StorageDeposit {
-    returnStrategy?: ReturnStrategy
+    returnStrategy?: ReturnStrategy;
     useExcessIfLow?: boolean;
 }
 

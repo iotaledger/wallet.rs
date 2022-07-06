@@ -77,6 +77,13 @@ export type __GetOutputMethod__ = {
     };
 };
 
+export type __GetFoundryOutputMethod__ = {
+    name: 'GetFoundryOutput';
+    data: {
+        tokenId: string;
+    };
+};
+
 export type __GetOutputsWithAdditionalUnlockConditionsMethod__ = {
     name: 'GetOutputsWithAdditionalUnlockConditions';
     data: {
@@ -142,9 +149,9 @@ export type __PrepareOutputMethod__ = {
     name: 'PrepareOutput';
     data: {
         options: OutputOptions;
-        transactionOptions?: TransactionOptions
-    }
-}
+        transactionOptions?: TransactionOptions;
+    };
+};
 
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
@@ -227,7 +234,7 @@ export type __SyncAccountMethod__ = {
     name: 'SyncAccount';
     data: {
         options?: AccountSyncOptions;
-    }
+    };
 };
 
 export type __TryClaimOutputsMethod__ = {
