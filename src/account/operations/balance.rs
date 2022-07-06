@@ -255,6 +255,12 @@ pub(crate) fn add_balances(balances: Vec<AccountBalance>) -> crate::Result<Accou
             {
                 total_native_token_balance.total += native_token_balance.total;
                 total_native_token_balance.available += native_token_balance.available;
+            } else {
+                total_balance.native_tokens.push(NativeTokensBalance {
+                    token_id: native_token_balance.token_id,
+                    total: native_token_balance.total,
+                    available: native_token_balance.available,
+                })
             }
         }
     }
