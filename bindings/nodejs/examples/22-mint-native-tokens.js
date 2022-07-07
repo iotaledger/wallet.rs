@@ -17,10 +17,10 @@ async function run() {
             maximumSupply: '0x64',
         };
 
-        let transactionResult = await account.mintNativeToken(
+        let { transaction } = await account.mintNativeToken(
             nativeTokenOptions,
         );
-        console.log('Transaction ID: {}', transactionResult.transactionId);
+        console.log('Transaction ID: ', transaction.transactionId);
     } catch (error) {
         console.log('Error: ' + error);
     }
