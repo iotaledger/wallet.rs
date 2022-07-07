@@ -10,6 +10,7 @@ import type { Transaction } from './transaction';
 export type AccountId = number | string;
 
 export interface AccountBalance {
+    baseCoin: BaseCoinBalance;
     total: string;
     available: string;
     requiredStorageDeposit: string;
@@ -65,6 +66,11 @@ export interface AccountMeta {
     transactions: { [transactionId: string]: Transaction };
     /** Transaction IDs of pending transactions */
     pendingTransactions: Set<string>;
+}
+
+export interface BaseCoinBalance {
+    total: string;
+    available: string;
 }
 
 export enum CoinType {
