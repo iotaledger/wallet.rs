@@ -106,6 +106,6 @@ impl AccountHandle {
             }),
         };
 
-        self.sync_and_prepare_transaction(outputs, options).await
+        self.prepare_transaction(outputs, options).await
     }
 }

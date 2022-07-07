@@ -77,8 +77,6 @@ pub struct TransactionInclusionEvent {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub enum TransactionProgressEvent {
-    /// Syncing account.
-    SyncingAccount,
     /// Performing input selection.
     SelectingInputs,
     /// Generating remainder value deposit address.
