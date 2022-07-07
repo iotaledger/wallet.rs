@@ -35,7 +35,9 @@ async function run() {
             await new Promise(resolve => setTimeout(resolve, 5000));
         
             // Sync to detect new outputs
-            await account.sync();
+            // syncOnlyMostBasicOutputs if not interested in outputs that are timelocked, 
+            // have a storage deposit return or are nft/alias/foundry outputs
+            await account.sync({ syncOnlyMostBasicOutputs: true });
         }
 
 
