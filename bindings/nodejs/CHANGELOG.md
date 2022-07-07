@@ -2,7 +2,7 @@
 
 ## \[2.0.2-alpha.2]
 
-- - Fix syncing account logic for bug around new accounts
+- Fix syncing account logic for bug around new accounts
 - Add syncing option for only basic outputs with AddressUnlockCondition
 - Return entire transaction object on send
 - Add option to sync incoming transactions
@@ -12,36 +12,16 @@
 ## \[2.0.2-alpha.1]
 
 - Added typescript declaration files to the package
+- Added coinType to account manager
   - [4918c237](https://github.com/iotaledger/wallet.rs/commit/4918c2377b1569d82034197f121df74fef2c583b) fix: added new file to trigger covector release ([#1240](https://github.com/iotaledger/wallet.rs/pull/1240)) on 2022-06-30
   - [617f6868](https://github.com/iotaledger/wallet.rs/commit/617f68685d759455ce25690b3ca73983b3d9a631) fix: add yarn before tsc ([#1248](https://github.com/iotaledger/wallet.rs/pull/1248)) on 2022-07-01
   - [205caf99](https://github.com/iotaledger/wallet.rs/commit/205caf99c90d0f5376fa253d9bfae5f10aab3d77) fix: trigger covector ([#1250](https://github.com/iotaledger/wallet.rs/pull/1250)) on 2022-07-01
-
-## \[2.0.2-alpha.2]
-
-- Added coinType to account manager
-  Added typescript declaration files to the package
-  - [617f6868](https://github.com/iotaledger/wallet.rs/commit/617f68685d759455ce25690b3ca73983b3d9a631) fix: add yarn before tsc ([#1248](https://github.com/iotaledger/wallet.rs/pull/1248)) on 2022-07-01
-
-## \[2.0.2-alpha.1]
-
-- Added coinType to account manager
-  Added typescript declaration files to the package
-  - [4918c237](https://github.com/iotaledger/wallet.rs/commit/4918c2377b1569d82034197f121df74fef2c583b) fix: added new file to trigger covector release ([#1240](https://github.com/iotaledger/wallet.rs/pull/1240)) on 2022-06-30
 
 ## \[2.0.2-alpha.0]
 
 - Pre-release of the Stardust bindings of Wallet.rs for Node.JS
   - [615f60e4](https://github.com/iotaledger/wallet.rs/commit/615f60e44f3ff4eac0270e458a42f2c28355ae04) chore: prerelease on npm ([#1228](https://github.com/iotaledger/wallet.rs/pull/1228)) on 2022-06-29
 
-## \[2.0.1]
-
-- Added default features to cargo.toml
-  - [faeec649](https://github.com/iotaledger/wallet.rs/commit/faeec6492406d84753abaa115cbf57bc9a6856f1) fix: add features upon release ([#1218](https://github.com/iotaledger/wallet.rs/pull/1218)) on 2022-06-28
-
-## \[2.0.0]
-
-- Release the version of wallet.rs compatible with the latest Stardust developments.
-  - [6063bfaf](https://github.com/iotaledger/wallet.rs/commit/6063bfaf650318e6489923421f3c6372f8337698) chore: release latest to npm ([#1212](https://github.com/iotaledger/wallet.rs/pull/1212)) on 2022-06-28
 
 ## \[1.0.4]
 
