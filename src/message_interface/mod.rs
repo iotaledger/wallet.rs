@@ -235,7 +235,7 @@ mod tests {
     async fn message_interface_stronghold() {
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
         let snapshot_path = "message_interface.stronghold";
-        let secret_manager = format!("\"{{\"Stronghold\": {{\"snapshotPath\": \"{}\"}}}}\"", snapshot_path);
+        let secret_manager = format!("{{\"Stronghold\": {{\"snapshotPath\": \"{}\"}}}}", snapshot_path);
 
         let client_options = r#"{
             "nodes":[
