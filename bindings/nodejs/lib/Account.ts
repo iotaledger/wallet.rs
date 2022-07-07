@@ -19,7 +19,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
-    TransactionResult,
+    MintTokenTransaction,
     PreparedTransactionData,
     OutputOptions,
 } from '../types';
@@ -93,7 +93,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async claimOutputs(outputIds: string[]): Promise<TransactionResult[]> {
+    async claimOutputs(outputIds: string[]): Promise<Transaction[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -109,7 +109,7 @@ export class Account {
     async consolidateOutputs(
         force: boolean,
         outputConsolidationThreshold?: number,
-    ): Promise<TransactionResult[]> {
+    ): Promise<Transaction[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -169,6 +169,23 @@ export class Account {
                 name: 'GetOutput',
                 data: {
                     outputId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    /**
+     * Get a foundry output by native token ID. It will try to get the foundry from
+     * the account, if it isn't in the account it will try to get it from the node
+     */
+    async getFoundryOutput(tokenId: string): Promise<IFoundryOutput> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'GetFoundryOutput',
+                data: {
+                    tokenId,
                 },
             },
         );
@@ -288,7 +305,7 @@ export class Account {
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<MintTokenTransaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -306,7 +323,7 @@ export class Account {
     async mintNfts(
         nftsOptions: NftOptions[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -331,11 +348,11 @@ export class Account {
                 name: 'PrepareOutput',
                 data: {
                     options,
-                    transactionOptions
-                }
-            }
-        )
-        return JSON.parse(response).payload
+                    transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
     }
 
     async prepareSendAmount(
@@ -354,7 +371,7 @@ export class Account {
         );
         return JSON.parse(response).payload;
     }
-    
+
     async prepareTransaction(
         outputs: OutputTypes[],
         options?: TransactionOptions,
@@ -375,7 +392,7 @@ export class Account {
     async sendAmount(
         addressesWithAmount: AddressWithAmount[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -393,7 +410,7 @@ export class Account {
     async sendMicroTransaction(
         addressesWithMicroAmount: AddressWithMicroAmount[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -411,7 +428,7 @@ export class Account {
     async sendNativeTokens(
         addressesNativeTokens: AddressNativeTokens[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -429,7 +446,7 @@ export class Account {
     async sendNft(
         addressesAndNftIds: AddressNftId[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -447,7 +464,7 @@ export class Account {
     async sendOutputs(
         outputs: OutputTypes[],
         transactionOptions?: TransactionOptions,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -488,7 +505,7 @@ export class Account {
 
     async submitAndStoreTransaction(
         signedTransactionData: SignedTransactionEssence,
-    ): Promise<TransactionResult> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -507,7 +524,7 @@ export class Account {
             {
                 name: 'SyncAccount',
                 data: {
-                    options: options ?? {}
+                    options: options ?? {},
                 },
             },
         );
@@ -516,7 +533,7 @@ export class Account {
 
     async tryClaimOutputs(
         outputsToClaim: OutputsToClaim,
-    ): Promise<TransactionResult[]> {
+    ): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

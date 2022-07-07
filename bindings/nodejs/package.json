@@ -24,7 +24,7 @@
     "prebuild-install": "^5.3.3"
   },
   "devDependencies": {
-    "@iota/types": "^1.0.0-beta.7",
+    "@iota/types": "^1.0.0-beta.8",
     "@typescript-eslint/eslint-plugin": "^5.19.0",
     "@typescript-eslint/parser": "^5.19.0",
     "dotenv": "^10.0.0",
@@ -34,7 +34,7 @@
     "jsdoc": "^3.6.7",
     "prebuild": "^10.0.1",
     "prettier": "^2.6.2",
-    "typescript": "^4.3.4"
+    "typescript": "^4.7.4"
   },
   "repository": {
     "type": "git",

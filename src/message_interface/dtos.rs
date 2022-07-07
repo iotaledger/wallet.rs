@@ -12,8 +12,9 @@ use crypto::keys::slip10::Chain;
 use iota_client::{
     bee_block::{
         address::dto::AddressDto,
+        dto::U256Dto,
         output::{
-            dto::{NativeTokenDto, OutputDto},
+            dto::{OutputDto, TokenIdDto},
             AliasId, FoundryId, NftId, OutputId,
         },
         payload::transaction::TransactionId,
@@ -25,8 +26,8 @@ use serde::{Deserialize, Serialize};
 use crate::{
     account::{
         types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, OutputData,
-            TransactionDto,
+            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, BaseCoinBalance,
+            NativeTokensBalance, OutputData, TransactionDto,
         },
         Account,
     },
@@ -94,8 +95,6 @@ pub struct AddressWithUnspentOutputsDto {
     pub key_index: u32,
     /// Determines if an address is a public or an internal (change) address.
     pub internal: bool,
-    /// Amount
-    pub amount: String,
     /// Output ids
     #[serde(rename = "outputIds")]
     pub output_ids: Vec<OutputId>,
@@ -107,26 +106,64 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
             address: value.address.clone(),
             key_index: value.key_index,
             internal: value.internal,
-            amount: value.amount.to_string(),
             output_ids: value.output_ids.clone(),
+        }
+    }
+}
+
+/// Base coin fields for [`AccountBalance`]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct BaseCoinBalanceDto {
+    /// Total amount
+    pub total: String,
+    /// Balance that can currently be spent
+    pub available: String,
+}
+
+impl From<&BaseCoinBalance> for BaseCoinBalanceDto {
+    fn from(value: &BaseCoinBalance) -> Self {
+        Self {
+            total: value.total.to_string(),
+            available: value.available.to_string(),
+        }
+    }
+}
+
+/// Base coin fields for [`AccountBalanceDto`]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
+pub struct NativeTokensBalanceDto {
+    /// Token id
+    #[serde(rename = "tokenId")]
+    pub token_id: TokenIdDto,
+    /// Total amount
+    pub total: U256Dto,
+    /// Balance that can currently be spent
+    pub available: U256Dto,
+}
+
+impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
+    fn from(value: &NativeTokensBalance) -> Self {
+        Self {
+            token_id: TokenIdDto::from(&value.token_id),
+            total: U256Dto::from(&value.total),
+            available: U256Dto::from(&value.available),
         }
     }
 }
 
 /// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct AccountBalanceDto {
-    /// Total amount
-    pub total: String,
-    /// Balance that can currently be spend
-    pub available: String,
+    /// Total and available amount of the base coin
+    #[serde(rename = "baseCoin")]
+    pub base_coin: BaseCoinBalanceDto,
     /// Current required storage deposit amount
     #[serde(rename = "requiredStorageDeposit")]
     pub required_storage_deposit: String,
     /// Native tokens
     #[serde(rename = "nativeTokens")]
-    pub native_tokens: Vec<NativeTokenDto>,
+    pub native_tokens: Vec<NativeTokensBalanceDto>,
     /// Nfts
     pub nfts: Vec<NftId>,
     /// Aliases
@@ -142,10 +179,13 @@ pub struct AccountBalanceDto {
 impl From<&AccountBalance> for AccountBalanceDto {
     fn from(value: &AccountBalance) -> Self {
         Self {
-            total: value.total.to_string(),
-            available: value.available.to_string(),
+            base_coin: BaseCoinBalanceDto::from(&value.base_coin),
             required_storage_deposit: value.required_storage_deposit.to_string(),
-            native_tokens: value.native_tokens.iter().map(Into::into).collect::<_>(),
+            native_tokens: value
+                .native_tokens
+                .iter()
+                .map(NativeTokensBalanceDto::from)
+                .collect::<_>(),
             nfts: value.nfts.clone(),
             aliases: value.aliases.clone(),
             foundries: value.foundries.clone(),

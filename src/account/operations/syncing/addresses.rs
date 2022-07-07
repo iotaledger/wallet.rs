@@ -75,7 +75,6 @@ impl AccountHandle {
                 address: address.address,
                 key_index: address.key_index,
                 internal: address.internal,
-                amount: 0,
                 output_ids,
             })
         }
@@ -169,19 +168,16 @@ impl AccountHandle {
             .map(|x: &[AddressWithUnspentOutputs]| x.to_vec())
         {
             let mut tasks = Vec::new();
-            for mut address in addresses_chunk {
+            for address in addresses_chunk {
                 let account_handle = self.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
-                        let (output_responses, already_known_balance, _loaded_output_responses) =
+                        let (output_responses, _loaded_output_responses) =
                             account_handle.get_outputs(address.output_ids.clone(), false).await?;
 
                         let outputs = account_handle
                             .output_response_to_output_data(output_responses, &address)
                             .await?;
-                        // Add balance from new outputs together with balance from already known outputs
-                        address.amount =
-                            outputs.iter().map(|output| output.amount).sum::<u64>() + already_known_balance;
                         crate::Result::Ok((address, outputs))
                     })
                     .await
@@ -298,7 +294,7 @@ impl AccountHandle {
                         output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // get basic outputs that can be controlled by an nft output
-                        let (mut nft_output_responses, _already_known_balance, loaded_output_responses) =
+                        let (mut nft_output_responses, loaded_output_responses) =
                             account_handle.get_outputs(nft_output_ids, false).await?;
                         nft_output_responses.extend(loaded_output_responses.into_iter());
                         let nft_basic_output_ids =
@@ -330,7 +326,7 @@ impl AccountHandle {
                         output_ids.extend(alias_output_ids.clone().into_iter());
 
                         // get possible foundries and basic outputs that can be controlled by an alias outputs
-                        let (mut alias_output_responses, _already_known_balance, loaded_output_responses) =
+                        let (mut alias_output_responses, loaded_output_responses) =
                             account_handle.get_outputs(alias_output_ids, false).await?;
                         alias_output_responses.extend(loaded_output_responses.into_iter());
                         let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(

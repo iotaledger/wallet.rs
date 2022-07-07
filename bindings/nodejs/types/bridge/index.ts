@@ -9,6 +9,7 @@ import type {
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
+    __GetFoundryOutputMethod__,
     __GetOutputsWithAdditionalUnlockConditionsMethod__,
     __GetTransactionMethod__,
     __ListAddressesMethod__,
@@ -71,6 +72,7 @@ export type __AccountMethod__ =
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
     | __GetOutputMethod__
+    | __GetFoundryOutputMethod__
     | __GetOutputsWithAdditionalUnlockConditionsMethod__
     | __GetTransactionMethod__
     | __ListAddressesMethod__

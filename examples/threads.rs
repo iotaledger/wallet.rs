@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
     let balance = account.sync(None).await?;
     println!("Balance: {:?}", balance);
 
-    if balance.available == 0 {
+    if balance.base_coin.available == 0 {
         panic!("Account has no available balance");
     }
 
@@ -82,7 +82,7 @@ async fn main() -> Result<()> {
                         1
                     ];
                     // Skip sync here, we already synced before and don't need to do it again for every transaction
-                    let res = account_
+                    let tx = account_
                         .send(
                             outputs,
                             Some(TransactionOptions {
@@ -91,7 +91,7 @@ async fn main() -> Result<()> {
                             }),
                         )
                         .await?;
-                    if let Some(block_id) = res.transaction.block_id {
+                    if let Some(block_id) = tx.block_id {
                         println!(
                             "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
                             n, block_id

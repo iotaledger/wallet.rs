@@ -12,14 +12,16 @@ use iota_client::bee_block::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
         SimpleTokenScheme, TokenId, TokenScheme,
     },
-    payload::transaction::TransactionId,
-    BlockId,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, TransactionOptions},
+    account::{
+        handle::AccountHandle,
+        types::{Transaction, TransactionDto},
+        TransactionOptions,
+    },
     Error,
 };
 
@@ -44,10 +46,26 @@ pub struct NativeTokenOptions {
 /// fail
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MintTokenTransactionResult {
+pub struct MintTokenTransaction {
     pub token_id: TokenId,
-    pub transaction_id: TransactionId,
-    pub block_id: Option<BlockId>,
+    pub transaction: Transaction,
+}
+
+/// Dto for MintTokenTransaction
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MintTokenTransactionDto {
+    pub token_id: TokenId,
+    pub transaction: TransactionDto,
+}
+
+impl From<&MintTokenTransaction> for MintTokenTransactionDto {
+    fn from(value: &MintTokenTransaction) -> Self {
+        Self {
+            token_id: value.token_id,
+            transaction: TransactionDto::from(&value.transaction),
+        }
+    }
 }
 
 impl AccountHandle {
@@ -66,9 +84,9 @@ impl AccountHandle {
     ///     foundry_metadata: None
     /// };
     ///
-    /// let res = account_handle.mint_native_token(native_token_options, None,).await?;
-    /// println!("Transaction created: {}", res.1);
-    /// if let Some(block_id) = res.0 {
+    /// let tx = account_handle.mint_native_token(native_token_options, None,).await?;
+    /// println!("Transaction created: {}", tx.transaction_id);
+    /// if let Some(block_id) = tx.block_id {
     ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
@@ -76,7 +94,7 @@ impl AccountHandle {
         &self,
         native_token_options: NativeTokenOptions,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<MintTokenTransactionResult> {
+    ) -> crate::Result<MintTokenTransaction> {
         log::debug!("[TRANSACTION] mint_native_token");
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
@@ -164,11 +182,7 @@ impl AccountHandle {
             ];
             self.send(outputs, options)
                 .await
-                .map(|transaction_result| MintTokenTransactionResult {
-                    token_id,
-                    transaction_id: transaction_result.transaction_id,
-                    block_id: transaction_result.transaction.block_id,
-                })
+                .map(|transaction| MintTokenTransaction { token_id, transaction })
         } else {
             unreachable!("We checked if it's an alias output before")
         }
@@ -213,10 +227,10 @@ impl AccountHandle {
                         )))
                         .finish_output()?,
                 ];
-                let transaction_result = self.send(outputs, options).await?;
+                let transaction = self.send(outputs, options).await?;
 
                 log::debug!("[TRANSACTION] sent alias output");
-                if let Some(block_id) = transaction_result.transaction.block_id {
+                if let Some(block_id) = transaction.block_id {
                     self.client.retry_until_included(&block_id, None, None).await?;
                 }
                 // Try to get the transaction confirmed

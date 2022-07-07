@@ -15,7 +15,7 @@ use iota_client::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions},
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
     Error,
 };
 
@@ -48,18 +48,18 @@ impl AccountHandle {
     ///     metadata: Some(b"some nft metadata".to_vec()),
     /// }];
     ///
-    /// let transaction_result = account.mint_nfts(nft_options, None).await?;
+    /// let transaction = account.mint_nfts(nft_options, None).await?;
     /// println!(
     ///     "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-    ///     transaction_result.transaction_id,
-    ///     transaction_result.block_id.expect("No block created yet")
+    ///     transaction.transaction_id,
+    ///     transaction.block_id.expect("No block created yet")
     /// );
     /// ```
     pub async fn mint_nfts(
         &self,
         nfts_options: Vec<NftOptions>,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         let prepared_trasacton = self.prepare_mint_nfts(nfts_options, options).await?;
         self.sign_and_submit_transaction(prepared_trasacton).await
     }

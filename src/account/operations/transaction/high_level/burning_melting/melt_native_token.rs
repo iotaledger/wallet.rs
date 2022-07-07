@@ -6,7 +6,7 @@ use iota_client::bee_block::output::{
 };
 use primitive_types::U256;
 
-use crate::account::{handle::AccountHandle, operations::transaction::TransactionResult, TransactionOptions};
+use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
 
 impl AccountHandle {
     /// Function to melt native tokens. This happens with the foundry output which minted them, by increasing it's
@@ -15,7 +15,7 @@ impl AccountHandle {
         &self,
         native_token: (TokenId, U256),
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] melt_native_token");
 
         let token_id = native_token.0;

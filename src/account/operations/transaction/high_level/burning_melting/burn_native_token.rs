@@ -16,7 +16,7 @@ use iota_client::bee_block::{
 use primitive_types::U256;
 
 use crate::account::{
-    handle::AccountHandle, operations::transaction::TransactionResult, types::OutputData, TransactionOptions,
+    handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions,
 };
 
 const NATIVE_TOKEN_OVERFLOW: &str = "NativeTokensOverflow";
@@ -50,7 +50,7 @@ impl AccountHandle {
         &self,
         native_token: (TokenId, U256),
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_native_token");
         let token_id = native_token.0;
         let burn_token_amount = native_token.1;

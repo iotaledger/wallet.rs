@@ -18,7 +18,8 @@ export interface AddressWithAmount {
     amount: string;
 }
 
-export interface AddressWithUnspentOutputs extends AddressWithAmount {
+export interface AddressWithUnspentOutputs {
+    address: string;
     keyIndex: number;
     internal: boolean;
     outputIds: string[];

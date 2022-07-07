@@ -80,9 +80,9 @@ async fn main() -> Result<()> {
             })
             .collect();
         match account.send(outputs, None).await {
-            Ok(res) => println!(
+            Ok(tx) => println!(
                 "Block sent: http://localhost:14265/api/v2/blocks/{}",
-                res.transaction.block_id.expect("No block created yet")
+                tx.block_id.expect("No block created yet")
             ),
             Err(e) => println!("{}", e),
         }

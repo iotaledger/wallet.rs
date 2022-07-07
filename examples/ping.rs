@@ -109,11 +109,11 @@ async fn main() -> Result<()> {
                             )))
                             .finish_output()?,
                     ];
-                    let res = ping_account_.send(outputs, None).await?;
+                    let tx = ping_account_.send(outputs, None).await?;
                     println!(
                         "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
                         n,
-                        res.transaction.block_id.expect("No block created yet")
+                        tx.block_id.expect("No block created yet")
                     );
                     iota_wallet::Result::Ok(n)
                 })

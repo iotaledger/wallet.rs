@@ -123,8 +123,8 @@ impl AccountHandle {
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
                     let balance = self.balance().await?;
-                    if let Ordering::Greater = balance.available.cmp(&first_output.amount()) {
-                        let balance_minus_output = balance.available - first_output.amount();
+                    if let Ordering::Greater = balance.base_coin.available.cmp(&first_output.amount()) {
+                        let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
                             BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
@@ -285,8 +285,8 @@ impl AccountHandle {
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
                     let balance = self.balance().await?;
-                    if let Ordering::Greater = balance.available.cmp(&first_output.amount()) {
-                        let balance_minus_output = balance.available - first_output.amount();
+                    if let Ordering::Greater = balance.base_coin.available.cmp(&first_output.amount()) {
+                        let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
                             BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?

@@ -18,9 +18,7 @@ use serde::Serialize;
 
 use crate::{
     account::{
-        operations::transaction::{
-            high_level::minting::mint_native_token::MintTokenTransactionResult, TransactionResult,
-        },
+        operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
         types::{address::AccountAddress, TransactionDto},
     },
     message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto},
@@ -49,7 +47,9 @@ pub enum Response {
     /// [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
     /// [`BuildFoundryOutput`](crate::message_interface::AccountMethod::BuildFoundryOutput)
     /// [`BuildNftOutput`](crate::message_interface::AccountMethod::BuildNftOutput)
-    BuiltOutput(OutputDto),
+    /// [`GetFoundryOutput`](crate::message_interface::AccountMethod::GetFoundryOutput)
+    /// [`PrepareOutput`](crate::message_interface::AccountMethod::PrepareOutput)
+    Output(OutputDto),
     /// Response for
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::AccountMethod::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit(String),
@@ -58,11 +58,11 @@ pub enum Response {
     /// GetOutputsWithAdditionalUnlockConditions)
     OutputIds(Vec<OutputId>),
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
-    Output(Option<Box<OutputDataDto>>),
+    OutputData(Option<Box<OutputDataDto>>),
     /// Response for
     /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
     /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
-    Outputs(Vec<OutputDataDto>),
+    OutputsData(Vec<OutputDataDto>),
     /// Response for
     /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
     /// [`PrepareTransaction`](crate::message_interface::AccountMethod::PrepareTransaction)
@@ -99,14 +99,14 @@ pub enum Response {
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
     /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
-    SentTransaction(TransactionResult),
+    SentTransaction(TransactionDto),
     /// Response for
     /// [`TryClaimOutputs`](crate::message_interface::AccountMethod::TryClaimOutputs),
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
-    SentTransactions(Vec<TransactionResult>),
+    SentTransactions(Vec<TransactionDto>),
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
-    MintTokenTransaction(MintTokenTransactionResult),
+    MintTokenTransaction(MintTokenTransactionDto),
     /// Response for
     /// [`IsStrongholdPasswordAvailable`](crate::message_interface::Message::IsStrongholdPasswordAvailable)
     StrongholdPasswordIsAvailable(bool),
@@ -149,11 +149,11 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
-            Response::BuiltOutput(output) => write!(f, "BuiltOutput({:?})", output),
+            Response::Output(output) => write!(f, "Output({:?})", output),
             Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
-            Response::Output(output) => write!(f, "Output({:?})", output),
-            Response::Outputs(outputs) => write!(f, "Outputs{:?}", outputs),
+            Response::OutputData(output) => write!(f, "OutputData({:?})", output),
+            Response::OutputsData(outputs) => write!(f, "OutputsData{:?}", outputs),
             Response::PreparedTransaction(transaction_data) => {
                 write!(f, "PreparedTransaction({:?})", transaction_data)
             }

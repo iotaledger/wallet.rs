@@ -10,8 +10,7 @@ use iota_client::bee_block::{
 
 use crate::{
     account::{
-        handle::AccountHandle, operations::transaction::TransactionResult, types::OutputData, SyncOptions,
-        TransactionOptions,
+        handle::AccountHandle, operations::transaction::Transaction, types::OutputData, SyncOptions, TransactionOptions,
     },
     Error,
 };
@@ -23,7 +22,7 @@ impl AccountHandle {
         &self,
         foundry_id: FoundryId,
         options: Option<TransactionOptions>,
-    ) -> crate::Result<TransactionResult> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_foundry");
 
         let alias_id = *foundry_id.alias_address().alias_id();
@@ -143,9 +142,9 @@ impl AccountHandle {
                 }),
             };
 
-            let transaction_result = self.send(outputs, options).await?;
-            transaction_ids.push(transaction_result.transaction_id);
-            match transaction_result.transaction.block_id {
+            let transaction = self.send(outputs, options).await?;
+            transaction_ids.push(transaction.transaction_id);
+            match transaction.block_id {
                 Some(block_id) => {
                     let _ = self.client.retry_until_included(&block_id, None, None).await?;
                     let sync_options = Some(SyncOptions {
