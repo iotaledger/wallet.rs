@@ -100,6 +100,8 @@ pub async fn clear_listeners(handle: &WalletMessageHandler, events: Vec<WalletEv
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+
     use iota_client::{
         bee_block::{
             address::Address,
@@ -161,6 +163,7 @@ mod tests {
             }
             _ => panic!("unexpected response {:?}", response),
         }
+
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
     }
 
@@ -223,6 +226,7 @@ mod tests {
         };
 
         let _response = message_interface::send_message(&wallet_handle, transaction).await;
+
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }
 
@@ -230,7 +234,9 @@ mod tests {
     #[tokio::test]
     async fn message_interface_stronghold() {
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
-        let secret_manager = r#"{"Stronghold": {"snapshotPath": "test.stronghold"}}"#.to_string();
+        let snapshot_path = "message_interface.stronghold";
+        let secret_manager = format!("\"{{\"Stronghold\": {{\"snapshotPath\": \"{}\"}}}}\"", snapshot_path);
+
         let client_options = r#"{
             "nodes":[
                {
@@ -273,7 +279,9 @@ mod tests {
             }
             _ => panic!("unexpected response {:?}", response),
         }
+
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
+        fs::remove_file(snapshot_path).unwrap();
     }
 
     #[tokio::test]
@@ -320,6 +328,7 @@ mod tests {
             }
             response_type => panic!("Unexpected response type: {:?}", response_type),
         }
+
         std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());
     }
 }
