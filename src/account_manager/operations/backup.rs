@@ -45,7 +45,9 @@ impl AccountManager {
                 save_data_to_stronghold_backup(
                     self,
                     // If the SecretManager is not Stronghold we'll create a new one for the backup
-                    &mut StrongholdSecretManager::builder().try_build()?,
+                    &mut StrongholdSecretManager::builder()
+                        .password(&stronghold_password)
+                        .try_build(backup_path.clone())?,
                     stronghold_password,
                     backup_path,
                     secret_manager_dto,
@@ -73,21 +75,18 @@ impl AccountManager {
         let snapshot_path = if let SecretManager::Stronghold(stronghold) = &mut *secret_manager {
             stronghold.snapshot_path.clone()
         } else {
-            None
+            PathBuf::from("wallet.stronghold")
         };
 
         // We'll create a new stronghold to load the backup
-        let mut new_stronghold = StrongholdSecretManager::builder().try_build()?;
+        let mut new_stronghold = StrongholdSecretManager::builder()
+            .password(&stronghold_password)
+            .try_build(backup_path)?;
+
+        // Set snapshot_path back
         new_stronghold.snapshot_path = snapshot_path;
-        read_data_from_stronghold_backup(
-            self,
-            &mut new_stronghold,
-            &stronghold_password,
-            backup_path,
-            &mut accounts,
-            &mut new_secret_manager,
-        )
-        .await?;
+
+        read_data_from_stronghold_backup(self, &mut new_stronghold, &mut accounts, &mut new_secret_manager).await?;
 
         // Update secret manager
         if let Some(mut new_secret_manager) = new_secret_manager {
@@ -141,10 +140,6 @@ async fn save_data_to_stronghold_backup(
     backup_path: PathBuf,
     secret_manager_dto: SecretManagerDto,
 ) -> crate::Result<()> {
-    if !stronghold.is_key_available().await {
-        stronghold.set_password(&stronghold_password).await?;
-    }
-
     // Save current data to Stronghold
 
     // Set backup_schema_version
@@ -191,7 +186,7 @@ async fn save_data_to_stronghold_backup(
     let current_snapshot_path = stronghold.snapshot_path.clone();
 
     // Save backup to backup_path
-    stronghold.snapshot_path = Some(backup_path);
+    stronghold.snapshot_path = backup_path;
     stronghold.write_stronghold_snapshot().await?;
 
     // Reset snapshot_path
@@ -205,24 +200,9 @@ async fn save_data_to_stronghold_backup(
 async fn read_data_from_stronghold_backup(
     account_manager: &AccountManager,
     stronghold: &mut StrongholdAdapter,
-    stronghold_password: &str,
-    backup_path: PathBuf,
     accounts: &mut RwLockWriteGuard<'_, Vec<AccountHandle>>,
     new_secret_manager: &mut Option<SecretManager>,
 ) -> crate::Result<()> {
-    if !stronghold.is_key_available().await {
-        stronghold.set_password(stronghold_password).await?;
-    }
-    // Get current snapshot_path to set it again after the backup
-    let current_snapshot_path = stronghold.snapshot_path.clone();
-
-    // Read backup
-    stronghold.snapshot_path = Some(backup_path.to_path_buf());
-    stronghold.read_stronghold_snapshot().await?;
-
-    // Set snapshot_path back
-    stronghold.snapshot_path = current_snapshot_path;
-
     // Get version
     let version = stronghold.get(BACKUP_SCHEMA_VERSION_KEY.as_bytes()).await?;
     if version.ok_or(crate::Error::BackupError("Missing backup_schema_version"))?[0] != BACKUP_SCHEMA_VERSION {
@@ -292,10 +272,8 @@ async fn read_data_from_stronghold_backup(
         **accounts = restored_account_handles;
     }
 
-    // If we have a snapshot_path, write stronghold so it's available the next time we start
-    if stronghold.snapshot_path.is_some() {
-        stronghold.write_stronghold_snapshot().await?;
-    }
+    // Write stronghold so it's available the next time we start
+    stronghold.write_stronghold_snapshot().await?;
 
     Ok(())
 }

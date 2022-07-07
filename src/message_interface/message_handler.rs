@@ -131,11 +131,10 @@ impl WalletMessageHandler {
             Message::ChangeStrongholdPassword {
                 mut current_password,
                 mut new_password,
-                keys_to_re_encrypt,
             } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .change_stronghold_password(&current_password, &new_password, keys_to_re_encrypt)
+                        .change_stronghold_password(&current_password, &new_password)
                         .await?;
                     current_password.zeroize();
                     new_password.zeroize();

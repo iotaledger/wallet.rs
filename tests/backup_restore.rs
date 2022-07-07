@@ -21,15 +21,14 @@ async fn backup_and_restore() -> Result<()> {
 
     // Create directory if not existing, because stronghold panics otherwise
     std::fs::create_dir_all("test-storage/backup_and_restore").unwrap_or(());
-    let mut stronghold_secmngr = StrongholdSecretManager::builder()
+    let mut stronghold = StrongholdSecretManager::builder()
         .password(stronghold_password)
-        .snapshot_path(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))
-        .try_build()?;
+        .try_build(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))?;
 
-    stronghold_secmngr.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
+    stronghold.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
 
     let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
         .with_client_options(client_options.clone())
         .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("test-storage/backup_and_restore/1")
@@ -51,13 +50,12 @@ async fn backup_and_restore() -> Result<()> {
 
     // restore from backup
 
-    let stronghold_secmngr = StrongholdSecretManager::builder()
-        .snapshot_path(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))
-        .try_build()?;
+    let stronghold =
+        StrongholdSecretManager::builder().try_build(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))?;
 
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")
-        .with_secret_manager(SecretManager::Stronghold(stronghold_secmngr))
+        .with_secret_manager(SecretManager::Stronghold(stronghold))
         .with_client_options(ClientOptions::new().with_node("http://some-other-node:14265")?)
         // Build with a different coin type, to check if it gets replaced by the one from the backup
         .with_coin_type(IOTA_COIN_TYPE)
