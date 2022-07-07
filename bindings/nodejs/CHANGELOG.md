@@ -1,5 +1,13 @@
 # Changelog
 
+## \[2.0.2-alpha.3]
+
+- - Use new stronghold version
+- Update balance structure
+- Transaction ID under Transaction object
+- Get foundry output by native token ID
+- [f636777f](https://github.com/iotaledger/wallet.rs/commit/f636777f7293a3c0232877ebc9710212aeca9228) chore: update wallet.rs npm package ([#1273](https://github.com/iotaledger/wallet.rs/pull/1273)) on 2022-07-07
+
 ## \[2.0.2-alpha.2]
 
 - Fix syncing account logic for bug around new accounts
@@ -21,7 +29,6 @@
 
 - Pre-release of the Stardust bindings of Wallet.rs for Node.JS
   - [615f60e4](https://github.com/iotaledger/wallet.rs/commit/615f60e44f3ff4eac0270e458a42f2c28355ae04) chore: prerelease on npm ([#1228](https://github.com/iotaledger/wallet.rs/pull/1228)) on 2022-06-29
-
 
 ## \[1.0.4]
 
