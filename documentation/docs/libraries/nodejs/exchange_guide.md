@@ -20,11 +20,11 @@ import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/ex
 
 # Exchange Guide
 
-## The IOTA Wallet Library
+## The Wallet Library
 
 :::note
 
-You can easily integrate IOTA with your exchange, custody solution, or product.
+You can easily integrate with your exchange, custody solution, or product.
 
 :::
 
@@ -62,7 +62,7 @@ Features of the Wallet Library:
 
 ## How Does it Work?
 
-The Wallet Library is a stateful package with a standardized interface for developers to build applications involving value transactions. It offers abstractions to handle payments and can optionally interact with the IOTA Stronghold for seed handling, seed storage, and state backup.
+The Wallet Library is a stateful package with a standardized interface for developers to build applications involving value transactions. It offers abstractions to handle payments and can optionally interact with Stronghold for seed handling, seed storage, and state backup.
 
 For further reference, you can read our [wallet documentation here](https://wiki.iota.org/wallet.rs/welcome).
 
@@ -77,7 +77,7 @@ The following examples cover the *multi-account approach* using the `NodeJS` bin
 
 :::note
 
-If you are looking for other languages, please read the [wallet library overview](../libraries/wallet).
+If you are looking for other languages, please read the [wallet library overview](https://wiki.iota.org/wallet.rs/welcome).
 
 :::
 
@@ -86,7 +86,7 @@ Since all `wallet.rs` bindings are based on core principles provided by the `wal
 ### 1. Set up the Wallet Library
 First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the `NodeJs` binding, it is straightforward since it is distributed via the `npm` package manager. We also recommend you use `dotenv` for password management.
 
-You can read more about [backup and security in this guide](./backup_security).
+You can read more about [backup and security in this guide](https://wiki.iota.org/introduction/guides/backup_security).
 
 ```bash
 npm install @iota/wallet dotenv
@@ -123,7 +123,7 @@ One of the key principles behind the `stronghold` is that no one can get a seed 
 
 :::note
 
-Keep the `stronghold` password and the `stronghold` database on separate devices. See the [backup and security guide](./backup_security) for more information.
+Keep the `stronghold` password and the `stronghold` database on separate devices. See the [backup and security guide](https://wiki.iota.org/introduction/guides/backup_security) for more information.
 
 :::
 
@@ -138,10 +138,6 @@ Import the Wallet Library and create an account manager:
 ### 2. Create an Account For a User
 
 Once the backend storage is created, individual accounts for individual users can be created.
-
-Each account is related to a specific IOTA network (mainnet/devnet) which is referenced by a node property, such as node url (in this example, the Chrysalis devnet balancer).
-
-For more information about `clientOptions`, please refer to the [Wallet NodeJs API Reference](https://wiki.iota.org/wallet.rs/libraries/nodejs/api_reference).
 
 The `Alias` can be whatever fits to the given use case and needs to be unique. The `Alias` is typically used to identify the given account later on. Each account is also represented by an `index` which is incremented (by 1) every time a new account is created. Any account can then be referred to via `index`, `alias`.
 
@@ -158,7 +154,7 @@ The most common methods of `account` instance include:
 `Wallet.rs` is a stateful library which means it caches all relevant information in storage to provide performance benefits while dealing with, potentially, many accounts/addresses.
 
 <CodeBlock className="language-javascript">
-  {create_account}
+  {generate_address}
 </CodeBlock>
 
 Every account can have multiple addresses. Addresses are represented by an `index` which is incremented (by 1) every time a new address is created. The addresses are accessible via `account.listAddress()`: 
@@ -168,7 +164,7 @@ Every account can have multiple addresses. Addresses are represented by an `inde
 
     console.log('Need a refill? Send it to this address:', addresses[0])
 ```
-You can fill the address with Devnet Tokens with the [IOTA Faucet](https://faucet.devnet.chrysalis2.com/) to test it.
+You can fill the address with Tokens with the [Faucet](https://faucet.testnet.shimmer.network/) to test it.
 
 Addresses are of two types, `internal` and `public` (external):
 
@@ -233,11 +229,10 @@ Default options are fine and successful; however, additional options can be prov
 TransactionOptions {
     remainderValueStrategy?: RemainderValueStrategy;
     taggedDataPayload?: ITaggedDataPayload;
-    skipSync?: boolean;
     customInputs?: string[];
 }
 ```
 
 The `Account.send()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. Individual transactions related to the given account can be obtained via the `account.listTransactions()` function.
 
-Please note that when sending tokens, a [dust protection](./developer#dust-protection) mechanism should be considered. 
+Please note that when sending tokens, a [dust protection](https://github.com/muXxer/tips/blob/master/tips/TIP-0019/tip-0019.md) mechanism should be considered. 

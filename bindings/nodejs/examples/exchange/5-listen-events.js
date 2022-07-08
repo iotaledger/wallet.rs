@@ -25,8 +25,8 @@ async function run() {
 
         const account = await manager.getAccount('Alice');
 
-        // Use the Chrysalis Faucet to send testnet tokens to your address:
-        // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")
+        // Use the Faucet to send testnet tokens to your address:
+        console.log("Fill your address with the Faucet: https://faucet.testnet.shimmer.network/")
         const addressObjects = await account.listAddresses();
         console.log('Send funds to:', addressObjects[0].address);
 

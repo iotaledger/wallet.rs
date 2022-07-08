@@ -10,7 +10,7 @@ async function run() {
         const accountManagerOptions = {
             storagePath: './alice-database',
             clientOptions: {
-                nodes: ['http://localhost:14265'],
+                nodes: ['https://api.testnet.shimmer.network'],
             },
             coinType: CoinType.Shimmer,
             secretManager: {

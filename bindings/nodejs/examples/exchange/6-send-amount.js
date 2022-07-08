@@ -27,7 +27,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your block on http://localhost:14265/api/v2/blocks/${response.blockId}`,
+            `Check your block on https://explorer.testnet.shimmer.network/testnet/block/${response.blockId}`,
         );
     } catch (error) {
         console.log('Error: ' + error);
