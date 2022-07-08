@@ -4,7 +4,7 @@
 #[cfg(any(feature = "storage", feature = "stronghold"))]
 use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicU32, AtomicUsize},
+    atomic::{AtomicU32, AtomicUsize, Ordering},
     Arc,
 };
 
@@ -219,5 +219,14 @@ impl AccountManagerBuilder {
             #[cfg(feature = "storage")]
             storage_manager,
         })
+    }
+
+    pub(crate) async fn from_account_manager(account_manager: &AccountManager) -> Self {
+        Self {
+            client_options: Some(account_manager.client_options.read().await.clone()),
+            coin_type: Some(account_manager.coin_type.load(Ordering::Relaxed)),
+            storage_options: Some(account_manager.storage_options.clone()),
+            secret_manager: Some(account_manager.secret_manager.clone()),
+        }
     }
 }
