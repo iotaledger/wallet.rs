@@ -2,7 +2,7 @@
 
 ## \[2.0.2-alpha.3]
 
-- - Use new stronghold version
+- Use new stronghold version
 - Update balance structure
 - Transaction ID under Transaction object
 - Get foundry output by native token ID
