@@ -1,5 +1,5 @@
 /**
- * This example sends IOTA tokens to an address.
+ * This example sends tokens to an address.
  */
 
 require('dotenv').config();
@@ -30,7 +30,7 @@ async function run() {
             `Check your block on https://explorer.testnet.shimmer.network/testnet/block/${response.blockId}`,
         );
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

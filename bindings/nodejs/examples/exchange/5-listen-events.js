@@ -1,5 +1,5 @@
 /**
- * This example gets the balance of an account
+ * This example listen to the NewOutput event
  */
 
 require('dotenv').config();
@@ -13,9 +13,11 @@ async function run() {
 
         const callback = function(err, data) {
             if(err) console.log("err:", err)
-             const event = JSON.parse(data)
+
+            const event = JSON.parse(data)
             console.log("Event for account:", event.accountIndex)
             console.log("data:", event.event)
+
             // Exit after receiving an event
             process.exit(0);
         }
@@ -40,9 +42,8 @@ async function run() {
             await account.sync({ syncOnlyMostBasicOutputs: true });
         }
 
-
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

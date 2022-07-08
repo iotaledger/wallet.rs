@@ -1,5 +1,5 @@
 /**
- * This example creates an address for an account
+ * This example generates an address for an account
  */
 
 require('dotenv').config();
@@ -20,7 +20,7 @@ async function run() {
         console.log('Address generated:', address);
 
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

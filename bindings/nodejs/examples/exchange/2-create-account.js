@@ -34,7 +34,7 @@ async function run() {
         console.log('Account created:', account);
 
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

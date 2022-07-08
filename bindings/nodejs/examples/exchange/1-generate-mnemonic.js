@@ -1,5 +1,5 @@
 /**
- * This example creates a new random mnemonic
+ * This example generates a new random mnemonic
  */
 
 const { AccountManager, CoinType } = require('@iota/wallet');
@@ -22,7 +22,7 @@ async function run() {
         require('fs').rmSync('./mnemonic-generation', { recursive: true, force: true });
 
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }
