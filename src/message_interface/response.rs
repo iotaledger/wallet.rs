@@ -25,6 +25,7 @@ use crate::{
     message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
+
 type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputResponse>);
 
 /// The response message.
