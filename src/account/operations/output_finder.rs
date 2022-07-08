@@ -60,22 +60,20 @@ impl AccountHandle {
 
             // Overwrite or set force_syncing and address_start_index so it's working correctly and doesn't send
             // duplicated requests
+            let address_start_index = match addresses.first() {
+                Some(address) => address.key_index,
+                None => 0,
+            };
             let sync_options = match &mut sync_options {
                 Some(sync_options) => {
                     sync_options.force_syncing = true;
-                    sync_options.address_start_index = match addresses.first() {
-                        Some(address) => address.key_index,
-                        None => 0,
-                    };
+                    sync_options.address_start_index = address_start_index;
                     Some(sync_options.clone())
                 }
                 None => Some(SyncOptions {
                     force_syncing: true,
                     // skip previous addresses
-                    address_start_index: match addresses.first() {
-                        Some(address) => address.key_index,
-                        None => 0,
-                    },
+                    address_start_index,
                     ..Default::default()
                 }),
             };
