@@ -108,7 +108,7 @@ impl AccountManager {
                     tokio::spawn(async move {
                         let new_account = new_account.finish().await?;
                         let account_outputs_count = new_account
-                            .search_addresses_with_outputs(address_gap_limit, sync_options_.clone())
+                            .search_addresses_with_outputs(address_gap_limit, sync_options_)
                             .await?;
                         let account_index = *new_account.read().await.index();
                         Ok((account_index, account_outputs_count))
