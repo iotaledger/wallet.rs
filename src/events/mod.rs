@@ -151,7 +151,7 @@ mod tests {
         emitter.emit(0, WalletEvent::ConsolidationRequired);
         emitter.emit(
             0,
-            WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
         emitter.emit(
             0,
@@ -178,7 +178,7 @@ mod tests {
         // emit events
         emitter.emit(
             0,
-            WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
+            WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
         emitter.emit(
             0,

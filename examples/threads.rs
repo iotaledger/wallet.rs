@@ -16,7 +16,6 @@ use iota_client::{
     constants::SHIMMER_COIN_TYPE,
 };
 use iota_wallet::{
-    account::TransactionOptions,
     account_manager::AccountManager,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
@@ -81,16 +80,7 @@ async fn main() -> Result<()> {
                         // amount of outputs in the transaction (one additional output might be added for the remaining amount)
                         1
                     ];
-                    // Skip sync here, we already synced before and don't need to do it again for every transaction
-                    let tx = account_
-                        .send(
-                            outputs,
-                            Some(TransactionOptions {
-                                skip_sync: true,
-                                ..Default::default()
-                            }),
-                        )
-                        .await?;
+                    let tx = account_.send(outputs, None).await?;
                     if let Some(block_id) = tx.block_id {
                         println!(
                             "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",

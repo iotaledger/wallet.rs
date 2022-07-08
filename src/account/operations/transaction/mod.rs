@@ -19,8 +19,6 @@ use iota_client::{
 };
 
 pub use self::options::{RemainderValueStrategy, TransactionOptions};
-#[cfg(feature = "events")]
-use crate::events::types::{TransactionProgressEvent, WalletEvent};
 use crate::{
     account::{
         handle::AccountHandle,
@@ -62,18 +60,7 @@ impl AccountHandle {
         for output in &outputs {
             output.verify_storage_deposit(&byte_cost_config)?;
         }
-        // sync account before sending a transaction
-        #[cfg(feature = "events")]
-        {
-            let account_index = self.read().await.index;
-            self.event_emitter.lock().await.emit(
-                account_index,
-                WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
-            );
-        }
-        if !options.clone().unwrap_or_default().skip_sync {
-            self.sync(None).await?;
-        }
+
         self.finish_transaction(outputs, options).await
     }
 
@@ -108,30 +95,6 @@ impl AccountHandle {
         };
 
         self.submit_and_store_transaction(signed_transaction_data).await
-    }
-
-    /// Sync an account if not skipped in options and prepare the transaction
-    pub async fn sync_and_prepare_transaction(
-        &self,
-        outputs: Vec<Output>,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSACTION] sync_and_prepare_transaction");
-        // sync account before sending a transaction
-        #[cfg(feature = "events")]
-        {
-            let account_index = self.read().await.index;
-            self.event_emitter.lock().await.emit(
-                account_index,
-                WalletEvent::TransactionProgress(TransactionProgressEvent::SyncingAccount),
-            );
-        }
-
-        if !options.clone().unwrap_or_default().skip_sync {
-            self.sync(None).await?;
-        }
-
-        self.prepare_transaction(outputs, options).await
     }
 
     /// Validate the transaction, submit it to a node and store it in the account

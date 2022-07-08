@@ -111,7 +111,6 @@ impl AccountHandle {
                     .finish_transaction(
                         consolidation_output,
                         Some(TransactionOptions {
-                            skip_sync: true,
                             custom_inputs: Some(custom_inputs),
                             ..Default::default()
                         }),

@@ -75,7 +75,7 @@ class SwiftAwait: XCTestCase {
             expectation.fulfill()
         }
         
-        let test_event = "{\"cmd\": \"EmitTestEvent\", \"payload\": { \"TransactionProgress\": \"SyncingAccount\" } }"
+        let test_event = "{\"cmd\": \"EmitTestEvent\", \"payload\": { \"TransactionProgress\": \"SelectingInputs\" } }"
         try! await wallet.sendMessage(test_event)
         
         await self.waitForExpectations(timeout: 2) { error in
