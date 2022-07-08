@@ -23,6 +23,8 @@ use iota_client::{
 use primitive_types::U256;
 use serde::{Deserialize, Deserializer, Serialize};
 
+use crate::account::Account;
+
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
 #[derive(Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize)]
@@ -102,12 +104,50 @@ pub struct OutputData {
 }
 
 impl OutputData {
-    pub fn input_signing_data(&self) -> crate::Result<InputSigningData> {
+    pub fn input_signing_data(
+        &self,
+        account: &Account,
+        current_time: u32,
+        bech32_hrp: &str,
+    ) -> crate::Result<InputSigningData> {
+        let unlock_address = {
+            if let Some(unlock_conditions) = self.output.unlock_conditions() {
+                *unlock_conditions.locked_address(&self.address, current_time)
+            } else {
+                self.address
+            }
+        };
+
+        let chain = if unlock_address == self.address {
+            self.chain.clone()
+        } else if let Address::Ed25519(_) = self.address {
+            if let Some(address) = account
+                .addresses_with_unspent_outputs
+                .iter()
+                .find(|a| a.address.inner == unlock_address)
+            {
+                Some(Chain::from_u32_hardened(vec![
+                    44,
+                    account.coin_type,
+                    account.index,
+                    address.internal as u32,
+                    address.key_index,
+                ]))
+            } else {
+                return Err(crate::Error::CustomInputError(
+                    "Unlock address not found in account addresses".to_string(),
+                ));
+            }
+        } else {
+            // Alias and NFT addresses have no chain
+            None
+        };
+
         Ok(InputSigningData {
             output: self.output.clone(),
             output_metadata: OutputMetadata::try_from(&self.metadata)?,
-            chain: self.chain.clone(),
-            bech32_address: self.address.to_bech32("atoi"),
+            chain,
+            bech32_address: unlock_address.to_bech32(bech32_hrp),
         })
     }
 }

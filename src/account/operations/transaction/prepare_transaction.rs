@@ -55,11 +55,15 @@ impl AccountHandle {
                             )),
                         ));
                     }
+                    let current_time = self.client.get_time_checked().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp().await?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {
                         match account.unspent_outputs().get(output_id) {
-                            Some(output) => input_outputs.push(output.input_signing_data()?),
+                            Some(output) => {
+                                input_outputs.push(output.input_signing_data(&account, current_time, &bech32_hrp)?)
+                            }
                             None => {
                                 return Err(crate::Error::CustomInputError(format!(
                                     "Custom input {} not found in unspent outputs",

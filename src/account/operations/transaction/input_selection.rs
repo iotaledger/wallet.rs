@@ -14,8 +14,7 @@ use iota_client::{
 };
 
 use crate::account::{
-    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    AddressWithUnspentOutputs, OutputData,
+    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on, Account, OutputData,
 };
 #[cfg(feature = "events")]
 use crate::events::types::{TransactionProgressEvent, WalletEvent};
@@ -71,10 +70,12 @@ impl AccountHandle {
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
         let current_time = self.client.get_time_checked().await?;
+        let bech32_hrp = self.client.get_bech32_hrp().await?;
         let available_outputs_signing_data = filter_inputs(
-            &account.addresses_with_unspent_outputs,
+            &account,
             account.unspent_outputs.values(),
             current_time,
+            &bech32_hrp,
             &outputs,
             &account.locked_outputs,
         )?;
@@ -129,9 +130,10 @@ impl AccountHandle {
 /// | [Address, StorageDepositReturn, ...]                | no                |
 /// | [Address, StorageDepositReturn, expired Expiration] | yes               |
 fn filter_inputs(
-    addresses_with_unspent_outputs: &[AddressWithUnspentOutputs],
+    account: &Account,
     available_outputs: Values<OutputId, OutputData>,
     current_time: u32,
+    bech32_hrp: &str,
     outputs: &[Output],
     locked_outputs: &HashSet<OutputId>,
 ) -> crate::Result<Vec<InputSigningData>> {
@@ -195,7 +197,7 @@ fn filter_inputs(
         let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
             // We use the addresses with unspent outputs, because other addresses of the
             // account without unspent outputs can't be related to this output
-            addresses_with_unspent_outputs,
+            &account.addresses_with_unspent_outputs,
             output_data,
             current_time,
         );
@@ -212,7 +214,7 @@ fn filter_inputs(
             continue;
         }
 
-        available_outputs_signing_data.push(output_data.input_signing_data()?);
+        available_outputs_signing_data.push(output_data.input_signing_data(account, current_time, bech32_hrp)?);
     }
     Ok(available_outputs_signing_data)
 }
