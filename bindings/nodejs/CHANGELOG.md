@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.2-alpha.4]
+
+- Fix fields in output data types ([#1279](https://github.com/iotaledger/wallet.rs/pull/1279))
+- Remove transaction option to skip sync ([#1271](https://github.com/iotaledger/wallet.rs/pull/1271))
+- Add sync options for recovering accounts ([#1269](https://github.com/iotaledger/wallet.rs/pull/1269))
+  - [a10ff091](https://github.com/iotaledger/wallet.rs/commit/a10ff091399200ef8c55d7f744a976206457bce5) chore: update NodeJS bindings ([#1280](https://github.com/iotaledger/wallet.rs/pull/1280)) on 2022-07-08
+
 ## \[2.0.2-alpha.3]
 
 - Use new stronghold version
