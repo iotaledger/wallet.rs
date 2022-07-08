@@ -38,12 +38,12 @@ async fn main() -> Result<()> {
     // output.
     let outputs = account.list_unspent_outputs().await?;
     println!("Outputs before consolidation:");
-    outputs.iter().for_each(|output| {
+    outputs.iter().for_each(|output_data| {
         println!(
             "address: {:?}\n amount: {:?}\n native tokens: {:?}\n",
-            output.address.to_bech32("rms"),
-            output.amount,
-            output.output.native_tokens()
+            output_data.address.to_bech32("rms"),
+            output_data.output.amount(),
+            output_data.output.native_tokens()
         )
     });
 
@@ -67,12 +67,12 @@ async fn main() -> Result<()> {
     // Outputs after consolidation
     let outputs = account.list_unspent_outputs().await?;
     println!("Outputs after consolidation:");
-    outputs.iter().for_each(|output| {
+    outputs.iter().for_each(|output_data| {
         println!(
             "address: {:?}\n amount: {:?}\n native tokens: {:?}\n",
-            output.address.to_bech32("rms"),
-            output.amount,
-            output.output.native_tokens()
+            output_data.address.to_bech32("rms"),
+            output_data.output.amount(),
+            output_data.output.native_tokens()
         )
     });
 

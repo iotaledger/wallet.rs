@@ -270,16 +270,6 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
-        // Drop account before syncing because we locked it
-        drop(account);
-        // after we set the new client options we should sync the account because the network could have changed
-        // we sync with all addresses, because otherwise the balance wouldn't get updated if an address doesn't has
-        // balance also in the new network
-        self.sync(Some(SyncOptions {
-            force_syncing: true,
-            ..Default::default()
-        }))
-        .await?;
         Ok(())
     }
 
@@ -292,7 +282,7 @@ impl AccountHandle {
         for output_response in output_responses.into_iter() {
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
-            let (amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
+            let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
             let remainder = {
@@ -307,7 +297,6 @@ impl AccountHandle {
                 output: Output::try_from(&output_response.output)?,
                 is_spent: output_response.metadata.is_spent,
                 metadata: output_response.metadata,
-                amount,
                 address,
                 network_id,
                 remainder,

@@ -3,7 +3,6 @@ import type { ITaggedDataPayload } from '@iota/types';
 export interface TransactionOptions {
     remainderValueStrategy?: RemainderValueStrategy;
     taggedDataPayload?: ITaggedDataPayload;
-    skipSync?: boolean;
     customInputs?: string[];
 }
 

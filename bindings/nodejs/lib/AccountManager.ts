@@ -179,12 +179,14 @@ export class AccountManager {
     async recoverAccounts(
         accountGapLimit: number,
         addressGapLimit: number,
+        syncOptions: AccountSyncOptions,
     ): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'RecoverAccounts',
             payload: {
                 accountGapLimit,
                 addressGapLimit,
+                syncOptions,
             },
         });
         return JSON.parse(response).payload;

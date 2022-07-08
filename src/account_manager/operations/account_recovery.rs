@@ -3,7 +3,10 @@
 
 use std::time::Instant;
 
-use crate::{account::handle::AccountHandle, account_manager::AccountManager};
+use crate::{
+    account::handle::AccountHandle,
+    account_manager::{AccountManager, SyncOptions},
+};
 
 impl AccountManager {
     /// Find accounts with unspent outputs
@@ -11,10 +14,13 @@ impl AccountManager {
     /// checked, if an account has unspent outputs, the counter is reset
     /// `address_gap_limit` defines how many addresses without unspent outputs will be checked in each account, if an
     /// address has unspent outputs, the counter is reset
+    /// address_start_index and force_syncing will be overwritten in sync_options to not skip addresses, but also don't
+    /// send duplicated requests
     pub async fn recover_accounts(
         &self,
         account_gap_limit: u32,
         address_gap_limit: u32,
+        sync_options: Option<SyncOptions>,
     ) -> crate::Result<Vec<AccountHandle>> {
         log::debug!("[recover_accounts]");
         let start_time = Instant::now();
@@ -24,7 +30,9 @@ impl AccountManager {
         for account_handle in self.accounts.read().await.iter() {
             // If the gap limit is 0, there is no need to search for funds
             if address_gap_limit > 0 {
-                account_handle.search_addresses_with_outputs(address_gap_limit).await?;
+                account_handle
+                    .search_addresses_with_outputs(address_gap_limit, sync_options.clone())
+                    .await?;
             }
             let account_index = *account_handle.read().await.index();
             match max_account_index_to_keep {
@@ -39,7 +47,12 @@ impl AccountManager {
 
         // Don't return possible errors here already, because we would then still have empty accounts
         let new_accounts_discovery_result = self
-            .search_new_accounts(account_gap_limit, address_gap_limit, &mut max_account_index_to_keep)
+            .search_new_accounts(
+                account_gap_limit,
+                address_gap_limit,
+                &mut max_account_index_to_keep,
+                sync_options.clone(),
+            )
             .await;
 
         // remove accounts without outputs
@@ -81,6 +94,7 @@ impl AccountManager {
         account_gap_limit: u32,
         address_gap_limit: u32,
         max_account_index_to_keep: &mut Option<u32>,
+        sync_options: Option<SyncOptions>,
     ) -> crate::Result<()> {
         loop {
             log::debug!("[recover_accounts] generating {account_gap_limit} new accounts");
@@ -89,11 +103,13 @@ impl AccountManager {
             let mut tasks = Vec::new();
             for _ in 0..account_gap_limit {
                 let mut new_account = self.create_account();
+                let sync_options_ = sync_options.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
                         let new_account = new_account.finish().await?;
-                        let account_outputs_count =
-                            new_account.search_addresses_with_outputs(address_gap_limit).await?;
+                        let account_outputs_count = new_account
+                            .search_addresses_with_outputs(address_gap_limit, sync_options_)
+                            .await?;
                         let account_index = *new_account.read().await.index();
                         Ok((account_index, account_outputs_count))
                     })

@@ -49,7 +49,7 @@ impl AccountHandle {
 
         let outputs = match existing_alias_output_data.output {
             Output::Alias(alias_output) => {
-                let amount = existing_alias_output_data.amount + existing_foundry_output_data.amount;
+                let amount = alias_output.amount() + existing_foundry_output_data.output.amount();
                 let mut native_tokens_builder = NativeTokensBuilder::from(alias_output.native_tokens().clone());
                 // Transfer native tokens from foundry to alias
                 if let Output::Foundry(foundry_output) = existing_foundry_output_data.output {
@@ -106,7 +106,7 @@ impl AccountHandle {
 
                     // Alias output state transition
                     if let Output::Alias(alias_output) = alias_output_data.output {
-                        let amount = alias_output_data.amount + foundry_output_data.amount;
+                        let amount = alias_output.amount() + foundry_output_data.output.amount();
                         let mut native_tokens_builder = NativeTokensBuilder::from(alias_output.native_tokens().clone());
                         // Transfer native tokens from foundry to alias
                         if let Output::Foundry(foundry_output) = foundry_output_data.output {

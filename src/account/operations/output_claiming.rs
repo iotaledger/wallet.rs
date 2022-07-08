@@ -338,7 +338,6 @@ impl AccountHandle {
                 .finish_transaction(
                     outputs_to_send,
                     Some(TransactionOptions {
-                        skip_sync: true,
                         custom_inputs: Some(
                             outputs
                                 .iter()

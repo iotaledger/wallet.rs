@@ -13,8 +13,6 @@ pub struct TransactionOptions {
     pub remainder_value_strategy: RemainderValueStrategy,
     #[serde(rename = "taggedDataPayload", default)]
     pub tagged_data_payload: Option<TaggedDataPayload>,
-    #[serde(rename = "skipSync", default)]
-    pub skip_sync: bool,
     #[serde(rename = "customInputs", default)]
     pub custom_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]

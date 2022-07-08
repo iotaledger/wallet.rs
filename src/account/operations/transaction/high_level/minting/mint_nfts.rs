@@ -114,6 +114,6 @@ impl AccountHandle {
             outputs.push(nft_builder.finish_output()?);
         }
 
-        self.sync_and_prepare_transaction(outputs, options).await
+        self.prepare_transaction(outputs, options).await
     }
 }
