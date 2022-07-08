@@ -29,8 +29,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    let accounts = manager.recover_accounts(2, 2).await?;
-    // let accounts = manager.recover_accounts(2, 2).await?;
+    let accounts = manager.recover_accounts(2, 2, None).await?;
 
     for account in accounts.iter() {
         println!("{}", account.read().await.index());

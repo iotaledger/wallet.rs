@@ -86,6 +86,10 @@ pub enum Message {
         /// Defines how many addresses without unspent outputs will be checked in each account, if an
         /// address has unspent outputs, the counter is reset
         address_gap_limit: u32,
+        /// SyncOptions to be used during the account recovery process.
+        /// address_start_index and force_syncing will be overwritten in sync_options to not skip addresses, but also
+        /// don't send duplicated requests
+        sync_options: Option<SyncOptions>,
     },
     /// Import accounts from a Stronghold backup.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -196,10 +200,11 @@ impl Debug for Message {
             Message::RecoverAccounts {
                 account_gap_limit,
                 address_gap_limit,
+                sync_options,
             } => write!(
                 f,
-                "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?} }}",
-                account_gap_limit, address_gap_limit
+                "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?}, sync_options: {:?} }}",
+                account_gap_limit, address_gap_limit, sync_options
             ),
             Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
