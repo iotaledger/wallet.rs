@@ -1,4 +1,3 @@
-import type { INativeToken } from '@iota/types';
 import type { Address, AddressWithUnspentOutputs } from './address';
 import type { OutputData } from './output';
 import type { Transaction } from './transaction';
@@ -10,10 +9,9 @@ import type { Transaction } from './transaction';
 export type AccountId = number | string;
 
 export interface AccountBalance {
-    total: string;
-    available: string;
+    baseCoin: BaseCoinBalance;
     requiredStorageDeposit: string;
-    nativeTokens: INativeToken[];
+    nativeTokens: NativeTokenBalance[];
     nfts: string[];
     aliases: string[];
     foundries: string[];
@@ -65,6 +63,15 @@ export interface AccountMeta {
     transactions: { [transactionId: string]: Transaction };
     /** Transaction IDs of pending transactions */
     pendingTransactions: Set<string>;
+}
+
+export interface BaseCoinBalance {
+    total: string;
+    available: string;
+}
+
+export interface NativeTokenBalance extends BaseCoinBalance {
+    id: string
 }
 
 export enum CoinType {
