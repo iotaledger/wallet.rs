@@ -121,30 +121,26 @@ impl AccountManager {
         self.secret_manager.clone()
     }
 
-    /// Sets the client options for all accounts, syncs them and sets the new bech32_hrp
+    /// Sets the client options for all accounts and sets the new bech32_hrp for the addresses.
     pub async fn set_client_options(&self, options: ClientOptions) -> crate::Result<()> {
         log::debug!("[set_client_options]");
+
         let mut client_options = self.client_options.write().await;
         *client_options = options.clone();
+        drop(client_options);
+
         let new_client = options.clone().finish().await?;
+
         let mut accounts = self.accounts.write().await;
         for account in accounts.iter_mut() {
             account.update_account_with_new_client(new_client.clone()).await?;
         }
+
         #[cfg(feature = "storage")]
         {
             // Update account manager data with new client options
-            let account_manager_builder = AccountManagerBuilder::new()
-                .with_secret_manager_arc(self.secret_manager.clone())
-                .with_storage_path(
-                    &self
-                        .storage_options
-                        .storage_path
-                        .clone()
-                        .into_os_string()
-                        .into_string()
-                        .expect("Can't convert os string"),
-                )
+            let account_manager_builder = AccountManagerBuilder::from_account_manager(self)
+                .await
                 .with_client_options(options);
 
             self.storage_manager

@@ -270,16 +270,6 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
-        // Drop account before syncing because we locked it
-        drop(account);
-        // after we set the new client options we should sync the account because the network could have changed
-        // we sync with all addresses, because otherwise the balance wouldn't get updated if an address doesn't has
-        // balance also in the new network
-        self.sync(Some(SyncOptions {
-            force_syncing: true,
-            ..Default::default()
-        }))
-        .await?;
         Ok(())
     }
 
