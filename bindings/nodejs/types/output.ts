@@ -20,8 +20,6 @@ export interface OutputData {
     metadata: IOutputMetadataResponse;
     /** The actual Output */
     output: OutputTypes;
-    /** The output amount */
-    amount: string;
     /** If an output is spent */
     isSpent: boolean;
     /** Associated account address */

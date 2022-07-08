@@ -183,7 +183,7 @@ impl AccountHandle {
             if let Some(output_data) = account.unspent_outputs.get(locked_output) {
                 // Only check outputs that are in this network
                 if output_data.network_id == network_id {
-                    locked_amount += output_data.amount;
+                    locked_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         locked_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }

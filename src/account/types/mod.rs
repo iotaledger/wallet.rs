@@ -88,8 +88,6 @@ pub struct OutputData {
     pub metadata: OutputMetadataResponse,
     /// The actual Output
     pub output: Output,
-    // The output amount
-    pub amount: u64,
     /// If an output is spent
     #[serde(rename = "isSpent")]
     pub is_spent: bool,
@@ -124,8 +122,6 @@ pub struct OutputDataDto {
     pub metadata: OutputMetadataResponse,
     /// The actual Output
     pub output: OutputDto,
-    /// The output amount
-    pub amount: String,
     /// If an output is spent
     #[serde(rename = "isSpent")]
     pub is_spent: bool,
@@ -146,7 +142,6 @@ impl From<&OutputData> for OutputDataDto {
             output_id: value.output_id,
             metadata: value.metadata.clone(),
             output: OutputDto::from(&value.output),
-            amount: value.amount.to_string(),
             is_spent: value.is_spent,
             address: AddressDto::from(&value.address),
             network_id: value.network_id.to_string(),

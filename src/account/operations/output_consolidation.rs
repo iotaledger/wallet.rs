@@ -89,7 +89,7 @@ impl AccountHandle {
                 let mut custom_inputs = Vec::with_capacity(16);
                 let mut total_native_tokens = NativeTokensBuilder::new();
                 for output_data in outputs {
-                    total_amount += output_data.amount;
+                    total_amount += output_data.output.amount();
 
                     custom_inputs.push(output_data.output_id);
 
