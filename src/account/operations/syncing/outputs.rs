@@ -33,7 +33,7 @@ impl AccountHandle {
         let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
         for output_response in output_responses {
-            let (amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
+            let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
@@ -57,7 +57,6 @@ impl AccountHandle {
                 output_id: OutputId::new(transaction_id, output_response.metadata.output_index)?,
                 metadata: output_response.metadata.clone(),
                 output: Output::try_from(&output_response.output)?,
-                amount,
                 is_spent: output_response.metadata.is_spent,
                 address,
                 network_id,

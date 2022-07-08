@@ -33,11 +33,12 @@ use crate::{
             high_level::minting::mint_native_token::MintTokenTransactionDto, prepare_output::OutputOptions,
         },
         types::{AccountIdentifier, TransactionDto},
+        OutputDataDto,
     },
     account_manager::AccountManager,
     message_interface::{
         account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto, OutputDataDto},
+        dtos::{AccountBalanceDto, AccountDto},
         message::{AccountToCreate, Message},
         response::Response,
         AddressWithUnspentOutputsDto,

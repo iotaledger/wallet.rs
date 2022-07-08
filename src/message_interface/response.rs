@@ -20,11 +20,11 @@ use crate::{
     account::{
         operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
         types::{address::AccountAddress, TransactionDto},
+        OutputDataDto,
     },
-    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto, OutputDataDto},
+    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
-
 type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputResponse>);
 
 /// The response message.
