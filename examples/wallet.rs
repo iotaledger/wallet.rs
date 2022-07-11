@@ -93,9 +93,9 @@ async fn main() -> Result<()> {
     // let client_options = ClientOptions::new()
     //     .with_node(&env::var("NODE_URL").unwrap())?
     //     .with_node_sync_disabled();
+    // manager.set_client_options(client_options).await?;
     // let now = Instant::now();
     // manager.sync(None).await?;
-    // manager.set_client_options(client_options).await?;
     // println!("Syncing took: {:.2?}", now.elapsed());
     // println!("Balance: {:?}", account.balance().await?);
 
