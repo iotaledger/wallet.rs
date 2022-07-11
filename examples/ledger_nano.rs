@@ -3,8 +3,9 @@
 
 //! cargo run --example ledger_nano --release --features=ledger_nano
 
-use std::time::Instant;
+use std::{env, time::Instant};
 
+use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -18,8 +19,11 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
     let secret_manager = LedgerSecretManager::new(true);
@@ -62,12 +66,13 @@ async fn main() -> Result<()> {
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         amount: 1_000_000,
     }];
-    let tx = account.send_amount(outputs, None).await?;
+    let transaction = account.send_amount(outputs, None).await?;
 
     println!(
-        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        tx.transaction_id,
-        tx.block_id.expect("No block created yet")
+        "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
+        transaction.transaction_id,
+        &env::var("NODE_URL").unwrap(),
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

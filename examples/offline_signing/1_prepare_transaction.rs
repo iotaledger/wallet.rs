@@ -5,11 +5,13 @@
 //! `cargo run --example 1_prepare_transaction --release`.
 
 use std::{
+    env,
     fs::File,
     io::{BufWriter, Read, Write},
     path::Path,
 };
 
+use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto},
     secret::{placeholder::PlaceholderSecretManager, SecretManager},
@@ -24,6 +26,9 @@ const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_
 #[tokio::main]
 
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let outputs = vec![AddressWithAmount {
         // Address to which we want to send the amount.
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
@@ -35,7 +40,7 @@ async fn main() -> Result<()> {
     let addresses = read_addresses_from_file(ADDRESS_FILE_NAME)?;
 
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265/")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
     // Create the account manager with the secret_manager and client options

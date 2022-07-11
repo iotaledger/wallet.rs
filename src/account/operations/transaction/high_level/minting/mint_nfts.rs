@@ -50,7 +50,7 @@ impl AccountHandle {
     ///
     /// let transaction = account.mint_nfts(nft_options, None).await?;
     /// println!(
-    ///     "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
+    ///     "Transaction: {} Block sent: http://localhost:14265/api/core/v2/blocks/{}",
     ///     transaction.transaction_id,
     ///     transaction.block_id.expect("No block created yet")
     /// );

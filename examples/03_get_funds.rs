@@ -5,11 +5,17 @@
 // In this example we request funds from the faucet to our address
 // Rename `.env.example` to `.env` first
 
+use std::env;
+
+use dotenv::dotenv;
 use iota_client::request_funds_from_faucet;
 use iota_wallet::{account_manager::AccountManager, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     // Create the account manager
     let manager = AccountManager::builder().finish().await?;
 
@@ -19,7 +25,7 @@ async fn main() -> Result<()> {
     let address = account.list_addresses().await?;
 
     let faucet_response =
-        request_funds_from_faucet("http://localhost:8091/api/enqueue", &address[0].address().to_bech32()).await?;
+        request_funds_from_faucet(&env::var("FAUCET_URL").unwrap(), &address[0].address().to_bech32()).await?;
 
     println!("{}", faucet_response);
 

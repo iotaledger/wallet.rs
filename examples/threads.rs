@@ -23,14 +23,15 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
-
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
-    let mnemonic = env::var("NONSECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(&mnemonic)?;
+
+    let client_options = ClientOptions::new()
+        .with_node(&env::var("NODE_URL").unwrap())?
+        .with_node_sync_disabled();
+
+    let secret_manager =
+        MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -83,8 +84,10 @@ async fn main() -> Result<()> {
                     let tx = account_.send(outputs, None).await?;
                     if let Some(block_id) = tx.block_id {
                         println!(
-                            "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
-                            n, block_id
+                            "Block from thread {} sent: {}/api/core/v2/blocks/{}",
+                            n,
+                            &env::var("NODE_URL").unwrap(),
+                            block_id
                         );
                     }
                     iota_wallet::Result::Ok(n)
