@@ -5,18 +5,24 @@
 
 use std::time::Instant;
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
+use log::LevelFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // Generates a wallet.log file with logs for debugging
-    // Currently commented because it's enabled by default
-    // init_logger("wallet.log", LevelFilter::Debug)?;
+    let logger_output_config = LoggerOutputConfigBuilder::new()
+        .name("wallet.log")
+        .target_exclusions(&["h2", "hyper", "rustls"])
+        .level_filter(LevelFilter::Debug);
+    let config = LoggerConfig::build().with_output(logger_output_config).finish();
+    logger_init(config)?;
 
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?

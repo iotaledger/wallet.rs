@@ -7,9 +7,9 @@ const getUnlockedManager = require('./account-manager');
 async function run() {
     const { initLogger } = require('@iota/wallet');
     initLogger({
-        colorEnabled: true,
         name: './wallet.log',
         levelFilter: 'debug',
+        targetExclusions: ["h2", "hyper", "rustls"]
     });
 
     try {
