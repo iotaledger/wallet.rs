@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota_client::{api::PreparedTransactionDataDto, bee_block::payload::transaction::TransactionId};
+use iota_client::{
+    api::PreparedTransactionDataDto,
+    bee_block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+    bee_rest_api::types::responses::OutputResponse,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::account::types::{address::AddressWrapper, InclusionState, OutputDataDto};
@@ -59,6 +63,11 @@ impl TryFrom<&str> for WalletEventType {
 pub struct NewOutputEvent {
     /// The new output.
     pub output: OutputDataDto,
+    /// The transaction that created the output. Might be pruned and not available.
+    pub transaction: Option<TransactionPayloadDto>,
+    /// The inputs for the transaction that created the output. Might be pruned and not available.
+    #[serde(rename = "transactionInputs")]
+    pub transaction_inputs: Option<Vec<OutputResponse>>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
