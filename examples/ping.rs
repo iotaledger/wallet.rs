@@ -11,7 +11,7 @@ use iota_client::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder,
     },
-    init_logger, request_funds_from_faucet,
+    request_funds_from_faucet,
 };
 use iota_wallet::{
     account_manager::AccountManager,
@@ -19,11 +19,9 @@ use iota_wallet::{
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
-use log::LevelFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    init_logger("ping.log", LevelFilter::Debug)?;
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
         .with_node_sync_disabled();

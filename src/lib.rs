@@ -26,9 +26,6 @@ pub mod events;
 /// The storage module.
 pub mod storage;
 
-/// Module for debug logs.
-pub mod logger;
-
 // Expose for high level functions
 pub use iota_client::{self, secret};
 pub use primitive_types::U256;
