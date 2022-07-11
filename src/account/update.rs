@@ -23,6 +23,7 @@ use crate::account::{
 use crate::{
     account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
+    iota_client::bee_block::payload::transaction::dto::TransactionPayloadDto,
 };
 impl AccountHandle {
     // Set the alias for the account
@@ -143,10 +144,17 @@ impl AccountHandle {
             {
                 #[cfg(feature = "events")]
                 {
+                    let transaction = account
+                        .incoming_transactions
+                        .get(output_data.output_id.transaction_id());
                     self.event_emitter.lock().await.emit(
                         account_index,
                         WalletEvent::NewOutput(NewOutputEvent {
                             output: OutputDataDto::from(&output_data),
+                            transaction: transaction
+                                .as_ref()
+                                .map(|(tx, _inputs)| TransactionPayloadDto::from(tx)),
+                            transaction_inputs: transaction.as_ref().map(|(_tx, inputs)| inputs).cloned(),
                         }),
                     );
                 }
