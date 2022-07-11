@@ -30,7 +30,7 @@ You can easily integrate with your exchange, custody solution, or product.
 
 ## How Do I Implement It to My Exchange?
 
-In [wallet.rs](../libraries/wallet.md), we use an account model so you can create an account for each of your users. Another approach would be to use one account and generate multiple addresses, which you can then link to the users in your database. The wallet library is designed to be as flexible as possible to back up any of your use cases.
+In [wallet.rs](../../welcome.md), we use an account model so you can create an account for each of your users. Another approach would be to use one account and generate multiple addresses, which you can then link to the users in your database. The wallet library is designed to be as flexible as possible to back up any of your use cases.
 
 Since addresses are reusable, they can be mapped to your users in a clear and concise way:
 
