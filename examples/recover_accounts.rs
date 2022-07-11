@@ -3,8 +3,9 @@
 
 //! cargo run --example recover_accounts --release
 
-use std::time::Instant;
+use std::{env, time::Instant};
 
+use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -14,13 +15,15 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
-    )?;
+    let secret_manager =
+        MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))

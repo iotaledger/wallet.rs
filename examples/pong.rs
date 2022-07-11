@@ -6,6 +6,9 @@
 // In this example we will try to send transactions from multiple threads simultaneously to the first 300 addresses of
 // the first account (ping_account)
 
+use std::env;
+
+use dotenv::dotenv;
 use iota_client::{
     bee_block::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
@@ -22,13 +25,15 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
-    )?;
+    let secret_manager =
+        MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -86,7 +91,7 @@ async fn main() -> Result<()> {
         };
         println!(
             "{}",
-            request_funds_from_faucet("http://localhost:8091/api/enqueue", &addresses[0].address().to_bech32()).await?
+            request_funds_from_faucet(&env::var("FAUCET_URL").unwrap(), &addresses[0].address().to_bech32()).await?
         );
         addresses
     };
@@ -109,8 +114,9 @@ async fn main() -> Result<()> {
                     ];
                     let tx = pong_account_.send(outputs, None).await?;
                     println!(
-                        "Block from thread {} sent: http://localhost:14265/api/v2/blocks/{}",
+                        "Block from thread {} sent: {}/api/core/v2/blocks/{}",
                         n,
+                        &env::var("NODE_URL").unwrap(),
                         tx.block_id.expect("No block created yet")
                     );
                     iota_wallet::Result::Ok(n)

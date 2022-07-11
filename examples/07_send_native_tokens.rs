@@ -42,8 +42,9 @@ async fn main() -> Result<()> {
     let transaction = account.send_native_tokens(outputs, None).await?;
 
     println!(
-        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
+        "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
+        &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("No block created yet")
     );
 

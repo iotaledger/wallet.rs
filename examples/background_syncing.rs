@@ -3,6 +3,9 @@
 
 //! cargo run --example background_syncing --release
 
+use std::env;
+
+use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -13,13 +16,15 @@ use tokio::time::{sleep, Duration};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "hollow office master ethics infant review action short vivid fix spatial fresh traffic stand car cradle flower goat voyage output word aisle theme village",
-    )?;
+    let secret_manager =
+        MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))

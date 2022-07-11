@@ -3,6 +3,9 @@
 
 //! cargo run --example events --features=events --release
 
+use std::env;
+
+use dotenv::dotenv;
 use iota_client::bee_block::{
     address::Address,
     output::{
@@ -19,13 +22,15 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // This example uses dotenv, which is not safe for use in production
+    dotenv().ok();
+
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
+        .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "flame fever pig forward exact dash body idea link scrub tennis minute surge unaware prosper over waste kitten ceiling human knife arch situate civil",
-    )?;
+    let secret_manager =
+        MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
@@ -68,11 +73,13 @@ async fn main() -> Result<()> {
             .finish_output()?,
     ];
 
-    let tx = account.send(outputs, None).await?;
+    let transaction = account.send(outputs, None).await?;
+
     println!(
-        "Transaction: {} Block sent: http://localhost:14265/api/v2/blocks/{}",
-        tx.transaction_id,
-        tx.block_id.expect("No block created yet")
+        "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
+        transaction.transaction_id,
+        &env::var("NODE_URL").unwrap(),
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())

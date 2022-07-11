@@ -9,16 +9,24 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::bee_block::payload::transaction::TransactionId;
-use iota_wallet::{account_manager::AccountManager, Result};
+use iota_client::{bee_block::payload::transaction::TransactionId, constants::SHIMMER_COIN_TYPE};
+use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
+    let client_options = ClientOptions::new()
+        .with_node(&env::var("NODE_URL").unwrap())?
+        .with_node_sync_disabled();
+
     // Create the account manager
-    let manager = AccountManager::builder().finish().await?;
+    let manager = AccountManager::builder()
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .finish()
+        .await?;
 
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
