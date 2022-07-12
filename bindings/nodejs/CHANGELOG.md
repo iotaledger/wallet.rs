@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.5]
+
+- Added transaction id to transaction type.
+  - [c1b96c49](https://github.com/iotaledger/wallet.rs/commit/c1b96c491d1c6ac4c5d71ec8b746db64633700e5) Add missing transaction id ([#1285](https://github.com/iotaledger/wallet.rs/pull/1285)) on 2022-07-12
+
 ## \[2.0.2-alpha.4]
 
 - Fix fields in output data types ([#1279](https://github.com/iotaledger/wallet.rs/pull/1279))
