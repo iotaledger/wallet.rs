@@ -42,7 +42,7 @@ You should use the multi-account approach if you want to create an account for e
 
 ### Single Account Approach
 
-The single account approach allows for just one account and creates addresses for each user. The associated addresses are then linked to the internal user IDs and store who owns which address in the database. Most exchanges are more familiar with the single account approach and find it easier to use, implement, and backup.
+You should use the single account approach if you want to create a single account and then create an address for each user. You will need to link the associated addresses to the internal user IDs and store who owns which address in a database. Most exchanges are familiar with the single account approach and find it easier to use, implement, and backup.
 
 ## Implementation Guide
 
