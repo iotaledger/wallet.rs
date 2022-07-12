@@ -126,9 +126,6 @@ pub enum Error {
     /// Client not set error
     #[error("client not set")]
     ClientNotSet,
-    /// Error from the logger.
-    #[error("{0}")]
-    Logger(iota_client::logger::Error),
     /// Local time doesn't match the time of the latest timestamp
     #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
     TimeNotSynced(u32, u32),
@@ -143,12 +140,6 @@ impl From<iota_client::Error> for Error {
 impl From<iota_client::bee_block::Error> for Error {
     fn from(error: iota_client::bee_block::Error) -> Self {
         Self::BeeBlock(error)
-    }
-}
-
-impl From<iota_client::logger::Error> for Error {
-    fn from(error: iota_client::logger::Error) -> Self {
-        Self::Logger(error)
     }
 }
 
@@ -207,7 +198,6 @@ impl serde::Serialize for Error {
             Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
-            Self::Logger(_) => serialize_variant(self, serializer, "Logger"),
             Self::TimeNotSynced(..) => serialize_variant(self, serializer, "TimeNotSynced"),
         }
     }
