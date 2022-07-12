@@ -223,6 +223,8 @@ pub struct TransactionDto {
     pub inclusion_state: InclusionState,
     /// Timestamp
     pub timestamp: String,
+    #[serde(rename = "transactionId")]
+    pub transaction_id: TransactionId,
     /// Network id to ignore outputs when set_client_options is used to switch to another network
     #[serde(rename = "networkId")]
     pub network_id: String,
@@ -237,6 +239,7 @@ impl From<&Transaction> for TransactionDto {
             block_id: value.block_id,
             inclusion_state: value.inclusion_state,
             timestamp: value.timestamp.to_string(),
+            transaction_id: value.transaction_id,
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
         }
