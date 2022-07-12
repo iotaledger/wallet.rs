@@ -230,4 +230,8 @@ TransactionOptions {
 
 The `Account.send()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. Individual transactions related to the given account can be obtained via the `account.listTransactions()` function.
 
-Please note that when sending tokens, a [dust protection](https://github.com/muXxer/tips/blob/master/tips/TIP-0019/tip-0019.md) mechanism should be considered. 
+:::note  Dust Protection
+
+When sending tokens, you should consider a [dust protection](https://github.com/muXxer/tips/blob/master/tips/TIP-0019/tip-0019.md) mechanism.
+  
+:::
