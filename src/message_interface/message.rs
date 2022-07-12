@@ -48,7 +48,7 @@ pub enum Message {
         /// The account method to call.
         method: AccountMethod,
     },
-    /// Backup storage.
+    /// Backup storage. Password must be the current one, when Stronghold is used as SecretManager.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "stronghold")]
     Backup {
