@@ -195,17 +195,19 @@ You can use the following example to listen to new output events:
 **Example output:**
 
 ```json
-TODO: update
-data: {
-  accountId: '0',
-  address: {
-    address: 'atoi1q9c6r2ek5w2yz54en78m8dxwl4qmwd7gmh9u0krm45p8txxyhtfry6apvwj',
-    balance: 20000000,
-    keyIndex: 0,
-    internal: false,
-    outputs: [ [Object], [Object] ]
+NewOutput: {
+  output: {
+    outputId: '0x2df0120a5e0ff2b941ec72dff3464a5b2c3ad8a0c96fe4c87243e4425b9a3fe30000',
+    metadata: [Object],
+    output: [Object],
+    isSpent: false,
+    address: [Object],
+    networkId: '1862946857608115868',
+    remainder: false,
+    chain: [Array]
   },
-  balance: 20000000
+  transaction: null,
+  transactionInputs: null
 }
 ```
 
