@@ -18,7 +18,7 @@ import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/
 import listen_events from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/5-listen-events.js';
 import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/6-send-amount.js';
 
-# Exchange Guide
+# Stardust Exchange Integration Guide
 
 ## The Wallet Library
 
