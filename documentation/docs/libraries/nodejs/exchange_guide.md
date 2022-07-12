@@ -45,40 +45,45 @@ You should use the single account approach if you want to create a single accoun
 
 ## Implementation Guide
 
-This guide explains how to use the Wallet Library to successfully implement into an exchange.
+This guide explains how to implement the Wallet library in your exchange.
 
 Features of the Wallet Library:
 - Secure seed management.
-- Account management (with multiple accounts and multiple addresses).
+- Account management with multiple accounts and multiple addresses.
 - Confirmation monitoring.
 - Deposit address monitoring.
 - Backup and restore functionality.
 
-## How Does it Work?
+### How Does it Work?
 
-The Wallet Library is a stateful package with a standardized interface for developers to build applications involving value transactions. It offers abstractions to handle payments and can optionally interact with Stronghold for seed handling, seed storage, and state backup.
-
-For further reference, you can read our [wallet documentation here](https://wiki.iota.org/wallet.rs/welcome).
-
-The following examples cover the *multi-account approach* using the `NodeJS` binding:
-
-1. Set up the Wallet Library.
-2. Create an account for each user.
-3. Generate a User Address to Deposit Funds
-4. Listen to events.
-5. Check the user balance.
-6. Enable withdrawals.
+The Wallet Library is a stateful package with a standardized interface for developers to build applications involving value transactions. It offers abstractions to handle payments and can optionally interact with [Stronghold](https://wiki.iota.org/stronghold.rs/getting_started) for seed handling, seed storage, and state backup.
 
 :::note
 
-If you are looking for other languages, please read the [wallet library overview](https://wiki.iota.org/wallet.rs/welcome).
+If you are not familiar with the wallet.rs library, you can find [explanations](../../explanations/nutshell.md), [references](../../reference/specifications.md), and [how-tos](../../examples/rust.md) in the [documentation](../../welcome.md).
 
 :::
 
-Since all `wallet.rs` bindings are based on core principles provided by the `wallet.rs` library, the outlined approach is very similar regardless of the programming language of your choice.
+You can use the following examples as a guide to implementing *the multi-account approach* using the `NodeJS` binding:
 
-### 1. Set up the Wallet Library
-First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the `NodeJs` binding, it is straightforward since it is distributed via the `npm` package manager. We also recommend you use `dotenv` for password management.
+1. [Set up the wallet.rs library](#1-set-up-the-wallet-library).
+2. [Create an account for each user](#2-create-an-account-for-a-user).
+3. [Generate a user address to deposit funds](3-generate-a-user-address-to-deposit-funds).
+4. [Check the user balance](4-check-the-account-balance).
+5. [Listen to events](#5-listen-to-events).
+6. [Enable withdrawals](#6-enable-withdrawals).
+
+:::note
+
+If you are looking for other languages, please read the [wallet.rs library overview](https://wiki.iota.org/wallet.rs/welcome).
+
+:::
+
+Since all `wallet.rs` bindings are based on core principles provided by the `wallet.rs` library, the outlined approach is very similar regardless of the programming language you choose.
+
+### 1. Set Up the Wallet.rs Library
+
+First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the [NodeJs binding](../../getting_started/nodejs.md), it is straightforward since it is distributed via the `npm` package manager. We recommend that you use `dotenv` for password management.
 
 You can read more about [backup and security in this guide](https://wiki.iota.org/introduction/guides/backup_security).
 
@@ -92,18 +97,20 @@ npm install @iota/wallet dotenv
   {generate_mnemonic}
 </CodeBlock>
 
-Then, input your password to the `.env` file like this:
+You can then create a `.env` by running the following command:
 
 ```bash
 touch .env
 ```
+
+You can now add your `SH_PASSWORD` and `MNEMONIC` to the `.env` file. 
 
 ```bash
 SH_PASSWORD="here is your super secure password"
 MNEMONIC="here is your super secure 24 word mnemonic, it's only needed here the first time"
 ```
 
-Once you have everything needed to use the `wallet.rs` library, it is necessary to initialize the `AccountManager` instance with a secret manager(`Stronghold` by default) and client options.
+After you have updated the `.env` file, you can initialize the `AccountManager` instance with a secret manager([`Stronghold`](https://wiki.iota.org/stronghold.rs/getting_started) by default) and client options.
 
 :::note
 
@@ -111,9 +118,9 @@ Manage your password with the utmost care.
 
 :::
 
-By default the Stronghold file will be called `wallet.stronghold`. It will store the seed (derived from the mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.
+By default, the Stronghold file will be called `wallet.stronghold`. It will store the seed (derived from the mnemonic) that serves as a cryptographic key from which all accounts and related addresses are generated.
 
-One of the key principles behind the `stronghold` is that no one can get a seed out of it, so you should also backup the mnemonic (24 words) in a secure place, because there is no way to recover it from the `.stronghold` file. You deal with all the accounts purely via the `AccountManager` instance where all complexities are hidden under the hood and are dealt with securely.
+One of the key principles behind the `stronghold` is that no one can get a seed out of it, so you should also back up your 24-word mnemonic in a secure place because there is no way to recover it from the `.stronghold` file. You deal with accounts using the `AccountManager` instance exclusively, where all complexities are hidden under the hood and are dealt with securely.
 
 :::note
 
@@ -123,7 +130,7 @@ Keep the `stronghold` password and the `stronghold` database on separate devices
 
 #### 1.2 Create an account
 
-Import the Wallet Library and create an account manager:
+You can import the Wallet Library and create an account manager using the following example:
 
 <CodeBlock className="language-javascript">
   {create_account}
@@ -131,11 +138,11 @@ Import the Wallet Library and create an account manager:
 
 ### 2. Create an Account For a User
 
-Once the backend storage is created, individual accounts for individual users can be created.
+Once you have created the backend storage, you can create individual accounts for users.
 
-The `Alias` can be whatever fits to the given use case and needs to be unique. The `Alias` is typically used to identify the given account later on. Each account is also represented by an `index` which is incremented (by 1) every time a new account is created. Any account can then be referred to via `index`, `alias`.
+The `Alias` must be unique and can be whatever fits your use case. The `Alias` is typically used to identify an account later on. Each account is also represented by an `index` which is incremented by one every time a new account is created. You can refer to any account via its `index`, or `alias`.
 
-Once an account has been created, you get an instance of it using `AccountManager.getAccount(accountId|alias)` or get all accounts with `AccountManager.getAccounts()`.
+You get an instance of any created account using `AccountManager.getAccount(accountId|alias)` or get all accounts with `AccountManager.getAccounts()`.
 
 The most common methods of `account` instance include:
 
@@ -145,31 +152,31 @@ The most common methods of `account` instance include:
 * `account.sync()` - sync the account information with the tangle.
 
 ### 3. Generate a User Address to Deposit Funds
-`Wallet.rs` is a stateful library which means it caches all relevant information in storage to provide performance benefits while dealing with, potentially, many accounts/addresses.
 
+`Wallet.rs` is a stateful library. This means it caches all relevant information in storage to provide performance benefits while dealing with, potentially, many accounts and addresses.
 <CodeBlock className="language-javascript">
   {generate_address}
 </CodeBlock>
 
-Every account can have multiple addresses. Addresses are represented by an `index` which is incremented (by 1) every time a new address is created. The addresses are accessible via `account.listAddress()`: 
+Every account can have multiple addresses. Addresses are represented by an `index` which is incremented by one every time a new address is created. You can access the addresses using the `account.listAddress()` method: 
 
 ```javascript
     const addresses = account.listAddresses()
 
     console.log('Need a refill? Send it to this address:', addresses[0])
 ```
-You can fill the address with Tokens with the [Faucet](https://faucet.testnet.shimmer.network/) to test it.
 
-Addresses are of two types, `internal` and `public` (external):
+You can use the [Faucet](https://faucet.testnet.shimmer.network/) to add test tokens and test your account.
 
-* Each set of addresses are independent from each other and has an independent `index` id.
+There are two types of addresses, `internal` and `public` (external). This approach is known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*. 
+
+* Each set of addresses is independent of each other and has an independent `index` id.
 * Addresses that are created by `account.generateAddress()` are indicated as `internal=false` (public).
 * Internal addresses (`internal=true`) are called `change` addresses and are used to send the excess funds to them.
-* The approach is also known as a *BIP32 Hierarchical Deterministic wallet (HD Wallet)*.
 
 ### 4. Check the Account Balance
 
-Get the available account balance across all addresses of the given account:
+You can get the available account balance across all addresses of the given account using the following example:
 
 <CodeBlock className="language-javascript">
   {check_balance}
@@ -177,17 +184,17 @@ Get the available account balance across all addresses of the given account:
 
 ### 5. Listen to Events
 
-The `Wallet.rs` library supports several events for listening. As soon as the given event occurs (which usually happens during syncing), a provided callback is triggered.
+The `Wallet.rs` library supports several events for listening. A provided callback is triggered as soon as an event occurs (which usually happens during syncing).
 
-Below is an example for listening to new output events:
+You can use the following example to listen to new output events:
 
 <CodeBlock className="language-javascript">
   {listen_events}
 </CodeBlock>
 
-Example output:
+**Example output:**
 
-```bash
+```json
 TODO: update
 data: {
   accountId: '0',
@@ -202,7 +209,7 @@ data: {
 }
 ```
 
-`accountId` can then be used to identify the given account via `AccountManager.getAccount(accountId)`.
+You can use the `accountId` to identify the given account via `AccountManager.getAccount(accountId)`.
 
 ### 6. Enable Withdrawals
 
