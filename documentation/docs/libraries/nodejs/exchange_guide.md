@@ -207,7 +207,7 @@ data: {
 
 ### 6. Enable Withdrawals
 
-Sending coins:
+You can use the following example to send tokens to an address.
 
 <CodeBlock className="language-javascript">
   {send_amount}
