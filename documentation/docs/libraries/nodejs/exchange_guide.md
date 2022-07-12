@@ -38,7 +38,7 @@ The library also allows consumers to assign a meaningful alias to each account. 
 
 ### Multi-Account Approach
 
-The multi-account approach is used to create an account for each individual user. The created accounts can then be linked to the internal user IDs as an account alias, which are distinctly separated.
+You should use the multi-account approach if you want to create an account for each individual user. You can link the accounts to the internal user IDs as an account alias, which are distinctly separated.
 
 ### Single Account Approach
 
