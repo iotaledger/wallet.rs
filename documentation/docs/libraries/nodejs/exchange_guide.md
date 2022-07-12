@@ -24,7 +24,7 @@ import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/ex
 
 :::note
 
-You can easily integrate with your exchange, custody solution, or product.
+You can easily integrate wallet.rs with your exchange, custody solution, or product.
 
 :::
 
