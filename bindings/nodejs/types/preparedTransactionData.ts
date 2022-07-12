@@ -7,7 +7,7 @@ import type {
 import type { Segment } from './output';
 
 /**
- * Helper struct for offline signing
+ * Prepared transaction data, useful for offline signing.
  */
 export interface PreparedTransactionData {
     /**

@@ -1,4 +1,4 @@
-export interface LedgerNanoSecretManager { 
+export interface LedgerNanoSecretManager {
     isSimulator: boolean;
 }
 
@@ -33,4 +33,7 @@ export enum LedgerDeviceType {
     LedgerNanoSPlus = 'LedgerNanoSPlus',
 }
 
-export type SecretManager = LedgerNanoSecretManager | MnemonicSecretManager | StrongholdSecretManager;
+export type SecretManager =
+    | LedgerNanoSecretManager
+    | MnemonicSecretManager
+    | StrongholdSecretManager;

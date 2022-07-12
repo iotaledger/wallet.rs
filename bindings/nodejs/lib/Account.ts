@@ -47,6 +47,11 @@ export class Account {
         this.messageHandler = messageHandler;
     }
 
+    /**
+     * Build an `AliasOutput`.
+     * @param data Options for building an `AliasOutput`.
+     * @returns The built `AliasOutput`.
+     */
     async buildAliasOutput(data: BuildAliasOutputData): Promise<IAliasOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -58,6 +63,11 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Build a `BasicOutput`.
+     * @param data Options for building a `BasicOutput`.
+     * @returns The built `BasicOutput`.
+     */
     async buildBasicOutput(data: BuildBasicOutputData): Promise<IBasicOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -69,6 +79,11 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Build a `FoundryOutput`.
+     * @param data Options for building a `FoundryOutput`.
+     * @returns The built `FoundryOutput`.
+     */
     async buildFoundryOutput(
         data: BuildFoundryOutputData,
     ): Promise<IFoundryOutput> {
@@ -82,6 +97,11 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Build an `NftOutput`.
+     * @param data Options for building an `NftOutput`.
+     * @returns The built `NftOutput`.
+     */
     async buildNftOutput(data: BuildNftOutputData): Promise<INftOutput> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -93,6 +113,12 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Claim basic or nft outputs that have additional unlock conditions
+     * to their `AddressUnlockCondition` from the account.
+     * @param outputIds The outputs to claim.
+     * @returns The resulting transactions.
+     */
     async claimOutputs(outputIds: string[]): Promise<Transaction[]> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -106,6 +132,14 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Consolidates basic outputs with only an `AddressUnlockCondition` from an account
+     * by sending them to the same address again if the output amount is greater or
+     * equal to the output consolidation threshold.
+     * @param force Force consolidation on addresses where the threshold isn't met.
+     * @param outputConsolidationThreshold A default threshold is used if this is omitted.
+     * @returns The consolidation transactions.
+     */
     async consolidateOutputs(
         force: boolean,
         outputConsolidationThreshold?: number,
@@ -123,6 +157,11 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Generate a new unused address.
+     * @param options Options for address generation.
+     * @returns The address.
+     */
     async generateAddress(
         options?: AddressGenerationOptions,
     ): Promise<Address> {
@@ -130,6 +169,12 @@ export class Account {
         return addresses[0];
     }
 
+    /**
+     * Generate new unused addresses.
+     * @param amount The amount of addresses to generate.
+     * @param options Options for address generation.
+     * @returns The address.
+     */
     async generateAddresses(
         amount: number,
         options?: AddressGenerationOptions,
@@ -147,10 +192,18 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get this accounts alias.
+     * @returns The accounts alias.
+     */
     getAlias(): string {
         return this.meta.alias;
     }
 
+    /**
+     * Get the account balance.
+     * @returns The account balance.
+     */
     async getBalance(): Promise<AccountBalance> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -162,6 +215,11 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Generate an the data of an output.
+     * @param outputId The output to get.
+     * @returns The `OutputData`.
+     */
     async getOutput(outputId: string): Promise<OutputData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -176,8 +234,10 @@ export class Account {
     }
 
     /**
-     * Get a foundry output by native token ID. It will try to get the foundry from
-     * the account, if it isn't in the account it will try to get it from the node
+     * Get a `FoundryOutput` by native token ID. It will try to get the foundry from
+     * the account, if it isn't in the account it will try to get it from the node.
+     * @param tokenId The native token ID to get the foundry for.
+     * @returns The `FoundryOutput` that minted the token.
      */
     async getFoundryOutput(tokenId: string): Promise<IFoundryOutput> {
         const response = await this.messageHandler.callAccountMethod(
@@ -192,6 +252,11 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get outputs with additional unlock conditions.
+     * @param outputs The type of outputs to claim.
+     * @returns The output IDs of the unlockable outputs.
+     */
     async getOutputsWithAdditionalUnlockConditions(
         outputs: OutputsToClaim,
     ): Promise<string[]> {
@@ -207,6 +272,11 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get a transaction stored in the account.
+     * @param transactionId The ID of the transaction to get.
+     * @returns The transaction.
+     */
     async getTransaction(transactionId: string): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -220,6 +290,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List all the addresses of the account.
+     * @returns The addresses.
+     */
     async listAddresses(): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -231,6 +305,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List the addresses of the account with unspent outputs.
+     * @returns The addresses.
+     */
     async listAddressesWithUnspentOutputs(): Promise<
         AddressWithUnspentOutputs[]
     > {
@@ -244,6 +322,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List all outputs of the account.
+     * @returns The outputs with metadata.
+     */
     async listOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -255,6 +337,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List all the pending transactions of the account.
+     * @returns The transactions.
+     */
     async listPendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -265,6 +351,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List all the transactions of the account.
+     * @returns The transactions.
+     */
     async listTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -276,6 +366,10 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * List all the unspent outputs of the account.
+     * @returns The outputs with metadata.
+     */
     async listUnspentOutputs(): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -287,21 +381,31 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async minimumRequiredStorageDeposit(
-        outputs: OutputTypes[],
-    ): Promise<string> {
+    /**
+     * Calculate the minimum required storage deposit for an output.
+     * @param output output to calculate the deposit amount for.
+     * @returns The amount.
+     */
+    async minimumRequiredStorageDeposit(output: OutputTypes): Promise<string> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'MinimumRequiredStorageDeposit',
                 data: {
-                    outputs,
+                    output,
                 },
             },
         );
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Mint native tokens.
+     * @param nativeTokenOptions The options for minting tokens.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The minting transaction and the token ID.
+     */
     async mintNativeToken(
         nativeTokenOptions: NativeTokenOptions,
         transactionOptions?: TransactionOptions,
@@ -320,6 +424,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Mint nfts.
+     * @param nftsOptions The options for minting nfts.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The minting transaction.
+     */
     async mintNfts(
         nftsOptions: NftOptions[],
         transactionOptions?: TransactionOptions,
@@ -338,6 +449,19 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Prepare an output for sending, useful for offline signing.
+     * @param options The options for preparing an output. If the amount is
+     * below the minimum required storage deposit, by default the remaining
+     * amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,
+     * when setting the `ReturnStrategy` to `gift`, the full minimum required
+     * storage deposit will be sent  to the recipient. When the assets contain
+     * an nft id, the data from the exisiting `NftOutput` will be used, just with
+     * the address unlock conditions replaced.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The prepared output.
+     */
     async prepareOutput(
         options: OutputOptions,
         transactionOptions?: TransactionOptions,
@@ -355,8 +479,15 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Prepare a send amount transaction, useful for offline signing.
+     * @param addressesWithAmount Address with amounts to send.
+     * @param options The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The prepared transaction data.
+     */
     async prepareSendAmount(
-        addressWithAmount: AddressWithAmount[],
+        addressesWithAmount: AddressWithAmount[],
         options?: TransactionOptions,
     ): Promise<PreparedTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
@@ -364,7 +495,7 @@ export class Account {
             {
                 name: 'PrepareSendAmount',
                 data: {
-                    addressWithAmount,
+                    addressWithAmount: addressesWithAmount,
                     options,
                 },
             },
@@ -372,6 +503,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Prepare a transaction, useful for offline signing.
+     * @param outputs Outputs to use in the transaction.
+     * @param options The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The prepared transaction data.
+     */
     async prepareTransaction(
         outputs: OutputTypes[],
         options?: TransactionOptions,
@@ -389,6 +527,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Send a transaction with amounts from input addresses.
+     * @param addressesWithAmount Addresses with amounts.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The sent transaction.
+     */
     async sendAmount(
         addressesWithAmount: AddressWithAmount[],
         transactionOptions?: TransactionOptions,
@@ -407,6 +552,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Send a micro transaction with amount below minimum storage deposit.
+     * @param addressesWithMicroAmount Addresses with micro amounts.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The sent transaction.
+     */
     async sendMicroTransaction(
         addressesWithMicroAmount: AddressWithMicroAmount[],
         transactionOptions?: TransactionOptions,
@@ -425,6 +577,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Send native tokens.
+     * @param addressesNativeTokens Addresses amounts and native tokens.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The sent transaction.
+     */
     async sendNativeTokens(
         addressesNativeTokens: AddressNativeTokens[],
         transactionOptions?: TransactionOptions,
@@ -443,6 +602,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Send nft.
+     * @param addressesAndNftIds Addresses and nft ids.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The sent transaction.
+     */
     async sendNft(
         addressesAndNftIds: AddressNftId[],
         transactionOptions?: TransactionOptions,
@@ -461,6 +627,13 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Send outputs in a transaction.
+     * @param outputs The outputs to send.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The sent transaction.
+     */
     async sendOutputs(
         outputs: OutputTypes[],
         transactionOptions?: TransactionOptions,
@@ -488,6 +661,11 @@ export class Account {
         });
     }
 
+    /**
+     * Sign a prepared transaction, useful for offline signing.
+     * @param preparedTransactionData The prepared transaction data to sign.
+     * @returns The signed transaction essence.
+     */
     async signTransactionEssence(
         preparedTransactionData: PreparedTransactionData,
     ): Promise<SignedTransactionEssence> {
@@ -503,6 +681,11 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Validate the transaction, submit it to a node and store it in the account.
+     * @param signedTransactionData A signed transaction to submit and store.
+     * @returns The sent transaction.
+     */
     async submitAndStoreTransaction(
         signedTransactionData: SignedTransactionEssence,
     ): Promise<Transaction> {
@@ -518,6 +701,12 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Syncs the account by fetching new information from the nodes.
+     * Will also retry pending transactions if necessary.
+     * @param options Optional synchronization options.
+     * @returns The account balance.
+     */
     async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -531,6 +720,13 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    /**
+     * Try to claim basic outputs that have additional unlock conditions to
+     * their `AddressUnlockCondition` and send them to the first address of the
+     * account.
+     * @param outputsToClaim Outputs to try to claim.
+     * @returns The resulting transactions.
+     */
     async tryClaimOutputs(
         outputsToClaim: OutputsToClaim,
     ): Promise<Transaction[]> {

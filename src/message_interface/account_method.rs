@@ -105,7 +105,7 @@ pub enum AccountMethod {
         #[serde(rename = "outputConsolidationThreshold")]
         output_consolidation_threshold: Option<usize>,
     },
-    /// Generate a new unused address.
+    /// Generate new unused addresses.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
     GenerateAddresses {
         amount: u32,
@@ -166,7 +166,7 @@ pub enum AccountMethod {
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint native token.
-    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
         #[serde(rename = "nativeTokenOptions")]
         native_token_options: NativeTokenOptions,

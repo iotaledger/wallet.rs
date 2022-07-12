@@ -14,6 +14,7 @@ export interface BuildAliasOutputData extends BuildBasicOutputData {
 }
 
 export interface BuildBasicOutputData {
+    /** If not provided, minimum storage deposit will be used */
     amount?: string;
     nativeTokens?: INativeToken;
     unlockConditions: UnlockConditionTypes[];
