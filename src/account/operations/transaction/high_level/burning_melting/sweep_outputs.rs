@@ -299,8 +299,10 @@ impl AccountHandle {
         network_id: u64,
     ) -> crate::Result<()> {
         let mut account = self.write().await;
+        let output = Output::try_from(&output_response.output)?;
+        let local_time = self.client.get_time_checked().await?;
 
-        let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output_response.output, None)?;
+        let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
         // check if we know the transaction that created this output and if we created it (if we store incoming
         // transactions separated, then this check wouldn't be required)
         let remainder = {
@@ -309,8 +311,6 @@ impl AccountHandle {
                 None => false,
             }
         };
-
-        let output = Output::try_from(&output_response.output)?;
 
         let output_data = OutputData {
             output_id,

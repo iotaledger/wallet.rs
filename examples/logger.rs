@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
         .target_exclusions(&["h2", "hyper", "rustls"])
         .level_filter(LevelFilter::Debug);
     let config = LoggerConfig::build().with_output(logger_output_config).finish();
-    logger_init(config)?;
+    logger_init(config).unwrap();
 
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?
