@@ -20,7 +20,6 @@ import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/ex
 
 # Stardust Exchange Integration Guide
 
-## The Wallet Library
 
 :::note
 
