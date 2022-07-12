@@ -12,6 +12,8 @@ async function run() {
             clientOptions: {
                 nodes: ['https://api.testnet.shimmer.network'],
             },
+            // CoinType.IOTA can be used to access Shimmer staking rewards, but it's
+            // recommended to use the Shimmer coin type to be compatible with other wallets.
             coinType: CoinType.Shimmer,
             secretManager: {
                 Stronghold: {
@@ -20,12 +22,12 @@ async function run() {
                 },
             },
         };
-    
+
         const manager = new AccountManager(accountManagerOptions);
 
         // Mnemonic only needs to be set the first time
         await manager.storeMnemonic(process.env.MNEMONIC);
-        
+
         // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',
