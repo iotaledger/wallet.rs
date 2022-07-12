@@ -32,14 +32,15 @@ pub(crate) const BACKUP_SCHEMA_VERSION: u8 = 1;
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file
-    pub async fn backup(&self, backup_path: PathBuf, stronghold_password: String) -> crate::Result<()> {
+    /// stronghold_password must be the current one when Stronghold is used as SecretManager.
+    pub async fn backup(&self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
         log::debug!("[backup] creating a stronghold backup");
         let mut secret_manager = self.secret_manager.write().await;
         let secret_manager_dto = SecretManagerDto::from(&*secret_manager);
         match &mut *secret_manager {
             SecretManager::Stronghold(stronghold) => {
-                save_data_to_stronghold_backup(self, stronghold, stronghold_password, backup_path, secret_manager_dto)
-                    .await?;
+                stronghold.set_password(&stronghold_password).await?;
+                save_data_to_stronghold_backup(self, stronghold, backup_path, secret_manager_dto).await?;
             }
             _ => {
                 save_data_to_stronghold_backup(
@@ -48,13 +49,14 @@ impl AccountManager {
                     &mut StrongholdSecretManager::builder()
                         .password(&stronghold_password)
                         .try_build(backup_path.clone())?,
-                    stronghold_password,
                     backup_path,
                     secret_manager_dto,
                 )
                 .await?;
             }
         }
+
+        stronghold_password.zeroize();
 
         Ok(())
     }
@@ -136,7 +138,6 @@ impl AccountManager {
 async fn save_data_to_stronghold_backup(
     account_manager: &AccountManager,
     stronghold: &mut StrongholdAdapter,
-    mut stronghold_password: String,
     backup_path: PathBuf,
     secret_manager_dto: SecretManagerDto,
 ) -> crate::Result<()> {
@@ -191,8 +192,6 @@ async fn save_data_to_stronghold_backup(
 
     // Reset snapshot_path
     stronghold.snapshot_path = current_snapshot_path;
-
-    stronghold_password.zeroize();
 
     Ok(())
 }
