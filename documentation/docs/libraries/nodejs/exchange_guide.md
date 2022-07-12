@@ -228,7 +228,7 @@ TransactionOptions {
 }
 ```
 
-The `Account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. Individual transactions related to the given account can be obtained via the `account.listTransactions()` function.
+The `Account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. You can obtain individual transactions related to the given account using the `account.listTransactions()` function.
 
 :::note  Dust Protection
 
