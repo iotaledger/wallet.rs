@@ -32,14 +32,9 @@ You can easily integrate wallet.rs with your exchange, custody solution, or prod
 
 In [wallet.rs](../../welcome.md), you can use an account model to [create an account for each user](#multi-account-approach) or [use one account and generate multiple addresses](#single-account-approach), which you can then link to the users in your database. The wallet library is as flexible as possible and can back up any of your use cases.
 
-Since addresses are reusable, they can be mapped to your users in a clear and concise way:
-
-- Create an account for every user -> `Multi Account` approach.
-- Create one account with many addresses -> `Single account` approach.
-
 The library supports derivation for multiple accounts from a single seed. An account is simply a deterministic identifier from which multiple addresses can be further derived. 
 
-The library also allows consumers to assign a meaningful alias to each account.
+The library also allows consumers to assign a meaningful alias to each account. Since addresses are reusable, they can be mapped to your users in a clear and concise way.
 
 ### Multi-Account Approach
 
