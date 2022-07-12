@@ -215,7 +215,7 @@ Sending coins:
 
 The full function signature is `Account.sendAmount(outputs[, options])`.
 
-Default options are fine and successful; however, additional options can be provided, such as `remainderValueStrategy`:
+Default options are fine and successful; however, you can provide additional options, such as `remainderValueStrategy`, which can have the following values:
 
 * `changeAddress`: Send the remainder value to an internal address.
 * `reuseAddress`: Send the remainder value back to its original address.
