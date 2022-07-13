@@ -59,7 +59,7 @@ impl AccountHandle {
                 remainder_address,
                 byte_cost_config,
                 allow_burning,
-                current_time
+                current_time,
             )
             .await?;
 
@@ -89,7 +89,7 @@ impl AccountHandle {
             remainder_address,
             byte_cost_config,
             allow_burning,
-            current_time
+            current_time,
         )
         .await
         {
