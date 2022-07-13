@@ -230,6 +230,8 @@ pub struct TransactionDto {
     pub network_id: String,
     /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
+
+    pub note: Option<String>,
 }
 
 impl From<&Transaction> for TransactionDto {
@@ -241,6 +243,7 @@ impl From<&Transaction> for TransactionDto {
             timestamp: value.timestamp.to_string(),
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
+            note: value.note.clone(),
         }
     }
 }
