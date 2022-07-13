@@ -83,7 +83,7 @@ Since all `wallet.rs` bindings are based on core principles provided by the `wal
 
 ### 1. Set Up the Wallet.rs Library
 
-First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the [NodeJs binding](../../getting_started/nodejs.md), it is straightforward since it is distributed via the `npm` package manager. We recommend that you use `dotenv` for password management.
+First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the [NodeJs binding](./getting_started.md), it is straightforward since it is distributed via the `npm` package manager. We recommend that you use `dotenv` for password management.
 
 You can read more about [backup and security in this guide](https://wiki.iota.org/introduction/guides/backup_security).
 
