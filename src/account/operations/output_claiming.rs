@@ -10,11 +10,12 @@ use iota_client::{
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
 };
+use iota_client::bee_block::output::unlock_condition::StorageDepositReturnUnlockCondition;
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
     handle::AccountHandle,
-    operations::helpers::time::{can_output_be_unlocked_now, is_expired},
+    operations::helpers::time::{can_output_be_unlocked_now},
     types::Transaction,
     OutputData, TransactionOptions,
 };
@@ -304,7 +305,7 @@ impl AccountHandle {
                                 )?;
                             }
                             additional_inputs.push(output_data.output_id);
-                            additional_inputs_used.push(output_data.output_id);
+                            additional_inputs_used.insert(output_data.output_id);
                         }
                     } else {
                         // Break if we have enough inputs
