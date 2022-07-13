@@ -208,6 +208,8 @@ pub struct Transaction {
     pub network_id: u64,
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
+
+    pub note: Option<String>,
 }
 
 /// Dto for a transaction with metadata

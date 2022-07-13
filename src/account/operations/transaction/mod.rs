@@ -146,6 +146,7 @@ impl AccountHandle {
                 .as_millis(),
             inclusion_state: InclusionState::Pending,
             incoming: false,
+            note: None,
         };
 
         let mut account = self.write().await;
