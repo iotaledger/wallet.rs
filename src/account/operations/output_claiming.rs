@@ -183,14 +183,18 @@ impl AccountHandle {
         possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
+
         let local_time = self.client.get_time_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
-        let mut outputs_to_claim = Vec::new();
         let account = self.read().await;
+
+        let mut outputs_to_claim = Vec::new();
         for output_id in output_ids_to_claim {
             if let Some(output_data) = account.unspent_outputs.get(&output_id) {
-                outputs_to_claim.push(output_data.clone());
+                if !account.locked_outputs.contains(&output_id) {
+                    outputs_to_claim.push(output_data.clone());
+                }
             }
         }
 
@@ -207,13 +211,10 @@ impl AccountHandle {
         drop(account);
 
         let mut claim_results = Vec::new();
-        // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited) and
-        // is <= max inputs
-        //
-        // Consideration: outputs with expiration and storage deposit return unlock
-        // conditions might require more outputs or maybe more additional inputs are required for the storage deposit
-        // amount, that's why I set it to 5 now, because even with duplicated output amount it will be low
-        // enough then
+
+        // Outputs with expiration and storage deposit return might require two outputs if there is a storage deposit
+        // return unlock condition Maybe also more additional inputs are required for the storage deposit, if we
+        // have to send the storage deposit back
         for outputs in outputs_to_claim.chunks(5) {
             let mut outputs_to_send = Vec::new();
             // Amount we get with the storage deposit return amounts already subtracted
@@ -225,22 +226,17 @@ impl AccountHandle {
                     // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
                     // updated address unlock conditions
 
-                    // todo: use minimum storage deposit amount for amount
-                    let mut nft_builder = NftOutputBuilder::new_with_amount(
-                        nft_output.amount(),
-                        nft_output.nft_id().or_from_output_id(output_data.output_id),
-                    )?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        first_account_address.address.inner,
-                    )));
-                    // native tokens are added later
-                    for feature in nft_output.features().iter() {
-                        nft_builder = nft_builder.add_feature(feature.clone());
-                    }
-                    for immutable_feature in nft_output.immutable_features().iter() {
-                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
-                    }
-                    outputs_to_send.push(nft_builder.finish_output()?);
+                    let nft_output = NftOutputBuilder::from(nft_output)
+                        .with_minimum_storage_deposit(byte_cost_config.clone())
+                        .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+                        .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
+                            first_account_address.address.inner,
+                        ))])
+                        // Set native tokens empty, we will collect them from all inputs later
+                        .with_native_tokens([])
+                        .finish_output()?;
+
+                    outputs_to_send.push(nft_output);
                 }
 
                 // if expired, we can send everything to us
@@ -364,5 +360,25 @@ impl AccountHandle {
         }
 
         Ok(claim_results)
+    }
+}
+
+/// Get the `StorageDepositReturnUnlockCondition`, if not expired
+pub(crate) fn sdr_not_expired(output: &Output, current_time: u32) -> Option<&StorageDepositReturnUnlockCondition> {
+    if let Some(unlock_conditions) = output.unlock_conditions() {
+        if let Some(sdr) = unlock_conditions.storage_deposit_return() {
+            let expired = if let Some(expiration) = unlock_conditions.expiration() {
+                current_time >= expiration.timestamp()
+            } else {
+                false
+            };
+
+            // We only have to send the storage deposit return back if the output is not expired
+            if !expired { Some(sdr) } else { None }
+        } else {
+            None
+        }
+    } else {
+        None
     }
 }
