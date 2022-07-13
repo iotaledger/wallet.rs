@@ -352,6 +352,10 @@ impl AccountHandle {
             output_ids.extend(found_output_ids.into_iter());
         }
 
+        // Dedup since the same output id could be returned from different queries.
+        output_ids.sort();
+        output_ids.dedup();
+
         Ok((address, output_ids))
     }
 }

@@ -132,6 +132,7 @@ impl AccountHandle {
             if let Some(output_data) = account.outputs.get_mut(&output_id) {
                 output_data.metadata = output_response.metadata;
             }
+            account.unspent_outputs.remove(&output_id);
         }
 
         // Add new synced outputs

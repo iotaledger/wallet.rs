@@ -37,6 +37,8 @@ impl AccountHandle {
             WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
 
+        let current_time = self.client.get_time_checked().await?;
+
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
@@ -57,6 +59,7 @@ impl AccountHandle {
                 remainder_address,
                 byte_cost_config,
                 allow_burning,
+                current_time,
             )
             .await?;
 
@@ -69,7 +72,6 @@ impl AccountHandle {
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
-        let current_time = self.client.get_time_checked().await?;
         let bech32_hrp = self.client.get_bech32_hrp().await?;
         let available_outputs_signing_data = filter_inputs(
             &account,
@@ -87,6 +89,7 @@ impl AccountHandle {
             remainder_address,
             byte_cost_config,
             allow_burning,
+            current_time,
         )
         .await
         {
