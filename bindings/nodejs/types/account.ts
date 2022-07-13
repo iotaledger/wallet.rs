@@ -1,6 +1,7 @@
 import type { Address, AddressWithUnspentOutputs } from './address';
 import type { OutputData } from './output';
 import type { Transaction } from './transaction';
+import type { HexEncodedAmount } from '@iota/types';
 
 /**
  * Account identifier
@@ -70,8 +71,10 @@ export interface BaseCoinBalance {
     available: string;
 }
 
-export interface NativeTokenBalance extends BaseCoinBalance {
+export interface NativeTokenBalance {
     id: string
+    total: HexEncodedAmount;
+    available: HexEncodedAmount;
 }
 
 export enum CoinType {
