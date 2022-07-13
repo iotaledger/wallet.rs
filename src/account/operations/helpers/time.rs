@@ -1,8 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-
-
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
 
 // Check if an output can be unlocked by one of the account addresses at the current time
