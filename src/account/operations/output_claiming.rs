@@ -6,18 +6,15 @@ use std::collections::HashSet;
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
     bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },
 };
-use iota_client::bee_block::output::unlock_condition::StorageDepositReturnUnlockCondition;
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
-    handle::AccountHandle,
-    operations::helpers::time::{can_output_be_unlocked_now},
-    types::Transaction,
-    OutputData, TransactionOptions,
+    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_now, types::Transaction, OutputData,
+    TransactionOptions,
 };
 
 /// Enum to specify which outputs should be claimed
@@ -31,7 +28,8 @@ pub enum OutputsToClaim {
 }
 
 /// Defines how many claiming inputs can be considered for one transaction.
-/// Needs to be limited because we might have to create the double amount of outputs because of the storage deposit return and need to consider the remainder.
+/// Needs to be limited because we might have to create the double amount of outputs because of the storage deposit
+/// return and need to consider the remainder.
 const MAX_CLAIM_INPUTS: usize = 60;
 
 impl AccountHandle {
@@ -297,7 +295,8 @@ impl AccountHandle {
                             new_amount += output_data.output.amount();
                             if let Some(native_tokens) = output_data.output.native_tokens() {
                                 new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                                // Re-calculate the required storage deposit amount since we have added a new native token
+                                // Re-calculate the required storage deposit amount since we have added a new native
+                                // token
                                 required_storage_deposit = minimum_storage_deposit(
                                     &byte_cost_config,
                                     &first_account_address.address.inner,
