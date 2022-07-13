@@ -68,8 +68,8 @@ You can use the following examples as a guide to implementing *the multi-account
 
 1. [Set up the wallet.rs library](#1-set-up-the-wallet-library).
 2. [Create an account for each user](#2-create-an-account-for-a-user).
-3. [Generate a user address to deposit funds](3-generate-a-user-address-to-deposit-funds).
-4. [Check the user balance](4-check-the-account-balance).
+3. [Generate a user address to deposit funds](#3-generate-a-user-address-to-deposit-funds).
+4. [Check the user balance](#4-check-the-account-balance).
 5. [Listen to events](#5-listen-to-events).
 6. [Enable withdrawals](#6-enable-withdrawals).
 
