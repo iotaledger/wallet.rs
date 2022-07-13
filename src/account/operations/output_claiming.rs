@@ -27,9 +27,9 @@ pub enum OutputsToClaim {
     All = 4,
 }
 
-/// Defines how many claiming inputs can be considered for one transaction.
-/// Needs to be limited because we might have to create the double amount of outputs because of the storage deposit
-/// return and need to consider the remainder.
+/// Defines how many inputs can be claimed with one transaction.
+/// This limit is needed because in addition we might need to create the double amount of outputs because of the storage
+/// deposit return and also consider the remainder output.
 const MAX_CLAIM_INPUTS: usize = 60;
 
 impl AccountHandle {
@@ -273,7 +273,7 @@ impl AccountHandle {
             };
 
             // Check if the new amount is enough for the storage deposit, otherwise increase it to this
-            let required_storage_deposit = minimum_storage_deposit(
+            let mut required_storage_deposit = minimum_storage_deposit(
                 &byte_cost_config,
                 &first_account_address.address.inner,
                 &option_native_token,
@@ -285,7 +285,7 @@ impl AccountHandle {
                 for output_data in &possible_additional_inputs {
                     // Recalculate every time, because new intputs can also add more native tokens, which would increase
                     // the storage deposit cost
-                    let mut required_storage_deposit = minimum_storage_deposit(
+                    required_storage_deposit = minimum_storage_deposit(
                         &byte_cost_config,
                         &first_account_address.address.inner,
                         &option_native_token,
@@ -295,13 +295,6 @@ impl AccountHandle {
                             new_amount += output_data.output.amount();
                             if let Some(native_tokens) = output_data.output.native_tokens() {
                                 new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                                // Re-calculate the required storage deposit amount since we have added a new native
-                                // token
-                                required_storage_deposit = minimum_storage_deposit(
-                                    &byte_cost_config,
-                                    &first_account_address.address.inner,
-                                    &option_native_token,
-                                )?;
                             }
                             additional_inputs.push(output_data.output_id);
                             additional_inputs_used.insert(output_data.output_id);
