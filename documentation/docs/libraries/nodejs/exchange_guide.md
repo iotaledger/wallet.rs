@@ -60,7 +60,7 @@ The Wallet Library is a stateful package with a standardized interface for devel
 
 :::note
 
-If you are not familiar with the wallet.rs library, you can find [explanations](../../explanations/nutshell.md), [references](../../reference/specifications.md), and [how-tos](../../examples/rust.md) in the [documentation](../../welcome.md).
+If you are not familiar with the wallet.rs library, you can find more information in the [documentation](../../welcome.md).
 
 :::
 
@@ -211,7 +211,7 @@ NewOutput: {
 }
 ```
 
-You can use the `accountId` to identify the given account via `AccountManager.getAccount(accountId)`.
+Alternatively you can use `account.listOutputs()` to get all outputs that are stored in the account, or `account.listUnspentOutputs()`, to get only unspent outputs.
 
 ### 6. Enable Withdrawals
 
@@ -221,7 +221,7 @@ You can use the following example to send tokens to an address.
   {send_amount}
 </CodeBlock>
 
-The full function signature is `Account.sendAmount(outputs[, options])`.
+The full function signature is `account.sendAmount(outputs[, options])`.
 
 Default options are fine and successful; however, you can provide additional options, such as `remainderValueStrategy`, which can have the following values:
 
@@ -236,7 +236,7 @@ TransactionOptions {
 }
 ```
 
-The `Account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. You can obtain individual transactions related to the given account using the `account.listTransactions()` function.
+The `account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. You can obtain individual transactions related to the given account using the `account.listTransactions()` function.
 
 :::note  Dust Protection
 
