@@ -6,7 +6,7 @@ pub(crate) const DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 100;
 #[cfg(feature = "ledger_nano")]
 /// Amount at which outputs on a single addresses will get consolidated by default with a ledger secret_manager if
 /// consolidatioin is enabled, needs to be smaller because the memory of the ledger nano s is limited
-pub(crate) const DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 16;
+pub(crate) const DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD: usize = 15;
 
 /// Amount of API request that can be sent in parallel during syncing
 pub(crate) const PARALLEL_REQUESTS_AMOUNT: usize = 500;
