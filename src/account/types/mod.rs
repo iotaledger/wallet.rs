@@ -229,7 +229,6 @@ pub struct TransactionDto {
     pub network_id: String,
     /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
-
     pub note: Option<String>,
 }
 
