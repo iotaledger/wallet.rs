@@ -4,6 +4,7 @@ export interface TransactionOptions {
     remainderValueStrategy?: RemainderValueStrategy;
     taggedDataPayload?: ITaggedDataPayload;
     customInputs?: string[];
+    note?: string;
 }
 
 export type RemainderValueStrategy =

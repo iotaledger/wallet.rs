@@ -17,6 +17,7 @@ pub struct TransactionOptions {
     pub custom_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
+    pub note: Option<String>,
 }
 
 #[allow(clippy::enum_variant_names)]
