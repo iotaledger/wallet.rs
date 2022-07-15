@@ -72,7 +72,7 @@ export interface BaseCoinBalance {
 }
 
 export interface NativeTokenBalance {
-    id: string
+    tokenId: string
     total: HexEncodedAmount;
     available: HexEncodedAmount;
 }
