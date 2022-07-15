@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.2-alpha.6]
+
+- Added optional note to the TransactionOptions.
+  - [32c01833](https://github.com/iotaledger/wallet.rs/commit/32c0183341750056b03c8346559ff11356334caa) Add `note` field ([#1295](https://github.com/iotaledger/wallet.rs/pull/1295)) on 2022-07-14
+- Rename `id` property in `NativeTokenBalance` to `tokenId`
+  - [6063bfaf](https://github.com/iotaledger/wallet.rs/commit/6063bfaf650318e6489923421f3c6372f8337698) chore: release latest to npm ([#1212](https://github.com/iotaledger/wallet.rs/pull/1212)) on 2022-06-28
+  - [966ef5c2](https://github.com/iotaledger/wallet.rs/commit/966ef5c256d773680e35f2ce38acd035e6913517) apply version updates ([#1216](https://github.com/iotaledger/wallet.rs/pull/1216)) on 2022-06-28
+  - [8442dc2c](https://github.com/iotaledger/wallet.rs/commit/8442dc2cce3d395127a279f48955f2ce0b9bc35a) Rename `id` to `tokenId` for native tokens ([#1298](https://github.com/iotaledger/wallet.rs/pull/1298)) on 2022-07-15
+
 ## \[2.0.2-alpha.5]
 
 - Added transaction id to transaction type.
