@@ -4,7 +4,9 @@
     ".changes/account-and-transaction-syncing.md",
     ".changes/initial-ledger-support.md",
     ".changes/missing-transaction-id.md",
+    ".changes/optional-note.md",
     ".changes/pre-release.md",
+    ".changes/stardust-release.md",
     ".changes/stronghold-update.md",
     ".changes/typescript-declarations.md"
   ]
