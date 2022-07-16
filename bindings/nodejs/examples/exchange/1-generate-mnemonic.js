@@ -12,6 +12,7 @@ async function run() {
                 nodes: ['http://localhost:14265'],
             },
             coinType: CoinType.Shimmer,
+            // Placeholder can't be used for address generation or signing, but we can use it since we only want to generate a mnemonic
             secretManager: "Placeholder",
         });
         
