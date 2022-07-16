@@ -8,7 +8,7 @@
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::bee_block::output::AliasId;
+use iota_client::block::output::AliasId;
 use iota_wallet::{account_manager::AccountManager, Result};
 
 #[tokio::main]

@@ -6,7 +6,7 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use iota_client::bee_block::{
+use iota_client::block::{
     input::INPUT_COUNT_MAX,
     output::{
         AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NativeTokensBuilder,

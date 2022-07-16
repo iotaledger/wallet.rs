@@ -7,11 +7,11 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::{
+    block::{
         output::{dto::OutputDto, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
     NodeInfoWrapper,
 };
 use serde::Serialize;

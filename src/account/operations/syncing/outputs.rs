@@ -6,7 +6,7 @@ use std::{str::FromStr, time::Instant};
 use crypto::keys::slip10::Chain;
 use iota_client::{
     api::ClientBlockBuilder,
-    bee_block::{
+    block::{
         input::Input,
         output::{dto::OutputDto, Output, OutputId},
         payload::{
@@ -14,7 +14,7 @@ use iota_client::{
             Payload, TransactionPayload,
         },
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
     Client,
 };
 

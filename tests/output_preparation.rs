@@ -7,7 +7,7 @@ use iota_wallet::{
     account::{Assets, Features, OutputOptions},
     account_manager::AccountManager,
     iota_client::{
-        bee_block::output::{NativeToken, NftId, TokenId},
+        block::output::{NativeToken, NftId, TokenId},
         constants::SHIMMER_COIN_TYPE,
     },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
@@ -189,10 +189,7 @@ async fn output_preparation() -> Result<()> {
         )
         .await
     {
-        assert_eq!(
-            output.kind(),
-            iota_wallet::iota_client::bee_block::output::NftOutput::KIND
-        );
+        assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
         assert_eq!(output.amount(), 500000);
         // only address condition
         assert_eq!(output.unlock_conditions().unwrap().len(), 1);

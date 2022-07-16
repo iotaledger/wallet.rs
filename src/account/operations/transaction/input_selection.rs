@@ -5,7 +5,7 @@ use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
     api::input_selection::{try_select_inputs, types::SelectedTransactionData},
-    bee_block::{
+    block::{
         address::Address,
         input::INPUT_COUNT_MAX,
         output::{ByteCostConfig, Output, OutputId},

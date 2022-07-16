@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::{
-    bee_block::address::Address,
+    block::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };

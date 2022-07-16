@@ -12,7 +12,7 @@ use backtrace::Backtrace;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::{
+    block::{
         output::{
             dto::{OutputBuilderAmountDto, OutputDto},
             AliasOutput, BasicOutput, ByteCost, FoundryOutput, NftOutput, Output, TokenId,

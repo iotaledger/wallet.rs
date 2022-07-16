@@ -41,15 +41,15 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error from bee_block crate.
+    /// Error from block crate.
     #[error("{0}")]
-    BeeBlock(iota_client::bee_block::Error),
+    Block(iota_client::block::Error),
     /// Block dtos error
     #[error("{0}")]
-    BeeBlockDtoError(#[from] iota_client::bee_block::DtoError),
-    /// Bee rest api error
+    BlockDtoError(#[from] iota_client::block::DtoError),
+    /// Rest api error
     #[error("{0}")]
-    BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
+    RestApiError(#[from] iota_client::rest_api::types::error::Error),
     /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
     BackupError(&'static str),
@@ -137,9 +137,9 @@ impl From<iota_client::Error> for Error {
     }
 }
 
-impl From<iota_client::bee_block::Error> for Error {
-    fn from(error: iota_client::bee_block::Error) -> Self {
-        Self::BeeBlock(error)
+impl From<iota_client::block::Error> for Error {
+    fn from(error: iota_client::block::Error) -> Self {
+        Self::Block(error)
     }
 }
 
@@ -171,9 +171,9 @@ impl serde::Serialize for Error {
             Self::RecordNotFound => serialize_variant(self, serializer, "RecordNotFound"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::Panic(_) => serialize_variant(self, serializer, "Panic"),
-            Self::BeeBlock(_) => serialize_variant(self, serializer, "BeeBlock"),
-            Self::BeeBlockDtoError(_) => serialize_variant(self, serializer, "BeeBlockDtoError"),
-            Self::BeeRestApiError(_) => serialize_variant(self, serializer, "BeeRestApiError"),
+            Self::Block(_) => serialize_variant(self, serializer, "Block"),
+            Self::BlockDtoError(_) => serialize_variant(self, serializer, "BlockDtoError"),
+            Self::RestApiError(_) => serialize_variant(self, serializer, "RestApiError"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidCoinType(..) => serialize_variant(self, serializer, "InvalidCoinType"),
             Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
