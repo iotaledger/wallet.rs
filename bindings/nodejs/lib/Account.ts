@@ -38,6 +38,7 @@ import type {
     OutputTypes,
 } from '@iota/types';
 
+/** The Account class. */
 export class Account {
     meta: AccountMeta;
     private messageHandler: MessageHandler;
@@ -495,7 +496,7 @@ export class Account {
             {
                 name: 'PrepareSendAmount',
                 data: {
-                    addressWithAmount: addressesWithAmount,
+                    addressesWithAmount,
                     options,
                 },
             },
@@ -543,7 +544,7 @@ export class Account {
             {
                 name: 'SendAmount',
                 data: {
-                    addressWithAmount: addressesWithAmount,
+                    addressesWithAmount,
                     options: transactionOptions,
                 },
             },
@@ -568,7 +569,7 @@ export class Account {
             {
                 name: 'SendMicroTransaction',
                 data: {
-                    addressWithMicroAmount: addressesWithMicroAmount,
+                    addressesWithMicroAmount,
                     options: transactionOptions,
                 },
             },
@@ -593,7 +594,7 @@ export class Account {
             {
                 name: 'SendNativeTokens',
                 data: {
-                    addressNativeTokens: addressesNativeTokens,
+                    addressesNativeTokens,
                     options: transactionOptions,
                 },
             },
@@ -618,7 +619,7 @@ export class Account {
             {
                 name: 'SendNft',
                 data: {
-                    addressNftIds: addressesAndNftIds,
+                    addressesAndNftIds,
                     options: transactionOptions,
                 },
             },

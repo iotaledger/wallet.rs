@@ -8,7 +8,9 @@ async function run() {
     try {
         const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
-        
+
+        await account.sync();
+
         // The address has to be specified in Ed25519 format
         const output = await account.buildBasicOutput({
             amount: '2000000',
@@ -27,11 +29,11 @@ async function run() {
 
         console.log(response);
 
-        // console.log(
-        //     `Check your block on http://localhost:14265/api/core/v2/blocks/${response.blockId}`,
-        // );
+        console.log(
+            `Check your block on http://localhost:14265/api/core/v2/blocks/${response.blockId}`,
+        );
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

@@ -21,7 +21,7 @@ async function run() {
         const bech32 = await manager.hexToBech32(hex);
         console.log('Bech32 encoded address: ', bech32);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

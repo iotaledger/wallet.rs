@@ -3,7 +3,7 @@
  * You can move this file to another app or device and restore it.
  */
 
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const getUnlockedManager = require('./account-manager');
 
 async function run() {
@@ -16,7 +16,7 @@ async function run() {
 
         console.log('Successfully created backup');
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

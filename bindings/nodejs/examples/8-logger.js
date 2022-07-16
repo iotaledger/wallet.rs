@@ -17,7 +17,7 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

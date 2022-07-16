@@ -1,5 +1,5 @@
 /**
- * This example creates a generates, stores and verifies a mnemonic
+ * This example generates, stores and verifies a mnemonic
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -15,7 +15,7 @@ async function run() {
         await manager.storeMnemonic(mnemonic);
         console.log('Mnemonic successfully stored!');
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit();
 }

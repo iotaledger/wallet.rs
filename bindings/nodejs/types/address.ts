@@ -1,4 +1,5 @@
 import type { Network } from './network';
+import type { HexEncodedAmount } from '@iota/types';
 
 export enum AddressType {
     Ed25519 = 'Ed25519',
@@ -34,7 +35,7 @@ export interface AddressWithMicroAmount {
 
 export interface AddressNativeTokens {
     address: string;
-    nativeTokens: string[];
+    nativeTokens: [string, HexEncodedAmount][];
     returnAddress?: string;
     expiration?: number;
 }

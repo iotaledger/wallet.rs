@@ -8,6 +8,8 @@ async function run() {
         const manager = await getUnlockedManager();
         const account = await manager.getAccount('0');
 
+        await account.sync();
+        
         const address =
         'rms1qrrv7flg6lz5cssvzv2lsdt8c673khad060l4quev6q09tkm9mgtupgf0h0';
         const amount = '1000000';
@@ -24,7 +26,7 @@ async function run() {
         
         console.log(response)
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

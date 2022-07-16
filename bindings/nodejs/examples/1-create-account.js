@@ -2,7 +2,7 @@
  * This example creates a new database and account
  */
 
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const { CoinType } = require('../out/types');
 const { AccountManager } = require('@iota/wallet');
 
@@ -10,7 +10,6 @@ async function run() {
     try {
         const manager = await createAccountManager();
 
-        // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',
         });
@@ -21,7 +20,7 @@ async function run() {
         });
         console.log('Account created:', secondAccount);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }
@@ -30,11 +29,7 @@ async function createAccountManager() {
     const accountManagerOptions = {
         storagePath: './alice-database',
         clientOptions: {
-            nodes: [
-                {
-                    url: 'https://firefly.h.chrysalis-devnet.iota.cafe/',
-                },
-            ],
+            nodes: ['https://api.testnet.shimmer.network'],
             localPow: true,
         },
         coinType: CoinType.Shimmer,

@@ -3,16 +3,8 @@
 
 import type { MessageHandler } from './MessageHandler';
 // @ts-ignore: path is set to match runtime transpiled js path
-import addon = require('../../index.node');
+import { initLogger as internalInitLogger, sendMessage, messageHandlerNew, listen, clearListeners, destroy } from '../../index.node';
 
-const {
-    initLogger,
-    sendMessage,
-    messageHandlerNew,
-    listen,
-    clearListeners,
-    destroy,
-} = addon;
 
 const sendMessageAsync = (
     message: string,
@@ -29,7 +21,7 @@ const sendMessageAsync = (
     });
 
 export {
-    initLogger,
+    internalInitLogger,
     sendMessageAsync,
     messageHandlerNew,
     listen,

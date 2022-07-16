@@ -17,6 +17,7 @@ import type {
     LedgerStatus,
 } from '../types';
 
+/** The AccountManager class. */
 export class AccountManager {
     private messageHandler: MessageHandler;
 
@@ -64,9 +65,6 @@ export class AccountManager {
         });
     }
 
-    /**
-     * The coin type only needs to be set on the first account
-     */
     async createAccount(payload: CreateAccountPayload): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'CreateAccount',

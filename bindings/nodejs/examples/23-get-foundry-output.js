@@ -29,7 +29,7 @@ async function run() {
             await secondAccount.getFoundryOutput(tokenId),
         );
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

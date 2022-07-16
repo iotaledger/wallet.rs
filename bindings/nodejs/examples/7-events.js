@@ -10,9 +10,9 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
 
-        // Use the Chrysalis Faucet to send testnet tokens to your address:
+        // Use the Faucet to send testnet tokens to your address:
         console.log(
-            'Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/',
+            'Fill your address with the Faucet: https://faucet.testnet.shimmer.network',
         );
 
         const callback = function (err, data) {
@@ -62,7 +62,7 @@ async function run() {
             console.log('All event listeners removed');
         }, 20000);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
 
     // Possible Event Types:

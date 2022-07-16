@@ -2,19 +2,14 @@
  * This example restores a secured backup file.
  */
 
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const { AccountManager } = require('@iota/wallet');
 async function run() {
     try {
         const manager = new AccountManager({
             storagePath: './alice-database',
             clientOptions: {
-                nodes: [
-                    {
-                        url: 'https://firefly.h.chrysalis-devnet.iota.cafe/',
-                    },
-                ],
-                localPow: true,
+                nodes: ['https://api.testnet.shimmer.network'],
             },
             secretManager: {
                 Stronghold: {},
@@ -29,7 +24,7 @@ async function run() {
         const account = await manager.getAccount('Alice');
         console.log('Account:', account.getAlias());
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

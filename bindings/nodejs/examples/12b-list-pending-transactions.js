@@ -21,7 +21,7 @@ async function run() {
         const pendingTransactions = await account.listPendingTransactions()
         console.log('Listing Pending Transactions:', pendingTransactions[0]?.payload);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

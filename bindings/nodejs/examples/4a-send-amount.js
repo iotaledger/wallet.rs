@@ -1,5 +1,5 @@
 /**
- * This example sends IOTA tokens to an address.
+ * This example sends a specified amount to an address.
  */
 
 const getUnlockedManager = require('./account-manager');
@@ -9,6 +9,8 @@ async function run() {
         const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
         console.log('Account:', account);
+
+        await account.sync();
 
         //TODO: Replace with the address of your choice!
         const address =
@@ -28,7 +30,7 @@ async function run() {
             `Check your block on http://localhost:14265/api/core/v2/blocks/${response.blockId}`,
         );
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

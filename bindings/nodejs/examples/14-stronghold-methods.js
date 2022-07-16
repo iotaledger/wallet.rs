@@ -22,7 +22,7 @@ async function run() {
         isStrongholdUnlocked = await manager.isStrongholdPasswordAvailable();
         console.log('Stronghold locked: ', !isStrongholdUnlocked)
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
 
     setTimeout(
