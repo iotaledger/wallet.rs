@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::{
+    block::{
         output::{
             dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
             feature::dto::FeatureDto,

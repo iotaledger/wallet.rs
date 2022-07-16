@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::PreparedTransactionData,
-    bee_block::{
+    block::{
         address::Address,
         output::{
             feature::{Feature, MetadataFeature},

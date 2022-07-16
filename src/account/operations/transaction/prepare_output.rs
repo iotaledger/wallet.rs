@@ -3,7 +3,7 @@
 
 use std::{cmp::Ordering, str::FromStr};
 
-use iota_client::bee_block::{
+use iota_client::block::{
     address::Address,
     output::{
         dto::NativeTokenDto,

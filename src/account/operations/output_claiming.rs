@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
-    bee_block::output::{
+    block::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
     },

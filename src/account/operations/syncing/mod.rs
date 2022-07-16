@@ -9,8 +9,8 @@ pub(crate) mod transactions;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    bee_block::{Block, BlockId},
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
+    block::{Block, BlockId},
 };
 
 pub use self::options::SyncOptions;

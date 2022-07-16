@@ -3,7 +3,7 @@
 
 use std::collections::HashSet;
 
-use iota_client::bee_block::{
+use iota_client::block::{
     output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme, OUTPUT_COUNT_MAX},
     payload::transaction::TransactionId,
 };

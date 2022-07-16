@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{output::OutputId, payload::tagged_data::TaggedDataPayload};
+use iota_client::block::{output::OutputId, payload::tagged_data::TaggedDataPayload};
 use serde::{Deserialize, Serialize};
 
 use crate::account::types::address::AccountAddress;

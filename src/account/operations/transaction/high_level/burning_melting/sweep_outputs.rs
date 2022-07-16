@@ -6,7 +6,7 @@ use std::{borrow::Borrow, collections::HashSet, pin::Pin, str::FromStr};
 use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientBlockBuilder,
-    bee_block::{
+    block::{
         address::{Address, AliasAddress, NftAddress},
         output::{
             dto::OutputDto,
@@ -19,7 +19,7 @@ use iota_client::{
         },
         payload::transaction::TransactionId,
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
     node_api::indexer::query_parameters::QueryParameter,
 };
 

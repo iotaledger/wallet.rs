@@ -41,15 +41,15 @@ pub enum Error {
     /// Panic error.
     #[error("a panic happened: {0}")]
     Panic(String),
-    /// Error from bee_block crate.
+    /// Error from block crate.
     #[error("{0}")]
-    BeeBlock(iota_client::bee_block::Error),
+    BeeBlock(iota_client::block::Error),
     /// Block dtos error
     #[error("{0}")]
-    BeeBlockDtoError(#[from] iota_client::bee_block::DtoError),
+    BeeBlockDtoError(#[from] iota_client::block::DtoError),
     /// Bee rest api error
     #[error("{0}")]
-    BeeRestApiError(#[from] iota_client::bee_rest_api::types::error::Error),
+    BeeRestApiError(#[from] iota_client::rest_api::types::error::Error),
     /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
     BackupError(&'static str),
@@ -137,8 +137,8 @@ impl From<iota_client::Error> for Error {
     }
 }
 
-impl From<iota_client::bee_block::Error> for Error {
-    fn from(error: iota_client::bee_block::Error) -> Self {
+impl From<iota_client::block::Error> for Error {
+    fn from(error: iota_client::block::Error) -> Self {
         Self::BeeBlock(error)
     }
 }

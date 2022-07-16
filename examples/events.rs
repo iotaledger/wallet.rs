@@ -6,7 +6,7 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::bee_block::{
+use iota_client::block::{
     address::Address,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
@@ -65,13 +65,11 @@ async fn main() -> Result<()> {
     println!("Balance: {:?}", balance);
 
     // send transaction
-    let outputs = vec![
-        BasicOutputBuilder::new_with_amount(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
-            )))
-            .finish_output()?,
-    ];
+    let outputs = vec![BasicOutputBuilder::new_with_amount(1_000_000)?
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+            Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
+        )))
+        .finish_output()?];
 
     let transaction = account.send(outputs, None).await?;
 

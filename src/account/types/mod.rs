@@ -11,13 +11,13 @@ use std::{collections::HashMap, str::FromStr};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    bee_block::{
+    block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
-    bee_rest_api::types::responses::OutputMetadataResponse,
+    rest_api::types::responses::OutputMetadataResponse,
     secret::types::{InputSigningData, OutputMetadata},
 };
 use primitive_types::U256;

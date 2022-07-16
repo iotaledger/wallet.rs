@@ -5,11 +5,11 @@ use std::str::FromStr;
 
 use iota_client::{
     api::ClientBlockBuilder,
-    bee_block::{
+    block::{
         output::{Output, OutputId},
         payload::transaction::TransactionId,
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
     Client,
 };
 
@@ -23,7 +23,7 @@ use crate::account::{
 use crate::{
     account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
-    iota_client::bee_block::payload::transaction::dto::TransactionPayloadDto,
+    iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
 impl AccountHandle {
     // Set the alias for the account

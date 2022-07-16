@@ -8,8 +8,8 @@ pub(crate) mod balance;
 /// Helper functions
 pub(crate) mod helpers;
 /// The module for claiming of outputs with
-/// [`UnlockCondition`](iota_client::bee_block::output::UnlockCondition)s that aren't only
-/// [`AddressUnlockCondition`](iota_client::bee_block::output::unlock_condition::AddressUnlockCondition)
+/// [`UnlockCondition`](iota_client::block::output::UnlockCondition)s that aren't only
+/// [`AddressUnlockCondition`](iota_client::block::output::unlock_condition::AddressUnlockCondition)
 pub(crate) mod output_claiming;
 /// The module for the output consolidation
 pub(crate) mod output_consolidation;

@@ -4,7 +4,7 @@
 use std::hash::Hash;
 
 use getset::{Getters, Setters};
-use iota_client::bee_block::{address::Address, output::OutputId};
+use iota_client::block::{address::Address, output::OutputId};
 use serde::{Deserialize, Serialize};
 
 /// An account address.

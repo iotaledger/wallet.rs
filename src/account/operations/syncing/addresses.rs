@@ -5,7 +5,7 @@ use std::{collections::HashSet, str::FromStr, time::Instant};
 
 use futures::FutureExt;
 use iota_client::{
-    bee_block::{
+    block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
         payload::transaction::TransactionId,
