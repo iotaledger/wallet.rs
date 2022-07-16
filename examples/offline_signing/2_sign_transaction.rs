@@ -12,7 +12,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
     bee_block::payload::TransactionPayload,
@@ -25,7 +24,7 @@ const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_tran
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     // Setup Stronghold secret_manager
     let mut secret_manager = StrongholdSecretManager::builder()

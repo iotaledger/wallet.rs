@@ -12,7 +12,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use dotenv::dotenv;
 use iota_wallet::{
     account::types::AccountAddress,
     account_manager::AccountManager,
@@ -25,7 +24,7 @@ const ADDRESS_FILE_NAME: &str = "examples/offline_signing/addresses.json";
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     let offline_client = ClientOptions::new().with_offline_mode();
 

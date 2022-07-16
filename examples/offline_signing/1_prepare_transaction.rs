@@ -11,7 +11,6 @@ use std::{
     path::Path,
 };
 
-use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto},
     secret::{placeholder::PlaceholderSecretManager, SecretManager},
@@ -27,7 +26,7 @@ const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_
 
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     let outputs = vec![AddressWithAmount {
         // Address to which we want to send the amount.

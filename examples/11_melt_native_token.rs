@@ -7,14 +7,13 @@
 
 use std::{env, str::FromStr};
 
-use dotenv::dotenv;
 use iota_client::bee_block::output::TokenId;
 use iota_wallet::{account_manager::AccountManager, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     // Create the account manager
     let manager = AccountManager::builder().finish().await?;

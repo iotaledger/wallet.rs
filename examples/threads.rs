@@ -7,7 +7,6 @@
 
 use std::env;
 
-use dotenv::dotenv;
 use iota_client::{
     bee_block::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
@@ -24,7 +23,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?

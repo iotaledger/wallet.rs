@@ -5,7 +5,6 @@
 
 use std::{env, time::Instant};
 
-use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -16,7 +15,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;

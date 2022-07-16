@@ -5,7 +5,6 @@
 
 use std::{env, time::Instant};
 
-use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -20,7 +19,7 @@ use iota_wallet::{
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
-    dotenv().ok();
+    dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?
