@@ -9,8 +9,8 @@ pub(crate) mod transactions;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    rest_api::types::responses::OutputResponse,
     block::{Block, BlockId},
+    rest_api::types::responses::OutputResponse,
 };
 
 pub use self::options::SyncOptions;

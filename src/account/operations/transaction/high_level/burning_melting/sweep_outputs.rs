@@ -19,8 +19,8 @@ use iota_client::{
         },
         payload::transaction::TransactionId,
     },
-    rest_api::types::responses::OutputResponse,
     node_api::indexer::query_parameters::QueryParameter,
+    rest_api::types::responses::OutputResponse,
 };
 
 use crate::{
