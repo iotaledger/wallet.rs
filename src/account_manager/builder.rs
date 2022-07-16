@@ -157,7 +157,7 @@ impl AccountManagerBuilder {
                 }
             };
 
-            let client = client_options.clone().finish().await?;
+            let client = client_options.clone().finish()?;
 
             let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
 

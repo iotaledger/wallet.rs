@@ -60,8 +60,7 @@ impl AccountHandle {
                 byte_cost_config,
                 allow_burning,
                 current_time,
-            )
-            .await?;
+            )?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -90,9 +89,7 @@ impl AccountHandle {
             byte_cost_config,
             allow_burning,
             current_time,
-        )
-        .await
-        {
+        ) {
             Ok(r) => r,
             Err(iota_client::Error::ConsolidationRequired(output_count)) => {
                 #[cfg(feature = "events")]

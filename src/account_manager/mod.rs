@@ -129,7 +129,7 @@ impl AccountManager {
         *client_options = options.clone();
         drop(client_options);
 
-        let new_client = options.clone().finish().await?;
+        let new_client = options.clone().finish()?;
 
         let mut accounts = self.accounts.write().await;
         for account in accounts.iter_mut() {
@@ -164,16 +164,7 @@ impl AccountManager {
         // Try to get the Client from the first account and only build the Client if we have no account
         let node_info_wrapper = match &accounts.first() {
             Some(account) => account.client.get_info().await?,
-            None => {
-                self.client_options
-                    .read()
-                    .await
-                    .clone()
-                    .finish()
-                    .await?
-                    .get_info()
-                    .await?
-            }
+            None => self.client_options.read().await.clone().finish()?.get_info().await?,
         };
 
         Ok(node_info_wrapper)

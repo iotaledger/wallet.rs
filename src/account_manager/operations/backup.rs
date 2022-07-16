@@ -241,7 +241,7 @@ async fn read_data_from_stronghold_backup(
         log::debug!("[restore_backup] restored secret_manager");
     }
 
-    let client = account_manager.client_options.read().await.clone().finish().await?;
+    let client = account_manager.client_options.read().await.clone().finish()?;
     #[cfg(feature = "events")]
     let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
 
