@@ -201,7 +201,7 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     SyncAccount {

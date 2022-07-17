@@ -262,7 +262,7 @@ class Account:
         )
 
     def sync_account(self, options=None):
-        """Syncs the account by fetching new information from the nodes.
+        """Sync the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
         return self._call_account_method(

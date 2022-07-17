@@ -133,7 +133,7 @@ export class Account {
     }
 
     /**
-     * Consolidates basic outputs with only an `AddressUnlockCondition` from an account
+     * Consolidate basic outputs with only an `AddressUnlockCondition` from an account
      * by sending them to the same address again if the output amount is greater or
      * equal to the output consolidation threshold.
      * @param force Force consolidation on addresses where the threshold isn't met.
@@ -216,7 +216,7 @@ export class Account {
     }
 
     /**
-     * Generate an the data of an output.
+     * Get the data for an output.
      * @param outputId The output to get.
      * @returns The `OutputData`.
      */
@@ -702,7 +702,7 @@ export class Account {
     }
 
     /**
-     * Syncs the account by fetching new information from the nodes.
+     * Sync the account by fetching new information from the nodes.
      * Will also retry pending transactions if necessary.
      * @param options Optional synchronization options.
      * @returns The account balance.

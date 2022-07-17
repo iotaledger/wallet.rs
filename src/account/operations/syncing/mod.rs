@@ -32,7 +32,7 @@ impl AccountHandle {
             .await?)
     }
 
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let options = options.unwrap_or_default();

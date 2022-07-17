@@ -18,7 +18,7 @@ use crate::account::{
 };
 
 impl AccountHandle {
-    /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
+    /// Consolidate basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
     pub async fn consolidate_outputs(
         self: &AccountHandle,
