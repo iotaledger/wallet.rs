@@ -173,7 +173,7 @@ export class Account {
      * Generate new unused addresses.
      * @param amount The amount of addresses to generate.
      * @param options Options for address generation.
-     * @returns The address.
+     * @returns The addresses.
      */
     async generateAddresses(
         amount: number,
