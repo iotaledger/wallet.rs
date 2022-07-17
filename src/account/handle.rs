@@ -4,11 +4,11 @@
 use std::{ops::Deref, sync::Arc};
 
 use iota_client::{
+    api_types::responses::OutputResponse,
     block::{
         output::{FoundryId, Output, OutputId, TokenId},
         payload::transaction::{TransactionId, TransactionPayload},
     },
-    rest_api::types::responses::OutputResponse,
     secret::SecretManager,
     Client,
 };
