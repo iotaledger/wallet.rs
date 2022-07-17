@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    bee_block::{
+    block::{
         output::{
             dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
             feature::dto::FeatureDto,
@@ -105,7 +105,7 @@ pub enum AccountMethod {
         #[serde(rename = "outputConsolidationThreshold")]
         output_consolidation_threshold: Option<usize>,
     },
-    /// Generate a new unused address.
+    /// Generate new unused addresses.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
     GenerateAddresses {
         amount: u32,
@@ -166,7 +166,7 @@ pub enum AccountMethod {
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint native token.
-    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
         #[serde(rename = "nativeTokenOptions")]
         native_token_options: NativeTokenOptions,
@@ -201,7 +201,7 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
     SyncAccount {

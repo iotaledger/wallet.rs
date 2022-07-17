@@ -4,11 +4,11 @@
 use std::{ops::Deref, sync::Arc};
 
 use iota_client::{
-    bee_block::{
+    block::{
         output::{FoundryId, Output, OutputId, TokenId},
         payload::transaction::{TransactionId, TransactionPayload},
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
     secret::SecretManager,
     Client,
 };

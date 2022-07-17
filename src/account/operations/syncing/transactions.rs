@@ -7,8 +7,8 @@ use std::{
 };
 
 use iota_client::{
-    bee_block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
-    bee_rest_api::types::dtos::LedgerInclusionStateDto,
+    block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
+    rest_api::types::dtos::LedgerInclusionStateDto,
     Error as ClientError,
 };
 

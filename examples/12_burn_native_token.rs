@@ -9,7 +9,7 @@
 
 use std::{env, str::FromStr};
 
-use iota_client::bee_block::output::TokenId;
+use iota_client::block::output::TokenId;
 use iota_wallet::{account_manager::AccountManager, Result, U256};
 
 #[tokio::main]

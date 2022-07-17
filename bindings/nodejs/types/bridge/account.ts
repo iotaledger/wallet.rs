@@ -125,7 +125,7 @@ export type __ListUnspentOutputsMethod__ = {
 export type __MinimumRequiredStorageDepositMethod__ = {
     name: 'MinimumRequiredStorageDeposit';
     data: {
-        outputs: OutputTypes[];
+        output: OutputTypes;
     };
 };
 

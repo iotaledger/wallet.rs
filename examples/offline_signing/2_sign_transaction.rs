@@ -14,7 +14,7 @@ use std::{
 
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    bee_block::payload::TransactionPayload,
+    block::payload::TransactionPayload,
     secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
 };
 use iota_wallet::Result;

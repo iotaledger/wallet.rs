@@ -1,12 +1,24 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::{
-    unlock_condition::{AddressUnlockCondition, UnlockCondition},
-    BasicOutputBuilder, NativeTokensBuilder, Output,
+use iota_client::block::{
+    input::INPUT_COUNT_MAX,
+    output::{
+        unlock_condition::{AddressUnlockCondition, UnlockCondition},
+        BasicOutputBuilder, NativeTokensBuilder, Output,
+    },
 };
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::SecretManager;
+
+// Constants for the calculation of the amount of inputs we can use with a ledger nano
+#[cfg(feature = "ledger_nano")]
+const ESSENCE_SIZE_WITHOUT_IN_AND_OUTPUTS: usize = 49;
+#[cfg(feature = "ledger_nano")]
+// Input size in essence (35) + LedgerBIP32Index (8)
+const INPUT_SIZE: usize = 43;
+#[cfg(feature = "ledger_nano")]
+const MIN_OUTPUT_SIZE_IN_ESSENCE: usize = 46;
 
 #[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
@@ -18,7 +30,7 @@ use crate::account::{
 };
 
 impl AccountHandle {
-    /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
+    /// Consolidate basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
     pub async fn consolidate_outputs(
         self: &AccountHandle,
@@ -26,14 +38,15 @@ impl AccountHandle {
         output_consolidation_threshold: Option<usize>,
     ) -> crate::Result<Vec<Transaction>> {
         let account = self.read().await;
-        let output_consolidation_threshold = match output_consolidation_threshold {
-            Some(threshold) => threshold,
-            None => match *self.secret_manager.read().await {
+
+        let output_consolidation_threshold = output_consolidation_threshold.unwrap_or({
+            match &*self.secret_manager.read().await {
                 #[cfg(feature = "ledger_nano")]
                 SecretManager::LedgerNano(_) => DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD,
                 _ => DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
-            },
-        };
+            }
+        });
+
         let addresses_that_need_consolidation: Vec<&AddressWithUnspentOutputs> = account
             .addresses_with_unspent_outputs
             .iter()
@@ -78,15 +91,37 @@ impl AccountHandle {
 
         if outputs_to_consolidate.is_empty() {
             log::debug!("[OUTPUT_CONSOLIDATION] no consolidation needed");
+            return Ok(Vec::new());
         }
+
+        let max_inputs = match &*self.secret_manager.read().await {
+            #[cfg(feature = "ledger_nano")]
+            SecretManager::LedgerNano(ledger) => {
+                let ledger_status = ledger.get_ledger_status().await;
+                // With blind signing we are only limited by the protocol
+                if ledger_status.blind_signing_enabled() {
+                    INPUT_COUNT_MAX
+                } else {
+                    ledger_status
+                        .buffer_size()
+                        .map(|buffer_size| {
+                            // Calculate how many inputs we can have with this ledger, buffer size is different for
+                            // different ledger types
+                            let available_buffer_size_for_inputs =
+                                buffer_size - ESSENCE_SIZE_WITHOUT_IN_AND_OUTPUTS - MIN_OUTPUT_SIZE_IN_ESSENCE;
+                            (available_buffer_size_for_inputs / INPUT_SIZE) as u16
+                        })
+                        .unwrap_or(INPUT_COUNT_MAX)
+                }
+            }
+            _ => INPUT_COUNT_MAX,
+        };
 
         let mut consolidation_results = Vec::new();
         for outputs_on_one_address in outputs_to_consolidate {
-            // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited)
-            // and is <= max inputs
-            for outputs in outputs_on_one_address.chunks(16) {
+            for outputs in outputs_on_one_address.chunks(max_inputs.into()) {
                 let mut total_amount = 0;
-                let mut custom_inputs = Vec::with_capacity(16);
+                let mut custom_inputs = Vec::with_capacity(max_inputs.into());
                 let mut total_native_tokens = NativeTokensBuilder::new();
                 for output_data in outputs {
                     total_amount += output_data.output.amount();

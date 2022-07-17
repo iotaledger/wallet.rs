@@ -1,22 +1,23 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
-    bee_block::output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+    block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
-    handle::AccountHandle,
-    operations::helpers::time::{can_output_be_unlocked_now, is_expired},
-    types::Transaction,
-    OutputData, TransactionOptions,
+    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_now, types::Transaction, OutputData,
+    TransactionOptions,
 };
 
 /// Enum to specify which outputs should be claimed
@@ -28,6 +29,11 @@ pub enum OutputsToClaim {
     Nfts = 3,
     All = 4,
 }
+
+/// Defines how many inputs can be claimed with one transaction.
+/// This limit is needed because in addition we might need to create the double amount of outputs because of the storage
+/// deposit return and also consider the remainder output.
+const MAX_CLAIM_INPUTS: usize = 60;
 
 impl AccountHandle {
     /// Get basic and nft outputs that have [`ExpirationUnlockCondition`], [`StorageDepositReturnUnlockCondition`] or
@@ -183,14 +189,18 @@ impl AccountHandle {
         possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
-        let local_time = self.client.get_time_checked().await?;
+
+        let current_time = self.client.get_time_checked().await?;
         let byte_cost_config = self.client.get_byte_cost_config().await?;
 
-        let mut outputs_to_claim = Vec::new();
         let account = self.read().await;
+
+        let mut outputs_to_claim = Vec::new();
         for output_id in output_ids_to_claim {
             if let Some(output_data) = account.unspent_outputs.get(&output_id) {
-                outputs_to_claim.push(output_data.clone());
+                if !account.locked_outputs.contains(&output_id) {
+                    outputs_to_claim.push(output_data.clone());
+                }
             }
         }
 
@@ -207,15 +217,15 @@ impl AccountHandle {
         drop(account);
 
         let mut claim_results = Vec::new();
-        // todo: remove magic number and get a value that works for the current secret_manager (ledger is limited) and
-        // is <= max inputs
-        //
-        // Consideration: outputs with expiration and storage deposit return unlock
-        // conditions might require more outputs or maybe more additional inputs are required for the storage deposit
-        // amount, that's why I set it to 5 now, because even with duplicated output amount it will be low
-        // enough then
-        for outputs in outputs_to_claim.chunks(5) {
+        let mut additional_inputs_used = HashSet::new();
+
+        // Outputs with expiration and storage deposit return might require two outputs if there is a storage deposit
+        // return unlock condition Maybe also more additional inputs are required for the storage deposit, if we
+        // have to send the storage deposit back.
+        for outputs in outputs_to_claim.chunks(MAX_CLAIM_INPUTS) {
             let mut outputs_to_send = Vec::new();
+            // Keep track of the outputs to return, so we only create one output per address
+            let mut required_address_returns: HashMap<Address, u64> = HashMap::new();
             // Amount we get with the storage deposit return amounts already subtracted
             let mut new_amount = 0;
             let mut new_native_tokens = NativeTokensBuilder::new();
@@ -225,93 +235,69 @@ impl AccountHandle {
                     // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
                     // updated address unlock conditions
 
-                    // todo: use minimum storage deposit amount for amount
-                    let mut nft_builder = NftOutputBuilder::new_with_amount(
-                        nft_output.amount(),
-                        nft_output.nft_id().or_from_output_id(output_data.output_id),
-                    )?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        first_account_address.address.inner,
-                    )));
-                    // native tokens are added later
-                    for feature in nft_output.features().iter() {
-                        nft_builder = nft_builder.add_feature(feature.clone());
-                    }
-                    for immutable_feature in nft_output.immutable_features().iter() {
-                        nft_builder = nft_builder.add_immutable_feature(immutable_feature.clone());
-                    }
-                    outputs_to_send.push(nft_builder.finish_output()?);
+                    let nft_output = NftOutputBuilder::from(nft_output)
+                        .with_minimum_storage_deposit(byte_cost_config.clone())
+                        .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+                        .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
+                            first_account_address.address.inner,
+                        ))])
+                        // Set native tokens empty, we will collect them from all inputs later
+                        .with_native_tokens([])
+                        .finish_output()?;
+
+                    outputs_to_send.push(nft_output);
                 }
 
-                // if expired, we can send everything to us
-                // todo: check again if the expired address is in the account
-                if is_expired(&output_data.output, local_time) {
+                if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
+                    // for own output subtract the return amount
+                    new_amount += output_data.output.amount() - sdr.amount();
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        new_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    }
+
+                    // Insert for return output
+                    *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
+                } else {
                     new_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         new_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
-                } else {
-                    // if storage deposit return, we have to subtract this amount and create the return output
-                    let mut storage_deposit = false;
-                    let mut return_amount = 0;
-                    if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                        if let Some(sdr) = unlock_conditions.storage_deposit_return() {
-                            storage_deposit = true;
-                            return_amount = sdr.amount();
-                            // create return output
-                            outputs_to_send.push(
-                                BasicOutputBuilder::new_with_amount(sdr.amount())?
-                                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                        *sdr.return_address(),
-                                    )))
-                                    .finish_output()?,
-                            );
-                        }
-                    }
-                    if storage_deposit {
-                        // for own output subtract the return amount
-                        new_amount += output_data.output.amount() - return_amount;
-                        if let Some(native_tokens) = output_data.output.native_tokens() {
-                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                        }
-                    } else {
-                        new_amount += output_data.output.amount();
-                        if let Some(native_tokens) = output_data.output.native_tokens() {
-                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                        }
-                    }
                 }
             }
 
-            // Check if the new amount is enough for the storage deposit, otherwise increase it to this
             let option_native_token = if new_native_tokens.is_empty() {
                 None
             } else {
                 Some(new_native_tokens.clone().finish()?)
             };
-            let required_storage_deposit = minimum_storage_deposit(
+
+            // Check if the new amount is enough for the storage deposit, otherwise increase it to this
+            let mut required_storage_deposit = minimum_storage_deposit(
                 &byte_cost_config,
                 &first_account_address.address.inner,
                 &option_native_token,
             )?;
-            let mut additional_inputs = Vec::new();
 
+            let mut additional_inputs = Vec::new();
             if new_amount < required_storage_deposit {
                 // add more inputs
                 for output_data in &possible_additional_inputs {
                     // Recalculate every time, because new intputs can also add more native tokens, which would increase
                     // the storage deposit cost
-                    let required_storage_deposit = minimum_storage_deposit(
+                    required_storage_deposit = minimum_storage_deposit(
                         &byte_cost_config,
                         &first_account_address.address.inner,
                         &option_native_token,
                     )?;
                     if new_amount < required_storage_deposit {
-                        new_amount += output_data.output.amount();
-                        if let Some(native_tokens) = output_data.output.native_tokens() {
-                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
+                        if !additional_inputs_used.contains(&output_data.output_id) {
+                            new_amount += output_data.output.amount();
+                            if let Some(native_tokens) = output_data.output.native_tokens() {
+                                new_native_tokens.add_native_tokens(native_tokens.clone())?;
+                            }
+                            additional_inputs.push(output_data.output_id);
+                            additional_inputs_used.insert(output_data.output_id);
                         }
-                        additional_inputs.push(output_data.output_id);
                     } else {
                         // Break if we have enough inputs
                         break;
@@ -322,6 +308,14 @@ impl AccountHandle {
             // If we still don't have enough amount we can't create the output
             if new_amount < required_storage_deposit {
                 return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
+            }
+
+            for (return_address, return_amount) in required_address_returns {
+                outputs_to_send.push(
+                    BasicOutputBuilder::new_with_amount(return_amount)?
+                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(return_address)))
+                        .finish_output()?,
+                );
             }
 
             // Create output with claimed values
@@ -364,5 +358,25 @@ impl AccountHandle {
         }
 
         Ok(claim_results)
+    }
+}
+
+/// Get the `StorageDepositReturnUnlockCondition`, if not expired
+pub(crate) fn sdr_not_expired(output: &Output, current_time: u32) -> Option<&StorageDepositReturnUnlockCondition> {
+    if let Some(unlock_conditions) = output.unlock_conditions() {
+        if let Some(sdr) = unlock_conditions.storage_deposit_return() {
+            let expired = if let Some(expiration) = unlock_conditions.expiration() {
+                current_time >= expiration.timestamp()
+            } else {
+                false
+            };
+
+            // We only have to send the storage deposit return back if the output is not expired
+            if !expired { Some(sdr) } else { None }
+        } else {
+            None
+        }
+    } else {
+        None
     }
 }

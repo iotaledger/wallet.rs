@@ -1,22 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::Output;
-
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
-
-// Check if an output has an expired ExpirationUnlockCondition
-pub(crate) fn is_expired(output: &Output, current_time: u32) -> bool {
-    if let Some(unlock_conditions) = output.unlock_conditions() {
-        if let Some(expiration) = unlock_conditions.expiration() {
-            expiration.timestamp() < current_time
-        } else {
-            false
-        }
-    } else {
-        false
-    }
-}
 
 // Check if an output can be unlocked by one of the account addresses at the current time
 pub(crate) fn can_output_be_unlocked_now(

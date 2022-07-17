@@ -5,7 +5,7 @@
 
 use std::env;
 
-use iota_client::bee_block::{
+use iota_client::block::{
     address::Address,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},

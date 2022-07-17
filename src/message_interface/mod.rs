@@ -103,7 +103,7 @@ mod tests {
     use std::fs;
 
     use iota_client::{
-        bee_block::{
+        block::{
             address::Address,
             output::{
                 dto::OutputDto,

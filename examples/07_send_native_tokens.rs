@@ -7,9 +7,7 @@
 
 use std::{env, str::FromStr};
 
-use iota_wallet::{
-    account_manager::AccountManager, iota_client::bee_block::output::TokenId, AddressNativeTokens, Result,
-};
+use iota_wallet::{account_manager::AccountManager, iota_client::block::output::TokenId, AddressNativeTokens, Result};
 use primitive_types::U256;
 
 #[tokio::main]

@@ -5,7 +5,7 @@
 
 use std::{env, time::Instant};
 
-use iota_client::bee_block::output::{
+use iota_client::block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder,
 };

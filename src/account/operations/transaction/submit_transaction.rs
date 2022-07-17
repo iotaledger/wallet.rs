@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::finish_pow,
-    bee_block::{payload::Payload, BlockId},
+    block::{payload::Payload, BlockId},
 };
 
 use crate::account::{handle::AccountHandle, operations::transaction::TransactionPayload};

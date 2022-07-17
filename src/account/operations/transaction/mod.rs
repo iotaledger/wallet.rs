@@ -14,7 +14,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    bee_block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason},
+    block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason},
     secret::types::InputSigningData,
 };
 

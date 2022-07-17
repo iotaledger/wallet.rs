@@ -8,7 +8,7 @@
 use std::env;
 
 use iota_client::{
-    bee_block::output::{
+    block::output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
         BasicOutputBuilder,
     },
