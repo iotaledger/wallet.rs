@@ -15,7 +15,8 @@ use iota_client::secret::SecretManager;
 #[cfg(feature = "ledger_nano")]
 const ESSENCE_SIZE_WITHOUT_IN_AND_OUTPUTS: usize = 49;
 #[cfg(feature = "ledger_nano")]
-const INPUT_SIZE_IN_ESSENCE: usize = 43;
+// Input size in essence (35) + LedgerBIP32Index (8)
+const INPUT_SIZE: usize = 43;
 #[cfg(feature = "ledger_nano")]
 const MIN_OUTPUT_SIZE_IN_ESSENCE: usize = 46;
 
@@ -108,7 +109,7 @@ impl AccountHandle {
                             // different ledger types
                             let available_buffer_size_for_inputs =
                                 buffer_size - ESSENCE_SIZE_WITHOUT_IN_AND_OUTPUTS - MIN_OUTPUT_SIZE_IN_ESSENCE;
-                            (available_buffer_size_for_inputs / INPUT_SIZE_IN_ESSENCE) as u16
+                            (available_buffer_size_for_inputs / INPUT_SIZE) as u16
                         })
                         .unwrap_or(INPUT_COUNT_MAX)
                 }
