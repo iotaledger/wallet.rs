@@ -465,13 +465,110 @@ account.</p>
 **Kind**: global class  
 
 * [AccountManager](#AccountManager)
+    * [.backup()](#AccountManager+backup)
     * [.bech32ToHex()](#AccountManager+bech32ToHex)
+    * [.changeStrongholdPassword()](#AccountManager+changeStrongholdPassword)
+    * [.clearStrongholdPassword()](#AccountManager+clearStrongholdPassword)
+    * [.createAccount()](#AccountManager+createAccount)
+    * [.deleteAccountsAndDatabase()](#AccountManager+deleteAccountsAndDatabase)
+    * [.destroy()](#AccountManager+destroy)
+    * [.emitTestEvent()](#AccountManager+emitTestEvent)
+    * [.generateMnemonic()](#AccountManager+generateMnemonic)
+    * [.getAccount()](#AccountManager+getAccount)
+    * [.getAccounts()](#AccountManager+getAccounts)
+    * [.getNodeInfo()](#AccountManager+getNodeInfo)
+    * [.getLedgerStatus()](#AccountManager+getLedgerStatus)
     * [.hexToBech32()](#AccountManager+hexToBech32)
+    * [.isStrongholdPasswordAvailable()](#AccountManager+isStrongholdPasswordAvailable)
+    * [.listen()](#AccountManager+listen)
+    * [.clearListeners()](#AccountManager+clearListeners)
+    * [.recoverAccounts()](#AccountManager+recoverAccounts)
+    * [.removeLatestAccount()](#AccountManager+removeLatestAccount)
+    * [.restoreBackup()](#AccountManager+restoreBackup)
+    * [.setClientOptions()](#AccountManager+setClientOptions)
+    * [.setStrongholdPassword()](#AccountManager+setStrongholdPassword)
+    * [.setStrongholdPasswordClearInterval()](#AccountManager+setStrongholdPasswordClearInterval)
+    * [.startBackgroundSync()](#AccountManager+startBackgroundSync)
+    * [.stopBackgroundSync()](#AccountManager+stopBackgroundSync)
+    * [.storeMnemonic()](#AccountManager+storeMnemonic)
+    * [.verifyMnemonic()](#AccountManager+verifyMnemonic)
 
+<a name="AccountManager+backup"></a>
+
+### accountManager.backup()
+<p>Backup the data to a Stronghold snapshot.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
 <a name="AccountManager+bech32ToHex"></a>
 
 ### accountManager.bech32ToHex()
 <p>Transform a bech32 encoded address to a hex encoded address</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+changeStrongholdPassword"></a>
+
+### accountManager.changeStrongholdPassword()
+<p>Change the Stronghold password.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+clearStrongholdPassword"></a>
+
+### accountManager.clearStrongholdPassword()
+<p>Clear the Stronghold password from memory.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+createAccount"></a>
+
+### accountManager.createAccount()
+<p>Create a new account.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+deleteAccountsAndDatabase"></a>
+
+### accountManager.deleteAccountsAndDatabase()
+<p>Delete all accounts and the database folder.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+destroy"></a>
+
+### accountManager.destroy()
+<p>Destroy the AccountManager and drop it's database connection.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+emitTestEvent"></a>
+
+### accountManager.emitTestEvent()
+<p>Emit a provided event for testing of the event system.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+generateMnemonic"></a>
+
+### accountManager.generateMnemonic()
+<p>Generate a random BIP39 mnemonic.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+getAccount"></a>
+
+### accountManager.getAccount()
+<p>Get an account by it's alias or index.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+getAccounts"></a>
+
+### accountManager.getAccounts()
+<p>Get all accounts.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+getNodeInfo"></a>
+
+### accountManager.getNodeInfo()
+<p>Get the node info.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+getLedgerStatus"></a>
+
+### accountManager.getLedgerStatus()
+<p>Get the status for a Ledger Nano.</p>
 
 **Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
 <a name="AccountManager+hexToBech32"></a>
@@ -480,6 +577,84 @@ account.</p>
 <p>Transform hex encoded address to bech32 encoded address. If no bech32Hrp
 is provided, the AccountManager will attempt to retrieve it from the
 NodeInfo. If this does not succeed, it will default to the Shimmer testnet bech32Hrp.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+isStrongholdPasswordAvailable"></a>
+
+### accountManager.isStrongholdPasswordAvailable()
+<p>Check if the Stronghold password has been set.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+listen"></a>
+
+### accountManager.listen()
+<p>Listen to wallet events with a callback. An empty array will listen to all possible events.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+clearListeners"></a>
+
+### accountManager.clearListeners()
+<p>Clear the callbacks for provided events. An empty array will clear all listeners.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+recoverAccounts"></a>
+
+### accountManager.recoverAccounts()
+<p>Find accounts with unspent outputs.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+removeLatestAccount"></a>
+
+### accountManager.removeLatestAccount()
+<p>Delete the latest account.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+restoreBackup"></a>
+
+### accountManager.restoreBackup()
+<p>Restore a backup from a Stronghold snapshot.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+setClientOptions"></a>
+
+### accountManager.setClientOptions()
+<p>Set ClientOptions.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+setStrongholdPassword"></a>
+
+### accountManager.setStrongholdPassword()
+<p>Set the Stronghold password.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+setStrongholdPasswordClearInterval"></a>
+
+### accountManager.setStrongholdPasswordClearInterval()
+<p>Set the interval after which the Stronghold password gets cleared from memory.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+startBackgroundSync"></a>
+
+### accountManager.startBackgroundSync()
+<p>Start the background syncing process for all accounts.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+stopBackgroundSync"></a>
+
+### accountManager.stopBackgroundSync()
+<p>Stop the background syncing process for all accounts.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+storeMnemonic"></a>
+
+### accountManager.storeMnemonic()
+<p>Store a mnemonic in the Stronghold snapshot.</p>
+
+**Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
+<a name="AccountManager+verifyMnemonic"></a>
+
+### accountManager.verifyMnemonic()
+<p>Verify if a mnemonic is a valid BIP39 mnemonic.</p>
 
 **Kind**: instance method of [<code>AccountManager</code>](#AccountManager)  
 <a name="initLogger"></a>
