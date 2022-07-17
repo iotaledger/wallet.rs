@@ -5,7 +5,7 @@ use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
     api::input_selection::{try_select_inputs, types::SelectedTransactionData},
-    bee_block::{
+    block::{
         address::Address,
         input::INPUT_COUNT_MAX,
         output::{ByteCostConfig, Output, OutputId},
@@ -60,8 +60,7 @@ impl AccountHandle {
                 byte_cost_config,
                 allow_burning,
                 current_time,
-            )
-            .await?;
+            )?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -90,9 +89,7 @@ impl AccountHandle {
             byte_cost_config,
             allow_burning,
             current_time,
-        )
-        .await
-        {
+        ) {
             Ok(r) => r,
             Err(iota_client::Error::ConsolidationRequired(output_count)) => {
                 #[cfg(feature = "events")]

@@ -9,8 +9,8 @@ pub(crate) mod transactions;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use iota_client::{
-    bee_block::{Block, BlockId},
-    bee_rest_api::types::responses::OutputResponse,
+    block::{Block, BlockId},
+    rest_api::types::responses::OutputResponse,
 };
 
 pub use self::options::SyncOptions;
@@ -32,7 +32,7 @@ impl AccountHandle {
             .await?)
     }
 
-    /// Syncs the account by fetching new information from the nodes. Will also retry pending transactions
+    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
         let options = options.unwrap_or_default();

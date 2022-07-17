@@ -12,7 +12,7 @@ use iota_wallet::{
         Address as AddressRust, AddressBuilder as AddressBuilderRust, AddressOutput as AddressOutputRust,
         AddressWrapper, OutputKind,
     },
-    iota_client::bee_block::{payload::transaction::TransactionId, prelude::OutputId},
+    iota_client::block::{payload::transaction::TransactionId, prelude::OutputId},
     message::BlockId,
 };
 

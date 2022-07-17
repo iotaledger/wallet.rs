@@ -34,7 +34,7 @@ use iota_wallet::{
     },
     client::Api,
     iota_client::{
-        bee_block::payload::{
+        block::payload::{
             milestone::MilestoneId,
             transaction::TransactionId,
         },

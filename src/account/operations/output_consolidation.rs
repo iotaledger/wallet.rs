@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::output::{
+use iota_client::block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder, NativeTokensBuilder, Output,
 };
@@ -18,7 +18,7 @@ use crate::account::{
 };
 
 impl AccountHandle {
-    /// Consolidates basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
+    /// Consolidate basic outputs with only an [AddressUnlockCondition] from an account by sending them to the same
     /// address again if the output amount is >= the output_consolidation_threshold
     pub async fn consolidate_outputs(
         self: &AccountHandle,

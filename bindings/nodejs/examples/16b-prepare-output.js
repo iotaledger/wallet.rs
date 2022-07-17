@@ -16,10 +16,16 @@ async function run() {
 
         const output = await account.prepareOutput({
             recipientAddress,
-            amount
+            amount,
         });
+        const minimumRequiredStorageDeposit =
+            await account.minimumRequiredStorageDeposit(output);
 
-        console.log(output);
+        console.log('Output:', output);
+        console.log(
+            'Minimum required storage deposit:',
+            minimumRequiredStorageDeposit,
+        );
     } catch (error) {
         console.log('Error: ' + error);
     }

@@ -7,7 +7,7 @@ use std::time::Instant;
 use iota_client::api::PreparedTransactionDataDto;
 use iota_client::{
     api::{input_selection::types::SelectedTransactionData, PreparedTransactionData},
-    bee_block::{
+    block::{
         input::{Input, UtxoInput},
         output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
         payload::{

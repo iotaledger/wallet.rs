@@ -7,8 +7,8 @@ use std::{
 };
 
 use iota_client::{
-    bee_block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
-    bee_rest_api::types::dtos::LedgerInclusionStateDto,
+    block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
+    rest_api::types::dtos::LedgerInclusionStateDto,
     Error as ClientError,
 };
 
@@ -150,8 +150,7 @@ impl AccountHandle {
                                     transaction,
                                     &mut updated_transactions,
                                     &mut output_ids_to_unlock,
-                                )
-                                .await?;
+                                )?;
                             } else {
                                 let time_now = SystemTime::now()
                                     .duration_since(UNIX_EPOCH)
@@ -173,8 +172,7 @@ impl AccountHandle {
                                 transaction,
                                 &mut updated_transactions,
                                 &mut output_ids_to_unlock,
-                            )
-                            .await?;
+                            )?;
                         } else {
                             let time_now = SystemTime::now()
                                 .duration_since(UNIX_EPOCH)
@@ -238,7 +236,7 @@ fn updated_transaction_and_outputs(
 
 // When a transaction got pruned, the inputs and outputs are also not available, then this could mean that it was
 // confirmed and the created outputs got also already spent and pruned or the inputs got spent in another transaction
-async fn process_transaction_with_unknown_state(
+fn process_transaction_with_unknown_state(
     account: &Account,
     mut transaction: Transaction,
     updated_transactions: &mut Vec<Transaction>,

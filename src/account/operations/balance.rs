@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::bee_block::output::{unlock_condition::UnlockCondition, ByteCost, NativeTokensBuilder, Output};
+use iota_client::block::output::{unlock_condition::UnlockCondition, ByteCost, NativeTokensBuilder, Output};
 use primitive_types::U256;
 
 use crate::account::{

@@ -11,13 +11,13 @@ use std::{collections::HashMap, str::FromStr};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    bee_block::{
+    block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, AliasId, FoundryId, NftId, Output, OutputId, TokenId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
-    bee_rest_api::types::responses::OutputMetadataResponse,
+    rest_api::types::responses::OutputMetadataResponse,
     secret::types::{InputSigningData, OutputMetadata},
 };
 use primitive_types::U256;
@@ -208,6 +208,7 @@ pub struct Transaction {
     pub network_id: u64,
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
+    pub note: Option<String>,
 }
 
 /// Dto for a transaction with metadata
@@ -230,6 +231,7 @@ pub struct TransactionDto {
     pub network_id: String,
     /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
+    pub note: Option<String>,
 }
 
 impl From<&Transaction> for TransactionDto {
@@ -242,6 +244,7 @@ impl From<&Transaction> for TransactionDto {
             transaction_id: value.transaction_id,
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
+            note: value.note.clone(),
         }
     }
 }

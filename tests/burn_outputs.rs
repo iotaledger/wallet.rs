@@ -4,7 +4,7 @@
 use std::time::Duration;
 
 use iota_client::{
-    bee_block::output::{NftId, OutputId},
+    block::output::{NftId, OutputId},
     request_funds_from_faucet,
 };
 use iota_wallet::{

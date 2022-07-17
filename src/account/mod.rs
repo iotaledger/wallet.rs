@@ -18,11 +18,11 @@ use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
 use iota_client::{
-    bee_block::{
+    block::{
         output::OutputId,
         payload::{transaction::TransactionId, TransactionPayload},
     },
-    bee_rest_api::types::responses::OutputResponse,
+    rest_api::types::responses::OutputResponse,
 };
 use serde::{Deserialize, Serialize};
 

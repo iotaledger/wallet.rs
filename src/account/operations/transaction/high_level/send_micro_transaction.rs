@@ -3,7 +3,7 @@
 
 use iota_client::{
     api::PreparedTransactionData,
-    bee_block::{
+    block::{
         address::Address,
         output::{
             unlock_condition::{
@@ -116,7 +116,7 @@ impl AccountHandle {
                         StorageDepositReturnUnlockCondition::new(return_address.address.inner, storage_deposit_amount)?,
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
-                        address,
+                        return_address.address.inner,
                         expiration_time,
                     )?))
                     .finish_output()?,

@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::bee_block::{
+use iota_client::block::{
     address::Address,
     output::{
         unlock_condition::{

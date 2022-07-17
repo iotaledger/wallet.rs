@@ -5,7 +5,7 @@ use std::time::Instant;
 
 use iota_client::{
     api::PreparedTransactionData,
-    bee_block::{
+    block::{
         input::INPUT_COUNT_RANGE,
         output::{Output, OUTPUT_COUNT_RANGE},
     },
@@ -39,9 +39,9 @@ impl AccountHandle {
 
         // validate amounts
         if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
-            return Err(crate::Error::BeeBlock(
-                iota_client::bee_block::Error::InvalidOutputCount(TryIntoBoundedU16Error::Truncated(outputs.len())),
-            ));
+            return Err(crate::Error::Block(iota_client::block::Error::InvalidOutputCount(
+                TryIntoBoundedU16Error::Truncated(outputs.len()),
+            )));
         }
 
         let custom_inputs: Option<Vec<InputSigningData>> = {
@@ -49,11 +49,9 @@ impl AccountHandle {
                 // validate inputs amount
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(crate::Error::BeeBlock(
-                            iota_client::bee_block::Error::InvalidInputCount(TryIntoBoundedU16Error::Truncated(
-                                inputs.len(),
-                            )),
-                        ));
+                        return Err(crate::Error::Block(iota_client::block::Error::InvalidInputCount(
+                            TryIntoBoundedU16Error::Truncated(inputs.len()),
+                        )));
                     }
                     let current_time = self.client.get_time_checked().await?;
                     let bech32_hrp = self.client.get_bech32_hrp().await?;

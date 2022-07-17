@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::{
-    bee_block::address::Address,
+    block::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
@@ -106,7 +106,7 @@ impl AccountBuilder {
             }
         }
 
-        let client = self.client_options.read().await.clone().finish().await?;
+        let client = self.client_options.read().await.clone().finish()?;
 
         // If addresses are provided we will use them directly without the additional checks, because then we assume
         // that it's for offline signing and the secretManager can't be used
