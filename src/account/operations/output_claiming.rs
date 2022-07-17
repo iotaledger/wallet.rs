@@ -1,13 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use iota_client::{
     api::input_selection::minimum_storage_deposit,
-    block::output::{
-        unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+    block::{
+        address::Address,
+        output::{
+            unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -221,6 +224,8 @@ impl AccountHandle {
         // have to send the storage deposit back.
         for outputs in outputs_to_claim.chunks(MAX_CLAIM_INPUTS) {
             let mut outputs_to_send = Vec::new();
+            // Keep track of the outputs to return, so we only create one output per address
+            let mut required_address_returns: HashMap<Address, u64> = HashMap::new();
             // Amount we get with the storage deposit return amounts already subtracted
             let mut new_amount = 0;
             let mut new_native_tokens = NativeTokensBuilder::new();
@@ -250,14 +255,8 @@ impl AccountHandle {
                         new_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
 
-                    // create return output
-                    outputs_to_send.push(
-                        BasicOutputBuilder::new_with_amount(sdr.amount())?
-                            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                                *sdr.return_address(),
-                            )))
-                            .finish_output()?,
-                    );
+                    // Insert for return output
+                    *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
                 } else {
                     new_amount += output_data.output.amount();
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -309,6 +308,14 @@ impl AccountHandle {
             // If we still don't have enough amount we can't create the output
             if new_amount < required_storage_deposit {
                 return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
+            }
+
+            for (return_address, return_amount) in required_address_returns {
+                outputs_to_send.push(
+                    BasicOutputBuilder::new_with_amount(return_amount)?
+                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(return_address)))
+                        .finish_output()?,
+                );
             }
 
             // Create output with claimed values
