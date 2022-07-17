@@ -3,8 +3,14 @@
 
 import type { MessageHandler } from './MessageHandler';
 // @ts-ignore: path is set to match runtime transpiled js path
-import { initLogger as internalInitLogger, sendMessage, messageHandlerNew, listen, clearListeners, destroy } from '../../index.node';
-
+import {
+    initLogger as internalInitLogger,
+    sendMessage,
+    messageHandlerNew,
+    listen,
+    clearListeners,
+    destroy,
+} from '../../index.node';
 
 const sendMessageAsync = (
     message: string,

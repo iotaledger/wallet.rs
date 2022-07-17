@@ -11,6 +11,7 @@ export * from './Account';
 export * from '../types';
 
 /** Function to create wallet logs */
-const initLogger = (config: LoggerConfig) => internalInitLogger(JSON.stringify(config));
+const initLogger = (config: LoggerConfig) =>
+    internalInitLogger(JSON.stringify(config));
 
 export { initLogger };
