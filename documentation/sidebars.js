@@ -37,9 +37,32 @@ module.exports = {
               label: 'Getting Started'
             },
             {
-              type: 'doc',
-              id: 'libraries/rust/examples',
-              label: 'Examples'
+              type: 'category',
+              label: 'How To',
+              items: [
+                {
+                  type: 'category',
+                  label: 'Account Manager',
+                  items: [
+                    {
+                      type: 'doc',
+                      id: 'libraries/rust/how_to/account_manager/create_accounts',
+                      label: 'Create Accounts',
+                    },
+                  ]
+                },
+                {
+                  type: 'category',
+                  label: 'Account',
+                  items: [
+                    {
+                      type: 'doc',
+                      id: 'libraries/rust/how_to/account/generate_list_addresses',
+                      label: 'Generate And List Addresses',
+                    },
+                  ]
+                }
+              ]
             },
             {
               type: 'doc',
