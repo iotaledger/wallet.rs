@@ -106,6 +106,7 @@ pub enum Response {
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionDto>),
+    /// Response for
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
     MintTokenTransaction(MintTokenTransactionDto),
     /// Response for
