@@ -5,11 +5,11 @@ use std::str::FromStr;
 
 use iota_client::{
     api::ClientBlockBuilder,
+    api_types::responses::OutputResponse,
     block::{
         output::{Output, OutputId},
         payload::transaction::TransactionId,
     },
-    rest_api::types::responses::OutputResponse,
     Client,
 };
 

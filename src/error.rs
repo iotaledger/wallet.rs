@@ -49,7 +49,7 @@ pub enum Error {
     BlockDtoError(#[from] iota_client::block::DtoError),
     /// Rest api error
     #[error("{0}")]
-    RestApiError(#[from] iota_client::rest_api::types::error::Error),
+    RestApiError(#[from] iota_client::api_types::error::Error),
     /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
     BackupError(&'static str),
