@@ -92,7 +92,7 @@ You can read more about [backup and security in this guide](https://wiki.iota.or
 npm install @iota/wallet dotenv
 ```
 
-#### 1.1 Generate a mnemonic
+#### 1 Generate a mnemonic
 
 <CodeBlock className="language-javascript">
   {generate_mnemonic}
@@ -129,7 +129,7 @@ Keep the `stronghold` password and the `stronghold` database on separate devices
 
 :::
 
-#### 1.2 Create an account
+#### 2 Create an account
 
 You can import the Wallet Library and create an account manager using the following example:
 
@@ -137,15 +137,11 @@ You can import the Wallet Library and create an account manager using the follow
   {create_account}
 </CodeBlock>
 
-### 2. Create an Account For a User
-
-Once you have created the backend storage, you can create individual accounts for users.
-
 The `Alias` must be unique and can be whatever fits your use case. The `Alias` is typically used to identify an account later on. Each account is also represented by an `index` which is incremented by one every time a new account is created. You can refer to any account via its `index`, or `alias`.
 
 You get an instance of any created account using `AccountManager.getAccount(accountId|alias)` or get all accounts with `AccountManager.getAccounts()`.
 
-The most common methods of `account` instance include:
+Common methods of `account` instance include:
 
 * `account.listAddresses()` - returns list of addresses related to the account.
 * `account.generateAddress()` - generate a new address for the address index incremented by 1.
@@ -228,6 +224,7 @@ Default options are fine and successful; however, you can provide additional opt
 
 * `changeAddress`: Send the remainder value to an internal address.
 * `reuseAddress`: Send the remainder value back to its original address.
+* `customAddress`: Send the remainder value back to a provided account address.
 
 ```json
 TransactionOptions {
