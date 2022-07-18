@@ -10,6 +10,7 @@ keywords:
 - NodeJS
 - explanation
 ---
+
 import CodeBlock from '@theme/CodeBlock';
 import generate_mnemonic from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/1-generate-mnemonic.js';
 import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/2-create-account.js';
