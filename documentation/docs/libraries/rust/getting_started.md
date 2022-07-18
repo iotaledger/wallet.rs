@@ -13,7 +13,7 @@ keywords:
 
  _Rust_ and _Cargo_ are required to use wallet.rs. You can find installation instructions in the [Rust documentation](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
-We recommend you update _Rust_ to the latest stable version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date). The nightly version should be fine, but there is a chance some changes are not compatible.
+We recommend you update _Rust_ to the latest stable version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date).
 
 ### Dependencies
 
