@@ -95,7 +95,7 @@ export class AccountManager {
     }
 
     /**
-     * Destroy the AccountManager and drop it's database connection.
+     * Destroy the AccountManager and drop its database connection.
      */
     destroy(): void {
         this.messageHandler.destroy();
