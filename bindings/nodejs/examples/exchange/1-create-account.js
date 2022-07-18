@@ -28,7 +28,6 @@ async function run() {
         // Mnemonic only needs to be set the first time
         await manager.storeMnemonic(process.env.MNEMONIC);
 
-        // The coin type only needs to be set on the first account
         const account = await manager.createAccount({
             alias: 'Alice',
             coinType: CoinType.IOTA,
