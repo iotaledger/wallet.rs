@@ -122,7 +122,7 @@ export class AccountManager {
     }
 
     /**
-     * Get an account by it's alias or index.
+     * Get an account by its alias or index.
      */
     async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
