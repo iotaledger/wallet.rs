@@ -16,7 +16,7 @@ use log::LevelFilter;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
+    // Generates a wallet.log file with logs for debugging.
     let logger_output_config = LoggerOutputConfigBuilder::new()
         .name("wallet.log")
         .target_exclusions(&["h2", "hyper", "rustls"])
@@ -38,12 +38,12 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "logger";
     let account = match manager.get_account(account_alias).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())

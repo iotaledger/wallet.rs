@@ -24,7 +24,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -42,12 +42,12 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "ping";
     let ping_account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -59,7 +59,7 @@ async fn main() -> Result<()> {
     let pong_account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
     };
 
     let amount_addresses = 5;
-    // generate addresses so we find all funds
+    // generate addresses so we find all funds.
     if pong_account.list_addresses().await?.len() < amount_addresses {
         pong_account
             .generate_addresses(
@@ -80,7 +80,7 @@ async fn main() -> Result<()> {
     }
     let balance = ping_account.sync(None).await?;
     println!("Balance: {:?}", balance);
-    // generate addresses from the second account to which we will send funds
+    // generate addresses from the second account to which we will send funds.
     let ping_addresses = {
         let mut addresses = ping_account.list_addresses().await?;
         if addresses.len() < amount_addresses {
@@ -102,9 +102,9 @@ async fn main() -> Result<()> {
             let ping_addresses_ = ping_addresses.clone();
             threads.push(async move {
                 tokio::spawn(async move {
-                    // send transaction
+                    // send transaction.
                     let outputs = vec![
-                        // send one or two Mi for more different transactions
+                        // send one or two Mi for more different transactions.
                         BasicOutputBuilder::new_with_amount(n * 1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 *ping_addresses_[address_index % amount_addresses].address().as_ref(),
@@ -132,7 +132,7 @@ async fn main() -> Result<()> {
         }
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
     }
-    // wait until user press enter so background tasks keep running
+    // wait until user press enter so background tasks keep running.
     let mut input = String::new();
     std::io::stdin().read_line(&mut input).unwrap();
     Ok(())

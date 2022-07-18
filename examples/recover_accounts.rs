@@ -14,7 +14,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
     }
     println!("Accounts len: {:?}", accounts.len());
 
-    // get latest account
+    // get latest account.
     let account = &accounts[accounts.len() - 1];
     let now = Instant::now();
     let balance = account.sync(None).await?;

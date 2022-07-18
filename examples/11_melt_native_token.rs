@@ -12,19 +12,19 @@ use iota_wallet::{account_manager::AccountManager, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
-    // Create the account manager
+    // Create the account manager.
     let manager = AccountManager::builder().finish().await?;
 
-    // Get the account we generated with `01_create_wallet`
+    // Get the account we generated with `01_create_wallet`.
     let account = manager.get_account("Alice").await?;
 
     let balance = account.balance().await?;
     println!("Balance before melting:\n{balance:?}",);
 
-    // Set the stronghold password
+    // Set the stronghold password.
     manager
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
     // available.
     let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
 
-    // Melt some of the circulating supply
+    // Melt some of the circulating supply.
     let melt_amount = U256::from(10);
     let transaction = account.melt_native_token((token_id, melt_amount), None).await?;
 

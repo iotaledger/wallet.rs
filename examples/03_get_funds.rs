@@ -12,13 +12,13 @@ use iota_wallet::{account_manager::AccountManager, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
-    // Create the account manager
+    // Create the account manager.
     let manager = AccountManager::builder().finish().await?;
 
-    // Get the account we generated with `01_create_wallet`
+    // Get the account we generated with `01_create_wallet`.
     let account = manager.get_account("Alice").await?;
 
     let address = account.list_addresses().await?;

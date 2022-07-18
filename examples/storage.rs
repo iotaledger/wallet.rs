@@ -14,7 +14,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let secret_manager =
@@ -32,12 +32,12 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "logger";
     let account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())

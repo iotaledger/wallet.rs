@@ -18,7 +18,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -37,12 +37,12 @@ async fn main() -> Result<()> {
 
     println!("{:?}", manager.get_ledger_status().await?);
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "ledger";
     let account = match manager.get_account(account_alias).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
-    // send transaction
+    // send transaction.
     let outputs = vec![AddressWithAmount {
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         amount: 1_000_000,

@@ -15,13 +15,13 @@ const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_tran
 async fn main() -> Result<()> {
     let signed_transaction_data = read_signed_transaction_from_file(SIGNED_TRANSACTION_FILE_NAME)?;
 
-    // Create the account manager with the secret_manager and client options
+    // Create the account manager with the secret_manager and client options.
     let manager = AccountManager::builder()
         .with_storage_path("examples/offline_signing/online_walletdb")
         .finish()
         .await?;
 
-    // Create a new account
+    // Create a new account.
     let account = manager.get_account("Alice").await?;
 
     // Sends offline signed transaction online.

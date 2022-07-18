@@ -12,16 +12,16 @@ use primitive_types::U256;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
-    // Create the account manager
+    // Create the account manager.
     let manager = AccountManager::builder().finish().await?;
 
-    // Get the account we generated with `01_create_wallet`
+    // Get the account we generated with `01_create_wallet`.
     let account = manager.get_account("Alice").await?;
 
-    // Set the stronghold password
+    // Set the stronghold password.
     manager
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     let outputs = vec![AddressNativeTokens {
         address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
         native_tokens: vec![(
-            // Replace with a TokenId that is available in the account
+            // Replace with a TokenId that is available in the account.
             TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?,
             U256::from(10),
         )],

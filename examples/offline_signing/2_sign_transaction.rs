@@ -26,12 +26,12 @@ const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_tran
 async fn main() -> Result<()> {
     dotenv::dotenv().ok();
 
-    // Setup Stronghold secret_manager
+    // Setup Stronghold secret_manager.
     let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .try_build(PathBuf::from("examples/offline_signing/offline_signing.stronghold"))?;
 
-    // Load snapshot file
+    // Load snapshot file.
     secret_manager.read_stronghold_snapshot().await?;
 
     let prepared_transaction_data = read_prepared_transaction_from_file(PREPARED_TRANSACTION_FILE_NAME)?;

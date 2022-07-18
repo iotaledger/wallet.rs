@@ -25,7 +25,7 @@ const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_
 #[tokio::main]
 
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let outputs = vec![AddressWithAmount {
@@ -42,7 +42,7 @@ async fn main() -> Result<()> {
         .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    // Create the account manager with the secret_manager and client options
+    // Create the account manager with the secret_manager and client options.
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Placeholder(PlaceholderSecretManager))
         .with_client_options(client_options.clone())
@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Create a new account
+    // Create a new account.
     let account = manager
         .create_account()
         .with_alias("Alice".to_string())
@@ -58,7 +58,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Sync the account to get the outputs for the addresses
+    // Sync the account to get the outputs for the addresses.
     account.sync(None).await?;
 
     let prepared_transaction = account.prepare_send_amount(outputs.clone(), None).await?;

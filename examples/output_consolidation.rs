@@ -13,21 +13,21 @@ use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
-    // Create the account manager
+    // Create the account manager.
     let manager = AccountManager::builder()
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()
         .await?;
 
-    // Get the account we generated with `01_create_wallet`
+    // Get the account we generated with `01_create_wallet`.
     let account = manager.get_account("Alice").await?;
 
     // Set the stronghold password
@@ -35,7 +35,7 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Sync account to make sure account is updated with outputs from previous examples
+    // Sync account to make sure account is updated with outputs from previous examples.
     let _ = account.sync(None).await?;
 
     // List unspent outputs before consolidation.
@@ -54,8 +54,8 @@ async fn main() -> Result<()> {
         )
     });
 
-    // Consolidate unspent outputs and print the consolidation transaction IDs
-    // Set `force` to true to force the consolidation even though the `output_consolidation_threshold` isn't reached
+    // Consolidate unspent outputs and print the consolidation transaction IDs.
+    // Set `force` to true to force the consolidation even though the `output_consolidation_threshold` isn't reached.
     let consolidation = account.consolidate_outputs(true, None).await?;
     println!(
         "Consolidation transaction ids:\n{:?}\n",
@@ -65,13 +65,13 @@ async fn main() -> Result<()> {
             .collect::<Vec<TransactionId>>()
     );
 
-    // Wait for the consolidation transactions
+    // Wait for the consolidation transactions.
     tokio::time::sleep(std::time::Duration::from_secs(15)).await;
 
-    // Sync account
+    // Sync account.
     let _ = account.sync(None).await?;
 
-    // Outputs after consolidation
+    // Outputs after consolidation.
     let outputs = account.list_unspent_outputs().await?;
     println!("Outputs after consolidation:");
     outputs.iter().for_each(|output_data| {

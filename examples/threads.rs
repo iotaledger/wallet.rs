@@ -22,7 +22,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -39,12 +39,12 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "thread_account";
     let account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -53,7 +53,7 @@ async fn main() -> Result<()> {
         }
     };
 
-    // One address gets generated during account creation
+    // One address gets generated during account creation.
     let address = account.list_addresses().await?[0].address().clone();
     println!("{}", address.to_bech32());
 
@@ -72,12 +72,12 @@ async fn main() -> Result<()> {
 
             threads.push(async move {
                 tokio::spawn(async move {
-                    // send transaction
+                    // send transaction.
                     let outputs = vec![
                         BasicOutputBuilder::new_with_amount(1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address_)))
                             .finish_output()?;
-                        // amount of outputs in the transaction (one additional output might be added for the remaining amount)
+                        // amount of outputs in the transaction (one additional output might be added for the remaining amount).
                         1
                     ];
                     let tx = account_.send(outputs, None).await?;
@@ -99,7 +99,7 @@ async fn main() -> Result<()> {
         for thread in results {
             if let Err(e) = thread {
                 println!("{e}");
-                // Sync when getting an error, because that's probably when no outputs are available anymore
+                // Sync when getting an error, because that's probably when no outputs are available anymore.
                 println!("Syncing account...");
                 account.sync(None).await?;
             }

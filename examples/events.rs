@@ -21,7 +21,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -44,12 +44,12 @@ async fn main() -> Result<()> {
         })
         .await;
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "event_account";
     let account = match manager.get_account(account_alias.to_string()).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // first we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -63,14 +63,12 @@ async fn main() -> Result<()> {
     let balance = account.sync(None).await?;
     println!("Balance: {:?}", balance);
 
-    // send transaction
-    let outputs = vec![
-        BasicOutputBuilder::new_with_amount(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
-            )))
-            .finish_output()?,
-    ];
+    // send transaction.
+    let outputs = vec![BasicOutputBuilder::new_with_amount(1_000_000)?
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+            Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
+        )))
+        .finish_output()?];
 
     let transaction = account.send(outputs, None).await?;
 

@@ -11,16 +11,16 @@ use iota_wallet::{account_manager::AccountManager, AddressWithMicroAmount, Resul
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
-    // Create the account manager
+    // Create the account manager.
     let manager = AccountManager::builder().finish().await?;
 
-    // Get the account we generated with `01_create_wallet`
+    // Get the account we generated with `01_create_wallet`.
     let account = manager.get_account("Alice").await?;
 
-    // Set the stronghold password
+    // Set the stronghold password.
     manager
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;

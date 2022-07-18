@@ -23,22 +23,22 @@ const ADDRESS_FILE_NAME: &str = "examples/offline_signing/addresses.json";
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv::dotenv().ok();
 
     let offline_client = ClientOptions::new().with_offline_mode();
 
-    // Setup Stronghold secret_manager
+    // Setup Stronghold secret_manager.
     let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .try_build(PathBuf::from("examples/offline_signing/offline_signing.stronghold"))?;
     // Only required the first time, can also be generated with `manager.generate_mnemonic()?`
     let mnemonic = env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
 
-    // The mnemonic only needs to be stored the first time
+    // The mnemonic only needs to be stored the first time.
     secret_manager.store_mnemonic(mnemonic).await?;
 
-    // Create the account manager with the secret_manager and client options
+    // Create the account manager with the secret_manager and client options.
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .with_client_options(offline_client)
@@ -46,7 +46,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    // Create a new account
+    // Create a new account.
     let account = manager
         .create_account()
         .with_alias("Alice".to_string())
