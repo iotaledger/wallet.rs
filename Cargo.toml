@@ -13,21 +13,21 @@ categories = [ "cryptography::cryptocurrencies" ]
 
 [dependencies]
 async-trait = { version = "0.1.56", default-features = false }
-backtrace = { version = "0.3.65", default-features = false, features = [ "std" ] }
+backtrace = { version = "0.3.66", default-features = false, features = [ "std" ] }
 futures = { version = "0.3.21", default-features = false }
 getset = { version = "0.1.2", default-features = false }
 hex = { version = "0.4.3", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "394f4bc9fdd1edaec46e826daabdeb4d65581211", default-features = false, features = [ "message_interface", "tls" ] }
-iota-crypto = { version = "0.12.1", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "d090915dc94d6efa5d9c28ea8de1c13fc9e722ce", default-features = false, features = [ "message_interface", "tls" ] }
+iota-crypto = { version = "0.13.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
-packable = { version = "0.4.0", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.5.0", default-features = false, features = [ "serde", "primitive-types" ] }
 primitive-types = { version = "0.11.1", default-features = false }
 rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = [ "lz4" ], optional = true }
-serde = { version = "1.0.137", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.81", default-features = false }
+serde = { version = "1.0.139", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.82", default-features = false }
 thiserror = { version = "1.0.31", default-features = false }
-tokio = { version = "1.19.2", default-features = false }
-zeroize = { version = "1.5.5", default-features = false, features = [ "zeroize_derive" ] }
+tokio = { version = "1.20.0", default-features = false }
+zeroize = { version = "1.5.6", default-features = false, features = [ "zeroize_derive" ] }
 
 [dev-dependencies]
 dotenv = { version =  "0.15.0", default-features = false }
