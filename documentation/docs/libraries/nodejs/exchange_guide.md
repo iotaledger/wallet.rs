@@ -12,12 +12,12 @@ keywords:
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import generate_mnemonic from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/1-generate-mnemonic.js';
-import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/2-create-account.js';
-import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/3-generate-address.js';
-import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/4-check-balance.js';
-import listen_events from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/5-listen-events.js';
-import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/6-send-amount.js';
+import generate_mnemonic from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/0-generate-mnemonic.js';
+import create_account from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/1-create-account.js';
+import generate_address from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/2-generate-address.js';
+import check_balance from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/3-check-balance.js';
+import listen_events from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/4-listen-events.js';
+import send_amount from  '!!raw-loader!./../../../../bindings/nodejs/examples/exchange/5-send-amount.js';
 
 # Stardust Exchange Integration Guide
 
@@ -76,7 +76,7 @@ You can use the following examples as a guide to implementing *the multi-account
 
 :::note
 
-If you are looking for other languages, please read the [wallet.rs library overview](https://wiki.iota.org/wallet.rs/welcome).
+If you are looking for other languages, please read the [wallet.rs library overview](https://wiki.iota.org/wallet.rs/develop/overview).
 
 :::
 
@@ -84,7 +84,7 @@ Since all `wallet.rs` bindings are based on core principles provided by the `wal
 
 ### 1. Set Up the Wallet.rs Library
 
-First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the [NodeJs binding](./getting_started.md), it is straightforward since it is distributed via the `npm` package manager. We recommend that you use `dotenv` for password management.
+First, you should install the components that are needed to use `wallet.rs` and the binding of your choice; it may vary a bit from language to language. In the case of the [NodeJs binding](./getting_started.md), it is straightforward since it is distributed via the `npm` package manager.
 
 You can read more about [backup and security in this guide](https://wiki.iota.org/introduction/guides/backup_security).
 
