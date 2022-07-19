@@ -54,7 +54,7 @@ Build an `AliasOutput`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `data` | `BuildAliasOutputData` | Options for building an `AliasOutput`. |
+| `data` | [`BuildAliasOutputData`](../interfaces/BuildAliasOutputData.md) | Options for building an `AliasOutput`. |
 
 #### Returns
 
@@ -74,7 +74,7 @@ Build a `BasicOutput`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `data` | `BuildBasicOutputData` | Options for building a `BasicOutput`. |
+| `data` | [`BuildBasicOutputData`](../interfaces/BuildBasicOutputData.md) | Options for building a `BasicOutput`. |
 
 #### Returns
 
@@ -94,7 +94,7 @@ Build a `FoundryOutput`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `data` | `BuildFoundryOutputData` | Options for building a `FoundryOutput`. |
+| `data` | [`BuildFoundryOutputData`](../interfaces/BuildFoundryOutputData.md) | Options for building a `FoundryOutput`. |
 
 #### Returns
 
@@ -114,7 +114,7 @@ Build an `NftOutput`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `data` | `BuildNftOutputData` | Options for building an `NftOutput`. |
+| `data` | [`BuildNftOutputData`](../interfaces/BuildNftOutputData.md) | Options for building an `NftOutput`. |
 
 #### Returns
 
@@ -126,7 +126,7 @@ ___
 
 ### claimOutputs
 
-▸ **claimOutputs**(`outputIds`): `Promise`<`Transaction`[]\>
+▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 Claim basic or nft outputs that have additional unlock conditions
 to their `AddressUnlockCondition` from the account.
@@ -139,7 +139,7 @@ to their `AddressUnlockCondition` from the account.
 
 #### Returns
 
-`Promise`<`Transaction`[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The resulting transactions.
 
@@ -147,7 +147,7 @@ ___
 
 ### consolidateOutputs
 
-▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<`Transaction`[]\>
+▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 Consolidate basic outputs with only an `AddressUnlockCondition` from an account
 by sending them to the same address again if the output amount is greater or
@@ -162,7 +162,7 @@ equal to the output consolidation threshold.
 
 #### Returns
 
-`Promise`<`Transaction`[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The consolidation transactions.
 
@@ -170,7 +170,7 @@ ___
 
 ### generateAddress
 
-▸ **generateAddress**(`options?`): `Promise`<`Address`\>
+▸ **generateAddress**(`options?`): `Promise`<[`Address`](../interfaces/Address.md)\>
 
 Generate a new unused address.
 
@@ -178,11 +178,11 @@ Generate a new unused address.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options?` | `AddressGenerationOptions` | Options for address generation. |
+| `options?` | [`AddressGenerationOptions`](../interfaces/AddressGenerationOptions.md) | Options for address generation. |
 
 #### Returns
 
-`Promise`<`Address`\>
+`Promise`<[`Address`](../interfaces/Address.md)\>
 
 The address.
 
@@ -190,7 +190,7 @@ ___
 
 ### generateAddresses
 
-▸ **generateAddresses**(`amount`, `options?`): `Promise`<`Address`[]\>
+▸ **generateAddresses**(`amount`, `options?`): `Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 Generate new unused addresses.
 
@@ -199,11 +199,11 @@ Generate new unused addresses.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `amount` | `number` | The amount of addresses to generate. |
-| `options?` | `AddressGenerationOptions` | Options for address generation. |
+| `options?` | [`AddressGenerationOptions`](../interfaces/AddressGenerationOptions.md) | Options for address generation. |
 
 #### Returns
 
-`Promise`<`Address`[]\>
+`Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 The addresses.
 
@@ -225,13 +225,13 @@ ___
 
 ### getBalance
 
-▸ **getBalance**(): `Promise`<`AccountBalance`\>
+▸ **getBalance**(): `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 Get the account balance.
 
 #### Returns
 
-`Promise`<`AccountBalance`\>
+`Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
 
@@ -288,7 +288,7 @@ Get outputs with additional unlock conditions.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `outputs` | `OutputsToClaim` | The type of outputs to claim. |
+| `outputs` | [`OutputsToClaim`](../enums/OutputsToClaim.md) | The type of outputs to claim. |
 
 #### Returns
 
@@ -300,7 +300,7 @@ ___
 
 ### getTransaction
 
-▸ **getTransaction**(`transactionId`): `Promise`<`Transaction`\>
+▸ **getTransaction**(`transactionId`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Get a transaction stored in the account.
 
@@ -312,7 +312,7 @@ Get a transaction stored in the account.
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The transaction.
 
@@ -320,13 +320,13 @@ ___
 
 ### listAddresses
 
-▸ **listAddresses**(): `Promise`<`Address`[]\>
+▸ **listAddresses**(): `Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 List all the addresses of the account.
 
 #### Returns
 
-`Promise`<`Address`[]\>
+`Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 The addresses.
 
@@ -334,13 +334,13 @@ ___
 
 ### listAddressesWithUnspentOutputs
 
-▸ **listAddressesWithUnspentOutputs**(): `Promise`<`AddressWithUnspentOutputs`[]\>
+▸ **listAddressesWithUnspentOutputs**(): `Promise`<[`AddressWithUnspentOutputs`](../interfaces/AddressWithUnspentOutputs.md)[]\>
 
 List the addresses of the account with unspent outputs.
 
 #### Returns
 
-`Promise`<`AddressWithUnspentOutputs`[]\>
+`Promise`<[`AddressWithUnspentOutputs`](../interfaces/AddressWithUnspentOutputs.md)[]\>
 
 The addresses.
 
@@ -362,13 +362,13 @@ ___
 
 ### listPendingTransactions
 
-▸ **listPendingTransactions**(): `Promise`<`Transaction`[]\>
+▸ **listPendingTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 List all the pending transactions of the account.
 
 #### Returns
 
-`Promise`<`Transaction`[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The transactions.
 
@@ -376,13 +376,13 @@ ___
 
 ### listTransactions
 
-▸ **listTransactions**(): `Promise`<`Transaction`[]\>
+▸ **listTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 List all the transactions of the account.
 
 #### Returns
 
-`Promise`<`Transaction`[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The transactions.
 
@@ -424,7 +424,7 @@ ___
 
 ### mintNativeToken
 
-▸ **mintNativeToken**(`nativeTokenOptions`, `transactionOptions?`): `Promise`<`MintTokenTransaction`\>
+▸ **mintNativeToken**(`nativeTokenOptions`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
 
 Mint native tokens.
 
@@ -432,12 +432,12 @@ Mint native tokens.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nativeTokenOptions` | `NativeTokenOptions` | The options for minting tokens. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `nativeTokenOptions` | [`NativeTokenOptions`](../interfaces/NativeTokenOptions.md) | The options for minting tokens. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`MintTokenTransaction`\>
+`Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
 
 The minting transaction and the token ID.
 
@@ -445,7 +445,7 @@ ___
 
 ### mintNfts
 
-▸ **mintNfts**(`nftsOptions`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **mintNfts**(`nftsOptions`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Mint nfts.
 
@@ -453,12 +453,12 @@ Mint nfts.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nftsOptions` | `NftOptions`[] | The options for minting nfts. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `nftsOptions` | [`NftOptions`](../interfaces/NftOptions.md)[] | The options for minting nfts. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The minting transaction.
 
@@ -474,8 +474,8 @@ Prepare an output for sending, useful for offline signing.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options` | `OutputOptions` | The options for preparing an output. If the amount is  below the minimum required storage deposit, by default the remaining  amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,  when setting the `ReturnStrategy` to `gift`, the full minimum required  storage deposit will be sent  to the recipient. When the assets contain  an nft id, the data from the exisiting `NftOutput` will be used, just with  the address unlock conditions replaced. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `options` | [`OutputOptions`](../interfaces/OutputOptions.md) | The options for preparing an output. If the amount is below the minimum required storage deposit, by default the remaining amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`, when setting the `ReturnStrategy` to `gift`, the full minimum required storage deposit will be sent  to the recipient. When the assets contain an nft id, the data from the exisiting `NftOutput` will be used, just with the address unlock conditions replaced. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -495,8 +495,8 @@ Prepare a send amount transaction, useful for offline signing.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `addressesWithAmount` | `AddressWithAmount`[] | Address with amounts to send. |
-| `options?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `addressesWithAmount` | [`AddressWithAmount`](../interfaces/AddressWithAmount.md)[] | Address with amounts to send. |
+| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -517,7 +517,7 @@ Prepare a transaction, useful for offline signing.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `outputs` | `OutputTypes`[] | Outputs to use in the transaction. |
-| `options?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -529,7 +529,7 @@ ___
 
 ### sendAmount
 
-▸ **sendAmount**(`addressesWithAmount`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **sendAmount**(`addressesWithAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Send a transaction with amounts from input addresses.
 
@@ -537,12 +537,12 @@ Send a transaction with amounts from input addresses.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `addressesWithAmount` | `AddressWithAmount`[] | Addresses with amounts. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `addressesWithAmount` | [`AddressWithAmount`](../interfaces/AddressWithAmount.md)[] | Addresses with amounts. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -550,7 +550,7 @@ ___
 
 ### sendMicroTransaction
 
-▸ **sendMicroTransaction**(`addressesWithMicroAmount`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **sendMicroTransaction**(`addressesWithMicroAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Send a micro transaction with amount below minimum storage deposit.
 
@@ -558,12 +558,12 @@ Send a micro transaction with amount below minimum storage deposit.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `addressesWithMicroAmount` | `AddressWithMicroAmount`[] | Addresses with micro amounts. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `addressesWithMicroAmount` | [`AddressWithMicroAmount`](../interfaces/AddressWithMicroAmount.md)[] | Addresses with micro amounts. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -571,7 +571,7 @@ ___
 
 ### sendNativeTokens
 
-▸ **sendNativeTokens**(`addressesNativeTokens`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **sendNativeTokens**(`addressesNativeTokens`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Send native tokens.
 
@@ -579,12 +579,12 @@ Send native tokens.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `addressesNativeTokens` | `AddressNativeTokens`[] | Addresses amounts and native tokens. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `addressesNativeTokens` | [`AddressNativeTokens`](../interfaces/AddressNativeTokens.md)[] | Addresses amounts and native tokens. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -592,7 +592,7 @@ ___
 
 ### sendNft
 
-▸ **sendNft**(`addressesAndNftIds`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **sendNft**(`addressesAndNftIds`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Send nft.
 
@@ -600,12 +600,12 @@ Send nft.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `addressesAndNftIds` | `AddressNftId`[] | Addresses and nft ids. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `addressesAndNftIds` | [`AddressNftId`](../interfaces/AddressNftId.md)[] | Addresses and nft ids. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -613,7 +613,7 @@ ___
 
 ### sendOutputs
 
-▸ **sendOutputs**(`outputs`, `transactionOptions?`): `Promise`<`Transaction`\>
+▸ **sendOutputs**(`outputs`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Send outputs in a transaction.
 
@@ -622,11 +622,11 @@ Send outputs in a transaction.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `outputs` | `OutputTypes`[] | The outputs to send. |
-| `transactionOptions?` | `TransactionOptions` | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -634,7 +634,7 @@ ___
 
 ### signTransactionEssence
 
-▸ **signTransactionEssence**(`preparedTransactionData`): `Promise`<`SignedTransactionEssence`\>
+▸ **signTransactionEssence**(`preparedTransactionData`): `Promise`<[`SignedTransactionEssence`](../interfaces/SignedTransactionEssence.md)\>
 
 Sign a prepared transaction, useful for offline signing.
 
@@ -646,7 +646,7 @@ Sign a prepared transaction, useful for offline signing.
 
 #### Returns
 
-`Promise`<`SignedTransactionEssence`\>
+`Promise`<[`SignedTransactionEssence`](../interfaces/SignedTransactionEssence.md)\>
 
 The signed transaction essence.
 
@@ -654,7 +654,7 @@ ___
 
 ### submitAndStoreTransaction
 
-▸ **submitAndStoreTransaction**(`signedTransactionData`): `Promise`<`Transaction`\>
+▸ **submitAndStoreTransaction**(`signedTransactionData`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Validate the transaction, submit it to a node and store it in the account.
 
@@ -662,11 +662,11 @@ Validate the transaction, submit it to a node and store it in the account.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `signedTransactionData` | `SignedTransactionEssence` | A signed transaction to submit and store. |
+| `signedTransactionData` | [`SignedTransactionEssence`](../interfaces/SignedTransactionEssence.md) | A signed transaction to submit and store. |
 
 #### Returns
 
-`Promise`<`Transaction`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The sent transaction.
 
@@ -674,7 +674,7 @@ ___
 
 ### sync
 
-▸ **sync**(`options?`): `Promise`<`AccountBalance`\>
+▸ **sync**(`options?`): `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 Sync the account by fetching new information from the nodes.
 Will also retry pending transactions if necessary.
@@ -683,11 +683,11 @@ Will also retry pending transactions if necessary.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options?` | `AccountSyncOptions` | Optional synchronization options. |
+| `options?` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) | Optional synchronization options. |
 
 #### Returns
 
-`Promise`<`AccountBalance`\>
+`Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
 
@@ -695,7 +695,7 @@ ___
 
 ### tryClaimOutputs
 
-▸ **tryClaimOutputs**(`outputsToClaim`): `Promise`<`Transaction`[]\>
+▸ **tryClaimOutputs**(`outputsToClaim`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 Try to claim basic outputs that have additional unlock conditions to
 their `AddressUnlockCondition` and send them to the first address of the
@@ -705,10 +705,10 @@ account.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `outputsToClaim` | `OutputsToClaim` | Outputs to try to claim. |
+| `outputsToClaim` | [`OutputsToClaim`](../enums/OutputsToClaim.md) | Outputs to try to claim. |
 
 #### Returns
 
-`Promise`<`Transaction`[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The resulting transactions.

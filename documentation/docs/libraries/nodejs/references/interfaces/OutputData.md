@@ -75,6 +75,6 @@ ___
 
 ### chain
 
-• `Optional` **chain**: `Segment`[]
+• `Optional` **chain**: [`Segment`](Segment.md)[]
 
-Bip32 path
+BIP32 path

@@ -31,7 +31,7 @@ ___
 
 ### chain
 
-• `Optional` **chain**: `Segment`[]
+• `Optional` **chain**: [`Segment`](Segment.md)[]
 
 The chain derived from seed, only for ed25519 addresses
 

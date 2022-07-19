@@ -1,16 +1,19 @@
 import type { INodeInfo, IRent } from '@iota/types';
 
+/** Network types */
 export enum Network {
     Mainnet,
     Testnet,
 }
 
+/** Basic Auth or JWT */
 export type Auth = {
     jwt?: string;
     username?: string;
     password?: string;
 };
 
+/** Information about the tetwork and client */
 export interface NetworkInfo {
     network?: string;
     networkId?: number;
@@ -22,12 +25,14 @@ export interface NetworkInfo {
     rentStructure?: IRent;
 }
 
+/** A node object for the client */
 export type Node = {
     url: string;
     auth?: Auth;
     disabled?: boolean;
 };
 
+/** Options for the client builder */
 export interface ClientOptions {
     apiTimeout?: number;
     automaticDisconnect?: boolean;

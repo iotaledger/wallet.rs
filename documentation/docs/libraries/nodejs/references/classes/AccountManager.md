@@ -114,7 +114,7 @@ Create a new account.
 
 | Name | Type |
 | :------ | :------ |
-| `payload` | `CreateAccountPayload` |
+| `payload` | [`CreateAccountPayload`](../interfaces/CreateAccountPayload.md) |
 
 #### Returns
 
@@ -156,7 +156,7 @@ Emit a provided event for testing of the event system.
 
 | Name | Type |
 | :------ | :------ |
-| `event` | `WalletEvent` |
+| `event` | [`WalletEvent`](../enums/WalletEvent.md) |
 
 #### Returns
 
@@ -217,7 +217,7 @@ Get the node info.
 | Name | Type |
 | :------ | :------ |
 | `url?` | `string` |
-| `auth?` | `Auth` |
+| `auth?` | [`Auth`](../api_ref.md#auth) |
 
 #### Returns
 
@@ -227,13 +227,13 @@ ___
 
 ### getLedgerStatus
 
-▸ **getLedgerStatus**(): `Promise`<`LedgerStatus`\>
+▸ **getLedgerStatus**(): `Promise`<[`LedgerStatus`](../interfaces/LedgerStatus.md)\>
 
 Get the status for a Ledger Nano.
 
 #### Returns
 
-`Promise`<`LedgerStatus`\>
+`Promise`<[`LedgerStatus`](../interfaces/LedgerStatus.md)\>
 
 ___
 
@@ -280,7 +280,7 @@ Listen to wallet events with a callback. An empty array will listen to all possi
 
 | Name | Type |
 | :------ | :------ |
-| `eventTypes` | `EventType`[] |
+| `eventTypes` | [`EventType`](../api_ref.md#eventtype)[] |
 | `callback` | (`error`: `Error`, `result`: `string`) => `void` |
 
 #### Returns
@@ -299,7 +299,7 @@ Clear the callbacks for provided events. An empty array will clear all listeners
 
 | Name | Type |
 | :------ | :------ |
-| `eventTypes` | `EventType`[] |
+| `eventTypes` | [`EventType`](../api_ref.md#eventtype)[] |
 
 #### Returns
 
@@ -319,7 +319,7 @@ Find accounts with unspent outputs.
 | :------ | :------ |
 | `accountGapLimit` | `number` |
 | `addressGapLimit` | `number` |
-| `syncOptions` | `AccountSyncOptions` |
+| `syncOptions` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) |
 
 #### Returns
 
@@ -368,7 +368,7 @@ Set ClientOptions.
 
 | Name | Type |
 | :------ | :------ |
-| `options` | `ClientOptions` |
+| `options` | [`ClientOptions`](../interfaces/ClientOptions.md) |
 
 #### Returns
 
@@ -422,7 +422,7 @@ Start the background syncing process for all accounts.
 
 | Name | Type |
 | :------ | :------ |
-| `options?` | `AccountSyncOptions` |
+| `options?` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) |
 | `intervalInMilliseconds?` | `number` |
 
 #### Returns

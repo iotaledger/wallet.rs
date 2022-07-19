@@ -22,7 +22,7 @@ ___
 
 ### chain
 
-• `Optional` **chain**: `Segment`[]
+• `Optional` **chain**: [`Segment`](Segment.md)[]
 
 The chain derived from seed, for the remainder addresses
 

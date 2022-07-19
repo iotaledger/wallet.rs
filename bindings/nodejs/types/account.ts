@@ -9,12 +9,19 @@ import type { HexEncodedAmount } from '@iota/types';
  */
 export type AccountId = number | string;
 
+/** The balance of an account */
 export interface AccountBalance {
+    /**  The balance of the base coin */
     baseCoin: BaseCoinBalance;
+    /** The required storage deposit for the outputs */
     requiredStorageDeposit: string;
+    /** The balance of the native tokens */
     nativeTokens: NativeTokenBalance[];
+    /** Nft outputs */
     nfts: string[];
+    /** Alias outputs */
     aliases: string[];
+    /** Foundry outputs */
     foundries: string[];
     /**
      * Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
@@ -23,6 +30,7 @@ export interface AccountBalance {
     potentiallyLockedOutputs: { [outputId: string]: boolean };
 }
 
+/** Sync options for an account */
 export interface AccountSyncOptions {
     /**
      * Specific Bech32 encoded addresses of the account to sync, if addresses are provided,
@@ -50,6 +58,7 @@ export interface AccountSyncOptions {
     syncOnlyMostBasicOutputs?: boolean;
 }
 
+/** The account object */
 export interface AccountMeta {
     index: number;
     coinType: CoinType;
@@ -66,22 +75,28 @@ export interface AccountMeta {
     pendingTransactions: Set<string>;
 }
 
+/** The balance of the base coin */
 export interface BaseCoinBalance {
+    /** The total amount of the outputs */
     total: string;
+    /** The amount of the outputs that aren't used in a transaction */
     available: string;
 }
 
+/** The balance of a native token */
 export interface NativeTokenBalance {
     tokenId: string;
     total: HexEncodedAmount;
     available: HexEncodedAmount;
 }
 
+/** IOTA and Shimmer coin types */
 export enum CoinType {
     IOTA = 4218,
     Shimmer = 4219,
 }
 
+/** Options for account creation */
 export interface CreateAccountPayload {
     alias?: string;
 }

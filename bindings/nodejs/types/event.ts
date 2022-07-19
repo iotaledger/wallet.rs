@@ -1,3 +1,4 @@
+/** Wallet event types */
 export type EventType =
     | '*'
     | 'ErrorThrown'
@@ -8,6 +9,7 @@ export type EventType =
     | 'TransactionInclusion'
     | 'TransactionProgress';
 
+/** Wallet events */
 export enum WalletEvent {
     ConsolidationRequired = 'ConsolidationRequired',
     LedgerAddressGeneration = 'LedgerAddressGeneration',

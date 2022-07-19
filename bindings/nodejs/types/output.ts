@@ -4,6 +4,7 @@ import type {
     IOutputMetadataResponse,
 } from '@iota/types';
 
+/** Output to claim */
 export enum OutputsToClaim {
     None = 'None',
     MicroTransactions = 'MicroTransactions',
@@ -28,10 +29,11 @@ export interface OutputData {
     networkId: string;
     /** Remainder */
     remainder: boolean;
-    /** Bip32 path */
+    /** BIP32 path */
     chain?: Segment[];
 }
 
+/** A Segment of the BIP32 path*/
 export interface Segment {
     hardened: boolean;
     bs: number[];

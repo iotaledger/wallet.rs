@@ -3,8 +3,7 @@
  */
 
 require('dotenv').config({ path: '../.env' });
-const { CoinType } = require('../out/types');
-const { AccountManager } = require('@iota/wallet');
+const { AccountManager, CoinType } = require('@iota/wallet');
 
 async function run() {
     try {

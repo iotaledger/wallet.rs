@@ -5,6 +5,7 @@ import type {
     UnlockConditionTypes,
 } from '@iota/types';
 
+/** An alias output */
 export interface BuildAliasOutputData extends BuildBasicOutputData {
     aliasId: string;
     stateIndex?: number;
@@ -13,6 +14,7 @@ export interface BuildAliasOutputData extends BuildBasicOutputData {
     immutableFeatures?: FeatureTypes[];
 }
 
+/** A basic output */
 export interface BuildBasicOutputData {
     /** If not provided, minimum storage deposit will be used */
     amount?: string;
@@ -21,12 +23,14 @@ export interface BuildBasicOutputData {
     features?: FeatureTypes[];
 }
 
+/** A foundry output */
 export interface BuildFoundryOutputData extends BuildBasicOutputData {
     serialNumber: number;
     tokenScheme: TokenSchemeTypes;
     immutableFeatures?: FeatureTypes[];
 }
 
+/** An nft output */
 export interface BuildNftOutputData extends BuildBasicOutputData {
     nftId: string;
     immutableFeatures?: FeatureTypes[];
