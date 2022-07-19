@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example split_funds --release
+//! Run: `cargo run --example split_funds --release`.
 
 use std::{env, time::Instant};
 

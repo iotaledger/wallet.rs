@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 06_send_micro_transaction --release
+//! Run: `cargo run --example 06_send_micro_transaction --release`.
 // In this example we will send an amount below the minimum storage deposit
 // Rename `.env.example` to `.env` first
 

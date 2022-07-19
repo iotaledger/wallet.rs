@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 04_get_balance --release
+//! RUn: `cargo run --example 04_get_balance --release`.
 // In this example we sync the account and get the balance
 // Rename `.env.example` to `.env` first
 

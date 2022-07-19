@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 //! In this example we send the signed transaction in a block.
-//! `cargo run --example 3_send_transaction --release`.
+//! Run: `cargo run --example 3_send_transaction --release`.
 
 use std::{fs::File, io::prelude::*, path::Path};
 

@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 01_create_wallet --release
+//! Run: `cargo run --example 01_create_wallet --release`.
 // In this example we will create a new wallet
 // Rename `.env.example` to `.env` first
 

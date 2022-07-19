@@ -3,7 +3,7 @@
 
 //! In this example we generate addresses which will be used later to find inputs.
 //! This example uses dotenv, which is not safe for use in production.
-//! `cargo run --example 0_generate_addresses --release`.
+//! Run: `cargo run --example 0_generate_addresses --release`.
 
 use std::{
     env,

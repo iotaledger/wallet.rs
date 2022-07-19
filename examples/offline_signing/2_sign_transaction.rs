@@ -3,7 +3,7 @@
 
 //! In this example we sign the prepared transaction.
 //! This example uses dotenv, which is not safe for use in production.
-//! `cargo run --example 2_sign_transaction --release`.
+//! Run: `cargo run --example 2_sign_transaction --release`.
 
 use std::{
     env,

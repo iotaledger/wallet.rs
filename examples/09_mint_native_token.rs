@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 09_mint_native_token --release
+//! Run: `cargo run --example 09_mint_native_token --release`.
 // In this example we will mint a native token
 // Rename `.env.example` to `.env` first
 

@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 13_burn_nft --release
+//! Run: `cargo run --example 13_burn_nft --release`.
 // In this example we will burn an existing nft output
 // Rename `.env.example` to `.env` first
 

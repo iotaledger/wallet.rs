@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 08_send_nft --release
+//! Run: `cargo run --example 08_send_nft --release`.
 // In this example we will send an nft
 // Rename `.env.example` to `.env` first
 

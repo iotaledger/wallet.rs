@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example ledger_nano --release --features=ledger_nano
+//! Run: `cargo run --example ledger_nano --release --features=ledger_nano`.
 
 use std::{env, time::Instant};
 

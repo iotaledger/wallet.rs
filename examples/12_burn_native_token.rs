@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 12_burn_native_token --release
+//! Run: `cargo run --example 12_burn_native_token --release`.
 // In this example we will burn an existing native token, this will not increase the melted supply in the foundry,
 // therefore the foundry output is also not required. But this will also make it impossible to destroy the foundry
 // output that minted it.

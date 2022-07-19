@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example events --features=events --release
+//! Run: `cargo run --example events --features=events --release`.
 
 use std::env;
 

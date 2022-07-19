@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example pong --release
+//! Run: `cargo run --example pong --release`.
 
 // In this example we will try to send transactions from multiple threads simultaneously to the first 300 addresses of
 // the first account (ping_account)

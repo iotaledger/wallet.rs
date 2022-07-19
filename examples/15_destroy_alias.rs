@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 15_destroy_alias --release
+//! Run: `cargo run --example 15_destroy_alias --release`.
 // In this example we will destroy an existing alias output. This is only possible if possible foundry outputs have
 // circulating supply of 0. Rename `.env.example` to `.env` first
 

@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 14_destroy_foundry --release
+//! Run: `cargo run --example 14_destroy_foundry --release`.
 // In this example we will destroy an existing foundry output. This is only possible if its circulating supply is 0.
 // Rename `.env.example` to `.env` first
 

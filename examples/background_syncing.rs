@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example background_syncing --release
+//! Run: `cargo run --example background_syncing --release`.
 
 use std::env;
 
