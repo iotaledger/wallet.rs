@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.7]
+
+- - Include @iota/types in dependencies.
+  - [61b06dfe](https://github.com/iotaledger/wallet.rs/commit/61b06dfe5e4e6e15fa9fb41ad051782a2998b493) Include @iota/types in dependencies ([#1307](https://github.com/iotaledger/wallet.rs/pull/1307)) on 2022-07-18
+
 ## \[2.0.2-alpha.6]
 
 - Added optional note to the TransactionOptions.
