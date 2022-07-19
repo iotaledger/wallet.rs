@@ -1,5 +1,5 @@
 /**
- * This example creates a new database and account
+ * This example gets the balance for an account
  */
 
 const getUnlockedManager = require('./account-manager');

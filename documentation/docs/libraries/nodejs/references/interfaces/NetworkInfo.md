@@ -1,3 +1,3 @@
 # Interface: NetworkInfo
 
-Information about the tetwork and client
+Information about the network and client

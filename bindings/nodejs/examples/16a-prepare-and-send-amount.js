@@ -1,5 +1,5 @@
 /**
- * This example prepares, signs and stores a transaction transferring SMR tokens in wallet.rs
+ * This example prepares, signs and stores a transaction transferring base coins in wallet.rs
  */
 const getUnlockedManager = require('./account-manager');
 

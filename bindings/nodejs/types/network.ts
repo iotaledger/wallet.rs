@@ -13,7 +13,7 @@ export type Auth = {
     password?: string;
 };
 
-/** Information about the tetwork and client */
+/** Information about the network and client */
 export interface NetworkInfo {
     network?: string;
     networkId?: number;
