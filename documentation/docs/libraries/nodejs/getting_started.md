@@ -33,4 +33,4 @@ $ yarn install @iota/wallet dotenv
 ```
 
 ## Usage
-You can find more information on using the `wallet.rs` library's node.js binding in the [examples section](examples.mdx).
+You can find more information on using the `wallet.rs` library's node.js binding in the [how tos section](./how_to/0_create_account.mdx).
