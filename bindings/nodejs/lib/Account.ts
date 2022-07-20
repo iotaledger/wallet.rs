@@ -714,7 +714,7 @@ export class Account {
             {
                 name: 'SyncAccount',
                 data: {
-                    options: options ?? {},
+                    options,
                 },
             },
         );
