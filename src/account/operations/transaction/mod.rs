@@ -114,7 +114,10 @@ impl AccountHandle {
         )?;
 
         if conflict != ConflictReason::None {
-            log::debug!("[TRANSACTION] conflict: {conflict:?}");
+            log::debug!(
+                "[TRANSACTION] conflict: {conflict:?} for {:?}",
+                signed_transaction_data.transaction_payload
+            );
             // unlock outputs so they are available for a new transaction
             self.unlock_inputs(signed_transaction_data.inputs_data).await?;
             return Err(Error::TransactionSemantic(conflict).into());
