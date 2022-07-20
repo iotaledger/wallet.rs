@@ -172,13 +172,7 @@ impl AccountHandle {
                     }
 
                     foundry_builder.finish_output()?
-                },
-                BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config)?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                        controller_address,
-                    )))
-                    .add_native_token(NativeToken::new(token_id, native_token_options.circulating_supply)?)
-                    .finish_output()?,
+                }, // Native Tokens will be added automatically in the remainder output in try_select_inputs()
             ];
             self.send(outputs, options)
                 .await
