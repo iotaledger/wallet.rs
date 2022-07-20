@@ -17,6 +17,7 @@ import type {
     LedgerStatus,
 } from '../types';
 
+/** The AccountManager class. */
 export class AccountManager {
     private messageHandler: MessageHandler;
 
@@ -24,6 +25,9 @@ export class AccountManager {
         this.messageHandler = new MessageHandler(options);
     }
 
+    /**
+     * Backup the data to a Stronghold snapshot.
+     */
     async backup(destination: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'Backup',
@@ -45,6 +49,9 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Change the Stronghold password.
+     */
     async changeStrongholdPassword(
         currentPassword: string,
         newPassword: string,
@@ -58,6 +65,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Clear the Stronghold password from memory.
+     */
     async clearStrongholdPassword(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'ClearStrongholdPassword',
@@ -65,7 +75,7 @@ export class AccountManager {
     }
 
     /**
-     * The coin type only needs to be set on the first account
+     * Create a new account.
      */
     async createAccount(payload: CreateAccountPayload): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
@@ -75,17 +85,25 @@ export class AccountManager {
         return new Account(JSON.parse(response).payload, this.messageHandler);
     }
 
+    /**
+     * Delete all accounts and the database folder.
+     */
     async deleteAccountsAndDatabase(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'DeleteAccountsAndDatabase',
         });
     }
 
+    /**
+     * Destroy the AccountManager and drop its database connection.
+     */
     destroy(): void {
         this.messageHandler.destroy();
     }
 
-    // TODO: test this
+    /**
+     * Emit a provided event for testing of the event system.
+     */
     async emitTestEvent(event: WalletEvent): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'EmitTestEvent',
@@ -93,6 +111,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Generate a random BIP39 mnemonic.
+     */
     async generateMnemonic(): Promise<string> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GenerateMnemonic',
@@ -100,6 +121,9 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get an account by its alias or index.
+     */
     async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetAccount',
@@ -114,6 +138,9 @@ export class AccountManager {
         return account;
     }
 
+    /**
+     * Get all accounts.
+     */
     async getAccounts(): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetAccounts',
@@ -129,6 +156,9 @@ export class AccountManager {
         return accounts;
     }
 
+    /**
+     * Get the node info.
+     */
     async getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetNodeInfo',
@@ -137,6 +167,9 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Get the status for a Ledger Nano.
+     */
     async getLedgerStatus(): Promise<LedgerStatus> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'GetLedgerStatus',
@@ -157,6 +190,9 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Check if the Stronghold password has been set.
+     */
     async isStrongholdPasswordAvailable(): Promise<boolean> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'IsStrongholdPasswordAvailable',
@@ -164,6 +200,9 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Listen to wallet events with a callback. An empty array will listen to all possible events.
+     */
     listen(
         eventTypes: EventType[],
         callback: (error: Error, result: string) => void,
@@ -171,11 +210,16 @@ export class AccountManager {
         return this.messageHandler.listen(eventTypes, callback);
     }
 
+    /**
+     * Clear the callbacks for provided events. An empty array will clear all listeners.
+     */
     clearListeners(eventTypes: EventType[]): void {
         return this.messageHandler.clearListeners(eventTypes);
     }
 
-    // TODO: test this
+    /**
+     * Find accounts with unspent outputs.
+     */
     async recoverAccounts(
         accountGapLimit: number,
         addressGapLimit: number,
@@ -192,12 +236,18 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    /**
+     * Delete the latest account.
+     */
     async removeLatestAccount(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'RemoveLatestAccount',
         });
     }
 
+    /**
+     * Restore a backup from a Stronghold snapshot.
+     */
     async restoreBackup(source: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'RestoreBackup',
@@ -208,6 +258,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Set ClientOptions.
+     */
     async setClientOptions(options: ClientOptions): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetClientOptions',
@@ -215,6 +268,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Set the Stronghold password.
+     */
     async setStrongholdPassword(password: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'SetStrongholdPassword',
@@ -222,6 +278,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Set the interval after which the Stronghold password gets cleared from memory.
+     */
     async setStrongholdPasswordClearInterval(
         intervalInMilliseconds?: number,
     ): Promise<void> {
@@ -231,6 +290,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Start the background syncing process for all accounts.
+     */
     async startBackgroundSync(
         options?: AccountSyncOptions,
         intervalInMilliseconds?: number,
@@ -244,12 +306,18 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Stop the background syncing process for all accounts.
+     */
     async stopBackgroundSync(): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StopBackgroundSync',
         });
     }
 
+    /**
+     * Store a mnemonic in the Stronghold snapshot.
+     */
     async storeMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'StoreMnemonic',
@@ -257,6 +325,9 @@ export class AccountManager {
         });
     }
 
+    /**
+     * Verify if a mnemonic is a valid BIP39 mnemonic.
+     */
     async verifyMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'VerifyMnemonic',

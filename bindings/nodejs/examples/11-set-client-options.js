@@ -17,7 +17,7 @@ async function run() {
         const resp = await manager.getNodeInfo();
         console.log(resp);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

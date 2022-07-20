@@ -38,7 +38,7 @@ async function run() {
             await bob.sync();
         }, 10000)
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
 }
 

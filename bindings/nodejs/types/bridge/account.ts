@@ -156,7 +156,7 @@ export type __PrepareOutputMethod__ = {
 export type __PrepareSendAmountMethod__ = {
     name: 'PrepareSendAmount';
     data: {
-        addressWithAmount: AddressWithAmount[];
+        addressesWithAmount: AddressWithAmount[];
         options?: TransactionOptions;
     };
 };
@@ -172,7 +172,7 @@ export type __PrepareTransactionMethod__ = {
 export type __SendAmountMethod__ = {
     name: 'SendAmount';
     data: {
-        addressWithAmount: AddressWithAmount[];
+        addressesWithAmount: AddressWithAmount[];
         options?: TransactionOptions;
     };
 };
@@ -180,7 +180,7 @@ export type __SendAmountMethod__ = {
 export type __SendMicroTransactionMethod__ = {
     name: 'SendMicroTransaction';
     data: {
-        addressWithMicroAmount: AddressWithMicroAmount[];
+        addressesWithMicroAmount: AddressWithMicroAmount[];
         options?: TransactionOptions;
     };
 };
@@ -188,7 +188,7 @@ export type __SendMicroTransactionMethod__ = {
 export type __SendNativeTokensMethod__ = {
     name: 'SendNativeTokens';
     data: {
-        addressNativeTokens: AddressNativeTokens[];
+        addressesNativeTokens: AddressNativeTokens[];
         options?: TransactionOptions;
     };
 };
@@ -196,7 +196,7 @@ export type __SendNativeTokensMethod__ = {
 export type __SendNftMethod__ = {
     name: 'SendNft';
     data: {
-        addressNftIds: AddressNftId[];
+        addressesAndNftIds: AddressNftId[];
         options?: TransactionOptions;
     };
 };

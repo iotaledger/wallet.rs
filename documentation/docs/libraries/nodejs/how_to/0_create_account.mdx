@@ -1,0 +1,20 @@
+---
+title: How To Create An Account
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import MoreExamples from "./_more_examples.md";
+import create_account from  '!!raw-loader!./../../../../../bindings/nodejs/examples/1-create-account.js';
+
+All the examples expect you to set your custom password  in the _.env_ file and the first one also requires a mnemonic:
+
+```bash
+SH_PASSWORD="here is your super secure password"
+MNEMONIC="here your 24 word mnemonic, it is the only way to recover your account if you ever forget your password and/or lose the stronghold file"
+```
+
+<CodeBlock className="language-javascript">
+    {create_account}
+</CodeBlock>
+
+<MoreExamples/>

@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const { AccountManager } = require('@iota/wallet');
 
 async function getUnlockedManager() {

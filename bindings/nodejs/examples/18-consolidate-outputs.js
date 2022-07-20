@@ -31,7 +31,7 @@ async function run() {
         }, 10000)
         
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
         process.exit(1);
     }
 }

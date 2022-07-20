@@ -27,7 +27,7 @@ async function run() {
             minimumRequiredStorageDeposit,
         );
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

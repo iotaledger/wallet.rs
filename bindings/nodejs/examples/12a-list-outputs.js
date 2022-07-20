@@ -12,7 +12,7 @@ async function run() {
         const outputs = await account.listOutputs()
         console.log('Listing Outputs:', outputs); 
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

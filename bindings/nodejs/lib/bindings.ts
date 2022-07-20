@@ -29,7 +29,7 @@ const sendMessageAsync = (
     });
 
 export {
-    initLogger,
+    initLogger as internalInitLogger,
     sendMessageAsync,
     messageHandlerNew,
     listen,

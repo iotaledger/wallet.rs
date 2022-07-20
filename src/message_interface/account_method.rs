@@ -175,7 +175,7 @@ pub enum AccountMethod {
     /// Mint nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     MintNfts {
-        #[serde(rename = "nftOptions")]
+        #[serde(rename = "nftsOptions")]
         nfts_options: Vec<NftOptions>,
         options: Option<TransactionOptions>,
     },
@@ -197,7 +197,7 @@ pub enum AccountMethod {
     /// Prepare send amount.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareSendAmount {
-        #[serde(rename = "addressWithAmount")]
+        #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
@@ -211,28 +211,28 @@ pub enum AccountMethod {
     /// Send amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendAmount {
-        #[serde(rename = "addressWithAmount")]
+        #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
     /// Send amount below minimum storage deposit.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendMicroTransaction {
-        #[serde(rename = "addressWithMicroAmount")]
+        #[serde(rename = "addressesWithMicroAmount")]
         addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
         options: Option<TransactionOptions>,
     },
     /// Send native tokens.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNativeTokens {
-        #[serde(rename = "addressNativeTokens")]
+        #[serde(rename = "addressesAndNativeTokens")]
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
     },
     /// Send nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNft {
-        #[serde(rename = "addressAndNftId")]
+        #[serde(rename = "addressesAndNftIds")]
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
     },

@@ -17,10 +17,10 @@ async function run() {
         // const addresses = await account.generateAddresses(2);
         // console.log('New addresses:', addresses);
 
-        // Use the Chrysalis Faucet to send testnet tokens to your address:
-        // console.log("Fill your address with the Faucet: https://faucet.chrysalis-devnet.iota.cafe/")
+        // Use the Faucet to send testnet tokens to your address:
+        console.log("Fill your address with the Faucet:  https://faucet.testnet.shimmer.network")
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

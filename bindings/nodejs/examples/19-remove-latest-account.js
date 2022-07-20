@@ -11,7 +11,7 @@ async function run() {
         await manager.removeLatestAccount();
         console.log('Accounts after:', await manager.getAccounts())
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

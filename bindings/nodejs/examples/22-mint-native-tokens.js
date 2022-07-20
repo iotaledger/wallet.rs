@@ -9,6 +9,8 @@ async function run() {
 
         const account = await manager.getAccount('0');
 
+        await account.sync();
+        
         // If we omit the AccountAddress field the first address of the account is used by default
         const nativeTokenOptions = {
             // Hello in bytes
@@ -22,7 +24,7 @@ async function run() {
         );
         console.log('Transaction ID: ', transaction.transactionId);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }

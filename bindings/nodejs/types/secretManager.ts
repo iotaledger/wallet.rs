@@ -1,11 +1,14 @@
+/** Secret manager that uses a Ledger Nano hardware wallet or Speculos simulator. */
 export interface LedgerNanoSecretManager {
     isSimulator: boolean;
 }
 
+/** Secret manager that uses only a mnemonic. */
 export interface MnemonicSecretManager {
     Mnemonic: string;
 }
 
+/** Secret manager that uses Stronghold. */
 export interface StrongholdSecretManager {
     Stronghold: {
         password?: string;
@@ -13,6 +16,7 @@ export interface StrongholdSecretManager {
     };
 }
 
+/** The status of a Ledger Nano */
 export interface LedgerStatus {
     connected: boolean;
     locked: boolean;
@@ -22,17 +26,20 @@ export interface LedgerStatus {
     bufferSize?: number;
 }
 
+/** The current opened app */
 export interface LedgerApp {
     name: string;
     version: string;
 }
 
+/** The Ledger Device Type */
 export enum LedgerDeviceType {
     LedgerNanoS = 'LedgerNanoS',
     LedgerNanoX = 'LedgerNanoX',
     LedgerNanoSPlus = 'LedgerNanoSPlus',
 }
 
+/** Supported secret managers */
 export type SecretManager =
     | LedgerNanoSecretManager
     | MnemonicSecretManager

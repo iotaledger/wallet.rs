@@ -12,7 +12,7 @@ async function run() {
         const transactions = await account.listTransactions()
         console.log('Listing Transactions:', transactions);
     } catch (error) {
-        console.log('Error: ' + error);
+        console.log('Error: ', error);
     }
     process.exit(0);
 }
