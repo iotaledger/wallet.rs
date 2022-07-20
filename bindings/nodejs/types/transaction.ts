@@ -28,6 +28,7 @@ export interface Transaction {
     networkId: string;
     /** If the transaction was created by the wallet or someone else */
     incoming: boolean;
+    note?: string;
 }
 
 /** The result of a minting operation */
