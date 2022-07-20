@@ -51,7 +51,7 @@ export interface AccountSyncOptions {
     forceSyncing?: boolean;
     /// Try to sync transactions from incoming outputs with their inputs. Some data may not be obtained if it has been
     /// pruned.
-    syncIncomingTransactions: boolean;
+    syncIncomingTransactions?: boolean;
     /** Checks pending transactions and promotes/reattaches them if necessary.  Default: true. */
     syncPendingTransactions?: boolean;
     /** Specifies if only basic outputs should be synced or also alias and nft outputs. Default: true. */
