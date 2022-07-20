@@ -6,11 +6,10 @@ use iota_client::block::{
     output::{
         feature::{Feature, MetadataFeature},
         unlock_condition::{
-            AddressUnlockCondition, GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
+            GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
             StateControllerAddressUnlockCondition, UnlockCondition,
         },
-        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryId, FoundryOutputBuilder, NativeToken, Output,
-        SimpleTokenScheme, TokenId, TokenScheme,
+        AliasId, AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
     },
 };
 use primitive_types::U256;
