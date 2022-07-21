@@ -29,12 +29,11 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(&byte_cost_config)?;
+            output.verify_storage_deposit(&rent_structure)?;
         }
 
         // validate amounts
@@ -115,7 +114,7 @@ impl AccountHandle {
                 outputs,
                 custom_inputs,
                 remainder_address,
-                &byte_cost_config,
+                &rent_structure,
                 allow_burning,
             )
             .await?;

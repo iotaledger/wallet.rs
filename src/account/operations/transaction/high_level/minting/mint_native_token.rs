@@ -95,7 +95,7 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
         log::debug!("[TRANSACTION] mint_native_token");
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         let account_addresses = self.list_addresses().await?;
         // the address needs to be from the account, because for the minting we need to sign transactions from it
@@ -153,7 +153,7 @@ impl AccountHandle {
                 new_alias_output_builder.finish_output()?,
                 {
                     let mut foundry_builder = FoundryOutputBuilder::new_with_minimum_storage_deposit(
-                        byte_cost_config.clone(),
+                        rent_structure.clone(),
                         alias_output.foundry_counter() + 1,
                         TokenScheme::Simple(SimpleTokenScheme::new(
                             native_token_options.circulating_supply,
@@ -188,7 +188,7 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<AliasId> {
         log::debug!("[TRANSACTION] get_or_create_alias_output");
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         let account = self.read().await;
         let existing_alias_output = account
@@ -209,7 +209,7 @@ impl AccountHandle {
             None => {
                 drop(account);
                 let outputs = vec![
-                    AliasOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config, AliasId::null())?
+                    AliasOutputBuilder::new_with_minimum_storage_deposit(rent_structure, AliasId::null())?
                         .with_state_index(0)
                         .with_foundry_counter(0)
                         .add_unlock_condition(UnlockCondition::StateControllerAddress(

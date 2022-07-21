@@ -83,7 +83,7 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         let account_addresses = self.list_addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
@@ -97,7 +97,7 @@ impl AccountHandle {
             // We have to check it for every output individually, because different address types and amount of
             // different native tokens require a differen storage deposit
             let storage_deposit_amount = minimum_storage_deposit_basic_native_tokens(
-                &byte_cost_config,
+                &rent_structure,
                 &address,
                 &return_address.address.inner,
                 None,

@@ -191,7 +191,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
         let current_time = self.client.get_time_checked().await?;
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         let account = self.read().await;
 
@@ -236,7 +236,7 @@ impl AccountHandle {
                     // updated address unlock conditions
 
                     let nft_output = NftOutputBuilder::from(nft_output)
-                        .with_minimum_storage_deposit(byte_cost_config.clone())
+                        .with_minimum_storage_deposit(rent_structure.clone())
                         .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
                         .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
                             first_account_address.address.inner,
@@ -273,7 +273,7 @@ impl AccountHandle {
 
             // Check if the new amount is enough for the storage deposit, otherwise increase it to this
             let mut required_storage_deposit = minimum_storage_deposit(
-                &byte_cost_config,
+                &rent_structure,
                 &first_account_address.address.inner,
                 &option_native_token,
             )?;
@@ -285,7 +285,7 @@ impl AccountHandle {
                     // Recalculate every time, because new intputs can also add more native tokens, which would increase
                     // the storage deposit cost
                     required_storage_deposit = minimum_storage_deposit(
-                        &byte_cost_config,
+                        &rent_structure,
                         &first_account_address.address.inner,
                         &option_native_token,
                     )?;

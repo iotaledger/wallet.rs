@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::block::output::{unlock_condition::UnlockCondition, ByteCost, NativeTokensBuilder, Output};
+use iota_client::block::output::{unlock_condition::UnlockCondition, NativeTokensBuilder, Output, Rent};
 use primitive_types::U256;
 
 use crate::account::{
@@ -25,7 +25,7 @@ impl AccountHandle {
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         let local_time = self.client.get_time_checked().await?;
 
@@ -50,7 +50,7 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
+                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -62,7 +62,7 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
+                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -87,7 +87,7 @@ impl AccountHandle {
                         // Add amount
                         total_amount += output_data.output.amount();
                         // Add storage deposit
-                        required_storage_deposit += &output_data.output.byte_cost(&byte_cost_config);
+                        required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
                         // Add native tokens
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -144,7 +144,7 @@ impl AccountHandle {
                                 // Add amount
                                 total_amount += amount;
                                 // Add storage deposit
-                                required_storage_deposit += output_data.output.byte_cost(&byte_cost_config);
+                                required_storage_deposit += output_data.output.rent_cost(&rent_structure);
                                 // Add native tokens
                                 if let Some(native_tokens) = output_data.output.native_tokens() {
                                     total_native_tokens.add_native_tokens(native_tokens.clone())?;
