@@ -175,7 +175,7 @@ There are two types of addresses, `internal` and `public` (external). This appro
 
 :::warning
 
-Outputs can have multiple [unlock conditions](https://github.com/lzpap/tips/blob/master/tips/TIP-0018/tip-0018.md#unlock-conditions), which could require one to send some or the full amount back, which could expire if not claimed in time or which might not be unlockable for a very long time.
+Outputs may have multiple [UnlockConditions] (https://github.com/lzpap/tips/blob/master/tips/TIP-0018/tip-0018.md#unlock-conditions) which may require returning some or all of the amount, which could expire if not claimed in time, or which may not be unlockable for a very long time.
 To get only outputs with the AddressUnlockCondition alone, that don't need extra checks for the ownership, sync with `syncOnlyMostBasicOutputs: true`. When syncing also other outputs, the unlock conditions must be carefully checked before crediting users any balance.
 
 :::
