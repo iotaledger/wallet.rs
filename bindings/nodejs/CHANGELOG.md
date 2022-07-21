@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.8]
+
+- Update types with missing properties
+  - [6e39cff6](https://github.com/iotaledger/wallet.rs/commit/6e39cff698a53cc43f16bc3dcfafac0dda3f8e53) feat: add missing types ([#1311](https://github.com/iotaledger/wallet.rs/pull/1311)) on 2022-07-20
+
 ## \[2.0.2-alpha.7]
 
 - - Include @iota/types in dependencies.
