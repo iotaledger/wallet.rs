@@ -282,8 +282,8 @@ impl AccountHandle {
             if new_amount < required_storage_deposit {
                 // add more inputs
                 for output_data in &possible_additional_inputs {
-                    // Recalculate every time, because new intputs can also add more native tokens, which would increase
-                    // the storage deposit cost
+                    // Recalculate every time, because new inputs can also add more native tokens, which would increase
+                    // the required storage deposit
                     required_storage_deposit = minimum_storage_deposit(
                         &rent_structure,
                         &first_account_address.address.inner,
