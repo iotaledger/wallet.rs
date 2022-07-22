@@ -71,7 +71,9 @@ impl TryFrom<&NativeTokenOptionsDto> for NativeTokenOptions {
             maximum_supply: U256::try_from(&value.maximum_supply)
                 .map_err(|_| DtoError::InvalidField("maximum_supply"))?,
             foundry_metadata: match &value.foundry_metadata {
-                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("foundry_metadata"))?),
+                Some(metadata) => {
+                    Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("foundry_metadata"))?)
+                }
                 None => None,
             },
         })
