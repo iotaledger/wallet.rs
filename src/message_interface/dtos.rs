@@ -8,10 +8,13 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::block::{
-    dto::U256Dto,
-    output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId},
-    payload::transaction::TransactionId,
+use iota_client::{
+    api_types::responses::OutputResponse,
+    block::{
+        dto::U256Dto,
+        output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId},
+        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -218,6 +221,9 @@ pub struct AccountDto {
     /// Pending transactions
     #[serde(rename = "pendingTransactions")]
     pub pending_transactions: HashSet<TransactionId>,
+    /// Incoming transactions
+    #[serde(rename = "incomingTransactions")]
+    pub incoming_transactions: HashMap<TransactionId, (TransactionPayloadDto, Vec<OutputResponse>)>,
 }
 
 impl From<&Account> for AccountDto {
@@ -253,6 +259,11 @@ impl From<&Account> for AccountDto {
                 .map(|(k, o)| (k, TransactionDto::from(&o)))
                 .collect(),
             pending_transactions: value.pending_transactions().clone(),
+            incoming_transactions: value
+                .incoming_transactions()
+                .iter()
+                .map(|(tx_id, (tx, inputs))| (*tx_id, (TransactionPayloadDto::from(tx), inputs.clone())))
+                .collect(),
         }
     }
 }

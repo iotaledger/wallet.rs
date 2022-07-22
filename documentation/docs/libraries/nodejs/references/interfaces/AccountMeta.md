@@ -8,6 +8,7 @@ The account object
 
 - [lockedOutputs](AccountMeta.md#lockedoutputs)
 - [pendingTransactions](AccountMeta.md#pendingtransactions)
+- [incomingTransactions](AccountMeta.md#incomingtransactions)
 
 ## Properties
 
@@ -24,3 +25,15 @@ ___
 • **pendingTransactions**: `Set`<`string`\>
 
 Transaction IDs of pending transactions
+
+___
+
+### incomingTransactions
+
+• **incomingTransactions**: `Object`
+
+Incoming transactions with their inputs if available and not already pruned
+
+#### Index signature
+
+▪ [transactionId: `string`]: { `transactionPayload`: `ITransactionPayload` ; `inputs`: `IOutputResponse`[]  }

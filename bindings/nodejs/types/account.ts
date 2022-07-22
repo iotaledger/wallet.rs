@@ -1,7 +1,11 @@
 import type { Address, AddressWithUnspentOutputs } from './address';
 import type { OutputData } from './output';
 import type { Transaction } from './transaction';
-import type { HexEncodedAmount } from '@iota/types';
+import type {
+    HexEncodedAmount,
+    IOutputResponse,
+    ITransactionPayload,
+} from '@iota/types';
 
 /**
  * Account identifier
@@ -76,6 +80,13 @@ export interface AccountMeta {
     transactions: { [transactionId: string]: Transaction };
     /** Transaction IDs of pending transactions */
     pendingTransactions: Set<string>;
+    /** Incoming transactions with their inputs if available and not already pruned */
+    incomingTransactions: {
+        [transactionId: string]: {
+            transactionPayload: ITransactionPayload;
+            inputs: IOutputResponse[];
+        };
+    };
 }
 
 /** The balance of the base coin */

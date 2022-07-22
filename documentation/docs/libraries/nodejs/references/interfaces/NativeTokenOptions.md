@@ -8,6 +8,7 @@ Native token options for minting
 
 - [circulatingSupply](NativeTokenOptions.md#circulatingsupply)
 - [maximumSupply](NativeTokenOptions.md#maximumsupply)
+- [foundryMetadata](NativeTokenOptions.md#foundrymetadata)
 
 ## Properties
 
@@ -24,3 +25,11 @@ ___
 • **maximumSupply**: `string`
 
 Hex encoded number
+
+___
+
+### foundryMetadata
+
+• `Optional` **foundryMetadata**: `string`
+
+Hex encoded bytes

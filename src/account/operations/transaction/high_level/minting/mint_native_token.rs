@@ -3,6 +3,7 @@
 
 use iota_client::block::{
     address::{Address, AliasAddress},
+    dto::U256Dto,
     output::{
         feature::{Feature, MetadataFeature},
         unlock_condition::{
@@ -11,6 +12,7 @@ use iota_client::block::{
         },
         AliasId, AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
     },
+    DtoError,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -24,7 +26,7 @@ use crate::{
     Error,
 };
 
-/// Address and nft for `mint_native_token()`
+/// Address and foundry data for `mint_native_token()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NativeTokenOptions {
     /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
@@ -39,6 +41,41 @@ pub struct NativeTokenOptions {
     /// Foundry metadata
     #[serde(rename = "foundryMetadata")]
     pub foundry_metadata: Option<Vec<u8>>,
+}
+
+/// Dto for NativeTokenOptions
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NativeTokenOptionsDto {
+    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
+    #[serde(rename = "accountAddress")]
+    pub account_address: Option<String>,
+    /// Circulating supply
+    #[serde(rename = "circulatingSupply")]
+    pub circulating_supply: U256Dto,
+    /// Maximum supply
+    #[serde(rename = "maximumSupply")]
+    pub maximum_supply: U256Dto,
+    /// Foundry metadata, hex encoded bytes
+    #[serde(rename = "foundryMetadata")]
+    pub foundry_metadata: Option<String>,
+}
+
+impl TryFrom<&NativeTokenOptionsDto> for NativeTokenOptions {
+    type Error = crate::Error;
+
+    fn try_from(value: &NativeTokenOptionsDto) -> crate::Result<Self> {
+        Ok(Self {
+            account_address: value.account_address.clone(),
+            circulating_supply: U256::try_from(&value.circulating_supply)
+                .map_err(|_| DtoError::InvalidField("circulating_supply"))?,
+            maximum_supply: U256::try_from(&value.maximum_supply)
+                .map_err(|_| DtoError::InvalidField("maximum_supply"))?,
+            foundry_metadata: match &value.foundry_metadata {
+                Some(metadata) => Some(hex::decode(metadata).map_err(|_| DtoError::InvalidField("foundry_metadata"))?),
+                None => None,
+            },
+        })
+    }
 }
 
 /// The result of a minting native token transaction, block_id is an option because submitting the transaction could

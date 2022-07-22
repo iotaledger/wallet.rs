@@ -41,7 +41,8 @@ export interface NativeTokenOptions {
     circulatingSupply: string;
     /** Hex encoded number */
     maximumSupply: string;
-    foundryMetadata?: number[];
+    /** Hex encoded bytes */
+    foundryMetadata?: string;
 }
 
 /** Nft options for minting */
@@ -50,6 +51,8 @@ export interface NftOptions {
      * first address of the account
      */
     address?: string;
-    immutableMetadata?: number[];
-    metadata?: number[];
+    /** Hex encoded bytes */
+    immutableMetadata?: string;
+    /** Hex encoded bytes */
+    metadata?: string;
 }
