@@ -14,7 +14,7 @@ async function run() {
         // If we omit the AccountAddress field the first address of the account is used by default
         const nativeTokenOptions = {
             // Hello in bytes
-            foundryMetadata: '48656c6c6f',
+            foundryMetadata: '0x48656c6c6f',
             circulatingSupply: '0x64',
             maximumSupply: '0x64',
         };

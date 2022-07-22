@@ -54,12 +54,12 @@ impl TryFrom<&NftOptionsDto> for NftOptions {
             address: value.address.clone(),
             immutable_metadata: match &value.immutable_metadata {
                 Some(metadata) => {
-                    Some(hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
+                    Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
                 }
                 None => None,
             },
             metadata: match &value.metadata {
-                Some(metadata) => Some(hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
+                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
                 None => None,
             },
         })
@@ -73,7 +73,7 @@ impl AccountHandle {
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let nft_id: [u8; 38] =
-    ///     hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
+    ///     prefix_hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
     ///         .try_into()
     ///         .unwrap();
     /// let nft_options = vec![NftOptions {
