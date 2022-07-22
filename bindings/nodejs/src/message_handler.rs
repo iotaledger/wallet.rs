@@ -69,7 +69,11 @@ impl MessageHandler {
             }
             Err(e) => {
                 log::debug!("{:?}", e);
-                (format!("Couldn't parse to message with error - {:?}", e), true)
+                (
+                    serde_json::to_string(&Response::Error(e.into()))
+                        .expect("The response is generated manually, so unwrap is safe."),
+                    true,
+                )
             }
         }
     }
