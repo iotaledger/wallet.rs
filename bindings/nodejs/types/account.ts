@@ -82,10 +82,7 @@ export interface AccountMeta {
     pendingTransactions: Set<string>;
     /** Incoming transactions with their inputs if available and not already pruned */
     incomingTransactions: {
-        [transactionId: string]: {
-            transactionPayload: ITransactionPayload;
-            inputs: IOutputResponse[];
-        };
+        [transactionId: string]: [ITransactionPayload, IOutputResponse[]];
     };
 }
 

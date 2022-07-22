@@ -36,4 +36,4 @@ Incoming transactions with their inputs if available and not already pruned
 
 #### Index signature
 
-▪ [transactionId: `string`]: { `transactionPayload`: `ITransactionPayload` ; `inputs`: `IOutputResponse`[]  }
+▪ [transactionId: `string`]: [`ITransactionPayload`, `IOutputResponse`[]]
