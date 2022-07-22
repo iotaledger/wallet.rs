@@ -8,7 +8,7 @@ use iota_client::{
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{ByteCostConfig, Output, OutputId},
+        output::{Output, OutputId, RentStructure},
     },
     secret::types::InputSigningData,
 };
@@ -25,7 +25,7 @@ impl AccountHandle {
         outputs: Vec<Output>,
         custom_inputs: Option<Vec<InputSigningData>>,
         remainder_address: Option<Address>,
-        byte_cost_config: &ByteCostConfig,
+        rent_structure: &RentStructure,
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
@@ -57,7 +57,7 @@ impl AccountHandle {
                 outputs,
                 true,
                 remainder_address,
-                byte_cost_config,
+                rent_structure,
                 allow_burning,
                 current_time,
             )?;
@@ -86,7 +86,7 @@ impl AccountHandle {
             outputs,
             false,
             remainder_address,
-            byte_cost_config,
+            rent_structure,
             allow_burning,
             current_time,
         ) {

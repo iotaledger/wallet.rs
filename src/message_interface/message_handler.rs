@@ -15,7 +15,7 @@ use iota_client::{
     block::{
         output::{
             dto::{OutputBuilderAmountDto, OutputDto},
-            AliasOutput, BasicOutput, ByteCost, FoundryOutput, NftOutput, Output, TokenId,
+            AliasOutput, BasicOutput, FoundryOutput, NftOutput, Output, Rent, TokenId,
         },
         payload::transaction::dto::TransactionPayloadDto,
     },
@@ -348,9 +348,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(
-                            account_handle.client.get_byte_cost_config().await?,
-                        )
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
                     },
                     native_tokens,
                     &alias_id,
@@ -374,9 +372,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(
-                            account_handle.client.get_byte_cost_config().await?,
-                        )
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
                     },
                     native_tokens,
                     unlock_conditions,
@@ -398,9 +394,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(
-                            account_handle.client.get_byte_cost_config().await?,
-                        )
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
                     },
                     native_tokens,
                     serial_number,
@@ -424,9 +418,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(
-                            account_handle.client.get_byte_cost_config().await?,
-                        )
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
                     },
                     native_tokens,
                     &nft_id,
@@ -535,9 +527,9 @@ impl WalletMessageHandler {
             AccountMethod::MinimumRequiredStorageDeposit { output } => {
                 convert_async_panics(|| async {
                     let output = Output::try_from(&output)?;
-                    let byte_cost_config = account_handle.client.get_byte_cost_config().await?;
+                    let rent_structure = account_handle.client.get_rent_structure().await?;
 
-                    let minimum_storage_deposit = output.byte_cost(&byte_cost_config);
+                    let minimum_storage_deposit = output.rent_cost(&rent_structure);
 
                     Ok(Response::MinimumRequiredStorageDeposit(
                         minimum_storage_deposit.to_string(),

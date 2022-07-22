@@ -7,7 +7,7 @@ use iota_client::block::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCost, ByteCostConfig, NativeToken, OutputAmount, TokenId,
+        BasicOutputBuilder, NativeToken, OutputAmount, Rent, RentStructure, TokenId,
     },
 };
 use primitive_types::U256;
@@ -19,7 +19,7 @@ use crate::Result;
 /// Computes the minimum amount that an output needs to have, when sent with [AddressUnlockCondition],
 /// [StorageDepositReturnUnlockCondition] and [ExpirationUnlockCondition].
 pub(crate) fn minimum_storage_deposit_basic_native_tokens(
-    config: &ByteCostConfig,
+    rent_structure: &RentStructure,
     address: &Address,
     return_address: &Address,
     native_tokens: Option<Vec<(TokenId, U256)>>,
@@ -48,5 +48,5 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
         );
     }
 
-    Ok(basic_output_builder.finish_output()?.byte_cost(config))
+    Ok(basic_output_builder.finish_output()?.rent_cost(rent_structure))
 }

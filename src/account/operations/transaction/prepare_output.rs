@@ -12,7 +12,7 @@ use iota_client::block::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, ByteCost, NativeToken, NftId, NftOutputBuilder, Output,
+        BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -40,11 +40,11 @@ impl AccountHandle {
                     .await;
             }
         }
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         // We start building with minimum storage deposit, so we know the minimum required amount and can later replace
         // it, if needed
-        let mut first_output_builder = BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+        let mut first_output_builder = BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                 Address::try_from_bech32(options.recipient_address.clone())?.1,
             )));
@@ -101,7 +101,7 @@ impl AccountHandle {
 
                     // Calculate the minimum storage deposit to be returned
                     min_storage_deposit_return_amount =
-                        BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                        BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
                             )))
@@ -127,7 +127,7 @@ impl AccountHandle {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
-                            BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                            BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                     Address::try_from_bech32(options.recipient_address)?.1,
                                 )))
@@ -145,7 +145,7 @@ impl AccountHandle {
 
         let second_output = second_output_builder.finish()?;
 
-        let required_storage_deposit = Output::Basic(second_output.clone()).byte_cost(&byte_cost_config);
+        let required_storage_deposit = Output::Basic(second_output.clone()).rent_cost(&rent_structure);
 
         let mut third_output_builder = BasicOutputBuilder::from(&second_output);
 
@@ -209,7 +209,7 @@ impl AccountHandle {
 
         // from here basically the same as in `prepare_output()`, just with Nft outputs
 
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         if let Some(assets) = options.assets {
             if let Some(native_tokens) = assets.native_tokens {
@@ -263,7 +263,7 @@ impl AccountHandle {
 
                     // Calculate the amount to be returned
                     min_storage_deposit_return_amount =
-                        BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                        BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
                             )))
@@ -289,7 +289,7 @@ impl AccountHandle {
                         let balance_minus_output = balance.base_coin.available - first_output.amount();
                         // Calculate the amount for a basic output
                         let minimum_required_storage_deposit =
-                            BasicOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone())?
+                            BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                     Address::try_from_bech32(options.recipient_address)?.1,
                                 )))
@@ -307,7 +307,7 @@ impl AccountHandle {
 
         let second_output = second_output_builder.finish()?;
 
-        let required_storage_deposit = Output::Nft(second_output.clone()).byte_cost(&byte_cost_config);
+        let required_storage_deposit = Output::Nft(second_output.clone()).rent_cost(&rent_structure);
 
         let mut third_output_builder = NftOutputBuilder::from(&second_output);
 

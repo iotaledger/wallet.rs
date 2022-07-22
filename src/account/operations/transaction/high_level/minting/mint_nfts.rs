@@ -72,11 +72,10 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_mint_nfts");
-        let byte_cost_config = self.client.get_byte_cost_config().await?;
-
+        let rent_structure = self.client.get_rent_structure().await?;
         let account_addresses = self.list_addresses().await?;
-
         let mut outputs = Vec::new();
+
         for nft_options in nfts_options {
             let address = match nft_options.address {
                 Some(address) => Address::try_from_bech32(&address)?.1,
@@ -102,7 +101,7 @@ impl AccountHandle {
 
             // NftId needs to be set to 0 for the creation
             let mut nft_builder =
-                NftOutputBuilder::new_with_minimum_storage_deposit(byte_cost_config.clone(), NftId::null())?
+                NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), NftId::null())?
                     // Address which will own the nft
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
             if let Some(immutable_metadata) = immutable_metadata {
