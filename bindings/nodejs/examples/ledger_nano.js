@@ -3,7 +3,7 @@ const { AccountManager, CoinType } = require('@iota/wallet');
 
 // In this example we will create addresses with a ledger nano hardware wallet
 // To use the ledger nano simulator clone https://github.com/iotaledger/ledger-shimmer-app, run `git submodule init && git submodule update --recursive`,
-// then `./build.sh -m nanos|nanox|nanosplus -s` and use `true` in `LedgerSecretManager::new(true)`.
+// then `./build.sh -m nanos|nanox|nanosplus -s` and use `true` for `LedgerNano`.
 
 async function run() {
     try {
