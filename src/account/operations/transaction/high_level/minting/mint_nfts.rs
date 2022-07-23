@@ -10,6 +10,7 @@ use iota_client::{
             unlock_condition::{AddressUnlockCondition, UnlockCondition},
             NftId, NftOutputBuilder,
         },
+        DtoError,
     },
 };
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,39 @@ pub struct NftOptions {
     pub metadata: Option<Vec<u8>>,
 }
 
+/// Dto for NftOptions
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NftOptionsDto {
+    /// Bech32 encoded address to which the Nft will be minted. Default will use the
+    /// first address of the account
+    pub address: Option<String>,
+    /// Immutable nft metadata, hex encoded bytes
+    #[serde(rename = "immutableMetadata")]
+    pub immutable_metadata: Option<String>,
+    /// Nft metadata, hex encoded bytes
+    pub metadata: Option<String>,
+}
+
+impl TryFrom<&NftOptionsDto> for NftOptions {
+    type Error = crate::Error;
+
+    fn try_from(value: &NftOptionsDto) -> crate::Result<Self> {
+        Ok(Self {
+            address: value.address.clone(),
+            immutable_metadata: match &value.immutable_metadata {
+                Some(metadata) => {
+                    Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
+                }
+                None => None,
+            },
+            metadata: match &value.metadata {
+                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
+                None => None,
+            },
+        })
+    }
+}
+
 impl AccountHandle {
     /// Function to mint nfts.
     /// Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
@@ -39,7 +73,7 @@ impl AccountHandle {
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let nft_id: [u8; 38] =
-    ///     hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
+    ///     prefix_hex::decode("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
     ///         .try_into()
     ///         .unwrap();
     /// let nft_options = vec![NftOptions {

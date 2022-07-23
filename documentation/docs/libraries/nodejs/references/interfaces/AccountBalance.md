@@ -20,8 +20,7 @@ The balance of an account
 
 • **baseCoin**: [`BaseCoinBalance`](BaseCoinBalance.md)
 
-test with multiple unlock conditions and if they can currently be spent or not. If there is a
-TimelockUnlockCondition or ExpirationUnlockCondition this can change at any time
+The balance of the base coin
 
 ___
 

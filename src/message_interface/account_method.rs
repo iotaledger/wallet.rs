@@ -20,10 +20,14 @@ use crate::{
         address_generation::AddressGenerationOptions,
         output_claiming::OutputsToClaim,
         syncing::SyncOptions,
-        transaction::{prepare_output::OutputOptionsDto, TransactionOptions},
+        transaction::{
+            high_level::minting::{mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto},
+            prepare_output::OutputOptionsDto,
+            TransactionOptions,
+        },
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
-    AddressAndNftId, AddressNativeTokens, NativeTokenOptions, NftOptions,
+    AddressAndNftId, AddressNativeTokens,
 };
 
 /// Each public account method.
@@ -169,14 +173,14 @@ pub enum AccountMethod {
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
         #[serde(rename = "nativeTokenOptions")]
-        native_token_options: NativeTokenOptions,
+        native_token_options: NativeTokenOptionsDto,
         options: Option<TransactionOptions>,
     },
     /// Mint nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     MintNfts {
         #[serde(rename = "nftsOptions")]
-        nfts_options: Vec<NftOptions>,
+        nfts_options: Vec<NftOptionsDto>,
         options: Option<TransactionOptions>,
     },
     /// Get account balance information.

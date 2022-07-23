@@ -43,7 +43,7 @@ impl AccountHandle {
                     self.event_emitter.lock().await.emit(
                         self.read().await.index,
                         WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransactionEssenceHash(
-                            hex::encode(prepared_transaction_data.essence.hash()),
+                            prefix_hex::encode(prepared_transaction_data.essence.hash()),
                         )),
                     );
                 } else {

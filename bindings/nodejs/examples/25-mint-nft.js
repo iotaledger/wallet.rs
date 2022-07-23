@@ -14,8 +14,8 @@ async function run() {
         const response = await account.mintNfts([
             {
                 // Hello in bytes
-                immutableMetadata: [72, 101, 108, 108, 111],
-                metadata: [72, 101, 108, 108, 111],
+                immutableMetadata: '0x48656c6c6f',
+                metadata: '0x48656c6c6f',
             }
         ]);
 

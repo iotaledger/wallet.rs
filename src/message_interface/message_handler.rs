@@ -43,7 +43,7 @@ use crate::{
         response::Response,
         AddressWithUnspentOutputsDto,
     },
-    AddressWithAmount, AddressWithMicroAmount, Result,
+    AddressWithAmount, AddressWithMicroAmount, NativeTokenOptions, NftOptions, Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Response {
@@ -516,7 +516,7 @@ impl WalletMessageHandler {
             } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
-                        .mint_native_token(native_token_options.clone(), options.clone())
+                        .mint_native_token(NativeTokenOptions::try_from(&native_token_options)?, options.clone())
                         .await?;
                     Ok(Response::MintTokenTransaction(MintTokenTransactionDto::from(
                         &transaction,
@@ -539,7 +539,15 @@ impl WalletMessageHandler {
             }
             AccountMethod::MintNfts { nfts_options, options } => {
                 convert_async_panics(|| async {
-                    let transaction = account_handle.mint_nfts(nfts_options.clone(), options.clone()).await?;
+                    let transaction = account_handle
+                        .mint_nfts(
+                            nfts_options
+                                .iter()
+                                .map(NftOptions::try_from)
+                                .collect::<Result<Vec<NftOptions>>>()?,
+                            options.clone(),
+                        )
+                        .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
                 .await

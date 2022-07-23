@@ -16,7 +16,7 @@ export type NewOutputEvent = {
     output: OutputData;
     transaction?: ITransactionPayload;
     transactionInputs?: IOutputResponse;
-}
+};
 
 /** Wallet events */
 export enum WalletEvent {
