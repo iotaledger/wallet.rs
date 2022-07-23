@@ -2,6 +2,7 @@
   "tag": "alpha",
   "changes": [
     ".changes/account-and-transaction-syncing.md",
+    ".changes/incoming_transaction_hex_metadata.md",
     ".changes/initial-ledger-support.md",
     ".changes/missing-transaction-id.md",
     ".changes/optional-note.md",
