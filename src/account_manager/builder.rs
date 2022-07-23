@@ -1,12 +1,12 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(any(feature = "storage", feature = "stronghold"))]
-use std::path::PathBuf;
 use std::sync::{
-    atomic::{AtomicU32, AtomicUsize, Ordering},
+    atomic::{AtomicU32, AtomicUsize},
     Arc,
 };
+#[cfg(any(feature = "storage", feature = "stronghold"))]
+use std::{path::PathBuf, sync::atomic::Ordering};
 
 use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
@@ -221,6 +221,7 @@ impl AccountManagerBuilder {
         })
     }
 
+    #[cfg(feature = "storage")]
     pub(crate) async fn from_account_manager(account_manager: &AccountManager) -> Self {
         Self {
             client_options: Some(account_manager.client_options.read().await.clone()),
