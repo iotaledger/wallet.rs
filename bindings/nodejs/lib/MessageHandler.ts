@@ -36,8 +36,10 @@ export class MessageHandler {
             JSON.stringify(message),
             this.messageHandler,
         ).catch((error) => {
-            const _error = JSON.parse(error);
-            return Promise.reject(_error.payload);
+            try {
+                error = JSON.parse(error).payload;
+            } catch (e) {}
+            return Promise.reject(error);
         });
     }
 
