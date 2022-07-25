@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.2-alpha.9]
+
+- Fixed LedgerNanoSecretManager interface.
+  Fixed error message when error message is not an object.
+  - [ef8fea18](https://github.com/iotaledger/wallet.rs/commit/ef8fea187b714c54d66760d3717dc94eb2ba335d) Fix LedgerNanoSecretManager and handle errors that aren't an object ([#1319](https://github.com/iotaledger/wallet.rs/pull/1319)) on 2022-07-25
+- Change metadata fields to hex encoded strings.
+  Add incomingTransactions field to AccountMeta.
+  - [a0e9cc86](https://github.com/iotaledger/wallet.rs/commit/a0e9cc86c9e8741b0d960aec634a158e464a9e6a) Change metadata fields to hex encoded strings. ([#1318](https://github.com/iotaledger/wallet.rs/pull/1318)) on 2022-07-23
+
 ## \[2.0.2-alpha.8]
 
 - Update types with missing properties
