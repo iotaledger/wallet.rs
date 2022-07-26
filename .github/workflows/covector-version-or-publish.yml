@@ -56,9 +56,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The GitHub hosted Windows 2022 image comes with Visual Studio 2022, but node-gyp
+        # (which is used by neon-sys) sadly fails to recognize it. As a mitigation, we still run the
+        # tests on Windows 2019, until we can figure out a way to fix the problem.
         # NOTE: Using Ubuntu 18.04 to provide glibc compatibility. (#588)
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, ubuntu-latest, macos-latest, windows-2019]
         node-version: ['14.x', '16.x', '18.x']
+        exclude:
+          # GLIBC_2.28 is only available with a newer ubuntu version
+          - os: ubuntu-18.04
+            node-version: ['18.x']
+          # ubuntu-18.04 is needed for node 14.x and 16.x
+          - os: ubuntu-latest
+            node-version: ['14.x', '16.x']
 
     steps:
       - uses: actions/checkout@v2
@@ -76,25 +86,25 @@ jobs:
       
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
       
       - name: Set LIBCLANG_PATH (Windows)
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'macos-latest' || if: ${{ startsWith(matrix.os, 'ubuntu') }}
 
       - name: Get current date
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install required packages (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
         run: |
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
@@ -139,7 +149,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, macos-latest, windows-2019]
 
     steps:
       - uses: actions/checkout@v2
@@ -157,21 +167,21 @@ jobs:
       
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
       
       - name: Set LIBCLANG_PATH (Windows)
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
         if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-18.04'
 
       - name: Get current date
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install required packages (Ubuntu)

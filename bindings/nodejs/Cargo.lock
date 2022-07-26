@@ -1176,8 +1176,8 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "1.1.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=31488c2865736b8b473a30b0e82cc7cdf9b337da#31488c2865736b8b473a30b0e82cc7cdf9b337da"
+version = "2.0.0-beta.1"
+source = "git+https://github.com/iotaledger/iota.rs?rev=0d2a37a4899ef046f16e7e132e3ac2c0c2216224#0d2a37a4899ef046f16e7e132e3ac2c0c2216224"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1188,7 +1188,6 @@ dependencies = [
  "derive_builder",
  "futures",
  "gloo-timers",
- "hex",
  "instant",
  "iota-crypto 0.13.0",
  "iota-ledger-nano",
@@ -1196,6 +1195,7 @@ dependencies = [
  "log",
  "num_cpus",
  "packable",
+ "prefix-hex",
  "primitive-types",
  "reqwest",
  "serde",
@@ -2102,9 +2102,9 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "serde"
-version = "1.0.139"
+version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0171ebb889e45aa68b44aee0859b3eede84c6f5f5c228e6f140c0b2a0a46cad6"
+checksum = "fc855a42c7967b7c369eb5860f7164ef1f6f81c20c7cc1141f2a604e18723b03"
 dependencies = [
  "serde_derive",
 ]
@@ -2120,9 +2120,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.139"
+version = "1.0.140"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1d3230c1de7932af58ad8ffbe1d784bd55efd5a9d84ac24f69c72d83543dfb"
+checksum = "6f2122636b9fe3b81f1cb25099fcf2d3f542cdb1d45940d56c713158884a05da"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2863,9 +2863,9 @@ dependencies = [
 
 [[package]]
 name = "zeroize"
-version = "1.5.6"
+version = "1.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "20b578acffd8516a6c3f2a1bdefc1ec37e547bb4e0fb8b6b01a4cafc886b4442"
+checksum = "c394b5bd0c6f669e7275d9c20aa90ae064cb22e75a1cad54e1b34088034b149f"
 dependencies = [
  "zeroize_derive",
 ]
