@@ -97,7 +97,7 @@ jobs:
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        if: matrix.os == 'macos-latest' || if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        if: matrix.os == 'macos-latest' || ${{ startsWith(matrix.os, 'ubuntu') }}
 
       - name: Get current date
         if: matrix.os == 'windows-2019'
