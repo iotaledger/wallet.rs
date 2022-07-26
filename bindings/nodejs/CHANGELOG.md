@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.10]
+
+- Bumped dependencies.
+  - [766ed17b](https://github.com/iotaledger/wallet.rs/commit/766ed17b50586b56af5ce4bd997a2b79112fc103) Fix workflow ([#1323](https://github.com/iotaledger/wallet.rs/pull/1323)) on 2022-07-26
+
 ## \[2.0.2-alpha.9]
 
 - Fixed LedgerNanoSecretManager interface.
