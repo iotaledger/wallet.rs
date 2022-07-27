@@ -275,6 +275,7 @@ impl AccountManagerBuilder {
                 .start_background_sync(
                     self.polling_interval,
                     self.account_options.automatic_output_consolidation,
+                    None,
                 )
                 .await?;
         }
@@ -804,10 +805,16 @@ impl AccountManager {
         &self,
         polling_interval: Duration,
         automatic_output_consolidation: bool,
+        gap_limit: Option<usize>,
     ) -> crate::Result<()> {
         Self::start_monitoring(self.accounts.clone()).await;
         let (stop_polling_sender, stop_polling_receiver) = broadcast_channel(1);
-        self.start_polling(polling_interval, stop_polling_receiver, automatic_output_consolidation)?;
+        self.start_polling(
+            polling_interval,
+            stop_polling_receiver,
+            automatic_output_consolidation,
+            gap_limit,
+        )?;
         self.stop_polling_sender
             .lock()
             .map_err(|_| crate::Error::PoisonError)?
@@ -971,6 +978,7 @@ impl AccountManager {
         polling_interval: Duration,
         mut stop: BroadcastReceiver<()>,
         automatic_output_consolidation: bool,
+        gap_limit: Option<usize>,
     ) -> crate::Result<()> {
         let storage_file_path = self.storage_path.clone();
         let accounts = self.accounts.clone();
@@ -999,7 +1007,8 @@ impl AccountManager {
                                         accounts.clone(),
                                         storage_file_path_,
                                         account_options,
-                                        automatic_output_consolidation)
+                                        automatic_output_consolidation,
+                                        gap_limit)
                                     )
                                     .catch_unwind()
                                     .await {
@@ -1816,12 +1825,16 @@ async fn poll(
     storage_file_path: PathBuf,
     account_options: AccountOptions,
     automatic_output_consolidation: bool,
+    gap_limit: Option<usize>,
 ) -> crate::Result<PollResponse> {
     log::debug!("[POLLING] poll");
     let polling_start_time = std::time::Instant::now();
     let mut synchronizer =
         AccountsSynchronizer::new(sync_accounts_lock, accounts.clone(), storage_file_path, account_options);
     synchronizer = synchronizer.skip_account_discovery().skip_change_addresses();
+    if let Some(gap_limit) = gap_limit {
+        synchronizer = synchronizer.gap_limit(gap_limit);
+    }
     let synced_accounts = synchronizer.execute().await?;
 
     log::debug!("[POLLING] synced accounts");
