@@ -17,8 +17,8 @@ export type Auth = {
 export interface NetworkInfo {
     network?: string;
     networkId?: number;
-    bech32HRP?: string;
-    minPoWScore?: number;
+    bech32Hrp?: string;
+    minPowScore?: number;
     localPow?: boolean;
     fallbackToLocalPow?: boolean;
     tipsInterval?: number;
@@ -48,7 +48,7 @@ export interface ClientOptions {
     port?: number;
     powWorkerCount?: number;
     primaryNode?: string | Node;
-    primaryPoWNode?: string | Node;
+    primaryPowNode?: string | Node;
     quorum?: boolean;
     quorumTreshold?: boolean;
     remotePowTimeout?: number;
