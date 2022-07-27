@@ -97,7 +97,7 @@ pub enum TransactionProgressEvent {
     /// Signing the transaction.
     SigningTransaction,
     /// Performing PoW.
-    PerformingPoW,
+    PerformingPow,
     /// Broadcasting.
     Broadcasting,
 }

@@ -29,7 +29,7 @@ impl AccountHandle {
             #[cfg(feature = "events")]
             self.event_emitter.lock().await.emit(
                 account_index,
-                WalletEvent::TransactionProgress(TransactionProgressEvent::PerformingPoW),
+                WalletEvent::TransactionProgress(TransactionProgressEvent::PerformingPow),
             );
         }
         let block = finish_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;

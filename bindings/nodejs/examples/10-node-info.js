@@ -28,8 +28,8 @@ run();
 //       protocol: {
 //         version: 2,
 //         networkName: 'dummy-1',
-//         bech32HRP: 'rms',
-//         minPoWScore: 1500,
+//         bech32Hrp: 'rms',
+//         minPowScore: 1500,
 //         rentStructure: [Object],
 //         tokenSupply: '1450896407249092'
 //       },
