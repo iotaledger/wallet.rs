@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.11]
+
+- Rename PoW to Pow and HRP to Hrp.
+  - [9561ccd4](https://github.com/iotaledger/wallet.rs/commit/9561ccd465dc9ed593bc0dbdb8ee284d0e1e5a82) Rename PoW to Pow and HRP to Hrp ([#1329](https://github.com/iotaledger/wallet.rs/pull/1329)) on 2022-07-27
+
 ## \[2.0.2-alpha.10]
 
 - Bumped dependencies.
