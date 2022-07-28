@@ -70,6 +70,11 @@ impl AccountHandle {
         self.read().await.alias.clone()
     }
 
+    // Get the Client
+    pub fn client(&self) -> &Client {
+        &self.client
+    }
+
     /// Get the [`OutputData`] of an output stored in the account
     pub async fn get_output(&self, output_id: &OutputId) -> Option<OutputData> {
         let account = self.read().await;
