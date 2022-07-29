@@ -1182,7 +1182,7 @@ fn get_balance_change_events(
         let balance_change = if change > 0 {
             BalanceChange::received(change as u64)
         } else {
-            BalanceChange::spent(change.abs() as u64)
+            BalanceChange::spent(change.unsigned_abs())
         };
         log::info!(
             "[SYNC] remaining balance change on {} {:?}",

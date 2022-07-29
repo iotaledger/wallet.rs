@@ -156,10 +156,11 @@ impl AccountManager {
         polling_interval: Duration,
         automatic_output_consolidation: bool,
     ) -> Result<()> {
-        match crate::block_on(
-            self.manager
-                .start_background_sync(polling_interval, automatic_output_consolidation),
-        ) {
+        match crate::block_on(self.manager.start_background_sync(
+            polling_interval,
+            automatic_output_consolidation,
+            None,
+        )) {
             Err(e) => Err(anyhow!(e.to_string())),
             Ok(_) => Ok(()),
         }

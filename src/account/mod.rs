@@ -511,7 +511,7 @@ impl AccountInitialiser {
 fn monitor_address(account_handle: AccountHandle) {
     crate::spawn(async move {
         // ignore errors because we fallback to the polling system
-        let _ = crate::monitor::monitor_account_addresses_balance(account_handle).await;
+        crate::monitor::monitor_account_addresses_balance(account_handle).await;
     });
 }
 
@@ -788,7 +788,7 @@ impl AccountHandle {
         let handle = self.clone();
         crate::spawn(async move {
             // ignore errors because we fallback to the polling system
-            let _ = crate::monitor::monitor_address_balance(handle, vec![address]).await;
+            crate::monitor::monitor_address_balance(handle, vec![address]).await;
         });
     }
 
@@ -1424,7 +1424,8 @@ impl Account {
     ///
     /// ```no_run
     /// use iota_wallet::{
-    ///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType, signing::SignerType,
+    ///     account_manager::AccountManager, client::ClientOptionsBuilder, message::MessageType,
+    ///     signing::SignerType,
     /// };
     ///
     /// #[tokio::main]
@@ -1442,7 +1443,10 @@ impl Account {
     ///         .await
     ///         .unwrap();
     ///     manager.set_stronghold_password("password").await.unwrap();
-    ///     manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
+    ///     manager
+    ///         .store_mnemonic(SignerType::Stronghold, None)
+    ///         .await
+    ///         .unwrap();
     ///
     ///     let account_handle = manager
     ///         .create_account(client_options)

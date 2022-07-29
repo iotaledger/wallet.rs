@@ -173,10 +173,11 @@ impl AccountManager {
 
     /// Starts the background polling and MQTT monitoring.
     fn start_background_sync(&mut self, polling_interval: u64, automatic_output_consolidation: bool) -> Result<()> {
-        crate::block_on(
-            self.account_manager
-                .start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation),
-        )?;
+        crate::block_on(self.account_manager.start_background_sync(
+            Duration::from_secs(polling_interval),
+            automatic_output_consolidation,
+            None,
+        ))?;
         Ok(())
     }
 
