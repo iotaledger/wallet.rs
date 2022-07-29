@@ -18,14 +18,15 @@ jobs:
       fail-fast: false
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install rustfmt with nightly toolchain
-      uses: actions-rs/toolchain@v1
-      with:
+      - uses: actions/checkout@v2
+      - name: Install rustfmt with nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
           profile: minimal
           toolchain: nightly
           override: true
           components: rustfmt
+
       - name: Install cargo-license-template
         uses: actions-rs/cargo@v1
         with:
