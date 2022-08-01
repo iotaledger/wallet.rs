@@ -8,7 +8,7 @@ use iota_client::{
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{Output, OutputId, RentStructure},
+        output::{Output, OutputId, Rent, RentStructure},
     },
     secret::types::InputSigningData,
 };
@@ -79,6 +79,7 @@ impl AccountHandle {
             &bech32_hrp,
             &outputs,
             &account.locked_outputs,
+            rent_structure,
         )?;
 
         let selected_transaction_data = match try_select_inputs(
@@ -136,6 +137,7 @@ fn filter_inputs(
     bech32_hrp: &str,
     outputs: &[Output],
     locked_outputs: &HashSet<OutputId>,
+    rent_structure: &RentStructure,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
     for output_data in available_outputs {
@@ -144,33 +146,43 @@ fn filter_inputs(
             continue;
         }
 
+        let minimum_required_storage_deposit = output_data.output.rent_cost(rent_structure);
+
         match &output_data.output {
             Output::Nft(nft_input) => {
-                // Don't add if output has not the same NftId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Nft(nft_output) = output {
-                        nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
-                    } else {
-                        false
+                // Only add if the output amount is larger than the min. required storage
+                // deposit
+                if output_data.output.amount() <= minimum_required_storage_deposit {
+                    // or if an output contains an nft output with the same nft id
+                    if !outputs.iter().any(|output| {
+                        if let Output::Nft(nft_output) = output {
+                            nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
+                        } else {
+                            false
+                        }
+                    }) {
+                        continue;
                     }
-                }) {
-                    continue;
                 }
             }
             Output::Alias(alias_input) => {
-                // Don't add if output has not the same AliasId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Alias(alias_output) = output {
-                        alias_input.alias_id().or_from_output_id(output_data.output_id) == *alias_output.alias_id()
-                    } else {
-                        false
+                // Only add if the output amount is larger than the min. required storage
+                // deposit
+                if output_data.output.amount() <= minimum_required_storage_deposit {
+                    // or if an output contains an alias output with the same alias id
+                    if !outputs.iter().any(|output| {
+                        if let Output::Alias(alias_output) = output {
+                            alias_input.alias_id().or_from_output_id(output_data.output_id) == *alias_output.alias_id()
+                        } else {
+                            false
+                        }
+                    }) {
+                        continue;
                     }
-                }) {
-                    continue;
                 }
             }
             Output::Foundry(foundry_input) => {
-                // Don't add if output has not the same FoundryId, so we don't burn it
+                // Only add foundry if required in the outputs, because we also need it's alias output additionally
                 if !outputs.iter().any(|output| {
                     if let Output::Foundry(foundry_output) = output {
                         foundry_input.id() == foundry_output.id()
