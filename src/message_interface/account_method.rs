@@ -229,7 +229,7 @@ pub enum AccountMethod {
     /// Send native tokens.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNativeTokens {
-        #[serde(rename = "addressesAndNativeTokens")]
+        #[serde(rename = "addressesNativeTokens")]
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
     },

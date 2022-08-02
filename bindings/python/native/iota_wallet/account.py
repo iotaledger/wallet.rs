@@ -45,14 +45,14 @@ class Account:
         return self._call_account_method(
             'BuildAliasOutput', {
                 'amount': amount,
-                'native_tokens': native_tokens,
-                'alias_id': alias_id,
-                'state_index': state_index,
-                'state_metadata': state_metadata,
-                'foundry_counter': foundry_counter,
-                'unlock_conditions': unlock_conditions,
+                'nativeTokens': native_tokens,
+                'aliasId': alias_id,
+                'stateIndex': state_index,
+                'stateMetadata': state_metadata,
+                'foundryCounter': foundry_counter,
+                'unlockConditions': unlock_conditions,
                 'features': features,
-                'immutable_features': immutable_features
+                'immutableFeatures': immutable_features
             }
         )
 
@@ -66,8 +66,8 @@ class Account:
         return self._call_account_method(
             'BuildBasicOutput', {
                 'amount': amount,
-                'native_tokens': native_tokens,
-                'unlock_conditions': unlock_conditions,
+                'nativeTokens': native_tokens,
+                'unlockConditions': unlock_conditions,
                 'features': features
             }
         )
@@ -85,12 +85,12 @@ class Account:
         return self._call_account_method(
             'BuildFoundryOutput', {
                 'amount': amount,
-                'native_tokens': native_tokens,
-                'serial_number': serial_number,
-                'token_scheme': token_scheme,
-                'unlock_conditions': unlock_conditions,
+                'nativeTokens': native_tokens,
+                'serialNumber': serial_number,
+                'tokenScheme': token_scheme,
+                'unlockConditions': unlock_conditions,
                 'features': features,
-                'immutable_features': immutable_features
+                'immutableFeatures': immutable_features
             }
         )
 
@@ -106,11 +106,11 @@ class Account:
         return self._call_account_method(
             'BuildNftOutput', {
                 'amount': amount,
-                'native_tokens': native_tokens,
-                'nft_id': nft_id,
-                'unlock_conditions': unlock_conditions,
+                'nativeTokens': native_tokens,
+                'nftId': nft_id,
+                'unlockConditions': unlock_conditions,
                 'features': features,
-                'immutable_features': immutable_features
+                'immutableFeatures': immutable_features
             }
         )
 
@@ -122,7 +122,7 @@ class Account:
         return self._call_account_method(
             'ConsolidateOutputs', {
                 'force': force,
-                'output_consolidation_threshold':  output_consolidation_threshold
+                'outputConsolidationThreshold':  output_consolidation_threshold
             }
         )
 
@@ -141,7 +141,7 @@ class Account:
         """
         return self._call_account_method(
             'GetOutputsWithAdditionalUnlockConditions', {
-                'outputs_to_claim': outputs_to_claim
+                'outputsToClaim': outputs_to_claim
             }
         )
 
@@ -150,7 +150,7 @@ class Account:
         """
         return self._call_account_method(
             'GetOutput', {
-                'output_id': output_id
+                'outputId': output_id
             }
         )
 
@@ -159,7 +159,7 @@ class Account:
         """
         return self._call_account_method(
             'GetTransaction', {
-                'transaction_id': transaction_id
+                'transactionId': transaction_id
             }
         )
 
@@ -210,7 +210,7 @@ class Account:
         """
         return self._call_account_method(
             'MintNativeToken', {
-                'native_token_options': native_token_options,
+                'nativeTokenOptions': native_token_options,
                 'options': options
             }
         )
@@ -229,7 +229,7 @@ class Account:
         """
         return self._call_account_method(
             'MintNfts', {
-                'nfts_options': nfts_options,
+                'nftsOptions': nfts_options,
                 'options': options
             }
         )
@@ -246,7 +246,7 @@ class Account:
         """
         return self._call_account_method(
             'PrepareSendAmount', {
-                'addresses_with_amount': addresses_with_amount,
+                'addressesWithAmount': addresses_with_amount,
                 'options': options
             }
         )
@@ -271,12 +271,12 @@ class Account:
             }
         )
 
-    def send_amount(self, addresses_with_amount, options):
+    def send_amount(self, addresses_with_amount, options=None):
         """Send amount.
         """
         return self._call_account_method(
             'SendAmount', {
-                'addresses_with_amount': addresses_with_amount,
+                'addressesWithAmount': addresses_with_amount,
                 'options': options
             }
         )
@@ -286,7 +286,7 @@ class Account:
         """
         return self._call_account_method(
             'SendMicroTransaction', {
-                'addresses_with_micro_amount': addresses_with_micro_amount,
+                'addressesWithMicroAmount': addresses_with_micro_amount,
                 'options': options
             }
         )
@@ -296,7 +296,7 @@ class Account:
         """
         return self._call_account_method(
             'SendNativeTokens', {
-                'addresses_native_tokens': addresses_native_tokens,
+                'addressesNativeTokens': addresses_native_tokens,
                 'options': options
             }
         )
@@ -306,7 +306,7 @@ class Account:
         """
         return self._call_account_method(
             'SendNft', {
-                'addresses_nft_ids': addresses_nft_ids,
+                'addressesAndNftIds': addresses_nft_ids,
                 'options': options
             }
         )
@@ -336,7 +336,7 @@ class Account:
         """
         return self._call_account_method(
             'SignTransactionEssence', {
-                'prepared_transaction_data': prepared_transaction_data
+                'preparedTransactionData': prepared_transaction_data
 
             }
         )
@@ -346,7 +346,7 @@ class Account:
         """
         return self._call_account_method(
             'SubmitAndStoreTransaction', {
-                'signed_transaction_data': signed_transaction_data
+                'signedTransactionData': signed_transaction_data
 
             }
         )
@@ -356,7 +356,7 @@ class Account:
         """
         return self._call_account_method(
             'TryClaimOutputs', {
-                'outputs_to_claim': outputs_to_claim
+                'outputsToClaim': outputs_to_claim
 
             }
         )
@@ -366,7 +366,7 @@ class Account:
         """
         return self._call_account_method(
             'ClaimOutputs', {
-                'output_ids_to_claim': output_ids_to_claim
+                'outputIdsToClaim': output_ids_to_claim
 
             }
         )
