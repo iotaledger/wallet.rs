@@ -14,9 +14,9 @@ class IotaWallet():
         if client_options:
             options['clientOptions'] = dumps(client_options)
         if coin_type:
-            options['coinType'] = dumps(coin_type)
+            options['coinType'] = coin_type
         if secret_manager:
-            options['secretManager'] = dumps({'Mnemonic': secret_manager})
+            options['secretManager'] = secret_manager.toJSON()
 
         options = dumps(options)
 
@@ -39,9 +39,13 @@ class IotaWallet():
         # Send message to the Rust library
         response = iota_wallet.send_message(self.handle, message)
         response = loads(response)
-        account_id = response['payload']['index']
-
-        return self.get_account(account_id)
+        try:
+            response['payload'].get(index)
+        except NameError:
+            return response
+        else:
+            account_id = response['payload']['index']
+            return self.get_account(account_id)
 
     def get_account(self, alias_index):
         """Get the account instance
@@ -112,7 +116,7 @@ class IotaWallet():
         return self._send_cmd_routine(
             'RecoverAccounts', {
                 'account_gap_limit': account_gap_limit,
-                'address_gap_limit': address_gap_limit
+                'address_gap_limit': address_gap_limit,
                 'sync_options': sync_options
             }
         )
@@ -178,9 +182,8 @@ class IotaWallet():
         """Set stronghold password.
         """
         return self._send_cmd_routine(
-            'SetStrongholdPassword', {
-                'password': password
-            }
+            'SetStrongholdPassword',
+            password
         )
 
     def set_stronghold_password_clear_interval(self, interval_in_milliseconds):
@@ -192,13 +195,12 @@ class IotaWallet():
             }
         )
 
-    def store_memonic(self, mnemonic):
-        """Store memonic.
+    def store_mnemonic(self, mnemonic):
+        """Store mnemonic.
         """
         return self._send_cmd_routine(
-            'StoreMnemonic', {
-                'mnemonic': mnemonic
-            }
+            'StoreMnemonic',
+            mnemonic
         )
 
     def start_background_sync(self, options, interval_in_milliseconds):

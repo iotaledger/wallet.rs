@@ -130,7 +130,7 @@ mod tests {
                   "disabled":false
                },
                {
-                  "url":"https://chrysalis-nodes.iota.cafe/",
+                  "url":"https://api.testnet.shimmer.network",
                   "auth":null,
                   "disabled":false
                }
