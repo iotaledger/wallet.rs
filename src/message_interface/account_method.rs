@@ -8,7 +8,7 @@ use iota_client::{
             dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
             feature::dto::FeatureDto,
             unlock_condition::dto::UnlockConditionDto,
-            OutputId,
+            FoundryId, OutputId,
         },
         payload::transaction::TransactionId,
     },
@@ -102,12 +102,47 @@ pub enum AccountMethod {
         #[serde(rename = "immutableFeatures")]
         immutable_features: Option<Vec<FeatureDto>>,
     },
+    /// Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+    /// the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+    /// recommended to use melting, if the foundry output is available.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    BurnNativeToken {
+        #[serde(rename = "nativeToken")]
+        native_token: NativeTokenDto,
+        options: Option<TransactionOptions>,
+    },
+    /// Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+    /// deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
+    /// burning, the foundry can never be destroyed anymore.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    BurnNft {
+        #[serde(rename = "nftId")]
+        nft_id: NftIdDto,
+        options: Option<TransactionOptions>,
+    },
     /// Consolidate outputs.
     /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
     ConsolidateOutputs {
         force: bool,
         #[serde(rename = "outputConsolidationThreshold")]
         output_consolidation_threshold: Option<usize>,
+    },
+    /// Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+    /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+    /// sent to the governor address.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    DestroyAlias {
+        #[serde(rename = "aliasId")]
+        alias_id: AliasIdDto,
+        options: Option<TransactionOptions>,
+    },
+    /// Function to destroy a foundry output with a circulating supply of 0.
+    /// Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    DestroyFoundry {
+        #[serde(rename = "foundryId")]
+        foundry_id: FoundryId,
+        options: Option<TransactionOptions>,
     },
     /// Generate new unused addresses.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
@@ -165,6 +200,14 @@ pub enum AccountMethod {
     /// Returns all pending transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
     ListPendingTransactions,
+    /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+    /// `melted_tokens` field.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    MeltNativeToken {
+        #[serde(rename = "nativeToken")]
+        native_token: NativeTokenDto,
+        options: Option<TransactionOptions>,
+    },
     /// Calculate the minimum required storage deposit for an output.
     /// Expected response:
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)

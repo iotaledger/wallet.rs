@@ -15,7 +15,7 @@ use iota_client::{
     block::{
         output::{
             dto::{OutputBuilderAmountDto, OutputDto},
-            AliasOutput, BasicOutput, FoundryOutput, NftOutput, Output, Rent, TokenId,
+            AliasId, AliasOutput, BasicOutput, FoundryOutput, NativeToken, NftId, NftOutput, Output, Rent, TokenId,
         },
         payload::transaction::dto::TransactionPayloadDto,
     },
@@ -429,6 +429,23 @@ impl WalletMessageHandler {
 
                 Ok(Response::Output(OutputDto::from(&output)))
             }
+            AccountMethod::BurnNativeToken { native_token, options } => {
+                convert_async_panics(|| async {
+                    let native_token = NativeToken::try_from(&native_token)?;
+                    let transaction = account_handle
+                        .burn_native_token((*native_token.token_id(), *native_token.amount()), options)
+                        .await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            AccountMethod::BurnNft { nft_id, options } => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle.burn_nft(NftId::try_from(&nft_id)?, options).await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
             AccountMethod::ConsolidateOutputs {
                 force,
                 output_consolidation_threshold,
@@ -440,6 +457,22 @@ impl WalletMessageHandler {
                     Ok(Response::SentTransactions(
                         transactions.iter().map(TransactionDto::from).collect(),
                     ))
+                })
+                .await
+            }
+            AccountMethod::DestroyAlias { alias_id, options } => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle
+                        .destroy_alias(AliasId::try_from(&alias_id)?, options)
+                        .await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            AccountMethod::DestroyFoundry { foundry_id, options } => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle.destroy_foundry(foundry_id, options).await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
                 .await
             }
@@ -509,6 +542,16 @@ impl WalletMessageHandler {
                 Ok(Response::Transactions(
                     transactions.iter().map(TransactionDto::from).collect(),
                 ))
+            }
+            AccountMethod::MeltNativeToken { native_token, options } => {
+                convert_async_panics(|| async {
+                    let native_token = NativeToken::try_from(&native_token)?;
+                    let transaction = account_handle
+                        .melt_native_token((*native_token.token_id(), *native_token.amount()), options)
+                        .await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
             }
             AccountMethod::MintNativeToken {
                 native_token_options,
