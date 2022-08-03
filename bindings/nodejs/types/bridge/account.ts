@@ -1,4 +1,4 @@
-import type { OutputTypes } from '@iota/types';
+import type { OutputTypes, HexEncodedAmount } from '@iota/types';
 import type { AccountSyncOptions } from '../account';
 import type {
     AddressWithAmount,
@@ -43,6 +43,22 @@ export type __BuildNftOutputMethod__ = {
     data: BuildNftOutputData;
 };
 
+export type __BurnNativeTokenMethod__ = {
+    name: 'BurnNativeToken';
+    data: {
+        nativeToken: [string, HexEncodedAmount];
+        options?: TransactionOptions;
+    };
+};
+
+export type __BurnNftMethod__ = {
+    name: 'BurnNft';
+    data: {
+        nftId: string;
+        options?: TransactionOptions;
+    };
+};
+
 export type __ClaimOutputsMethod__ = {
     name: 'ClaimOutputs';
     data: {
@@ -55,6 +71,22 @@ export type __ConsolidateOutputsMethod__ = {
     data: {
         force: boolean;
         outputConsolidationThreshold?: number;
+    };
+};
+
+export type __DestroyAliasMethod__ = {
+    name: 'DestroyAlias';
+    data: {
+        aliasId: string;
+        options?: TransactionOptions;
+    };
+};
+
+export type __DestroyFoundryMethod__ = {
+    name: 'DestroyFoundry';
+    data: {
+        foundryId: string;
+        options?: TransactionOptions;
     };
 };
 
@@ -120,6 +152,14 @@ export type __ListTransactionsMethod__ = {
 
 export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
+};
+
+export type __MeltNativeTokenMethod__ = {
+    name: 'MeltNativeToken';
+    data: {
+        nativeToken: [string, HexEncodedAmount];
+        options?: TransactionOptions;
+    };
 };
 
 export type __MinimumRequiredStorageDepositMethod__ = {

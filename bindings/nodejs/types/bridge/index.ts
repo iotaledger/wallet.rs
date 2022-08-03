@@ -4,8 +4,12 @@ import type {
     __BuildBasicOutputMethod__,
     __BuildFoundryOutputMethod__,
     __BuildNftOutputMethod__,
+    __BurnNativeTokenMethod__,
+    __BurnNftMethod__,
     __ClaimOutputsMethod__,
     __ConsolidateOutputsMethod__,
+    __DestroyAliasMethod__,
+    __DestroyFoundryMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
@@ -18,6 +22,7 @@ import type {
     __ListPendingTransactionsMethod__,
     __ListTransactionsMethod__,
     __ListUnspentOutputsMethod__,
+    __MeltNativeTokenMethod__,
     __MinimumRequiredStorageDepositMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
@@ -67,8 +72,12 @@ export type __AccountMethod__ =
     | __BuildBasicOutputMethod__
     | __BuildFoundryOutputMethod__
     | __BuildNftOutputMethod__
+    | __BurnNativeTokenMethod__
+    | __BurnNftMethod__
     | __ClaimOutputsMethod__
     | __ConsolidateOutputsMethod__
+    | __DestroyAliasMethod__
+    | __DestroyFoundryMethod__
     | __GenerateAddressesMethod__
     | __GetBalanceMethod__
     | __GetOutputMethod__
@@ -81,6 +90,7 @@ export type __AccountMethod__ =
     | __ListPendingTransactionsMethod__
     | __ListTransactionsMethod__
     | __ListUnspentOutputsMethod__
+    | __MeltNativeTokenMethod__
     | __MinimumRequiredStorageDepositMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__

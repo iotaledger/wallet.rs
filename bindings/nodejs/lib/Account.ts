@@ -35,6 +35,7 @@ import type {
     IBasicOutput,
     IFoundryOutput,
     INftOutput,
+    HexEncodedAmount,
     OutputTypes,
 } from '@iota/types';
 
@@ -115,6 +116,58 @@ export class Account {
     }
 
     /**
+     * Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+     * the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+     * recommended to use melting, if the foundry output is available.
+     * @param nativeToken The Native Token with amount.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async burnNativeToken(
+        nativeToken: [string, HexEncodedAmount],
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BurnNativeToken',
+                data: {
+                    nativeToken,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
+     * Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+     * deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
+     * burning, the foundry can never be destroyed anymore.
+     * @param nftId The NftId.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async burnNft(
+        nftId: string,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'BurnNft',
+                data: {
+                    nftId,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
      * Claim basic or nft outputs that have additional unlock conditions
      * to their `AddressUnlockCondition` from the account.
      * @param outputIds The outputs to claim.
@@ -152,6 +205,57 @@ export class Account {
                 data: {
                     force,
                     outputConsolidationThreshold,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
+     * Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+     * storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+     * sent to the governor address.
+     * @param aliasId The AliasId.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async destroyAlias(
+        aliasId: string,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'DestroyAlias',
+                data: {
+                    aliasId,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
+     * Function to destroy a foundry output with a circulating supply of 0.
+     * Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias.
+     * @param foundryId The FoundryId.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async destroyFoundry(
+        foundryId: string,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'DestroyFoundry',
+                data: {
+                    foundryId,
+                    options: transactionOptions,
                 },
             },
         );
@@ -380,6 +484,31 @@ export class Account {
         );
 
         return JSON.parse(response).payload;
+    }
+
+    /**
+     * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+     * `melted_tokens` field.
+     * @param nativeToken The Native Token with amount.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async meltNativeToken(
+        nativeToken: [string, HexEncodedAmount],
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'MeltNativeToken',
+                data: {
+                    nativeToken,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     /**
