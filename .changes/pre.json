@@ -3,6 +3,7 @@
   "changes": [
     ".changes/account-and-transaction-syncing.md",
     ".changes/bump-depdendencies.md",
+    ".changes/burning.md",
     ".changes/error-message-and-ledger.md",
     ".changes/incoming_transaction_hex_metadata.md",
     ".changes/initial-ledger-support.md",
@@ -14,6 +15,7 @@
     ".changes/stronghold-update.md",
     ".changes/types.md",
     ".changes/typescript-declarations.md",
+    ".changes/update-iota-client-types.md",
     ".changes/update-types.md"
   ]
 }
