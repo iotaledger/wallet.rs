@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.2-alpha.12]
+
+- Add burning methods.
+  - [cbd74771](https://github.com/iotaledger/wallet.rs/commit/cbd747715567c1c50bc265265ae14278e79800b8) Expose burning methods ([#1338](https://github.com/iotaledger/wallet.rs/pull/1338)) on 2022-08-04
+- Update iota client for more logs and update @iota/types to fix types.
+  - [a100c24f](https://github.com/iotaledger/wallet.rs/commit/a100c24f3448aa294a7fee640ee34df89425e200) Update iota-client and @iota/types ([#1339](https://github.com/iotaledger/wallet.rs/pull/1339)) on 2022-08-04
+
 ## \[2.0.2-alpha.11]
 
 - Rename PoW to Pow and HRP to Hrp.
