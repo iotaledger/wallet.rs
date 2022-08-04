@@ -10,8 +10,12 @@ The Account class.
 - [buildBasicOutput](Account.md#buildbasicoutput)
 - [buildFoundryOutput](Account.md#buildfoundryoutput)
 - [buildNftOutput](Account.md#buildnftoutput)
+- [burnNativeToken](Account.md#burnnativetoken)
+- [burnNft](Account.md#burnnft)
 - [claimOutputs](Account.md#claimoutputs)
 - [consolidateOutputs](Account.md#consolidateoutputs)
+- [destroyAlias](Account.md#destroyalias)
+- [destroyFoundry](Account.md#destroyfoundry)
 - [generateAddress](Account.md#generateaddress)
 - [generateAddresses](Account.md#generateaddresses)
 - [getAlias](Account.md#getalias)
@@ -26,6 +30,7 @@ The Account class.
 - [listPendingTransactions](Account.md#listpendingtransactions)
 - [listTransactions](Account.md#listtransactions)
 - [listUnspentOutputs](Account.md#listunspentoutputs)
+- [meltNativeToken](Account.md#meltnativetoken)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
 - [mintNativeToken](Account.md#mintnativetoken)
 - [mintNfts](Account.md#mintnfts)
@@ -124,6 +129,52 @@ The built `NftOutput`.
 
 ___
 
+### burnNativeToken
+
+▸ **burnNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+recommended to use melting, if the foundry output is available.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
+
+___
+
+### burnNft
+
+▸ **burnNft**(`nftId`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
+burning, the foundry can never be destroyed anymore.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `nftId` | `string` | The NftId. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
+
+___
+
 ### claimOutputs
 
 ▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
@@ -165,6 +216,51 @@ equal to the output consolidation threshold.
 `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The consolidation transactions.
+
+___
+
+### destroyAlias
+
+▸ **destroyAlias**(`aliasId`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+sent to the governor address.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `aliasId` | `string` | The AliasId. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
+
+___
+
+### destroyFoundry
+
+▸ **destroyFoundry**(`foundryId`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Function to destroy a foundry output with a circulating supply of 0.
+Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `foundryId` | `string` | The FoundryId. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
 
 ___
 
@@ -399,6 +495,28 @@ List all the unspent outputs of the account.
 `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
 
 The outputs with metadata.
+
+___
+
+### meltNativeToken
+
+▸ **meltNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+`melted_tokens` field.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
 
 ___
 

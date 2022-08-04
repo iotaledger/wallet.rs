@@ -114,6 +114,34 @@ class Account:
             }
         )
 
+    def burn_native_token(self,
+                          native_token,
+                          options):
+        """Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+        the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+        recommended to use melting, if the foundry output is available.
+        """
+        return self._call_account_method(
+            'BurnNativeToken', {
+                'nativeToken': native_token,
+                'options':  options
+            }
+        )
+
+    def burn_nft(self,
+                 nft_id,
+                 options):
+        """Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+        deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
+        burning, the foundry can never be destroyed anymore.
+        """
+        return self._call_account_method(
+            'BurnNft', {
+                'nftId': nft_id,
+                'options':  options
+            }
+        )
+
     def cnsolidate_outputs(self,
                            force,
                            output_consolidation_threshold):
@@ -123,6 +151,33 @@ class Account:
             'ConsolidateOutputs', {
                 'force': force,
                 'outputConsolidationThreshold':  output_consolidation_threshold
+            }
+        )
+
+    def destroy_alias(self,
+                      alias_id,
+                      options):
+        """Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+        storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+        sent to the governor address.
+        """
+        return self._call_account_method(
+            'DestroyAlias', {
+                'aliasId': alias_id,
+                'options':  options
+            }
+        )
+
+    def destroy_foundry(self,
+                        foundry_id,
+                        options):
+        """Destroy a foundry output with a circulating supply of 0.
+        Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+        """
+        return self._call_account_method(
+            'DestroyFoundry', {
+                'foundryId': foundry_id,
+                'options':  options
             }
         )
 
@@ -203,6 +258,19 @@ class Account:
         """
         return self._call_account_method(
             'ListPendingTransactions'
+        )
+
+    def melt_native_token(self,
+                          native_token,
+                          options):
+        """Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+        `melted_tokens` field.
+        """
+        return self._call_account_method(
+            'MeltNativeToken', {
+                'nativeToken': native_token,
+                'options':  options
+            }
         )
 
     def mint_native_token(self, native_token_options, options):

@@ -10,7 +10,8 @@ use crate::account::{handle::AccountHandle, operations::transaction::Transaction
 
 impl AccountHandle {
     /// Function to melt native tokens. This happens with the foundry output which minted them, by increasing it's
-    /// `melted_tokens` field.
+    /// `melted_tokens` field. This should be preferred over burning, because after burning, the foundry can never be
+    /// destroyed anymore.
     pub async fn melt_native_token(
         &self,
         native_token: (TokenId, U256),

@@ -45,7 +45,8 @@ struct StrippedOutputAggregate {
 
 impl AccountHandle {
     /// Function to burn native tokens. This doesn't require the foundry output which minted them, but will not increase
-    /// the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output.
+    /// the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+    /// recommended to use melting, if the foundry output is available.
     pub async fn burn_native_token(
         &self,
         native_token: (TokenId, U256),

@@ -58,6 +58,30 @@ def build_nft_output(amount, native_tokens, nft_id, unlock_conditions,
 
 BuildNftOutput.
 
+<a id="iota_wallet.account.Account.burn_native_token"></a>
+
+#### burn\_native\_token
+
+```python
+def burn_native_token(native_token, options)
+```
+
+Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
+the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
+recommended to use melting, if the foundry output is available.
+
+<a id="iota_wallet.account.Account.burn_nft"></a>
+
+#### burn\_nft
+
+```python
+def burn_nft(nft_id, options)
+```
+
+Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
+burning, the foundry can never be destroyed anymore.
+
 <a id="iota_wallet.account.Account.cnsolidate_outputs"></a>
 
 #### cnsolidate\_outputs
@@ -67,6 +91,29 @@ def cnsolidate_outputs(force, output_consolidation_threshold)
 ```
 
 Consolidate outputs.
+
+<a id="iota_wallet.account.Account.destroy_alias"></a>
+
+#### destroy\_alias
+
+```python
+def destroy_alias(alias_id, options)
+```
+
+Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
+sent to the governor address.
+
+<a id="iota_wallet.account.Account.destroy_foundry"></a>
+
+#### destroy\_foundry
+
+```python
+def destroy_foundry(foundry_id, options)
+```
+
+Destroy a foundry output with a circulating supply of 0.
+Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
 
 <a id="iota_wallet.account.Account.generate_addresses"></a>
 
@@ -167,6 +214,17 @@ def list_pending_transactions()
 ```
 
 Returns all pending transaction of the account.
+
+<a id="iota_wallet.account.Account.melt_native_token"></a>
+
+#### melt\_native\_token
+
+```python
+def melt_native_token(native_token, options)
+```
+
+Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+`melted_tokens` field.
 
 <a id="iota_wallet.account.Account.mint_native_token"></a>
 
