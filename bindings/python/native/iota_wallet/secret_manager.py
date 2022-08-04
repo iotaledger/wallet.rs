@@ -1,33 +1,27 @@
-import json
-
-class LedgerNanoSecretManager:
+class LedgerNanoSecretManager(dict):
     def __init__(self, is_simulator):
         """Initialize a ledger nano secret manager.
         """
 
-        self.LedgerNano = is_simulator
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
-            
-class MnemonicSecretManager:
+        dict.__init__(self, LedgerNano=is_simulator)
+
+
+class MnemonicSecretManager(dict):
     def __init__(self, mnemonic):
         """Initialize a mnemonic secret manager.
         """
 
-        self.Mnemonic = mnemonic
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
+        dict.__init__(self, Mnemonic=mnemonic)
 
-class StrongholdSecretManager:
+
+class StrongholdSecretManager(dict):
     def __init__(self, snapshot_path, password):
         """Initialize a stronghold secret manager.
         """
 
-        self.Stronghold = StrongholdSecretManager.Inner(snapshot_path, password)
-    def toJSON(self):
-        return json.dumps(self, default=lambda o: o.__dict__)
+        dict.__init__(self, Stronghold=StrongholdSecretManager.Inner(
+            snapshot_path, password))
 
-    class Inner:
+    class Inner(dict):
         def __init__(self, snapshot_path, password):
-            self.password = password
-            self.snapshotPath = snapshot_path
+            dict.__init__(self, password=password, snapshotPath=snapshot_path)

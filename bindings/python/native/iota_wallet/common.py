@@ -1,4 +1,5 @@
 import iota_wallet
+import json
 from json import dumps
 
 
@@ -11,5 +12,5 @@ def send_message_routine(func):
 
         # Send message to the Rust library
         response = iota_wallet.send_message(args[0].handle, message)
-        return response
+        return json.loads(response)['payload']
     return wrapper
