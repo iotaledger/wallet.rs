@@ -184,9 +184,9 @@ dependencies = [
 
 [[package]]
 name = "bee-block"
-version = "1.0.0-beta.4"
+version = "1.0.0-beta.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "19986a689227ecf48f0f563a70db6b40e210b7153f6664e72e49d3eba73de2ed"
+checksum = "400e3fbac56e7c7e4d69af820f18a02e4ee89d8cf52a5b2e267b0b9d2d85d7f7"
 dependencies = [
  "bech32",
  "bee-pow",
@@ -1065,7 +1065,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.0-beta.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=4fcb685082d6741a5e8c00ae44e1e70503b586d7#4fcb685082d6741a5e8c00ae44e1e70503b586d7"
+source = "git+https://github.com/iotaledger/iota.rs?rev=bc39eae567ff02e4c6a15c0d784b4399deb18d64#bc39eae567ff02e4c6a15c0d784b4399deb18d64"
 dependencies = [
  "async-trait",
  "backtrace",
