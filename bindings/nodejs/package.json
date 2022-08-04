@@ -20,7 +20,7 @@
   "author": "IOTA Foundation <contact@iota.org>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@iota/types": "^1.0.0-beta.10",
+    "@iota/types": "^1.0.0-beta.11",
     "cargo-cp-artifact": "^0.1.5",
     "prebuild-install": "^5.3.3"
   },
