@@ -16,7 +16,7 @@ class IotaWallet():
         if coin_type:
             options['coinType'] = coin_type
         if secret_manager:
-            options['secretManager'] = secret_manager.toJSON()
+            options['secretManager'] = dumps(secret_manager)
 
         options = dumps(options)
 
@@ -27,25 +27,13 @@ class IotaWallet():
         return self.handle
 
     def create_account(self, alias=None):
-        # Setup the message
-        message = {
-            'cmd': 'CreateAccount',
-            'payload': {
+        """Create a new account
+        """
+        return self._send_cmd_routine(
+            'CreateAccount', {
                 'alias': self.__return_str_or_none(alias),
             }
-        }
-        message = dumps(message)
-
-        # Send message to the Rust library
-        response = iota_wallet.send_message(self.handle, message)
-        response = loads(response)
-        try:
-            response['payload'].get(index)
-        except NameError:
-            return response
-        else:
-            account_id = response['payload']['index']
-            return self.get_account(account_id)
+        )
 
     def get_account(self, alias_index):
         """Get the account instance
