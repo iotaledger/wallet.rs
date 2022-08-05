@@ -1,6 +1,19 @@
-# IOTA Wallet Library - Python binding
+---
+description: Getting started with the official IOTA Wallet Library Python binding.
+image: /img/logo/iota_mark_light.png
+keywords:
+- Python
+- install
+- pip
+- unpack
+---
+# Getting Started with IOTA Wallet Python Binding
 
-Python binding to the iota.rs wallet library.
+## Security
+
+:::warning
+In a production setup, do not store passwords in the host's environment variables or in the source code. See our [backup and security recommendations](https://wiki.iota.org/chrysalis-docs/guides/backup_security) for production setups.
+:::
 
 ## Requirements
 
@@ -14,7 +27,7 @@ setuptools-rust>=0.10.2
 ## Installation
 
 ### Build the wheel file
-- Go to `iota.rs/bindings/python/native`
+- Go to `wallet.rs/bindings/python/native`
 - `python3 setup.py bdist_wheel`
 
 ### Create a virtual environment and use it (optional)
@@ -45,7 +58,7 @@ from iota_wallet import IotaWallet, StrongholdSecretManager
 
 # This example creates a new database and account
 
-wallet_options = {
+client_options = {
     'nodes': ['https://api.testnet.shimmer.network'],
 }
 
@@ -54,7 +67,7 @@ coin_type = 4219
 
 secret_manager = StrongholdSecretManager("wallet.stronghold", "some_hopefully_secure_password")
 
-wallet = IotaWallet('./alice-database', wallet_options, coin_type, secret_manager)
+wallet = IotaWallet('./alice-database', client_options, coin_type, secret_manager)
 
 # Store the mnemonic in the Stronghold snapshot, this only needs to be done once
 account = wallet.store_mnemonic("flame fever pig forward exact dash body idea link scrub tennis minute " +
@@ -62,8 +75,4 @@ account = wallet.store_mnemonic("flame fever pig forward exact dash body idea li
 
 account = wallet.create_account('Alice')
 print(account)
-
 ```
-
-## Build docs
-`pydoc-markdown -p iota_wallet > ../../../documentation/docs/libraries/python/api_reference.md`
