@@ -13,7 +13,7 @@
 - `python3 -m pip install [your built wheel file]`
 
 ## Run examples
-- Go to `wallet.rs/bindings/python/native/example`
+- Go to `wallet.rs/bindings/python/native/examples`
 - `python3 [example file]`
 
 ## To deactivate the virtual environment (optional)
