@@ -357,15 +357,14 @@ pub fn set_client_options(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let (sender, receiver) = channel();
     crate::RUNTIME.spawn(async move {
         let account_handle = crate::get_account(id.as_str()).await;
-        let result = account_handle
-            .set_client_options(client_options.into())
-            .await
-            .expect("failed to update client options");
+        let result = account_handle.set_client_options(client_options.into()).await;
         let _ = sender.send(result);
     });
-    let _ = receiver.recv().unwrap();
 
-    Ok(cx.undefined())
+    match receiver.recv().unwrap() {
+        Ok(_) => Ok(cx.undefined()),
+        Err(e) => cx.throw_error(e.to_string()),
+    }
 }
 
 pub fn get_message(mut cx: FunctionContext) -> JsResult<JsValue> {

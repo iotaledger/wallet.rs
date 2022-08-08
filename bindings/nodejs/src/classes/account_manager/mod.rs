@@ -212,7 +212,11 @@ pub fn start_background_sync(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     crate::RUNTIME.spawn(async move {
         let result = wrapper
             .account_manager
-            .start_background_sync(Duration::from_secs(polling_interval), automatic_output_consolidation)
+            .start_background_sync(
+                Duration::from_secs(polling_interval),
+                automatic_output_consolidation,
+                None,
+            )
             .await;
         let _ = sender.send(result);
     });

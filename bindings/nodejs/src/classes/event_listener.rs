@@ -128,47 +128,47 @@ impl EventListener {
     ) -> [u8; 32] {
         match event_type {
             EventType::ErrorThrown => on_error(move |error| {
-                let _ = callback(serde_json::to_string(&error).unwrap(), event_type);
+                callback(serde_json::to_string(&error).unwrap(), event_type);
             }),
             EventType::BalanceChange => {
                 on_balance_change(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::NewTransaction => {
                 on_new_transaction(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::ConfirmationStateChange => {
                 on_confirmation_state_change(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::Reattachment => {
                 on_reattachment(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::Broadcast => {
                 on_broadcast(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::StrongholdStatusChange => {
                 on_stronghold_status_change(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }
             EventType::TransferProgress => {
                 on_transfer_progress(move |event| {
-                    let _ = callback(serde_json::to_string(&event).unwrap(), event_type);
+                    callback(serde_json::to_string(&event).unwrap(), event_type);
                 })
                 .await
             }

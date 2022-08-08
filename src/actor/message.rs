@@ -339,6 +339,9 @@ pub enum MessageType {
         /// If outputs should get automatically consolidated
         #[serde(rename = "automaticOutputConsolidation")]
         automatic_output_consolidation: bool,
+        /// gap_limit for the unused address generation
+        #[serde(rename = "gapLimit")]
+        gap_limit: Option<usize>,
     },
     /// Stop background syncing.
     StopBackgroundSync,

@@ -1,9 +1,11 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_wallet::message::{MessageMigratedFundsEntry as MigratedFundsEntryRust, MessageReceiptPayload as ReceiptPayloadRust};
-use std::fmt::{Display, Formatter};
 use crate::types::SignatureLockedSingleOutput;
+use iota_wallet::message::{
+    MessageMigratedFundsEntry as MigratedFundsEntryRust, MessageReceiptPayload as ReceiptPayloadRust,
+};
+use std::fmt::{Display, Formatter};
 
 pub struct ReceiptPayload {
     payload: ReceiptPayloadRust,

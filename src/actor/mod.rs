@@ -406,10 +406,11 @@ impl WalletMessageHandler {
             MessageType::StartBackgroundSync {
                 polling_interval,
                 automatic_output_consolidation,
+                gap_limit,
             } => {
                 convert_async_panics(|| async {
                     self.account_manager
-                        .start_background_sync(*polling_interval, *automatic_output_consolidation)
+                        .start_background_sync(*polling_interval, *automatic_output_consolidation, *gap_limit)
                         .await?;
                     Ok(ResponseType::Ok(()))
                 })
