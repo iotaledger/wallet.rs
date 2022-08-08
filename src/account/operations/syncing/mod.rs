@@ -62,7 +62,7 @@ impl AccountHandle {
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
         // get outputs for addresses and add them also the the addresses_with_unspent_outputs
-        let (addresses_with_output_ids, spent_output_ids) =
+        let (addresses_with_output_ids, spent_or_not_synced_output_ids) =
             self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
 
         // get outputs for addresses and add them also the the addresses_with_unspent_outputs
@@ -70,8 +70,8 @@ impl AccountHandle {
             self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
-        let (spent_output_responses, _loaded_output_responses) =
-            self.get_outputs(spent_output_ids.clone(), true).await?;
+        let (spent_or_not_synced_output_responses, _loaded_output_responses) =
+            self.get_outputs(spent_or_not_synced_output_ids.clone(), true).await?;
 
         if options.sync_incoming_transactions {
             let transaction_ids = output_data
@@ -86,8 +86,8 @@ impl AccountHandle {
         self.update_account(
             addresses_with_unspent_outputs_and_outputs,
             output_data,
-            spent_output_ids,
-            spent_output_responses,
+            spent_or_not_synced_output_ids,
+            spent_or_not_synced_output_responses,
             &options,
         )
         .await?;
