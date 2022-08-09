@@ -36,6 +36,8 @@ export type Node = {
 export interface ClientOptions {
     apiTimeout?: number;
     automaticDisconnect?: boolean;
+    fallbackToLocalPow?: boolean;
+    localPow?: boolean;
     maxReconnectionAttempts?: number;
     minQuorumSize?: number;
     network?: string;
