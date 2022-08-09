@@ -1,4 +1,4 @@
-import type { ITaggedDataPayload } from '@iota/types';
+import type { ITaggedDataPayload, HexEncodedAmount } from '@iota/types';
 
 /** Options for the transaction creation */
 export interface TransactionOptions {
@@ -38,9 +38,9 @@ export type CustomAddress = {
 export interface NativeTokenOptions {
     accountAddress?: string;
     /** Hex encoded number */
-    circulatingSupply: string;
+    circulatingSupply: HexEncodedAmount;
     /** Hex encoded number */
-    maximumSupply: string;
+    maximumSupply: HexEncodedAmount;
     /** Hex encoded bytes */
     foundryMetadata?: string;
 }
