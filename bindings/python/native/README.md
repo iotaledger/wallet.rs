@@ -4,28 +4,21 @@ Python binding to the iota.rs wallet library.
 
 ## Requirements
 
-Python 3
-
-pip>=19.1
-setuptools-rust>=0.10.2
+[Python 3.x](https://www.python.org) & [pip](https://pypi.org/project/pip)
 
 `Rust` and `Cargo`, to compile the binding. Install them [here](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
 ## Installation
 
-### Build the wheel file
-- Go to `iota.rs/bindings/python/native`
-- `python3 setup.py bdist_wheel`
+- Go to `wallet.rs/bindings/python/native`
 
 ### Create a virtual environment and use it (optional)
-- `python3 -m venv .venv`
-- `source .venv/bin/activate`
+- `python3 -m venv iota_wallet_venv`
+- `source iota_wallet_venv/bin/activate`; Windows: `.\iota_wallet_venv\Scripts\activate`
 
-### Install the wheel file
-`python3 -m pip install dist/[your built wheel file]`
-
-Example:
-- `python3 -m pip install dist/iota_wallet-0.2.0-cp310-cp310-linux_x86_64.whl`
+### Install required dependencies and build the wheel
+- `pip install -r requirements-dev.txt`
+- `pip install .`
 
 ### Run examples
 `python3 example/[example file]`

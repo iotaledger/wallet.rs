@@ -19,8 +19,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        os: [ubuntu-18.04, macos-latest, windows-latest]
+        python-version: [3.10]
         include:
           - os: ubuntu-latest
             identifier: linux
@@ -33,7 +33,7 @@ jobs:
             python: python
 
     steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v3
 
      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
@@ -52,7 +52,7 @@ jobs:
          override: true
          profile: minimal
 
-     - uses: actions/setup-python@v2
+     - uses: actions/setup-python@v4
        with:
          python-version: ${{ matrix.python-version }}
 
