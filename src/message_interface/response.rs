@@ -4,7 +4,7 @@
 use std::fmt::{Debug, Formatter, Result};
 
 #[cfg(feature = "ledger_nano")]
-use iota_client::secret::LedgerStatus;
+use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     api_types::responses::OutputResponse,
@@ -86,9 +86,9 @@ pub enum Response {
     /// [`SyncAccount`](crate::message_interface::AccountMethod::SyncAccount)
     Balance(AccountBalanceDto),
     /// Response for
-    /// [`GetLedgerStatus`](crate::message_interface::Message::GetLedgerStatus),
+    /// [`GetLedgerNanoStatus`](crate::message_interface::Message::GetLedgerNanoStatus),
     #[cfg(feature = "ledger_nano")]
-    LedgerStatus(LedgerStatus),
+    LedgerNanoStatus(LedgerNanoStatus),
     /// Response for
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
     IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
@@ -181,7 +181,7 @@ impl Debug for Response {
             Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
             Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
             #[cfg(feature = "ledger_nano")]
-            Response::LedgerStatus(ledger_status) => write!(f, "LedgerStatus({:?})", ledger_status),
+            Response::LedgerNanoStatus(ledger_nano_status) => write!(f, "LedgerNanoStatus({:?})", ledger_nano_status),
             Response::NodeInfo(info) => write!(f, "NodeInfo({:?})", info),
             Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
             Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),

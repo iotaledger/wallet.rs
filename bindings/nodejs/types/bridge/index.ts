@@ -51,7 +51,7 @@ import type {
     __GenerateMnemonicMessage__,
     __GetAccountMessage__,
     __GetAccountsMessage__,
-    __GetLedgerStatusMessage__,
+    __GetLedgerNanoStatusMessage__,
     __GetNodeInfoMessage__,
     __HexToBech32__,
     __IsStrongholdPasswordAvailableMessage__,
@@ -128,7 +128,7 @@ export type __Message__ =
     | __GenerateMnemonicMessage__
     | __GetAccountMessage__
     | __GetAccountsMessage__
-    | __GetLedgerStatusMessage__
+    | __GetLedgerNanoStatusMessage__
     | __GetNodeInfoMessage__
     | __HexToBech32__
     | __IsStrongholdPasswordAvailableMessage__

@@ -551,7 +551,7 @@ Mint native tokens.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `nativeTokenOptions` | [`NativeTokenOptions`](../interfaces/NativeTokenOptions.md) | The options for minting tokens. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -572,7 +572,7 @@ Mint nfts.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `nftsOptions` | [`NftOptions`](../interfaces/NftOptions.md)[] | The options for minting nfts. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -592,8 +592,8 @@ Prepare an output for sending, useful for offline signing.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options` | [`OutputOptions`](../interfaces/OutputOptions.md) | The options for preparing an output. If the amount is  below the minimum required storage deposit, by default the remaining  amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,  when setting the `ReturnStrategy` to `gift`, the full minimum required  storage deposit will be sent  to the recipient. When the assets contain  an nft id, the data from the exisiting `NftOutput` will be used, just with  the address unlock conditions replaced. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `options` | [`OutputOptions`](../interfaces/OutputOptions.md) | The options for preparing an output. If the amount is below the minimum required storage deposit, by default the remaining amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`, when setting the `ReturnStrategy` to `gift`, the full minimum required storage deposit will be sent  to the recipient. When the assets contain an nft id, the data from the exisiting `NftOutput` will be used, just with the address unlock conditions replaced. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -614,7 +614,7 @@ Prepare a send amount transaction, useful for offline signing.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `addressesWithAmount` | [`AddressWithAmount`](../interfaces/AddressWithAmount.md)[] | Address with amounts to send. |
-| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -635,7 +635,7 @@ Prepare a transaction, useful for offline signing.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `outputs` | `OutputTypes`[] | Outputs to use in the transaction. |
-| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `options?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -656,7 +656,7 @@ Send a transaction with amounts from input addresses.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `addressesWithAmount` | [`AddressWithAmount`](../interfaces/AddressWithAmount.md)[] | Addresses with amounts. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -677,7 +677,7 @@ Send a micro transaction with amount below minimum storage deposit.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `addressesWithMicroAmount` | [`AddressWithMicroAmount`](../interfaces/AddressWithMicroAmount.md)[] | Addresses with micro amounts. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -698,7 +698,7 @@ Send native tokens.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `addressesNativeTokens` | [`AddressNativeTokens`](../interfaces/AddressNativeTokens.md)[] | Addresses amounts and native tokens. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -719,7 +719,7 @@ Send nft.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `addressesAndNftIds` | [`AddressNftId`](../interfaces/AddressNftId.md)[] | Addresses and nft ids. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 
@@ -740,7 +740,7 @@ Send outputs in a transaction.
 | Name | Type | Description |
 | :------ | :------ | :------ |
 | `outputs` | `OutputTypes`[] | The outputs to send. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy`  or custom inputs. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
 

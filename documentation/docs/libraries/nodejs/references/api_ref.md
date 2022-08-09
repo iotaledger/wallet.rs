@@ -61,7 +61,7 @@
 - [LedgerNanoSecretManager](interfaces/LedgerNanoSecretManager.md)
 - [MnemonicSecretManager](interfaces/MnemonicSecretManager.md)
 - [StrongholdSecretManager](interfaces/StrongholdSecretManager.md)
-- [LedgerStatus](interfaces/LedgerStatus.md)
+- [LedgerNanoStatus](interfaces/LedgerNanoStatus.md)
 - [LedgerApp](interfaces/LedgerApp.md)
 - [SignedTransactionEssence](interfaces/SignedTransactionEssence.md)
 - [Transaction](interfaces/Transaction.md)

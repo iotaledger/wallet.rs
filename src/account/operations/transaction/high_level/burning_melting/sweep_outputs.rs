@@ -264,9 +264,9 @@ impl AccountHandle {
     async fn fetch_address_basic_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
             QueryParameter::Address(address.to_bech32()),
-            QueryParameter::HasExpirationCondition(false),
-            QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageReturnCondition(false),
+            QueryParameter::HasExpiration(false),
+            QueryParameter::HasTimelock(false),
+            QueryParameter::HasStorageDepositReturn(false),
         ];
 
         let basic_output_ids = self.client.basic_output_ids(query_parameters.clone()).await?;
@@ -279,9 +279,9 @@ impl AccountHandle {
     async fn fetch_address_nft_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
         let query_parameters = vec![
             QueryParameter::Address(address.to_bech32()),
-            QueryParameter::HasExpirationCondition(false),
-            QueryParameter::HasTimelockCondition(false),
-            QueryParameter::HasStorageReturnCondition(false),
+            QueryParameter::HasExpiration(false),
+            QueryParameter::HasTimelock(false),
+            QueryParameter::HasStorageDepositReturn(false),
         ];
 
         let nfts_output_ids = self.client.nft_output_ids(query_parameters).await?;

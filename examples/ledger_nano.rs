@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    println!("{:?}", manager.get_ledger_status().await?);
+    println!("{:?}", manager.get_ledger_nano_status().await?);
 
     // Get account or create a new one
     let account_alias = "ledger";
