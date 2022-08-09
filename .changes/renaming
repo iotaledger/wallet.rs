@@ -1,0 +1,6 @@
+---
+"nodejs-binding": patch
+---
+
+Updated to renamed query parameters.
+Renamed getLedgerStatus to getLedgerNanoStatus.

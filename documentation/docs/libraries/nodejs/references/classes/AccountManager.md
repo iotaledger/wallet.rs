@@ -18,7 +18,7 @@ The AccountManager class.
 - [getAccount](AccountManager.md#getaccount)
 - [getAccounts](AccountManager.md#getaccounts)
 - [getNodeInfo](AccountManager.md#getnodeinfo)
-- [getLedgerStatus](AccountManager.md#getledgerstatus)
+- [getLedgerNanoStatus](AccountManager.md#getledgernanostatus)
 - [hexToBech32](AccountManager.md#hextobech32)
 - [isStrongholdPasswordAvailable](AccountManager.md#isstrongholdpasswordavailable)
 - [listen](AccountManager.md#listen)
@@ -225,15 +225,15 @@ Get the node info.
 
 ___
 
-### getLedgerStatus
+### getLedgerNanoStatus
 
-▸ **getLedgerStatus**(): `Promise`<[`LedgerStatus`](../interfaces/LedgerStatus.md)\>
+▸ **getLedgerNanoStatus**(): `Promise`<[`LedgerNanoStatus`](../interfaces/LedgerNanoStatus.md)\>
 
 Get the status for a Ledger Nano.
 
 #### Returns
 
-`Promise`<[`LedgerStatus`](../interfaces/LedgerStatus.md)\>
+`Promise`<[`LedgerNanoStatus`](../interfaces/LedgerNanoStatus.md)\>
 
 ___
 

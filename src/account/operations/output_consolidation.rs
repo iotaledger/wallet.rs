@@ -97,12 +97,12 @@ impl AccountHandle {
         let max_inputs = match &*self.secret_manager.read().await {
             #[cfg(feature = "ledger_nano")]
             SecretManager::LedgerNano(ledger) => {
-                let ledger_status = ledger.get_ledger_status().await;
+                let ledger_nano_status = ledger.get_ledger_nano_status().await;
                 // With blind signing we are only limited by the protocol
-                if ledger_status.blind_signing_enabled() {
+                if ledger_nano_status.blind_signing_enabled() {
                     INPUT_COUNT_MAX
                 } else {
-                    ledger_status
+                    ledger_nano_status
                         .buffer_size()
                         .map(|buffer_size| {
                             // Calculate how many inputs we can have with this ledger, buffer size is different for

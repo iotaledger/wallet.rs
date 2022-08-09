@@ -37,8 +37,8 @@ impl AccountHandle {
 
         #[cfg(all(feature = "events", feature = "ledger_nano"))]
         if let SecretManager::LedgerNano(ledger) = &*self.secret_manager.read().await {
-            let ledger_status = ledger.get_ledger_status().await;
-            if let Some(buffer_size) = ledger_status.buffer_size() {
+            let ledger_nano_status = ledger.get_ledger_nano_status().await;
+            if let Some(buffer_size) = ledger_nano_status.buffer_size() {
                 if needs_blind_signing(prepared_transaction_data, buffer_size) {
                     self.event_emitter.lock().await.emit(
                         self.read().await.index,

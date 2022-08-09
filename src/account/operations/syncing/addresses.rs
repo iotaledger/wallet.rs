@@ -213,9 +213,9 @@ impl AccountHandle {
             let output_ids = client
                 .basic_output_ids(vec![
                     QueryParameter::Address(bech32_address_.to_string()),
-                    QueryParameter::HasExpirationCondition(false),
-                    QueryParameter::HasTimelockCondition(false),
-                    QueryParameter::HasStorageReturnCondition(false),
+                    QueryParameter::HasExpiration(false),
+                    QueryParameter::HasTimelock(false),
+                    QueryParameter::HasStorageDepositReturn(false),
                 ])
                 .await?;
             return Ok((address, output_ids));
@@ -241,7 +241,7 @@ impl AccountHandle {
                 let client = client.clone();
                 tokio::spawn(async move {
                     client
-                        .basic_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address)])
+                        .basic_output_ids(vec![QueryParameter::StorageDepositReturnAddress(bech32_address)])
                         .await
                         .map_err(From::from)
                 })
@@ -281,7 +281,9 @@ impl AccountHandle {
 
                         // Get outputs where the address is in the storage deposit return unlock condition
                         let nft_output_ids = client
-                            .nft_output_ids(vec![QueryParameter::StorageReturnAddress(bech32_address.to_string())])
+                            .nft_output_ids(vec![QueryParameter::StorageDepositReturnAddress(
+                                bech32_address.to_string(),
+                            )])
                             .await?;
                         output_ids.extend(nft_output_ids.clone().into_iter());
 

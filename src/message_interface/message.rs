@@ -116,10 +116,10 @@ pub enum Message {
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetClientOptions(Box<ClientOptions>),
-    /// Get the ledger status
-    /// Expected response: [`LedgerStatus`](crate::message_interface::Response::LedgerStatus)
+    /// Get the ledger nano status
+    /// Expected response: [`LedgerNanoStatus`](crate::message_interface::Response::LedgerNanoStatus)
     #[cfg(feature = "ledger_nano")]
-    GetLedgerStatus,
+    GetLedgerNanoStatus,
     /// Get the node information
     /// Expected response: [`NodeInfo`](crate::message_interface::Response::NodeInfo)
     GetNodeInfo {
@@ -215,7 +215,7 @@ impl Debug for Message {
             Message::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             #[cfg(feature = "ledger_nano")]
-            Message::GetLedgerStatus => write!(f, "GetLedgerStatus"),
+            Message::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
@@ -299,7 +299,7 @@ impl Serialize for Message {
             Message::Bech32ToHex(_) => serializer.serialize_unit_variant("Message", 23, "Bech32ToHex"),
             Message::HexToBech32 { .. } => serializer.serialize_unit_variant("Message", 24, "HexToBech32"),
             #[cfg(feature = "ledger_nano")]
-            Message::GetLedgerStatus => serializer.serialize_unit_variant("Message", 25, "GetLedgerStatus"),
+            Message::GetLedgerNanoStatus => serializer.serialize_unit_variant("Message", 25, "GetLedgerNanoStatus"),
         }
     }
 }

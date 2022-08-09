@@ -14,7 +14,7 @@ import type {
     ClientOptions,
     AccountSyncOptions,
     WalletEvent,
-    LedgerStatus,
+    LedgerNanoStatus,
 } from '../types';
 
 /** The AccountManager class. */
@@ -170,9 +170,9 @@ export class AccountManager {
     /**
      * Get the status for a Ledger Nano.
      */
-    async getLedgerStatus(): Promise<LedgerStatus> {
+    async getLedgerNanoStatus(): Promise<LedgerNanoStatus> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GetLedgerStatus',
+            cmd: 'GetLedgerNanoStatus',
         });
         return JSON.parse(response).payload;
     }
