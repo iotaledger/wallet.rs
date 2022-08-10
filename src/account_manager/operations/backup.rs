@@ -97,6 +97,8 @@ impl AccountManager {
                 if !stronghold.is_key_available().await {
                     stronghold.set_password(&stronghold_password).await?;
                 }
+                // Write stronghold so it's available the next time we start
+                stronghold.write_stronghold_snapshot().await?;
             }
             *secret_manager = new_secret_manager;
         }
@@ -235,10 +237,13 @@ async fn read_data_from_stronghold_backup(
     if let Some(restored_secret_manager) = restored_secret_manager {
         let secret_manager_string = String::from_utf8(restored_secret_manager)
             .map_err(|_| crate::Error::BackupError("Invalid secret_manager"))?;
+            
+        log::debug!("[restore_backup] restored secret_manager: {}", secret_manager_string);
+
         let restored_secret_manager = SecretManager::from_str(&secret_manager_string)
             .map_err(|_| crate::Error::BackupError("Invalid secret_manager"))?;
+
         new_secret_manager.replace(restored_secret_manager);
-        log::debug!("[restore_backup] restored secret_manager");
     }
 
     let client = account_manager.client_options.read().await.clone().finish()?;
@@ -250,6 +255,7 @@ async fn read_data_from_stronghold_backup(
     if let Some(restored_accounts) = restored_accounts {
         let restored_accounts_string =
             String::from_utf8(restored_accounts).map_err(|_| crate::Error::BackupError("Invalid accounts"))?;
+        log::debug!("[restore_backup] restore accounts: {restored_accounts_string}");
         let restored_accounts_string: Vec<String> = serde_json::from_str(&restored_accounts_string)?;
         let restored_accounts = restored_accounts_string
             .into_iter()
@@ -270,9 +276,6 @@ async fn read_data_from_stronghold_backup(
         log::debug!("[restore_backup] restored accounts");
         **accounts = restored_account_handles;
     }
-
-    // Write stronghold so it's available the next time we start
-    stronghold.write_stronghold_snapshot().await?;
 
     Ok(())
 }
