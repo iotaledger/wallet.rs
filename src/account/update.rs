@@ -87,12 +87,9 @@ impl AccountHandle {
         // Update addresses_with_unspent_outputs
         // get all addresses with balance that we didn't sync because their index is below the address_start_index of
         // the options
-        account.addresses_with_unspent_outputs = account
+        account
             .addresses_with_unspent_outputs
-            .iter()
-            .filter(|a| a.key_index < options.address_start_index)
-            .cloned()
-            .collect();
+            .retain(|a| a.key_index < options.address_start_index);
         // then add all synced addresses with balance, all other addresses that had balance before will then be removed
         // from this list
         account
