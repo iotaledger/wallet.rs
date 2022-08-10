@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.2-alpha.13]
+
+- Use HexEncodedAmount type in NativeTokenOptions.
+  Add `localPow` and `fallbackToLocalPow` fields to ClientOptions.
+  - [dc018364](https://github.com/iotaledger/wallet.rs/commit/dc018364e2e3dd9592b9d88dd4f5284e8bd256b8) Update nodejs types ([#1326](https://github.com/iotaledger/wallet.rs/pull/1326)) on 2022-08-09
+- Updated to renamed query parameters. This is a breaking change.
+  Renamed getLedgerStatus to getLedgerNanoStatus.
+  - [d5f76ab4](https://github.com/iotaledger/wallet.rs/commit/d5f76ab4fb2f53313430b1679e70548e924d4396) Fix file name ending ([#1347](https://github.com/iotaledger/wallet.rs/pull/1347)) on 2022-08-10
+
 ## \[2.0.2-alpha.12]
 
 - Add burning methods.
