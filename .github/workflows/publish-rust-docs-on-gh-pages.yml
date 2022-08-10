@@ -3,7 +3,7 @@ name:  Publish Rust Docs On GitHub Pages
 on:
   push:
     branches:
-      - mainnet
+      - production
 
 jobs:
   gh-release:
