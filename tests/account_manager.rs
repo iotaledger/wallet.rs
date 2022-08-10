@@ -224,3 +224,58 @@ async fn iota_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/iota_coin_type").unwrap_or(());
     Ok(())
 }
+
+#[tokio::test]
+async fn delete_accounts_and_database() -> Result<()> {
+    use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
+    use log::LevelFilter;
+    // Generates a wallet.log file with logs for debugging
+    let logger_output_config = LoggerOutputConfigBuilder::new()
+        .name("wallet-test.log")
+        .target_exclusions(&["h2", "hyper", "rustls"])
+        .level_filter(LevelFilter::Debug);
+    let config = LoggerConfig::build().with_output(logger_output_config).finish();
+    logger_init(config).unwrap();
+
+    std::fs::remove_dir_all("test-storage/delete_accounts_and_database").unwrap_or(());
+    let client_options = ClientOptions::new().with_offline_mode();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .with_storage_path("test-storage/delete_accounts_and_database")
+        .finish()
+        .await?;
+
+    manager.create_account().finish().await?;
+
+    manager.delete_accounts_and_database().await?;
+
+    assert!(manager.get_accounts().await?.is_empty());
+
+    manager.create_account().finish().await?;
+
+    drop(manager);
+
+    // mnemonic without balance
+    // let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+    //     "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain
+    // glad warm early rain clutch slab august bleak", )?;
+
+    // Recreated manager, should have 1 account
+    // let manager = AccountManager::builder()
+    //     .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+    //     .with_storage_path("test-storage/delete_accounts_and_database")
+    //     .finish()
+    //     .await?;
+
+    // assert_eq!(manager.get_accounts().await?.len(), 1);
+
+    Ok(())
+}
