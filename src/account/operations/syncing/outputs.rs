@@ -5,7 +5,6 @@ use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api::ClientBlockBuilder,
     api_types::responses::OutputResponse,
     block::{
         input::Input,
@@ -32,11 +31,9 @@ impl AccountHandle {
         let account = self.read().await;
         let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
-        let local_time = self.client.get_time_checked().await?;
 
         for output_response in output_responses {
             let output = Output::try_from(&output_response.output)?;
-            let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)
@@ -61,7 +58,7 @@ impl AccountHandle {
                 metadata: output_response.metadata.clone(),
                 output,
                 is_spent: output_response.metadata.is_spent,
-                address,
+                address: associated_address.address.inner,
                 network_id,
                 remainder,
                 chain: Some(chain),
