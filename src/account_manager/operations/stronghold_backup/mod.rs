@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 mod stronghold_snapshot;
+
 use std::{fs, path::PathBuf, sync::atomic::Ordering};
 
 use iota_client::secret::{stronghold::StrongholdSecretManager, SecretManager, SecretManagerDto};
