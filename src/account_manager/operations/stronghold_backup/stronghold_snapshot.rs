@@ -74,7 +74,7 @@ pub(crate) async fn read_data_from_stronghold_snapshot(
     let version = stronghold.get(BACKUP_SCHEMA_VERSION_KEY.as_bytes()).await?;
     if let Some(version) = version {
         if version[0] != BACKUP_SCHEMA_VERSION {
-            return Err(crate::Error::BackupError("Invalid backup_schema_version"));
+            return Err(crate::Error::BackupError("invalid backup_schema_version"));
         }
     }
 
@@ -82,7 +82,7 @@ pub(crate) async fn read_data_from_stronghold_snapshot(
     let client_options_bytes = stronghold.get(CLIENT_OPTIONS_KEY.as_bytes()).await?;
     let client_options = if let Some(client_options_bytes) = client_options_bytes {
         let client_options_string =
-            String::from_utf8(client_options_bytes).map_err(|_| crate::Error::BackupError("Invalid client_options"))?;
+            String::from_utf8(client_options_bytes).map_err(|_| crate::Error::BackupError("invalid client_options"))?;
         let client_options: ClientOptions = serde_json::from_str(&client_options_string)?;
 
         log::debug!("[restore_backup] restored client_options {client_options_string}");
@@ -97,7 +97,7 @@ pub(crate) async fn read_data_from_stronghold_snapshot(
         let coin_type = u32::from_le_bytes(
             coin_type_bytes
                 .try_into()
-                .map_err(|_| crate::Error::BackupError("Invalid coin_type"))?,
+                .map_err(|_| crate::Error::BackupError("invalid coin_type"))?,
         );
         log::debug!("[restore_backup] restored coin_type: {coin_type}");
         Some(coin_type)
@@ -109,7 +109,7 @@ pub(crate) async fn read_data_from_stronghold_snapshot(
     let restored_secret_manager_bytes = stronghold.get(SECRET_MANAGER_KEY.as_bytes()).await?;
     let restored_secret_manager = if let Some(restored_secret_manager) = restored_secret_manager_bytes {
         let secret_manager_string = String::from_utf8(restored_secret_manager)
-            .map_err(|_| crate::Error::BackupError("Invalid secret_manager"))?;
+            .map_err(|_| crate::Error::BackupError("invalid secret_manager"))?;
 
         log::debug!("[restore_backup] restored secret_manager: {}", secret_manager_string);
 

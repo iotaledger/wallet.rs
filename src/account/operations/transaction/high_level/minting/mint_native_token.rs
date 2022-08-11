@@ -169,7 +169,7 @@ impl AccountHandle {
             }
         });
         let existing_alias_output = existing_alias_output
-            .ok_or_else(|| Error::MintingFailed("No alias output available".to_string()))?
+            .ok_or_else(|| Error::MintingFailed("no alias output available".to_string()))?
             .clone();
         drop(account);
 
@@ -274,7 +274,7 @@ impl AccountHandle {
                     self.sync_pending_transactions().await?;
                     tokio::time::sleep(std::time::Duration::from_secs(5)).await;
                 }
-                Err(Error::MintingFailed("Alias output creation took too long".to_string()))
+                Err(Error::MintingFailed("alias output creation took too long".to_string()))
             }
         }
     }

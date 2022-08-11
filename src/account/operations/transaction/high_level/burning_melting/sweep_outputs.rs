@@ -86,7 +86,7 @@ impl AccountHandle {
                 }
                 _ => None,
             })
-            .ok_or_else(|| Error::BurningOrMeltingFailed("Alias output not found".to_string()))?;
+            .ok_or_else(|| Error::BurningOrMeltingFailed("alias output not found".to_string()))?;
 
         let new_state_alias_output = AliasOutputBuilder::from(alias_output)
             .with_alias_id(alias_id)
@@ -218,7 +218,7 @@ impl AccountHandle {
             }
             Address::Ed25519(_) => {
                 return Err(Error::BurningOrMeltingFailed(
-                    "Ed25519 address is not intended to be swept".to_string(),
+                    "ed25519 address is not intended to be swept".to_string(),
                 ));
             }
         }
@@ -239,7 +239,7 @@ impl AccountHandle {
             }
             None => {
                 return Err(Error::BurningOrMeltingFailed(
-                    "Could not sweep address outputs".to_string(),
+                    "could not sweep address outputs".to_string(),
                 ));
             }
         }
@@ -345,7 +345,7 @@ impl AccountHandle {
                 }
                 _ => {
                     return Err(Error::BurningOrMeltingFailed(
-                        "Unexpected non-foundry output".to_string(),
+                        "unexpected non-foundry output".to_string(),
                     ));
                 }
             }

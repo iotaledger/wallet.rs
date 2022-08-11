@@ -26,7 +26,7 @@ use tokio::sync::Mutex;
 use std::{collections::HashMap, path::Path, sync::Arc};
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("recor not found")]
+    #[error("record not found")]
     RecordNotFound,
     #[error("{0}")]
     Storage(String),

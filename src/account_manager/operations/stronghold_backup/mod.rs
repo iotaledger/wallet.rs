@@ -66,14 +66,14 @@ impl AccountManager {
         log::debug!("[restore_backup] loading stronghold backup");
 
         if !backup_path.is_file() {
-            return Err(crate::Error::BackupError("Backup path doesn't exist"));
+            return Err(crate::Error::BackupError("backup path doesn't exist"));
         }
 
         let mut accounts = self.accounts.write().await;
         // We don't want to overwrite possible existing accounts
         if !accounts.is_empty() {
             return Err(crate::Error::BackupError(
-                "Can't restore backup when there are already accounts",
+                "can't restore backup when there are already accounts",
             ));
         }
 
@@ -109,7 +109,7 @@ impl AccountManager {
             }
 
             let mut restored_secret_manager = SecretManager::try_from(&read_secret_manager)
-                .map_err(|_| crate::Error::BackupError("Invalid secret_manager"))?;
+                .map_err(|_| crate::Error::BackupError("invalid secret_manager"))?;
 
             if let SecretManager::Stronghold(stronghold) = &mut restored_secret_manager {
                 // Copy Stronghold file so the seed is available in the new location

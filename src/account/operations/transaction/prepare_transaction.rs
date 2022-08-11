@@ -63,7 +63,7 @@ impl AccountHandle {
                             }
                             None => {
                                 return Err(crate::Error::CustomInputError(format!(
-                                    "Custom input {} not found in unspent outputs",
+                                    "custom input {} not found in unspent outputs",
                                     output_id
                                 )));
                             }

@@ -153,7 +153,7 @@ impl AccountHandle {
                     });
                     let _ = self.sync(sync_options).await?;
                 }
-                None => return Err(Error::BurningOrMeltingFailed("Could not burn foundries".to_string())),
+                None => return Err(Error::BurningOrMeltingFailed("could not burn foundries".to_string())),
             }
         }
 
@@ -193,11 +193,11 @@ impl AccountHandle {
         }
 
         let existing_alias_output_data = existing_alias_output_data
-            .ok_or_else(|| Error::BurningOrMeltingFailed("Required alias output for foundry not found".to_string()))?
+            .ok_or_else(|| Error::BurningOrMeltingFailed("required alias output for foundry not found".to_string()))?
             .clone();
 
         let existing_foundry_output_data = existing_foundry_output
-            .ok_or_else(|| Error::BurningOrMeltingFailed("Required foundry output not found".to_string()))?
+            .ok_or_else(|| Error::BurningOrMeltingFailed("required foundry output not found".to_string()))?
             .clone();
 
         Ok((existing_alias_output_data, existing_foundry_output_data))
@@ -214,12 +214,12 @@ fn validate_empty_state(output: &Output) -> crate::Result<()> {
                 Ok(())
             } else {
                 Err(Error::BurningOrMeltingFailed(
-                    "Foundry still has native tokens in circulation or native tokens were burned".to_string(),
+                    "foundry still has native tokens in circulation or native tokens were burned".to_string(),
                 ))
             }
         }
         _ => Err(Error::BurningOrMeltingFailed(
-            "Invalid output type: expected foundry".to_string(),
+            "invalid output type: expected foundry".to_string(),
         )),
     }
 }

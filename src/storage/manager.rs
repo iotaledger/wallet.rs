@@ -38,10 +38,10 @@ pub(crate) async fn new_storage_manager(
     let db_schema_version = storage.get(DATABASE_SCHEMA_VERSION_KEY).await.ok();
     if let Some(db_schema_version) = db_schema_version {
         let db_schema_version = u8::from_str(&db_schema_version)
-            .map_err(|_| crate::Error::Storage("Invalid db_schema_version".to_string()))?;
+            .map_err(|_| crate::Error::Storage("invalid db_schema_version".to_string()))?;
         if db_schema_version != DATABASE_SCHEMA_VERSION {
             return Err(crate::Error::Storage(format!(
-                "Unsupported database schema version {db_schema_version}"
+                "unsupported database schema version {db_schema_version}"
             )));
         }
     } else {

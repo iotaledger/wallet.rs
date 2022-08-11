@@ -38,7 +38,7 @@ async fn main() -> Result<()> {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "Burn nft failed to submitted".to_string(),
+                "burn nft failed to submitted".to_string(),
             ));
         }
     };

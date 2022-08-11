@@ -62,7 +62,7 @@ impl AccountHandle {
         let address_unlock_condition = nft_output
             .unlock_conditions()
             .address()
-            .expect("Nft output needs to have an address unlock condition")
+            .expect("nft output needs to have an address unlock condition")
             .clone();
 
         let basic_output = Output::Basic(
