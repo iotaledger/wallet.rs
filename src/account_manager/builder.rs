@@ -126,7 +126,7 @@ impl AccountManagerBuilder {
                         Some(options) => options,
                         None => data
                             .client_options
-                            .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
+                            .ok_or(crate::Error::MissingParameter("client_options"))?,
                     };
                     let secret_manager = match self.secret_manager {
                         Some(secret_manager) => secret_manager,
@@ -148,7 +148,7 @@ impl AccountManagerBuilder {
                     storage_manager.lock().await.save_account_manager_data(&self).await?;
                     (
                         self.client_options
-                            .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
+                            .ok_or(crate::Error::MissingParameter("client_options"))?,
                         self.secret_manager
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                         self.coin_type
@@ -203,7 +203,7 @@ impl AccountManagerBuilder {
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
             client_options: Arc::new(RwLock::new(
                 self.client_options
-                    .ok_or(crate::Error::MissingParameter("ClientOptions"))?,
+                    .ok_or(crate::Error::MissingParameter("client_options"))?,
             )),
             coin_type: Arc::new(AtomicU32::new(
                 self.coin_type

@@ -33,7 +33,7 @@ pub enum Error {
     #[error("account not found")]
     AccountNotFound,
     /// Record not found
-    #[error("Record not found")]
+    #[error("record not found")]
     RecordNotFound,
     /// Storage access error.
     #[error("error accessing storage: {0}")]
@@ -115,7 +115,7 @@ pub enum Error {
     #[error("{0}")]
     TaskJoinError(#[from] tokio::task::JoinError),
     /// std thread join error
-    #[error("Thread join error")]
+    #[error("thread join error")]
     StdThreadJoinError,
     /// Blake2b256 Error
     #[error("{0}")]
@@ -127,7 +127,7 @@ pub enum Error {
     #[error("client not set")]
     ClientNotSet,
     /// Local time doesn't match the time of the latest timestamp
-    #[error("Local time {0} doesn't match the time of the latest timestamp: {1}")]
+    #[error("local time {0} doesn't match the time of the latest timestamp: {1}")]
     TimeNotSynced(u32, u32),
 }
 

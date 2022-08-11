@@ -343,7 +343,10 @@ ___
 
 ▸ **restoreBackup**(`source`, `password`): `Promise`<`void`\>
 
-Restore a backup from a Stronghold snapshot.
+Restore a backup from a Stronghold file
+Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
+If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was
+stored, it will be gone.
 
 #### Parameters
 

@@ -623,7 +623,10 @@ Remove latest account.
 def restore_back(source, password)
 ```
 
-Import accounts from storage.
+Restore a backup from a Stronghold file
+Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
+If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was
+stored, it will be gone.
 
 <a id="iota_wallet.wallet.IotaWallet.delete_accounts_and_database"></a>
 

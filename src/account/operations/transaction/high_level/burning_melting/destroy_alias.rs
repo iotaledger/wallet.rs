@@ -62,11 +62,11 @@ impl AccountHandle {
                 Output::Alias(alias_output) => alias_output.alias_id().or_from_output_id(output_id) == alias_id,
                 _ => false,
             })
-            .ok_or_else(|| Error::BurningOrMeltingFailed("Alias output not found".to_string()))?;
+            .ok_or_else(|| Error::BurningOrMeltingFailed("alias output not found".to_string()))?;
 
         let alias_output = match &output_data.output {
             Output::Alias(alias_output) => alias_output,
-            _ => unreachable!("We already checked that it's an alias output"),
+            _ => unreachable!("we already checked that it's an alias output"),
         };
 
         let basic_output = Output::Basic(

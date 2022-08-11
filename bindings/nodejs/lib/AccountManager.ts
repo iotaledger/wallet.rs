@@ -246,7 +246,10 @@ export class AccountManager {
     }
 
     /**
-     * Restore a backup from a Stronghold snapshot.
+     * Restore a backup from a Stronghold file
+     * Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
+     * If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was
+     * stored, it will be gone.
      */
     async restoreBackup(source: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({

@@ -131,7 +131,7 @@ impl AccountBuilder {
                             .inner
                     {
                         return Err(Error::InvalidMnemonic(
-                            "First account address used another seed".to_string(),
+                            "first account address used another seed".to_string(),
                         ));
                     }
 

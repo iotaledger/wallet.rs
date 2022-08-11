@@ -46,7 +46,7 @@ impl AccountHandle {
             for input in custom_inputs.iter() {
                 if account.locked_outputs.contains(&input.output_id()?) {
                     return Err(crate::Error::CustomInputError(format!(
-                        "Provided custom input {} is already used in another transaction",
+                        "provided custom input {} is already used in another transaction",
                         input.output_id()?
                     )));
                 }

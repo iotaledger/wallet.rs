@@ -122,7 +122,7 @@ impl AccountHandle {
 
         if basic_and_nft_selection.is_empty() && alias_selection.is_empty() && foundry_selection.is_empty() {
             return Err(crate::Error::BurningOrMeltingFailed(
-                "Native token not found".to_string(),
+                "native token not found".to_string(),
             ));
         }
 
@@ -160,19 +160,19 @@ impl AccountHandle {
 
         if aggregate.amount < burn_token_amount {
             return Err(crate::Error::BurningOrMeltingFailed(format!(
-                "Insufficient native token balance: {}/{burn_token_amount}",
+                "insufficient native token balance: {}/{burn_token_amount}",
                 aggregate.amount
             )));
         }
         if aggregate.outputs.len() > (OUTPUT_COUNT_MAX as usize) {
             return Err(crate::Error::BurningOrMeltingFailed(format!(
-                "Outputs for required amount exceed max allowed count: {}/{OUTPUT_COUNT_MAX}; try a lower amount",
+                "outputs for required amount exceed max allowed count: {}/{OUTPUT_COUNT_MAX}; try a lower amount",
                 aggregate.outputs.len()
             )));
         }
         if aggregate.custom_inputs.len() > (INPUT_COUNT_MAX as usize) {
             return Err(crate::Error::BurningOrMeltingFailed(format!(
-                "Inputs for required amount exceed max allowed count: {}/{INPUT_COUNT_MAX}; try a lower amount",
+                "inputs for required amount exceed max allowed count: {}/{INPUT_COUNT_MAX}; try a lower amount",
                 aggregate.custom_inputs.len()
             )));
         }
@@ -415,7 +415,7 @@ fn create_output_and_replace_native_tokens(
         }
         Output::Treasury(_) => {
             return Err(crate::Error::InvalidOutputKind(
-                "Treasury output cannot hold native tokens".to_string(),
+                "treasury output cannot hold native tokens".to_string(),
             ));
         }
     };
@@ -451,7 +451,7 @@ fn add_native_token_to_output(output: &Output, native_token: NativeToken) -> cra
         }
         Output::Treasury(_) => {
             return Err(crate::Error::InvalidOutputKind(
-                "Treasury output cannot hold native tokens".to_string(),
+                "treasury output cannot hold native tokens".to_string(),
             ));
         }
     };
