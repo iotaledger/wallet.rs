@@ -1,15 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod stronghold_snapshot;
 use std::{fs, path::PathBuf, sync::atomic::Ordering};
 
 use iota_client::secret::{stronghold::StrongholdSecretManager, SecretManager, SecretManagerDto};
 use zeroize::Zeroize;
 
+use self::stronghold_snapshot::{read_data_from_stronghold_snapshot, store_data_to_stronghold};
 use crate::account_manager::{AccountHandle, AccountManager, AccountManagerBuilder};
-
-mod stronghold_snapshot;
-use stronghold_snapshot::{read_data_from_stronghold_snapshot, store_data_to_stronghold};
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file
@@ -41,17 +40,12 @@ impl AccountManager {
             }
             // Backup with new stronghold
             _ => {
+                // If the SecretManager is not Stronghold we'll create a new one for the backup
                 let mut backup_stronghold = StrongholdSecretManager::builder()
                     .password(&stronghold_password)
                     .try_build(backup_path)?;
 
-                store_data_to_stronghold(
-                    self,
-                    // If the SecretManager is not Stronghold we'll create a new one for the backup
-                    &mut backup_stronghold,
-                    secret_manager_dto,
-                )
-                .await?;
+                store_data_to_stronghold(self, &mut backup_stronghold, secret_manager_dto).await?;
 
                 // Write snapshot to backup path
                 backup_stronghold.write_stronghold_snapshot().await?;
@@ -64,8 +58,9 @@ impl AccountManager {
     }
 
     /// Restore a backup from a Stronghold file
-    /// Replaces client_options, secret_manager, returns an error if accounts were are already created
-    /// An existing Stronghold file will be overwritten
+    /// Replaces client_options, secret_manager, returns an error if accounts were already created
+    /// If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was
+    /// stored, it will be gone.
     pub async fn restore_backup(&self, backup_path: PathBuf, mut stronghold_password: String) -> crate::Result<()> {
         log::debug!("[restore_backup] loading stronghold backup");
 
