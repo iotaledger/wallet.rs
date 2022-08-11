@@ -52,10 +52,7 @@ impl AccountHandle {
         // Filter addresses when address_start_index is not 0 so we skip these addresses
         // If we force syncing, we want to sync all addresses
         if options.addresses.is_empty() && options.address_start_index != 0 && !options.force_syncing {
-            addresses_before_syncing = addresses_before_syncing
-                .into_iter()
-                .filter(|a| a.key_index >= options.address_start_index)
-                .collect();
+            addresses_before_syncing.retain(|a| a.key_index >= options.address_start_index);
         }
 
         // Check if selected addresses contains addresses with balance so we can correctly update them
