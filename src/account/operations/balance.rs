@@ -205,7 +205,7 @@ impl AccountHandle {
 
         let mut native_tokens_balance = Vec::new();
 
-        for native_token in total_native_tokens.finish()? {
+        for native_token in total_native_tokens.finish_vec()? {
             // Check if some amount is currently locked
             let locked_amount = locked_native_tokens.iter().find_map(|(id, amount)| {
                 if id == native_token.token_id() {
