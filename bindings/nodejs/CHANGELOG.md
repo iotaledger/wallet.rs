@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.2-alpha.14]
+
+- Fix restore backup.
+  - [0e849b30](https://github.com/iotaledger/wallet.rs/commit/0e849b3048ce4dc6639b9eddf35ac8d878f20fe2) chore(manager): simplify backup API, dropping extension requirement ([#588](https://github.com/iotaledger/wallet.rs/pull/588)) on 2021-04-26
+  - [15d9c6f4](https://github.com/iotaledger/wallet.rs/commit/15d9c6f4364de10bb91257b99916cd73f49aa6a3) Apply Version Updates From Current Changes ([#586](https://github.com/iotaledger/wallet.rs/pull/586)) on 2021-04-26
+  - [08b5a41b](https://github.com/iotaledger/wallet.rs/commit/08b5a41b69c11c3eae1121cddd5f52d07a86ebf2) Fix backup restore ([#1349](https://github.com/iotaledger/wallet.rs/pull/1349)) on 2022-08-11
+
 ## \[2.0.2-alpha.13]
 
 - Use HexEncodedAmount type in NativeTokenOptions.
