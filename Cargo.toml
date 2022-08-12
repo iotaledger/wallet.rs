@@ -70,8 +70,118 @@ name = "3_send_transaction"
 path = "examples/offline_signing/3_send_transaction.rs"
 
 [[example]]
+name = "create_wallet"
+path = "examples/01_create_wallet.rs"
+
+[[example]]
+name = "generate_address"
+path = "examples/02_generate_address.rs"
+
+[[example]]
+name = "get_funds"
+path = "examples/03_get_funds.rs"
+
+[[example]]
+name = "get_balance"
+path = "examples/04_get_balance.rs"
+
+[[example]]
+name = "transaction"
+path = "examples/05_transaction.rs"
+
+[[example]]
+name = "send_micro_transaction"
+path = "examples/06_send_micro_transaction.rs"
+
+[[example]]
+name = "send_native_tokens"
+path = "examples/07_send_native_tokens.rs"
+
+[[example]]
+name = "send_nft"
+path = "examples/08_send_nft.rs"
+
+[[example]]
+name = "mint_native_token"
+path = "examples/09_mint_native_token.rs"
+
+[[example]]
+name = "mint_nft"
+path = "examples/10_mint_nft.rs"
+
+[[example]]
+name = "melt_native_token"
+path = "examples/11_melt_native_token.rs"
+
+[[example]]
+name = "burn_native_token"
+path = "examples/12_burn_native_token.rs"
+
+[[example]]
+name = "burn_nft"
+path = "examples/13_burn_nft.rs"
+
+[[example]]
+name = "destroy_foundry"
+path = "examples/14_destroy_foundry.rs"
+
+[[example]]
+name = "destroy_alias"
+path = "examples/15_destroy_alias.rs"
+
+[[example]]
+name = "accounts"
+path = "examples/accounts.rs"
+
+[[example]]
+name = "background_syncing"
+path = "examples/background_syncing.rs"
+
+[[example]]
+name = "events"
+path = "examples/events.rs"
+required-features = [ "events" ]
+
+[[example]]
 name = "ledger_nano"
+path = "examples/ledger_nano.rs"
 required-features = [ "ledger_nano" ]
+
+[[example]]
+name = "logger"
+path = "examples/logger.rs"
+
+[[example]]
+name = "output_consolidation"
+path = "examples/output_consolidation.rs"
+
+[[example]]
+name = "ping"
+path = "examples/ping.rs"
+
+[[example]]
+name = "pong"
+path = "examples/pong.rs"
+
+[[example]]
+name = "recover_accounts"
+path = "examples/recover_accounts.rs"
+
+[[example]]
+name = "split_funds"
+path = "examples/split_funds.rs"
+
+[[example]]
+name = "storage"
+path = "examples/storage.rs"
+
+[[example]]
+name = "threads"
+path = "examples/threads.rs"
+
+[[example]]
+name = "wallet"
+path = "examples/wallet.rs"
 
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]
@@ -80,7 +190,3 @@ normal = ["backtrace"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
-[[example]]
-name = "events"
-required-features = ["events"]
