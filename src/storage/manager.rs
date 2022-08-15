@@ -3,6 +3,7 @@
 
 use std::{str::FromStr, sync::Arc};
 
+use crypto::ciphers::chacha;
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
@@ -10,7 +11,7 @@ use tokio::sync::{Mutex, RwLock};
 use crate::{
     account::Account,
     account_manager::builder::AccountManagerBuilder,
-    storage::{constants::*, decrypt_record, Storage, StorageAdapter},
+    storage::{constants::*, Storage, StorageAdapter},
 };
 
 /// The storage used by the manager.
@@ -178,7 +179,7 @@ fn parse_accounts(accounts: &[String], encryption_key: &Option<[u8; 32]>) -> cra
         let account_json = if account.starts_with('{') {
             Some(account.to_string())
         } else if let Some(key) = encryption_key {
-            Some(decrypt_record(account, key)?)
+            Some(String::from_utf8(chacha::aead_decrypt(key, account.as_bytes())?).unwrap())
         } else {
             None
         };
