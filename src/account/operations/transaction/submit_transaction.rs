@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    api::finish_pow,
+    api::finish_multi_threaded_pow,
     block::{payload::Payload, BlockId},
 };
 
@@ -32,7 +32,8 @@ impl AccountHandle {
                 WalletEvent::TransactionProgress(TransactionProgressEvent::PerformingPow),
             );
         }
-        let block = finish_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
+        let block =
+            finish_multi_threaded_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
         // log::debug!("[TRANSACTION] submitting block {:#?}", block);
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
