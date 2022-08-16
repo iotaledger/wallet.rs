@@ -2,6 +2,7 @@
   "tag": "alpha",
   "changes": [
     ".changes/account-and-transaction-syncing.md",
+    ".changes/add-windows-node-gyp-config.md",
     ".changes/backup.md",
     ".changes/bump-depdendencies.md",
     ".changes/burning.md",

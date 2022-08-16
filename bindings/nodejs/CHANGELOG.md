@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.15]
+
+- Add "win_delay_load_hook": "true" to check if add-on gets compiled correctly.
+  - [6dab8026](https://github.com/iotaledger/wallet.rs/commit/6dab80263f7d32284c29b6497d802778441d42b9) fix: windows delay load hook set to true ([#1363](https://github.com/iotaledger/wallet.rs/pull/1363)) on 2022-08-16
+
 ## \[2.0.2-alpha.14]
 
 - Fix restore backup.
