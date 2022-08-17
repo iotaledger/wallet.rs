@@ -81,16 +81,7 @@ impl AccountHandle {
             inputs_data: inputs_for_signing,
             remainder: selected_transaction_data.remainder,
         };
-        #[cfg(feature = "events")]
-        {
-            let account_index = self.read().await.index;
-            self.event_emitter.lock().await.emit(
-                account_index,
-                WalletEvent::TransactionProgress(TransactionProgressEvent::PreparedTransaction(Box::new(
-                    PreparedTransactionDataDto::from(&prepared_transaction_data),
-                ))),
-            );
-        }
+
         log::debug!(
             "[TRANSACTION] finished build_transaction in {:.2?}",
             build_transaction_essence_start_time.elapsed()
