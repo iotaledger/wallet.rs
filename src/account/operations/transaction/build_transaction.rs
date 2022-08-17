@@ -3,8 +3,6 @@
 
 use std::time::Instant;
 
-#[cfg(feature = "events")]
-use iota_client::api::PreparedTransactionDataDto;
 use iota_client::{
     api::{input_selection::types::SelectedTransactionData, PreparedTransactionData},
     block::{
@@ -19,8 +17,6 @@ use iota_client::{
 };
 
 use crate::account::{handle::AccountHandle, operations::transaction::TransactionOptions};
-#[cfg(feature = "events")]
-use crate::events::types::{TransactionProgressEvent, WalletEvent};
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
