@@ -164,7 +164,7 @@ impl StorageManager {
         self.storage
             .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
             .await?;
-        self.account_indexes.retain(|a| a == &account_index);
+        self.account_indexes.retain(|a| a != &account_index);
         self.storage
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await
