@@ -14,6 +14,8 @@
     ".changes/optional-note.md",
     ".changes/pow-hrp-renaming.md",
     ".changes/pre-release.md",
+    ".changes/remove-account.md",
+    ".changes/remove-duplicated-event.md",
     ".changes/renaming.md",
     ".changes/stardust-release.md",
     ".changes/stronghold-update.md",

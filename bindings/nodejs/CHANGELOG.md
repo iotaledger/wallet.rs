@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.2-alpha.16]
+
+- Fix removeLatestAccount().
+  - [0d1ad1c0](https://github.com/iotaledger/wallet.rs/commit/0d1ad1c07c4968237909867e25a3263ba1c51cbc) Fix remove_latest_account ([#1369](https://github.com/iotaledger/wallet.rs/pull/1369)) on 2022-08-18
+- Emit `PreparedTransaction` only once and when blindsigning is not needed.
+  - [d5479e61](https://github.com/iotaledger/wallet.rs/commit/d5479e61b59d2836f7174aeb31d24b2d18ed4a27) Emit `PreparedTransaction` only once and when blindsigning is not needed ([#1367](https://github.com/iotaledger/wallet.rs/pull/1367)) on 2022-08-18
+
 ## \[2.0.2-alpha.15]
 
 - Add "win_delay_load_hook": "true" to check if add-on gets compiled correctly.
