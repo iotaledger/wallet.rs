@@ -7,28 +7,22 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
-import org.iota.types.ClientConfig;
-import org.iota.types.ClientException;
+import org.iota.types.WalletConfig;
+import org.iota.types.WalletException;
 
 import java.io.IOException;
 
 public class BaseApi {
 
-    protected ClientConfig clientConfig;
-
-    protected BaseApi(ClientConfig clientConfig) {
-        this.clientConfig = clientConfig;
-    }
-
     static {
         String libraryName = null;
 
         if (SystemUtils.IS_OS_LINUX)
-            libraryName = "libiota_client.so";
+            libraryName = "libiota_wallet.so";
         else if (SystemUtils.IS_OS_MAC)
-            libraryName = "libiota_client.dylib";
+            libraryName = "libiota_wallet.dylib";
         else if (SystemUtils.IS_OS_WINDOWS)
-            libraryName = "iota_client.dll";
+            libraryName = "iota_wallet.dll";
         else throw new RuntimeException("OS not supported");
 
         try {
@@ -40,17 +34,28 @@ public class BaseApi {
 
     }
 
-    private static native String callNativeLibrary(String clientConfig, String clientCommand);
+    protected WalletConfig walletConfig;
 
-    protected JsonElement callBaseApi(ClientCommand command) throws ClientException {
-        String jsonResponse = callNativeLibrary(clientConfig.getJson().toString(), command.toString());
+    protected BaseApi(WalletConfig walletConfig) {
+        this.walletConfig = walletConfig;
+        createMessageHandler(walletConfig.getJson().toString());
+    }
+
+    private static native void createMessageHandler(String config);
+
+    private static native String sendMessage(String command);
+
+    protected JsonElement callBaseApi(ClientCommand command) throws WalletException {
+        System.out.println("REQUEST: " + command);
+        String jsonResponse = sendMessage(command.toString());
+        System.out.println("RESPONSE: " + jsonResponse);
         ClientResponse response = new Gson().fromJson(jsonResponse, ClientResponse.class);
 
         switch (response.type) {
             case "Panic":
                 throw new RuntimeException(response.toString());
             case "Error":
-                throw new ClientException(command.methodName, response.payload.getAsJsonObject().toString());
+                throw new WalletException(command.methodName, response.payload.getAsJsonObject().toString());
 
             default:
                 return response.payload;
@@ -79,8 +84,8 @@ public class BaseApi {
         @Override
         public String toString() {
             JsonObject message = new JsonObject();
-            message.addProperty("name", methodName);
-            message.add("data", methodParams);
+            message.addProperty("cmd", methodName);
+            message.add("payload", methodParams);
 
             return message.toString();
         }
