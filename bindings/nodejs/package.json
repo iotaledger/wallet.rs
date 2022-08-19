@@ -22,7 +22,8 @@
   "dependencies": {
     "@iota/types": "^1.0.0-beta.11",
     "cargo-cp-artifact": "^0.1.5",
-    "prebuild-install": "^5.3.3"
+    "prebuild-install": "^5.3.3",
+    "typescript": "^4.7.4"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.30.7",
@@ -34,8 +35,7 @@
     "prebuild": "^11.0.4",
     "prettier": "^2.7.1",
     "typedoc": "^0.23.8",
-    "typedoc-plugin-markdown": "^3.13.3",
-    "typescript": "^4.7.4"
+    "typedoc-plugin-markdown": "^3.13.3"
   },
   "repository": {
     "type": "git",
