@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.18]
+
+- Striping index.node from the correct path
+  - [e9cc4b7c](https://github.com/iotaledger/wallet.rs/commit/e9cc4b7ca7fa377b6c8dd982a826c2552869f9f9) fix: workflow doesn't support matrix exclusions ([#1374](https://github.com/iotaledger/wallet.rs/pull/1374)) on 2022-08-19
+
 ## \[2.0.2-alpha.17]
 
 - Fixed prebuilds for nodejs bindings.
