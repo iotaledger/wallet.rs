@@ -3,7 +3,7 @@
 
 import type { MessageHandler } from './MessageHandler';
 // @ts-ignore: path is set to match runtime transpiled js path
-import addon = require('../../index.node');
+import addon = require('../../build/Release/index.node');
 
 const {
     initLogger,
