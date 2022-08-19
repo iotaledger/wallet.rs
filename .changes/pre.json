@@ -18,6 +18,7 @@
     ".changes/remove-account.md",
     ".changes/remove-duplicated-event.md",
     ".changes/renaming.md",
+    ".changes/revert-strip.md",
     ".changes/stardust-release.md",
     ".changes/stronghold-update.md",
     ".changes/types.md",
