@@ -1,6 +1,6 @@
 const { spawnSync } = require('child_process');
 const { resolve } = require('path');
-const ELECTRON_VERSIONS = ['12.0.18', '13.2.3', '14.0.0'];
+const ELECTRON_VERSIONS = ['13.2.3', '14.0.0', '15.0.0', '16.0.0', '17.0.0', '18.0.0', '19.0.0'];
 
 for (const version of ELECTRON_VERSIONS) {
     // HACK: make electron-build-env aware of the electron version we're targeting
