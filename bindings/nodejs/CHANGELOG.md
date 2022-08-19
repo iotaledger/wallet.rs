@@ -1,5 +1,13 @@
 # Changelog
 
+## \[2.0.2-alpha.17]
+
+- Fixed prebuilds for nodejs bindings.
+  Add newer Electron versions for electron build.
+  - [a3381e5a](https://github.com/iotaledger/wallet.rs/commit/a3381e5ad5cdde78291f0765637056b09772a76d) fix: fix nodejs prebuilds ([#1372](https://github.com/iotaledger/wallet.rs/pull/1372)) on 2022-08-19
+- Add missing typescript dependency.
+  - [7f885322](https://github.com/iotaledger/wallet.rs/commit/7f8853225d9f3afc90d9ec8130a65fdb87fa4539) Add missing typescript dependency ([#1371](https://github.com/iotaledger/wallet.rs/pull/1371)) on 2022-08-19
+
 ## \[2.0.2-alpha.16]
 
 - Fix removeLatestAccount().
