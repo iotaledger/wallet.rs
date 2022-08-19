@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.19]
+
+- Fixed location of native add-on.
+  - [2a4409cb](https://github.com/iotaledger/wallet.rs/commit/2a4409cb11993f4102c09e97b27929183907dfda) chore: add changes to trigger covector ([#1378](https://github.com/iotaledger/wallet.rs/pull/1378)) on 2022-08-19
+
 ## \[2.0.2-alpha.18]
 
 - Striping index.node from the correct path
