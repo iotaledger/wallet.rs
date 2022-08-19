@@ -135,6 +135,58 @@ public class AccountMethodApi extends BaseApi {
         return addresses;
     }
 
+    public AccountAddress[] listAddressesWithUnspentOutputs(AccountIdentifier accountIdentifier, ListAddressesWithUnspentOutputs method) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+
+        AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
+        for (int i = 0; i < responsePayload.size(); i++)
+            addresses[i] = new AccountAddress(responsePayload.get(i).getAsJsonObject());
+
+        return addresses;
+    }
+
+    public JsonObject listOutputs(AccountIdentifier accountIdentifier, ListOutputs method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+
+        return responsePayload;
+    }
+
+    public TransactionPayload[] listPendingTransactions(AccountIdentifier accountIdentifier, ListPendingTransactions method) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+
+        TransactionPayload[] transactionPayloads = new TransactionPayload[responsePayload.size()];
+        for (int i = 0; i < responsePayload.size(); i++)
+            transactionPayloads[i] = new TransactionPayload(responsePayload.get(i).getAsJsonObject());
+
+        return transactionPayloads;
+    }
+
+    public TransactionPayload[] listTransactions(AccountIdentifier accountIdentifier, ListTransactions method) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+
+        TransactionPayload[] transactionPayloads = new TransactionPayload[responsePayload.size()];
+        for (int i = 0; i < responsePayload.size(); i++)
+            transactionPayloads[i] = new TransactionPayload(responsePayload.get(i).getAsJsonObject());
+
+        return transactionPayloads;
+    }
+
+    public JsonObject listUnspentOutputs(AccountIdentifier accountIdentifier, ListUnspentOutputs method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+
+        return responsePayload;
+    }
+
+    public TaggedDataPayload meltNativeToken(AccountIdentifier accountIdentifier, MeltNativeToken method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TaggedDataPayload(responsePayload);
+    }
+
+    public String minimumRequiredStorageDeposit(AccountIdentifier accountIdentifier, MinimumRequiredStorageDeposit method) throws WalletException {
+        String responsePayload = callAccountMethod(accountIdentifier, method).getAsJsonPrimitive().getAsString();
+        return responsePayload;
+    }
+
 
 
 }
