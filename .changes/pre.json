@@ -27,6 +27,7 @@
     ".changes/typescript-declarations.md",
     ".changes/typescript-dependency.md",
     ".changes/update-iota-client-types.md",
+    ".changes/update-prebuild-install-and-electron-version.md",
     ".changes/update-types.md"
   ]
 }
