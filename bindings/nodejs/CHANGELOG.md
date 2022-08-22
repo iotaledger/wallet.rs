@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.20]
+
+- Fix prebuilding the electron bindings
+  - [cacd6853](https://github.com/iotaledger/wallet.rs/commit/cacd6853abc367765268ef193aaee39a73d1ca02) fix: electron prebuilds ([#1380](https://github.com/iotaledger/wallet.rs/pull/1380)) on 2022-08-22
+
 ## \[2.0.2-alpha.19]
 
 - Fixed location of native add-on.
