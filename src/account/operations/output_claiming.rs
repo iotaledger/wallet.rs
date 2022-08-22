@@ -4,7 +4,7 @@
 use std::collections::{HashMap, HashSet};
 
 use iota_client::{
-    api::input_selection::minimum_storage_deposit,
+    api::input_selection::minimum_storage_deposit_basic_output,
     block::{
         address::Address,
         output::{
@@ -272,7 +272,7 @@ impl AccountHandle {
             };
 
             // Check if the new amount is enough for the storage deposit, otherwise increase it to this
-            let mut required_storage_deposit = minimum_storage_deposit(
+            let mut required_storage_deposit = minimum_storage_deposit_basic_output(
                 &rent_structure,
                 &first_account_address.address.inner,
                 &option_native_token,
@@ -284,7 +284,7 @@ impl AccountHandle {
                 for output_data in &possible_additional_inputs {
                     // Recalculate every time, because new inputs can also add more native tokens, which would increase
                     // the required storage deposit
-                    required_storage_deposit = minimum_storage_deposit(
+                    required_storage_deposit = minimum_storage_deposit_basic_output(
                         &rent_structure,
                         &first_account_address.address.inner,
                         &option_native_token,
