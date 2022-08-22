@@ -8,6 +8,7 @@
     ".changes/burning.md",
     ".changes/error-message-and-ledger.md",
     ".changes/fix-binary-location.md",
+    ".changes/fix-electron-binaries.md",
     ".changes/fix-prebuild.md",
     ".changes/fix-types.md",
     ".changes/incoming_transaction_hex_metadata.md",
