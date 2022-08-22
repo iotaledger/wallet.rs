@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.21]
+
+- Update prebuild-install to 7.1.1 and specify building for electron latest version.
+  - [2b5fd77e](https://github.com/iotaledger/wallet.rs/commit/2b5fd77ec3ccb963b82e9d6e89b3012a6520d3e6) chore: update to ubuntu 20.04 ([#1384](https://github.com/iotaledger/wallet.rs/pull/1384)) on 2022-08-22
+
 ## \[2.0.2-alpha.20]
 
 - Fix prebuilding the electron bindings
