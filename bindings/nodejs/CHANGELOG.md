@@ -1,5 +1,40 @@
 # Changelog
 
+## \[2.0.2-alpha.20]
+
+- Fix prebuilding the electron bindings
+  - [cacd6853](https://github.com/iotaledger/wallet.rs/commit/cacd6853abc367765268ef193aaee39a73d1ca02) fix: electron prebuilds ([#1380](https://github.com/iotaledger/wallet.rs/pull/1380)) on 2022-08-22
+
+## \[2.0.2-alpha.19]
+
+- Fixed location of native add-on.
+  - [2a4409cb](https://github.com/iotaledger/wallet.rs/commit/2a4409cb11993f4102c09e97b27929183907dfda) chore: add changes to trigger covector ([#1378](https://github.com/iotaledger/wallet.rs/pull/1378)) on 2022-08-19
+
+## \[2.0.2-alpha.18]
+
+- Striping index.node from the correct path
+  - [e9cc4b7c](https://github.com/iotaledger/wallet.rs/commit/e9cc4b7ca7fa377b6c8dd982a826c2552869f9f9) fix: workflow doesn't support matrix exclusions ([#1374](https://github.com/iotaledger/wallet.rs/pull/1374)) on 2022-08-19
+
+## \[2.0.2-alpha.17]
+
+- Fixed prebuilds for nodejs bindings.
+  Add newer Electron versions for electron build.
+  - [a3381e5a](https://github.com/iotaledger/wallet.rs/commit/a3381e5ad5cdde78291f0765637056b09772a76d) fix: fix nodejs prebuilds ([#1372](https://github.com/iotaledger/wallet.rs/pull/1372)) on 2022-08-19
+- Add missing typescript dependency.
+  - [7f885322](https://github.com/iotaledger/wallet.rs/commit/7f8853225d9f3afc90d9ec8130a65fdb87fa4539) Add missing typescript dependency ([#1371](https://github.com/iotaledger/wallet.rs/pull/1371)) on 2022-08-19
+
+## \[2.0.2-alpha.16]
+
+- Fix removeLatestAccount().
+  - [0d1ad1c0](https://github.com/iotaledger/wallet.rs/commit/0d1ad1c07c4968237909867e25a3263ba1c51cbc) Fix remove_latest_account ([#1369](https://github.com/iotaledger/wallet.rs/pull/1369)) on 2022-08-18
+- Emit `PreparedTransaction` only once and when blindsigning is not needed.
+  - [d5479e61](https://github.com/iotaledger/wallet.rs/commit/d5479e61b59d2836f7174aeb31d24b2d18ed4a27) Emit `PreparedTransaction` only once and when blindsigning is not needed ([#1367](https://github.com/iotaledger/wallet.rs/pull/1367)) on 2022-08-18
+
+## \[2.0.2-alpha.15]
+
+- Add "win_delay_load_hook": "true" to check if add-on gets compiled correctly.
+  - [6dab8026](https://github.com/iotaledger/wallet.rs/commit/6dab80263f7d32284c29b6497d802778441d42b9) fix: windows delay load hook set to true ([#1363](https://github.com/iotaledger/wallet.rs/pull/1363)) on 2022-08-16
+
 ## \[2.0.2-alpha.14]
 
 - Fix restore backup.

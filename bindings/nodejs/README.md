@@ -32,7 +32,9 @@ If you have already installed the project and only want to run the build, run:
 npm run build
 ```
 
-This command uses the [cargo-cp-artifact](https://github.com/neon-bindings/cargo-cp-artifact) utility to run the Rust build and copy the built library into `./index.node`.
+This command uses the [cargo-cp-artifact](https://github.com/neon-bindings/cargo-cp-artifact) utility to run the Rust build and copy the built library into `./build/Release/index.node`.
+Prebuild requires that the binary is in `build/Release` as though it was built with node-gyp.
+
 
 ## Available Scripts
 

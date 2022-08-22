@@ -7,7 +7,7 @@ on:
 
 jobs:
   version-or-publish:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     outputs:
       change: ${{ steps.covector.outputs.change }}
       commandRan: ${{ steps.covector.outputs.commandRan }}
@@ -59,16 +59,11 @@ jobs:
         # The GitHub hosted Windows 2022 image comes with Visual Studio 2022, but node-gyp
         # (which is used by neon-sys) sadly fails to recognize it. As a mitigation, we still run the
         # tests on Windows 2019, until we can figure out a way to fix the problem.
-        # NOTE: Using Ubuntu 18.04 to provide glibc compatibility. (#588)
-        os: [ubuntu-18.04, ubuntu-latest, macos-latest, windows-2019]
+        os: [ubuntu-latest, macos-latest, windows-2019]
         node-version: ['14.x', '16.x', '18.x']
         exclude:
-          # GLIBC_2.28 is only available with a newer ubuntu version
-          - os: ubuntu-18.04
-            node-version: ['18.x']
-          # ubuntu-18.04 is needed for node 14.x and 16.x
           - os: ubuntu-latest
-            node-version: ['14.x', '16.x']
+            node-version: '14.x'
 
     steps:
       - uses: actions/checkout@v2
@@ -149,7 +144,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, macos-latest, windows-2019]
+        os: [ubuntu-latest, macos-latest, windows-2019]
 
     steps:
       - uses: actions/checkout@v2
@@ -178,14 +173,14 @@ jobs:
 
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
 
       - name: Get current date
         if: matrix.os == 'windows-2019'
         run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install required packages (Ubuntu)
-        if: matrix.os == 'ubuntu-18.04'
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev

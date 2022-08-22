@@ -27,17 +27,8 @@ impl AccountManager {
 
                 store_data_to_stronghold(self, stronghold, secret_manager_dto).await?;
 
-                // Get current snapshot_path to set it again after the backup
-                let current_snapshot_path = stronghold.snapshot_path.clone();
-
-                // Set the snapshot path
-                stronghold.snapshot_path = backup_path;
-
                 // Write snapshot to backup path
-                stronghold.write_stronghold_snapshot().await?;
-
-                // Reset snapshot_path
-                stronghold.snapshot_path = current_snapshot_path;
+                stronghold.write_stronghold_snapshot(Some(&backup_path)).await?;
             }
             // Backup with new stronghold
             _ => {
@@ -49,7 +40,7 @@ impl AccountManager {
                 store_data_to_stronghold(self, &mut backup_stronghold, secret_manager_dto).await?;
 
                 // Write snapshot to backup path
-                backup_stronghold.write_stronghold_snapshot().await?;
+                backup_stronghold.write_stronghold_snapshot(None).await?;
             }
         }
 

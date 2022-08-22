@@ -12,21 +12,21 @@ keywords = [ "iota", "wallet", "transaction" ]
 categories = [ "cryptography::cryptocurrencies" ]
 
 [dependencies]
-async-trait = { version = "0.1.56", default-features = false }
+async-trait = { version = "0.1.57", default-features = false }
 backtrace = { version = "0.3.66", default-features = false, features = [ "std" ] }
-futures = { version = "0.3.21", default-features = false }
+futures = { version = "0.3.23", default-features = false }
 getset = { version = "0.1.2", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "14e434b772528b025b07d4e3017a6522100ef1f7", default-features = false, features = [ "message_interface", "tls" ] }
-iota-crypto = { git = "https://github.com/thibault-martinez/crypto.rs", rev = "75fdf00896ba8811c2d06ef713db3e21e7630198", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "4c18f091d1e8cb752cb7bc19ca3d6b621f7a74a2", default-features = false, features = [ "message_interface", "tls" ] }
+iota-crypto = { version = "0.13.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
 packable = { version = "0.5.0", default-features = false, features = [ "serde", "primitive-types" ] }
 prefix-hex = { version = "0.4.0", default-features = false, features = [ "std" ] }
 primitive-types = { version = "0.11.1", default-features = false }
-rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = [ "lz4" ], optional = true }
-serde = { version = "1.0.140", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.82", default-features = false }
-thiserror = { version = "1.0.31", default-features = false }
-tokio = { version = "1.20.0", default-features = false }
+rocksdb = { version = "0.19.0", default-features = false, features = [ "lz4" ], optional = true }
+serde = { version = "1.0.143", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.83", default-features = false }
+thiserror = { version = "1.0.32", default-features = false }
+tokio = { version = "1.20.1", default-features = false }
 
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
