@@ -48,7 +48,8 @@ cc = { version = "1.0.67", default-features = false }
 bindgen = { version = "0.59.1", default-features = false, features = ["runtime"] }
 
 [features]
-default = ["stronghold"]
+default = ["stronghold", "participation"]
 stronghold = ["iota-wallet/stronghold"]
 ledger-nano = ["iota-wallet/ledger-nano"]
 ledger-nano-simulator = ["iota-wallet/ledger-nano-simulator"]
+participation = ["iota-wallet/participation"]
