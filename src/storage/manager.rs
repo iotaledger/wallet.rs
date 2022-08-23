@@ -179,7 +179,7 @@ fn parse_accounts(accounts: &[String], encryption_key: &Option<[u8; 32]>) -> cra
         let account_json = if account.starts_with('{') {
             Some(account.to_string())
         } else if let Some(key) = encryption_key {
-            Some(String::from_utf8(chacha::aead_decrypt(key, account.as_bytes())?).unwrap())
+            Some(String::from_utf8_lossy(&chacha::aead_decrypt(key, account.as_bytes())?).into_owned())
         } else {
             None
         };
