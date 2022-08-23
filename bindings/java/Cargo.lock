@@ -1578,6 +1578,7 @@ dependencies = [
  "log",
  "once_cell",
  "rand 0.8.4",
+ "reqwest",
  "riker",
  "rocksdb",
  "serde 1.0.131",
