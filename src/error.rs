@@ -129,6 +129,9 @@ pub enum Error {
     /// Local time doesn't match the time of the latest timestamp
     #[error("local time {0} doesn't match the time of the latest timestamp: {1}")]
     TimeNotSynced(u32, u32),
+    /// Crypto.rs error
+    #[error("{0}")]
+    CryptoError(#[from] crypto::Error),
 }
 
 impl From<iota_client::Error> for Error {
@@ -199,6 +202,7 @@ impl serde::Serialize for Error {
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::ClientNotSet => serialize_variant(self, serializer, "ClientNotSet"),
             Self::TimeNotSynced(..) => serialize_variant(self, serializer, "TimeNotSynced"),
+            Self::CryptoError(..) => serialize_variant(self, serializer, "CryptoError"),
         }
     }
 }
