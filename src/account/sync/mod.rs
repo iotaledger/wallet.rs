@@ -66,7 +66,7 @@ async fn get_address_outputs(
 ) -> crate::Result<Vec<UtxoInput>> {
     let outputs = {
         if fetch_spent_outputs {
-            let spent_and_unspent_outputs = client
+            client
                 .get_address()
                 .outputs(
                     &address,
@@ -75,10 +75,9 @@ async fn get_address_outputs(
                         ..Default::default()
                     },
                 )
-                .await?;
-            spent_and_unspent_outputs
+                .await?
         } else {
-            let address_outputs = client
+            client
                 .get_address()
                 .outputs(
                     &address,
@@ -87,8 +86,7 @@ async fn get_address_outputs(
                         ..Default::default()
                     },
                 )
-                .await?;
-            address_outputs
+                .await?
         }
     };
     Ok(outputs.to_vec())
@@ -582,7 +580,7 @@ async fn sync_addresses_and_messages(
                                             // if the output got pruned and the node doesn't have it anymore, set it as
                                             // spent
                                             if status_code == 404 {
-                                                if let Some(output) = address.outputs().get(&(*output_id)) {
+                                                if let Some(output) = address.outputs().get(output_id) {
                                                     let mut output = output.clone();
                                                     output.set_is_spent(true);
                                                     address_or_message_data_changed = true;
@@ -2411,7 +2409,7 @@ async fn perform_transfer(
     let mut indexation_data = None;
     if let Some(indexation) = &transfer_obj.indexation {
         if !indexation.data().is_empty() {
-            indexation_data = Some(hex::encode(&*indexation.data()));
+            indexation_data = Some(hex::encode(indexation.data()));
         }
         essence_builder = essence_builder.with_payload(Payload::Indexation(Box::new(indexation.clone())));
     }

@@ -318,7 +318,7 @@ impl Transfer {
 }
 
 /// Possible Value units.
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Eq, PartialEq)]
 pub enum ValueUnit {
     /// i
     I,
@@ -348,7 +348,7 @@ impl fmt::Display for ValueUnit {
 }
 
 /// The transaction Value struct.
-#[derive(Debug, Getters, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Getters, Serialize, Deserialize, Clone, Eq, PartialEq)]
 #[getset(get = "pub")]
 pub struct Value {
     /// The value.
@@ -1417,7 +1417,7 @@ impl Message {
 }
 
 /// Message type.
-#[derive(Debug, Clone, Deserialize_repr, PartialEq)]
+#[derive(Debug, Clone, Deserialize_repr, Eq, PartialEq)]
 #[repr(u8)]
 pub enum MessageType {
     /// Message received.

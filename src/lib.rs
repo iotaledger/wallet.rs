@@ -279,7 +279,7 @@ mod test_utils {
         Storage(StorageTestCase),
     }
 
-    #[derive(PartialEq)]
+    #[derive(Eq, PartialEq)]
     pub enum TestType {
         Signing,
         Storage,

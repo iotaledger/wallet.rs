@@ -75,7 +75,7 @@ pub struct ParticipatingAccount {
 }
 
 /// Participation information.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Participation {
     /// A staking or voting event id, hex encoded [u8; 32]
     #[serde(rename = "eventId")]
@@ -85,7 +85,7 @@ pub struct Participation {
 }
 
 /// Participation information.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq)]
 pub struct Participations {
     /// Multiple participations that happen at the same time
     pub participations: Vec<Participation>,

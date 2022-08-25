@@ -27,7 +27,7 @@ iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "47e5f6684e
 log = { version = "0.4.14", default-features = false }
 once_cell = { version = "1.8.0", default-features = false }
 rand = { version = "0.8.4", default-features = false }
-rocksdb = { git = "https://github.com/iotaledger/rust-rocksdb", rev = "89eeb926c50288666b85e4f491df912040fcdbaf", default-features = false, features = ["lz4"] }
+rocksdb = { version = "0.19.0", default-features = false, features = [ "lz4" ] }
 serde = { version = "1.0.130", default-features = false, features = ["derive"] }
 serde_json = { version = "1.0.68", default-features = false }
 serde_repr = { version = "0.1.7", default-features = false }
