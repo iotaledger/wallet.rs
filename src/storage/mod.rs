@@ -542,6 +542,7 @@ fn split_key_checksum(record: &[u8]) -> crate::Result<([u8; XChaCha20Poly1305::N
     Ok((nonce, kcv))
 }
 
+#[allow(clippy::let_and_return)]
 pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32]) -> crate::Result<bool> {
     let record = crate::storage::get_encryption_key_checksum(storage_path).await;
 

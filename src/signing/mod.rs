@@ -52,7 +52,7 @@ pub struct TransactionInput {
 }
 
 /// Network enum for ledger metadata
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub enum Network {
     /// Mainnet
     Mainnet,
