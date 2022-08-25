@@ -542,7 +542,6 @@ fn split_key_checksum(record: &[u8]) -> crate::Result<([u8; XChaCha20Poly1305::N
     Ok((nonce, kcv))
 }
 
-#[allow(clippy::let_and_return)]
 pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32]) -> crate::Result<bool> {
     let record = crate::storage::get_encryption_key_checksum(storage_path).await;
 
@@ -556,8 +555,13 @@ pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32])
             }
         }
         Err(crate::Error::RecordNotFound) => {
-            let storage_handle = crate::storage::get(storage_path).await?;
-            let is_valid = match storage_handle.lock().await.get(ACCOUNT_INDEXATION_KEY).await {
+            match crate::storage::get(storage_path)
+                .await?
+                .lock()
+                .await
+                .get(ACCOUNT_INDEXATION_KEY)
+                .await
+            {
                 // Existing DB
                 Ok(indexation) => match serde_json::from_str::<Vec<AccountIndexation>>(&indexation) {
                     Ok(_account_indexation) => {
@@ -573,8 +577,7 @@ pub(crate) async fn is_key_valid(storage_path: &Path, encryption_key: &[u8; 32])
                 Err(crate::Error::RecordNotFound) => Ok(true),
                 // Some other error
                 Err(e) => Err(e),
-            };
-            is_valid
+            }
         }
         Err(e) => Err(e),
     }
