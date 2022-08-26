@@ -1064,8 +1064,8 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "2.0.0-beta.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=4c18f091d1e8cb752cb7bc19ca3d6b621f7a74a2#4c18f091d1e8cb752cb7bc19ca3d6b621f7a74a2"
+version = "2.0.0-beta.2"
+source = "git+https://github.com/iotaledger/iota.rs?rev=334188eb6dba9f272619b85ef057cc3155cd5c63#334188eb6dba9f272619b85ef057cc3155cd5c63"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1077,7 +1077,7 @@ dependencies = [
  "futures",
  "gloo-timers",
  "instant",
- "iota-crypto 0.13.0",
+ "iota-crypto 0.14.0",
  "iota_stronghold",
  "log",
  "num_cpus",
@@ -1134,8 +1134,19 @@ version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "538b238fbd6fa732f526f6401656fa6a366598b9fe1ca35185e47f3978369707"
 dependencies = [
- "aead",
  "bee-ternary",
+ "blake2 0.10.4",
+ "digest 0.10.3",
+ "ed25519-zebra",
+]
+
+[[package]]
+name = "iota-crypto"
+version = "0.14.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aee0fbdc68c475a78fd19a6509280b25166499f1bfe087a81237813e7b951667"
+dependencies = [
+ "aead",
  "blake2 0.10.4",
  "chacha20poly1305",
  "digest 0.10.3",
@@ -1159,7 +1170,7 @@ dependencies = [
  "futures",
  "getset",
  "iota-client",
- "iota-crypto 0.13.0",
+ "iota-crypto 0.14.0",
  "log",
  "packable",
  "prefix-hex",
@@ -1944,9 +1955,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.143"
+version = "1.0.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "53e8e5d5b70924f74ff5c6d64d9a5acd91422117c60f48c4e07855238a254553"
+checksum = "0f747710de3dcd43b88c9168773254e809d8ddbdf9653b84e2554ab219f17860"
 dependencies = [
  "serde_derive",
 ]
@@ -1962,9 +1973,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.143"
+version = "1.0.144"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3d8e8de557aee63c26b85b947f5e59b690d0454c753f3adeb5cd7835ab88391"
+checksum = "94ed3a816fb1d101812f83e789f888322c34e291f894f19590dc310963e87a00"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1973,9 +1984,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.83"
+version = "1.0.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38dd04e3c8279e75b31ef29dbdceebfe5ad89f4d0937213c53f7d49d01b3d5a7"
+checksum = "e55a28e3aaef9d5ce0506d0a14dbba8054ddc7e499ef522dd8b26859ec9d4a44"
 dependencies = [
  "itoa 1.0.1",
  "ryu",
