@@ -79,8 +79,8 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'ChangeStrongholdPassword', {
-                'current_password': password,
-                'new_password': password
+                'currentPassword': password,
+                'newPassword': password
             }
         )
 
@@ -103,9 +103,9 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'RecoverAccounts', {
-                'account_gap_limit': account_gap_limit,
-                'address_gap_limit': address_gap_limit,
-                'sync_options': sync_options
+                'accountGapLimit': account_gap_limit,
+                'addressGapLimit': address_gap_limit,
+                'syncOptions': sync_options
             }
         )
 
@@ -182,7 +182,7 @@ class IotaWallet():
         """
         return self._send_cmd_routine(
             'SetStrongholdPasswordClearInterval', {
-                'interval_in_milliseconds': interval_in_milliseconds
+                'intervalInMilliseconds': interval_in_milliseconds
             }
         )
 
@@ -200,7 +200,7 @@ class IotaWallet():
         return self._send_cmd_routine(
             'StartBackgroundSync', {
                 'options': options,
-                'interval_in_milliseconds': interval_in_milliseconds
+                'intervalInMilliseconds': interval_in_milliseconds
             }
         )
 
