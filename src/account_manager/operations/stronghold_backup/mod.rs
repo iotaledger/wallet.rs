@@ -35,7 +35,7 @@ impl AccountManager {
                 // If the SecretManager is not Stronghold we'll create a new one for the backup
                 let mut backup_stronghold = StrongholdSecretManager::builder()
                     .password(&stronghold_password)
-                    .try_build(backup_path)?;
+                    .build(backup_path)?;
 
                 store_data_to_stronghold(self, &mut backup_stronghold, secret_manager_dto).await?;
 
@@ -79,7 +79,7 @@ impl AccountManager {
         // We'll create a new stronghold to load the backup
         let mut new_stronghold = StrongholdSecretManager::builder()
             .password(&stronghold_password)
-            .try_build(backup_path.clone())?;
+            .build(backup_path.clone())?;
 
         let (read_client_options, read_coin_type, read_secret_manager, read_accounts) =
             read_data_from_stronghold_snapshot(&mut new_stronghold).await?;

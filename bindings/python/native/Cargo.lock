@@ -1065,7 +1065,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.0-beta.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=334188eb6dba9f272619b85ef057cc3155cd5c63#334188eb6dba9f272619b85ef057cc3155cd5c63"
+source = "git+https://github.com/iotaledger/iota.rs?rev=d5cbe96c9f7a1924c6b58c281b21ab3b7f247d72#d5cbe96c9f7a1924c6b58c281b21ab3b7f247d72"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1147,6 +1147,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aee0fbdc68c475a78fd19a6509280b25166499f1bfe087a81237813e7b951667"
 dependencies = [
  "aead",
+ "bee-ternary",
  "blake2 0.10.4",
  "chacha20poly1305",
  "digest 0.10.3",
