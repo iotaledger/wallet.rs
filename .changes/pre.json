@@ -4,6 +4,7 @@
     ".changes/account-and-transaction-syncing.md",
     ".changes/add-windows-node-gyp-config.md",
     ".changes/backup.md",
+    ".changes/bump-client.md",
     ".changes/bump-depdendencies.md",
     ".changes/burning.md",
     ".changes/error-message-and-ledger.md",

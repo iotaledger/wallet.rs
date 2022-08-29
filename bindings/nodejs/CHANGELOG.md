@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.22]
+
+- Bumped client revision and fix breaking changes.
+  - [1bbec445](https://github.com/iotaledger/wallet.rs/commit/1bbec4454462492e7de4b79d40c970e7454613d5) Add .changes for nodejs bindings ([#1395](https://github.com/iotaledger/wallet.rs/pull/1395)) on 2022-08-29
+
 ## \[2.0.2-alpha.21]
 
 - Update prebuild-install to 7.1.1 and specify building for electron latest version.
