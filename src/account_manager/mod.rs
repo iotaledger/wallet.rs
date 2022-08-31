@@ -36,6 +36,7 @@ use crate::{
 
 /// The account manager, used to create and get accounts. One account manager can hold many accounts, but they should
 /// all share the same secret_manager type with the same seed/mnemonic.
+#[derive(Debug)]
 pub struct AccountManager {
     // should we use a hashmap instead of a vec like in wallet.rs?
     pub(crate) accounts: Arc<RwLock<Vec<AccountHandle>>>,
