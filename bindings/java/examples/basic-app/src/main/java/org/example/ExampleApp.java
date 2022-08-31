@@ -28,7 +28,7 @@ public class ExampleApp implements ErrorListener, StrongholdStatusListener {
         // Beware: All builder patterns return NEW instances on each method call.
         // Mutating the old builder after a builder call will not result in a change on
         // the second call
-        // This is due to the JNI bindings not beeing able to call non-reference methods
+        // This is due to the JNI bindings not being able to call non-reference methods
         // in rust
         // Examble that doesnt work:
         // AccountManagerBuilder builder = AccountManager.Builder();

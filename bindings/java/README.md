@@ -19,7 +19,7 @@ cd wallet.rs/bindings/java/native
 cargo build
 ```
 
-- Running an example usign gradle
+- Running an example using gradle
 ```
 cd wallet.rs/bindings/java
 ./gradlew examples:basic-app:test --info

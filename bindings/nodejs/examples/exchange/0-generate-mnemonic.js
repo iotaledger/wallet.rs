@@ -19,7 +19,7 @@ async function run() {
         console.log('Generated mnemonic:', await manager.generateMnemonic());
         // Set generated mnemonic as env variable for MNEMONIC so it can be used in 1-create-account.js
 
-        // delete unecessary db folder again
+        // delete unnecessary db folder again
         require('fs').rmSync('./mnemonic-generation', { recursive: true, force: true });
 
     } catch (error) {

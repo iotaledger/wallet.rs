@@ -950,7 +950,7 @@ foreign_class!(
         fn EventManager::subscribe_errors(cb: Box<dyn ErrorListener + Send + 'static>) -> EventId; alias subscribeErrors;
         fn EventManager::subscribe_new_transaction(cb: Box<dyn NewTransactionListener + Send + 'static>) -> EventId; alias subscribeNewTransaction;
         fn EventManager::subscribe_confirmation_state_change(cb: Box<dyn TransactionConfirmationChangeListener + Send + 'static>) -> EventId; alias subscribeConfirmationStateChange;
-        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachement;
+        fn EventManager::subscribe_reattachment(cb: Box<dyn ReattachTransactionListener + Send + 'static>) -> EventId; alias subscribeReattachment;
         fn EventManager::subscribe_broadcast(cb: Box<dyn BroadcastTransactionListener + Send + 'static>) -> EventId; alias subscribeBroadcast;
         fn EventManager::subscribe_transaction_progress(cb: Box<dyn TransactionProgressListener + Send + 'static>) -> EventId; alias subscribeTransactionProgress;
         fn EventManager::subscribe_migration_progress(cb: Box<dyn MigrationProgressListener + Send + 'static>) -> EventId; alias subscribeMigrationProgress;
@@ -961,7 +961,7 @@ foreign_class!(
         fn EventManager::remove_error_listener(event: EventId); alias removeErrorListener;
         fn EventManager::remove_new_transaction_listener(event: EventId); alias removeNewTransactionListener;
         fn EventManager::remove_confirmation_state_change_listener(event: EventId); alias removeConfirmationStateChangeListener;
-        fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachementListener;
+        fn EventManager::remove_reattachment_listener(event: EventId); alias removeReattachmentListener;
         fn EventManager::remove_broadcast_listener(event: EventId); alias removeBroadcastListener;
         fn EventManager::remove_transaction_progress_listener(event: EventId); alias removeTransactionProgressListener;
         fn EventManager::remove_migration_progress_listener(event: EventId); alias removeMigrationProgressListener;

@@ -31,7 +31,7 @@ We recommend you update Rust to the latest stable version [`rustup update stable
 
 ### Dependencies
 
-`cmake`, `clang` and `openssl` are required. In order to run the build process succesfully using Cargo you might need install additional build tools on your system.
+`cmake`, `clang` and `openssl` are required. In order to run the build process successfully using Cargo you might need install additional build tools on your system.
 
 ### Windows
 

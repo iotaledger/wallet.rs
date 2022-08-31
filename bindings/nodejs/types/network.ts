@@ -52,7 +52,7 @@ export interface ClientOptions {
     primaryNode?: string | Node;
     primaryPowNode?: string | Node;
     quorum?: boolean;
-    quorumTreshold?: boolean;
+    quorumThreshold?: boolean;
     remotePowTimeout?: number;
     // timeout in seconds
     timeout?: number;
