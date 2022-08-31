@@ -8,7 +8,7 @@ use tokio::time::sleep;
 use crate::{account::operations::syncing::SyncOptions, account_manager::AccountManager};
 
 /// The default interval for background syncing
-pub(crate) const DEFAUTL_BACKGROUNDSYNCING_INTERVAL: Duration = Duration::from_secs(7);
+pub(crate) const DEFAULT_BACKGROUNDSYNCING_INTERVAL: Duration = Duration::from_secs(7);
 
 impl AccountManager {
     /// Start the background syncing process for all accounts, default interval is 7 seconds
@@ -51,7 +51,7 @@ impl AccountManager {
                         };
                     }
                     // split interval syncing to seconds so stopping the process doesn't have to wait long
-                    let seconds = interval.unwrap_or(DEFAUTL_BACKGROUNDSYNCING_INTERVAL).as_secs();
+                    let seconds = interval.unwrap_or(DEFAULT_BACKGROUNDSYNCING_INTERVAL).as_secs();
                     for _ in 0..seconds {
                         if background_syncing_status.load(Ordering::Relaxed) == 2 {
                             log::debug!("[background_syncing]: stopping");

@@ -1,7 +1,7 @@
 // Copyright 2020 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-// deref_nullptr: supressing UB warnings in bindgen generated code. See:
+// deref_nullptr: suppressing UB warnings in bindgen generated code. See:
 // https://github.com/rust-lang/rust-bindgen/issues/1651
 #![allow(
     non_upper_case_globals,

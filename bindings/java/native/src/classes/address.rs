@@ -147,15 +147,15 @@ impl Display for AddressOutput {
 }
 
 impl From<AddressOutputRust> for AddressOutput {
-    fn from(ouput: AddressOutputRust) -> Self {
+    fn from(output: AddressOutputRust) -> Self {
         Self {
-            transaction_id: ouput.transaction_id().clone(),
-            block_id: ouput.block_id().clone(),
-            index: ouput.index().clone(),
-            amount: ouput.amount().clone(),
-            is_spent: ouput.is_spent().clone(),
-            address: ouput.address().clone(),
-            kind: ouput.kind().clone(),
+            transaction_id: output.transaction_id().clone(),
+            block_id: output.block_id().clone(),
+            index: output.index().clone(),
+            amount: output.amount().clone(),
+            is_spent: output.is_spent().clone(),
+            address: output.address().clone(),
+            kind: output.kind().clone(),
         }
     }
 }

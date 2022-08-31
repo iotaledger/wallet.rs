@@ -30,7 +30,7 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Replace with a TokenId that is available in the account, the foundry output whcih minted it, also needs to be
+    // Replace with a TokenId that is available in the account, the foundry output which minted it, also needs to be
     // available.
     let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
 

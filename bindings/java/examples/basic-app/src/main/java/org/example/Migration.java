@@ -159,7 +159,7 @@ public class Migration implements MigrationProgressListener {
                     try {
                         MigrationBundleOptions options = new MigrationBundleOptions();
                         // This will appear in DB_STORAGE_PATH/iota-migration.log
-                        // ANd contain information about old and new addresses
+                        // And contain information about old and new addresses
                         options.setLogFileName("iota-migration.log");
                         options.setMine(batch.get(0).spent());
 

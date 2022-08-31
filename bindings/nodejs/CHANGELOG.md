@@ -373,7 +373,7 @@
 - Adds a `remainder` property to the transaction's `output` object.
   - [f87a987](https://github.com/iotaledger/wallet.rs/commit/f87a9877041fde5dbffed0f117b075450f9ce21f) feat(message): add `remainder` field to the TransactionOutput struct ([#350](https://github.com/iotaledger/wallet.rs/pull/350)) on 2021-02-25
 - Fixes `setStrongholdPassword` accepting a wrong password after a few tries.
-  - [991c2e6](https://github.com/iotaledger/wallet.rs/commit/991c2e68c1f88f0c327d1cd37a1275089aaf0ed3) fix(stronghold): mark client as loaded if the snapshot decrypt succeded ([#357](https://github.com/iotaledger/wallet.rs/pull/357)) on 2021-03-01
+  - [991c2e6](https://github.com/iotaledger/wallet.rs/commit/991c2e68c1f88f0c327d1cd37a1275089aaf0ed3) fix(stronghold): mark client as loaded if the snapshot decrypt succeeded ([#357](https://github.com/iotaledger/wallet.rs/pull/357)) on 2021-03-01
 - Adds the `options: SyncOptions` parameter on the `AccountManager#syncAccounts` method.
   - [9855cfa](https://github.com/iotaledger/wallet.rs/commit/9855cfa4ce7296d04d1c647c7f6ca1722784eb33) refactor(manager): `sync_accounts` gap_limit and address_index options ([#346](https://github.com/iotaledger/wallet.rs/pull/346)) on 2021-02-24
 - Move `transfer`, `retry`, `reattach`, `promote` APIs to the account object.

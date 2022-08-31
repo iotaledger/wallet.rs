@@ -24,8 +24,8 @@ impl AccountHandle {
     /// If the amount is below the minimum required storage deposit, by default the remaining amount will automatically
     /// be added with a StorageDepositReturn UnlockCondition, when setting the ReturnStrategy to `gift`, the full
     /// minimum required storage deposit will be sent to the recipient.
-    /// When the assets contain an nft_id, the data from the
-    /// exisiting nft output will be used, just with the address unlock conditions replaced
+    /// When the assets contain an nft_id, the data from the existing nft output will be used, just with the address
+    /// unlock conditions replaced
     pub async fn prepare_output(
         &self,
         options: OutputOptions,

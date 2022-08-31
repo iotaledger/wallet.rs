@@ -56,7 +56,7 @@ fn gen_jni_bindings(jni_c_headers_rs: &Path) {
 
     let java_include_dir = Path::new(&java_home).join("include");
 
-    let target = env::var("TARGET").expect("target env var not setted");
+    let target = env::var("TARGET").expect("target env var not set");
     let java_sys_include_dir = java_include_dir.join(if target.contains("windows") {
         "win32"
     } else if target.contains("darwin") {

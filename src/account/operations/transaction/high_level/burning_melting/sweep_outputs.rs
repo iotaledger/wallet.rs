@@ -340,8 +340,8 @@ impl AccountHandle {
         for output_response in &output_responses {
             match &output_response.output {
                 OutputDto::Foundry(foundry_output) => {
-                    let foundry_outut = FoundryOutput::try_from(foundry_output)?;
-                    foundry_ids.insert(foundry_outut.id());
+                    let foundry_output = FoundryOutput::try_from(foundry_output)?;
+                    foundry_ids.insert(foundry_output.id());
                 }
                 _ => {
                     return Err(Error::BurningOrMeltingFailed(

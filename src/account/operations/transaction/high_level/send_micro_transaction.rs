@@ -95,7 +95,7 @@ impl AccountHandle {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_with_amount.address)?;
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
-            // different native tokens require a differen storage deposit
+            // different native tokens require a different storage deposit
             let storage_deposit_amount = minimum_storage_deposit_basic_native_tokens(
                 &rent_structure,
                 &address,
