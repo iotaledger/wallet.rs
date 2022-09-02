@@ -1,5 +1,13 @@
 # Changelog
 
+## \[2.0.2-alpha.23]
+
+- Bump client to update `iota-ledger-nano` and fix a bug.
+  - [c2463433](https://github.com/iotaledger/wallet.rs/commit/c2463433c92ef33b71db9d0611006a0e8feb447f) Bump client to update `iota-ledger-nano` and fix a bug ([#1408](https://github.com/iotaledger/wallet.rs/pull/1408)) on 2022-09-02
+- Bump client revision to include the fix `Check expiration for remainder address`.
+  - [eac49410](https://github.com/iotaledger/wallet.rs/commit/eac49410cd5c8b48c229579704e792e93a516a6d) Check expiration for remainder address ([#1406](https://github.com/iotaledger/wallet.rs/pull/1406)) on 2022-09-02
+  - [c2463433](https://github.com/iotaledger/wallet.rs/commit/c2463433c92ef33b71db9d0611006a0e8feb447f) Bump client to update `iota-ledger-nano` and fix a bug ([#1408](https://github.com/iotaledger/wallet.rs/pull/1408)) on 2022-09-02
+
 ## \[2.0.2-alpha.22]
 
 - Bumped client revision and fix breaking changes.
