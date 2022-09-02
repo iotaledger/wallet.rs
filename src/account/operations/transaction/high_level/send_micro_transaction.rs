@@ -70,10 +70,10 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] send_micro_transaction");
-        let prepared_trasacton = self
+        let prepared_transaction = self
             .prepare_send_micro_transaction(addresses_with_micro_amount, options)
             .await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for

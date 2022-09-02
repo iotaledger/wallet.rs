@@ -46,8 +46,8 @@ impl AccountHandle {
         addresses_with_amount: Vec<AddressWithAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        let prepared_trasacton = self.prepare_send_amount(addresses_with_amount, options).await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        let prepared_transaction = self.prepare_send_amount(addresses_with_amount, options).await?;
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for

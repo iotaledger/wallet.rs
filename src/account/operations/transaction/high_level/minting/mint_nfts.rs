@@ -94,8 +94,8 @@ impl AccountHandle {
         nfts_options: Vec<NftOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        let prepared_trasacton = self.prepare_mint_nfts(nfts_options, options).await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        let prepared_transaction = self.prepare_mint_nfts(nfts_options, options).await?;
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for
