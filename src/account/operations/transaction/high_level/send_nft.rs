@@ -54,8 +54,8 @@ impl AccountHandle {
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        let prepared_trasacton = self.prepare_send_nft(addresses_nft_ids, options).await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        let prepared_transaction = self.prepare_send_nft(addresses_nft_ids, options).await?;
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for

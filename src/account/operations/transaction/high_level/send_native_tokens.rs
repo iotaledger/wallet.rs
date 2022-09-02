@@ -73,10 +73,10 @@ impl AccountHandle {
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        let prepared_trasacton = self
+        let prepared_transaction = self
             .prepare_send_native_tokens(addresses_native_tokens, options)
             .await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for
