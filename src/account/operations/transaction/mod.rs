@@ -10,11 +10,15 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashSet,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
     block::{
+        address::Address,
         output::Output,
         payload::{
             transaction::{TransactionEssence, TransactionPayload},
@@ -210,6 +214,10 @@ impl AccountHandle {
                     if let Some(Payload::Transaction(tx_payload)) = confirmed_block.1.payload() {
                         let TransactionEssence::Regular(regular_essence) = tx_payload.essence();
                         if let Ok(account_addresses) = account.list_addresses().await {
+                            // Safe to index, because the first address is generated during account creation
+                            let bech32_hrp = account_addresses[0].address.bech32_hrp.clone();
+                            let account_addresses: HashSet<Address> =
+                                HashSet::from_iter(account_addresses.into_iter().map(|a| a.address().inner));
                             // Filter for addresses from the account
                             let addresses: Vec<String> = regular_essence
                                 .outputs()
@@ -217,10 +225,11 @@ impl AccountHandle {
                                 .filter_map(|o| {
                                     o.unlock_conditions().and_then(|unlock_conditions| {
                                         unlock_conditions.address().and_then(|output_address| {
-                                            account_addresses
-                                                .iter()
-                                                .find(|a| a.address.inner == *output_address.address())
-                                                .map(|acc_address| acc_address.address.to_bech32())
+                                            if account_addresses.contains(output_address.address()) {
+                                                Some(output_address.address().to_bech32(bech32_hrp.clone()))
+                                            } else {
+                                                None
+                                            }
                                         })
                                     })
                                 })
