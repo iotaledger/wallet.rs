@@ -233,7 +233,13 @@ export class AccountManager {
                 syncOptions,
             },
         });
-        return JSON.parse(response).payload;
+
+        const accounts: Account[] = [];
+
+        for (const account of JSON.parse(response).payload) {
+            accounts.push(new Account(account, this.messageHandler));
+        }
+        return accounts;
     }
 
     /**
