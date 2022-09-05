@@ -30,6 +30,10 @@ impl AccountHandle {
         log::debug!("[SYNC] sync pending transactions");
         let account = self.read().await;
 
+        if account.pending_transactions.is_empty() {
+            return Ok(());
+        }
+
         let network_id = self.client.get_network_id().await?;
 
         let mut updated_transactions = Vec::new();

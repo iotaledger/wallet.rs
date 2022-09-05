@@ -10,11 +10,23 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashSet,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason},
+    block::{
+        address::Address,
+        output::Output,
+        payload::{
+            transaction::{TransactionEssence, TransactionPayload},
+            Payload,
+        },
+        semantic::ConflictReason,
+        BlockId,
+    },
     secret::types::InputSigningData,
 };
 
@@ -23,6 +35,7 @@ use crate::{
     account::{
         handle::AccountHandle,
         types::{InclusionState, Transaction},
+        SyncOptions,
     },
     iota_client::Error,
 };
@@ -128,7 +141,10 @@ impl AccountHandle {
             .submit_transaction_payload(signed_transaction_data.transaction_payload.clone())
             .await
         {
-            Ok(block_id) => Some(block_id),
+            Ok(block_id) => {
+                self.monitor_tx_confirmation(block_id);
+                Some(block_id)
+            }
             Err(err) => {
                 log::error!("Failed to submit_transaction_payload {}", err);
                 None
@@ -177,5 +193,68 @@ impl AccountHandle {
             );
         }
         Ok(())
+    }
+
+    // Try to get a transaction confirmed and sync related account addresses when confirmed, so the outputs get
+    // available for new transactions without manually syncing (which would sync all addresses and be more heavy without
+    // extra logic)
+    fn monitor_tx_confirmation(&self, block_id: BlockId) {
+        // spawn a task which tries to get the block confirmed
+        let account = self.clone();
+        tokio::spawn(async move {
+            if let Ok(blocks) = account.client().retry_until_included(&block_id, None, None).await {
+                if let Some(confirmed_block) = blocks.first() {
+                    if confirmed_block.0 != block_id {
+                        log::debug!(
+                            "[TRANSACTION] reattached {}, new block id {}",
+                            block_id,
+                            confirmed_block.0
+                        );
+                    }
+                    if let Some(Payload::Transaction(tx_payload)) = confirmed_block.1.payload() {
+                        let TransactionEssence::Regular(regular_essence) = tx_payload.essence();
+                        if let Ok(account_addresses) = account.list_addresses().await {
+                            // Safe to index, because the first address is generated during account creation
+                            let bech32_hrp = account_addresses[0].address.bech32_hrp.clone();
+                            let account_addresses: HashSet<Address> =
+                                HashSet::from_iter(account_addresses.into_iter().map(|a| a.address().inner));
+                            // Filter for addresses from the account
+                            let addresses: Vec<String> = regular_essence
+                                .outputs()
+                                .iter()
+                                .filter_map(|o| {
+                                    o.unlock_conditions().and_then(|unlock_conditions| {
+                                        unlock_conditions.address().and_then(|output_address| {
+                                            if account_addresses.contains(output_address.address()) {
+                                                Some(output_address.address().to_bech32(bech32_hrp.clone()))
+                                            } else {
+                                                None
+                                            }
+                                        })
+                                    })
+                                })
+                                .collect();
+
+                            if !addresses.is_empty() {
+                                // Sync account with output addresses, so the outputs are available
+                                log::debug!("[TRANSACTION] sync addresses from outputs");
+                                // Ignore errors
+                                let _ = account
+                                    .sync(Some(SyncOptions {
+                                        addresses,
+                                        force_syncing: true,
+                                        // Sync only most basic output here since that's expected for remainder outputs
+                                        // and they will be synced with any sync options, but other outputs not, and we
+                                        // don't want to add other outputs when the user doesn't expect to get them
+                                        sync_only_most_basic_outputs: true,
+                                        ..Default::default()
+                                    }))
+                                    .await;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 }

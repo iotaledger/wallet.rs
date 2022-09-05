@@ -34,7 +34,7 @@ impl AccountHandle {
         }
         let block =
             finish_multi_threaded_pow(&self.client, Some(Payload::Transaction(Box::new(transaction_payload)))).await?;
-        // log::debug!("[TRANSACTION] submitting block {:#?}", block);
+
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             account_index,
@@ -42,21 +42,6 @@ impl AccountHandle {
         );
         let block_id = self.client.post_block(&block).await?;
         log::debug!("[TRANSACTION] submitted block {}", block_id);
-        // spawn a thread which tries to get the block confirmed
-        let client = self.client.clone();
-        tokio::spawn(async move {
-            if let Ok(blocks) = client.retry_until_included(&block_id, None, None).await {
-                if let Some(confirmed_block) = blocks.first() {
-                    if confirmed_block.0 != block_id {
-                        log::debug!(
-                            "[TRANSACTION] reattached {}, new block id {}",
-                            block_id,
-                            confirmed_block.0
-                        );
-                    }
-                }
-            }
-        });
         Ok(block_id)
     }
 }
