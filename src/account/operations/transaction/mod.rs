@@ -215,15 +215,14 @@ impl AccountHandle {
                                 .outputs()
                                 .iter()
                                 .filter_map(|o| {
-                                    o.unlock_conditions()
-                                        .expect("output needs to have unlock conditions")
-                                        .address()
-                                        .and_then(|output_address| {
+                                    o.unlock_conditions().and_then(|unlock_conditions| {
+                                        unlock_conditions.address().and_then(|output_address| {
                                             account_addresses
                                                 .iter()
                                                 .find(|a| a.address.inner == *output_address.address())
                                                 .map(|acc_address| acc_address.address.to_bech32())
                                         })
+                                    })
                                 })
                                 .collect();
 
