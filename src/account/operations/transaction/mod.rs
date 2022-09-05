@@ -195,7 +195,7 @@ impl AccountHandle {
     // available for new transactions without manually syncing (which would sync all addresses and be more heavy without
     // extra logic)
     fn monitor_tx_confirmation(&self, block_id: BlockId) {
-        // spawn a thread which tries to get the block confirmed
+        // spawn a task which tries to get the block confirmed
         let account = self.clone();
         tokio::spawn(async move {
             if let Ok(blocks) = account.client().retry_until_included(&block_id, None, None).await {
