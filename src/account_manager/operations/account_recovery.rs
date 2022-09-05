@@ -72,7 +72,7 @@ impl AccountManager {
                 // accounts are stored during syncing, delete the empty accounts again
                 #[cfg(feature = "storage")]
                 {
-                    log::debug!("[recover_accounts] delete emtpy account {}", account_index);
+                    log::debug!("[recover_accounts] delete empty account {}", account_index);
                     self.storage_manager.lock().await.remove_account(account_index).await?;
                 }
             }

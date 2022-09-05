@@ -5,19 +5,15 @@
 pub mod adapter;
 /// Storage constants.
 pub mod constants;
-/// Storage encryption.
-pub mod encryption;
 /// Storage manager.
 pub mod manager;
 
 use std::collections::HashMap;
 
+use crypto::ciphers::chacha;
 use serde::Serialize;
 
-use self::{
-    adapter::StorageAdapter,
-    encryption::{decrypt_record, encrypt_record},
-};
+use self::adapter::StorageAdapter;
 
 #[derive(Debug)]
 struct Storage {
@@ -34,7 +30,7 @@ impl Storage {
         self.inner.get(key).await.and_then(|record| {
             if let Some(key) = &self.encryption_key {
                 if serde_json::from_str::<Vec<u8>>(&record).is_ok() {
-                    decrypt_record(&record, key)
+                    Ok(String::from_utf8_lossy(&chacha::aead_decrypt(key, record.as_bytes())?).into_owned())
                 } else {
                     Ok(record)
                 }
@@ -50,8 +46,7 @@ impl Storage {
             .set(
                 key,
                 if let Some(key) = &self.encryption_key {
-                    let mut output = Vec::new();
-                    encrypt_record(record.as_bytes(), key, &mut output)?;
+                    let output = chacha::aead_encrypt(key, record.as_bytes())?;
                     serde_json::to_string(&output)?
                 } else {
                     record
@@ -66,8 +61,7 @@ impl Storage {
             .batch_set(if let Some(key) = &self.encryption_key {
                 let mut encrypted_records = HashMap::new();
                 for (id, record) in records {
-                    let mut output = Vec::new();
-                    encrypt_record(record.as_bytes(), key, &mut output)?;
+                    let output = chacha::aead_encrypt(key, record.as_bytes())?;
                     encrypted_records.insert(id, serde_json::to_string(&output)?);
                 }
                 encrypted_records

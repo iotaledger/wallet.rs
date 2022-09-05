@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
 
     // List unspent outputs before consolidation.
     // The output we created with example `03_get_funds` and the basic output from `09_mint_native_tokens` have only one
-    // unlock condition and it is an `AdressUnlockCondition`, and so they are valid for consolidation. They have the
+    // unlock condition and it is an `AddressUnlockCondition`, and so they are valid for consolidation. They have the
     // same `AddressUnlockCondition`(the first address of the account), so they will be consolidated into one
     // output.
     let outputs = account.list_unspent_outputs().await?;

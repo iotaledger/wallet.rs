@@ -12,21 +12,21 @@ keywords = [ "iota", "wallet", "transaction" ]
 categories = [ "cryptography::cryptocurrencies" ]
 
 [dependencies]
-async-trait = { version = "0.1.56", default-features = false }
+async-trait = { version = "0.1.57", default-features = false }
 backtrace = { version = "0.3.66", default-features = false, features = [ "std" ] }
-futures = { version = "0.3.21", default-features = false }
+futures = { version = "0.3.24", default-features = false }
 getset = { version = "0.1.2", default-features = false }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "14e434b772528b025b07d4e3017a6522100ef1f7", default-features = false, features = [ "message_interface", "tls" ] }
-iota-crypto = { version = "0.13.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "f9bc46f9dbf55dad1a6df771e9921646772d88a3", default-features = false, features = [ "message_interface", "tls" ] }
+iota-crypto = { version = "0.14.0", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
-packable = { version = "0.5.0", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.6.1", default-features = false, features = [ "serde", "primitive-types" ] }
 prefix-hex = { version = "0.4.0", default-features = false, features = [ "std" ] }
 primitive-types = { version = "0.11.1", default-features = false }
-rocksdb = { git = "https://github.com/rust-rocksdb/rust-rocksdb", rev = "86d983987e7cafce90ad8a147b0b325e6007eba6", default-features = false, features = [ "lz4" ], optional = true }
-serde = { version = "1.0.140", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.82", default-features = false }
-thiserror = { version = "1.0.31", default-features = false }
-tokio = { version = "1.20.0", default-features = false }
+rocksdb = { version = "0.19.0", default-features = false, features = [ "lz4" ], optional = true }
+serde = { version = "1.0.144", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.85", default-features = false }
+thiserror = { version = "1.0.32", default-features = false }
+tokio = { version = "1.20.1", default-features = false }
 
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
@@ -70,8 +70,118 @@ name = "3_send_transaction"
 path = "examples/offline_signing/3_send_transaction.rs"
 
 [[example]]
+name = "create_wallet"
+path = "examples/01_create_wallet.rs"
+
+[[example]]
+name = "generate_address"
+path = "examples/02_generate_address.rs"
+
+[[example]]
+name = "get_funds"
+path = "examples/03_get_funds.rs"
+
+[[example]]
+name = "get_balance"
+path = "examples/04_get_balance.rs"
+
+[[example]]
+name = "transaction"
+path = "examples/05_transaction.rs"
+
+[[example]]
+name = "send_micro_transaction"
+path = "examples/06_send_micro_transaction.rs"
+
+[[example]]
+name = "send_native_tokens"
+path = "examples/07_send_native_tokens.rs"
+
+[[example]]
+name = "send_nft"
+path = "examples/08_send_nft.rs"
+
+[[example]]
+name = "mint_native_token"
+path = "examples/09_mint_native_token.rs"
+
+[[example]]
+name = "mint_nft"
+path = "examples/10_mint_nft.rs"
+
+[[example]]
+name = "melt_native_token"
+path = "examples/11_melt_native_token.rs"
+
+[[example]]
+name = "burn_native_token"
+path = "examples/12_burn_native_token.rs"
+
+[[example]]
+name = "burn_nft"
+path = "examples/13_burn_nft.rs"
+
+[[example]]
+name = "destroy_foundry"
+path = "examples/14_destroy_foundry.rs"
+
+[[example]]
+name = "destroy_alias"
+path = "examples/15_destroy_alias.rs"
+
+[[example]]
+name = "accounts"
+path = "examples/accounts.rs"
+
+[[example]]
+name = "background_syncing"
+path = "examples/background_syncing.rs"
+
+[[example]]
+name = "events"
+path = "examples/events.rs"
+required-features = [ "events" ]
+
+[[example]]
 name = "ledger_nano"
+path = "examples/ledger_nano.rs"
 required-features = [ "ledger_nano" ]
+
+[[example]]
+name = "logger"
+path = "examples/logger.rs"
+
+[[example]]
+name = "output_consolidation"
+path = "examples/output_consolidation.rs"
+
+[[example]]
+name = "ping"
+path = "examples/ping.rs"
+
+[[example]]
+name = "pong"
+path = "examples/pong.rs"
+
+[[example]]
+name = "recover_accounts"
+path = "examples/recover_accounts.rs"
+
+[[example]]
+name = "split_funds"
+path = "examples/split_funds.rs"
+
+[[example]]
+name = "storage"
+path = "examples/storage.rs"
+
+[[example]]
+name = "threads"
+path = "examples/threads.rs"
+
+[[example]]
+name = "wallet"
+path = "examples/wallet.rs"
 
 # udeps returns a false positive for this, so we add it here
 [package.metadata.cargo-udeps.ignore]
@@ -80,7 +190,3 @@ normal = ["backtrace"]
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
-
-[[example]]
-name = "events"
-required-features = ["events"]

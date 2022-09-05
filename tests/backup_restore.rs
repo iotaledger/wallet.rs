@@ -23,7 +23,7 @@ async fn backup_and_restore() -> Result<()> {
     std::fs::create_dir_all("test-storage/backup_and_restore").unwrap_or(());
     let mut stronghold = StrongholdSecretManager::builder()
         .password(stronghold_password)
-        .try_build(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))?;
+        .build(PathBuf::from("test-storage/backup_and_restore/1.stronghold"))?;
 
     stronghold.store_mnemonic("inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak".to_string()).await.unwrap();
 
@@ -51,7 +51,7 @@ async fn backup_and_restore() -> Result<()> {
     // restore from backup
 
     let stronghold =
-        StrongholdSecretManager::builder().try_build(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))?;
+        StrongholdSecretManager::builder().build(PathBuf::from("test-storage/backup_and_restore/2.stronghold"))?;
 
     let restore_manager = AccountManager::builder()
         .with_storage_path("test-storage/backup_and_restore/2")

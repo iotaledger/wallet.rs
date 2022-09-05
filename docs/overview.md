@@ -2,8 +2,8 @@
 
 The aim of this wallet is to have an improved version of [the current wallet](https://github.com/iotaledger/wallet.rs), by redesigning a few parts (most important, move away from blocks), to have it cleaner and better mainainable for the future.
 
-The wallet should consist of a core part which provides needed functionallity to generate addresses, get balance and send transactions, but which isn't affected by any extended functionallity.
-Via Rust features extendend functionallity will be available later, like having a database for the state, different secret_manager types (Stronghold, Ledger), being able to store events and high level functions like internal_transactions, which can be used to send a transfer from one account to another.
+The wallet should consist of a core part which provides needed functionality to generate addresses, get balance and send transactions, but which isn't affected by any extended functionality.
+Via Rust features extendend functionality will be available later, like having a database for the state, different secret_manager types (Stronghold, Ledger), being able to store events and high level functions like internal_transactions, which can be used to send a transfer from one account to another.
 
 ## Account Manager
 
@@ -17,7 +17,7 @@ For the interaction with the Tangle the [iota_client](https://github.com/iotaled
 
 ## secret_manager
 
-A secret_manager is used to generate adddresses and sign transactions, it will be used by an account.
+A secret_manager is used to generate addresses and sign transactions, it will be used by an account.
 
 Possible types are [Stronghold](https://github.com/iotaledger/stronghold.rs/), Ledger (only supports SignatureLockedSingle outputs), LedgerSimulator, Mnemonic and custom implementations could be added.
 

@@ -73,10 +73,10 @@ impl AccountHandle {
         addresses_native_tokens: Vec<AddressNativeTokens>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        let prepared_trasacton = self
+        let prepared_transaction = self
             .prepare_send_native_tokens(addresses_native_tokens, options)
             .await?;
-        self.sign_and_submit_transaction(prepared_trasacton).await
+        self.sign_and_submit_transaction(prepared_transaction).await
     }
 
     /// Function to prepare the transaction for
@@ -99,7 +99,7 @@ impl AccountHandle {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_with_amount.address)?;
             // get minimum required amount for such an output, so we don't lock more than required
             // We have to check it for every output individually, because different address types and amount of
-            // different native tokens require a differen storage deposit
+            // different native tokens require a different storage deposit
             let storage_deposit_amount = minimum_storage_deposit_basic_native_tokens(
                 &rent_structure,
                 &address,

@@ -1,6 +1,6 @@
 # Interface: NodeInfoWrapper
 
-NodeInfo wrapper which contains the nodeinfo and the url from the node (useful when multiple nodes are used)
+NodeInfo wrapper which contains the node info and the url from the node (useful when multiple nodes are used)
 
 ## Table of contents
 
@@ -15,7 +15,7 @@ NodeInfo wrapper which contains the nodeinfo and the url from the node (useful w
 
 • **nodeInfo**: `INodeInfo`
 
-The returned nodeinfo
+The returned node info
 
 ___
 
@@ -23,4 +23,4 @@ ___
 
 • **url**: `string`
 
-The url from the node which returned the nodeinfo
+The url from the node which returned the node info

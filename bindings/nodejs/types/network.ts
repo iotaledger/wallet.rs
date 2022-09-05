@@ -52,7 +52,7 @@ export interface ClientOptions {
     primaryNode?: string | Node;
     primaryPowNode?: string | Node;
     quorum?: boolean;
-    quorumTreshold?: boolean;
+    quorumThreshold?: boolean;
     remotePowTimeout?: number;
     // timeout in seconds
     timeout?: number;
@@ -60,11 +60,11 @@ export interface ClientOptions {
 }
 
 /**
- * NodeInfo wrapper which contains the nodeinfo and the url from the node (useful when multiple nodes are used)
+ * NodeInfo wrapper which contains the node info and the url from the node (useful when multiple nodes are used)
  */
 export interface NodeInfoWrapper {
-    /** The returned nodeinfo */
+    /** The returned node info */
     nodeInfo: INodeInfo;
-    /** The url from the node which returned the nodeinfo */
+    /** The url from the node which returned the node info */
     url: string;
 }

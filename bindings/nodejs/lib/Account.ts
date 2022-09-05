@@ -586,7 +586,7 @@ export class Account {
      * amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,
      * when setting the `ReturnStrategy` to `gift`, the full minimum required
      * storage deposit will be sent  to the recipient. When the assets contain
-     * an nft id, the data from the exisiting `NftOutput` will be used, just with
+     * an nft id, the data from the existing `NftOutput` will be used, just with
      * the address unlock conditions replaced.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
      * or custom inputs.

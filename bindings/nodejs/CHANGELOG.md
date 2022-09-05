@@ -1,5 +1,58 @@
 # Changelog
 
+## \[2.0.2-alpha.23]
+
+- Bump client to update `iota-ledger-nano` and fix a bug.
+  - [c2463433](https://github.com/iotaledger/wallet.rs/commit/c2463433c92ef33b71db9d0611006a0e8feb447f) Bump client to update `iota-ledger-nano` and fix a bug ([#1408](https://github.com/iotaledger/wallet.rs/pull/1408)) on 2022-09-02
+- Bump client revision to include the fix `Check expiration for remainder address`.
+  - [eac49410](https://github.com/iotaledger/wallet.rs/commit/eac49410cd5c8b48c229579704e792e93a516a6d) Check expiration for remainder address ([#1406](https://github.com/iotaledger/wallet.rs/pull/1406)) on 2022-09-02
+  - [c2463433](https://github.com/iotaledger/wallet.rs/commit/c2463433c92ef33b71db9d0611006a0e8feb447f) Bump client to update `iota-ledger-nano` and fix a bug ([#1408](https://github.com/iotaledger/wallet.rs/pull/1408)) on 2022-09-02
+
+## \[2.0.2-alpha.22]
+
+- Bumped client revision and fix breaking changes.
+  - [1bbec445](https://github.com/iotaledger/wallet.rs/commit/1bbec4454462492e7de4b79d40c970e7454613d5) Add .changes for nodejs bindings ([#1395](https://github.com/iotaledger/wallet.rs/pull/1395)) on 2022-08-29
+
+## \[2.0.2-alpha.21]
+
+- Update prebuild-install to 7.1.1 and specify building for electron latest version.
+  - [2b5fd77e](https://github.com/iotaledger/wallet.rs/commit/2b5fd77ec3ccb963b82e9d6e89b3012a6520d3e6) chore: update to ubuntu 20.04 ([#1384](https://github.com/iotaledger/wallet.rs/pull/1384)) on 2022-08-22
+
+## \[2.0.2-alpha.20]
+
+- Fix prebuilding the electron bindings
+  - [cacd6853](https://github.com/iotaledger/wallet.rs/commit/cacd6853abc367765268ef193aaee39a73d1ca02) fix: electron prebuilds ([#1380](https://github.com/iotaledger/wallet.rs/pull/1380)) on 2022-08-22
+
+## \[2.0.2-alpha.19]
+
+- Fixed location of native add-on.
+  - [2a4409cb](https://github.com/iotaledger/wallet.rs/commit/2a4409cb11993f4102c09e97b27929183907dfda) chore: add changes to trigger covector ([#1378](https://github.com/iotaledger/wallet.rs/pull/1378)) on 2022-08-19
+
+## \[2.0.2-alpha.18]
+
+- Striping index.node from the correct path
+  - [e9cc4b7c](https://github.com/iotaledger/wallet.rs/commit/e9cc4b7ca7fa377b6c8dd982a826c2552869f9f9) fix: workflow doesn't support matrix exclusions ([#1374](https://github.com/iotaledger/wallet.rs/pull/1374)) on 2022-08-19
+
+## \[2.0.2-alpha.17]
+
+- Fixed prebuilds for nodejs bindings.
+  Add newer Electron versions for electron build.
+  - [a3381e5a](https://github.com/iotaledger/wallet.rs/commit/a3381e5ad5cdde78291f0765637056b09772a76d) fix: fix nodejs prebuilds ([#1372](https://github.com/iotaledger/wallet.rs/pull/1372)) on 2022-08-19
+- Add missing typescript dependency.
+  - [7f885322](https://github.com/iotaledger/wallet.rs/commit/7f8853225d9f3afc90d9ec8130a65fdb87fa4539) Add missing typescript dependency ([#1371](https://github.com/iotaledger/wallet.rs/pull/1371)) on 2022-08-19
+
+## \[2.0.2-alpha.16]
+
+- Fix removeLatestAccount().
+  - [0d1ad1c0](https://github.com/iotaledger/wallet.rs/commit/0d1ad1c07c4968237909867e25a3263ba1c51cbc) Fix remove_latest_account ([#1369](https://github.com/iotaledger/wallet.rs/pull/1369)) on 2022-08-18
+- Emit `PreparedTransaction` only once and when blindsigning is not needed.
+  - [d5479e61](https://github.com/iotaledger/wallet.rs/commit/d5479e61b59d2836f7174aeb31d24b2d18ed4a27) Emit `PreparedTransaction` only once and when blindsigning is not needed ([#1367](https://github.com/iotaledger/wallet.rs/pull/1367)) on 2022-08-18
+
+## \[2.0.2-alpha.15]
+
+- Add "win_delay_load_hook": "true" to check if add-on gets compiled correctly.
+  - [6dab8026](https://github.com/iotaledger/wallet.rs/commit/6dab80263f7d32284c29b6497d802778441d42b9) fix: windows delay load hook set to true ([#1363](https://github.com/iotaledger/wallet.rs/pull/1363)) on 2022-08-16
+
 ## \[2.0.2-alpha.14]
 
 - Fix restore backup.
@@ -328,7 +381,7 @@
 - Adds a `remainder` property to the transaction's `output` object.
   - [f87a987](https://github.com/iotaledger/wallet.rs/commit/f87a9877041fde5dbffed0f117b075450f9ce21f) feat(message): add `remainder` field to the TransactionOutput struct ([#350](https://github.com/iotaledger/wallet.rs/pull/350)) on 2021-02-25
 - Fixes `setStrongholdPassword` accepting a wrong password after a few tries.
-  - [991c2e6](https://github.com/iotaledger/wallet.rs/commit/991c2e68c1f88f0c327d1cd37a1275089aaf0ed3) fix(stronghold): mark client as loaded if the snapshot decrypt succeded ([#357](https://github.com/iotaledger/wallet.rs/pull/357)) on 2021-03-01
+  - [991c2e6](https://github.com/iotaledger/wallet.rs/commit/991c2e68c1f88f0c327d1cd37a1275089aaf0ed3) fix(stronghold): mark client as loaded if the snapshot decrypt succeeded ([#357](https://github.com/iotaledger/wallet.rs/pull/357)) on 2021-03-01
 - Adds the `options: SyncOptions` parameter on the `AccountManager#syncAccounts` method.
   - [9855cfa](https://github.com/iotaledger/wallet.rs/commit/9855cfa4ce7296d04d1c647c7f6ca1722784eb33) refactor(manager): `sync_accounts` gap_limit and address_index options ([#346](https://github.com/iotaledger/wallet.rs/pull/346)) on 2021-02-24
 - Move `transfer`, `retry`, `reattach`, `promote` APIs to the account object.

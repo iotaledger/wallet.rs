@@ -80,7 +80,7 @@ async fn different_seed() -> Result<()> {
     drop(_account);
     drop(manager);
 
-    // Recreate AccountManager with a diferent mnemonic
+    // Recreate AccountManager with a different mnemonic
     let secret_manager2 = MnemonicSecretManager::try_from_mnemonic(
         "route hen wink below army inmate object crew vintage gas best space visit say fortune gown few brain emerge umbrella consider spider digital galaxy",
     )?;

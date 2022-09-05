@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
     };
 
     // create second account
-    let account_alias = "second_acccount";
+    let account_alias = "second_account";
     let account = match manager.get_account(account_alias).await {
         Ok(account) => account,
         _ => {
