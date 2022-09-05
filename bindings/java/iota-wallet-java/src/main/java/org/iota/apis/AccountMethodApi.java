@@ -187,6 +187,14 @@ public class AccountMethodApi extends BaseApi {
         return responsePayload;
     }
 
+    public TransactionPayload mintNfts(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
 
+    public TransactionPayload getBalance(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
 
 }

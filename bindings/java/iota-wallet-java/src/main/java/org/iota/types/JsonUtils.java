@@ -1,6 +1,7 @@
 package org.iota.types;
 
 import com.google.gson.JsonArray;
+import org.iota.types.account_method.AccountMethod;
 import org.iota.types.ids.AbstractId;
 
 public class JsonUtils<T> {
@@ -21,6 +22,18 @@ public class JsonUtils<T> {
         if (array != null) {
             JsonArray a = new JsonArray();
             for (AbstractObject o : array) {
+                a.add(o.toJson());
+            }
+            return a;
+        } else {
+            return null;
+        }
+    }
+
+    public static JsonArray toJson(AccountMethod[] array) {
+        if (array != null) {
+            JsonArray a = new JsonArray();
+            for (AccountMethod o : array) {
                 a.add(o.toJson());
             }
             return a;

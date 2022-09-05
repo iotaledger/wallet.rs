@@ -37,11 +37,6 @@ public class SimpleTest extends ApiTest {
             System.out.println(x);
     }
 
-    @Test
-    public void testBuildBasicOutput() throws WalletException {
-        System.out.println(wallet.);
-    }
-
 
 
 }
