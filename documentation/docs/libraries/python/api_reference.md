@@ -180,7 +180,7 @@ Returns only addresses of the account with unspent outputs.
 #### list\_outputs
 
 ```python
-def list_outputs()
+def list_outputs(filter_options=None)
 ```
 
 Returns all outputs of the account.
@@ -190,7 +190,7 @@ Returns all outputs of the account.
 #### list\_unspent\_outputs
 
 ```python
-def list_unspent_outputs()
+def list_unspent_outputs(filter_options=None)
 ```
 
 Returns all unspent outputs of the account.

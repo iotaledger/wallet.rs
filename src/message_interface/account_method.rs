@@ -16,14 +16,17 @@ use iota_client::{
 use serde::Deserialize;
 
 use crate::{
-    account::operations::{
-        address_generation::AddressGenerationOptions,
-        output_claiming::OutputsToClaim,
-        syncing::SyncOptions,
-        transaction::{
-            high_level::minting::{mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto},
-            prepare_output::OutputOptionsDto,
-            TransactionOptions,
+    account::{
+        handle::FilterOptions,
+        operations::{
+            address_generation::AddressGenerationOptions,
+            output_claiming::OutputsToClaim,
+            syncing::SyncOptions,
+            transaction::{
+                high_level::minting::{mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto},
+                prepare_output::OutputOptionsDto,
+                TransactionOptions,
+            },
         },
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
@@ -190,10 +193,16 @@ pub enum AccountMethod {
     ListAddressesWithUnspentOutputs,
     /// Returns all outputs of the account
     /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListOutputs,
+    ListOutputs {
+        #[serde(rename = "filterOptions")]
+        filter_options: Option<FilterOptions>,
+    },
     /// Returns all unspent outputs of the account
     /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListUnspentOutputs,
+    ListUnspentOutputs {
+        #[serde(rename = "filterOptions")]
+        filter_options: Option<FilterOptions>,
+    },
     /// Returns all transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
     ListTransactions,

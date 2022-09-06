@@ -7,6 +7,7 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
+    FilterOptions,
     OutputsToClaim,
     OutputData,
     Transaction,
@@ -429,13 +430,15 @@ export class Account {
 
     /**
      * List all outputs of the account.
+     * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listOutputs(): Promise<OutputData[]> {
+    async listOutputs(filterOptions?: FilterOptions): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'ListOutputs',
+                data: { filterOptions },
             },
         );
 
@@ -473,13 +476,17 @@ export class Account {
 
     /**
      * List all the unspent outputs of the account.
+     * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listUnspentOutputs(): Promise<OutputData[]> {
+    async listUnspentOutputs(
+        filterOptions?: FilterOptions,
+    ): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'ListUnspentOutputs',
+                data: { filterOptions },
             },
         );
 

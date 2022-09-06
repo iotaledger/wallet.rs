@@ -523,12 +523,12 @@ impl WalletMessageHandler {
                     addresses.iter().map(AddressWithUnspentOutputsDto::from).collect(),
                 ))
             }
-            AccountMethod::ListOutputs => {
-                let outputs = account_handle.list_outputs().await?;
+            AccountMethod::ListOutputs { filter_options } => {
+                let outputs = account_handle.list_outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
-            AccountMethod::ListUnspentOutputs => {
-                let outputs = account_handle.list_unspent_outputs().await?;
+            AccountMethod::ListUnspentOutputs { filter_options } => {
+                let outputs = account_handle.list_unspent_outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
             AccountMethod::ListTransactions => {

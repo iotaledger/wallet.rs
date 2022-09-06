@@ -232,18 +232,22 @@ class Account:
             'ListAddressesWithUnspentOutputs'
         )
 
-    def list_outputs(self):
+    def list_outputs(self, filter_options=None):
         """Returns all outputs of the account.
         """
         return self._call_account_method(
-            'ListOutputs'
+            'ListOutputs', {
+                'filterOptions': filter_options
+            }
         )
 
-    def list_unspent_outputs(self):
+    def list_unspent_outputs(self, filter_options=None):
         """Returns all unspent outputs of the account.
         """
         return self._call_account_method(
-            'ListUnspentOutputs'
+            'ListUnspentOutputs', {
+                'filterOptions': filter_options
+            }
         )
 
     def list_transactions(self):
