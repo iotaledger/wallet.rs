@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.iota.types.*;
 import org.iota.types.account_method.*;
+import org.iota.types.ids.OutputId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
@@ -192,9 +193,79 @@ public class AccountMethodApi extends BaseApi {
         return new TransactionPayload(responsePayload);
     }
 
-    public TransactionPayload getBalance(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
+    public AccountBalance getBalance(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new AccountBalance(responsePayload);
+    }
+
+    public Output prepareOutput(AccountIdentifier accountIdentifier, PrepareOutput method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new Output(responsePayload);
+    }
+
+    public PreparedTransactionData prepareTransaction(AccountIdentifier accountIdentifier, PrepareTransaction method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new PreparedTransactionData(responsePayload);
+    }
+
+    public PreparedTransactionData prepareSendAmount(AccountIdentifier accountIdentifier, PrepareSendAmount method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new PreparedTransactionData(responsePayload);
+    }
+
+    public AccountBalance prepareSendAmount(AccountIdentifier accountIdentifier, SyncAccount method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new AccountBalance(responsePayload);
+    }
+
+    public TransactionPayload sendAmount(AccountIdentifier accountIdentifier, SendAmount method) throws WalletException {
         JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
         return new TransactionPayload(responsePayload);
     }
+
+    public TransactionPayload sendMicroTransaction(AccountIdentifier accountIdentifier, SendMicroTransaction method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload sendNativeTokens(AccountIdentifier accountIdentifier, SendNativeTokens method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload sendNft(AccountIdentifier accountIdentifier, SendNft method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public void setAlias(AccountIdentifier accountIdentifier, SetAlias method) throws WalletException {
+        callAccountMethod(accountIdentifier, method);
+    }
+
+    public TransactionPayload sendOutputs(AccountIdentifier accountIdentifier, SendOutputs method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload signTransactionEssence(AccountIdentifier accountIdentifier, SignTransactionEssence method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload submitAndStoreTransaction(AccountIdentifier accountIdentifier, SubmitAndStoreTransaction method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload tryClaimOutputs(AccountIdentifier accountIdentifier, TryClaimOutputs method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
+    public TransactionPayload claimOutputs(AccountIdentifier accountIdentifier, ClaimOutputs method) throws WalletException {
+        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
+        return new TransactionPayload(responsePayload);
+    }
+
 
 }
