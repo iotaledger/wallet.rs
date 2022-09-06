@@ -298,7 +298,9 @@ impl AccountHandle {
                         if !additional_inputs_used.contains(&output_data.output_id) {
                             if let Some(native_tokens) = output_data.output.native_tokens() {
                                 // Skip input if the max native tokens count would be exceeded
-                                if new_native_tokens.len() + native_tokens.len() > NativeTokens::COUNT_MAX.into() {
+                                if get_new_native_token_count(&new_native_tokens, native_tokens)?
+                                    > NativeTokens::COUNT_MAX.into()
+                                {
                                     log::debug!(
                                         "[OUTPUT_CLAIMING] skipping input to not exceed the max native tokens count"
                                     );
