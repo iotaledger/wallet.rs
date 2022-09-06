@@ -25,6 +25,7 @@ use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 use crate::account::{
     constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
     handle::AccountHandle,
+    operations::output_claiming::get_new_native_token_count,
     types::{address::AddressWithUnspentOutputs, Transaction},
     TransactionOptions,
 };
@@ -125,7 +126,9 @@ impl AccountHandle {
                 for output_data in outputs {
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         // Skip output if the max native tokens count would be exceeded
-                        if total_native_tokens.len() + native_tokens.len() > NativeTokens::COUNT_MAX.into() {
+                        if get_new_native_token_count(&total_native_tokens, native_tokens)?
+                            > NativeTokens::COUNT_MAX.into()
+                        {
                             log::debug!(
                                 "[OUTPUT_CONSOLIDATION] skipping output to not exceed the max native tokens count"
                             );

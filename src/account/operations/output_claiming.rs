@@ -233,7 +233,7 @@ impl AccountHandle {
             for output_data in outputs {
                 if let Some(native_tokens) = output_data.output.native_tokens() {
                     // Skip output if the max native tokens count would be exceeded
-                    if new_native_tokens.len() + native_tokens.len() > NativeTokens::COUNT_MAX.into() {
+                    if get_new_native_token_count(&new_native_tokens, native_tokens)? > NativeTokens::COUNT_MAX.into() {
                         log::debug!("[OUTPUT_CLAIMING] skipping output to not exceed the max native tokens count");
                         continue;
                     }
@@ -391,4 +391,16 @@ pub(crate) fn sdr_not_expired(output: &Output, current_time: u32) -> Option<&Sto
     } else {
         None
     }
+}
+
+// Helper function to calculate the native token count without duplicates, when new native tokens are added
+// Might be possible to refactor the sections where it's used to remove the clones
+pub(crate) fn get_new_native_token_count(
+    native_tokens_builder: &NativeTokensBuilder,
+    native_tokens: &NativeTokens,
+) -> crate::Result<usize> {
+    // Clone to get the new native token count without actually modifying it
+    let mut native_tokens_count = native_tokens_builder.clone();
+    native_tokens_count.add_native_tokens(native_tokens.clone())?;
+    Ok(native_tokens_count.len())
 }
