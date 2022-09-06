@@ -20,30 +20,42 @@ use crate::{
     Error,
 };
 
-/// Address and nft for `send_nft()`
+/// Address and NFT for `send_nft()`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftOptions {
-    /// Bech32 encoded address to which the Nft will be minted. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address to which the NFT will be minted. Default will use the
+    /// first address of the account.
     pub address: Option<String>,
-    /// Immutable nft metadata
+    /// NFT sender feature.
+    pub sender: Option<String>,
+    /// NFT metadata feature.
+    pub metadata: Option<Vec<u8>>,
+    /// NFT tag feature.
+    pub tag: Option<Vec<u8>>,
+    /// NFT issuer feature.
+    pub issuer: Option<String>,
+    /// NFT immutable metadata feature.
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<Vec<u8>>,
-    /// Nft metadata
-    pub metadata: Option<Vec<u8>>,
 }
 
-/// Dto for NftOptions
+/// Dto for NftOptions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftOptionsDto {
-    /// Bech32 encoded address to which the Nft will be minted. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address to which the NFT will be minted. Default will use the
+    /// first address of the account.
     pub address: Option<String>,
-    /// Immutable nft metadata, hex encoded bytes
+    /// NFT sender feature, bech32 encoded address.
+    pub sender: Option<String>,
+    /// NFT metadata feature, hex encoded bytes.
+    pub metadata: Option<String>,
+    /// NFT tag feature, hex encoded bytes.
+    pub tag: Option<String>,
+    /// NFT issuer feature, bech32 encoded address.
+    pub issuer: Option<String>,
+    /// Immutable NFT metadata, hex encoded bytes.
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<String>,
-    /// Nft metadata, hex encoded bytes
-    pub metadata: Option<String>,
 }
 
 impl TryFrom<&NftOptionsDto> for NftOptions {
@@ -52,14 +64,20 @@ impl TryFrom<&NftOptionsDto> for NftOptions {
     fn try_from(value: &NftOptionsDto) -> crate::Result<Self> {
         Ok(Self {
             address: value.address.clone(),
+            sender: value.sender.clone(),
+            metadata: match &value.metadata {
+                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
+                None => None,
+            },
+            tag: match &value.tag {
+                Some(tag) => Some(prefix_hex::decode(tag).map_err(|_| DtoError::InvalidField("tag"))?),
+                None => None,
+            },
+            issuer: value.issuer.clone(),
             immutable_metadata: match &value.immutable_metadata {
                 Some(metadata) => {
                     Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
                 }
-                None => None,
-            },
-            metadata: match &value.metadata {
-                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
                 None => None,
             },
         })
