@@ -35,7 +35,7 @@ export type CustomAddress = {
 };
 
 /** Native token options for minting more native tokens */
-export interface IncreaseNativeTokenSupplyOptions {}
+export interface IncreaseNativeTokenSupplyOptions { }
 
 /** Native token options for minting */
 export interface NativeTokenOptions {
@@ -54,10 +54,16 @@ export interface NftOptions {
      * first address of the account
      */
     address?: string;
-    /** Hex encoded bytes */
-    immutableMetadata?: string;
+    /** Bech32 encoded sender address **/
+    sender?: string;
     /** Hex encoded bytes */
     metadata?: string;
+    /** Hex encoded bytes */
+    tag?: string;
+    /** Bech32 encoded issuer address **/
+    issuer?: string;
+    /** Hex encoded bytes */
+    immutableMetadata?: string;
 }
 
 /** Options for the alias output creation */
