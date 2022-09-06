@@ -191,7 +191,7 @@ impl AccountHandle {
             }
         }
         log::debug!(
-            "[BALANCE] total_amount: {}, lockedbalance: {}",
+            "[BALANCE] total_amount: {}, locked balance: {}",
             total_amount,
             locked_amount
         );
