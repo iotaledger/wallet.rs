@@ -10,7 +10,7 @@ import com.google.gson.JsonSyntaxException;
 
 import java.util.Objects;
 
-public class AbstractObject {
+public class AbstractObject implements ReturnJson {
 
     private JsonObject jsonObject;
 
@@ -22,10 +22,6 @@ public class AbstractObject {
         Gson gson = new Gson();
         JsonElement element = gson.fromJson(jsonObject, JsonElement.class);
         this.jsonObject = element.getAsJsonObject();
-    }
-
-    public JsonObject toJson() {
-        return jsonObject;
     }
 
     @Override
@@ -46,4 +42,8 @@ public class AbstractObject {
         return jsonObject.toString();
     }
 
+    @Override
+    public JsonElement toJson() {
+        return jsonObject;
+    }
 }

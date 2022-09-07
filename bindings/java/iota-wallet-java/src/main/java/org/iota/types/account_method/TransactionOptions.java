@@ -68,7 +68,7 @@ public class TransactionOptions implements ReturnJson {
         }
 
         @Override
-        public JsonObject toJson() {
+        public JsonElement toJson() {
             return accountAddress.toJson();
         }
     }

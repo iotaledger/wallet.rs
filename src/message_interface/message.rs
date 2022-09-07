@@ -86,6 +86,7 @@ pub enum Message {
         /// Defines how many addresses without unspent outputs will be checked in each account, if an
         /// address has unspent outputs, the counter is reset
         address_gap_limit: u32,
+        #[serde(rename = "syncOptions")]
         /// SyncOptions to be used during the account recovery process.
         /// address_start_index and force_syncing will be overwritten in sync_options to not skip addresses, but also
         /// don't send duplicated requests
