@@ -1,5 +1,5 @@
 import type { OutputTypes, HexEncodedAmount } from '@iota/types';
-import type { AccountSyncOptions } from '../account';
+import type { AccountSyncOptions, FilterOptions } from '../account';
 import type {
     AddressWithAmount,
     AddressWithMicroAmount,
@@ -140,6 +140,9 @@ export type __ListAddressesWithUnspentOutputsMethod__ = {
 
 export type __ListOutputsMethod__ = {
     name: 'ListOutputs';
+    data: {
+        filterOptions?: FilterOptions;
+    };
 };
 
 export type __ListPendingTransactionsMethod__ = {
@@ -152,6 +155,9 @@ export type __ListTransactionsMethod__ = {
 
 export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
+    data: {
+        filterOptions?: FilterOptions;
+    };
 };
 
 export type __MeltNativeTokenMethod__ = {

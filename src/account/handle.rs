@@ -12,6 +12,7 @@ use iota_client::{
     secret::SecretManager,
     Client,
 };
+use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 #[cfg(feature = "events")]
@@ -28,6 +29,17 @@ use crate::{
     },
     Result,
 };
+
+/// Options to filter outputs
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
+pub struct FilterOptions {
+    /// Filter all outputs where the booked milestone index is below the specified timestamp
+    #[serde(rename = "lowerBoundBookedTimestamp")]
+    pub lower_bound_booked_timestamp: Option<u32>,
+    /// Filter all outputs where the booked milestone index is above the specified timestamp
+    #[serde(rename = "upperBoundBookedTimestamp")]
+    pub upper_bound_booked_timestamp: Option<u32>,
+}
 
 /// A thread guard over an account, so we can lock the account during operations.
 #[derive(Debug, Clone)]
@@ -132,21 +144,45 @@ impl AccountHandle {
         Ok(account.addresses_with_unspent_outputs().to_vec())
     }
 
-    /// Returns all outputs of the account
-    pub async fn list_outputs(&self) -> Result<Vec<OutputData>> {
+    /// Returns outputs of the account
+    pub async fn list_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.outputs.values() {
+            if let Some(filter_options) = filter {
+                if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
+                    if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
+                        continue;
+                    }
+                }
+                if let Some(upper_bound_booked_timestamp) = filter_options.upper_bound_booked_timestamp {
+                    if output.metadata.milestone_timestamp_booked > upper_bound_booked_timestamp {
+                        continue;
+                    }
+                }
+            }
             outputs.push(output.clone());
         }
         Ok(outputs)
     }
 
-    /// Returns all unspent outputs of the account
-    pub async fn list_unspent_outputs(&self) -> Result<Vec<OutputData>> {
+    /// Returns unspent outputs of the account
+    pub async fn list_unspent_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.unspent_outputs.values() {
+            if let Some(filter_options) = filter {
+                if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
+                    if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
+                        continue;
+                    }
+                }
+                if let Some(upper_bound_booked_timestamp) = filter_options.upper_bound_booked_timestamp {
+                    if output.metadata.milestone_timestamp_booked > upper_bound_booked_timestamp {
+                        continue;
+                    }
+                }
+            }
             outputs.push(output.clone());
         }
         Ok(outputs)

@@ -111,3 +111,11 @@ export enum CoinType {
 export interface CreateAccountPayload {
     alias?: string;
 }
+
+/** Options to filter outputs */
+export interface FilterOptions {
+    /** Filter all outputs where the booked milestone index is below the specified timestamp */
+    lowerBoundBookedTimestamp: number;
+    /** Filter all outputs where the booked milestone index is above the specified timestamp */
+    upperBoundBookedTimestamp: number;
+}

@@ -444,9 +444,15 @@ ___
 
 ### listOutputs
 
-▸ **listOutputs**(): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
+▸ **listOutputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
 
 List all outputs of the account.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
 
 #### Returns
 
@@ -486,9 +492,15 @@ ___
 
 ### listUnspentOutputs
 
-▸ **listUnspentOutputs**(): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
+▸ **listUnspentOutputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
 
 List all the unspent outputs of the account.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
 
 #### Returns
 
