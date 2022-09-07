@@ -20,6 +20,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
+    MintMoreNativeTokenOptions,
     MintTokenTransaction,
     PreparedTransactionData,
     OutputOptions,
@@ -533,6 +534,31 @@ export class Account {
                 },
             },
         );
+        return JSON.parse(response).payload;
+    }
+
+    /**
+     * Mint more native tokens.
+     * @param mintMoreNativeTokenOptions The options for minting more tokens.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The minting transaction and the token ID.
+     */
+    async mintMoreNativeToken(
+        mintMoreNativeTokenOptions: MintMoreNativeTokenOptions,
+        transactionOptions?: TransactionOptions,
+    ): Promise<MintTokenTransaction> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'MintMoreNativeToken',
+                data: {
+                    mintMoreNativeTokenOptions: mintMoreNativeTokenOptions,
+                    options: transactionOptions,
+                },
+            },
+        );
+
         return JSON.parse(response).payload;
     }
 

@@ -18,6 +18,7 @@ import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
+    MintMoreNativeTokenOptions,
     NativeTokenOptions,
     TransactionOptions,
     NftOptions,
@@ -172,6 +173,14 @@ export type __MinimumRequiredStorageDepositMethod__ = {
     name: 'MinimumRequiredStorageDeposit';
     data: {
         output: OutputTypes;
+    };
+};
+
+export type __MintMoreNativeTokenMethod__ = {
+    name: 'MintMoreNativeToken';
+    data: {
+        mintMoreNativeTokenOptions: MintMoreNativeTokenOptions;
+        options?: TransactionOptions;
     };
 };
 

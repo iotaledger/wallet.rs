@@ -43,7 +43,7 @@ use crate::{
         response::Response,
         AddressWithUnspentOutputsDto,
     },
-    AddressWithAmount, AddressWithMicroAmount, NativeTokenOptions, NftOptions, Result,
+    AddressWithAmount, AddressWithMicroAmount, MintMoreNativeTokenOptions, NativeTokenOptions, NftOptions, Result,
 };
 
 fn panic_to_response_message(panic: Box<dyn Any>) -> Response {
@@ -550,6 +550,23 @@ impl WalletMessageHandler {
                         .melt_native_token((*native_token.token_id(), *native_token.amount()), options)
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            AccountMethod::MintMoreNativeToken {
+                mint_more_native_token_options,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle
+                        .mint_more_native_token(
+                            MintMoreNativeTokenOptions::try_from(&mint_more_native_token_options)?,
+                            options.clone(),
+                        )
+                        .await?;
+                    Ok(Response::MintTokenTransaction(MintTokenTransactionDto::from(
+                        &transaction,
+                    )))
                 })
                 .await
             }

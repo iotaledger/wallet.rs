@@ -24,6 +24,7 @@ import type {
     __ListUnspentOutputsMethod__,
     __MeltNativeTokenMethod__,
     __MinimumRequiredStorageDepositMethod__,
+    __MintMoreNativeTokenMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
     __PrepareOutputMethod__,
@@ -92,6 +93,7 @@ export type __AccountMethod__ =
     | __ListUnspentOutputsMethod__
     | __MeltNativeTokenMethod__
     | __MinimumRequiredStorageDepositMethod__
+    | __MintMoreNativeTokenMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__
     | __PrepareOutputMethod__

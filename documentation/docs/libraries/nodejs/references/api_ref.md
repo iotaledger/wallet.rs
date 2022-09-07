@@ -68,6 +68,7 @@
 - [Transaction](interfaces/Transaction.md)
 - [MintTokenTransaction](interfaces/MintTokenTransaction.md)
 - [TransactionOptions](interfaces/TransactionOptions.md)
+- [MintMoreNativeTokenOptions](interfaces/MintMoreNativeTokenOptions.md)
 - [NativeTokenOptions](interfaces/NativeTokenOptions.md)
 - [NftOptions](interfaces/NftOptions.md)
 

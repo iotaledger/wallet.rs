@@ -32,6 +32,7 @@ The Account class.
 - [listUnspentOutputs](Account.md#listunspentoutputs)
 - [meltNativeToken](Account.md#meltnativetoken)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
+- [mintMoreNativeToken](Account.md#mintmorenativetoken)
 - [mintNativeToken](Account.md#mintnativetoken)
 - [mintNfts](Account.md#mintnfts)
 - [prepareOutput](Account.md#prepareoutput)
@@ -549,6 +550,27 @@ Calculate the minimum required storage deposit for an output.
 `Promise`<`string`\>
 
 The amount.
+
+___
+
+### mintMoreNativeToken
+
+▸ **mintMoreNativeToken**(`mintMoreNativeTokenOptions`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+
+Mint more native tokens.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `mintMoreNativeTokenOptions` | [`MintMoreNativeTokenOptions`](../interfaces/MintMoreNativeTokenOptions.md) | The options for minting more tokens. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+
+The minting transaction and the token ID.
 
 ___
 

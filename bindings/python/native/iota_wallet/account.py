@@ -277,6 +277,16 @@ class Account:
             }
         )
 
+    def mint_more_native_token(self, mint_more_native_token_options, options):
+        """Mint more native token.
+        """
+        return self._call_account_method(
+            'MintMoreNativeToken', {
+                'mintMoreNativeTokenOptions': mint_more_native_token_options,
+                'options': options
+            }
+        )
+
     def mint_native_token(self, native_token_options, options):
         """Mint native token.
         """

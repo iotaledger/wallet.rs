@@ -16,17 +16,17 @@ use iota_client::{
 use serde::Deserialize;
 
 use crate::{
-    account::{
-        handle::FilterOptions,
-        operations::{
-            address_generation::AddressGenerationOptions,
-            output_claiming::OutputsToClaim,
-            syncing::SyncOptions,
-            transaction::{
-                high_level::minting::{mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto},
-                prepare_output::OutputOptionsDto,
-                TransactionOptions,
+    account::operations::{
+        address_generation::AddressGenerationOptions,
+        output_claiming::OutputsToClaim,
+        syncing::SyncOptions,
+        transaction::{
+            high_level::minting::{
+                mint_more_native_token::MintMoreNativeTokenOptionsDto, mint_native_token::NativeTokenOptionsDto,
+                mint_nfts::NftOptionsDto,
             },
+            prepare_output::OutputOptionsDto,
+            TransactionOptions,
         },
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
@@ -221,6 +221,13 @@ pub enum AccountMethod {
     /// Expected response:
     /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
     MinimumRequiredStorageDeposit { output: OutputDto },
+    /// Mint more native token.
+    /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
+    MintMoreNativeToken {
+        #[serde(rename = "mintMoreNativeTokenOptions")]
+        mint_more_native_token_options: MintMoreNativeTokenOptionsDto,
+        options: Option<TransactionOptions>,
+    },
     /// Mint native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {

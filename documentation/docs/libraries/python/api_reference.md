@@ -226,6 +226,16 @@ def melt_native_token(native_token, options)
 Melt native tokens. This happens with the foundry output which minted them, by increasing it's
 `melted_tokens` field.
 
+<a id="iota_wallet.account.Account.mint_more_native_token"></a>
+
+#### mint\_more\_native\_token
+
+```python
+def mint_more_native_token(mint_more_native_token_options, options)
+```
+
+Mint more native token.
+
 <a id="iota_wallet.account.Account.mint_native_token"></a>
 
 #### mint\_native\_token

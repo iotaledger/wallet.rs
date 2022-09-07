@@ -156,6 +156,7 @@ impl AccountHandle {
             new_foundry_output_builder.finish_output()?,
             // Native Tokens will be added automatically in the remainder output in try_select_inputs()
         ];
+
         self.send(outputs, options)
             .await
             .map(|transaction| MintTokenTransaction {
