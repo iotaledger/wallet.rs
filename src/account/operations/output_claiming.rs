@@ -9,7 +9,7 @@ use iota_client::{
         address::Address,
         output::{
             unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-            BasicOutputBuilder, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+            BasicOutputBuilder, NativeTokens, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
         },
     },
 };
@@ -186,7 +186,7 @@ impl AccountHandle {
     pub(crate) async fn claim_outputs_internal(
         &self,
         output_ids_to_claim: Vec<OutputId>,
-        possible_additional_inputs: Vec<OutputData>,
+        mut possible_additional_inputs: Vec<OutputData>,
     ) -> crate::Result<Vec<Transaction>> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
@@ -231,6 +231,24 @@ impl AccountHandle {
             let mut new_native_tokens = NativeTokensBuilder::new();
             // check native tokens
             for output_data in outputs {
+                if let Some(native_tokens) = output_data.output.native_tokens() {
+                    // Skip output if the max native tokens count would be exceeded
+                    if get_new_native_token_count(&new_native_tokens, native_tokens)? > NativeTokens::COUNT_MAX.into() {
+                        log::debug!("[OUTPUT_CLAIMING] skipping output to not exceed the max native tokens count");
+                        continue;
+                    }
+                    new_native_tokens.add_native_tokens(native_tokens.clone())?;
+                }
+                if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
+                    // for own output subtract the return amount
+                    new_amount += output_data.output.amount() - sdr.amount();
+
+                    // Insert for return output
+                    *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
+                } else {
+                    new_amount += output_data.output.amount();
+                }
+
                 if let Output::Nft(nft_output) = &output_data.output {
                     // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
                     // updated address unlock conditions
@@ -246,22 +264,6 @@ impl AccountHandle {
                         .finish_output()?;
 
                     outputs_to_send.push(nft_output);
-                }
-
-                if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
-                    // for own output subtract the return amount
-                    new_amount += output_data.output.amount() - sdr.amount();
-                    if let Some(native_tokens) = output_data.output.native_tokens() {
-                        new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                    }
-
-                    // Insert for return output
-                    *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
-                } else {
-                    new_amount += output_data.output.amount();
-                    if let Some(native_tokens) = output_data.output.native_tokens() {
-                        new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                    }
                 }
             }
 
@@ -280,6 +282,9 @@ impl AccountHandle {
 
             let mut additional_inputs = Vec::new();
             if new_amount < required_storage_deposit {
+                // Sort by amount so we use as less as possible
+                possible_additional_inputs.sort_by_key(|o| o.output.amount());
+
                 // add more inputs
                 for output_data in &possible_additional_inputs {
                     // Recalculate every time, because new inputs can also add more native tokens, which would increase
@@ -291,10 +296,19 @@ impl AccountHandle {
                     )?;
                     if new_amount < required_storage_deposit {
                         if !additional_inputs_used.contains(&output_data.output_id) {
-                            new_amount += output_data.output.amount();
                             if let Some(native_tokens) = output_data.output.native_tokens() {
+                                // Skip input if the max native tokens count would be exceeded
+                                if get_new_native_token_count(&new_native_tokens, native_tokens)?
+                                    > NativeTokens::COUNT_MAX.into()
+                                {
+                                    log::debug!(
+                                        "[OUTPUT_CLAIMING] skipping input to not exceed the max native tokens count"
+                                    );
+                                    continue;
+                                }
                                 new_native_tokens.add_native_tokens(native_tokens.clone())?;
                             }
+                            new_amount += output_data.output.amount();
                             additional_inputs.push(output_data.output_id);
                             additional_inputs_used.insert(output_data.output_id);
                         }
@@ -379,4 +393,16 @@ pub(crate) fn sdr_not_expired(output: &Output, current_time: u32) -> Option<&Sto
     } else {
         None
     }
+}
+
+// Helper function to calculate the native token count without duplicates, when new native tokens are added
+// Might be possible to refactor the sections where it's used to remove the clones
+pub(crate) fn get_new_native_token_count(
+    native_tokens_builder: &NativeTokensBuilder,
+    native_tokens: &NativeTokens,
+) -> crate::Result<usize> {
+    // Clone to get the new native token count without actually modifying it
+    let mut native_tokens_count = native_tokens_builder.clone();
+    native_tokens_count.add_native_tokens(native_tokens.clone())?;
+    Ok(native_tokens_count.len())
 }
