@@ -16,17 +16,20 @@ use iota_client::{
 use serde::Deserialize;
 
 use crate::{
-    account::operations::{
-        address_generation::AddressGenerationOptions,
-        output_claiming::OutputsToClaim,
-        syncing::SyncOptions,
-        transaction::{
-            high_level::minting::{
-                mint_more_native_token::MintMoreNativeTokenOptionsDto, mint_native_token::NativeTokenOptionsDto,
-                mint_nfts::NftOptionsDto,
+    account::{
+        handle::FilterOptions,
+        operations::{
+            address_generation::AddressGenerationOptions,
+            output_claiming::OutputsToClaim,
+            syncing::SyncOptions,
+            transaction::{
+                high_level::minting::{
+                    mint_more_native_token::MintMoreNativeTokenOptionsDto, mint_native_token::NativeTokenOptionsDto,
+                    mint_nfts::NftOptionsDto,
+                },
+                prepare_output::OutputOptionsDto,
+                TransactionOptions,
             },
-            prepare_output::OutputOptionsDto,
-            TransactionOptions,
         },
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},
