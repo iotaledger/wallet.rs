@@ -166,7 +166,7 @@ impl AccountHandle {
             }
 
             if let Some(issuer) = nft_options.issuer {
-                nft_builder = nft_builder.add_feature(Feature::Issuer(IssuerFeature::new(
+                nft_builder = nft_builder.add_immutable_feature(Feature::Issuer(IssuerFeature::new(
                     Address::try_from_bech32(&issuer)?.1,
                 )));
             }
