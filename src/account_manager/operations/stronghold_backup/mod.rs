@@ -146,7 +146,8 @@ impl AccountManager {
                         .into_string()
                         .expect("Can't convert os string"),
                 )
-                .with_client_options(self.client_options.read().await.clone());
+                .with_client_options(self.client_options.read().await.clone())
+                .with_coin_type(self.coin_type.load(Ordering::Relaxed));
             // drop secret manager, otherwise we get a deadlock in save_account_manager_data
             drop(secret_manager);
             self.storage_manager
