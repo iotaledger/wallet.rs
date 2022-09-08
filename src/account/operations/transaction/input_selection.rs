@@ -29,7 +29,6 @@ impl AccountHandle {
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
-
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply()?;
@@ -55,6 +54,7 @@ impl AccountHandle {
                 }
             }
 
+            println!("try_select_inputs");
             let selected_transaction_data = try_select_inputs(
                 custom_inputs,
                 Vec::new(),
@@ -70,8 +70,11 @@ impl AccountHandle {
             for output in &selected_transaction_data.inputs {
                 account.locked_outputs.insert(output.output_id()?);
             }
+
             return Ok(selected_transaction_data);
         }
+
+        // println!("{:?}", account.unspent_outputs.values());
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
@@ -84,6 +87,8 @@ impl AccountHandle {
             &outputs,
             &account.locked_outputs,
         )?;
+
+        // println!("{:?}", available_outputs_signing_data);
 
         let selected_transaction_data = match try_select_inputs(
             Vec::new(),

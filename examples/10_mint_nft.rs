@@ -38,18 +38,18 @@ async fn main() -> Result<()> {
 
     let nft_options = vec![NftOptions {
         address: Some("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string()),
-        sender: None,
+        sender: Some("rms1qpllaj0pyveqfkwxmnngz2c488hfdtmfrj3wfkgxtk4gtyrax0jaxzt70zy".to_string()),
         metadata: Some(b"some NFT metadata".to_vec()),
         tag: Some(b"some NFT tag".to_vec()),
-        issuer: None,
+        issuer: Some("rms1qpllaj0pyveqfkwxmnngz2c488hfdtmfrj3wfkgxtk4gtyrax0jaxzt70zy".to_string()),
         immutable_metadata: Some(b"some NFT immutable metadata".to_vec()),
     }];
 
     let transaction = account.mint_nfts(nft_options, None).await?;
 
+    println!("Transaction: {}.", transaction.transaction_id,);
     println!(
-        "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
-        transaction.transaction_id,
+        "Block sent: {}/api/core/v2/blocks/{}.",
         &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("no block created yet")
     );
@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
             )))
             .add_feature(Feature::Sender(SenderFeature::new(*sender_address.as_ref())))
             .add_immutable_feature(Feature::Issuer(IssuerFeature::new(*sender_address.as_ref())))
-            .finish_output(account.client().get_token_supply()?)?,
+            .finish_output()?,
     ];
 
     let transaction = account.send(outputs, None).await?;
@@ -73,7 +73,7 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("no block created yet")
+        transaction.block_id.expect("No block created yet")
     );
 
     Ok(())
