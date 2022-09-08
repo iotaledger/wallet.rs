@@ -18,9 +18,6 @@ pub enum Error {
     /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
     BackupError(&'static str),
-    /// Blake2b256 Error
-    #[error("{0}")]
-    Blake2b256(&'static str),
     /// Error from block crate.
     #[error("{0}")]
     Block(iota_client::block::Error),
@@ -75,9 +72,6 @@ pub enum Error {
     /// Record not found
     #[error("record {0} not found")]
     RecordNotFound(String),
-    /// Rest api error
-    #[error("{0}")]
-    RestApiError(#[from] iota_client::api_types::error::Error),
     /// Storage access error.
     #[error("error accessing storage: {0}")]
     Storage(String),
@@ -124,7 +118,6 @@ impl serde::Serialize for Error {
             Self::AccountNotFound(_) => serialize_variant(self, serializer, "AccountNotFound"),
             Self::AddressNotFoundInAccount(_) => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
             Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
-            Self::Blake2b256(_) => serialize_variant(self, serializer, "Blake2b256"),
             Self::Block(_) => serialize_variant(self, serializer, "Block"),
             Self::BlockDtoError(_) => serialize_variant(self, serializer, "BlockDtoError"),
             Self::BurningOrMeltingFailed(_) => serialize_variant(self, serializer, "BurningOrMeltingFailed"),
@@ -143,7 +136,6 @@ impl serde::Serialize for Error {
             Self::MissingParameter(_) => serialize_variant(self, serializer, "MissingParameter"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
             Self::RecordNotFound(_) => serialize_variant(self, serializer, "RecordNotFound"),
-            Self::RestApiError(_) => serialize_variant(self, serializer, "RestApiError"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
             Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
