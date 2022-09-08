@@ -50,20 +50,18 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("No block created yet")
+        transaction.block_id.expect("no block created yet")
     );
 
     // Send native tokens together with the required storage deposit
     let rent_structure = account.client().get_rent_structure().await?;
 
-    let outputs = vec![
-        BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32(bech32_address)?.1,
-            )))
-            .with_native_tokens(vec![NativeToken::new(token_id, U256::from(10))?])
-            .finish_output()?,
-    ];
+    let outputs = vec![BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)?
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+            Address::try_from_bech32(bech32_address)?.1,
+        )))
+        .with_native_tokens(vec![NativeToken::new(token_id, U256::from(10))?])
+        .finish_output()?];
 
     let transaction = account.send(outputs, None).await?;
 
@@ -71,7 +69,7 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("No block created yet")
+        transaction.block_id.expect("no block created yet")
     );
 
     Ok(())

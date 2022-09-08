@@ -75,7 +75,7 @@ impl AccountHandle {
                     if let [UnlockCondition::Address(_)] = output_data
                         .output
                         .unlock_conditions()
-                        .expect("Output needs to have unlock conditions")
+                        .expect("output needs to have unlock conditions")
                         .as_ref()
                     {
                         // add nft_id for nft outputs
@@ -158,7 +158,7 @@ impl AccountHandle {
                             if let Some(expiration) = output_data
                                 .output
                                 .unlock_conditions()
-                                .expect("Output needs to have unlock conditions")
+                                .expect("output needs to have unlock conditions")
                                 .expiration()
                             {
                                 // Not expired, could get unlockable when it's expired, so we insert it

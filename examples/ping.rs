@@ -117,7 +117,7 @@ async fn main() -> Result<()> {
                         "Block from thread {} sent: {}/api/core/v2/blocks/{}",
                         n,
                         &env::var("NODE_URL").unwrap(),
-                        tx.block_id.expect("No block created yet")
+                        tx.block_id.expect("no block created yet")
                     );
                     iota_wallet::Result::Ok(n)
                 })

@@ -67,7 +67,7 @@ impl AccountHandle {
 
             if let Some(transaction_output) = transaction_output {
                 // Save to unwrap, we just got the output
-                let confirmed_output_data = account.outputs.get(transaction_output).expect("Output exists");
+                let confirmed_output_data = account.outputs.get(transaction_output).expect("output exists");
                 log::debug!(
                     "[SYNC] confirmed transaction {} in block {}",
                     transaction_id,
@@ -158,7 +158,7 @@ impl AccountHandle {
                             } else {
                                 let time_now = SystemTime::now()
                                     .duration_since(UNIX_EPOCH)
-                                    .expect("Time went backwards")
+                                    .expect("time went backwards")
                                     .as_millis();
                                 // Reattach if older than 30 seconds
                                 if transaction.timestamp + 30000 < time_now {
@@ -180,7 +180,7 @@ impl AccountHandle {
                         } else {
                             let time_now = SystemTime::now()
                                 .duration_since(UNIX_EPOCH)
-                                .expect("Time went backwards")
+                                .expect("time went backwards")
                                 .as_millis();
                             // Reattach if older than 30 seconds
                             if transaction.timestamp + 30000 < time_now {

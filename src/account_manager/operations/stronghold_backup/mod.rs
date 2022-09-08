@@ -144,7 +144,7 @@ impl AccountManager {
                         .clone()
                         .into_os_string()
                         .into_string()
-                        .expect("Can't convert os string"),
+                        .expect("can't convert os string"),
                 )
                 .with_client_options(self.client_options.read().await.clone())
                 .with_coin_type(self.coin_type.load(Ordering::Relaxed));
