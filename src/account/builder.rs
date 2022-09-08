@@ -102,7 +102,7 @@ impl AccountBuilder {
                 return Err(Error::InvalidCoinType(self.coin_type, existing_coin_type));
             }
             if account.alias().to_lowercase() == account_alias.to_lowercase() {
-                return Err(Error::AccountAliasAlreadyExists);
+                return Err(Error::AccountAliasAlreadyExists(account_alias));
             }
         }
 
