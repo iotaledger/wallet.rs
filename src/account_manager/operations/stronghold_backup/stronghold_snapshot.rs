@@ -124,7 +124,7 @@ pub(crate) async fn read_data_from_stronghold_snapshot(
     let restored_accounts_bytes = stronghold.get(ACCOUNTS_KEY.as_bytes()).await?;
     let restored_accounts = if let Some(restored_accounts) = restored_accounts_bytes {
         let restored_accounts_string =
-            String::from_utf8(restored_accounts).map_err(|_| crate::Error::BackupError("Invalid accounts"))?;
+            String::from_utf8(restored_accounts).map_err(|_| crate::Error::BackupError("invalid accounts"))?;
 
         log::debug!("[restore_backup] restore accounts: {restored_accounts_string}");
 
