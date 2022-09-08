@@ -45,9 +45,6 @@ pub enum Error {
     /// Failed to get remainder
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
-    /// Insufficient funds to send transaction.
-    #[error("insufficient funds {0}/{1} available")]
-    InsufficientFunds(u64, u64),
     /// Invalid coin type, all accounts need to have the same coin type
     #[error("invalid coin type for new account: {0}, existing coin type is: {1}")]
     InvalidCoinType(u32, u32),
@@ -57,6 +54,9 @@ pub enum Error {
     /// Invalid output kind.
     #[error("invalid output kind: {0}")]
     InvalidOutputKind(String),
+    /// Insufficient funds to send transaction.
+    #[error("insufficient funds {0}/{1} available")]
+    InsufficientFunds(u64, u64),
     /// IO error. (storage, backup, restore)
     #[error("`{0}`")]
     IoError(#[from] std::io::Error),
@@ -91,15 +91,15 @@ pub enum Error {
     TaskJoinError(#[from] tokio::task::JoinError),
 }
 
-impl From<iota_client::Error> for Error {
-    fn from(error: iota_client::Error) -> Self {
-        Self::ClientError(Box::new(error))
-    }
-}
-
 impl From<iota_client::block::Error> for Error {
     fn from(error: iota_client::block::Error) -> Self {
         Self::Block(error)
+    }
+}
+
+impl From<iota_client::Error> for Error {
+    fn from(error: iota_client::Error) -> Self {
+        Self::ClientError(Box::new(error))
     }
 }
 
@@ -128,15 +128,15 @@ impl serde::Serialize for Error {
             Self::Block(_) => serialize_variant(self, serializer, "Block"),
             Self::BlockDtoError(_) => serialize_variant(self, serializer, "BlockDtoError"),
             Self::BurningOrMeltingFailed(_) => serialize_variant(self, serializer, "BurningOrMeltingFailed"),
-            Self::CryptoError(..) => serialize_variant(self, serializer, "CryptoError"),
             Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
             Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
+            Self::CryptoError(..) => serialize_variant(self, serializer, "CryptoError"),
             Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
             Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
-            Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::InvalidCoinType(..) => serialize_variant(self, serializer, "InvalidCoinType"),
             Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
             Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
+            Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
             Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
             Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
             Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
