@@ -5,29 +5,29 @@ import com.google.gson.JsonObject;
 import org.iota.JsonUtils;
 import org.iota.types.*;
 
-public class BasicOutputBuilder implements AccountMethod {
+public class BuildBasicOutput implements AccountMethod {
 
     private String amount;
     private NativeToken[] nativeTokens;
     private UnlockCondition[] unlockConditions;
     private Feature[] features;
 
-    public BasicOutputBuilder withAmount(String amount) {
+    public BuildBasicOutput withAmount(String amount) {
         this.amount = amount;
         return this;
     }
 
-    public BasicOutputBuilder withNativeTokens(NativeToken[] nativeTokens) {
+    public BuildBasicOutput withNativeTokens(NativeToken[] nativeTokens) {
         this.nativeTokens = nativeTokens;
         return this;
     }
 
-    public BasicOutputBuilder withUnlockConditions(UnlockCondition[] unlockConditions) {
+    public BuildBasicOutput withUnlockConditions(UnlockCondition[] unlockConditions) {
         this.unlockConditions = unlockConditions;
         return this;
     }
 
-    public BasicOutputBuilder withFeatures(Feature[] features) {
+    public BuildBasicOutput withFeatures(Feature[] features) {
         this.features = features;
         return this;
     }

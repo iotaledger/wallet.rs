@@ -2,47 +2,50 @@ package org.iota.types.account_methods;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import org.iota.types.Feature;
 import org.iota.JsonUtils;
-import org.iota.types.NativeToken;
-import org.iota.types.UnlockCondition;
-import org.iota.types.ids.NftId;
+import org.iota.types.*;
 
-public class NftOutputBuilder implements AccountMethod {
+public class BuildFoundryOutput implements AccountMethod {
 
     private String amount;
     private NativeToken[] nativeTokens;
-    private NftId nftId;
+    private int serialNumber;
+    private TokenScheme tokenScheme;
     private UnlockCondition[] unlockConditions;
     private Feature[] features;
     private Feature[] immutableFeatures;
 
-    public NftOutputBuilder withAmount(String amount) {
+    public BuildFoundryOutput withAmount(String amount) {
         this.amount = amount;
         return this;
     }
 
-    public NftOutputBuilder withNativeTokens(NativeToken[] nativeTokens) {
+    public BuildFoundryOutput withNativeTokens(NativeToken[] nativeTokens) {
         this.nativeTokens = nativeTokens;
         return this;
     }
 
-    public NftOutputBuilder withNftId(NftId nftId) {
-        this.nftId = nftId;
+    public BuildFoundryOutput withSerialNumber(int serialNumber) {
+        this.serialNumber = serialNumber;
         return this;
     }
 
-    public NftOutputBuilder withUnlockConditions(UnlockCondition[] unlockConditions) {
+    public BuildFoundryOutput withTokenScheme(TokenScheme tokenScheme) {
+        this.tokenScheme = tokenScheme;
+        return this;
+    }
+
+    public BuildFoundryOutput withUnlockConditions(UnlockCondition[] unlockConditions) {
         this.unlockConditions = unlockConditions;
         return this;
     }
 
-    public NftOutputBuilder withFeatures(Feature[] features) {
+    public BuildFoundryOutput withFeatures(Feature[] features) {
         this.features = features;
         return this;
     }
 
-    public NftOutputBuilder withImmutableFeatures(Feature[] immutableFeatures) {
+    public BuildFoundryOutput withImmutableFeatures(Feature[] immutableFeatures) {
         this.immutableFeatures = immutableFeatures;
         return this;
     }
@@ -52,12 +55,12 @@ public class NftOutputBuilder implements AccountMethod {
         JsonObject o = new JsonObject();
         o.addProperty("amount", amount);
         o.add("nativeTokens", JsonUtils.toJson(nativeTokens));
-        o.addProperty("nftId", nftId != null ? nftId.toString() : null);
+        o.addProperty("serialNumber", serialNumber);
+        o.add("tokenScheme", tokenScheme != null ? tokenScheme.toJson() : null);
         o.add("unlockConditions", JsonUtils.toJson(unlockConditions));
         o.add("features", JsonUtils.toJson(features));
         o.add("immutableFeatures", JsonUtils.toJson(immutableFeatures));
 
         return o;
     }
-
 }

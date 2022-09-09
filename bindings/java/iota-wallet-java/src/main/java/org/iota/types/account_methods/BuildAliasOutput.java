@@ -8,7 +8,7 @@ import org.iota.types.NativeToken;
 import org.iota.types.UnlockCondition;
 import org.iota.types.ids.AliasId;
 
-public class AliasOutputBuilder implements AccountMethod {
+public class BuildAliasOutput implements AccountMethod {
 
     private String amount;
     private NativeToken[] nativeTokens;
@@ -20,47 +20,47 @@ public class AliasOutputBuilder implements AccountMethod {
     private Feature[] features;
     private Feature[] immutableFeatures;
 
-    public AliasOutputBuilder withAmount(String amount) {
+    public BuildAliasOutput withAmount(String amount) {
         this.amount = amount;
         return this;
     }
 
-    public AliasOutputBuilder withNativeTokens(NativeToken[] nativeTokens) {
+    public BuildAliasOutput withNativeTokens(NativeToken[] nativeTokens) {
         this.nativeTokens = nativeTokens;
         return this;
     }
 
-    public AliasOutputBuilder withAliasId(AliasId aliasId) {
+    public BuildAliasOutput withAliasId(AliasId aliasId) {
         this.aliasId = aliasId;
         return this;
     }
 
-    public AliasOutputBuilder withStateIndex(Integer stateIndex) {
+    public BuildAliasOutput withStateIndex(Integer stateIndex) {
         this.stateIndex = stateIndex;
         return this;
     }
 
-    public AliasOutputBuilder withStateMetadata(byte[] stateMetadata) {
+    public BuildAliasOutput withStateMetadata(byte[] stateMetadata) {
         this.stateMetadata = stateMetadata;
         return this;
     }
 
-    public AliasOutputBuilder withFoundryCounter(Integer foundryCounter) {
+    public BuildAliasOutput withFoundryCounter(Integer foundryCounter) {
         this.foundryCounter = foundryCounter;
         return this;
     }
 
-    public AliasOutputBuilder withUnlockConditions(UnlockCondition[] unlockConditions) {
+    public BuildAliasOutput withUnlockConditions(UnlockCondition[] unlockConditions) {
         this.unlockConditions = unlockConditions;
         return this;
     }
 
-    public AliasOutputBuilder withFeatures(Feature[] features) {
+    public BuildAliasOutput withFeatures(Feature[] features) {
         this.features = features;
         return this;
     }
 
-    public AliasOutputBuilder withImmutableFeatures(Feature[] immutableFeatures) {
+    public BuildAliasOutput withImmutableFeatures(Feature[] immutableFeatures) {
         this.immutableFeatures = immutableFeatures;
         return this;
     }
