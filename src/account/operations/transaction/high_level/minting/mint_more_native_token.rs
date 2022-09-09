@@ -1,12 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    dto::U256Dto,
-    output::{
-        dto::TokenIdDto, AliasOutputBuilder, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
-    },
-    DtoError,
+use iota_client::block::output::{
+    AliasOutputBuilder, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -21,35 +17,17 @@ use crate::{
 
 /// Address and foundry data for `mint_native_token()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MintMoreNativeTokenOptions {
-    /// To be minted amount
-    #[serde(rename = "additionalSupply")]
-    pub additional_supply: U256,
-    /// Native token id
-    #[serde(rename = "tokenId")]
-    pub token_id: TokenId,
-}
+pub struct MintMoreNativeTokenOptions {}
 
 /// Dto for MintMoreNativeTokenOptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MintMoreNativeTokenOptionsDto {
-    /// To be minted amount
-    #[serde(rename = "additionalSupply")]
-    pub additional_supply: U256Dto,
-    /// Native token id
-    #[serde(rename = "tokenId")]
-    pub token_id: TokenIdDto,
-}
+pub struct MintMoreNativeTokenOptionsDto {}
 
 impl TryFrom<&MintMoreNativeTokenOptionsDto> for MintMoreNativeTokenOptions {
     type Error = crate::Error;
 
-    fn try_from(value: &MintMoreNativeTokenOptionsDto) -> crate::Result<Self> {
-        Ok(Self {
-            additional_supply: U256::try_from(&value.additional_supply)
-                .map_err(|_| DtoError::InvalidField("additional_supply"))?,
-            token_id: TokenId::try_from(&value.token_id).map_err(|_| DtoError::InvalidField("token_id"))?,
-        })
+    fn try_from(_value: &MintMoreNativeTokenOptionsDto) -> crate::Result<Self> {
+        Ok(Self {})
     }
 }
 
@@ -57,12 +35,12 @@ impl AccountHandle {
     /// Function to mint more native tokens when the max supply isn't reached yet. The foundry needs to be controlled by
     /// this account. Address needs to be Bech32 encoded
     /// ```ignore
-    /// let native_token_options = MintMoreNativeTokenOptions {
-    ///     additional_supply: U256::from(100),
-    ///     token_id: TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?
-    /// };
-    ///
-    /// let tx = account_handle.mint_more_native_token(native_token_options, None,).await?;
+    /// let tx = account_handle.mint_more_native_token(
+    ///             TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
+    ///             U256::from(100),
+    ///             native_token_options,
+    ///             None
+    ///         ).await?;
     /// println!("Transaction created: {}", tx.transaction_id);
     /// if let Some(block_id) = tx.block_id {
     ///     println!("Block sent: {}", block_id);
@@ -70,7 +48,9 @@ impl AccountHandle {
     /// ```
     pub async fn mint_more_native_token(
         &self,
-        native_token_options: MintMoreNativeTokenOptions,
+        token_id: TokenId,
+        additional_supply: U256,
+        _native_token_options: Option<MintMoreNativeTokenOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
         log::debug!("[TRANSACTION] mint_more_native_token");
@@ -78,30 +58,23 @@ impl AccountHandle {
         let account = self.read().await;
         let existing_foundry_output = account.unspent_outputs().values().into_iter().find(|output_data| {
             if let Output::Foundry(output) = &output_data.output {
-                TokenId::new(*output.id()) == native_token_options.token_id
+                TokenId::new(*output.id()) == token_id
             } else {
                 false
             }
         });
 
         let existing_foundry_output = existing_foundry_output
-            .ok_or_else(|| {
-                Error::MintingFailed(format!(
-                    "foundry output {} is not available",
-                    native_token_options.token_id
-                ))
-            })?
+            .ok_or_else(|| Error::MintingFailed(format!("foundry output {} is not available", token_id)))?
             .clone();
 
         let existing_alias_output = if let Output::Foundry(foundry_output) = &existing_foundry_output.output {
             let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
             // Check if we can mint the provided amount without exceeding the maximum_supply
-            if token_scheme.maximum_supply() - token_scheme.circulating_supply()
-                < native_token_options.additional_supply
-            {
+            if token_scheme.maximum_supply() - token_scheme.circulating_supply() < additional_supply {
                 return Err(Error::MintingFailed(format!(
                     "minting additional {} tokens would exceed the maximum supply: {}",
-                    native_token_options.additional_supply,
+                    additional_supply,
                     token_scheme.maximum_supply()
                 )));
             }
@@ -143,7 +116,7 @@ impl AccountHandle {
         let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
 
         let updated_token_scheme = TokenScheme::Simple(SimpleTokenScheme::new(
-            token_scheme.circulating_supply() + native_token_options.additional_supply,
+            token_scheme.circulating_supply() + additional_supply,
             *token_scheme.melted_tokens(),
             *token_scheme.maximum_supply(),
         )?);
@@ -159,9 +132,6 @@ impl AccountHandle {
 
         self.send(outputs, options)
             .await
-            .map(|transaction| MintTokenTransaction {
-                token_id: native_token_options.token_id,
-                transaction,
-            })
+            .map(|transaction| MintTokenTransaction { token_id, transaction })
     }
 }

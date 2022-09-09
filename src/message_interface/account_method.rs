@@ -4,6 +4,7 @@
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     block::{
+        dto::U256Dto,
         output::{
             dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
             feature::dto::FeatureDto,
@@ -227,8 +228,14 @@ pub enum AccountMethod {
     /// Mint more native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintMoreNativeToken {
+        /// Native token id
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
+        /// To be minted amount
+        #[serde(rename = "additionalSupply")]
+        additional_supply: U256Dto,
         #[serde(rename = "mintMoreNativeTokenOptions")]
-        mint_more_native_token_options: MintMoreNativeTokenOptionsDto,
+        mint_more_native_token_options: Option<MintMoreNativeTokenOptionsDto>,
         options: Option<TransactionOptions>,
     },
     /// Mint native token.

@@ -18,10 +18,12 @@ use iota_client::{
             AliasId, AliasOutput, BasicOutput, FoundryOutput, NativeToken, NftId, NftOutput, Output, Rent, TokenId,
         },
         payload::transaction::dto::TransactionPayloadDto,
+        DtoError,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
     utils, Client, NodeInfoWrapper,
 };
+use primitive_types::U256;
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
 
@@ -554,13 +556,24 @@ impl WalletMessageHandler {
                 .await
             }
             AccountMethod::MintMoreNativeToken {
+                token_id,
+                additional_supply,
                 mint_more_native_token_options,
                 options,
             } => {
                 convert_async_panics(|| async {
+                    let mint_more_native_token_options = match mint_more_native_token_options {
+                        Some(native_token_options) => {
+                            Some(MintMoreNativeTokenOptions::try_from(&native_token_options)?)
+                        }
+                        None => None,
+                    };
                     let transaction = account_handle
                         .mint_more_native_token(
-                            MintMoreNativeTokenOptions::try_from(&mint_more_native_token_options)?,
+                            TokenId::try_from(&token_id)?,
+                            U256::try_from(&additional_supply)
+                                .map_err(|_| DtoError::InvalidField("additional_supply"))?,
+                            mint_more_native_token_options,
                             options.clone(),
                         )
                         .await?;
