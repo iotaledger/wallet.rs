@@ -5,6 +5,7 @@ package org.iota.types;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import org.iota.JsonUtils;
 import org.iota.types.secret.SecretManager;
 
 public class WalletConfig {

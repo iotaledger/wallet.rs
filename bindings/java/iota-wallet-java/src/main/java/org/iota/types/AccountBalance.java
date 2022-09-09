@@ -4,7 +4,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 public class AccountBalance extends AbstractObject {
-
     public AccountBalance(JsonObject jsonObject) {
         super(jsonObject);
     }

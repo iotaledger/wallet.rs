@@ -1,7 +1,7 @@
 package org.iota;
 
 import org.iota.types.Account;
-import org.iota.types.WalletException;
+import org.iota.types.expections.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIndex;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,5 @@ public class SimpleTest extends ApiTest {
         for (Account x : wallet.getAccounts())
             System.out.println(x);
     }
-
-
 
 }

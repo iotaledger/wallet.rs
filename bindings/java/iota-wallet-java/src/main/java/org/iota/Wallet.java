@@ -6,7 +6,8 @@ package org.iota;
 import org.iota.apis.AccountMethodApi;
 import org.iota.apis.WalletApi;
 import org.iota.types.*;
-import org.iota.types.account_method.*;
+import org.iota.types.account_methods.*;
+import org.iota.types.expections.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 
 public class Wallet {

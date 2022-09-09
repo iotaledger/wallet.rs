@@ -4,14 +4,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import org.iota.types.*;
+import org.iota.types.expections.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
 
 public class WalletApi extends BaseApi {
 
+    private AccountMethodApi accountMethodApi;
+
     public WalletApi(WalletConfig walletConfig) {
         super(walletConfig);
+        accountMethodApi = new AccountMethodApi(walletConfig);
     }
 
     public Account createAccount(String alias) throws WalletException {

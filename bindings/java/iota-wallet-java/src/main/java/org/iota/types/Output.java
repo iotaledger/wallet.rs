@@ -1,9 +1,7 @@
-// Copyright 2022 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
-
 package org.iota.types;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 
 public class Output extends AbstractObject {
 
@@ -11,8 +9,7 @@ public class Output extends AbstractObject {
         super(jsonObject);
     }
 
-    public Output(String jsonObject) {
+    public Output(String jsonObject) throws JsonSyntaxException {
         super(jsonObject);
     }
-
 }
