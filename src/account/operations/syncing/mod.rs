@@ -42,7 +42,7 @@ impl AccountHandle {
         // prevent syncing the account multiple times simultaneously
         let time_now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
+            .expect("time went backwards")
             .as_millis();
         let mut last_synced = self.last_synced.lock().await;
         log::debug!("[SYNC] last time synced before {}ms", time_now - *last_synced);
@@ -101,7 +101,7 @@ impl AccountHandle {
         // update last_synced mutex
         let time_now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards")
+            .expect("time went backwards")
             .as_millis();
         *last_synced = time_now;
         log::debug!("[SYNC] finished syncing in {:.2?}", syc_start_time.elapsed());

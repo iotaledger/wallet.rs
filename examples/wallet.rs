@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         tx.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        tx.block_id.expect("No block created yet")
+        tx.block_id.expect("no block created yet")
     );
     let now = Instant::now();
     let balance = account.sync(None).await?;

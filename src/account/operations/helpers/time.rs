@@ -18,7 +18,7 @@ pub(crate) fn can_output_be_unlocked_now(
 
         let output_address = unlock_conditions
             .address()
-            .expect("Output needs to have an address unlock condition")
+            .expect("output needs to have an address unlock condition")
             .address();
 
         let unlock_address = unlock_conditions.locked_address(output_address, current_time);

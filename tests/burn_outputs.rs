@@ -39,7 +39,7 @@ async fn mint_and_burn_nft() -> Result<()> {
 
     let account = match manager.get_account("Alice".to_string()).await {
         Ok(account) => account,
-        Err(Error::AccountNotFound) => manager
+        Err(Error::AccountNotFound(_)) => manager
             .create_account()
             .with_alias("Alice".to_string())
             .finish()
@@ -112,7 +112,7 @@ async fn mint_and_melt_native_token() -> Result<()> {
 
     let account = match manager.get_account("Alice".to_string()).await {
         Ok(account) => account,
-        Err(Error::AccountNotFound) => manager
+        Err(Error::AccountNotFound(_)) => manager
             .create_account()
             .with_alias("Alice".to_string())
             .finish()
@@ -209,7 +209,7 @@ async fn destroy_foundry() -> Result<()> {
 
     let account = match manager.get_account("Alice".to_string()).await {
         Ok(account) => account,
-        Err(Error::AccountNotFound) => manager
+        Err(Error::AccountNotFound(_)) => manager
             .create_account()
             .with_alias("Alice".to_string())
             .finish()
