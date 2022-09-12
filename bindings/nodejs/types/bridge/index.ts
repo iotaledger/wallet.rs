@@ -22,9 +22,9 @@ import type {
     __ListPendingTransactionsMethod__,
     __ListTransactionsMethod__,
     __ListUnspentOutputsMethod__,
-    __MeltNativeTokenMethod__,
+    __DecreaseNativeTokenSupplyMethod__,
     __MinimumRequiredStorageDepositMethod__,
-    __MintMoreNativeTokenMethod__,
+    __IncreaseNativeTokenSupplyMethod__,
     __MintNativeTokenMethod__,
     __MintNftsMethod__,
     __PrepareOutputMethod__,
@@ -91,9 +91,9 @@ export type __AccountMethod__ =
     | __ListPendingTransactionsMethod__
     | __ListTransactionsMethod__
     | __ListUnspentOutputsMethod__
-    | __MeltNativeTokenMethod__
+    | __DecreaseNativeTokenSupplyMethod__
     | __MinimumRequiredStorageDepositMethod__
-    | __MintMoreNativeTokenMethod__
+    | __IncreaseNativeTokenSupplyMethod__
     | __MintNativeTokenMethod__
     | __MintNftsMethod__
     | __PrepareOutputMethod__

@@ -25,8 +25,8 @@ use crate::{
             syncing::SyncOptions,
             transaction::{
                 high_level::minting::{
-                    mint_more_native_token::MintMoreNativeTokenOptionsDto, mint_native_token::NativeTokenOptionsDto,
-                    mint_nfts::NftOptionsDto,
+                    increase_native_token_supply::IncreaseNativeTokenSupplyOptionsDto,
+                    mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto,
                 },
                 prepare_output::OutputOptionsDto,
                 TransactionOptions,
@@ -216,7 +216,7 @@ pub enum AccountMethod {
     /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
     /// `melted_tokens` field.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
-    MeltNativeToken {
+    DecreaseNativeTokenSupply {
         #[serde(rename = "nativeToken")]
         native_token: NativeTokenDto,
         options: Option<TransactionOptions>,
@@ -227,15 +227,15 @@ pub enum AccountMethod {
     MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint more native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
-    MintMoreNativeToken {
+    IncreaseNativeTokenSupply {
         /// Native token id
         #[serde(rename = "tokenId")]
         token_id: TokenIdDto,
         /// To be minted amount
         #[serde(rename = "additionalSupply")]
         additional_supply: U256Dto,
-        #[serde(rename = "mintMoreNativeTokenOptions")]
-        mint_more_native_token_options: Option<MintMoreNativeTokenOptionsDto>,
+        #[serde(rename = "increaseNativeTokenSupplyOptions")]
+        increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptionsDto>,
         options: Option<TransactionOptions>,
     },
     /// Mint native token.

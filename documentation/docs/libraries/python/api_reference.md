@@ -63,7 +63,7 @@ BuildNftOutput.
 #### burn\_native\_token
 
 ```python
-def burn_native_token(native_token, options)
+def burn_native_token(native_token, options=None)
 ```
 
 Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
@@ -75,19 +75,19 @@ recommended to use melting, if the foundry output is available.
 #### burn\_nft
 
 ```python
-def burn_nft(nft_id, options)
+def burn_nft(nft_id, options=None)
 ```
 
 Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
 deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
 burning, the foundry can never be destroyed anymore.
 
-<a id="iota_wallet.account.Account.cnsolidate_outputs"></a>
+<a id="iota_wallet.account.Account.consolidate_outputs"></a>
 
-#### cnsolidate\_outputs
+#### consolidate\_outputs
 
 ```python
-def cnsolidate_outputs(force, output_consolidation_threshold)
+def consolidate_outputs(force, output_consolidation_threshold)
 ```
 
 Consolidate outputs.
@@ -97,7 +97,7 @@ Consolidate outputs.
 #### destroy\_alias
 
 ```python
-def destroy_alias(alias_id, options)
+def destroy_alias(alias_id, options=None)
 ```
 
 Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
@@ -109,7 +109,7 @@ sent to the governor address.
 #### destroy\_foundry
 
 ```python
-def destroy_foundry(foundry_id, options)
+def destroy_foundry(foundry_id, options=None)
 ```
 
 Destroy a foundry output with a circulating supply of 0.
@@ -215,23 +215,26 @@ def list_pending_transactions()
 
 Returns all pending transaction of the account.
 
-<a id="iota_wallet.account.Account.melt_native_token"></a>
+<a id="iota_wallet.account.Account.decrease_native_token_supply"></a>
 
-#### melt\_native\_token
+#### decrease\_native\_token\_supply
 
 ```python
-def melt_native_token(native_token, options)
+def decrease_native_token_supply(token_id, melt_amount, options=None)
 ```
 
 Melt native tokens. This happens with the foundry output which minted them, by increasing it's
 `melted_tokens` field.
 
-<a id="iota_wallet.account.Account.mint_more_native_token"></a>
+<a id="iota_wallet.account.Account.increase_native_token_supply"></a>
 
-#### mint\_more\_native\_token
+#### increase\_native\_token\_supply
 
 ```python
-def mint_more_native_token(mint_more_native_token_options, options)
+def increase_native_token_supply(token_id,
+                                 amount,
+                                 increase_native_token_supply_options=None,
+                                 options=None)
 ```
 
 Mint more native token.
@@ -241,7 +244,7 @@ Mint more native token.
 #### mint\_native\_token
 
 ```python
-def mint_native_token(native_token_options, options)
+def mint_native_token(native_token_options, options=None)
 ```
 
 Mint native token.
@@ -261,7 +264,7 @@ Minimum required storage deposit.
 #### mint\_nfts
 
 ```python
-def mint_nfts(nfts_options, options)
+def mint_nfts(nfts_options, options=None)
 ```
 
 Mint nfts.
@@ -281,7 +284,7 @@ Get account balance information.
 #### prepare\_send\_amount
 
 ```python
-def prepare_send_amount(addresses_with_amount, options)
+def prepare_send_amount(addresses_with_amount, options=None)
 ```
 
 Prepare send amount.
@@ -291,7 +294,7 @@ Prepare send amount.
 #### prepare\_transaction
 
 ```python
-def prepare_transaction(outputs, options)
+def prepare_transaction(outputs, options=None)
 ```
 
 Prepare transaction.
@@ -322,7 +325,7 @@ Send amount.
 #### send\_micro\_transaction
 
 ```python
-def send_micro_transaction(addresses_with_micro_amount, options)
+def send_micro_transaction(addresses_with_micro_amount, options=None)
 ```
 
 Send micro transaction.
@@ -332,7 +335,7 @@ Send micro transaction.
 #### send\_native\_tokens
 
 ```python
-def send_native_tokens(addresses_native_tokens, options)
+def send_native_tokens(addresses_native_tokens, options=None)
 ```
 
 Send native tokens.
@@ -342,7 +345,7 @@ Send native tokens.
 #### send\_nft
 
 ```python
-def send_nft(addresses_nft_ids, options)
+def send_nft(addresses_nft_ids, options=None)
 ```
 
 Send nft.
@@ -362,7 +365,7 @@ Set alias.
 #### send\_transaction
 
 ```python
-def send_transaction(outputs, options)
+def send_transaction(outputs, options=None)
 ```
 
 Send a transaction.

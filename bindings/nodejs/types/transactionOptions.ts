@@ -35,12 +35,7 @@ export type CustomAddress = {
 };
 
 /** Native token options for minting more native tokens */
-export interface MintMoreNativeTokenOptions {
-    /** Hex encoded number */
-    additionalSupply: HexEncodedAmount;
-    /** Native token id */
-    tokenId: string;
-}
+export interface IncreaseNativeTokenSupplyOptions {}
 
 /** Native token options for minting */
 export interface NativeTokenOptions {

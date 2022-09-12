@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 11_melt_native_token --release
+//! cargo run --example 11_decrease_native_token_supply --release
 // In this example we will melt an existing native token with its foundry
 // Rename `.env.example` to `.env` first
 
@@ -36,7 +36,9 @@ async fn main() -> Result<()> {
 
     // Melt some of the circulating supply
     let melt_amount = U256::from(10);
-    let transaction = account.melt_native_token((token_id, melt_amount), None).await?;
+    let transaction = account
+        .decrease_native_token_supply(token_id, melt_amount, None)
+        .await?;
 
     let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,

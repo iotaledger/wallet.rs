@@ -18,7 +18,7 @@ import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
-    MintMoreNativeTokenOptions,
+    IncreaseNativeTokenSupplyOptions,
     NativeTokenOptions,
     TransactionOptions,
     NftOptions,
@@ -161,10 +161,11 @@ export type __ListUnspentOutputsMethod__ = {
     };
 };
 
-export type __MeltNativeTokenMethod__ = {
-    name: 'MeltNativeToken';
+export type __DecreaseNativeTokenSupplyMethod__ = {
+    name: 'DecreaseNativeTokenSupply';
     data: {
-        nativeToken: [string, HexEncodedAmount];
+        tokenId: string;
+        meltAmount: HexEncodedAmount;
         options?: TransactionOptions;
     };
 };
@@ -176,10 +177,10 @@ export type __MinimumRequiredStorageDepositMethod__ = {
     };
 };
 
-export type __MintMoreNativeTokenMethod__ = {
-    name: 'MintMoreNativeToken';
+export type __IncreaseNativeTokenSupplyMethod__ = {
+    name: 'IncreaseNativeTokenSupply';
     data: {
-        mintMoreNativeTokenOptions: MintMoreNativeTokenOptions;
+        increaseNativeTokenSupplyOptions: IncreaseNativeTokenSupplyOptions;
         options?: TransactionOptions;
     };
 };

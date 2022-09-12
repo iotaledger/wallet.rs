@@ -33,7 +33,7 @@ pub use primitive_types::U256;
 pub use self::{
     account::operations::transaction::high_level::{
         minting::{
-            mint_more_native_token::MintMoreNativeTokenOptions, mint_native_token::NativeTokenOptions,
+            increase_native_token_supply::IncreaseNativeTokenSupplyOptions, mint_native_token::NativeTokenOptions,
             mint_nfts::NftOptions,
         },
         send_amount::AddressWithAmount,

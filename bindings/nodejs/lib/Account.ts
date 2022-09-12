@@ -20,7 +20,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
-    MintMoreNativeTokenOptions,
+    IncreaseNativeTokenSupplyOptions,
     MintTokenTransaction,
     PreparedTransactionData,
     OutputOptions,
@@ -502,16 +502,18 @@ export class Account {
      * or custom inputs.
      * @returns The transaction.
      */
-    async meltNativeToken(
-        nativeToken: [string, HexEncodedAmount],
+    async decreaseNativeTokenSupply(
+        tokenId: string,
+        meltAmount: HexEncodedAmount,
         transactionOptions?: TransactionOptions,
     ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MeltNativeToken',
+                name: 'DecreaseNativeTokenSupply',
                 data: {
-                    nativeToken,
+                    tokenId,
+                    meltAmount,
                     options: transactionOptions,
                 },
             },
@@ -539,21 +541,24 @@ export class Account {
 
     /**
      * Mint more native tokens.
-     * @param mintMoreNativeTokenOptions The options for minting more tokens.
+     * @param increaseNativeTokenSupplyOptions The options for minting more tokens.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
      * or custom inputs.
      * @returns The minting transaction and the token ID.
      */
-    async mintMoreNativeToken(
-        mintMoreNativeTokenOptions: MintMoreNativeTokenOptions,
+    async increaseNativeTokenSupply(
+        tokenId: string,
+        amount: HexEncodedAmount,
+        increaseNativeTokenSupplyOptions: IncreaseNativeTokenSupplyOptions,
         transactionOptions?: TransactionOptions,
     ): Promise<MintTokenTransaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MintMoreNativeToken',
+                name: 'IncreaseNativeTokenSupply',
                 data: {
-                    mintMoreNativeTokenOptions: mintMoreNativeTokenOptions,
+                    increaseNativeTokenSupplyOptions:
+                        increaseNativeTokenSupplyOptions,
                     options: transactionOptions,
                 },
             },

@@ -116,7 +116,7 @@ class Account:
 
     def burn_native_token(self,
                           native_token,
-                          options):
+                          options=None):
         """Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
         the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
         recommended to use melting, if the foundry output is available.
@@ -130,7 +130,7 @@ class Account:
 
     def burn_nft(self,
                  nft_id,
-                 options):
+                 options=None):
         """Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
         deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
         burning, the foundry can never be destroyed anymore.
@@ -142,7 +142,7 @@ class Account:
             }
         )
 
-    def cnsolidate_outputs(self,
+    def consolidate_outputs(self,
                            force,
                            output_consolidation_threshold):
         """Consolidate outputs.
@@ -156,7 +156,7 @@ class Account:
 
     def destroy_alias(self,
                       alias_id,
-                      options):
+                      options=None):
         """Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
         storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
         sent to the governor address.
@@ -170,7 +170,7 @@ class Account:
 
     def destroy_foundry(self,
                         foundry_id,
-                        options):
+                        options=None):
         """Destroy a foundry output with a circulating supply of 0.
         Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
         """
@@ -264,30 +264,34 @@ class Account:
             'ListPendingTransactions'
         )
 
-    def melt_native_token(self,
-                          native_token,
-                          options):
+    def decrease_native_token_supply(self,
+                                     token_id,
+                                     melt_amount,
+                                     options=None):
         """Melt native tokens. This happens with the foundry output which minted them, by increasing it's
         `melted_tokens` field.
         """
         return self._call_account_method(
-            'MeltNativeToken', {
-                'nativeToken': native_token,
+            'DecreaseNativeTokenSupply', {
+                'tokenId': token_id,
+                'meltAmount': melt_amount,
                 'options':  options
             }
         )
 
-    def mint_more_native_token(self, mint_more_native_token_options, options):
+    def increase_native_token_supply(self, token_id, amount, increase_native_token_supply_options=None, options=None):
         """Mint more native token.
         """
         return self._call_account_method(
-            'MintMoreNativeToken', {
-                'mintMoreNativeTokenOptions': mint_more_native_token_options,
+            'IncreaseNativeTokenSupply', {
+                'tokenId': token_id,
+                'amount': amount,
+                'increaseNativeTokenSupplyOptions': increase_native_token_supply_options,
                 'options': options
             }
         )
 
-    def mint_native_token(self, native_token_options, options):
+    def mint_native_token(self, native_token_options, options=None):
         """Mint native token.
         """
         return self._call_account_method(
@@ -306,7 +310,7 @@ class Account:
             }
         )
 
-    def mint_nfts(self, nfts_options, options):
+    def mint_nfts(self, nfts_options, options=None):
         """Mint nfts.
         """
         return self._call_account_method(
@@ -323,7 +327,7 @@ class Account:
             'GetBalance'
         )
 
-    def prepare_send_amount(self, addresses_with_amount, options):
+    def prepare_send_amount(self, addresses_with_amount, options=None):
         """Prepare send amount.
         """
         return self._call_account_method(
@@ -333,7 +337,7 @@ class Account:
             }
         )
 
-    def prepare_transaction(self, outputs, options):
+    def prepare_transaction(self, outputs, options=None):
         """Prepare transaction.
         """
         return self._call_account_method(
@@ -363,7 +367,7 @@ class Account:
             }
         )
 
-    def send_micro_transaction(self, addresses_with_micro_amount, options):
+    def send_micro_transaction(self, addresses_with_micro_amount, options=None):
         """Send micro transaction.
         """
         return self._call_account_method(
@@ -373,7 +377,7 @@ class Account:
             }
         )
 
-    def send_native_tokens(self, addresses_native_tokens, options):
+    def send_native_tokens(self, addresses_native_tokens, options=None):
         """Send native tokens.
         """
         return self._call_account_method(
@@ -383,7 +387,7 @@ class Account:
             }
         )
 
-    def send_nft(self, addresses_nft_ids, options):
+    def send_nft(self, addresses_nft_ids, options=None):
         """Send nft.
         """
         return self._call_account_method(
@@ -403,7 +407,7 @@ class Account:
             }
         )
 
-    def send_transaction(self, outputs, options):
+    def send_transaction(self, outputs, options=None):
         """Send a transaction.
         """
         return self._call_account_method(

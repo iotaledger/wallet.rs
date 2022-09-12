@@ -30,9 +30,9 @@ The Account class.
 - [listPendingTransactions](Account.md#listpendingtransactions)
 - [listTransactions](Account.md#listtransactions)
 - [listUnspentOutputs](Account.md#listunspentoutputs)
-- [meltNativeToken](Account.md#meltnativetoken)
+- [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
-- [mintMoreNativeToken](Account.md#mintmorenativetoken)
+- [increaseNativeTokenSupply](Account.md#increasenativetokensupply)
 - [mintNativeToken](Account.md#mintnativetoken)
 - [mintNfts](Account.md#mintnfts)
 - [prepareOutput](Account.md#prepareoutput)
@@ -511,9 +511,9 @@ The outputs with metadata.
 
 ___
 
-### meltNativeToken
+### decreaseNativeTokenSupply
 
-▸ **meltNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Melt native tokens. This happens with the foundry output which minted them, by increasing it's
 `melted_tokens` field.
@@ -522,7 +522,8 @@ Melt native tokens. This happens with the foundry output which minted them, by i
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `tokenId` | `string` | - |
+| `meltAmount` | `string` | - |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -553,9 +554,9 @@ The amount.
 
 ___
 
-### mintMoreNativeToken
+### increaseNativeTokenSupply
 
-▸ **mintMoreNativeToken**(`mintMoreNativeTokenOptions`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+▸ **increaseNativeTokenSupply**(`tokenId`, `amount`, `increaseNativeTokenSupplyOptions`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
 
 Mint more native tokens.
 
@@ -563,7 +564,9 @@ Mint more native tokens.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `mintMoreNativeTokenOptions` | [`MintMoreNativeTokenOptions`](../interfaces/MintMoreNativeTokenOptions.md) | The options for minting more tokens. |
+| `tokenId` | `string` | - |
+| `amount` | `string` | - |
+| `increaseNativeTokenSupplyOptions` | [`IncreaseNativeTokenSupplyOptions`](../interfaces/IncreaseNativeTokenSupplyOptions.md) | The options for minting more tokens. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns

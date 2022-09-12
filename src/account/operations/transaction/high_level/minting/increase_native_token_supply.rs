@@ -17,16 +17,16 @@ use crate::{
 
 /// Address and foundry data for `mint_native_token()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MintMoreNativeTokenOptions {}
+pub struct IncreaseNativeTokenSupplyOptions {}
 
-/// Dto for MintMoreNativeTokenOptions
+/// Dto for IncreaseNativeTokenSupplyOptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct MintMoreNativeTokenOptionsDto {}
+pub struct IncreaseNativeTokenSupplyOptionsDto {}
 
-impl TryFrom<&MintMoreNativeTokenOptionsDto> for MintMoreNativeTokenOptions {
+impl TryFrom<&IncreaseNativeTokenSupplyOptionsDto> for IncreaseNativeTokenSupplyOptions {
     type Error = crate::Error;
 
-    fn try_from(_value: &MintMoreNativeTokenOptionsDto) -> crate::Result<Self> {
+    fn try_from(_value: &IncreaseNativeTokenSupplyOptionsDto) -> crate::Result<Self> {
         Ok(Self {})
     }
 }
@@ -35,7 +35,7 @@ impl AccountHandle {
     /// Function to mint more native tokens when the max supply isn't reached yet. The foundry needs to be controlled by
     /// this account. Address needs to be Bech32 encoded
     /// ```ignore
-    /// let tx = account_handle.mint_more_native_token(
+    /// let tx = account_handle.increase_native_token_supply(
     ///             TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
     ///             U256::from(100),
     ///             native_token_options,
@@ -46,14 +46,14 @@ impl AccountHandle {
     ///     println!("Block sent: {}", block_id);
     /// }
     /// ```
-    pub async fn mint_more_native_token(
+    pub async fn increase_native_token_supply(
         &self,
         token_id: TokenId,
         additional_supply: U256,
-        _native_token_options: Option<MintMoreNativeTokenOptions>,
+        _increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
-        log::debug!("[TRANSACTION] mint_more_native_token");
+        log::debug!("[TRANSACTION] increase_native_token_supply");
 
         let account = self.read().await;
         let existing_foundry_output = account.unspent_outputs().values().into_iter().find(|output_data| {
