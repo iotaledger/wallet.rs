@@ -115,7 +115,8 @@ class Account:
         )
 
     def burn_native_token(self,
-                          native_token,
+                          token_id,
+                          burn_amount,
                           options=None):
         """Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
         the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
@@ -123,7 +124,8 @@ class Account:
         """
         return self._call_account_method(
             'BurnNativeToken', {
-                'nativeToken': native_token,
+                'tokenId': token_id,
+                'burnAmount': burn_amount,
                 'options':  options
             }
         )
@@ -143,8 +145,8 @@ class Account:
         )
 
     def consolidate_outputs(self,
-                           force,
-                           output_consolidation_threshold):
+                            force,
+                            output_consolidation_threshold):
         """Consolidate outputs.
         """
         return self._call_account_method(
@@ -279,13 +281,13 @@ class Account:
             }
         )
 
-    def increase_native_token_supply(self, token_id, amount, increase_native_token_supply_options=None, options=None):
+    def increase_native_token_supply(self, token_id, mint_amount, increase_native_token_supply_options=None, options=None):
         """Mint more native token.
         """
         return self._call_account_method(
             'IncreaseNativeTokenSupply', {
                 'tokenId': token_id,
-                'amount': amount,
+                'mintAmount': mint_amount,
                 'increaseNativeTokenSupplyOptions': increase_native_token_supply_options,
                 'options': options
             }

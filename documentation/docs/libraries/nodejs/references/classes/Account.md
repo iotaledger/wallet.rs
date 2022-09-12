@@ -132,7 +132,7 @@ ___
 
 ### burnNativeToken
 
-▸ **burnNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+▸ **burnNativeToken**(`tokenId`, `burnAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
 the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
@@ -142,7 +142,8 @@ recommended to use melting, if the foundry output is available.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `tokenId` | `string` | The native token id. |
+| `burnAmount` | `string` | The to be burned amount. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -522,8 +523,8 @@ Melt native tokens. This happens with the foundry output which minted them, by i
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenId` | `string` | - |
-| `meltAmount` | `string` | - |
+| `tokenId` | `string` | The native token id. |
+| `meltAmount` | `string` | To be melted amount. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -556,7 +557,7 @@ ___
 
 ### increaseNativeTokenSupply
 
-▸ **increaseNativeTokenSupply**(`tokenId`, `amount`, `increaseNativeTokenSupplyOptions`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+▸ **increaseNativeTokenSupply**(`tokenId`, `mintAmount`, `increaseNativeTokenSupplyOptions?`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
 
 Mint more native tokens.
 
@@ -564,9 +565,9 @@ Mint more native tokens.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenId` | `string` | - |
-| `amount` | `string` | - |
-| `increaseNativeTokenSupplyOptions` | [`IncreaseNativeTokenSupplyOptions`](../interfaces/IncreaseNativeTokenSupplyOptions.md) | The options for minting more tokens. |
+| `tokenId` | `string` | The native token id. |
+| `mintAmount` | `string` | To be minted amount. |
+| `increaseNativeTokenSupplyOptions?` | [`IncreaseNativeTokenSupplyOptions`](../interfaces/IncreaseNativeTokenSupplyOptions.md) | Options for minting more tokens. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns

@@ -47,7 +47,8 @@ export type __BuildNftOutputMethod__ = {
 export type __BurnNativeTokenMethod__ = {
     name: 'BurnNativeToken';
     data: {
-        nativeToken: [string, HexEncodedAmount];
+        tokenId: string;
+        burnAmount: HexEncodedAmount;
         options?: TransactionOptions;
     };
 };
@@ -180,7 +181,9 @@ export type __MinimumRequiredStorageDepositMethod__ = {
 export type __IncreaseNativeTokenSupplyMethod__ = {
     name: 'IncreaseNativeTokenSupply';
     data: {
-        increaseNativeTokenSupplyOptions: IncreaseNativeTokenSupplyOptions;
+        tokenId: string;
+        mintAmount: HexEncodedAmount;
+        increaseNativeTokenSupplyOptions?: IncreaseNativeTokenSupplyOptions;
         options?: TransactionOptions;
     };
 };

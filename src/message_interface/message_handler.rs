@@ -15,7 +15,7 @@ use iota_client::{
     block::{
         output::{
             dto::{OutputBuilderAmountDto, OutputDto},
-            AliasId, AliasOutput, BasicOutput, FoundryOutput, NativeToken, NftId, NftOutput, Output, Rent, TokenId,
+            AliasId, AliasOutput, BasicOutput, FoundryOutput, NftId, NftOutput, Output, Rent, TokenId,
         },
         payload::transaction::dto::TransactionPayloadDto,
         DtoError,
@@ -432,11 +432,18 @@ impl WalletMessageHandler {
 
                 Ok(Response::Output(OutputDto::from(&output)))
             }
-            AccountMethod::BurnNativeToken { native_token, options } => {
+            AccountMethod::BurnNativeToken {
+                token_id,
+                burn_amount,
+                options,
+            } => {
                 convert_async_panics(|| async {
-                    let native_token = NativeToken::try_from(&native_token)?;
                     let transaction = account_handle
-                        .burn_native_token((*native_token.token_id(), *native_token.amount()), options)
+                        .burn_native_token(
+                            TokenId::try_from(&token_id)?,
+                            U256::try_from(&burn_amount).map_err(|_| DtoError::InvalidField("burn_amount"))?,
+                            options,
+                        )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
@@ -546,11 +553,18 @@ impl WalletMessageHandler {
                     transactions.iter().map(TransactionDto::from).collect(),
                 ))
             }
-            AccountMethod::DecreaseNativeTokenSupply { native_token, options } => {
+            AccountMethod::DecreaseNativeTokenSupply {
+                token_id,
+                melt_amount,
+                options,
+            } => {
                 convert_async_panics(|| async {
-                    let native_token = NativeToken::try_from(&native_token)?;
                     let transaction = account_handle
-                        .decrease_native_token_supply(*native_token.token_id(), *native_token.amount(), options)
+                        .decrease_native_token_supply(
+                            TokenId::try_from(&token_id)?,
+                            U256::try_from(&melt_amount).map_err(|_| DtoError::InvalidField("melt_amount"))?,
+                            options,
+                        )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
@@ -558,7 +572,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::IncreaseNativeTokenSupply {
                 token_id,
-                additional_supply,
+                mint_amount,
                 increase_native_token_supply_options,
                 options,
             } => {
@@ -572,8 +586,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .increase_native_token_supply(
                             TokenId::try_from(&token_id)?,
-                            U256::try_from(&additional_supply)
-                                .map_err(|_| DtoError::InvalidField("additional_supply"))?,
+                            U256::try_from(&mint_amount).map_err(|_| DtoError::InvalidField("mint_amount"))?,
                             increase_native_token_supply_options,
                             options.clone(),
                         )

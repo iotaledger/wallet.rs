@@ -114,8 +114,12 @@ pub enum AccountMethod {
     /// recommended to use melting, if the foundry output is available.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     BurnNativeToken {
-        #[serde(rename = "nativeToken")]
-        native_token: NativeTokenDto,
+        /// Native token id
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
+        /// To be burned amount
+        #[serde(rename = "burnAmount")]
+        burn_amount: U256Dto,
         options: Option<TransactionOptions>,
     },
     /// Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
@@ -217,8 +221,12 @@ pub enum AccountMethod {
     /// `melted_tokens` field.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     DecreaseNativeTokenSupply {
-        #[serde(rename = "nativeToken")]
-        native_token: NativeTokenDto,
+        /// Native token id
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
+        /// To be melted amount
+        #[serde(rename = "meltAmount")]
+        melt_amount: U256Dto,
         options: Option<TransactionOptions>,
     },
     /// Calculate the minimum required storage deposit for an output.
@@ -232,8 +240,8 @@ pub enum AccountMethod {
         #[serde(rename = "tokenId")]
         token_id: TokenIdDto,
         /// To be minted amount
-        #[serde(rename = "additionalSupply")]
-        additional_supply: U256Dto,
+        #[serde(rename = "mintAmount")]
+        mint_amount: U256Dto,
         #[serde(rename = "increaseNativeTokenSupplyOptions")]
         increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptionsDto>,
         options: Option<TransactionOptions>,

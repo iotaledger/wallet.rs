@@ -49,7 +49,7 @@ impl AccountHandle {
     pub async fn increase_native_token_supply(
         &self,
         token_id: TokenId,
-        additional_supply: U256,
+        mint_amount: U256,
         _increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
@@ -71,10 +71,10 @@ impl AccountHandle {
         let existing_alias_output = if let Output::Foundry(foundry_output) = &existing_foundry_output.output {
             let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
             // Check if we can mint the provided amount without exceeding the maximum_supply
-            if token_scheme.maximum_supply() - token_scheme.circulating_supply() < additional_supply {
+            if token_scheme.maximum_supply() - token_scheme.circulating_supply() < mint_amount {
                 return Err(Error::MintingFailed(format!(
                     "minting additional {} tokens would exceed the maximum supply: {}",
-                    additional_supply,
+                    mint_amount,
                     token_scheme.maximum_supply()
                 )));
             }
@@ -116,7 +116,7 @@ impl AccountHandle {
         let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
 
         let updated_token_scheme = TokenScheme::Simple(SimpleTokenScheme::new(
-            token_scheme.circulating_supply() + additional_supply,
+            token_scheme.circulating_supply() + mint_amount,
             *token_scheme.melted_tokens(),
             *token_scheme.maximum_supply(),
         )?);

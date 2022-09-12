@@ -63,7 +63,7 @@ BuildNftOutput.
 #### burn\_native\_token
 
 ```python
-def burn_native_token(native_token, options=None)
+def burn_native_token(token_id, burn_amount, options=None)
 ```
 
 Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
@@ -232,7 +232,7 @@ Melt native tokens. This happens with the foundry output which minted them, by i
 
 ```python
 def increase_native_token_supply(token_id,
-                                 amount,
+                                 mint_amount,
                                  increase_native_token_supply_options=None,
                                  options=None)
 ```

@@ -37,7 +37,7 @@ async fn main() -> Result<()> {
 
     // Burn a native token
     let burn_amount = U256::from(1);
-    let transaction = account.burn_native_token((token_id, burn_amount), None).await?;
+    let transaction = account.burn_native_token(token_id, burn_amount, None).await?;
 
     let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
