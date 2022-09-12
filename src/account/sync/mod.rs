@@ -2508,6 +2508,7 @@ async fn perform_transfer(
                 .await;
         }
         log::debug!("[TRANSFER] Checking confirmation for {} finished", message_id);
+        drop(new_account_handle);
     });
 
     let mut account_ = account_handle.write().await;
@@ -2586,6 +2587,12 @@ async fn perform_transfer(
                 .await?;
         }
     }
+
+    // Drop account handle to prevent deadlock from `new_account_handle` in the spawned task
+    drop(account_handle);
+
+    log::debug!("[TRANSFER] perform_transfer finished");
+
     Ok(message)
 }
 
