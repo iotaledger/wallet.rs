@@ -110,8 +110,8 @@ name = "mint_nft"
 path = "examples/10_mint_nft.rs"
 
 [[example]]
-name = "melt_native_token"
-path = "examples/11_melt_native_token.rs"
+name = "decrease_native_token_supply"
+path = "examples/11_decrease_native_token_supply.rs"
 
 [[example]]
 name = "burn_native_token"
