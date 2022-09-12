@@ -114,20 +114,24 @@ name = "decrease_native_token_supply"
 path = "examples/11_decrease_native_token_supply.rs"
 
 [[example]]
+name = "increase_native_token_supply"
+path = "examples/12_increase_native_token_supply.rs"
+
+[[example]]
 name = "burn_native_token"
-path = "examples/12_burn_native_token.rs"
+path = "examples/13_burn_native_token.rs"
 
 [[example]]
 name = "burn_nft"
-path = "examples/13_burn_nft.rs"
+path = "examples/14_burn_nft.rs"
 
 [[example]]
 name = "destroy_foundry"
-path = "examples/14_destroy_foundry.rs"
+path = "examples/15_destroy_foundry.rs"
 
 [[example]]
 name = "destroy_alias"
-path = "examples/15_destroy_alias.rs"
+path = "examples/16_destroy_alias.rs"
 
 [[example]]
 name = "accounts"
