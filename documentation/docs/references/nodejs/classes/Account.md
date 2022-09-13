@@ -452,9 +452,9 @@ List all outputs of the account.
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
+| Name | Type            | Description |
+| :------ |:----------------| :------ |
+| `filterOptions?` | `FilterOptions` | Options to filter the to be returned outputs. |
 
 #### Returns
 
@@ -502,7 +502,7 @@ List all the unspent outputs of the account.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
+| `filterOptions?` | `FilterOptions` | Options to filter the to be returned outputs. |
 
 #### Returns
 
