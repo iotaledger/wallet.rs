@@ -2,16 +2,14 @@
 description: 'Get started with the official IOTA Wallet Library Python binding.'
 image: /img/logo/iota_mark_light.png
 keywords:
-
 - Python
 - install
 - pip
 - unpack
-
 ---
 import SafePasswordStorage from '../_admonitions/_warning_safe_password_storage.md'
 
-# Getting Started with Python 
+# Getting Started with Python
 
 <SafePasswordStorage />
 
@@ -42,6 +40,26 @@ running the following command:
 cd wallet.rs/bindings/python/native
 ```
 
+#### (optional) Create and use a virtual environment
+
+If you want to isolate the library from the rest of your system, you can create a virtual environment by running the
+following commands:
+
+```bash
+python3 -m venv iota_wallet_venv
+````
+##### Linux and macOS
+
+```bash
+source iota_wallet_venv/bin/activate
+```
+
+##### Windows
+
+```bash
+.\iota_wallet_venv\Scripts\activate
+```
+
 ### Install the Required Dependencies and Build the Wheel
 
 Once you have [cloned the library](#clone-the-library),
@@ -50,21 +68,10 @@ build the wheel file.
 
 You can do so by running the following commands:
 
-#### Build the wheel file
-
 ```bash
-python3 setup.py bdist_wheel
+pip install -r requirements-dev.txt
+pip install .
 ```
-
-#### (optional) Create and use a virtual environment
-
-If you want to isolate the library from the rest of your system, you can create a virtual environment by running the
-following commands:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-````
 
 #### (optional) Deactivate the virtual environment
 
@@ -72,20 +79,6 @@ If you want to deactivate the virtual environment, you should run the following 
 
 ```bash
 deactivate
-```
-
-#### Install the wheel file
-
-You can install the wheel file by running the following command:
-
-```bash
-python3 -m pip install dist/[your built wheel file]
-```
-
-For example:
-
-```bash
-python3 -m pip install dist/iota_wallet-0.2.0-cp310-cp310-linux_x86_64.whl
 ```
 
 ## Use the Library

@@ -20,9 +20,9 @@ keywords:
 
 The `wallet.rs` library is written in Rust. You can also find a bindings written in Node.js and Python.
 
-- [Rust](rust.md)
-- [Node.js](nodejs.md)
-- [Python](python.md)
+- [Rust](rust.mdx)
+- [Node.js](nodejs.mdx)
+- [Python](python.mdx)
 
 ## Connect to the Testnet API
 
