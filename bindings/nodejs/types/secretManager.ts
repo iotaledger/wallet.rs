@@ -4,9 +4,14 @@ export interface LedgerNanoSecretManager {
     LedgerNano: boolean;
 }
 
-/** Secret manager that uses only a mnemonic. */
+/** Secret manager that uses a mnemonic. */
 export interface MnemonicSecretManager {
     Mnemonic: string;
+}
+
+/** Secret manager that uses a seed. */
+export interface SeedSecretManager {
+    HexSeed: string;
 }
 
 /** Secret manager that uses Stronghold. */

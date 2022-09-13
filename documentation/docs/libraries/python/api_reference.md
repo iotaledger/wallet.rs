@@ -448,6 +448,24 @@ def __init__(mnemonic)
 
 Initialize a mnemonic secret manager.
 
+<a id="iota_wallet.secret_manager.SeedSecretManager"></a>
+
+## SeedSecretManager Objects
+
+```python
+class SeedSecretManager(dict)
+```
+
+<a id="iota_wallet.secret_manager.SeedSecretManager.__init__"></a>
+
+#### \_\_init\_\_
+
+```python
+def __init__(seed)
+```
+
+Initialize a seed secret manager.
+
 <a id="iota_wallet.secret_manager.StrongholdSecretManager"></a>
 
 ## StrongholdSecretManager Objects
