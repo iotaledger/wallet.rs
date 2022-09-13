@@ -1,0 +1,72 @@
+---
+title: Send Native Tokens
+sidebar_label: Send
+description: 'How to send native tokens using wallet.rs.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- send native token
+- send
+- native token
+- nodejs
+- python
+- rust
+---
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/native_tokens/_02_send_native_token/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/native_tokens/_02_send_native_token/_expected_output.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import RustCode from "../../libraries/rust/how_to/native_tokens/_02_send_native_tokens/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/native_tokens/_02_send_native_tokens/_expected_output.md";
+import ReplaceNativeTokenId from '../../_admonitions/_note_replace_native_token_id.md';
+
+After you have [minted](01_mint_native_token.mdx) a
+[native tokens](https://wiki.iota.org/introduction/develop/explanations/what_is_stardust/tokenization#native-tokens),
+you can easily send it by calling the `Account.send_native_tokens(addresses_native_tokens, options)` function.
+
+As with any output, you can set a
+[storage deposit](https://wiki.iota.org/introduction/develop/explanations/what_is_stardust/storage_deposit) and
+[output unlock conditions](https://wiki.iota.org/introduction/develop/explanations/what_is_stardust/unlock_conditions).
+Keep in mind that if you set unlock conditions, whoever you send the native tokens to may need to
+[claim them](../outputs_and_transactions/04_claim_outputs.mdx).
+
+## Code Example
+
+<ReplaceNativeTokenId/>
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. Define the type of native token and amount to send.
+4. Send the native tokens calling the `Account.send_native_tokens(addresses_native_tokens, options)` function.
+
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+
