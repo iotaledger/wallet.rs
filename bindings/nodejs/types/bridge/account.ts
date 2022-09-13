@@ -151,6 +151,10 @@ export type __ListPendingTransactionsMethod__ = {
     name: 'ListPendingTransactions';
 };
 
+export type __ListIncomingTransactionsMethod__ = {
+    name: 'ListIncomingTransactions';
+};
+
 export type __ListTransactionsMethod__ = {
     name: 'ListTransactions';
 };

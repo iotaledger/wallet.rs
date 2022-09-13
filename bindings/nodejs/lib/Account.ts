@@ -37,6 +37,8 @@ import type {
     IBasicOutput,
     IFoundryOutput,
     INftOutput,
+    IOutputResponse,
+    ITransactionPayload,
     HexEncodedAmount,
     OutputTypes,
 } from '@iota/types';
@@ -461,6 +463,23 @@ export class Account {
                 name: 'ListPendingTransactions',
             },
         );
+        return JSON.parse(response).payload;
+    }
+
+    /**
+     * List all incoming transactions of the account.
+     * @returns The incoming transactions with their inputs.
+     */
+    async listIncomingTransactions(): Promise<
+        [string, ITransactionPayload, IOutputResponse][]
+    > {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'ListIncomingTransactions',
+            },
+        );
+
         return JSON.parse(response).payload;
     }
 

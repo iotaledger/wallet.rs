@@ -188,7 +188,15 @@ impl AccountHandle {
         Ok(outputs)
     }
 
-    /// Returns all transaction of the account
+    /// Returns all incoming transactions of the account
+    pub async fn list_incoming_transactions(
+        &self,
+    ) -> Result<Vec<(TransactionId, (TransactionPayload, Vec<OutputResponse>))>> {
+        let account = self.read().await;
+        Ok(account.incoming_transactions.clone().into_iter().collect())
+    }
+
+    /// Returns all transactions of the account
     pub async fn list_transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();
@@ -198,7 +206,7 @@ impl AccountHandle {
         Ok(transactions)
     }
 
-    /// Returns all pending transaction of the account
+    /// Returns all pending transactions of the account
     pub async fn list_pending_transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();

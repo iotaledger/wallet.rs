@@ -20,6 +20,7 @@ import type {
     __ListAddressesWithUnspentOutputsMethod__,
     __ListOutputsMethod__,
     __ListPendingTransactionsMethod__,
+    __ListIncomingTransactionsMethod__,
     __ListTransactionsMethod__,
     __ListUnspentOutputsMethod__,
     __DecreaseNativeTokenSupplyMethod__,
@@ -88,6 +89,7 @@ export type __AccountMethod__ =
     | __ListAddressesWithUnspentOutputsMethod__
     | __ListOutputsMethod__
     | __ListPendingTransactionsMethod__
+    | __ListIncomingTransactionsMethod__
     | __ListTransactionsMethod__
     | __ListUnspentOutputsMethod__
     | __DecreaseNativeTokenSupplyMethod__

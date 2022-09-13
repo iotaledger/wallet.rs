@@ -28,6 +28,7 @@ The Account class.
 - [listAddressesWithUnspentOutputs](Account.md#listaddresseswithunspentoutputs)
 - [listOutputs](Account.md#listoutputs)
 - [listPendingTransactions](Account.md#listpendingtransactions)
+- [listIncomingTransactions](Account.md#listincomingtransactions)
 - [listTransactions](Account.md#listtransactions)
 - [listUnspentOutputs](Account.md#listunspentoutputs)
 - [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
@@ -474,6 +475,20 @@ List all the pending transactions of the account.
 `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 The transactions.
+
+___
+
+### listIncomingTransactions
+
+▸ **listIncomingTransactions**(): `Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+
+List all incoming transactions of the account.
+
+#### Returns
+
+`Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+
+The incoming transactions with their inputs.
 
 ___
 

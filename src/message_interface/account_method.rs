@@ -211,10 +211,13 @@ pub enum AccountMethod {
         #[serde(rename = "filterOptions")]
         filter_options: Option<FilterOptions>,
     },
+    /// Returns all incoming transactions of the account
+    /// Expected response: [`IncomingTransactionsData`](crate::message_interface::Response::IncomingTransactionsData)
+    ListIncomingTransactions,
     /// Returns all transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
     ListTransactions,
-    /// Returns all pending transaction of the account
+    /// Returns all pending transactions of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
     ListPendingTransactions,
     /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
