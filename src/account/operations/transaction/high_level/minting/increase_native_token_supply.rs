@@ -33,7 +33,7 @@ impl TryFrom<&IncreaseNativeTokenSupplyOptionsDto> for IncreaseNativeTokenSupply
 
 impl AccountHandle {
     /// Function to mint more native tokens when the max supply isn't reached yet. The foundry needs to be controlled by
-    /// this account. Address needs to be Bech32 encoded
+    /// this account. Address needs to be Bech32 encoded. This will not change the max supply.
     /// ```ignore
     /// let tx = account_handle.increase_native_token_supply(
     ///             TokenId::from_str("08e68f7616cd4948efebc6a77c4f93aed770ac53860100000000000000000000000000000000")?,
