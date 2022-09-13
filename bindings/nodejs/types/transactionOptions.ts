@@ -34,6 +34,9 @@ export type CustomAddress = {
     value: string;
 };
 
+/** Native token options for minting more native tokens */
+export interface IncreaseNativeTokenSupplyOptions {}
+
 /** Native token options for minting */
 export interface NativeTokenOptions {
     accountAddress?: string;

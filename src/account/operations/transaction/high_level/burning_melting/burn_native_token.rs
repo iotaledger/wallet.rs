@@ -49,18 +49,17 @@ impl AccountHandle {
     /// recommended to use melting, if the foundry output is available.
     pub async fn burn_native_token(
         &self,
-        native_token: (TokenId, U256),
+        token_id: TokenId,
+        burn_amount: U256,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_native_token");
-        let token_id = native_token.0;
-        let burn_token_amount = native_token.1;
 
         let StrippedOutputAggregate {
             custom_inputs,
             amount: _,
             outputs,
-        } = self.get_burn_inputs_and_outputs(token_id, burn_token_amount).await?;
+        } = self.get_burn_inputs_and_outputs(token_id, burn_amount).await?;
 
         // Set custom inputs and allow burning
         let options = match options {

@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 11_melt_native_token --release
+//! cargo run --example increase_native_token_supply --release
 // In this example we will melt an existing native token with its foundry
 // Rename `.env.example` to `.env` first
 
@@ -34,22 +34,24 @@ async fn main() -> Result<()> {
     // available.
     let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
 
-    // Melt some of the circulating supply
-    let melt_amount = U256::from(10);
-    let transaction = account.melt_native_token((token_id, melt_amount), None).await?;
+    // Mint some more native tokens
+    let mint_amount = U256::from(10);
+    let mint_transaction = account
+        .increase_native_token_supply(token_id, mint_amount, None, None)
+        .await?;
 
-    let _ = match transaction.block_id {
+    let _ = match mint_transaction.transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "melt native token transaction failed to submitted".to_string(),
+                "mint native token transaction failed to submitted".to_string(),
             ));
         }
     };
 
     let balance = account.sync(None).await?;
 
-    println!("Balance after melting:\n{balance:?}",);
+    println!("Balance after minting:\n{balance:?}",);
 
     Ok(())
 }

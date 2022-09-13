@@ -30,8 +30,9 @@ The Account class.
 - [listPendingTransactions](Account.md#listpendingtransactions)
 - [listTransactions](Account.md#listtransactions)
 - [listUnspentOutputs](Account.md#listunspentoutputs)
-- [meltNativeToken](Account.md#meltnativetoken)
+- [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
+- [increaseNativeTokenSupply](Account.md#increasenativetokensupply)
 - [mintNativeToken](Account.md#mintnativetoken)
 - [mintNfts](Account.md#mintnfts)
 - [prepareOutput](Account.md#prepareoutput)
@@ -131,7 +132,7 @@ ___
 
 ### burnNativeToken
 
-▸ **burnNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+▸ **burnNativeToken**(`tokenId`, `burnAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
 the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
@@ -141,7 +142,8 @@ recommended to use melting, if the foundry output is available.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `tokenId` | `string` | The native token id. |
+| `burnAmount` | `string` | The to be burned amount. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -510,9 +512,9 @@ The outputs with metadata.
 
 ___
 
-### meltNativeToken
+### decreaseNativeTokenSupply
 
-▸ **meltNativeToken**(`nativeToken`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Melt native tokens. This happens with the foundry output which minted them, by increasing it's
 `melted_tokens` field.
@@ -521,7 +523,8 @@ Melt native tokens. This happens with the foundry output which minted them, by i
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `nativeToken` | [`string`, `string`] | The Native Token with amount. |
+| `tokenId` | `string` | The native token id. |
+| `meltAmount` | `string` | To be melted amount. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -549,6 +552,29 @@ Calculate the minimum required storage deposit for an output.
 `Promise`<`string`\>
 
 The amount.
+
+___
+
+### increaseNativeTokenSupply
+
+▸ **increaseNativeTokenSupply**(`tokenId`, `mintAmount`, `increaseNativeTokenSupplyOptions?`, `transactionOptions?`): `Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+
+Mint more native tokens.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tokenId` | `string` | The native token id. |
+| `mintAmount` | `string` | To be minted amount. |
+| `increaseNativeTokenSupplyOptions?` | [`IncreaseNativeTokenSupplyOptions`](../interfaces/IncreaseNativeTokenSupplyOptions.md) | Options for minting more tokens. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`MintTokenTransaction`](../interfaces/MintTokenTransaction.md)\>
+
+The minting transaction and the token ID.
 
 ___
 

@@ -1,14 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 14_destroy_foundry --release
-// In this example we will destroy an existing foundry output. This is only possible if its circulating supply is 0.
-// Rename `.env.example` to `.env` first
+//! cargo run --example destroy_alias --release
+// In this example we will destroy an existing alias output. This is only possible if possible foundry outputs have
+// circulating supply of 0. Rename `.env.example` to `.env` first
 
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::block::output::FoundryId;
+use iota_client::block::output::AliasId;
 use iota_wallet::{account_manager::AccountManager, Result};
 
 #[tokio::main]
@@ -30,10 +30,9 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Replace with an FoundryId that is available in the account
-    let foundry_id =
-        FoundryId::from_str("0x0857f1bafae0ef43190597a0dfe72ef1477b769560203c1854c6fb427c486e65300100000000")?;
-    let transaction = account.destroy_foundry(foundry_id, None).await?;
+    // Replace with an AliasId that is available in the account
+    let alias_id = AliasId::from_str("0x57f1bafae0ef43190597a0dfe72ef1477b769560203c1854c6fb427c486e6530")?;
+    let transaction = account.destroy_alias(alias_id, None).await?;
 
     let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,

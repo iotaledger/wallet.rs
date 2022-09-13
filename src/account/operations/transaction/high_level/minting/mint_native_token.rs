@@ -80,8 +80,7 @@ impl TryFrom<&NativeTokenOptionsDto> for NativeTokenOptions {
     }
 }
 
-/// The result of a minting native token transaction, block_id is an option because submitting the transaction could
-/// fail
+/// The result of a minting native token transaction
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MintTokenTransaction {

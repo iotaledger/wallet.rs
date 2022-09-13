@@ -12,15 +12,13 @@ impl AccountHandle {
     /// Function to melt native tokens. This happens with the foundry output which minted them, by increasing it's
     /// `melted_tokens` field. This should be preferred over burning, because after burning, the foundry can never be
     /// destroyed anymore.
-    pub async fn melt_native_token(
+    pub async fn decrease_native_token_supply(
         &self,
-        native_token: (TokenId, U256),
+        token_id: TokenId,
+        melt_amount: U256,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
-        log::debug!("[TRANSACTION] melt_native_token");
-
-        let token_id = native_token.0;
-        let melt_token_amount = native_token.1;
+        log::debug!("[TRANSACTION] decrease_native_token_supply");
 
         let foundry_id = FoundryId::from(token_id);
         let alias_id = *foundry_id.alias_address().alias_id();
@@ -46,7 +44,7 @@ impl AccountHandle {
                 FoundryOutputBuilder::from(&existing_foundry_output)
                     .with_token_scheme(TokenScheme::Simple(SimpleTokenScheme::new(
                         *token_scheme.minted_tokens(),
-                        token_scheme.melted_tokens() + melt_token_amount,
+                        token_scheme.melted_tokens() + melt_amount,
                         *token_scheme.maximum_supply(),
                     )?))
                     .finish_output()?,
