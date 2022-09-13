@@ -1,0 +1,124 @@
+---
+description: 'Get started with the official IOTA Wallet Library Python binding.'
+image: /img/logo/iota_mark_light.png
+keywords:
+
+- Python
+- install
+- pip
+- unpack
+
+---
+import SafePasswordStorage from '../_admonitions/_warning_safe_password_storage.md'
+
+# Getting Started with Python 
+
+<SafePasswordStorage />
+
+## Requirements
+
+* [Python 3.x](https://www.python.org)
+* [pip](https://pypi.org/project/pip) >= 19.1
+* [setuptools-rust](https://pypi.org/project/setuptools-rust/) >= 0.10.2
+* [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) to compile the binding.
+
+## Install the Library
+
+### Clone the Repository
+
+You can clone the [wallet.rs client library](https://github.com/iotaledger/wallet.rs) by running the following command:
+
+```bash
+git clone git@github.com:iotaledger/wallet.rs.git
+```
+
+### Change to the Python Binding Directory
+
+After you have cloned the repository, you should change directory to `wallet.rs/bindings/python/native`. You can do so
+by
+running the following command:
+
+```bash
+cd wallet.rs/bindings/python/native
+```
+
+### Install the Required Dependencies and Build the Wheel
+
+Once you have [cloned the library](#clone-the-library),
+and [moved to the binding's directory](#change-to-the-python-binding-directory), you should install dependencies and
+build the wheel file.
+
+You can do so by running the following commands:
+
+#### Build the wheel file
+
+```bash
+python3 setup.py bdist_wheel
+```
+
+#### (optional) Create and use a virtual environment
+
+If you want to isolate the library from the rest of your system, you can create a virtual environment by running the
+following commands:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+````
+
+#### (optional) Deactivate the virtual environment
+
+If you want to deactivate the virtual environment, you should run the following command from the virtual environment:
+
+```bash
+deactivate
+```
+
+#### Install the wheel file
+
+You can install the wheel file by running the following command:
+
+```bash
+python3 -m pip install dist/[your built wheel file]
+```
+
+For example:
+
+```bash
+python3 -m pip install dist/iota_wallet-0.2.0-cp310-cp310-linux_x86_64.whl
+```
+
+## Use the Library
+
+After you have [installed the library](#install-the-library), you can create a `IotaWallet` instance and interact with
+it.
+
+```python
+from iota_wallet import IotaWallet, StrongholdSecretManager
+
+# This example creates a new database and account
+
+client_options = {
+    'nodes': ['https://api.testnet.shimmer.network'],
+}
+
+# Shimmer coin type
+coin_type = 4219
+
+secret_manager = StrongholdSecretManager("wallet.stronghold", "some_hopefully_secure_password")
+
+wallet = IotaWallet('./alice-database', client_options, coin_type, secret_manager)
+
+# Store the mnemonic in the Stronghold snapshot, this only needs to be done once
+account = wallet.store_mnemonic("flame fever pig forward exact dash body idea link scrub tennis minute " +
+          "surge unaware prosper over waste kitten ceiling human knife arch situate civil")
+
+account = wallet.create_account('Alice')
+print(account)
+```
+
+## What's Next?
+
+Now that you are up and running, you can get acquainted with the library using
+its [how-to guides](../how_tos/run_how_tos.mdx) and the
+repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/python/native/examples).
