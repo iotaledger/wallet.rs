@@ -309,7 +309,7 @@ ___
 
 ### recoverAccounts
 
-▸ **recoverAccounts**(`accountGapLimit`, `addressGapLimit`, `syncOptions`): `Promise`<[`Account`](Account.md)[]\>
+▸ **recoverAccounts**(`accountStartIndex`, `accountGapLimit`, `addressGapLimit`, `syncOptions`): `Promise`<[`Account`](Account.md)[]\>
 
 Find accounts with unspent outputs.
 
@@ -317,6 +317,7 @@ Find accounts with unspent outputs.
 
 | Name | Type |
 | :------ | :------ |
+| `accountStartIndex` | `number` |
 | `accountGapLimit` | `number` |
 | `addressGapLimit` | `number` |
 | `syncOptions` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) |

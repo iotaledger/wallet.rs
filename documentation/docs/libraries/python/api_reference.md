@@ -613,7 +613,8 @@ Is stronghold password available.
 #### recover\_accounts
 
 ```python
-def recover_accounts(account_gap_limit, address_gap_limit, sync_options)
+def recover_accounts(account_start_index, account_gap_limit, address_gap_limit,
+                     sync_options)
 ```
 
 Recover accounts.
