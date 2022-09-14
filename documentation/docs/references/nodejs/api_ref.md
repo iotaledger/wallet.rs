@@ -60,7 +60,7 @@
 - [RemainderData](interfaces/RemainderData.md)
 - [LedgerNanoSecretManager](interfaces/LedgerNanoSecretManager.md)
 - [MnemonicSecretManager](interfaces/MnemonicSecretManager.md)
-- [SeedSecretManager](interfaces/SeedSecretManager.md)
+- SeedSecretManager
 - [StrongholdSecretManager](interfaces/StrongholdSecretManager.md)
 - [LedgerNanoStatus](interfaces/LedgerNanoStatus.md)
 - [LedgerApp](interfaces/LedgerApp.md)
