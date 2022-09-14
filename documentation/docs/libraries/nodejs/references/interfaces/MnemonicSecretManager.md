@@ -1,3 +1,3 @@
 # Interface: MnemonicSecretManager
 
-Secret manager that uses only a mnemonic.
+Secret manager that uses a mnemonic.
