@@ -176,9 +176,9 @@ export class Account {
      * Claim basic or nft outputs that have additional unlock conditions
      * to their `AddressUnlockCondition` from the account.
      * @param outputIds The outputs to claim.
-     * @returns The resulting transactions.
+     * @returns The resulting transaction.
      */
-    async claimOutputs(outputIds: string[]): Promise<Transaction[]> {
+    async claimOutputs(outputIds: string[]): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

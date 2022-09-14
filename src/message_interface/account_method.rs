@@ -339,7 +339,7 @@ pub enum AccountMethod {
         signed_transaction_data: SignedTransactionDataDto,
     },
     /// Claim outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     ClaimOutputs {
         #[serde(rename = "outputIdsToClaim")]
         output_ids_to_claim: Vec<OutputId>,

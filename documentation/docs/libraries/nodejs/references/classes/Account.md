@@ -178,7 +178,7 @@ ___
 
 ### claimOutputs
 
-▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Claim basic or nft outputs that have additional unlock conditions
 to their `AddressUnlockCondition` from the account.
@@ -193,7 +193,7 @@ to their `AddressUnlockCondition` from the account.
 
 `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
-The resulting transactions.
+The resulting transaction.
 
 ___
 
