@@ -102,7 +102,6 @@ pub enum Response {
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransaction(TransactionDto),
     /// Response for
-    /// [`TryClaimOutputs`](crate::message_interface::AccountMethod::TryClaimOutputs),
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionDto>),

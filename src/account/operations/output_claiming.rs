@@ -137,17 +137,6 @@ impl AccountHandle {
         Ok(output_ids_to_claim.into_iter().collect())
     }
 
-    /// Try to claim basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub async fn try_claim_outputs(&self, outputs_to_claim: OutputsToClaim) -> crate::Result<Vec<Transaction>> {
-        log::debug!("[OUTPUT_CLAIMING] try_claim_outputs");
-
-        let output_ids_to_claim = self
-            .get_unlockable_outputs_with_additional_unlock_conditions(outputs_to_claim)
-            .await?;
-        let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
-        self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
-    }
-
     /// Get basic outputs that have only one unlock condition which is [AddressUnlockCondition], so they can be used as
     /// additional inputs
     pub async fn get_basic_outputs_for_additional_inputs(&self) -> crate::Result<Vec<OutputData>> {

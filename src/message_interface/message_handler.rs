@@ -797,15 +797,6 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::TryClaimOutputs { outputs_to_claim } => {
-                convert_async_panics(|| async {
-                    let transactions = account_handle.try_claim_outputs(outputs_to_claim).await?;
-                    Ok(Response::SentTransactions(
-                        transactions.iter().map(TransactionDto::from).collect(),
-                    ))
-                })
-                .await
-            }
             AccountMethod::ClaimOutputs { output_ids_to_claim } => {
                 convert_async_panics(|| async {
                     let transactions = account_handle.claim_outputs(output_ids_to_claim.to_vec()).await?;
