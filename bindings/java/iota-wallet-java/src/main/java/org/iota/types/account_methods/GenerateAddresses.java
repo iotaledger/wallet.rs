@@ -1,9 +1,5 @@
 package org.iota.types.account_methods;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import org.iota.types.ReturnJson;
-
 public class GenerateAddresses implements AccountMethod {
 
     private int amount;

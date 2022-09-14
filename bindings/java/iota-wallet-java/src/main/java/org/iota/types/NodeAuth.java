@@ -3,16 +3,12 @@
 
 package org.iota.types;
 
-import com.google.gson.JsonObject;
+import java.util.Map;
 
-public class NodeAuth extends AbstractObject {
-
-    public NodeAuth(JsonObject jsonObject) {
-        super(jsonObject);
-    }
-
-    public NodeAuth(String jsonObject) {
-        super(jsonObject);
-    }
+public class NodeAuth extends NewAbstractObject {
+    /// JWT.
+    private String jwt;
+    /// Username and password.
+    private Map.Entry<String, String> basic_auth_name_pwd;
 
 }

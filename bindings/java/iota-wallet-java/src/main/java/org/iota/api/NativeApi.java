@@ -34,11 +34,8 @@ public class NativeApi {
 
     }
 
-    protected WalletConfig walletConfig;
-
     protected NativeApi(WalletConfig walletConfig) {
-        this.walletConfig = walletConfig;
-        createMessageHandler(walletConfig.getJson().toString());
+        createMessageHandler(new Gson().toJsonTree(walletConfig).toString());
     }
 
     private static native void createMessageHandler(String config);

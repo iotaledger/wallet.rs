@@ -5,7 +5,7 @@ package org.iota.types;
 
 import com.google.gson.JsonObject;
 
-public class SignedTransactionData extends AbstractObject {
+public class SignedTransactionData extends AbstractJsonObject {
 
     public SignedTransactionData(JsonObject jsonObject) {
         super(jsonObject);

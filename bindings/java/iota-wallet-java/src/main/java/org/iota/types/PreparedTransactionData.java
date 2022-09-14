@@ -5,7 +5,7 @@ package org.iota.types;
 
 import com.google.gson.JsonObject;
 
-public class PreparedTransactionData extends AbstractObject {
+public class PreparedTransactionData extends AbstractJsonObject {
 
     public PreparedTransactionData(JsonObject jsonObject) {
         super(jsonObject);

@@ -3,7 +3,7 @@ package org.iota.types;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
-public class Output extends AbstractObject {
+public class Output extends AbstractJsonObject {
 
     public Output(JsonObject jsonObject) {
         super(jsonObject);

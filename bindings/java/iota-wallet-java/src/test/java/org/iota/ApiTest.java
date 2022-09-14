@@ -1,5 +1,6 @@
 package org.iota;
 
+import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.expections.WalletException;
 import org.iota.types.secret.MnemonicSecretManager;
@@ -15,7 +16,7 @@ public class ApiTest {
 
     protected static Wallet wallet;
     protected static WalletConfig config = new WalletConfig()
-            .withClientOptions(new WalletConfig.ClientConfig().withNodes(new String[] { DEFAULT_TESTNET_NODE_URL }))
+            .withClientOptions(new ClientConfig().withNodes(new String[] { DEFAULT_TESTNET_NODE_URL }))
             .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC));
 
     static {

@@ -3,16 +3,35 @@
 
 package org.iota.types;
 
-import com.google.gson.JsonObject;
+public class LedgerNanoStatus extends NewAbstractObject {
 
-public class LedgerNanoStatus extends AbstractObject {
+    /// Ledger is available and ready to be used.
+    private boolean connected;
+    /// Ledger is connected and locked.
+    private boolean locked;
+    /// Ledger blind signing enabled
+    private boolean blindSigningEnabled;
+    /// Ledger opened app.
+    private LedgerApp app;
+    /// Ledger device
+    private LedgerDeviceType device;
+    /// Buffer size on device
+    private int bufferSize;
 
-    public LedgerNanoStatus(JsonObject jsonObject) {
-        super(jsonObject);
+    public static class LedgerApp extends NewAbstractObject {
+        /// Opened app name.
+        private String name;
+        /// Opened app version.
+        private String version;
     }
 
-    public LedgerNanoStatus(String jsonObject) {
-        super(jsonObject);
+    public enum LedgerDeviceType {
+        /// Device Type Nano S
+        LedgerNanoS,
+        /// Device Type Nano X
+        LedgerNanoX,
+        /// Device Type Nano S Plus
+        LedgerNanoSPlus,
     }
 
 }

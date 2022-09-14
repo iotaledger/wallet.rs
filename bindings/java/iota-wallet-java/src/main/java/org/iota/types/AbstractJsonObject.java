@@ -9,16 +9,19 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 
 import java.util.Objects;
+interface ReturnJson {
+    JsonElement toJson();
+}
 
-public class AbstractObject implements ReturnJson {
+public class AbstractJsonObject implements ReturnJson {
 
     private JsonObject jsonObject;
 
-    public AbstractObject(JsonObject jsonObject) {
+    public AbstractJsonObject(JsonObject jsonObject) {
         this.jsonObject = jsonObject;
     }
 
-    public AbstractObject(String jsonObject) throws JsonSyntaxException {
+    public AbstractJsonObject(String jsonObject) throws JsonSyntaxException {
         Gson gson = new Gson();
         JsonElement element = gson.fromJson(jsonObject, JsonElement.class);
         this.jsonObject = element.getAsJsonObject();
@@ -28,7 +31,7 @@ public class AbstractObject implements ReturnJson {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AbstractObject other = (AbstractObject) o;
+        AbstractJsonObject other = (AbstractJsonObject) o;
         return Objects.equals(this.jsonObject, other.jsonObject);
     }
 

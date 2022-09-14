@@ -5,7 +5,7 @@ package org.iota.types;
 
 import com.google.gson.JsonObject;
 
-public class WalletEvent extends AbstractObject {
+public class WalletEvent extends AbstractJsonObject {
 
     public WalletEvent(JsonObject jsonObject) {
         super(jsonObject);

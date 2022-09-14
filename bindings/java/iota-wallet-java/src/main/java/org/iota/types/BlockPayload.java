@@ -5,7 +5,7 @@ package org.iota.types;
 
 import com.google.gson.JsonObject;
 
-public abstract class BlockPayload extends AbstractObject {
+public abstract class BlockPayload extends AbstractJsonObject {
 
     public BlockPayload(JsonObject jsonObject) {
         super(jsonObject);

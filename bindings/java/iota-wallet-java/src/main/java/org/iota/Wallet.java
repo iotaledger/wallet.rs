@@ -358,19 +358,18 @@ public class Wallet extends NativeApi {
         return callBaseApi(new ClientCommand("VerifyMnemonic", p)).getAsString();
     }
 
-    public String setClientOptions(WalletConfig.ClientConfig config) throws WalletException {
-        return callBaseApi(new ClientCommand("SetClientOptions", config.getJson())).getAsString();
+    public String setClientOptions(ClientConfig config) throws WalletException {
+        return callBaseApi(new ClientCommand("SetClientOptions", new Gson().toJsonTree(config))).getAsString();
     }
 
     public LedgerNanoStatus getLedgerNanoStatus() throws WalletException {
-        JsonObject o = (JsonObject) callBaseApi(new ClientCommand("GetLedgerNanoStatus"));
-        return new LedgerNanoStatus(o);
+        return new Gson().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
     }
 
     public JsonObject getNodeInfo(String url, NodeAuth auth) throws WalletException {
         JsonObject p = new JsonObject();
         p.addProperty("url", url);
-        p.add("auth", auth.toJson());
+        p.add("auth", new Gson().toJsonTree(auth));
 
         return (JsonObject) callBaseApi(new ClientCommand("GetNodeInfo", p));
     }
