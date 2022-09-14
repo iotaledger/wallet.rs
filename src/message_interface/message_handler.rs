@@ -543,8 +543,8 @@ impl WalletMessageHandler {
                 let transactions = account_handle.list_incoming_transactions().await?;
                 Ok(Response::IncomingTransactionsData(
                     transactions
-                        .iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1.clone())))
+                        .into_iter()
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
                         .collect(),
                 ))
             }

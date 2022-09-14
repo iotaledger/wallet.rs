@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{ops::Deref, sync::Arc};
+use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use iota_client::{
     api_types::responses::OutputResponse,
@@ -191,9 +191,9 @@ impl AccountHandle {
     /// Returns all incoming transactions of the account
     pub async fn list_incoming_transactions(
         &self,
-    ) -> Result<Vec<(TransactionId, (TransactionPayload, Vec<OutputResponse>))>> {
+    ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>> {
         let account = self.read().await;
-        Ok(account.incoming_transactions.clone().into_iter().collect())
+        Ok(account.incoming_transactions.clone())
     }
 
     /// Returns all transactions of the account
