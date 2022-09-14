@@ -9,15 +9,23 @@ use crate::{
 };
 
 impl AccountManager {
-    /// Find accounts with unspent outputs
-    /// `account_gap_limit` defines how many accounts without unspent outputs will be
-    /// checked, if an account has unspent outputs, the counter is reset
-    /// `address_gap_limit` defines how many addresses without unspent outputs will be checked in each account, if an
-    /// address has unspent outputs, the counter is reset
-    /// address_start_index and force_syncing will be overwritten in sync_options to not skip addresses, but also don't
-    /// send duplicated requests
+    /// Find accounts with unspent outputs.
+    ///
+    /// Arguments:
+    ///
+    /// * `account_start_index`: The index of the first account to search for.
+    /// * `account_gap_limit`: The number of accounts to search for, after the last account with unspent outputs.
+    /// * `address_gap_limit`: The number of addresses to search for, after the last address with unspent outputs, in
+    ///   each account.
+    /// * `sync_options`: Optional parameter to specify the sync options. The `address_start_index` and `force_syncing`
+    ///   fields will be overwritten to skip existing addresses.
+    ///
+    /// Returns:
+    ///
+    /// A vector of AccountHandle
     pub async fn recover_accounts(
         &self,
+        account_start_index: u32,
         account_gap_limit: u32,
         address_gap_limit: u32,
         sync_options: Option<SyncOptions>,
@@ -43,6 +51,13 @@ impl AccountManager {
                 }
                 None => max_account_index_to_keep = Some(account_index),
             }
+        }
+
+        // Create accounts below account_start_index, because we don't want to have gaps in the accounts, but we also
+        // don't want to sync them
+        for _ in max_account_index_to_keep.unwrap_or(0)..account_start_index {
+            // Don't return possible errors here, because we could then still have empty accounts
+            let _ = self.create_account().finish().await;
         }
 
         // Don't return possible errors here already, because we would then still have empty accounts
