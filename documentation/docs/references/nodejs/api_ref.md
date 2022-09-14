@@ -31,6 +31,7 @@
 - [BaseCoinBalance](interfaces/BaseCoinBalance.md)
 - [NativeTokenBalance](interfaces/NativeTokenBalance.md)
 - [CreateAccountPayload](interfaces/CreateAccountPayload.md)
+- FilterOptions
 - [AccountManagerOptions](interfaces/AccountManagerOptions.md)
 - [Address](interfaces/Address.md)
 - [AddressWithAmount](interfaces/AddressWithAmount.md)
@@ -60,7 +61,7 @@
 - [RemainderData](interfaces/RemainderData.md)
 - [LedgerNanoSecretManager](interfaces/LedgerNanoSecretManager.md)
 - [MnemonicSecretManager](interfaces/MnemonicSecretManager.md)
-- SeedSecretManager
+- [SeedSecretManager](interfaces/SeedSecretManager.md)
 - [StrongholdSecretManager](interfaces/StrongholdSecretManager.md)
 - [LedgerNanoStatus](interfaces/LedgerNanoStatus.md)
 - [LedgerApp](interfaces/LedgerApp.md)
