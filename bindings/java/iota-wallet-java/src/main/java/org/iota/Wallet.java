@@ -3,11 +3,8 @@
 
 package org.iota;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
-import org.iota.apis.BaseApi;
+import com.google.gson.*;
+import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.account_methods.*;
 import org.iota.types.expections.WalletException;
@@ -15,7 +12,7 @@ import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
 
-public class Wallet extends BaseApi {
+public class Wallet extends NativeApi {
 
     public Wallet(WalletConfig config) {
         super(config);
@@ -25,9 +22,7 @@ public class Wallet extends BaseApi {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
 
-        JsonObject responsePayload = (JsonObject) callBaseApi(new ClientCommand("CreateAccount", o));
-
-        return new Account(responsePayload);
+        return new Gson().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
     }
 
     public Account getAccount(AccountIdentifier accountIdentifier) throws WalletException {
@@ -39,9 +34,7 @@ public class Wallet extends BaseApi {
             p = new JsonPrimitive(((AccountAlias) accountIdentifier).getAccountAlias());
         } else throw new RuntimeException("unknown account identifier");
 
-        JsonObject responsePayload = (JsonObject) callBaseApi(new ClientCommand("GetAccount", p));
-
-        return new Account(responsePayload);
+        return new Gson().fromJson(callBaseApi(new ClientCommand("GetAccount", p)), Account.class);
     }
 
     public Account[] getAccounts() throws WalletException {
@@ -49,7 +42,7 @@ public class Wallet extends BaseApi {
 
         Account[] accounts = new Account[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accounts[i] = new Account(responsePayload.get(i).getAsJsonObject());
+            accounts[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class);
 
         return accounts;
     }
@@ -67,7 +60,7 @@ public class Wallet extends BaseApi {
 
         JsonObject method = new JsonObject();
         method.addProperty("name", accountMethod.getClass().getSimpleName());
-        method.add("data", accountMethod.toJson());
+        method.add("data", new Gson().toJsonTree(accountMethod));
 
         JsonObject o = new JsonObject();
         o.add("accountId", p);
@@ -126,7 +119,7 @@ public class Wallet extends BaseApi {
 
         AccountAddress[] accountAddress = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accountAddress[i] = new AccountAddress(responsePayload.get(i).getAsJsonObject());
+            accountAddress[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return accountAddress;
     }
@@ -157,9 +150,8 @@ public class Wallet extends BaseApi {
         return new TransactionPayload(responsePayload);
     }
 
-    public IncomingTransactionData getIncomingTransactionData(AccountIdentifier accountIdentifier, GetIncomingTransactionData getIncomingTransactionData) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, getIncomingTransactionData);
-        return new IncomingTransactionData(responsePayload);
+    public JsonElement getIncomingTransactionData(AccountIdentifier accountIdentifier, GetIncomingTransactionData getIncomingTransactionData) throws WalletException {
+        return callAccountMethod(accountIdentifier, getIncomingTransactionData);
     }
 
     public AccountAddress[] listAddresses(AccountIdentifier accountIdentifier, ListAddresses method) throws WalletException {
@@ -167,7 +159,7 @@ public class Wallet extends BaseApi {
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = new AccountAddress(responsePayload.get(i).getAsJsonObject());
+            addresses[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return addresses;
     }
@@ -177,14 +169,19 @@ public class Wallet extends BaseApi {
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = new AccountAddress(responsePayload.get(i).getAsJsonObject());
+            addresses[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return addresses;
     }
 
-    public OutputsData listOutputs(AccountIdentifier accountIdentifier, ListOutputs method) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
-        return new OutputsData(responsePayload);
+    public OutputData[] listOutputs(AccountIdentifier accountIdentifier, ListOutputs method) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+
+        OutputData[] outputsData = new OutputData[responsePayload.size()];
+        for (int i = 0; i < responsePayload.size(); i++)
+            outputsData[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
+
+        return outputsData;
     }
 
     public TransactionPayload[] listPendingTransactions(AccountIdentifier accountIdentifier, ListPendingTransactions method) throws WalletException {
@@ -207,9 +204,14 @@ public class Wallet extends BaseApi {
         return transactionPayloads;
     }
 
-    public OutputsData listUnspentOutputs(AccountIdentifier accountIdentifier, ListUnspentOutputs method) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
-        return new OutputsData(responsePayload);
+    public OutputData[] listUnspentOutputs(AccountIdentifier accountIdentifier, ListUnspentOutputs method) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+
+        OutputData[] outputsData = new OutputData[responsePayload.size()];
+        for (int i = 0; i < responsePayload.size(); i++)
+            outputsData[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
+
+        return outputsData;
     }
 
     public TaggedDataPayload meltNativeToken(AccountIdentifier accountIdentifier, MeltNativeToken method) throws WalletException {
@@ -218,8 +220,7 @@ public class Wallet extends BaseApi {
     }
 
     public String minimumRequiredStorageDeposit(AccountIdentifier accountIdentifier, MinimumRequiredStorageDeposit method) throws WalletException {
-        String responsePayload = callAccountMethod(accountIdentifier, method).getAsJsonPrimitive().getAsString();
-        return responsePayload;
+        return callAccountMethod(accountIdentifier, method).getAsJsonPrimitive().getAsString();
     }
 
     public TransactionPayload mintNfts(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
@@ -228,8 +229,7 @@ public class Wallet extends BaseApi {
     }
 
     public AccountBalance getBalance(AccountIdentifier accountIdentifier, GetBalance method) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
-        return new AccountBalance(responsePayload);
+        return new Gson().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
     }
 
     public Output prepareOutput(AccountIdentifier accountIdentifier, PrepareOutput method) throws WalletException {
@@ -248,8 +248,7 @@ public class Wallet extends BaseApi {
     }
 
     public AccountBalance syncAccount(AccountIdentifier accountIdentifier, SyncAccount method) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
-        return new AccountBalance(responsePayload);
+        return new Gson().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
     }
 
     public TransactionPayload sendAmount(AccountIdentifier accountIdentifier, SendAmount method) throws WalletException {
@@ -329,7 +328,7 @@ public class Wallet extends BaseApi {
         JsonObject o = new JsonObject();
         o.addProperty("accountGapLimit", accountGapLimit);
         o.addProperty("addressGapLimit", addressGapLimit);
-        o.add("sync_options", sync_options.toJson());
+        o.add("sync_options", new Gson().toJsonTree(sync_options));
 
         callBaseApi(new ClientCommand("RecoverAccounts", o));
     }
@@ -393,7 +392,7 @@ public class Wallet extends BaseApi {
 
     public void startBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
         JsonObject o = new JsonObject();
-        o.add("options", options.toJson());
+        o.add("options", new Gson().toJsonTree(options));
         o.addProperty("intervalInMilliseconds", intervalInMilliseconds);
 
         callBaseApi(new ClientCommand("StartBackgroundSync", o));

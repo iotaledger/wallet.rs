@@ -3,16 +3,20 @@
 
 package org.iota.types;
 
-import com.google.gson.JsonObject;
+import org.iota.types.ids.TokenId;
 
-public class NativeToken extends AbstractObject {
+public class NativeToken {
 
-    public NativeToken(JsonObject jsonObject) {
-        super(jsonObject);
+    // Identifier of the native token.
+    private TokenId id;
+    // Identifier of the native token.
+    private String amount;
+
+    public TokenId getId() {
+        return id;
     }
 
-    public NativeToken(String jsonObject) {
-        super(jsonObject);
+    public String getAmount() {
+        return amount;
     }
-
 }

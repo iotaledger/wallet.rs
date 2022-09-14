@@ -15,11 +15,4 @@ public class GetOutputsWithAdditionalUnlockConditions implements AccountMethod {
         All,
     }
 
-    @Override
-    public JsonElement toJson() {
-        JsonObject o = new JsonObject();
-        o.addProperty("outputsToClaim", outputsToClaim.toString());
-
-        return o;
-    }
 }

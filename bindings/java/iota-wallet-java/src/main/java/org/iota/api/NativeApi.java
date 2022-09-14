@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-package org.iota.apis;
+package org.iota.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -12,7 +12,7 @@ import org.iota.types.expections.WalletException;
 
 import java.io.IOException;
 
-public class BaseApi {
+public class NativeApi {
 
     static {
         String libraryName = null;
@@ -36,7 +36,7 @@ public class BaseApi {
 
     protected WalletConfig walletConfig;
 
-    protected BaseApi(WalletConfig walletConfig) {
+    protected NativeApi(WalletConfig walletConfig) {
         this.walletConfig = walletConfig;
         createMessageHandler(walletConfig.getJson().toString());
     }

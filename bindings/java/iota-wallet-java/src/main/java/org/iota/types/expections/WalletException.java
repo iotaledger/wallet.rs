@@ -9,6 +9,7 @@ public class WalletException extends Exception {
 
     public WalletException(String methodName, String message) {
         super(message);
+        this.methodName = methodName;
     }
 
     public String getMethodName() {

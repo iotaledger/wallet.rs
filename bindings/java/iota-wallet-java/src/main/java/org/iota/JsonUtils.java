@@ -31,18 +31,6 @@ public class JsonUtils<T> {
         }
     }
 
-    public static JsonArray toJson(AccountMethod[] array) {
-        if (array != null) {
-            JsonArray a = new JsonArray();
-            for (AccountMethod o : array) {
-                a.add(o.toJson());
-            }
-            return a;
-        } else {
-            return null;
-        }
-    }
-
     public static JsonArray toJson(String[] array) {
         if (array != null) {
             JsonArray a = new JsonArray();

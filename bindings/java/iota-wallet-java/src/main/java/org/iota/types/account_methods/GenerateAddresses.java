@@ -19,20 +19,11 @@ public class GenerateAddresses implements AccountMethod {
         return this;
     }
 
-    public static class AddressGenerationOptions implements ReturnJson {
+    public static class AddressGenerationOptions {
         private boolean internal;
         private GenerateAddressMetadata metadata;
 
-        @Override
-        public JsonElement toJson() {
-            JsonObject o = new JsonObject();
-            o.addProperty("internal", internal);
-            o.add("metadata", metadata.toJson());
-
-            return o;
-        }
-
-        public static class GenerateAddressMetadata implements ReturnJson {
+        public static class GenerateAddressMetadata {
             private boolean syncing;
 
             public GenerateAddressMetadata withSyncing(boolean syncing) {
@@ -40,22 +31,7 @@ public class GenerateAddresses implements AccountMethod {
                 return this;
             }
 
-            @Override
-            public JsonElement toJson() {
-                JsonObject o = new JsonObject();
-                o.addProperty("syncing", syncing);
-
-                return o;
-            }
         }
     }
 
-    @Override
-    public JsonElement toJson() {
-        JsonObject o = new JsonObject();
-        o.addProperty("amount", amount);
-        o.add("addressGenerationOptions", addressGenerationOptions.toJson());
-
-        return o;
-    }
 }

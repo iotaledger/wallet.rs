@@ -1,15 +1,10 @@
 package org.iota.types;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
-
-public class NftOptions extends AbstractObject {
-
-    public NftOptions(JsonObject jsonObject) {
-        super(jsonObject);
-    }
-
-    public NftOptions(String jsonObject) throws JsonSyntaxException {
-        super(jsonObject);
-    }
+public class NftOptions extends NewAbstractObject {
+    /// Bech32 encoded address to which the Nft will be minted. Default will use the first address of the account
+    private String address;
+    /// Immutable nft metadata, hex encoded bytes
+    private String immutableMetadata;
+    /// Nft metadata, hex encoded bytes
+    private String metadata;
 }

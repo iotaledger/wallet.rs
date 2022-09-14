@@ -1,4 +1,4 @@
-package org.iota.apis;
+package org.iota.api;
 
 /*
  * Class NativeUtils is published under the The MIT License:

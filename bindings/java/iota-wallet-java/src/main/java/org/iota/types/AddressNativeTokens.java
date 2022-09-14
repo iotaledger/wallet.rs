@@ -1,14 +1,20 @@
 package org.iota.types;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonSyntaxException;
+import org.iota.types.ids.TokenId;
 
-public class AddressNativeTokens extends AbstractObject {
-    public AddressNativeTokens(JsonObject jsonObject) {
-        super(jsonObject);
-    }
+import java.util.Map;
 
-    public AddressNativeTokens(String jsonObject) throws JsonSyntaxException {
-        super(jsonObject);
-    }
+public class AddressNativeTokens extends NewAbstractObject {
+
+    /// Bech32 encoded address
+    private String address;
+    /// Native tokens
+    private Map<TokenId, String>[] nativeTokens;
+    /// Bech32 encoded address return address, to which the storage deposit will be returned. Default will use the
+    /// first address of the account
+    private String returnAddress;
+    /// Expiration in seconds, after which the output will be available for the sender again, if not spent by the
+    /// receiver before. Default is 1 day
+    private int expiration;
 }
+

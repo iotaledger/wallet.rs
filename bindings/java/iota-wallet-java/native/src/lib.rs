@@ -20,7 +20,7 @@ lazy_static! {
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
 #[no_mangle]
-pub extern "system" fn Java_org_iota_apis_BaseApi_createMessageHandler(
+pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     env: JNIEnv,
     // this is the class that owns our
     // static method. Not going to be
@@ -38,7 +38,7 @@ pub extern "system" fn Java_org_iota_apis_BaseApi_createMessageHandler(
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
 #[no_mangle]
-pub extern "system" fn Java_org_iota_apis_BaseApi_sendMessage(
+pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
     env: JNIEnv,
     // this is the class that owns our
     // static method. Not going to be

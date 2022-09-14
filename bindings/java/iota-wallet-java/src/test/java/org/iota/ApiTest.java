@@ -21,6 +21,8 @@ public class ApiTest {
     static {
         wallet = new Wallet(config);
         try {
+            while(wallet.getAccounts().length > 0)
+                wallet.removeLatestAccount();
             assertTrue(wallet.getAccounts().length == 0);
         } catch (WalletException e) {
             throw new RuntimeException(e);

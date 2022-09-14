@@ -10,22 +10,4 @@ public class SendNativeTokens implements AccountMethod {
     private AddressNativeTokens[] addressesNativeTokens;
     private TransactionOptions options;
 
-    public SendNativeTokens withAddressesNativeTokens(AddressNativeTokens[] addressesNativeTokens) {
-        this.addressesNativeTokens = addressesNativeTokens;
-        return this;
-    }
-
-    public SendNativeTokens withOptions(TransactionOptions options) {
-        this.options = options;
-        return this;
-    }
-
-    @Override
-    public JsonElement toJson() {
-        JsonObject o = new JsonObject();
-        o.add("addressesWithMicroAmount", JsonUtils.toJson(addressesNativeTokens));
-        o.add("options", options.toJson());
-
-        return o;
-    }
 }
