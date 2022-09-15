@@ -93,8 +93,9 @@ pub enum Response {
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
     IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
     /// Response for
-    /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
+    /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
+    /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
     /// [`SendNativeTokens`](crate::message_interface::AccountMethod::SendNativeTokens),
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
@@ -104,7 +105,6 @@ pub enum Response {
     /// Response for
     /// [`TryClaimOutputs`](crate::message_interface::AccountMethod::TryClaimOutputs),
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
-    /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     SentTransactions(Vec<TransactionDto>),
     /// Response for
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),

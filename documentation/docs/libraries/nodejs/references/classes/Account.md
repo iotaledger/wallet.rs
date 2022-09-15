@@ -200,10 +200,10 @@ ___
 
 ### consolidateOutputs
 
-▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Consolidate basic outputs with only an `AddressUnlockCondition` from an account
-by sending them to the same address again if the output amount is greater or
+by sending them to an own address again if the output amount is greater or
 equal to the output consolidation threshold.
 
 #### Parameters
@@ -215,9 +215,9 @@ equal to the output consolidation threshold.
 
 #### Returns
 
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
-The consolidation transactions.
+The consolidation transaction.
 
 ___
 

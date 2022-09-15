@@ -461,12 +461,10 @@ impl WalletMessageHandler {
                 output_consolidation_threshold,
             } => {
                 convert_async_panics(|| async {
-                    let transactions = account_handle
+                    let transaction = account_handle
                         .consolidate_outputs(force, output_consolidation_threshold)
                         .await?;
-                    Ok(Response::SentTransactions(
-                        transactions.iter().map(TransactionDto::from).collect(),
-                    ))
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
                 .await
             }
