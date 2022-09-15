@@ -57,17 +57,13 @@ async fn main() -> Result<()> {
 
     // Consolidate unspent outputs and print the consolidation transaction IDs
     // Set `force` to true to force the consolidation even though the `output_consolidation_threshold` isn't reached
-    let consolidation = account.consolidate_outputs(true, None).await?;
-    println!(
-        "Consolidation transaction ids:\n{:?}\n",
-        consolidation
-            .iter()
-            .map(|t| t.transaction_id)
-            .collect::<Vec<TransactionId>>()
-    );
+    let consolidation_tx = account.consolidate_outputs(true, None).await?;
+    println!("Consolidation transaction id:\n{:?}\n", consolidation_tx);
 
-    // Wait for the consolidation transactions
-    tokio::time::sleep(std::time::Duration::from_secs(15)).await;
+    // Wait for the consolidation transaction to get confirmed
+    account
+        .retry_until_included(&consolidation_tx.block_id.expect("No block created yet"), None, None)
+        .await?;
 
     // Sync account
     let _ = account.sync(None).await?;
