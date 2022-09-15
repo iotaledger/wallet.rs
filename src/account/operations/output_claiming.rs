@@ -30,11 +30,6 @@ pub enum OutputsToClaim {
     All = 4,
 }
 
-/// Defines how many inputs can be claimed with one transaction.
-/// This limit is needed because in addition we might need to create the double amount of outputs because of the storage
-/// deposit return and also consider the remainder output.
-const MAX_CLAIM_INPUTS: usize = 60;
-
 impl AccountHandle {
     /// Get basic and nft outputs that have [`ExpirationUnlockCondition`], [`StorageDepositReturnUnlockCondition`] or
     /// [`TimelockUnlockCondition`] and can be unlocked now and also get basic outputs with only an
@@ -137,17 +132,6 @@ impl AccountHandle {
         Ok(output_ids_to_claim.into_iter().collect())
     }
 
-    /// Try to claim basic outputs that have additional unlock conditions to their [AddressUnlockCondition].
-    pub async fn try_claim_outputs(&self, outputs_to_claim: OutputsToClaim) -> crate::Result<Vec<Transaction>> {
-        log::debug!("[OUTPUT_CLAIMING] try_claim_outputs");
-
-        let output_ids_to_claim = self
-            .get_unlockable_outputs_with_additional_unlock_conditions(outputs_to_claim)
-            .await?;
-        let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
-        self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
-    }
-
     /// Get basic outputs that have only one unlock condition which is [AddressUnlockCondition], so they can be used as
     /// additional inputs
     pub async fn get_basic_outputs_for_additional_inputs(&self) -> crate::Result<Vec<OutputData>> {
@@ -176,7 +160,7 @@ impl AccountHandle {
 
     /// Try to claim basic or nft outputs that have additional unlock conditions to their [AddressUnlockCondition]
     /// from [`AccountHandle::get_unlockable_outputs_with_additional_unlock_conditions()`].
-    pub async fn claim_outputs(&self, output_ids_to_claim: Vec<OutputId>) -> crate::Result<Vec<Transaction>> {
+    pub async fn claim_outputs(&self, output_ids_to_claim: Vec<OutputId>) -> crate::Result<Transaction> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs");
         let basic_outputs = self.get_basic_outputs_for_additional_inputs().await?;
         self.claim_outputs_internal(output_ids_to_claim, basic_outputs).await
@@ -187,7 +171,7 @@ impl AccountHandle {
         &self,
         output_ids_to_claim: Vec<OutputId>,
         mut possible_additional_inputs: Vec<OutputData>,
-    ) -> crate::Result<Vec<Transaction>> {
+    ) -> crate::Result<Transaction> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
         let current_time = self.client.get_time_checked().await?;
@@ -205,8 +189,9 @@ impl AccountHandle {
         }
 
         if outputs_to_claim.is_empty() {
-            // No outputs to claim, return
-            return Ok(Vec::new());
+            return Err(crate::Error::CustomInputError(
+                "provided outputs can't be claimed".to_string(),
+            ));
         }
 
         let first_account_address = account
@@ -216,162 +201,154 @@ impl AccountHandle {
             .clone();
         drop(account);
 
-        let mut claim_results = Vec::new();
         let mut additional_inputs_used = HashSet::new();
 
         // Outputs with expiration and storage deposit return might require two outputs if there is a storage deposit
         // return unlock condition Maybe also more additional inputs are required for the storage deposit, if we
         // have to send the storage deposit back.
-        for outputs in outputs_to_claim.chunks(MAX_CLAIM_INPUTS) {
-            let mut outputs_to_send = Vec::new();
-            // Keep track of the outputs to return, so we only create one output per address
-            let mut required_address_returns: HashMap<Address, u64> = HashMap::new();
-            // Amount we get with the storage deposit return amounts already subtracted
-            let mut new_amount = 0;
-            let mut new_native_tokens = NativeTokensBuilder::new();
-            // check native tokens
-            for output_data in outputs {
-                if let Some(native_tokens) = output_data.output.native_tokens() {
-                    // Skip output if the max native tokens count would be exceeded
-                    if get_new_native_token_count(&new_native_tokens, native_tokens)? > NativeTokens::COUNT_MAX.into() {
-                        log::debug!("[OUTPUT_CLAIMING] skipping output to not exceed the max native tokens count");
-                        continue;
-                    }
-                    new_native_tokens.add_native_tokens(native_tokens.clone())?;
+
+        let mut outputs_to_send = Vec::new();
+        // Keep track of the outputs to return, so we only create one output per address
+        let mut required_address_returns: HashMap<Address, u64> = HashMap::new();
+        // Amount we get with the storage deposit return amounts already subtracted
+        let mut new_amount = 0;
+        let mut new_native_tokens = NativeTokensBuilder::new();
+        // check native tokens
+        for output_data in &outputs_to_claim {
+            if let Some(native_tokens) = output_data.output.native_tokens() {
+                // Skip output if the max native tokens count would be exceeded
+                if get_new_native_token_count(&new_native_tokens, native_tokens)? > NativeTokens::COUNT_MAX.into() {
+                    log::debug!("[OUTPUT_CLAIMING] skipping output to not exceed the max native tokens count");
+                    continue;
                 }
-                if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
-                    // for own output subtract the return amount
-                    new_amount += output_data.output.amount() - sdr.amount();
-
-                    // Insert for return output
-                    *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
-                } else {
-                    new_amount += output_data.output.amount();
-                }
-
-                if let Output::Nft(nft_output) = &output_data.output {
-                    // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
-                    // updated address unlock conditions
-
-                    let nft_output = NftOutputBuilder::from(nft_output)
-                        .with_minimum_storage_deposit(rent_structure.clone())
-                        .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
-                        .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
-                            first_account_address.address.inner,
-                        ))])
-                        // Set native tokens empty, we will collect them from all inputs later
-                        .with_native_tokens([])
-                        .finish_output()?;
-
-                    outputs_to_send.push(nft_output);
-                }
+                new_native_tokens.add_native_tokens(native_tokens.clone())?;
             }
+            if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
+                // for own output subtract the return amount
+                new_amount += output_data.output.amount() - sdr.amount();
 
-            let option_native_token = if new_native_tokens.is_empty() {
-                None
+                // Insert for return output
+                *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
             } else {
-                Some(new_native_tokens.clone().finish()?)
-            };
-
-            // Check if the new amount is enough for the storage deposit, otherwise increase it to this
-            let mut required_storage_deposit = minimum_storage_deposit_basic_output(
-                &rent_structure,
-                &first_account_address.address.inner,
-                &option_native_token,
-            )?;
-
-            let mut additional_inputs = Vec::new();
-            if new_amount < required_storage_deposit {
-                // Sort by amount so we use as less as possible
-                possible_additional_inputs.sort_by_key(|o| o.output.amount());
-
-                // add more inputs
-                for output_data in &possible_additional_inputs {
-                    // Recalculate every time, because new inputs can also add more native tokens, which would increase
-                    // the required storage deposit
-                    required_storage_deposit = minimum_storage_deposit_basic_output(
-                        &rent_structure,
-                        &first_account_address.address.inner,
-                        &option_native_token,
-                    )?;
-                    if new_amount < required_storage_deposit {
-                        if !additional_inputs_used.contains(&output_data.output_id) {
-                            if let Some(native_tokens) = output_data.output.native_tokens() {
-                                // Skip input if the max native tokens count would be exceeded
-                                if get_new_native_token_count(&new_native_tokens, native_tokens)?
-                                    > NativeTokens::COUNT_MAX.into()
-                                {
-                                    log::debug!(
-                                        "[OUTPUT_CLAIMING] skipping input to not exceed the max native tokens count"
-                                    );
-                                    continue;
-                                }
-                                new_native_tokens.add_native_tokens(native_tokens.clone())?;
-                            }
-                            new_amount += output_data.output.amount();
-                            additional_inputs.push(output_data.output_id);
-                            additional_inputs_used.insert(output_data.output_id);
-                        }
-                    } else {
-                        // Break if we have enough inputs
-                        break;
-                    }
-                }
+                new_amount += output_data.output.amount();
             }
 
-            // If we still don't have enough amount we can't create the output
-            if new_amount < required_storage_deposit {
-                return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
-            }
+            if let Output::Nft(nft_output) = &output_data.output {
+                // build new output with same amount, nft_id, immutable/feature blocks and native tokens, just
+                // updated address unlock conditions
 
-            for (return_address, return_amount) in required_address_returns {
-                outputs_to_send.push(
-                    BasicOutputBuilder::new_with_amount(return_amount)?
-                        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(return_address)))
-                        .finish_output()?,
-                );
-            }
-
-            // Create output with claimed values
-            outputs_to_send.push(
-                BasicOutputBuilder::new_with_amount(new_amount)?
-                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                let nft_output = NftOutputBuilder::from(nft_output)
+                    .with_minimum_storage_deposit(rent_structure.clone())
+                    .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+                    .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
                         first_account_address.address.inner,
-                    )))
-                    .with_native_tokens(new_native_tokens.finish()?)
-                    .finish_output()?,
-            );
+                    ))])
+                    // Set native tokens empty, we will collect them from all inputs later
+                    .with_native_tokens([])
+                    .finish_output()?;
 
-            match self
-                .finish_transaction(
-                    outputs_to_send,
-                    Some(TransactionOptions {
-                        custom_inputs: Some(
-                            outputs
-                                .iter()
-                                .map(|o| o.output_id)
-                                // add additional inputs
-                                .chain(additional_inputs)
-                                .collect::<Vec<OutputId>>(),
-                        ),
-                        ..Default::default()
-                    }),
-                )
-                .await
-            {
-                Ok(tx) => {
-                    log::debug!(
-                        "[OUTPUT_CLAIMING] Claiming transaction created: block_id: {:?} tx_id: {:?}",
-                        tx.block_id,
-                        tx.transaction_id
-                    );
-                    claim_results.push(tx);
-                }
-                Err(e) => log::debug!("Output claim error: {}", e),
-            };
+                outputs_to_send.push(nft_output);
+            }
         }
 
-        Ok(claim_results)
+        let option_native_token = if new_native_tokens.is_empty() {
+            None
+        } else {
+            Some(new_native_tokens.clone().finish()?)
+        };
+
+        // Check if the new amount is enough for the storage deposit, otherwise increase it to this
+        let mut required_storage_deposit = minimum_storage_deposit_basic_output(
+            &rent_structure,
+            &first_account_address.address.inner,
+            &option_native_token,
+        )?;
+
+        let mut additional_inputs = Vec::new();
+        if new_amount < required_storage_deposit {
+            // Sort by amount so we use as less as possible
+            possible_additional_inputs.sort_by_key(|o| o.output.amount());
+
+            // add more inputs
+            for output_data in &possible_additional_inputs {
+                // Recalculate every time, because new inputs can also add more native tokens, which would increase
+                // the required storage deposit
+                required_storage_deposit = minimum_storage_deposit_basic_output(
+                    &rent_structure,
+                    &first_account_address.address.inner,
+                    &option_native_token,
+                )?;
+                if new_amount < required_storage_deposit {
+                    if !additional_inputs_used.contains(&output_data.output_id) {
+                        if let Some(native_tokens) = output_data.output.native_tokens() {
+                            // Skip input if the max native tokens count would be exceeded
+                            if get_new_native_token_count(&new_native_tokens, native_tokens)?
+                                > NativeTokens::COUNT_MAX.into()
+                            {
+                                log::debug!(
+                                    "[OUTPUT_CLAIMING] skipping input to not exceed the max native tokens count"
+                                );
+                                continue;
+                            }
+                            new_native_tokens.add_native_tokens(native_tokens.clone())?;
+                        }
+                        new_amount += output_data.output.amount();
+                        additional_inputs.push(output_data.output_id);
+                        additional_inputs_used.insert(output_data.output_id);
+                    }
+                } else {
+                    // Break if we have enough inputs
+                    break;
+                }
+            }
+        }
+
+        // If we still don't have enough amount we can't create the output
+        if new_amount < required_storage_deposit {
+            return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
+        }
+
+        for (return_address, return_amount) in required_address_returns {
+            outputs_to_send.push(
+                BasicOutputBuilder::new_with_amount(return_amount)?
+                    .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(return_address)))
+                    .finish_output()?,
+            );
+        }
+
+        // Create output with claimed values
+        outputs_to_send.push(
+            BasicOutputBuilder::new_with_amount(new_amount)?
+                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                    first_account_address.address.inner,
+                )))
+                .with_native_tokens(new_native_tokens.finish()?)
+                .finish_output()?,
+        );
+
+        let claim_tx = self
+            .finish_transaction(
+                outputs_to_send,
+                Some(TransactionOptions {
+                    custom_inputs: Some(
+                        outputs_to_claim
+                            .iter()
+                            .map(|o| o.output_id)
+                            // add additional inputs
+                            .chain(additional_inputs)
+                            .collect::<Vec<OutputId>>(),
+                    ),
+                    ..Default::default()
+                }),
+            )
+            .await?;
+
+        log::debug!(
+            "[OUTPUT_CLAIMING] Claiming transaction created: block_id: {:?} tx_id: {:?}",
+            claim_tx.block_id,
+            claim_tx.transaction_id
+        );
+        Ok(claim_tx)
     }
 }
 

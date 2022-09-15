@@ -218,13 +218,6 @@ async fn destroy_foundry() -> Result<()> {
         Err(e) => return Err(e),
     };
 
-    let _account_addresses = account.generate_addresses(1, None).await.unwrap();
-
-    let _ = account
-        .try_claim_outputs(iota_wallet::account::OutputsToClaim::All)
-        .await
-        .unwrap();
-
     let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 

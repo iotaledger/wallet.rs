@@ -338,14 +338,8 @@ pub enum AccountMethod {
         #[serde(rename = "signedTransactionData")]
         signed_transaction_data: SignedTransactionDataDto,
     },
-    /// Try to claim outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
-    TryClaimOutputs {
-        #[serde(rename = "outputsToClaim")]
-        outputs_to_claim: OutputsToClaim,
-    },
     /// Claim outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     ClaimOutputs {
         #[serde(rename = "outputIdsToClaim")]
         output_ids_to_claim: Vec<OutputId>,

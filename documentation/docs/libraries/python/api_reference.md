@@ -390,16 +390,6 @@ def submit_and_store_transaction(signed_transaction_data)
 
 Submit and store transaction.
 
-<a id="iota_wallet.account.Account.try_claim_outputs"></a>
-
-#### try\_claim\_outputs
-
-```python
-def try_claim_outputs(outputs_to_claim)
-```
-
-Try to claim outputs.
-
 <a id="iota_wallet.account.Account.claim_outputs"></a>
 
 #### claim\_outputs
