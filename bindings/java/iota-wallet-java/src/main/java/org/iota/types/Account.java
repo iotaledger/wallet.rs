@@ -80,5 +80,4 @@ public class Account extends NewAbstractObject {
     public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() {
         return incomingTransactions;
     }
-
 }

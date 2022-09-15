@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 
 import java.util.Objects;
 
-public class NewAbstractObject {
+public abstract class NewAbstractObject {
 
     @Override
     public boolean equals(Object o) {

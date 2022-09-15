@@ -5,6 +5,7 @@ package org.iota;
 
 import com.google.gson.*;
 import org.iota.api.NativeApi;
+import org.iota.api.GsonSingleton;
 import org.iota.types.*;
 import org.iota.types.account_methods.*;
 import org.iota.types.expections.WalletException;
@@ -22,7 +23,7 @@ public class Wallet extends NativeApi {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
 
-        return new Gson().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
+        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
     }
 
     public Account getAccount(AccountIdentifier accountIdentifier) throws WalletException {
@@ -34,7 +35,7 @@ public class Wallet extends NativeApi {
             p = new JsonPrimitive(((AccountAlias) accountIdentifier).getAccountAlias());
         } else throw new RuntimeException("unknown account identifier");
 
-        return new Gson().fromJson(callBaseApi(new ClientCommand("GetAccount", p)), Account.class);
+        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", p)), Account.class);
     }
 
     public Account[] getAccounts() throws WalletException {
@@ -42,7 +43,7 @@ public class Wallet extends NativeApi {
 
         Account[] accounts = new Account[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accounts[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class);
+            accounts[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class);
 
         return accounts;
     }
@@ -60,7 +61,7 @@ public class Wallet extends NativeApi {
 
         JsonObject method = new JsonObject();
         method.addProperty("name", accountMethod.getClass().getSimpleName());
-        method.add("data", new Gson().toJsonTree(accountMethod));
+        method.add("data", GsonSingleton.getInstance().toJsonTree(accountMethod));
 
         JsonObject o = new JsonObject();
         o.add("accountId", p);
@@ -119,7 +120,7 @@ public class Wallet extends NativeApi {
 
         AccountAddress[] accountAddress = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accountAddress[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
+            accountAddress[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return accountAddress;
     }
@@ -159,7 +160,7 @@ public class Wallet extends NativeApi {
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
+            addresses[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return addresses;
     }
@@ -169,7 +170,7 @@ public class Wallet extends NativeApi {
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
+            addresses[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
 
         return addresses;
     }
@@ -179,7 +180,7 @@ public class Wallet extends NativeApi {
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            outputsData[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
+            outputsData[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
 
         return outputsData;
     }
@@ -209,7 +210,7 @@ public class Wallet extends NativeApi {
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            outputsData[i] = new Gson().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
+            outputsData[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
 
         return outputsData;
     }
@@ -229,7 +230,7 @@ public class Wallet extends NativeApi {
     }
 
     public AccountBalance getBalance(AccountIdentifier accountIdentifier, GetBalance method) throws WalletException {
-        return new Gson().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
     }
 
     public Output prepareOutput(AccountIdentifier accountIdentifier, PrepareOutput method) throws WalletException {
@@ -248,7 +249,7 @@ public class Wallet extends NativeApi {
     }
 
     public AccountBalance syncAccount(AccountIdentifier accountIdentifier, SyncAccount method) throws WalletException {
-        return new Gson().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
     }
 
     public TransactionPayload sendAmount(AccountIdentifier accountIdentifier, SendAmount method) throws WalletException {
@@ -328,7 +329,7 @@ public class Wallet extends NativeApi {
         JsonObject o = new JsonObject();
         o.addProperty("accountGapLimit", accountGapLimit);
         o.addProperty("addressGapLimit", addressGapLimit);
-        o.add("sync_options", new Gson().toJsonTree(sync_options));
+        o.add("sync_options", GsonSingleton.getInstance().toJsonTree(sync_options));
 
         callBaseApi(new ClientCommand("RecoverAccounts", o));
     }
@@ -359,17 +360,17 @@ public class Wallet extends NativeApi {
     }
 
     public String setClientOptions(ClientConfig config) throws WalletException {
-        return callBaseApi(new ClientCommand("SetClientOptions", new Gson().toJsonTree(config))).getAsString();
+        return callBaseApi(new ClientCommand("SetClientOptions", GsonSingleton.getInstance().toJsonTree(config))).getAsString();
     }
 
     public LedgerNanoStatus getLedgerNanoStatus() throws WalletException {
-        return new Gson().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
+        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
     }
 
     public JsonObject getNodeInfo(String url, NodeAuth auth) throws WalletException {
         JsonObject p = new JsonObject();
         p.addProperty("url", url);
-        p.add("auth", new Gson().toJsonTree(auth));
+        p.add("auth", GsonSingleton.getInstance().toJsonTree(auth));
 
         return (JsonObject) callBaseApi(new ClientCommand("GetNodeInfo", p));
     }
@@ -391,7 +392,7 @@ public class Wallet extends NativeApi {
 
     public void startBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
         JsonObject o = new JsonObject();
-        o.add("options", new Gson().toJsonTree(options));
+        o.add("options", GsonSingleton.getInstance().toJsonTree(options));
         o.addProperty("intervalInMilliseconds", intervalInMilliseconds);
 
         callBaseApi(new ClientCommand("StartBackgroundSync", o));

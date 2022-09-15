@@ -3,14 +3,15 @@
 
 package org.iota.types;
 
+import org.iota.api.GsonSingleton;
 import org.iota.types.secret.SecretManager;
 
 public class WalletConfig {
 
     private String storagePath;
-    private ClientConfig clientOptions;
+    private String clientOptions;
     private Integer coinType;
-    private SecretManager secretManager;
+    private String secretManager;
 
     public WalletConfig withStoragePath(String storagePath) {
         this.storagePath = storagePath;
@@ -18,7 +19,7 @@ public class WalletConfig {
     }
 
     public WalletConfig withClientOptions(ClientConfig clientOptions) {
-        this.clientOptions = clientOptions;
+        this.clientOptions = GsonSingleton.getInstance().toJsonTree(clientOptions).toString();
         return this;
     }
 
@@ -28,7 +29,7 @@ public class WalletConfig {
     }
 
     public WalletConfig withSecretManager(SecretManager secretManager) {
-        this.secretManager = secretManager;
+        this.secretManager = GsonSingleton.getInstance().toJsonTree(secretManager).toString();
         return this;
     }
 
