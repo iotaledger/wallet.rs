@@ -221,6 +221,34 @@ export class Account {
     }
 
     /**
+     * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+     * `melted_tokens` field.
+     * @param tokenId The native token id.
+     * @param meltAmount To be melted amount.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async decreaseNativeTokenSupply(
+        tokenId: string,
+        meltAmount: HexEncodedAmount,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'DecreaseNativeTokenSupply',
+                data: {
+                    tokenId,
+                    meltAmount,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
      * Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
      * storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
      * sent to the governor address.
@@ -520,34 +548,6 @@ export class Account {
             coinType: this.meta.coinType,
             index: this.meta.index,
         };
-    }
-
-    /**
-     * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
-     * `melted_tokens` field.
-     * @param tokenId The native token id.
-     * @param meltAmount To be melted amount.
-     * @param transactionOptions The options to define a `RemainderValueStrategy`
-     * or custom inputs.
-     * @returns The transaction.
-     */
-    async decreaseNativeTokenSupply(
-        tokenId: string,
-        meltAmount: HexEncodedAmount,
-        transactionOptions?: TransactionOptions,
-    ): Promise<Transaction> {
-        const resp = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'DecreaseNativeTokenSupply',
-                data: {
-                    tokenId,
-                    meltAmount,
-                    options: transactionOptions,
-                },
-            },
-        );
-        return JSON.parse(resp).payload;
     }
 
     /**

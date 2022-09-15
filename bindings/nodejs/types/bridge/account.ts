@@ -76,6 +76,15 @@ export type __ConsolidateOutputsMethod__ = {
     };
 };
 
+export type __DecreaseNativeTokenSupplyMethod__ = {
+    name: 'DecreaseNativeTokenSupply';
+    data: {
+        tokenId: string;
+        meltAmount: HexEncodedAmount;
+        options?: TransactionOptions;
+    };
+};
+
 export type __DestroyAliasMethod__ = {
     name: 'DestroyAlias';
     data: {
@@ -163,15 +172,6 @@ export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
     data: {
         filterOptions?: FilterOptions;
-    };
-};
-
-export type __DecreaseNativeTokenSupplyMethod__ = {
-    name: 'DecreaseNativeTokenSupply';
-    data: {
-        tokenId: string;
-        meltAmount: HexEncodedAmount;
-        options?: TransactionOptions;
     };
 };
 
