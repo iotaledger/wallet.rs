@@ -89,7 +89,7 @@ pub enum Message {
         /// each account.
         address_gap_limit: u32,
         /// Optional parameter to specify the sync options. The `address_start_index` and `force_syncing`
-        ///   fields will be overwritten to skip existing addresses.
+        /// fields will be overwritten to skip existing addresses.
         sync_options: Option<SyncOptions>,
     },
     /// Restore a backup from a Stronghold file
