@@ -7,6 +7,7 @@ import type {
     Address,
     AccountSyncOptions,
     AccountMeta,
+    FilterOptions,
     OutputsToClaim,
     OutputData,
     Transaction,
@@ -19,6 +20,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
+    IncreaseNativeTokenSupplyOptions,
     MintTokenTransaction,
     PreparedTransactionData,
     OutputOptions,
@@ -119,13 +121,15 @@ export class Account {
      * Burn native tokens. This doesn't require the foundry output which minted them, but will not increase
      * the foundries `melted_tokens` field, which makes it impossible to destroy the foundry output. Therefore it's
      * recommended to use melting, if the foundry output is available.
-     * @param nativeToken The Native Token with amount.
+     * @param tokenId The native token id.
+     * @param burnAmount The to be burned amount.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
      * or custom inputs.
      * @returns The transaction.
      */
     async burnNativeToken(
-        nativeToken: [string, HexEncodedAmount],
+        tokenId: string,
+        burnAmount: HexEncodedAmount,
         transactionOptions?: TransactionOptions,
     ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
@@ -133,7 +137,8 @@ export class Account {
             {
                 name: 'BurnNativeToken',
                 data: {
-                    nativeToken,
+                    tokenId,
+                    burnAmount,
                     options: transactionOptions,
                 },
             },
@@ -429,13 +434,15 @@ export class Account {
 
     /**
      * List all outputs of the account.
+     * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listOutputs(): Promise<OutputData[]> {
+    async listOutputs(filterOptions?: FilterOptions): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'ListOutputs',
+                data: { filterOptions },
             },
         );
 
@@ -473,13 +480,17 @@ export class Account {
 
     /**
      * List all the unspent outputs of the account.
+     * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listUnspentOutputs(): Promise<OutputData[]> {
+    async listUnspentOutputs(
+        filterOptions?: FilterOptions,
+    ): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
                 name: 'ListUnspentOutputs',
+                data: { filterOptions },
             },
         );
 
@@ -489,21 +500,24 @@ export class Account {
     /**
      * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
      * `melted_tokens` field.
-     * @param nativeToken The Native Token with amount.
+     * @param tokenId The native token id.
+     * @param meltAmount To be melted amount.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
      * or custom inputs.
      * @returns The transaction.
      */
-    async meltNativeToken(
-        nativeToken: [string, HexEncodedAmount],
+    async decreaseNativeTokenSupply(
+        tokenId: string,
+        meltAmount: HexEncodedAmount,
         transactionOptions?: TransactionOptions,
     ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MeltNativeToken',
+                name: 'DecreaseNativeTokenSupply',
                 data: {
-                    nativeToken,
+                    tokenId,
+                    meltAmount,
                     options: transactionOptions,
                 },
             },
@@ -526,6 +540,37 @@ export class Account {
                 },
             },
         );
+        return JSON.parse(response).payload;
+    }
+
+    /**
+     * Mint more native tokens.
+     * @param tokenId The native token id.
+     * @param mintAmount To be minted amount.
+     * @param increaseNativeTokenSupplyOptions Options for minting more tokens.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The minting transaction and the token ID.
+     */
+    async increaseNativeTokenSupply(
+        tokenId: string,
+        mintAmount: HexEncodedAmount,
+        increaseNativeTokenSupplyOptions?: IncreaseNativeTokenSupplyOptions,
+        transactionOptions?: TransactionOptions,
+    ): Promise<MintTokenTransaction> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'IncreaseNativeTokenSupply',
+                data: {
+                    tokenId,
+                    mintAmount,
+                    increaseNativeTokenSupplyOptions,
+                    options: transactionOptions,
+                },
+            },
+        );
+
         return JSON.parse(response).payload;
     }
 

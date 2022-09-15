@@ -46,7 +46,7 @@ impl AccountHandle {
     /// println!(
     /// "Transaction: {} Block sent: http://localhost:14265/api/core/v2/blocks/{}",
     /// transaction.transaction_id,
-    /// transaction.block_id.expect("No block created yet")
+    /// transaction.block_id.expect("no block created yet")
     /// );
     /// ```
     pub async fn send_nft(
@@ -67,7 +67,7 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_nft");
 
-        let unspent_outputs = self.list_unspent_outputs().await?;
+        let unspent_outputs = self.list_unspent_outputs(None).await?;
 
         let mut outputs = Vec::new();
         let mut custom_inputs = Vec::new();

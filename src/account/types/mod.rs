@@ -112,7 +112,10 @@ impl OutputData {
     ) -> crate::Result<InputSigningData> {
         let unlock_address = {
             if let Some(unlock_conditions) = self.output.unlock_conditions() {
-                *unlock_conditions.locked_address(&self.address, current_time)
+                match &self.output {
+                    Output::Foundry(foundry) => Address::Alias(*foundry.alias_address()),
+                    _ => *unlock_conditions.locked_address(&self.address, current_time),
+                }
             } else {
                 self.address
             }
@@ -120,7 +123,7 @@ impl OutputData {
 
         let chain = if unlock_address == self.address {
             self.chain.clone()
-        } else if let Address::Ed25519(_) = self.address {
+        } else if let Address::Ed25519(_) = unlock_address {
             if let Some(address) = account
                 .addresses_with_unspent_outputs
                 .iter()

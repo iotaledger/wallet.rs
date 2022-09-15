@@ -187,9 +187,9 @@ fn filter_inputs(
         let unlock_conditions = output_data
             .output
             .unlock_conditions()
-            .expect("Output needs to have unlock_conditions");
+            .expect("output needs to have unlock_conditions");
 
-        // If still timelocked, don't include it
+        // If still time locked, don't include it
         if unlock_conditions.is_time_locked(current_time) {
             continue;
         }

@@ -86,7 +86,7 @@ async fn main() -> Result<()> {
             Ok(tx) => println!(
                 "Block sent: {}/api/core/v2/blocks/{}",
                 &env::var("NODE_URL").unwrap(),
-                tx.block_id.expect("No block created yet")
+                tx.block_id.expect("no block created yet")
             ),
             Err(e) => println!("{}", e),
         }

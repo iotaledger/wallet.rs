@@ -1,5 +1,5 @@
 import type { OutputTypes, HexEncodedAmount } from '@iota/types';
-import type { AccountSyncOptions } from '../account';
+import type { AccountSyncOptions, FilterOptions } from '../account';
 import type {
     AddressWithAmount,
     AddressWithMicroAmount,
@@ -18,6 +18,7 @@ import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
+    IncreaseNativeTokenSupplyOptions,
     NativeTokenOptions,
     TransactionOptions,
     NftOptions,
@@ -46,7 +47,8 @@ export type __BuildNftOutputMethod__ = {
 export type __BurnNativeTokenMethod__ = {
     name: 'BurnNativeToken';
     data: {
-        nativeToken: [string, HexEncodedAmount];
+        tokenId: string;
+        burnAmount: HexEncodedAmount;
         options?: TransactionOptions;
     };
 };
@@ -140,6 +142,9 @@ export type __ListAddressesWithUnspentOutputsMethod__ = {
 
 export type __ListOutputsMethod__ = {
     name: 'ListOutputs';
+    data: {
+        filterOptions?: FilterOptions;
+    };
 };
 
 export type __ListPendingTransactionsMethod__ = {
@@ -152,12 +157,16 @@ export type __ListTransactionsMethod__ = {
 
 export type __ListUnspentOutputsMethod__ = {
     name: 'ListUnspentOutputs';
+    data: {
+        filterOptions?: FilterOptions;
+    };
 };
 
-export type __MeltNativeTokenMethod__ = {
-    name: 'MeltNativeToken';
+export type __DecreaseNativeTokenSupplyMethod__ = {
+    name: 'DecreaseNativeTokenSupply';
     data: {
-        nativeToken: [string, HexEncodedAmount];
+        tokenId: string;
+        meltAmount: HexEncodedAmount;
         options?: TransactionOptions;
     };
 };
@@ -166,6 +175,16 @@ export type __MinimumRequiredStorageDepositMethod__ = {
     name: 'MinimumRequiredStorageDeposit';
     data: {
         output: OutputTypes;
+    };
+};
+
+export type __IncreaseNativeTokenSupplyMethod__ = {
+    name: 'IncreaseNativeTokenSupply';
+    data: {
+        tokenId: string;
+        mintAmount: HexEncodedAmount;
+        increaseNativeTokenSupplyOptions?: IncreaseNativeTokenSupplyOptions;
+        options?: TransactionOptions;
     };
 };
 

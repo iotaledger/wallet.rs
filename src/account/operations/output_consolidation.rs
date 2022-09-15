@@ -5,7 +5,7 @@ use iota_client::block::{
     input::INPUT_COUNT_MAX,
     output::{
         unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeTokensBuilder, Output,
+        BasicOutputBuilder, NativeTokens, NativeTokensBuilder, Output,
     },
 };
 #[cfg(feature = "ledger_nano")]
@@ -25,6 +25,7 @@ use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
 use crate::account::{
     constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
     handle::AccountHandle,
+    operations::output_claiming::get_new_native_token_count,
     types::{address::AddressWithUnspentOutputs, Transaction},
     TransactionOptions,
 };
@@ -67,10 +68,9 @@ impl AccountHandle {
                 // Don't use outputs that are locked for other transactions
                 if !account.locked_outputs.contains(output_id) {
                     if let Some(output) = account.outputs.get(output_id) {
-                        // Only consolidate basic outputs with no address unlock condition alone
+                        // Only consolidate basic outputs with the address unlock condition alone
                         if let Output::Basic(basic_output) = &output.output {
-                            // If the length is 1, then there is only [AddressUnlockCondition]
-                            if basic_output.unlock_conditions().len() == 1 {
+                            if let [UnlockCondition::Address(_)] = &basic_output.unlock_conditions().as_ref() {
                                 unspent_outputs.push(output.clone());
                             }
                         }
@@ -124,13 +124,21 @@ impl AccountHandle {
                 let mut custom_inputs = Vec::with_capacity(max_inputs.into());
                 let mut total_native_tokens = NativeTokensBuilder::new();
                 for output_data in outputs {
+                    if let Some(native_tokens) = output_data.output.native_tokens() {
+                        // Skip output if the max native tokens count would be exceeded
+                        if get_new_native_token_count(&total_native_tokens, native_tokens)?
+                            > NativeTokens::COUNT_MAX.into()
+                        {
+                            log::debug!(
+                                "[OUTPUT_CONSOLIDATION] skipping output to not exceed the max native tokens count"
+                            );
+                            continue;
+                        }
+                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
+                    };
                     total_amount += output_data.output.amount();
 
                     custom_inputs.push(output_data.output_id);
-
-                    if let Some(native_tokens) = output_data.output.native_tokens() {
-                        total_native_tokens.add_native_tokens(native_tokens.clone())?;
-                    };
                 }
 
                 let consolidation_output = vec![

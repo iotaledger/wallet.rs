@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("No block created yet")
+        transaction.block_id.expect("no block created yet")
     );
 
     // Send native tokens together with the required storage deposit
@@ -71,7 +71,7 @@ async fn main() -> Result<()> {
         "Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("No block created yet")
+        transaction.block_id.expect("no block created yet")
     );
 
     Ok(())

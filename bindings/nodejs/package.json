@@ -1,6 +1,6 @@
 {
   "name": "@iota/wallet",
-  "version": "2.0.2-alpha.23",
+  "version": "2.0.2-alpha.24",
   "description": "Node.js binding to the wallet library",
   "main": "out/lib/index.js",
   "types": "out/lib/index.d.ts",
@@ -23,7 +23,7 @@
     "@iota/types": "^1.0.0-beta.11",
     "cargo-cp-artifact": "^0.1.5",
     "prebuild-install": "^7.1.1",
-    "typescript": "^4.7.4"
+    "typescript": "^4.8.3"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.30.7",
@@ -34,8 +34,17 @@
     "eslint-config-prettier": "^8.5.0",
     "prebuild": "^11.0.4",
     "prettier": "^2.7.1",
-    "typedoc": "^0.23.8",
-    "typedoc-plugin-markdown": "^3.13.3"
+    "typedoc": "^0.23.14",
+    "typedoc-plugin-markdown": "^3.13.4"
+  },
+  "overrides": {
+    "tar@<=4.4.17": "^4.4.19",
+    "tar@2.0.0": "^4.4.19",
+    "simple-get@1.4.2": "^2.8.2"
+  },
+  "resolutions": {
+    "tar": "^4.4.19",
+    "simple-get": "^2.8.2"
   },
   "repository": {
     "type": "git",

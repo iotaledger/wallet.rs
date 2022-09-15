@@ -1,15 +1,17 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 13_burn_nft --release
-// In this example we will burn an existing nft output
+//! cargo run --example burn_native_token --release
+// In this example we will burn an existing native token, this will not increase the melted supply in the foundry,
+// therefore the foundry output is also not required. But this will also make it impossible to destroy the foundry
+// output that minted it.
 // Rename `.env.example` to `.env` first
 
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::block::output::NftId;
-use iota_wallet::{account_manager::AccountManager, Result};
+use iota_client::block::output::TokenId;
+use iota_wallet::{account_manager::AccountManager, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -30,15 +32,18 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    // Replace with an NftId that is available in the account
-    let nft_id = NftId::from_str("0xe192461b30098a5da889ef6abc9e8130bf3b2d980450fa9201e5df404121b932")?;
-    let transaction = account.burn_nft(nft_id, None).await?;
+    // Replace with a TokenId that is available in the account
+    let token_id = TokenId::from_str("0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000")?;
+
+    // Burn a native token
+    let burn_amount = U256::from(1);
+    let transaction = account.burn_native_token(token_id, burn_amount, None).await?;
 
     let _ = match transaction.block_id {
         Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
         None => {
             return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "burn nft failed to submitted".to_string(),
+                "burn native token transaction failed to submitted".to_string(),
             ));
         }
     };

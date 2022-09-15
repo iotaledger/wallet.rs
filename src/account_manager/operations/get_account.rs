@@ -12,11 +12,11 @@ impl AccountManager {
         let account_id = identifier.into();
         let accounts = self.accounts.read().await;
 
-        match account_id {
+        match &account_id {
             AccountIdentifier::Index(index) => {
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
-                    if account.index() == &index {
+                    if account.index() == index {
                         return Ok(account_handle.clone());
                     }
                 }
@@ -24,12 +24,12 @@ impl AccountManager {
             AccountIdentifier::Alias(alias) => {
                 for account_handle in accounts.iter() {
                     let account = account_handle.read().await;
-                    if account.alias() == &alias {
+                    if account.alias() == alias {
                         return Ok(account_handle.clone());
                     }
                 }
             }
         };
-        Err(crate::Error::AccountNotFound)
+        Err(crate::Error::AccountNotFound(serde_json::to_string(&account_id)?))
     }
 }

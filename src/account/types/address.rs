@@ -78,11 +78,9 @@ impl AddressWrapper {
         &self.bech32_hrp
     }
 }
+
 /// Parses a bech32 address string.
 pub fn parse_bech32_address<A: AsRef<str>>(address: A) -> crate::Result<AddressWrapper> {
-    let address = address.as_ref();
-    let mut tokens = address.split('1');
-    let hrp = tokens.next().ok_or(crate::Error::InvalidAddress)?;
-    let (_bech32_hrp, address) = Address::try_from_bech32(address)?;
-    Ok(AddressWrapper::new(address, hrp.to_string()))
+    let (bech32_hrp, address) = Address::try_from_bech32(address)?;
+    Ok(AddressWrapper::new(address, bech32_hrp))
 }

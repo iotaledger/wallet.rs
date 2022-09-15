@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.2-alpha.24]
+
+- Added optional FilterOptions to listOutputs() and listUnspentOutputs().
+  - [11bddc7f](https://github.com/iotaledger/wallet.rs/commit/11bddc7f12dbd5ed18c7fd9a5582f26e03573f80) Add FilterOptions ([#1413](https://github.com/iotaledger/wallet.rs/pull/1413)) on 2022-09-07
+- Check max native tokens limit in consolidation and claiming.
+  - [fa895233](https://github.com/iotaledger/wallet.rs/commit/fa8952331a56ed74a1a87786eed8d166c7cf8082) Check max native tokens limit in consolidation and claiming ([#1411](https://github.com/iotaledger/wallet.rs/pull/1411)) on 2022-09-07
+- Return correct Account type from recoverAccounts().
+  - [909f80ae](https://github.com/iotaledger/wallet.rs/commit/909f80aea217280e134bc298d1fee6e7a7529358) Return Account instead of AccountMeta ([#1409](https://github.com/iotaledger/wallet.rs/pull/1409)) on 2022-09-05
+
 ## \[2.0.2-alpha.23]
 
 - Bump client to update `iota-ledger-nano` and fix a bug.
