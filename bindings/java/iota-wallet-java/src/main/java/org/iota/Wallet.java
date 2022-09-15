@@ -275,11 +275,6 @@ public class Wallet extends NativeApi {
         return new TransactionPayload(responsePayload);
     }
 
-    public TransactionPayload tryClaimOutputs(AccountIdentifier accountIdentifier, TryClaimOutputs method) throws WalletException {
-        JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
-        return new TransactionPayload(responsePayload);
-    }
-
     public TransactionPayload claimOutputs(AccountIdentifier accountIdentifier, ClaimOutputs method) throws WalletException {
         JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
         return new TransactionPayload(responsePayload);
