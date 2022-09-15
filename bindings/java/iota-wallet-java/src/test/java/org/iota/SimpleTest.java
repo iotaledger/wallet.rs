@@ -2,9 +2,9 @@ package org.iota;
 
 import org.iota.types.Account;
 import org.iota.types.AccountAddress;
-import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.account_methods.ListAddresses;
-import org.iota.types.expections.WalletException;
+import org.iota.types.account_methods.SetAlias;
+import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIndex;
 import org.junit.jupiter.api.Test;
@@ -52,12 +52,10 @@ public class SimpleTest extends ApiTest {
     }
 
     @Test
-    public void testAccoun() throws WalletException {
-        Account a = wallet.createAccount("Hans");
-        AccountAddress[] addresses = wallet.listAddresses(new AccountIndex(0), new ListAddresses());
-        for(AccountAddress address : addresses) {
-            System.out.println(address.getAddress());
-        }
+    public void testSetAlias() throws WalletException {
+        wallet.createAccount("Hans");
+        wallet.setAlias(new AccountIndex(0), new SetAlias().withAlias("Billy"));
+        System.out.println(wallet.getAccount(new AccountIndex(0)).getAlias());
     }
 
 }

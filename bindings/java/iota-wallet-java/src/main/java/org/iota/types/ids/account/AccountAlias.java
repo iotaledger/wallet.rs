@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 
 @JsonAdapter(AccountAlias.AccountAliasAdapter.class)
-public class AccountAlias extends AccountIdentifier {
+public class AccountAlias implements AccountIdentifier {
     private String accountAlias;
 
     public AccountAlias(String accountAlias) {

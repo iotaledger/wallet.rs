@@ -10,7 +10,7 @@ import java.lang.reflect.Type;
 import java.util.Objects;
 
 @JsonAdapter(AccountIndex.AccountIndexAdapter.class)
-public class AccountIndex extends AccountIdentifier {
+public class AccountIndex implements AccountIdentifier {
     private Integer accountIndex;
 
     public AccountIndex(int accountIndex) {

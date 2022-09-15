@@ -3,4 +3,4 @@
 
 package org.iota.types.ids.account;
 
-public abstract class AccountIdentifier {}
+public interface AccountIdentifier {}

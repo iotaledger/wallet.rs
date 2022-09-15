@@ -2,7 +2,7 @@ package org.iota;
 
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
-import org.iota.types.expections.WalletException;
+import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.MnemonicSecretManager;
 import org.junit.jupiter.api.AfterEach;
 

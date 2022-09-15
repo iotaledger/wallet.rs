@@ -8,10 +8,8 @@ import org.iota.api.NativeApi;
 import org.iota.api.GsonSingleton;
 import org.iota.types.*;
 import org.iota.types.account_methods.*;
-import org.iota.types.expections.WalletException;
-import org.iota.types.ids.account.AccountAlias;
+import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
-import org.iota.types.ids.account.AccountIndex;
 
 public class Wallet extends NativeApi {
 
@@ -27,15 +25,7 @@ public class Wallet extends NativeApi {
     }
 
     public Account getAccount(AccountIdentifier accountIdentifier) throws WalletException {
-        JsonPrimitive p = null;
-
-        if (accountIdentifier instanceof AccountIndex) {
-            p = new JsonPrimitive(((AccountIndex) accountIdentifier).getAccountIndex());
-        } else if (accountIdentifier instanceof AccountAlias) {
-            p = new JsonPrimitive(((AccountAlias) accountIdentifier).getAccountAlias());
-        } else throw new RuntimeException("unknown account identifier");
-
-        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", p)), Account.class);
+        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
     }
 
     public Account[] getAccounts() throws WalletException {

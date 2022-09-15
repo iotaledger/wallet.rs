@@ -1,44 +1,49 @@
 package org.iota.types.features;
 
 import com.google.gson.*;
-import org.iota.types.secret.SecretManager;
+import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
 
-public abstract class Feature implements JsonDeserializer<Feature> {
+@JsonAdapter(Feature.FeatureAdapter.class)
+public abstract class Feature {
 
-    @Override
-    public Feature deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
-            throws JsonParseException {
+    public static class FeatureAdapter implements JsonDeserializer<Feature> {
 
-        JsonObject jsonObject = json.getAsJsonObject();
+        @Override
+        public Feature deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
+                throws JsonParseException {
 
-        int type = jsonObject.get("type").getAsInt();
+            JsonObject jsonObject = json.getAsJsonObject();
 
-        Feature feature;
+            int type = jsonObject.get("type").getAsInt();
 
-        switch (type) {
-            case 0: {
-                feature = new Gson().fromJson(json, SenderFeature.class);
-                break;
+            Feature feature;
+
+            switch (type) {
+                case 0: {
+                    feature = new Gson().fromJson(json, SenderFeature.class);
+                    break;
+                }
+                case 1: {
+                    feature = new Gson().fromJson(json, IssuerFeature.class);
+                    break;
+                }
+                case 2: {
+                    feature = new Gson().fromJson(json, MetadataFeature.class);
+                    break;
+                }
+                case 3: {
+                    feature = new Gson().fromJson(json, TagFeature.class);
+                    break;
+                }
+
+                default: throw new JsonParseException("unknown type: " + type);
             }
-            case 1: {
-                feature = new Gson().fromJson(json, IssuerFeature.class);
-                break;
-            }
-            case 2: {
-                feature = new Gson().fromJson(json, MetadataFeature.class);
-                break;
-            }
-            case 3: {
-                feature = new Gson().fromJson(json, TagFeature.class);
-                break;
-            }
 
-            default: throw new JsonParseException("unknown type: " + type);
+            return feature;
         }
 
-        return feature;
     }
 
 }

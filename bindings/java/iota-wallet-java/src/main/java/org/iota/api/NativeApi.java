@@ -8,7 +8,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
 import org.iota.types.WalletConfig;
-import org.iota.types.expections.WalletException;
+import org.iota.types.exceptions.WalletException;
 
 import java.io.IOException;
 
