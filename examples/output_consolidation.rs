@@ -9,7 +9,7 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::{block::payload::transaction::TransactionId, constants::SHIMMER_COIN_TYPE};
+use iota_client::constants::SHIMMER_COIN_TYPE;
 use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::main]
