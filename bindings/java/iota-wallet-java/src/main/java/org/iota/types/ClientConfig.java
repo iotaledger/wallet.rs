@@ -26,22 +26,67 @@ public class ClientConfig extends NewAbstractObject {
     static class NodeSyncInterval {
         private int secs;
         private int nanos;
+
+        public NodeSyncInterval withSecs(int secs) {
+            this.secs = secs;
+            return this;
+        }
+
+        public NodeSyncInterval withNanos(int nanos) {
+            this.nanos = nanos;
+            return this;
+        }
     }
 
     static class RentStructure {
         private int vByteCost;
         private int vByteFactorKey;
         private int vByteFactorData;
+
+        public RentStructure withvByteCost(int vByteCost) {
+            this.vByteCost = vByteCost;
+            return this;
+        }
+
+        public RentStructure withvByteFactorKey(int vByteFactorKey) {
+            this.vByteFactorKey = vByteFactorKey;
+            return this;
+        }
+
+        public RentStructure withvByteFactorData(int vByteFactorData) {
+            this.vByteFactorData = vByteFactorData;
+            return this;
+        }
     }
 
     static class ApiTimeout {
         private int secs;
         private int nanos;
+
+        public ApiTimeout withSecs(int secs) {
+            this.secs = secs;
+            return this;
+        }
+
+        public ApiTimeout withNanos(int nanos) {
+            this.nanos = nanos;
+            return this;
+        }
     }
 
     static class RemotePowTimeout {
         private int secs;
         private int nanos;
+
+        public RemotePowTimeout withSecs(int secs) {
+            this.secs = secs;
+            return this;
+        }
+
+        public RemotePowTimeout withNanos(int nanos) {
+            this.nanos = nanos;
+            return this;
+        }
     }
 
 

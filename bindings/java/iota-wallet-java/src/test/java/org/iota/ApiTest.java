@@ -24,7 +24,6 @@ public class ApiTest {
         try {
             while(wallet.getAccounts().length > 0)
                 wallet.removeLatestAccount();
-            assertTrue(wallet.getAccounts().length == 0);
         } catch (WalletException e) {
             throw new RuntimeException(e);
         }
@@ -34,7 +33,6 @@ public class ApiTest {
     protected void tearDown() throws WalletException {
         while(wallet.getAccounts().length > 0)
             wallet.removeLatestAccount();
-        assertTrue(wallet.getAccounts().length == 0);
     }
 
 }

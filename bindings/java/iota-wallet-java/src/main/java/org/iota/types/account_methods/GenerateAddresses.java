@@ -19,6 +19,16 @@ public class GenerateAddresses implements AccountMethod {
         private boolean internal;
         private GenerateAddressMetadata metadata;
 
+        public AddressGenerationOptions withInternal(boolean internal) {
+            this.internal = internal;
+            return this;
+        }
+
+        public AddressGenerationOptions withMetadata(GenerateAddressMetadata metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
         public static class GenerateAddressMetadata {
             private boolean syncing;
 

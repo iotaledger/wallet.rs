@@ -11,4 +11,40 @@ public class AccountAddress {
     // do we want this field? Could be useful if we don't store spent output ids and because of that wouldn't know if
     // an address was used or not just by looking at it
     private boolean used;
+
+    public AccountAddress withAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public AccountAddress withKeyIndex(int keyIndex) {
+        this.keyIndex = keyIndex;
+        return this;
+    }
+
+    public AccountAddress withInternal(boolean internal) {
+        isInternal = internal;
+        return this;
+    }
+
+    public AccountAddress withUsed(boolean used) {
+        this.used = used;
+        return this;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public int getKeyIndex() {
+        return keyIndex;
+    }
+
+    public boolean isInternal() {
+        return isInternal;
+    }
+
+    public boolean isUsed() {
+        return used;
+    }
 }

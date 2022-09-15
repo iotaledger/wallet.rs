@@ -51,20 +51,14 @@ public class Wallet extends NativeApi {
     // Account Method APIs
 
     private JsonElement callAccountMethod(AccountIdentifier accountIdentifier, AccountMethod accountMethod) throws WalletException {
-        JsonPrimitive p;
-
-        if (accountIdentifier instanceof AccountIndex) {
-            p = new JsonPrimitive(((AccountIndex) accountIdentifier).getAccountIndex());
-        } else if (accountIdentifier instanceof AccountAlias) {
-            p = new JsonPrimitive(((AccountAlias) accountIdentifier).getAccountAlias());
-        } else throw new RuntimeException("unknown account identifier");
-
         JsonObject method = new JsonObject();
         method.addProperty("name", accountMethod.getClass().getSimpleName());
-        method.add("data", GsonSingleton.getInstance().toJsonTree(accountMethod));
+        JsonElement data = GsonSingleton.getInstance().toJsonTree(accountMethod);
+        if(!data.toString().equals("{}"))
+            method.add("data", data);
 
         JsonObject o = new JsonObject();
-        o.add("accountId", p);
+        o.add("accountId", GsonSingleton.getInstance().toJsonTree(accountIdentifier));
         o.add("method", method);
 
         return callBaseApi(new ClientCommand("CallAccountMethod", o));
