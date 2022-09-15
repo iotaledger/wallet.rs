@@ -4,26 +4,27 @@
 import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
-    Address,
+    AccountMetadata,
     AccountSyncOptions,
     AccountMeta,
-    FilterOptions,
-    OutputsToClaim,
-    OutputData,
-    Transaction,
-    NativeTokenOptions,
-    TransactionOptions,
-    NftOptions,
+    Address,
     AddressWithAmount,
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
+    FilterOptions,
     IncreaseNativeTokenSupplyOptions,
     MintTokenTransaction,
-    PreparedTransactionData,
+    NativeTokenOptions,
+    NftOptions,
+    OutputData,
     OutputOptions,
+    OutputsToClaim,
+    PreparedTransactionData,
+    Transaction,
+    TransactionOptions,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -33,13 +34,13 @@ import type {
     BuildNftOutputData,
 } from '../types/buildOutputData';
 import type {
+    HexEncodedAmount,
     IAliasOutput,
     IBasicOutput,
     IFoundryOutput,
     INftOutput,
     IOutputResponse,
     ITransactionPayload,
-    HexEncodedAmount,
     OutputTypes,
 } from '@iota/types';
 
@@ -306,14 +307,6 @@ export class Account {
     }
 
     /**
-     * Get this accounts alias.
-     * @returns The accounts alias.
-     */
-    getAlias(): string {
-        return this.meta.alias;
-    }
-
-    /**
      * Get the account balance.
      * @returns The account balance.
      */
@@ -515,6 +508,18 @@ export class Account {
         );
 
         return JSON.parse(response).payload;
+    }
+
+    /**
+     * Get the accounts metadata.
+     * @returns The accounts metadata.
+     */
+    getMetadata(): AccountMetadata {
+        return {
+            alias: this.meta.alias,
+            coinType: this.meta.coinType,
+            index: this.meta.index,
+        };
     }
 
     /**

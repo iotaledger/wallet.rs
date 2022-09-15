@@ -28,6 +28,7 @@
 - [AccountBalance](interfaces/AccountBalance.md)
 - [AccountSyncOptions](interfaces/AccountSyncOptions.md)
 - [AccountMeta](interfaces/AccountMeta.md)
+- [AccountMetadata](interfaces/AccountMetadata.md)
 - [BaseCoinBalance](interfaces/BaseCoinBalance.md)
 - [NativeTokenBalance](interfaces/NativeTokenBalance.md)
 - [CreateAccountPayload](interfaces/CreateAccountPayload.md)
