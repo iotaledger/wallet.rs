@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class SyncOptions extends NewAbstractObject {
+public class SyncOptions extends AbstractObject {
     /// Specific Bech32 encoded addresses of the account to sync, if addresses are provided, then `address_start_index`
     /// will be ignored
     private String[] addresses;

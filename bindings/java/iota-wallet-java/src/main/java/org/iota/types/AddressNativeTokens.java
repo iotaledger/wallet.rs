@@ -4,7 +4,7 @@ import org.iota.types.ids.TokenId;
 
 import java.util.Map;
 
-public class AddressNativeTokens extends NewAbstractObject {
+public class AddressNativeTokens extends AbstractObject {
 
     /// Bech32 encoded address
     private String address;

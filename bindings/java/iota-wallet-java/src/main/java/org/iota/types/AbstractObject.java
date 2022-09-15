@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 
 import java.util.Objects;
 
-public abstract class NewAbstractObject {
+public abstract class AbstractObject {
 
     @Override
     public boolean equals(Object o) {
@@ -19,5 +19,10 @@ public abstract class NewAbstractObject {
     @Override
     public int hashCode() {
         return new Gson().toJsonTree(this).hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return new Gson().toJsonTree(this).toString();
     }
 }

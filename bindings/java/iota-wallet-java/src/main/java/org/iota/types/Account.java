@@ -6,7 +6,7 @@ import org.iota.types.ids.TransactionId;
 import java.util.Map;
 import java.util.Set;
 
-public class Account extends NewAbstractObject {
+public class Account extends AbstractObject {
 
     /// The account index.
     private int index;

@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class AddressWithMicroAmount extends NewAbstractObject {
+public class AddressWithMicroAmount extends AbstractObject {
     /// Bech32 encoded address
     private String address;
     /// Amount below the minimum storage deposit

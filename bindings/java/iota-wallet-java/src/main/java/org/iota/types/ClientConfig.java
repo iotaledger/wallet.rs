@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class ClientConfig extends NewAbstractObject {
+public class ClientConfig extends AbstractObject {
     private String primaryNode;
     private String primaryPowNode;
     private String[] nodes;

@@ -2,7 +2,7 @@ package org.iota.types;
 
 import org.iota.types.ids.TokenId;
 
-public class NativeTokensBalance extends NewAbstractObject {
+public class NativeTokensBalance extends AbstractObject {
     /// Token id
     private TokenId tokenId;
     /// Total amount

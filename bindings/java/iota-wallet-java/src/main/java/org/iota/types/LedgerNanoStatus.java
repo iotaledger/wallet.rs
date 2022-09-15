@@ -3,7 +3,7 @@
 
 package org.iota.types;
 
-public class LedgerNanoStatus extends NewAbstractObject {
+public class LedgerNanoStatus extends AbstractObject {
 
     /// Ledger is available and ready to be used.
     private boolean connected;
@@ -18,7 +18,7 @@ public class LedgerNanoStatus extends NewAbstractObject {
     /// Buffer size on device
     private int bufferSize;
 
-    public static class LedgerApp extends NewAbstractObject {
+    public static class LedgerApp extends AbstractObject {
         /// Opened app name.
         private String name;
         /// Opened app version.

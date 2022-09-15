@@ -7,7 +7,7 @@ import org.iota.types.ids.OutputId;
 
 import java.util.Map;
 
-public class AccountBalance extends NewAbstractObject {
+public class AccountBalance extends AbstractObject {
 
     /// Total and available amount of the base coin
     private BaseCoinBalance baseCoin;

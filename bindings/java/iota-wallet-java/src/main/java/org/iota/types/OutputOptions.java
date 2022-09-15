@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class OutputOptions extends NewAbstractObject {
+public class OutputOptions extends AbstractObject {
 
     private String recipientAddress;
     private String amount;
@@ -9,22 +9,22 @@ public class OutputOptions extends NewAbstractObject {
     private Unlocks unlocks;
     private StorageDeposit storageDeposit;
 
-    public static class Assets extends NewAbstractObject {
+    public static class Assets extends AbstractObject {
         private NativeToken[] nativeTokens;
         private String nftId;
     }
 
-    public static class Features extends NewAbstractObject {
+    public static class Features extends AbstractObject {
         private String tag;
         private String metadata;
     }
 
-    public static class Unlocks extends NewAbstractObject {
+    public static class Unlocks extends AbstractObject {
         private int expirationUnixTime;
         private int timelockUnixTime;
     }
 
-    public static class StorageDeposit extends NewAbstractObject {
+    public static class StorageDeposit extends AbstractObject {
         private ReturnStrategy returnStrategy;
         // If account has 2 Mi, min storage deposit is 1 Mi and one wants to send 1.5 Mi, it wouldn't be possible with a
         // 0.5 Mi remainder. To still send a transaction, the 0.5 can be added to the output automatically, if set to true

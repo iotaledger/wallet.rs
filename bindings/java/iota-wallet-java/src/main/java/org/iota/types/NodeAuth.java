@@ -5,7 +5,7 @@ package org.iota.types;
 
 import java.util.Map;
 
-public class NodeAuth extends NewAbstractObject {
+public class NodeAuth extends AbstractObject {
     /// JWT.
     private String jwt;
     /// Username and password.
