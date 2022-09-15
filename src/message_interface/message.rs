@@ -86,7 +86,7 @@ pub enum Message {
         account_gap_limit: u32,
         #[serde(rename = "addressGapLimit")]
         /// The number of addresses to search for, after the last address with unspent outputs, in
-        ///   each account.
+        /// each account.
         address_gap_limit: u32,
         /// Optional parameter to specify the sync options. The `address_start_index` and `force_syncing`
         ///   fields will be overwritten to skip existing addresses.
