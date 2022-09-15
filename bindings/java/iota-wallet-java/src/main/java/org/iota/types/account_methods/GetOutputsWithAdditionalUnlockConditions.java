@@ -1,8 +1,6 @@
 package org.iota.types.account_methods;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
+/// Get outputs with additional unlock conditions
 public class GetOutputsWithAdditionalUnlockConditions implements AccountMethod {
 
     private OutputsToClaim outputsToClaim;
@@ -15,4 +13,8 @@ public class GetOutputsWithAdditionalUnlockConditions implements AccountMethod {
         All,
     }
 
+    public GetOutputsWithAdditionalUnlockConditions withOutputsToClaim(OutputsToClaim outputsToClaim) {
+        this.outputsToClaim = outputsToClaim;
+        return this;
+    }
 }

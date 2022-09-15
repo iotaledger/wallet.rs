@@ -1,4 +1,4 @@
-package org.iota.types.account_methods;
+package org.iota.types;
 
 import com.google.gson.*;
 import org.iota.types.AccountAddress;

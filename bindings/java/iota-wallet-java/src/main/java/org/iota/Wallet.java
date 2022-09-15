@@ -209,7 +209,7 @@ public class Wallet extends NativeApi {
         return outputsData;
     }
 
-    public TaggedDataPayload meltNativeToken(AccountIdentifier accountIdentifier, MeltNativeToken method) throws WalletException {
+    public TaggedDataPayload meltNativeToken(AccountIdentifier accountIdentifier, DecreaseNativeTokenSupply method) throws WalletException {
         JsonObject responsePayload = (JsonObject) callAccountMethod(accountIdentifier, method);
         return new TaggedDataPayload(responsePayload);
     }
