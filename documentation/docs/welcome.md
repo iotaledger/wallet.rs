@@ -18,14 +18,14 @@ This is the documentation for the official IOTA Wallet Library Software. The doc
 `wallet.rs` is a general wallet library written in Rust. It is being utilized by our wallet software `Firefly` and other software components across IOTA ecosystem. `wallet.rs` contains all the logic to safely build wallets or integrations that require value-based transfers (such as exchanges, pay-as-you-go systems, etc.). `wallet.rs` includes account state management and backup, account creation, transferring tokens and much more. Needless to say, it is also based on our official _one-source-code-of-truth_ [IOTA Rust library](https://github.com/iotaledger/wallet.rs) and can be integrated with the [Stronghold enclave](https://blog.iota.org/iota-stronghold-6ce55d311d7c/) to achieve a maximum level of security.
 
 :::caution
-Use Stronghold to store account data of the `wallet.rs`. It integrates the best security practices and is open-source.
+Use Stronghold for secrets management. It integrates the best security practices and is open-source.
 :::
 
-With the `wallet.rs` library, developers do not need to use a self-generated seed anymore. By default, `Stronghold` will create and store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
+`Stronghold` can store the encrypted seed at rest. It is not possible to extract the seed from `Stronghold` for security purposes. `Stronghold` uses encrypted snapshots that can easily be backed up and securely shared between devices. These snapshots are further secured with a password.
 
 ## Testnet
 
-To join the public testnet checkout this [blog post](TODO: set working link). More information about Stardust components is available in the [tips repository](https://github.com/iotaledger/tips/pulls).
+To join the public testnet checkout this [blog post](https://blog.shimmer.network/shimmer-beta-network-is-live). More information about Stardust components is available in the [tips repository](https://github.com/iotaledger/tips/pulls).
 
 ## Joining the Discussion
 
