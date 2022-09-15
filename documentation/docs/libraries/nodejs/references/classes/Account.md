@@ -46,7 +46,6 @@ The Account class.
 - [signTransactionEssence](Account.md#signtransactionessence)
 - [submitAndStoreTransaction](Account.md#submitandstoretransaction)
 - [sync](Account.md#sync)
-- [tryClaimOutputs](Account.md#tryclaimoutputs)
 
 ## Methods
 
@@ -179,7 +178,7 @@ ___
 
 ### claimOutputs
 
-▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Claim basic or nft outputs that have additional unlock conditions
 to their `AddressUnlockCondition` from the account.
@@ -194,7 +193,7 @@ to their `AddressUnlockCondition` from the account.
 
 `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
-The resulting transactions.
+The resulting transaction.
 
 ___
 
@@ -846,25 +845,3 @@ Will also retry pending transactions if necessary.
 `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
-
-___
-
-### tryClaimOutputs
-
-▸ **tryClaimOutputs**(`outputsToClaim`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
-
-Try to claim basic outputs that have additional unlock conditions to
-their `AddressUnlockCondition` and send them to the first address of the
-account.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `outputsToClaim` | [`OutputsToClaim`](../enums/OutputsToClaim.md) | Outputs to try to claim. |
-
-#### Returns
-
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
-
-The resulting transactions.

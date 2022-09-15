@@ -344,10 +344,4 @@ pub enum AccountMethod {
         /// Sync options
         options: Option<SyncOptions>,
     },
-    /// Try to claim outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
-    TryClaimOutputs {
-        #[serde(rename = "outputsToClaim")]
-        outputs_to_claim: OutputsToClaim,
-    },
 }
