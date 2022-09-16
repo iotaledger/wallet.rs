@@ -132,7 +132,7 @@ pub enum AccountMethod {
         options: Option<TransactionOptions>,
     },
     /// Consolidate outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     ConsolidateOutputs {
         force: bool,
         #[serde(rename = "outputConsolidationThreshold")]
