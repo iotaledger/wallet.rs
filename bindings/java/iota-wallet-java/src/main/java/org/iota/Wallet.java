@@ -307,10 +307,6 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("RemoveLatestAccount"));
     }
 
-    public void deleteAccountsAndDatabase() throws WalletException {
-        callBaseApi(new ClientCommand("DeleteAccountsAndDatabase"));
-    }
-
     public String generateMnemonic() throws WalletException {
         return callBaseApi(new ClientCommand("GenerateMnemonic")).getAsString();
     }
