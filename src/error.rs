@@ -69,6 +69,16 @@ pub enum Error {
     /// Nft not found in unspent outputs
     #[error("nft not found in unspent outputs")]
     NftNotFoundInUnspentOutputs,
+    /// No outputs available for consolidating
+    #[error(
+        "nothing to consolidate: available outputs: {available_outputs}, consolidation threshold: {consolidation_threshold}"
+    )]
+    NoOutputsToConsolidate {
+        /// The available outputs for consolidation.
+        available_outputs: usize,
+        /// The consolidation threshold.
+        consolidation_threshold: usize,
+    },
     /// Record not found
     #[error("record {0} not found")]
     RecordNotFound(String),
@@ -135,6 +145,7 @@ impl serde::Serialize for Error {
             Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
             Self::MissingParameter(_) => serialize_variant(self, serializer, "MissingParameter"),
             Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
+            Self::NoOutputsToConsolidate { .. } => serialize_variant(self, serializer, "NoOutputsToConsolidate"),
             Self::RecordNotFound(_) => serialize_variant(self, serializer, "RecordNotFound"),
             Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
             Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),

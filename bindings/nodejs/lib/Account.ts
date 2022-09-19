@@ -193,16 +193,16 @@ export class Account {
 
     /**
      * Consolidate basic outputs with only an `AddressUnlockCondition` from an account
-     * by sending them to the same address again if the output amount is greater or
+     * by sending them to an own address again if the output amount is greater or
      * equal to the output consolidation threshold.
      * @param force Force consolidation on addresses where the threshold isn't met.
      * @param outputConsolidationThreshold A default threshold is used if this is omitted.
-     * @returns The consolidation transactions.
+     * @returns The consolidation transaction.
      */
     async consolidateOutputs(
         force: boolean,
         outputConsolidationThreshold?: number,
-    ): Promise<Transaction[]> {
+    ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
