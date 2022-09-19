@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::block::{
-    address::{Address, AliasAddress},
+    address::AliasAddress,
     dto::U256Dto,
     output::{
+        dto::AliasIdDto,
         feature::{Feature, MetadataFeature},
-        unlock_condition::{
-            GovernorAddressUnlockCondition, ImmutableAliasAddressUnlockCondition,
-            StateControllerAddressUnlockCondition, UnlockCondition,
-        },
+        unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
         AliasId, AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
     },
     DtoError,
@@ -17,21 +15,18 @@ use iota_client::block::{
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    account::{
-        handle::AccountHandle,
-        types::{Transaction, TransactionDto},
-        TransactionOptions,
-    },
-    Error,
+use crate::account::{
+    handle::AccountHandle,
+    types::{Transaction, TransactionDto},
+    TransactionOptions,
 };
 
 /// Address and foundry data for `mint_native_token()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NativeTokenOptions {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
-    #[serde(rename = "accountAddress")]
-    pub account_address: Option<String>,
+    /// The alias id which should be used to create the foundry.
+    #[serde(rename = "aliasId")]
+    pub alias_id: Option<AliasId>,
     /// Circulating supply
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256,
@@ -46,9 +41,9 @@ pub struct NativeTokenOptions {
 /// Dto for NativeTokenOptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NativeTokenOptionsDto {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
-    #[serde(rename = "accountAddress")]
-    pub account_address: Option<String>,
+    /// The alias id which should be used to create the foundry.
+    #[serde(rename = "aliasId")]
+    pub alias_id: Option<AliasIdDto>,
     /// Circulating supply
     #[serde(rename = "circulatingSupply")]
     pub circulating_supply: U256Dto,
@@ -65,7 +60,10 @@ impl TryFrom<&NativeTokenOptionsDto> for NativeTokenOptions {
 
     fn try_from(value: &NativeTokenOptionsDto) -> crate::Result<Self> {
         Ok(Self {
-            account_address: value.account_address.clone(),
+            alias_id: match &value.alias_id {
+                Some(alias_id) => Some(AliasId::try_from(alias_id)?),
+                None => None,
+            },
             circulating_supply: U256::try_from(&value.circulating_supply)
                 .map_err(|_| DtoError::InvalidField("circulating_supply"))?,
             maximum_supply: U256::try_from(&value.maximum_supply)
@@ -135,44 +133,12 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] mint_native_token");
         let rent_structure = self.client.get_rent_structure().await?;
 
-        let account_addresses = self.list_addresses().await?;
-        // the address needs to be from the account, because for the minting we need to sign transactions from it
-        let controller_address = match &native_token_options.account_address {
-            Some(bech32_address) => {
-                let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
-                if !account_addresses.iter().any(|addr| addr.address.inner == address) {
-                    return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
-                }
-                address
-            }
-            None => {
-                account_addresses
-                    .first()
-                    // todo other error message
-                    .ok_or(Error::FailedToGetRemainder)?
-                    .address
-                    .inner
-            }
-        };
+        let (alias_id, alias_output) = self
+            .get_alias_output(native_token_options.alias_id)
+            .await
+            .ok_or_else(|| crate::Error::MintingFailed("Missing alias output".to_string()))?;
 
-        let alias_id = self
-            .get_or_create_alias_output(controller_address, options.clone())
-            .await?;
-
-        let account = self.read().await;
-        let existing_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
-            if let Output::Alias(output) = &output_data.output {
-                output.alias_id().or_from_output_id(output_data.output_id) == alias_id
-            } else {
-                false
-            }
-        });
-        let existing_alias_output = existing_alias_output
-            .ok_or_else(|| Error::MintingFailed("no alias output available".to_string()))?
-            .clone();
-        drop(account);
-
-        if let Output::Alias(alias_output) = &existing_alias_output.output {
+        if let Output::Alias(alias_output) = &alias_output.output {
             // Create the new alias output with the same feature blocks, just updated state_index and foundry_counter
             let new_alias_output_builder = AliasOutputBuilder::from(alias_output)
                 .with_alias_id(alias_id)
@@ -216,65 +182,6 @@ impl AccountHandle {
                 .map(|transaction| MintTokenTransaction { token_id, transaction })
         } else {
             unreachable!("We checked if it's an alias output before")
-        }
-    }
-
-    /// Get an existing alias output or create a new one
-    pub(crate) async fn get_or_create_alias_output(
-        &self,
-        controller_address: Address,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<AliasId> {
-        log::debug!("[TRANSACTION] get_or_create_alias_output");
-        let rent_structure = self.client.get_rent_structure().await?;
-
-        let account = self.read().await;
-        let existing_alias_output = account
-            .unspent_outputs()
-            .values()
-            .into_iter()
-            .find(|output_data| matches!(&output_data.output, Output::Alias(_output)));
-        match existing_alias_output {
-            Some(output_data) => {
-                if let Output::Alias(alias_output) = &output_data.output {
-                    let alias_id = alias_output.alias_id().or_from_output_id(output_data.output_id);
-                    Ok(alias_id)
-                } else {
-                    unreachable!("We checked if it's an alias output before")
-                }
-            }
-            // Create a new alias output
-            None => {
-                drop(account);
-                let outputs = vec![
-                    AliasOutputBuilder::new_with_minimum_storage_deposit(rent_structure, AliasId::null())?
-                        .with_state_index(0)
-                        .with_foundry_counter(0)
-                        .add_unlock_condition(UnlockCondition::StateControllerAddress(
-                            StateControllerAddressUnlockCondition::new(controller_address),
-                        ))
-                        .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
-                            controller_address,
-                        )))
-                        .finish_output()?,
-                ];
-                let transaction = self.send(outputs, options).await?;
-
-                log::debug!("[TRANSACTION] sent alias output");
-                if let Some(block_id) = transaction.block_id {
-                    self.client.retry_until_included(&block_id, None, None).await?;
-                }
-                // Try to get the transaction confirmed
-                for _ in 0..10 {
-                    let balance = self.sync(None).await?;
-                    if !balance.aliases.is_empty() {
-                        return Ok(balance.aliases[0]);
-                    }
-                    self.sync_pending_transactions().await?;
-                    tokio::time::sleep(std::time::Duration::from_secs(5)).await;
-                }
-                Err(Error::MintingFailed("alias output creation took too long".to_string()))
-            }
         }
     }
 }
