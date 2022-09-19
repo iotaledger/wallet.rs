@@ -221,7 +221,7 @@ export class Account {
     }
 
     /**
-     * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+     * Melt native tokens. This happens with the foundry output which minted them, by increasing its
      * `melted_tokens` field.
      * @param tokenId The native token id.
      * @param meltAmount To be melted amount.
