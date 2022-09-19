@@ -1,6 +1,6 @@
 package org.iota.types.account_methods;
 
-import org.iota.types.Output;
+import org.iota.types.outputs.Output;
 
 /// Calculate the minimum required storage deposit for an output.
 public class MinimumRequiredStorageDeposit implements AccountMethod {

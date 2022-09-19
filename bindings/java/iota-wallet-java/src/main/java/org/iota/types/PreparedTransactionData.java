@@ -3,16 +3,29 @@
 
 package org.iota.types;
 
-import com.google.gson.JsonObject;
+import org.iota.types.transaction_essence.TransactionEssence;
 
-public class PreparedTransactionData extends AbstractJsonObject {
+public class PreparedTransactionData extends AbstractObject {
 
-    public PreparedTransactionData(JsonObject jsonObject) {
-        super(jsonObject);
+    private TransactionEssence essence;
+    private InputSigningData inputsData;
+    private RemainderData remainderData;
+
+    public PreparedTransactionData(TransactionEssence essence, InputSigningData inputsData, RemainderData remainderData) {
+        this.essence = essence;
+        this.inputsData = inputsData;
+        this.remainderData = remainderData;
     }
 
-    public PreparedTransactionData(String jsonObject) {
-        super(jsonObject);
+    public TransactionEssence getEssence() {
+        return essence;
     }
 
+    public InputSigningData getInputsData() {
+        return inputsData;
+    }
+
+    public RemainderData getRemainderData() {
+        return remainderData;
+    }
 }

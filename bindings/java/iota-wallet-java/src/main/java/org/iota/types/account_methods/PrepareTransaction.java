@@ -1,7 +1,7 @@
 package org.iota.types.account_methods;
 
-import org.iota.types.Output;
 import org.iota.types.TransactionOptions;
+import org.iota.types.outputs.Output;
 
 /// Prepare transaction.
 public class PrepareTransaction implements AccountMethod {

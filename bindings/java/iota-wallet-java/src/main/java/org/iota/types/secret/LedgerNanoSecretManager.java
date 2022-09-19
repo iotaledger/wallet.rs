@@ -23,15 +23,13 @@ public class LedgerNanoSecretManager extends SecretManager {
         return isSimulator;
     }
 
-    public static class LedgerNanoSecretManagerAdapter implements JsonSerializer<LedgerNanoSecretManager> {
+    class LedgerNanoSecretManagerAdapter implements JsonSerializer<LedgerNanoSecretManager> {
         @Override
         public JsonElement serialize(LedgerNanoSecretManager src, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject o = new JsonObject();
-            o.addProperty("LedgerNano", src.isSimulator);
+            o.addProperty("LedgerNano", src.isSimulator());
             return o;
         }
     }
 
 }
-
-

@@ -3,16 +3,13 @@
 
 package org.iota.types;
 
-import com.google.gson.JsonObject;
+import org.iota.types.payload.TransactionPayload;
 
-public class SignedTransactionData extends AbstractJsonObject {
+public class SignedTransactionData extends AbstractObject {
 
-    public SignedTransactionData(JsonObject jsonObject) {
-        super(jsonObject);
-    }
-
-    public SignedTransactionData(String jsonObject) {
-        super(jsonObject);
-    }
+    /// Transaction essence
+    private TransactionPayload transactionPayload;
+    /// Required address information for signing
+    private InputSigningData[] inputsData;
 
 }

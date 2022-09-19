@@ -24,7 +24,7 @@ public class StrongholdSecretManager extends SecretManager {
         this.snapshotPath = snapshotPath;
     }
 
-    public static class StrongholdSecretManagerAdapter implements JsonSerializer<StrongholdSecretManager> {
+    class StrongholdSecretManagerAdapter implements JsonSerializer<StrongholdSecretManager> {
         @Override
         public JsonElement serialize(StrongholdSecretManager s, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject dto = new JsonObject();

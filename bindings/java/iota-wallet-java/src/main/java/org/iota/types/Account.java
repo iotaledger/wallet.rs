@@ -2,6 +2,7 @@ package org.iota.types;
 
 import org.iota.types.ids.OutputId;
 import org.iota.types.ids.TransactionId;
+import org.iota.types.payload.TransactionPayload;
 
 import java.util.Map;
 import java.util.Set;

@@ -5,13 +5,14 @@ package org.iota.types;
 
 import org.iota.types.addresses.Address;
 import org.iota.types.ids.OutputId;
+import org.iota.types.outputs.Output;
 
 public class OutputData {
 
     /// The output id.
     private OutputId outputId;
     /// The metadata of the output.
-    private OutputMetadataResponse metadata;
+    private OutputMetadata metadata;
     /// The actual Output.
     private Output output;
     /// If an output is spent.
@@ -24,11 +25,6 @@ public class OutputData {
     private boolean remainder;
     /// Bip32 path.
     private Segment[] chain;
-
-    static class Segment {
-        private boolean hardened;
-        private byte[] bs;
-    }
 
 }
 

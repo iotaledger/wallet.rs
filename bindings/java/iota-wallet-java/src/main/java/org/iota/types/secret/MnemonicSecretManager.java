@@ -20,7 +20,7 @@ public class MnemonicSecretManager extends SecretManager {
         this.mnemonic = mnemonic;
     }
 
-    public static class MnemonicSecretManagerAdapter implements JsonSerializer<MnemonicSecretManager> {
+     class MnemonicSecretManagerAdapter implements JsonSerializer<MnemonicSecretManager> {
         @Override
         public JsonElement serialize(MnemonicSecretManager src, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject o = new JsonObject();

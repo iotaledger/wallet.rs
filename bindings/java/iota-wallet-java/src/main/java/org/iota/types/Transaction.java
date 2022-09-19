@@ -2,6 +2,7 @@ package org.iota.types;
 
 import org.iota.types.ids.BlockId;
 import org.iota.types.ids.TransactionId;
+import org.iota.types.payload.TransactionPayload;
 
 public class Transaction {
 

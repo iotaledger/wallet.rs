@@ -5,28 +5,27 @@ import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
 
-@JsonAdapter(TokenScheme.TokenSchemeAdapter.class)
-public abstract class TokenScheme  {
+@JsonAdapter(TokenSchemeAdapter.class)
+public abstract class TokenScheme  {}
 
-    public static class TokenSchemeAdapter implements JsonDeserializer<TokenScheme> {
-        @Override
-        public TokenScheme deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
-                throws JsonParseException {
+class TokenSchemeAdapter implements JsonDeserializer<TokenScheme> {
+    @Override
+    public TokenScheme deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
+            throws JsonParseException {
 
-            int type = json.getAsJsonObject().get("type").getAsInt();
+        int type = json.getAsJsonObject().get("type").getAsInt();
 
-            TokenScheme tokenScheme;
+        TokenScheme tokenScheme;
 
-            switch (type) {
-                case 0: {
-                    tokenScheme = new Gson().fromJson(json, TokenScheme.class);
-                    break;
-                }
-                default: throw new JsonParseException("unknown type: " + type);
+        switch (type) {
+            case 0: {
+                tokenScheme = new Gson().fromJson(json, SimpleTokenScheme.class);
+                break;
             }
-
-            return tokenScheme;
+            default: throw new JsonParseException("unknown type: " + type);
         }
+
+        return tokenScheme;
     }
 }
 

@@ -1,9 +1,8 @@
 package org.iota.types;
 
 import com.google.gson.*;
-import org.iota.types.AccountAddress;
-import org.iota.types.TaggedDataPayload;
 import org.iota.types.ids.OutputId;
+import org.iota.types.payload.TaggedDataPayload;
 
 import java.lang.reflect.Type;
 

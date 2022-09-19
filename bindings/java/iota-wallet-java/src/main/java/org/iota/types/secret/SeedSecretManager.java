@@ -20,7 +20,7 @@ public class SeedSecretManager extends SecretManager {
         this.hexSeed = hexSeed;
     }
 
-    public static class SeedSecretManagerAdapter implements JsonSerializer<SeedSecretManager> {
+    class SeedSecretManagerAdapter implements JsonSerializer<SeedSecretManager> {
         @Override
         public JsonElement serialize(SeedSecretManager s, Type typeOfSrc, JsonSerializationContext context) {
             JsonObject o = new JsonObject();
@@ -30,5 +30,3 @@ public class SeedSecretManager extends SecretManager {
     }
 
 }
-
-

@@ -1,6 +1,6 @@
 package org.iota.types.token_scheme;
 
-public class SimpleTokenScheme {
+public class SimpleTokenScheme extends TokenScheme {
     private int type = 0;
     private String mintedTokens;
     private String meltedTokens;

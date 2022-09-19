@@ -3,12 +3,14 @@
 
 package org.iota.types;
 
+import org.iota.types.outputs.Output;
+
 public class OutputResponse {
 
     /// The actual Output.
     private Output output;
     /// The metadata of the output.
-    private OutputMetadataResponse metadata;
+    private OutputMetadata metadata;
 
 }
 
