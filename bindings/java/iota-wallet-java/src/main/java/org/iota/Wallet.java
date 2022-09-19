@@ -3,14 +3,15 @@
 
 package org.iota;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import org.iota.api.GsonSingleton;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.account_methods.*;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.features.TagFeature;
-import org.iota.types.ids.TransactionId;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.outputs.Output;
 import org.iota.types.payload.TaggedDataPayload;
