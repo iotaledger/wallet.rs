@@ -295,10 +295,3 @@ export type __SyncAccountMethod__ = {
         options?: AccountSyncOptions;
     };
 };
-
-export type __TryClaimOutputsMethod__ = {
-    name: 'TryClaimOutputs';
-    data: {
-        outputsToClaim: OutputsToClaim;
-    };
-};

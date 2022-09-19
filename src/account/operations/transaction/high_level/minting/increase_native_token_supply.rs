@@ -116,7 +116,7 @@ impl AccountHandle {
         let TokenScheme::Simple(token_scheme) = foundry_output.token_scheme();
 
         let updated_token_scheme = TokenScheme::Simple(SimpleTokenScheme::new(
-            token_scheme.circulating_supply() + mint_amount,
+            token_scheme.minted_tokens() + mint_amount,
             *token_scheme.melted_tokens(),
             *token_scheme.maximum_supply(),
         )?);

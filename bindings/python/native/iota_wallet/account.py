@@ -439,16 +439,6 @@ class Account:
             }
         )
 
-    def try_claim_outputs(self, outputs_to_claim):
-        """Try to claim outputs.
-        """
-        return self._call_account_method(
-            'TryClaimOutputs', {
-                'outputsToClaim': outputs_to_claim
-
-            }
-        )
-
     def claim_outputs(self, output_ids_to_claim):
         """Claim outputs.
         """

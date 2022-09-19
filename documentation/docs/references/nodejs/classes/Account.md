@@ -46,7 +46,6 @@ The Account class.
 - [signTransactionEssence](Account.md#signtransactionessence)
 - [submitAndStoreTransaction](Account.md#submitandstoretransaction)
 - [sync](Account.md#sync)
-- [tryClaimOutputs](Account.md#tryclaimoutputs)
 
 ## Methods
 
@@ -179,7 +178,7 @@ ___
 
 ### claimOutputs
 
-▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **claimOutputs**(`outputIds`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Claim basic or nft outputs that have additional unlock conditions
 to their `AddressUnlockCondition` from the account.
@@ -194,16 +193,16 @@ to their `AddressUnlockCondition` from the account.
 
 `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
-The resulting transactions.
+The resulting transaction.
 
 ___
 
 ### consolidateOutputs
 
-▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **consolidateOutputs**(`force`, `outputConsolidationThreshold?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Consolidate basic outputs with only an `AddressUnlockCondition` from an account
-by sending them to the same address again if the output amount is greater or
+by sending them to an own address again if the output amount is greater or
 equal to the output consolidation threshold.
 
 #### Parameters
@@ -215,9 +214,9 @@ equal to the output consolidation threshold.
 
 #### Returns
 
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
-The consolidation transactions.
+The consolidation transaction.
 
 ___
 
@@ -846,25 +845,3 @@ Will also retry pending transactions if necessary.
 `Promise`<[`AccountBalance`](../interfaces/AccountBalance.md)\>
 
 The account balance.
-
-___
-
-### tryClaimOutputs
-
-▸ **tryClaimOutputs**(`outputsToClaim`): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
-
-Try to claim basic outputs that have additional unlock conditions to
-their `AddressUnlockCondition` and send them to the first address of the
-account.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `outputsToClaim` | [`OutputsToClaim`](../enums/OutputsToClaim.md) | Outputs to try to claim. |
-
-#### Returns
-
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
-
-The resulting transactions.

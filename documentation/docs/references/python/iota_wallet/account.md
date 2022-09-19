@@ -313,14 +313,6 @@ def submit_and_store_transaction(signed_transaction_data)
 
 Submit and store transaction.
 
-### try\_claim\_outputs
-
-```python
-def try_claim_outputs(outputs_to_claim)
-```
-
-Try to claim outputs.
-
 ### claim\_outputs
 
 ```python
