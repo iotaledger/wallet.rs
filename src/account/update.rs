@@ -85,11 +85,14 @@ impl AccountHandle {
         }
 
         // Update addresses_with_unspent_outputs
-        // get all addresses with balance that we didn't sync because their index is below the address_start_index of
-        // the options
-        account
-            .addresses_with_unspent_outputs
-            .retain(|a| a.key_index < options.address_start_index);
+        // only keep addresses below the address start index, because we synced the addresses above and will update them
+        account.addresses_with_unspent_outputs.retain(|a| {
+            if a.internal {
+                a.key_index < options.address_start_index_internal
+            } else {
+                a.key_index < options.address_start_index
+            }
+        });
         // then add all synced addresses with balance, all other addresses that had balance before will then be removed
         // from this list
         account
@@ -244,7 +247,7 @@ impl AccountHandle {
         internal: bool,
         new_addresses: Vec<AccountAddress>,
     ) -> crate::Result<()> {
-        log::debug!("[SYNC] Update account with new synced transactions");
+        log::debug!("[update_account_addresses]");
 
         let mut account = self.write().await;
 
@@ -257,7 +260,7 @@ impl AccountHandle {
 
         #[cfg(feature = "storage")]
         {
-            log::debug!("[ADDRESS GENERATION] storing account {}", account.index());
+            log::debug!("[update_account_addresses] storing account {}", account.index());
             self.save(Some(&account)).await?;
         }
         Ok(())

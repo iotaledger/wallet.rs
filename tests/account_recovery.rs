@@ -31,7 +31,7 @@ async fn account_recovery_empty() -> Result<()> {
         .finish()
         .await?;
 
-    let accounts = manager.recover_accounts(2, 2, None).await?;
+    let accounts = manager.recover_accounts(0, 2, 2, None).await?;
 
     // accounts should be empty if no account was created before and no account was found with balance
     assert_eq!(0, accounts.len());
@@ -62,7 +62,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
     manager.create_account().finish().await?;
     manager.create_account().finish().await?;
 
-    let accounts = manager.recover_accounts(2, 2, None).await?;
+    let accounts = manager.recover_accounts(0, 2, 2, None).await?;
 
     // accounts should still be ordered
     for (index, account) in accounts.iter().enumerate() {
@@ -96,7 +96,7 @@ async fn account_recovery_with_balance() -> Result<()> {
     // create one account
     manager.create_account().finish().await?;
 
-    let accounts = manager.recover_accounts(3, 2, None).await?;
+    let accounts = manager.recover_accounts(0, 3, 2, None).await?;
 
     // accounts should still be ordered
     for (index, account) in accounts.iter().enumerate() {
@@ -137,7 +137,7 @@ async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
     let account = manager.create_account().finish().await?;
     let _addresses = account.generate_addresses(5, None).await?;
 
-    let accounts = manager.recover_accounts(3, 2, None).await?;
+    let accounts = manager.recover_accounts(0, 3, 2, None).await?;
 
     // accounts should still be ordered
     for (index, account) in accounts.iter().enumerate() {

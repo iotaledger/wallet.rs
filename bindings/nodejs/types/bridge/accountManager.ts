@@ -85,6 +85,7 @@ export type __IsStrongholdPasswordAvailableMessage__ = {
 export type __RecoverAccountsMessage__ = {
     cmd: 'RecoverAccounts';
     payload: {
+        accountStartIndex: number;
         accountGapLimit: number;
         addressGapLimit: number;
         syncOptions?: AccountSyncOptions;

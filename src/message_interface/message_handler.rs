@@ -163,6 +163,7 @@ impl WalletMessageHandler {
                 .await
             }
             Message::RecoverAccounts {
+                account_start_index,
                 account_gap_limit,
                 address_gap_limit,
                 sync_options,
@@ -170,7 +171,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let account_handles = self
                         .account_manager
-                        .recover_accounts(account_gap_limit, address_gap_limit, sync_options)
+                        .recover_accounts(account_start_index, account_gap_limit, address_gap_limit, sync_options)
                         .await?;
                     let mut accounts = Vec::new();
                     for account_handle in account_handles {
