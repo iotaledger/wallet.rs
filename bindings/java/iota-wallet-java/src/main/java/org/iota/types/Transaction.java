@@ -30,4 +30,36 @@ public class Transaction {
         UnknownPruned,
     }
 
+
+    public TransactionPayload getPayload() {
+        return payload;
+    }
+
+    public BlockId getBlockId() {
+        return blockId;
+    }
+
+    public InclusionState getInclusionState() {
+        return inclusionState;
+    }
+
+    public String getTimestamp() {
+        return timestamp;
+    }
+
+    public TransactionId getTransactionId() {
+        return transactionId;
+    }
+
+    public String getNetworkId() {
+        return networkId;
+    }
+
+    public boolean isIncoming() {
+        return incoming;
+    }
+
+    public String getNote() {
+        return note;
+    }
 }

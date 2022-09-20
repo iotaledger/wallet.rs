@@ -11,12 +11,6 @@ public class PreparedTransactionData extends AbstractObject {
     private InputSigningData inputsData;
     private RemainderData remainderData;
 
-    public PreparedTransactionData(TransactionEssence essence, InputSigningData inputsData, RemainderData remainderData) {
-        this.essence = essence;
-        this.inputsData = inputsData;
-        this.remainderData = remainderData;
-    }
-
     public TransactionEssence getEssence() {
         return essence;
     }

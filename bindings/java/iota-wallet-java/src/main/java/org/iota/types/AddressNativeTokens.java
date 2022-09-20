@@ -16,5 +16,41 @@ public class AddressNativeTokens extends AbstractObject {
     /// Expiration in seconds, after which the output will be available for the sender again, if not spent by the
     /// receiver before. Default is 1 day
     private int expiration;
+
+    public String getAddress() {
+        return address;
+    }
+
+    public AddressNativeTokens withAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public Map<TokenId, String>[] getNativeTokens() {
+        return nativeTokens;
+    }
+
+    public AddressNativeTokens withNativeTokens(Map<TokenId, String>[] nativeTokens) {
+        this.nativeTokens = nativeTokens;
+        return this;
+    }
+
+    public String getReturnAddress() {
+        return returnAddress;
+    }
+
+    public AddressNativeTokens withReturnAddress(String returnAddress) {
+        this.returnAddress = returnAddress;
+        return this;
+    }
+
+    public int getExpiration() {
+        return expiration;
+    }
+
+    public AddressNativeTokens withExpiration(int expiration) {
+        this.expiration = expiration;
+        return this;
+    }
 }
 

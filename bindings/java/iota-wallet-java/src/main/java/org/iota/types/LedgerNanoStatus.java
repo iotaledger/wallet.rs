@@ -23,6 +23,14 @@ public class LedgerNanoStatus extends AbstractObject {
         private String name;
         /// Opened app version.
         private String version;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getVersion() {
+            return version;
+        }
     }
 
     public enum LedgerDeviceType {
@@ -34,4 +42,27 @@ public class LedgerNanoStatus extends AbstractObject {
         LedgerNanoSPlus,
     }
 
+    public boolean isConnected() {
+        return connected;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public boolean isBlindSigningEnabled() {
+        return blindSigningEnabled;
+    }
+
+    public LedgerApp getApp() {
+        return app;
+    }
+
+    public LedgerDeviceType getDevice() {
+        return device;
+    }
+
+    public int getBufferSize() {
+        return bufferSize;
+    }
 }

@@ -51,7 +51,15 @@ public class TransactionOptions {
     public static class ReuseAddress extends RemainderValueStrategy {}
     public static class ChangeAddress extends RemainderValueStrategy {}
     public static class CustomAddress extends RemainderValueStrategy {
-        AccountAddress content;
+        private AccountAddress content;
+
+        public CustomAddress(AccountAddress content) {
+            this.content = content;
+        }
+
+        public AccountAddress getContent() {
+            return content;
+        }
     }
 
 }

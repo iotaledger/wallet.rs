@@ -25,4 +25,31 @@ public class AccountBalance extends AbstractObject {
     /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
     private Map<OutputId, Boolean> potentiallyLockedOutputs;
 
+    public BaseCoinBalance getBaseCoin() {
+        return baseCoin;
+    }
+
+    public String getRequiredStorageDeposit() {
+        return requiredStorageDeposit;
+    }
+
+    public NativeTokensBalance[] getNativeTokens() {
+        return nativeTokens;
+    }
+
+    public NftId[] getNfts() {
+        return nfts;
+    }
+
+    public AliasId[] getAliases() {
+        return aliases;
+    }
+
+    public FoundryId[] getFoundries() {
+        return foundries;
+    }
+
+    public Map<OutputId, Boolean> getPotentiallyLockedOutputs() {
+        return potentiallyLockedOutputs;
+    }
 }

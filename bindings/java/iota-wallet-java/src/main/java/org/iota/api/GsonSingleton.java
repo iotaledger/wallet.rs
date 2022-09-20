@@ -5,7 +5,7 @@ import com.google.gson.GsonBuilder;
 
 public class GsonSingleton {
 
-    private static Gson GSON = new GsonBuilder().create();
+    private static Gson GSON = new GsonBuilder().serializeNulls().create();
 
     public static Gson getInstance() {
         return GSON;

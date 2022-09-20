@@ -26,5 +26,36 @@ public class OutputData {
     /// Bip32 path.
     private Segment[] chain;
 
+    public OutputId getOutputId() {
+        return outputId;
+    }
+
+    public OutputMetadata getMetadata() {
+        return metadata;
+    }
+
+    public Output getOutput() {
+        return output;
+    }
+
+    public boolean isSpent() {
+        return isSpent;
+    }
+
+    public Address getAddress() {
+        return address;
+    }
+
+    public String getNetworkId() {
+        return networkId;
+    }
+
+    public boolean isRemainder() {
+        return remainder;
+    }
+
+    public Segment[] getChain() {
+        return chain;
+    }
 }
 

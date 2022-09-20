@@ -12,4 +12,11 @@ public class SignedTransactionData extends AbstractObject {
     /// Required address information for signing
     private InputSigningData[] inputsData;
 
+    public TransactionPayload getTransactionPayload() {
+        return transactionPayload;
+    }
+
+    public InputSigningData[] getInputsData() {
+        return inputsData;
+    }
 }

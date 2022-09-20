@@ -21,4 +21,5 @@ public class NativeTokensBalance extends AbstractObject {
     public String getAvailable() {
         return available;
     }
+
 }

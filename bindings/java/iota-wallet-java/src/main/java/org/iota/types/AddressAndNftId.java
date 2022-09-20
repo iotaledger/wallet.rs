@@ -9,4 +9,21 @@ public class AddressAndNftId extends AbstractObject {
     /// Nft id
     private NftId nftId;
 
+    public String getAddress() {
+        return address;
+    }
+
+    public AddressAndNftId withAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public NftId getNftId() {
+        return nftId;
+    }
+
+    public AddressAndNftId withNftId(NftId nftId) {
+        this.nftId = nftId;
+        return this;
+    }
 }

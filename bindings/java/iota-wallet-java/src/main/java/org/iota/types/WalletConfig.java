@@ -3,6 +3,7 @@
 
 package org.iota.types;
 
+import com.google.gson.Gson;
 import org.iota.api.GsonSingleton;
 import org.iota.types.secret.SecretManager;
 
@@ -19,7 +20,7 @@ public class WalletConfig {
     }
 
     public WalletConfig withClientOptions(ClientConfig clientOptions) {
-        this.clientOptions = GsonSingleton.getInstance().toJsonTree(clientOptions).toString();
+        this.clientOptions = new Gson().toJsonTree(clientOptions).toString();
         return this;
     }
 

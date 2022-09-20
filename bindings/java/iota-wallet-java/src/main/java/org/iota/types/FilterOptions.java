@@ -16,4 +16,12 @@ public class FilterOptions {
         this.upperBoundBookedTimestamp = upperBoundBookedTimestamp;
         return this;
     }
+
+    public Integer getLowerBoundBookedTimestamp() {
+        return lowerBoundBookedTimestamp;
+    }
+
+    public Integer getUpperBoundBookedTimestamp() {
+        return upperBoundBookedTimestamp;
+    }
 }

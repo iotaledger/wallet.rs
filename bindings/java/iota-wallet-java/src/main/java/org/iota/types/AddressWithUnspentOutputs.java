@@ -13,6 +13,21 @@ public class AddressWithUnspentOutputs {
     /// Output ids.
     private OutputId[] output_ids;
 
+    public AddressWrapper getAddress() {
+        return address;
+    }
+
+    public int getKeyIndex() {
+        return keyIndex;
+    }
+
+    public boolean isInternal() {
+        return internal;
+    }
+
+    public OutputId[] getOutput_ids() {
+        return output_ids;
+    }
 }
 
 

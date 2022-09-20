@@ -5,4 +5,12 @@ public class BaseCoinBalance {
     private String total;
     /// Balance that can currently be spent
     private String available;
+
+    public String getTotal() {
+        return total;
+    }
+
+    public String getAvailable() {
+        return available;
+    }
 }

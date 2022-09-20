@@ -166,7 +166,9 @@ public class Wallet extends NativeApi {
         JsonObject method = new JsonObject();
         method.addProperty("name", accountMethod.getClass().getSimpleName());
         JsonElement data = GsonSingleton.getInstance().toJsonTree(accountMethod);
-        if(!data.toString().equals("{}"))
+        if(data.toString().equals("{}"))
+            method.add("data", null);
+        else
             method.add("data", data);
 
         JsonObject o = new JsonObject();

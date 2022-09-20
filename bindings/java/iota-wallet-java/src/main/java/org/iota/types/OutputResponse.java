@@ -12,5 +12,12 @@ public class OutputResponse {
     /// The metadata of the output.
     private OutputMetadata metadata;
 
+    public Output getOutput() {
+        return output;
+    }
+
+    public OutputMetadata getMetadata() {
+        return metadata;
+    }
 }
 

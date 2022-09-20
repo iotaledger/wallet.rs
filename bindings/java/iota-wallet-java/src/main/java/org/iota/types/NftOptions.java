@@ -7,4 +7,31 @@ public class NftOptions extends AbstractObject {
     private String immutableMetadata;
     /// Nft metadata, hex encoded bytes
     private String metadata;
+
+    public String getAddress() {
+        return address;
+    }
+
+    public NftOptions withAddress(String address) {
+        this.address = address;
+        return this;
+    }
+
+    public String getImmutableMetadata() {
+        return immutableMetadata;
+    }
+
+    public NftOptions withImmutableMetadata(String immutableMetadata) {
+        this.immutableMetadata = immutableMetadata;
+        return this;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public NftOptions withMetadata(String metadata) {
+        this.metadata = metadata;
+        return this;
+    }
 }

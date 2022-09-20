@@ -13,4 +13,20 @@ public class InputSigningData extends AbstractObject {
     /// The bech32 encoded address, required because of alias outputs where we have multiple possible unlock
     /// conditions, because we otherwise don't know which one we need
     private String bech32Address;
+
+    public Output getOutput() {
+        return output;
+    }
+
+    public OutputMetadata getOutputMetadata() {
+        return outputMetadata;
+    }
+
+    public Segment[] getChain() {
+        return chain;
+    }
+
+    public String getBech32Address() {
+        return bech32Address;
+    }
 }

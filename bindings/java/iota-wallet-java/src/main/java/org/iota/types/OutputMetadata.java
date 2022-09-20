@@ -19,4 +19,43 @@ public class OutputMetadata {
     private int milestoneTimestampBooked;
     private int ledgerIndex;
 
+    public BlockId getBlockId() {
+        return blockId;
+    }
+
+    public TransactionId getTransactionId() {
+        return transactionId;
+    }
+
+    public int getOutputIndex() {
+        return outputIndex;
+    }
+
+    public boolean isSpent() {
+        return isSpent;
+    }
+
+    public Integer getMilestoneIndexSpent() {
+        return milestoneIndexSpent;
+    }
+
+    public Integer getMilestoneTimestampSpent() {
+        return milestoneTimestampSpent;
+    }
+
+    public TransactionId getTransactionIdSpent() {
+        return transactionIdSpent;
+    }
+
+    public int getMilestoneIndexBooked() {
+        return milestoneIndexBooked;
+    }
+
+    public int getMilestoneTimestampBooked() {
+        return milestoneTimestampBooked;
+    }
+
+    public int getLedgerIndex() {
+        return ledgerIndex;
+    }
 }

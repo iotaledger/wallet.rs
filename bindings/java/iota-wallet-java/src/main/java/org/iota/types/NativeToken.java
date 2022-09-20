@@ -12,6 +12,11 @@ public class NativeToken {
     // Identifier of the native token.
     private String amount;
 
+    public NativeToken(TokenId id, String amount) {
+        this.id = id;
+        this.amount = amount;
+    }
+
     public TokenId getId() {
         return id;
     }
@@ -19,4 +24,5 @@ public class NativeToken {
     public String getAmount() {
         return amount;
     }
+
 }

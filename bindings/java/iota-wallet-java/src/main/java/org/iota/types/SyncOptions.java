@@ -22,4 +22,67 @@ public class SyncOptions extends AbstractObject {
     /// Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
     /// `sync_aliases_and_nfts`
     private boolean syncOnlyMostBasicOutputs;
+
+    public String[] getAddresses() {
+        return addresses;
+    }
+
+    public SyncOptions withAddresses(String[] addresses) {
+        this.addresses = addresses;
+        return this;
+    }
+
+    public int getAddressStartIndex() {
+        return addressStartIndex;
+    }
+
+    public SyncOptions withAddressStartIndex(int addressStartIndex) {
+        this.addressStartIndex = addressStartIndex;
+        return this;
+    }
+
+    public boolean isForceSyncing() {
+        return forceSyncing;
+    }
+
+    public SyncOptions withForceSyncing(boolean forceSyncing) {
+        this.forceSyncing = forceSyncing;
+        return this;
+    }
+
+    public boolean isSyncIncomingTransactions() {
+        return syncIncomingTransactions;
+    }
+
+    public SyncOptions withSyncIncomingTransactions(boolean syncIncomingTransactions) {
+        this.syncIncomingTransactions = syncIncomingTransactions;
+        return this;
+    }
+
+    public boolean isSyncPendingTransactions() {
+        return syncPendingTransactions;
+    }
+
+    public SyncOptions withSyncPendingTransactions(boolean syncPendingTransactions) {
+        this.syncPendingTransactions = syncPendingTransactions;
+        return this;
+    }
+
+    public boolean isSyncAliasesAndNfts() {
+        return syncAliasesAndNfts;
+    }
+
+    public SyncOptions withSyncAliasesAndNfts(boolean syncAliasesAndNfts) {
+        this.syncAliasesAndNfts = syncAliasesAndNfts;
+        return this;
+    }
+
+    public boolean isSyncOnlyMostBasicOutputs() {
+        return syncOnlyMostBasicOutputs;
+    }
+
+    public SyncOptions withSyncOnlyMostBasicOutputs(boolean syncOnlyMostBasicOutputs) {
+        this.syncOnlyMostBasicOutputs = syncOnlyMostBasicOutputs;
+        return this;
+    }
 }
