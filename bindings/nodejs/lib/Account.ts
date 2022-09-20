@@ -14,6 +14,7 @@ import type {
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
+    AliasOutputOptions,
     FilterOptions,
     IncreaseNativeTokenSupplyOptions,
     MintTokenTransaction,
@@ -214,6 +215,30 @@ export class Account {
                 data: {
                     force,
                     outputConsolidationThreshold,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
+     * `createAliasOutput` creates an alias output
+     * @param aliasOutputOptions The alias output options.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns A transaction object.
+     */
+    async createAliasOutput(
+        aliasOutputOptions?: AliasOutputOptions,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'CreateAliasOutput',
+                data: {
+                    aliasOutputOptions,
+                    options: transactionOptions,
                 },
             },
         );

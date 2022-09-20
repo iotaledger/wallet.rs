@@ -24,9 +24,12 @@ use crate::{
             output_claiming::OutputsToClaim,
             syncing::SyncOptions,
             transaction::{
-                high_level::minting::{
-                    increase_native_token_supply::IncreaseNativeTokenSupplyOptionsDto,
-                    mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto,
+                high_level::{
+                    create_alias::AliasOutputOptionsDto,
+                    minting::{
+                        increase_native_token_supply::IncreaseNativeTokenSupplyOptionsDto,
+                        mint_native_token::NativeTokenOptionsDto, mint_nfts::NftOptionsDto,
+                    },
                 },
                 prepare_output::OutputOptionsDto,
                 TransactionOptions,
@@ -137,6 +140,13 @@ pub enum AccountMethod {
         force: bool,
         #[serde(rename = "outputConsolidationThreshold")]
         output_consolidation_threshold: Option<usize>,
+    },
+    /// Create an alias output.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    CreateAliasOutput {
+        #[serde(rename = "aliasOutputOptions")]
+        alias_output_options: Option<AliasOutputOptionsDto>,
+        options: Option<TransactionOptions>,
     },
     /// Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
     /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be

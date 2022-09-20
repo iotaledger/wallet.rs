@@ -8,6 +8,7 @@ import type {
     __BurnNftMethod__,
     __ClaimOutputsMethod__,
     __ConsolidateOutputsMethod__,
+    __CreateAliasOutputMethod__,
     __DecreaseNativeTokenSupplyMethod__,
     __DestroyAliasMethod__,
     __DestroyFoundryMethod__,
@@ -77,6 +78,7 @@ export type __AccountMethod__ =
     | __BurnNftMethod__
     | __ClaimOutputsMethod__
     | __ConsolidateOutputsMethod__
+    | __CreateAliasOutputMethod__
     | __DestroyAliasMethod__
     | __DestroyFoundryMethod__
     | __GenerateAddressesMethod__

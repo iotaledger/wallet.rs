@@ -73,6 +73,7 @@
 - [IncreaseNativeTokenSupplyOptions](interfaces/IncreaseNativeTokenSupplyOptions.md)
 - [NativeTokenOptions](interfaces/NativeTokenOptions.md)
 - [NftOptions](interfaces/NftOptions.md)
+- [AliasOutputOptions](interfaces/AliasOutputOptions.md)
 
 ### Enumerations
 

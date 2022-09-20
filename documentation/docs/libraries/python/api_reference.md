@@ -92,6 +92,16 @@ def consolidate_outputs(force, output_consolidation_threshold)
 
 Consolidate outputs.
 
+<a id="iota_wallet.account.Account.create_alias_output"></a>
+
+#### create\_alias\_output
+
+```python
+def create_alias_output(alias_output_options, options)
+```
+
+Create an alias outputs.
+
 <a id="iota_wallet.account.Account.destroy_alias"></a>
 
 #### destroy\_alias

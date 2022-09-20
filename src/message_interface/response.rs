@@ -97,6 +97,7 @@ pub enum Response {
     IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
     /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
+    /// [`CreateAliasOutput`](crate::message_interface::AccountMethod::CreateAliasOutput)
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),

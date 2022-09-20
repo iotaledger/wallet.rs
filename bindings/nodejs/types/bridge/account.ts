@@ -18,6 +18,7 @@ import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
 import type { PreparedTransactionData } from '../preparedTransactionData';
 import type {
+    AliasOutputOptions,
     IncreaseNativeTokenSupplyOptions,
     NativeTokenOptions,
     TransactionOptions,
@@ -73,6 +74,14 @@ export type __ConsolidateOutputsMethod__ = {
     data: {
         force: boolean;
         outputConsolidationThreshold?: number;
+    };
+};
+
+export type __CreateAliasOutputMethod__ = {
+    name: 'CreateAliasOutput';
+    data: {
+        aliasOutputOptions?: AliasOutputOptions;
+        options?: TransactionOptions;
     };
 };
 

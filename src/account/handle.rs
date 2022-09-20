@@ -138,6 +138,12 @@ impl AccountHandle {
         Ok(all_addresses.to_vec())
     }
 
+    /// Returns all public addresses of the account
+    pub(crate) async fn public_addresses(&self) -> Vec<AccountAddress> {
+        let account = self.read().await;
+        account.public_addresses().to_vec()
+    }
+
     /// Returns only addresses of the account with balance
     pub async fn list_addresses_with_unspent_outputs(&self) -> Result<Vec<AddressWithUnspentOutputs>> {
         let account = self.read().await;

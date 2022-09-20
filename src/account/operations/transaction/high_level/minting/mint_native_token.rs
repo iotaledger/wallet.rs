@@ -104,16 +104,13 @@ impl From<&MintTokenTransaction> for MintTokenTransactionDto {
 }
 
 impl AccountHandle {
-    /// Function to mint native tokens
-    /// This happens in a two step process:
-    /// 1. Create or get an existing alias output
-    /// 2. Create a new foundry output with native tokens minted to the account address
+    /// Function to create a new foundry output with minted native tokens.
     /// Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
     /// RemainderValueStrategy or custom inputs.
     /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let native_token_options = NativeTokenOptions {
-    ///     account_address: None,
+    ///     alias_id: None,
     ///     circulating_supply: U256::from(100),
     ///     maximum_supply: U256::from(100),
     ///     foundry_metadata: None

@@ -156,6 +156,18 @@ class Account:
             }
         )
 
+    def create_alias_output(self,
+                            alias_output_options,
+                            options):
+        """Create an alias outputs.
+        """
+        return self._call_account_method(
+            'CreateAliasOutput', {
+                'aliasOutputOptions': alias_output_options,
+                'options':  options
+            }
+        )
+
     def destroy_alias(self,
                       alias_id,
                       options=None):

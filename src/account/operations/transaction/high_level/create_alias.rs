@@ -22,26 +22,25 @@ use crate::{
     Error,
 };
 
-/// Address and nft for `send_nft()`
+/// Address and alias for `create_alias_output()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AliasOutputOptions {
-    /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
-    #[serde(rename = "accountAddress")]
-    pub account_address: Option<String>,
-    /// Immutable nft metadata
+    /// Bech32 encoded address which will control the alias. Default will use the first
+    /// address of the account
+    pub address: Option<String>,
+    /// Immutable alias metadata
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<Vec<u8>>,
-    /// Nft metadata
+    /// Alias metadata
     pub metadata: Option<Vec<u8>>,
 }
 
-/// Dto for NftOptions
+/// Dto for aliasOptions
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AliasOutputOptionsDto {
-    /// Bech32 encoded address to which the Nft will be minted. Default will use the
-    /// first address of the account
-    #[serde(rename = "accountAddress")]
-    pub account_address: Option<String>,
+    /// Bech32 encoded address which will control the alias. Default will use the first
+    /// address of the account
+    pub address: Option<String>,
     /// Immutable alias metadata, hex encoded bytes
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<String>,
@@ -54,7 +53,7 @@ impl TryFrom<&AliasOutputOptionsDto> for AliasOutputOptions {
 
     fn try_from(value: &AliasOutputOptionsDto) -> crate::Result<Self> {
         Ok(Self {
-            account_address: value.account_address.clone(),
+            address: value.address.clone(),
             immutable_metadata: match &value.immutable_metadata {
                 Some(metadata) => {
                     Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
@@ -71,14 +70,11 @@ impl TryFrom<&AliasOutputOptionsDto> for AliasOutputOptions {
 
 impl AccountHandle {
     /// Function to create an alias output.
-    /// Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
-    /// RemainderValueStrategy or custom inputs.
-    /// Address needs to be Bech32 encoded
     /// ```ignore
     /// let alias_options = AliasOutputOptions {
-    ///     address: Some("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string()),
-    ///     immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
-    ///     metadata: Some(b"some nft metadata".to_vec()),
+    ///     address: None,
+    ///     immutable_metadata: Some(b"some immutable alias metadata".to_vec()),
+    ///     metadata: Some(b"some alias metadata".to_vec()),
     /// };
     ///
     /// let transaction = account.create_alias_output(alias_options, None).await?;
@@ -90,7 +86,7 @@ impl AccountHandle {
     /// ```
     pub async fn create_alias_output(
         &self,
-        alias_output_options: AliasOutputOptions,
+        alias_output_options: Option<AliasOutputOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<Transaction> {
         let prepared_transaction = self.prepare_create_alias_output(alias_output_options, options).await?;
@@ -99,26 +95,21 @@ impl AccountHandle {
 
     pub(crate) async fn prepare_create_alias_output(
         &self,
-        alias_output_options: AliasOutputOptions,
+        alias_output_options: Option<AliasOutputOptions>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        log::debug!("[TRANSACTION] get_or_create_alias_output");
+        log::debug!("[TRANSACTION] prepare_create_alias_output");
         let rent_structure = self.client.get_rent_structure().await?;
 
-        let account_addresses = self.list_addresses().await?;
-        // the address needs to be from the account, because for the minting we need to sign transactions from it
-        let controller_address = match &alias_output_options.account_address {
-            Some(bech32_address) => {
-                let (_bech32_hrp, address) = Address::try_from_bech32(&bech32_address)?;
-                if !account_addresses.iter().any(|addr| addr.address.inner == address) {
-                    return Err(Error::AddressNotFoundInAccount(bech32_address.to_string()));
-                }
-                address
-            }
+        let controller_address = match alias_output_options
+            .as_ref()
+            .and_then(|options| options.address.as_ref())
+        {
+            Some(bech32_address) => Address::try_from_bech32(bech32_address)?.1,
             None => {
-                account_addresses
+                self.public_addresses()
+                    .await
                     .first()
-                    // todo other error message
                     .ok_or(Error::FailedToGetRemainder)?
                     .address
                     .inner
@@ -135,11 +126,14 @@ impl AccountHandle {
                 .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
                     controller_address,
                 )));
-        if let Some(immutable_metadata) = alias_output_options.immutable_metadata {
+        if let Some(immutable_metadata) = alias_output_options
+            .as_ref()
+            .and_then(|options| options.immutable_metadata.clone())
+        {
             alias_output_builder = alias_output_builder
                 .add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
         };
-        if let Some(metadata) = alias_output_options.metadata {
+        if let Some(metadata) = alias_output_options.and_then(|options| options.metadata) {
             alias_output_builder = alias_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
         };
 

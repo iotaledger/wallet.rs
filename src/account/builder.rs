@@ -121,7 +121,7 @@ impl AccountBuilder {
                     // seeds
                     let first_account_public_address =
                         get_first_public_address(&self.secret_manager, first_account_coin_type, 0).await?;
-                    let first_account_addresses = first_account.list_addresses().await?;
+                    let first_account_addresses = first_account.public_addresses().await;
 
                     if first_account_public_address
                         != first_account_addresses
