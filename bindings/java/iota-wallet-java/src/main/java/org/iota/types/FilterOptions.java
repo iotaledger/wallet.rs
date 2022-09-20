@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class FilterOptions {
+public class FilterOptions extends AbstractObject {
 
     /// Filter all outputs where the booked milestone index is below the specified timestamp
     private Integer lowerBoundBookedTimestamp;

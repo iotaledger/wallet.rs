@@ -6,7 +6,7 @@ import org.iota.types.payload.TaggedDataPayload;
 
 import java.lang.reflect.Type;
 
-public class TransactionOptions {
+public class TransactionOptions extends AbstractObject {
 
     private RemainderValueStrategy remainderValueStrategy = new ReuseAddress();
     private TaggedDataPayload taggedDataPayload;

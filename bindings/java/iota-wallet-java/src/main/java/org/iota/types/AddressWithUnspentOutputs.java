@@ -2,7 +2,7 @@ package org.iota.types;
 
 import org.iota.types.ids.OutputId;
 
-public class AddressWithUnspentOutputs {
+public class AddressWithUnspentOutputs extends AbstractObject {
 
     /// The address.
     private AddressWrapper address;

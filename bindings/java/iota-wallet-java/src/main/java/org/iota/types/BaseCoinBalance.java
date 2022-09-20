@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class BaseCoinBalance {
+public class BaseCoinBalance extends AbstractObject {
     /// Total amount
     private String total;
     /// Balance that can currently be spent

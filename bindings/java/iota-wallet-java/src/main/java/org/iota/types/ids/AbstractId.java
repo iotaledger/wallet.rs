@@ -3,7 +3,11 @@
 
 package org.iota.types.ids;
 
+import com.google.gson.*;
+
+import java.lang.reflect.Type;
 import java.util.Objects;
+
 
 public abstract class AbstractId {
 
@@ -32,3 +36,12 @@ public abstract class AbstractId {
     }
 
 }
+
+class AbstractIdAdapter implements JsonSerializer<AbstractId> {
+
+    @Override
+    public JsonElement serialize(AbstractId src, Type typeOfSrc, JsonSerializationContext context) {
+        return new JsonPrimitive(src.toString());
+    }
+}
+

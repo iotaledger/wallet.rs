@@ -5,7 +5,7 @@ package org.iota.types;
 
 import org.iota.types.outputs.Output;
 
-public class OutputResponse {
+public class OutputResponse extends AbstractObject {
 
     /// The actual Output.
     private Output output;

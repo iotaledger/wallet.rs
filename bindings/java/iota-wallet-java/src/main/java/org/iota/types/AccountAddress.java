@@ -1,6 +1,6 @@
 package org.iota.types;
 
-public class AccountAddress {
+public class AccountAddress extends AbstractObject {
 
     /// The address.
     private String address;

@@ -5,7 +5,7 @@ package org.iota.types;
 
 import org.iota.types.ids.TokenId;
 
-public class NativeToken {
+public class NativeToken extends AbstractObject {
 
     // Identifier of the native token.
     private TokenId id;

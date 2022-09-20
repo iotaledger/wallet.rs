@@ -4,7 +4,7 @@ import org.iota.types.ids.BlockId;
 import org.iota.types.ids.TransactionId;
 import org.iota.types.payload.TransactionPayload;
 
-public class Transaction {
+public class Transaction extends AbstractObject {
 
     /// The transaction payload
     private TransactionPayload payload;

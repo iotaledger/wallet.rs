@@ -7,7 +7,7 @@ import org.iota.types.addresses.Address;
 import org.iota.types.ids.OutputId;
 import org.iota.types.outputs.Output;
 
-public class OutputData {
+public class OutputData extends AbstractObject {
 
     /// The output id.
     private OutputId outputId;

@@ -6,7 +6,7 @@ package org.iota.types;
 import org.iota.types.ids.BlockId;
 import org.iota.types.ids.TransactionId;
 
-public class OutputMetadata {
+public class OutputMetadata extends AbstractObject {
 
     private BlockId blockId;
     private TransactionId transactionId;

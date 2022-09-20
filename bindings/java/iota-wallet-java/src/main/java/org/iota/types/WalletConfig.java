@@ -7,7 +7,7 @@ import com.google.gson.Gson;
 import org.iota.api.GsonSingleton;
 import org.iota.types.secret.SecretManager;
 
-public class WalletConfig {
+public class WalletConfig extends AbstractObject {
 
     private String storagePath;
     private String clientOptions;
