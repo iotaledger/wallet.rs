@@ -60,7 +60,7 @@ export interface NftOptions {
     metadata?: string;
 }
 
-/** Options for the transaction creation */
+/** Options for the alias output creation */
 export interface AliasOutputOptions {
     /** Bech32 encoded address to which the Nft will be minted. Default will use the
      * first address of the account

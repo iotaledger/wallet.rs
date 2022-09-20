@@ -1,6 +1,6 @@
 # Interface: AliasOutputOptions
 
-Options for the transaction creation
+Options for the alias output creation
 
 ## Table of contents
 
