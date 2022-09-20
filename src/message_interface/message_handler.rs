@@ -163,6 +163,7 @@ impl WalletMessageHandler {
                 .await
             }
             Message::RecoverAccounts {
+                account_start_index,
                 account_gap_limit,
                 address_gap_limit,
                 sync_options,
@@ -170,7 +171,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let account_handles = self
                         .account_manager
-                        .recover_accounts(account_gap_limit, address_gap_limit, sync_options)
+                        .recover_accounts(account_start_index, account_gap_limit, address_gap_limit, sync_options)
                         .await?;
                     let mut accounts = Vec::new();
                     for account_handle in account_handles {
@@ -538,6 +539,15 @@ impl WalletMessageHandler {
             AccountMethod::ListUnspentOutputs { filter_options } => {
                 let outputs = account_handle.list_unspent_outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
+            }
+            AccountMethod::ListIncomingTransactions => {
+                let transactions = account_handle.list_incoming_transactions().await?;
+                Ok(Response::IncomingTransactionsData(
+                    transactions
+                        .into_iter()
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .collect(),
+                ))
             }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;

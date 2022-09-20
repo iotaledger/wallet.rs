@@ -56,8 +56,6 @@ impl AccountHandle {
             return self.balance().await;
         }
 
-        // one could skip addresses to sync, to sync faster (should we only add a field to the sync option to only sync
-        // specific addresses?)
         let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 

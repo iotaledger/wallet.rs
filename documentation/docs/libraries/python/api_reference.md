@@ -195,6 +195,16 @@ def list_unspent_outputs(filter_options=None)
 
 Returns all unspent outputs of the account.
 
+<a id="iota_wallet.account.Account.list_incoming_transactions"></a>
+
+#### list\_incoming\_transactions
+
+```python
+def list_incoming_transactions()
+```
+
+Returns all incoming transactions of the account.
+
 <a id="iota_wallet.account.Account.list_transactions"></a>
 
 #### list\_transactions
@@ -213,7 +223,7 @@ Returns all transaction of the account.
 def list_pending_transactions()
 ```
 
-Returns all pending transaction of the account.
+Returns all pending transactions of the account.
 
 <a id="iota_wallet.account.Account.decrease_native_token_supply"></a>
 
@@ -621,7 +631,8 @@ Is stronghold password available.
 #### recover\_accounts
 
 ```python
-def recover_accounts(account_gap_limit, address_gap_limit, sync_options)
+def recover_accounts(account_start_index, account_gap_limit, address_gap_limit,
+                     sync_options)
 ```
 
 Recover accounts.

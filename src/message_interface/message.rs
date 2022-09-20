@@ -78,18 +78,19 @@ pub enum Message {
     /// Find accounts with unspent outputs
     /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     RecoverAccounts {
+        #[serde(rename = "accountStartIndex")]
+        /// The index of the first account to search for.
+        account_start_index: u32,
         #[serde(rename = "accountGapLimit")]
-        /// Defines how many accounts without unspent outputs will be
-        /// checked, if an account has unspent outputs, the counter is reset
+        /// The number of accounts to search for, after the last account with unspent outputs.
         account_gap_limit: u32,
         #[serde(rename = "addressGapLimit")]
-        /// Defines how many addresses without unspent outputs will be checked in each account, if an
-        /// address has unspent outputs, the counter is reset
+        /// The number of addresses to search for, after the last address with unspent outputs, in
+        /// each account.
         address_gap_limit: u32,
         #[serde(rename = "syncOptions")]
-        /// SyncOptions to be used during the account recovery process.
-        /// address_start_index and force_syncing will be overwritten in sync_options to not skip addresses, but also
-        /// don't send duplicated requests
+        /// Optional parameter to specify the sync options. The `address_start_index` and `force_syncing`
+        /// fields will be overwritten to skip existing addresses.
         sync_options: Option<SyncOptions>,
     },
     /// Restore a backup from a Stronghold file
@@ -202,13 +203,14 @@ impl Debug for Message {
                 password: _,
             } => write!(f, "Backup{{ destination: {:?} }}", destination),
             Message::RecoverAccounts {
+                account_start_index,
                 account_gap_limit,
                 address_gap_limit,
                 sync_options,
             } => write!(
                 f,
-                "RecoverAccounts{{ account_gap_limit: {:?}, address_gap_limit: {:?}, sync_options: {:?} }}",
-                account_gap_limit, address_gap_limit, sync_options
+                "RecoverAccounts{{ account_start_index: {:?}, account_gap_limit: {:?}, address_gap_limit: {:?}, sync_options: {:?} }}",
+                account_start_index, account_gap_limit, address_gap_limit, sync_options
             ),
             Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]

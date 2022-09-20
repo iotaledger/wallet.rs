@@ -4,26 +4,27 @@
 import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
-    Address,
+    AccountMetadata,
     AccountSyncOptions,
     AccountMeta,
-    FilterOptions,
-    OutputsToClaim,
-    OutputData,
-    Transaction,
-    NativeTokenOptions,
-    TransactionOptions,
-    NftOptions,
+    Address,
     AddressWithAmount,
     AddressWithMicroAmount,
     AddressNativeTokens,
     AddressNftId,
     AddressGenerationOptions,
     AddressWithUnspentOutputs,
+    FilterOptions,
     IncreaseNativeTokenSupplyOptions,
     MintTokenTransaction,
-    PreparedTransactionData,
+    NativeTokenOptions,
+    NftOptions,
+    OutputData,
     OutputOptions,
+    OutputsToClaim,
+    PreparedTransactionData,
+    Transaction,
+    TransactionOptions,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -33,17 +34,20 @@ import type {
     BuildNftOutputData,
 } from '../types/buildOutputData';
 import type {
+    HexEncodedAmount,
     IAliasOutput,
     IBasicOutput,
     IFoundryOutput,
     INftOutput,
-    HexEncodedAmount,
+    IOutputResponse,
+    ITransactionPayload,
     OutputTypes,
 } from '@iota/types';
 
 /** The Account class. */
 export class Account {
-    meta: AccountMeta;
+    // private because the data isn't updated
+    private meta: AccountMeta;
     private messageHandler: MessageHandler;
 
     constructor(accountMeta: AccountMeta, messageHandler: MessageHandler) {
@@ -217,6 +221,34 @@ export class Account {
     }
 
     /**
+     * Melt native tokens. This happens with the foundry output which minted them, by increasing its
+     * `melted_tokens` field.
+     * @param tokenId The native token id.
+     * @param meltAmount To be melted amount.
+     * @param transactionOptions The options to define a `RemainderValueStrategy`
+     * or custom inputs.
+     * @returns The transaction.
+     */
+    async decreaseNativeTokenSupply(
+        tokenId: string,
+        meltAmount: HexEncodedAmount,
+        transactionOptions?: TransactionOptions,
+    ): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'DecreaseNativeTokenSupply',
+                data: {
+                    tokenId,
+                    meltAmount,
+                    options: transactionOptions,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    /**
      * Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
      * storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
      * sent to the governor address.
@@ -300,14 +332,6 @@ export class Account {
             },
         );
         return JSON.parse(response).payload;
-    }
-
-    /**
-     * Get this accounts alias.
-     * @returns The accounts alias.
-     */
-    getAlias(): string {
-        return this.meta.alias;
     }
 
     /**
@@ -464,6 +488,23 @@ export class Account {
     }
 
     /**
+     * List all incoming transactions of the account.
+     * @returns The incoming transactions with their inputs.
+     */
+    async listIncomingTransactions(): Promise<
+        [string, ITransactionPayload, IOutputResponse][]
+    > {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'ListIncomingTransactions',
+            },
+        );
+
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * List all the transactions of the account.
      * @returns The transactions.
      */
@@ -498,31 +539,15 @@ export class Account {
     }
 
     /**
-     * Melt native tokens. This happens with the foundry output which minted them, by increasing it's
-     * `melted_tokens` field.
-     * @param tokenId The native token id.
-     * @param meltAmount To be melted amount.
-     * @param transactionOptions The options to define a `RemainderValueStrategy`
-     * or custom inputs.
-     * @returns The transaction.
+     * Get the accounts metadata.
+     * @returns The accounts metadata.
      */
-    async decreaseNativeTokenSupply(
-        tokenId: string,
-        meltAmount: HexEncodedAmount,
-        transactionOptions?: TransactionOptions,
-    ): Promise<Transaction> {
-        const resp = await this.messageHandler.callAccountMethod(
-            this.meta.index,
-            {
-                name: 'DecreaseNativeTokenSupply',
-                data: {
-                    tokenId,
-                    meltAmount,
-                    options: transactionOptions,
-                },
-            },
-        );
-        return JSON.parse(resp).payload;
+    getMetadata(): AccountMetadata {
+        return {
+            alias: this.meta.alias,
+            coinType: this.meta.coinType,
+            index: this.meta.index,
+        };
     }
 
     /**

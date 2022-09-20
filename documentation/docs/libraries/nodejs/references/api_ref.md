@@ -28,6 +28,7 @@
 - [AccountBalance](interfaces/AccountBalance.md)
 - [AccountSyncOptions](interfaces/AccountSyncOptions.md)
 - [AccountMeta](interfaces/AccountMeta.md)
+- [AccountMetadata](interfaces/AccountMetadata.md)
 - [BaseCoinBalance](interfaces/BaseCoinBalance.md)
 - [NativeTokenBalance](interfaces/NativeTokenBalance.md)
 - [CreateAccountPayload](interfaces/CreateAccountPayload.md)
@@ -115,7 +116,7 @@ ___
 
 ### EventType
 
-Ƭ **EventType**: ``"*"`` \| ``"ErrorThrown"`` \| ``"ConsolidationRequired"`` \| ``"LedgerAddressGeneration"`` \| ``"NewOutput"`` \| ``"SpentOutput"`` \| ``"TransactionInclusion"`` \| ``"TransactionProgress"``
+Ƭ **EventType**: ``"*"`` \| ``"ConsolidationRequired"`` \| ``"LedgerAddressGeneration"`` \| ``"NewOutput"`` \| ``"SpentOutput"`` \| ``"TransactionInclusion"`` \| ``"TransactionProgress"``
 
 Wallet event types
 

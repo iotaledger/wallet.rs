@@ -233,6 +233,9 @@ pub enum AccountMethod {
     /// Expected response:
     /// [`AddressesWithUnspentOutputs`](crate::message_interface::Response::AddressesWithUnspentOutputs)
     ListAddressesWithUnspentOutputs,
+    /// Returns all incoming transactions of the account
+    /// Expected response: [`IncomingTransactionsData`](crate::message_interface::Response::IncomingTransactionsData)
+    ListIncomingTransactions,
     /// Returns all outputs of the account
     /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
     ListOutputs {

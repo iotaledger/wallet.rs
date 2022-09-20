@@ -21,10 +21,13 @@ pub struct SyncOptions {
     /// addresses with a lower index will be skipped, but could result in a wrong balance for that reason
     #[serde(rename = "addressStartIndex", default = "default_address_start_index")]
     pub address_start_index: u32,
-    /// Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 5
-    /// seconds. But if we change the client options, we need to resync, because the new node could be from a nother
-    /// network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
-    /// addresses.
+    /// Address index from which to start syncing internal addresses. 0 by default, using a higher index will be faster
+    /// because addresses with a lower index will be skipped, but could result in a wrong balance for that reason
+    #[serde(rename = "addressStartIndexInternal", default = "default_address_start_index")]
+    pub address_start_index_internal: u32,
+    /// Usually syncing is skipped if it's called in between 200ms, because there can only be new changes every
+    /// milestone and calling it twice "at the same time" will not return new data
+    /// When this to true, we will sync anyways, even if it's called 0ms after the las sync finished.
     #[serde(rename = "forceSyncing", default)]
     pub force_syncing: bool,
     /// Try to sync transactions from incoming outputs with their inputs. Some data may not be obtained if it has been
@@ -75,6 +78,7 @@ impl Default for SyncOptions {
         Self {
             addresses: Vec::new(),
             address_start_index: default_address_start_index(),
+            address_start_index_internal: default_address_start_index(),
             sync_incoming_transactions: default_sync_incoming_transactions(),
             sync_pending_transactions: default_sync_pending_transactions(),
             sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
