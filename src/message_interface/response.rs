@@ -97,6 +97,7 @@ pub enum Response {
     IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
     /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
+    /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
     /// [`CreateAliasOutput`](crate::message_interface::AccountMethod::CreateAliasOutput)
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
@@ -107,9 +108,6 @@ pub enum Response {
     /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     SentTransaction(TransactionDto),
-    /// Response for
-    /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
-    SentTransactions(Vec<TransactionDto>),
     /// Response for
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
     MintTokenTransaction(MintTokenTransactionDto),
@@ -177,7 +175,6 @@ impl Debug for Response {
                 write!(f, "IncomingTransactionsData({:?})", transactions_data)
             }
             Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
-            Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),
             Response::MintTokenTransaction(mint_transaction) => {
                 write!(f, "MintTokenTransaction({:?})", mint_transaction)
             }
