@@ -93,7 +93,11 @@ pub enum Response {
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
     IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
     /// Response for
+    /// [`ListIncomingTransactions`](crate::message_interface::AccountMethod::ListIncomingTransactions),
+    IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
+    /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
+    /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`MintNfts`](crate::message_interface::AccountMethod::MintNfts),
     /// [`SendAmount`](crate::message_interface::AccountMethod::SendAmount),
     /// [`SendMicroTransaction`](crate::message_interface::AccountMethod::SendMicroTransaction),
@@ -167,6 +171,9 @@ impl Debug for Response {
             Response::Balance(balance) => write!(f, "Balance({:?})", balance),
             Response::IncomingTransactionData(transaction_data) => {
                 write!(f, "IncomingTransactionData({:?})", transaction_data)
+            }
+            Response::IncomingTransactionsData(transactions_data) => {
+                write!(f, "IncomingTransactionsData({:?})", transactions_data)
             }
             Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
             Response::SentTransactions(transactions) => write!(f, "SentTransactions({:?})", transactions),

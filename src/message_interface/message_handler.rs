@@ -539,6 +539,15 @@ impl WalletMessageHandler {
                 let outputs = account_handle.list_unspent_outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
+            AccountMethod::ListIncomingTransactions => {
+                let transactions = account_handle.list_incoming_transactions().await?;
+                Ok(Response::IncomingTransactionsData(
+                    transactions
+                        .into_iter()
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .collect(),
+                ))
+            }
             AccountMethod::ListTransactions => {
                 let transactions = account_handle.list_transactions().await?;
                 Ok(Response::Transactions(

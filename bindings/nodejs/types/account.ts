@@ -86,6 +86,16 @@ export interface AccountMeta {
     };
 }
 
+/** The account metadata */
+export interface AccountMetadata {
+    /** The account alias */
+    alias: string;
+    /** The used coin type */
+    coinType: CoinType;
+    /** The account index which will be used in the BIP32 path */
+    index: number;
+}
+
 /** The balance of the base coin */
 export interface BaseCoinBalance {
     /** The total amount of the outputs */
