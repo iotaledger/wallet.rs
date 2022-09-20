@@ -1,5 +1,30 @@
 # Changelog
 
+## \[2.0.2-alpha.25]
+
+- Remove tryClaimOutputs() and only do a single transaction when calling the claimOutputs() function.
+  - [ffb5f867](https://github.com/iotaledger/wallet.rs/commit/ffb5f8677feca3493d1c751490da885e3eefb626) Remove try_claim_outputs() ([#1434](https://github.com/iotaledger/wallet.rs/pull/1434)) on 2022-09-15
+- Make account meta private.
+  Replace getAlias() with getMetadata().
+  - [0ee85b48](https://github.com/iotaledger/wallet.rs/commit/0ee85b48a8ebada02d39a23e1f98d1d7457a6d31) Make account meta private ([#1428](https://github.com/iotaledger/wallet.rs/pull/1428)) on 2022-09-20
+- Only do a single transaction in consolidation.
+  - [a45278f2](https://github.com/iotaledger/wallet.rs/commit/a45278f2c06058a24bd056a9f91f08d3e42fa9fa) Only do a single consolidation transaction ([#1437](https://github.com/iotaledger/wallet.rs/pull/1437)) on 2022-09-16
+- Remove outdated ErrorThrown event.
+  - [e39716ad](https://github.com/iotaledger/wallet.rs/commit/e39716ad797b216449763ce33b03ea75e11b3f94) Remove outdated ErorThrown event ([#1443](https://github.com/iotaledger/wallet.rs/pull/1443)) on 2022-09-20
+- Fix dependencies.
+  - [48378b39](https://github.com/iotaledger/wallet.rs/commit/48378b3927d89a4e71e914c11de9e05aeb65276e) Fix npm dependencies ([#1431](https://github.com/iotaledger/wallet.rs/pull/1431)) on 2022-09-13
+- Fix minted tokens amount in increaseNativeTokenSupply().
+  - [58df4927](https://github.com/iotaledger/wallet.rs/commit/58df4927d4894b300d929d5099faa654459c82fc) Fix mint amount ([#1435](https://github.com/iotaledger/wallet.rs/pull/1435)) on 2022-09-15
+- Add missing `coin_type` on account manager backups.
+  - [66d94faf](https://github.com/iotaledger/wallet.rs/commit/66d94faf8b860f3287bed28e207fa7d688890340) Add missing `coin_type` on account manager backups ([#1422](https://github.com/iotaledger/wallet.rs/pull/1422)) on 2022-09-08
+- Renamed meltNativeToken() to decreaseNativeTokenSupply() and aligned parameters with burnNativeToken() and increaseNativeTokenSupply().
+  Added increaseNativeTokenSupply().
+  - [b29be7c0](https://github.com/iotaledger/wallet.rs/commit/b29be7c0b620b679729e58408809418ea5d921c9) Mint more native token ([#1418](https://github.com/iotaledger/wallet.rs/pull/1418)) on 2022-09-13
+- Add accountStartIndex to recoverAccounts and change gap limit logic.
+  - [4cee3a33](https://github.com/iotaledger/wallet.rs/commit/4cee3a33711d41e08d6fd4a372be42597680ccb1) Update recover accounts ([#1433](https://github.com/iotaledger/wallet.rs/pull/1433)) on 2022-09-20
+- Add SeedSecretManager.
+  - [44e85926](https://github.com/iotaledger/wallet.rs/commit/44e85926592f854a8e39aa4f63c7e35272ed89cb) Add SeedSecretManager ([#1430](https://github.com/iotaledger/wallet.rs/pull/1430)) on 2022-09-14
+
 ## \[2.0.2-alpha.24]
 
 - Added optional FilterOptions to listOutputs() and listUnspentOutputs().
