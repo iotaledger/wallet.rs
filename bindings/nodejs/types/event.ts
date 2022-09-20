@@ -4,7 +4,6 @@ import type { OutputData } from './output';
 /** Wallet event types */
 export type EventType =
     | '*'
-    | 'ErrorThrown'
     | 'ConsolidationRequired'
     | 'LedgerAddressGeneration'
     | 'NewOutput'

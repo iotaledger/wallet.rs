@@ -116,7 +116,7 @@ ___
 
 ### EventType
 
-Ƭ **EventType**: ``"*"`` \| ``"ErrorThrown"`` \| ``"ConsolidationRequired"`` \| ``"LedgerAddressGeneration"`` \| ``"NewOutput"`` \| ``"SpentOutput"`` \| ``"TransactionInclusion"`` \| ``"TransactionProgress"``
+Ƭ **EventType**: ``"*"`` \| ``"ConsolidationRequired"`` \| ``"LedgerAddressGeneration"`` \| ``"NewOutput"`` \| ``"SpentOutput"`` \| ``"TransactionInclusion"`` \| ``"TransactionProgress"``
 
 Wallet event types
 
