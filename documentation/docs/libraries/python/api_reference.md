@@ -100,7 +100,7 @@ Consolidate outputs.
 def create_alias_output(alias_output_options, options)
 ```
 
-Create an alias outputs.
+Create an alias output.
 
 <a id="iota_wallet.account.Account.destroy_alias"></a>
 
