@@ -159,7 +159,7 @@ class Account:
     def create_alias_output(self,
                             alias_output_options,
                             options):
-        """Create an alias outputs.
+        """Create an alias output.
         """
         return self._call_account_method(
             'CreateAliasOutput', {
