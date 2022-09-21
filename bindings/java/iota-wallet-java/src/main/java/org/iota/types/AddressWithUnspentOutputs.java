@@ -5,7 +5,7 @@ import org.iota.types.ids.OutputId;
 public class AddressWithUnspentOutputs extends AbstractObject {
 
     /// The address.
-    private AddressWrapper address;
+    private String address;
     /// The address key index.
     private int keyIndex;
     /// Determines if an address is a public or an internal (change) address.
@@ -13,7 +13,7 @@ public class AddressWithUnspentOutputs extends AbstractObject {
     /// Output ids.
     private OutputId[] output_ids;
 
-    public AddressWrapper getAddress() {
+    public String getAddress() {
         return address;
     }
 

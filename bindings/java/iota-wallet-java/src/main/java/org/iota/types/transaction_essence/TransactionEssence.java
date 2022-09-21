@@ -29,7 +29,7 @@ class TransactionEssenceAdapter implements JsonDeserializer<TransactionEssence>,
 
         return transactionEssence;
     }
-
+    @Override
     public JsonElement serialize(TransactionEssence src, Type typeOfSrc, JsonSerializationContext context) {
         if (src instanceof RegularTransactionEssence) {
             return new Gson().toJsonTree(src, RegularTransactionEssence.class);

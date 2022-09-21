@@ -1,19 +1,20 @@
+import com.google.gson.Gson;
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.PrepareTransaction;
-import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.OutputId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.outputs.BasicOutput;
 import org.iota.types.outputs.Output;
+import org.iota.types.payload.TransactionPayload;
 import org.iota.types.secret.MnemonicSecretManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class ListTransactions {
+public class SendAmount {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
@@ -30,16 +31,16 @@ public class ListTransactions {
         // Set up an account with funds for this example
         ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
-        // Sync account
-        wallet.syncAccount(new AccountAlias("Hans"), new SyncAccount());
+        // Set up receiver address
+        AccountAddress address = wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses()[0];
 
-        // List transactions
-        Transaction[] transactions = wallet.listTransactions(new AccountAlias("Hans"), new org.iota.types.account_methods.ListTransactions());
+        // Configure outputs
+        Transaction p = wallet.sendAmount(new AccountAlias("Hans"), new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
+                new AddressWithAmount[] { new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
+        ));
 
-        // Print transactions
-        for (Transaction tx : transactions) {
-            System.out.println(tx.toString());
-        }
+        // Print transaction
+        System.out.println(new Gson().toJson(p));
 
     }
 
