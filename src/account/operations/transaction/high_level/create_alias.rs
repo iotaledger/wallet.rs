@@ -17,10 +17,7 @@ use iota_client::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    account::{handle::AccountHandle, types::Transaction, OutputData, TransactionOptions},
-    Error,
-};
+use crate::account::{handle::AccountHandle, types::Transaction, OutputData, TransactionOptions};
 
 /// Alias output options for `create_alias_output()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -123,7 +120,7 @@ impl AccountHandle {
                 self.public_addresses()
                     .await
                     .first()
-                    .ok_or(Error::FailedToGetRemainder)?
+                    .expect("first address is generated during account creation")
                     .address
                     .inner
             }
