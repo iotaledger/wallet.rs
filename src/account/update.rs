@@ -40,7 +40,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_outputs: Vec<OutputId>,
+        spent_or_not_synced_output_ids: Vec<OutputId>,
         spent_or_not_synced_output_responses: Vec<OutputResponse>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
@@ -100,7 +100,20 @@ impl AccountHandle {
             .extend(addresses_with_unspent_outputs);
 
         // Update spent outputs
-        for output_id in spent_outputs {
+        'spent_outputs: for output_id in spent_or_not_synced_output_ids {
+            // If we got the output response and it's still unspent, skip it
+            for o in &spent_or_not_synced_output_responses {
+                if !o.metadata.is_spent
+                    && OutputId::new(
+                        TransactionId::from_str(&o.metadata.transaction_id)?,
+                        o.metadata.output_index,
+                    )? == output_id
+                {
+                    // not spent, just not synced, skip
+                    continue 'spent_outputs;
+                }
+            }
+
             if let Some(output) = account.outputs.get(&output_id) {
                 // Could also be outputs from other networks after we switched the node, so we check that first
                 if output.network_id == network_id {
@@ -127,13 +140,13 @@ impl AccountHandle {
 
         // Update output_response if it got spent to include the new metadata
         for output_response in spent_or_not_synced_output_responses {
-            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
             if output_response.metadata.is_spent {
+                let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+                let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
                 account.unspent_outputs.remove(&output_id);
-            }
-            if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                output_data.metadata = output_response.metadata;
+                if let Some(output_data) = account.outputs.get_mut(&output_id) {
+                    output_data.metadata = output_response.metadata;
+                }
             }
         }
 
