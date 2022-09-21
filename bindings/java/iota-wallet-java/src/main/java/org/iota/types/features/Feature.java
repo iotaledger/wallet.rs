@@ -2,13 +2,17 @@ package org.iota.types.features;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.addresses.Address;
+import org.iota.types.addresses.AliasAddress;
+import org.iota.types.addresses.Ed25519Address;
+import org.iota.types.addresses.NftAddress;
 
 import java.lang.reflect.Type;
 
 @JsonAdapter(Feature.FeatureAdapter.class)
 public abstract class Feature {
 
-    public static class FeatureAdapter implements JsonDeserializer<Feature> {
+    public static class FeatureAdapter implements JsonDeserializer<Feature>, JsonSerializer<Feature> {
 
         @Override
         public Feature deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
@@ -42,6 +46,18 @@ public abstract class Feature {
             }
 
             return feature;
+        }
+
+        public JsonElement serialize(Feature src, Type typeOfSrc, JsonSerializationContext context) {
+            if (src instanceof SenderFeature) {
+                return new Gson().toJsonTree(src, SenderFeature.class);
+            } else if (src instanceof IssuerFeature) {
+                return new Gson().toJsonTree(src, IssuerFeature.class);
+            } else if (src instanceof MetadataFeature) {
+                return new Gson().toJsonTree(src, MetadataFeature.class);
+            } else if (src instanceof TagFeature) {
+                return new Gson().toJsonTree(src, TagFeature.class);
+            } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
         }
 
     }

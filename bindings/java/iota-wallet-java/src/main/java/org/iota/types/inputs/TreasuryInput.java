@@ -3,7 +3,7 @@ package org.iota.types.inputs;
 import org.iota.types.ids.MilestoneId;
 
 public class TreasuryInput extends Input {
-    private int type;
+    private int type = 1;
     private MilestoneId transactionId;
 
     public TreasuryInput(MilestoneId transactionId) {

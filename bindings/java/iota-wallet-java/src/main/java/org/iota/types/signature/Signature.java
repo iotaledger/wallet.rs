@@ -2,13 +2,14 @@ package org.iota.types.signature;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.features.*;
 
 import java.lang.reflect.Type;
 
+@JsonAdapter(SignatureAdapter.class)
 public abstract class Signature {}
 
-@JsonAdapter(SignatureAdapter.class)
-class SignatureAdapter implements JsonDeserializer<Signature> {
+class SignatureAdapter implements JsonDeserializer<Signature>, JsonSerializer<Signature> {
 
     @Override
     public Signature deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
@@ -28,6 +29,12 @@ class SignatureAdapter implements JsonDeserializer<Signature> {
         }
 
         return signature;
+    }
+
+    public JsonElement serialize(Signature src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src instanceof Ed25519Signature) {
+            return new Gson().toJsonTree(src, Ed25519Signature.class);
+        } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
     }
 
 }

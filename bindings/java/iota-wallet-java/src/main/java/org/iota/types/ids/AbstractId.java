@@ -3,12 +3,16 @@
 
 package org.iota.types.ids;
 
-import com.google.gson.*;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
 
-
+@JsonAdapter(AbstractIdAdapter.class)
 public abstract class AbstractId {
 
     private String id;

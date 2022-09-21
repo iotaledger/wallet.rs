@@ -2,13 +2,14 @@ package org.iota.types.inputs;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.AbstractObject;
 
 import java.lang.reflect.Type;
 
 @JsonAdapter(InputAdapter.class)
-public abstract class Input {}
+public abstract class Input extends AbstractObject {}
 
-class InputAdapter implements JsonDeserializer<Input> {
+class InputAdapter implements JsonDeserializer<Input>, JsonSerializer<Input> {
     @Override
     public Input deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
@@ -31,5 +32,15 @@ class InputAdapter implements JsonDeserializer<Input> {
 
         return input;
     }
+
+    @Override
+    public JsonElement serialize(Input src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src instanceof UtxoInput) {
+            return new Gson().toJsonTree(src, UtxoInput.class);
+        } else if (src instanceof TreasuryInput) {
+            return new Gson().toJsonTree(src, TreasuryInput.class);
+        } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
+    }
+
 }
 

@@ -24,5 +24,4 @@ public class NativeToken extends AbstractObject {
     public String getAmount() {
         return amount;
     }
-
 }

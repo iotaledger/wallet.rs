@@ -2,13 +2,16 @@ package org.iota.types.unlocks;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.inputs.Input;
+import org.iota.types.inputs.TreasuryInput;
+import org.iota.types.inputs.UtxoInput;
 
 import java.lang.reflect.Type;
 
 @JsonAdapter(UnlockAdapter.class)
 public abstract class Unlock {}
 
-class UnlockAdapter implements JsonDeserializer<Unlock> {
+class UnlockAdapter implements JsonDeserializer<Unlock>, JsonSerializer<Unlock> {
 
     @Override
     public Unlock deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
@@ -40,6 +43,19 @@ class UnlockAdapter implements JsonDeserializer<Unlock> {
         }
 
         return unlock;
+    }
+
+    @Override
+    public JsonElement serialize(Unlock src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src instanceof SignatureUnlock) {
+            return new Gson().toJsonTree(src, SignatureUnlock.class);
+        } else if (src instanceof ReferenceUnlock) {
+            return new Gson().toJsonTree(src, ReferenceUnlock.class);
+        } else if (src instanceof AliasUnlock) {
+            return new Gson().toJsonTree(src, AliasUnlock.class);
+        } else if (src instanceof NftUnlock) {
+            return new Gson().toJsonTree(src, NftUnlock.class);
+        } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
     }
 
 }

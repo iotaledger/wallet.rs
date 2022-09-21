@@ -2,13 +2,15 @@ package org.iota.types.unlock_conditions;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.AbstractObject;
+import org.iota.types.outputs.*;
 
 import java.lang.reflect.Type;
 
 @JsonAdapter(UnlockCondition.UnlockConditionAdapter.class)
-public abstract class UnlockCondition {
+public abstract class UnlockCondition extends AbstractObject {
 
-    public static class UnlockConditionAdapter implements JsonDeserializer<UnlockCondition> {
+    public static class UnlockConditionAdapter implements JsonDeserializer<UnlockCondition>, JsonSerializer<UnlockCondition> {
 
         @Override
         public UnlockCondition deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
@@ -53,6 +55,23 @@ public abstract class UnlockCondition {
             }
 
             return unlockCondition;
+        }
+        public JsonElement serialize(UnlockCondition src, Type typeOfSrc, JsonSerializationContext context) {
+            if (src instanceof AddressUnlockCondition) {
+                return new Gson().toJsonTree(src, AddressUnlockCondition.class);
+            } else if (src instanceof StorageDepositReturnUnlockCondition) {
+                return new Gson().toJsonTree(src, StorageDepositReturnUnlockCondition.class);
+            } else if (src instanceof TimelockUnlockCondition) {
+                return new Gson().toJsonTree(src, TimelockUnlockCondition.class);
+            } else if (src instanceof ExpirationUnlockCondition) {
+                return new Gson().toJsonTree(src, ExpirationUnlockCondition.class);
+            } else if (src instanceof StateControllerAddressUnlockCondition) {
+                return new Gson().toJsonTree(src, StateControllerAddressUnlockCondition.class);
+            } else if (src instanceof GovernorAddressUnlockCondition) {
+                return new Gson().toJsonTree(src, GovernorAddressUnlockCondition.class);
+            } else if (src instanceof ImmutableAliasAddressUnlockCondition) {
+                return new Gson().toJsonTree(src, ImmutableAliasAddressUnlockCondition.class);
+            } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
         }
 
     }

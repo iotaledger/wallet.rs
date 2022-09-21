@@ -3,9 +3,9 @@ package org.iota.types.inputs;
 import org.iota.types.ids.TransactionId;
 
 public class UtxoInput extends Input {
-    private int type;
-    private TransactionId transactionId;
-    private int transactionOutputIndex;
+     int type = 0;
+     TransactionId transactionId;
+     int transactionOutputIndex;
 
     public UtxoInput(TransactionId transactionId, int transactionOutputIndex) {
         this.transactionId = transactionId;

@@ -2,13 +2,15 @@ package org.iota.types.token_scheme;
 
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import org.iota.types.transaction_essence.RegularTransactionEssence;
+import org.iota.types.transaction_essence.TransactionEssence;
 
 import java.lang.reflect.Type;
 
 @JsonAdapter(TokenSchemeAdapter.class)
 public abstract class TokenScheme  {}
 
-class TokenSchemeAdapter implements JsonDeserializer<TokenScheme> {
+class TokenSchemeAdapter implements JsonDeserializer<TokenScheme>, JsonSerializer<TokenScheme> {
     @Override
     public TokenScheme deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
@@ -26,6 +28,12 @@ class TokenSchemeAdapter implements JsonDeserializer<TokenScheme> {
         }
 
         return tokenScheme;
+    }
+
+    public JsonElement serialize(TokenScheme src, Type typeOfSrc, JsonSerializationContext context) {
+        if (src instanceof SimpleTokenScheme) {
+            return new Gson().toJsonTree(src, SimpleTokenScheme.class);
+        } else throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
     }
 }
 
