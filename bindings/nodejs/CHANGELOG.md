@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.27]
+
+- Update `@iota/types` dependency to fix a compilation issue.
+  - [b6b09ae1](https://github.com/iotaledger/wallet.rs/commit/b6b09ae10afa894da07c153c0a6416a7e9cfe22f) Update `@iota/types` dependency to fix a compilation issue ([#1447](https://github.com/iotaledger/wallet.rs/pull/1447)) on 2022-09-21
+
 ## \[2.0.2-alpha.26]
 
 - Make account meta field temporarily public.
