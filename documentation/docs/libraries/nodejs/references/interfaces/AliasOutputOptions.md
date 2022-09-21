@@ -9,6 +9,7 @@ Options for the alias output creation
 - [address](AliasOutputOptions.md#address)
 - [immutableMetadata](AliasOutputOptions.md#immutablemetadata)
 - [metadata](AliasOutputOptions.md#metadata)
+- [stateMetadata](AliasOutputOptions.md#statemetadata)
 
 ## Properties
 
@@ -32,5 +33,13 @@ ___
 ### metadata
 
 • `Optional` **metadata**: `string`
+
+Hex encoded bytes
+
+___
+
+### stateMetadata
+
+• `Optional` **stateMetadata**: `string`
 
 Hex encoded bytes

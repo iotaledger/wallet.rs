@@ -22,7 +22,7 @@ use crate::{
     Error,
 };
 
-/// Address and alias for `create_alias_output()`
+/// Alias output options for `create_alias_output()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AliasOutputOptions {
     /// Bech32 encoded address which will control the alias. Default will use the first
@@ -33,6 +33,9 @@ pub struct AliasOutputOptions {
     pub immutable_metadata: Option<Vec<u8>>,
     /// Alias metadata
     pub metadata: Option<Vec<u8>>,
+    /// Alias state metadata
+    #[serde(rename = "stateMetadata")]
+    pub state_metadata: Option<Vec<u8>>,
 }
 
 /// Dto for aliasOptions
@@ -46,6 +49,9 @@ pub struct AliasOutputOptionsDto {
     pub immutable_metadata: Option<String>,
     /// Alias metadata, hex encoded bytes
     pub metadata: Option<String>,
+    /// Alias state metadata
+    #[serde(rename = "stateMetadata")]
+    pub state_metadata: Option<String>,
 }
 
 impl TryFrom<&AliasOutputOptionsDto> for AliasOutputOptions {
@@ -64,6 +70,12 @@ impl TryFrom<&AliasOutputOptionsDto> for AliasOutputOptions {
                 Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
                 None => None,
             },
+            state_metadata: match &value.state_metadata {
+                Some(metadata) => {
+                    Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("state_metadata"))?)
+                }
+                None => None,
+            },
         })
     }
 }
@@ -75,6 +87,7 @@ impl AccountHandle {
     ///     address: None,
     ///     immutable_metadata: Some(b"some immutable alias metadata".to_vec()),
     ///     metadata: Some(b"some alias metadata".to_vec()),
+    ///     state_metadata: Some(b"some alias state metadata".to_vec()),
     /// };
     ///
     /// let transaction = account.create_alias_output(alias_options, None).await?;
@@ -126,16 +139,19 @@ impl AccountHandle {
                 .add_unlock_condition(UnlockCondition::GovernorAddress(GovernorAddressUnlockCondition::new(
                     controller_address,
                 )));
-        if let Some(immutable_metadata) = alias_output_options
-            .as_ref()
-            .and_then(|options| options.immutable_metadata.clone())
-        {
-            alias_output_builder = alias_output_builder
-                .add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
-        };
-        if let Some(metadata) = alias_output_options.and_then(|options| options.metadata) {
-            alias_output_builder = alias_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
-        };
+        if let Some(options) = alias_output_options {
+            if let Some(immutable_metadata) = options.immutable_metadata {
+                alias_output_builder = alias_output_builder
+                    .add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
+            }
+            if let Some(metadata) = options.metadata {
+                alias_output_builder =
+                    alias_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
+            }
+            if let Some(state_metadata) = options.state_metadata {
+                alias_output_builder = alias_output_builder.with_state_metadata(state_metadata);
+            }
+        }
 
         let outputs = vec![alias_output_builder.finish_output()?];
 
@@ -149,7 +165,6 @@ impl AccountHandle {
             .await
             .unspent_outputs()
             .values()
-            .into_iter()
             .find_map(|output_data| match &output_data.output {
                 Output::Alias(alias_output) => {
                     let output_alias_id = alias_output.alias_id().or_from_output_id(output_data.output_id);

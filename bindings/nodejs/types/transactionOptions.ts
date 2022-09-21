@@ -70,4 +70,6 @@ export interface AliasOutputOptions {
     immutableMetadata?: string;
     /** Hex encoded bytes */
     metadata?: string;
+    /** Hex encoded bytes */
+    stateMetadata?: string;
 }
