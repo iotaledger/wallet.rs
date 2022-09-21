@@ -34,7 +34,7 @@ public class ListTransactions {
         wallet.syncAccount(new AccountAlias("Hans"), new SyncAccount());
 
         // List transactions
-        Transaction[] transactions = wallet.listTransactions(new AccountAlias("Hans"), new org.iota.types.account_methods.ListTransactions());
+        Transaction[] transactions = wallet.listTransactions(new AccountAlias("Hans"));
 
         // Print transactions
         for (Transaction tx : transactions) {

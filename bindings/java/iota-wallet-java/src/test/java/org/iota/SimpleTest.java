@@ -45,7 +45,7 @@ public class SimpleTest extends ApiTest {
     @Test
     public void testListAddresses() throws WalletException {
         Account a = wallet.createAccount("Hans");
-        AccountAddress[] addresses = wallet.listAddresses(new AccountIndex(0), new ListAddresses());
+        AccountAddress[] addresses = wallet.listAddresses(new AccountIndex(0));
         for(AccountAddress address : addresses) {
             System.out.println(address.getAddress());
         }

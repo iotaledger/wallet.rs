@@ -253,8 +253,8 @@ public class Wallet extends NativeApi {
         return callAccountMethod(accountIdentifier, method);
     }
 
-    public AccountAddress[] listAddresses(AccountIdentifier accountIdentifier, ListAddresses method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+    public AccountAddress[] listAddresses(AccountIdentifier accountIdentifier) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListAddresses());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -263,8 +263,8 @@ public class Wallet extends NativeApi {
         return addresses;
     }
 
-    public AccountAddress[] listAddressesWithUnspentOutputs(AccountIdentifier accountIdentifier, ListAddressesWithUnspentOutputs method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+    public AccountAddress[] listAddressesWithUnspentOutputs(AccountIdentifier accountIdentifier) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListAddressesWithUnspentOutputs());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -283,8 +283,8 @@ public class Wallet extends NativeApi {
         return outputsData;
     }
 
-    public Transaction[] listPendingTransactions(AccountIdentifier accountIdentifier, ListPendingTransactions method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+    public Transaction[] listPendingTransactions(AccountIdentifier accountIdentifier) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListPendingTransactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -293,8 +293,8 @@ public class Wallet extends NativeApi {
         return transactions;
     }
 
-    public Transaction[] listTransactions(AccountIdentifier accountIdentifier, ListTransactions method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
+    public Transaction[] listTransactions(AccountIdentifier accountIdentifier) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListTransactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -325,8 +325,8 @@ public class Wallet extends NativeApi {
         return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), TransactionPayload.class);
     }
 
-    public AccountBalance getBalance(AccountIdentifier accountIdentifier, GetBalance method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
+    public AccountBalance getBalance(AccountIdentifier accountIdentifier) throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, new GetBalance()), AccountBalance.class);
     }
 
     public Output prepareOutput(AccountIdentifier accountIdentifier, PrepareOutput method) throws WalletException {
