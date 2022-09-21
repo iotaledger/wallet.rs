@@ -9,14 +9,15 @@ use iota_client::block::{
 };
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    account::{
+        handle::AccountHandle, operations::transaction::Transaction, types::address::AddressWrapper, TransactionOptions,
+    },
     Error,
 };
 
 impl AccountHandle {
-    /// Function to destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
-    /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
-    /// sent to the governor address.
+    /// Function to destroy an alias output. Outputs controlled by it need to be sweeped before. The amount and possible
+    /// native tokens will be sent to the governor address.
     pub async fn destroy_alias(
         &self,
         alias_id: AliasId,
@@ -24,9 +25,25 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_alias");
 
-        let address = self.get_sweep_remainder_address(&options).await?;
-        self.sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), &address)
-            .await?;
+        let bech32_hrp = self.client().get_bech32_hrp().await?;
+        let address = AddressWrapper::new(Address::Alias(AliasAddress::new(alias_id)), bech32_hrp);
+
+        let alias_outputs_state_controller = self.fetch_state_controller_address_alias_outputs(&address).await?;
+        let alias_outputs_governor = self.fetch_governor_address_alias_outputs(&address).await?;
+        // TODO: should we also check outputs with timelock, expiration and storage deposit return?
+        let basic_outputs = self.fetch_address_basic_outputs(&address).await?;
+        let foundry_outputs = self.fetch_foundry_outputs(&address).await?;
+        // TODO: should we also check outputs with timelock, expiration and storage deposit return?
+        let nft_outputs = self.fetch_address_nft_outputs(&address).await?;
+
+        if !alias_outputs_state_controller.is_empty()
+            || !alias_outputs_governor.is_empty()
+            || !basic_outputs.is_empty()
+            || !foundry_outputs.is_empty()
+            || !nft_outputs.is_empty()
+        {
+            return Err(Error::BurningOrMeltingFailed("alias still owns outputs".to_string()));
+        }
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_alias(alias_id).await?;
 
