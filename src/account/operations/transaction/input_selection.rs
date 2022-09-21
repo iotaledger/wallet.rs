@@ -54,7 +54,6 @@ impl AccountHandle {
                 }
             }
 
-            println!("try_select_inputs");
             let selected_transaction_data = try_select_inputs(
                 custom_inputs,
                 Vec::new(),
@@ -74,8 +73,6 @@ impl AccountHandle {
             return Ok(selected_transaction_data);
         }
 
-        // println!("{:?}", account.unspent_outputs.values());
-
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
         let bech32_hrp = self.client.get_bech32_hrp()?;
@@ -87,8 +84,6 @@ impl AccountHandle {
             &outputs,
             &account.locked_outputs,
         )?;
-
-        // println!("{:?}", available_outputs_signing_data);
 
         let selected_transaction_data = match try_select_inputs(
             Vec::new(),
