@@ -32,7 +32,7 @@
 - [BaseCoinBalance](interfaces/BaseCoinBalance.md)
 - [NativeTokenBalance](interfaces/NativeTokenBalance.md)
 - [CreateAccountPayload](interfaces/CreateAccountPayload.md)
-- FilterOptions
+- [FilterOptions](interfaces/FilterOptions.md)
 - [AccountManagerOptions](interfaces/AccountManagerOptions.md)
 - [Address](interfaces/Address.md)
 - [AddressWithAmount](interfaces/AddressWithAmount.md)

@@ -192,7 +192,7 @@ to their `AddressUnlockCondition` from the account.
 
 #### Returns
 
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The resulting transaction.
 
@@ -225,7 +225,7 @@ ___
 
 ▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
-Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+Melt native tokens. This happens with the foundry output which minted them, by increasing its
 `melted_tokens` field.
 
 #### Parameters
@@ -461,9 +461,9 @@ List all outputs of the account.
 
 #### Parameters
 
-| Name | Type            | Description |
-| :------ |:----------------| :------ |
-| `filterOptions?` | `FilterOptions` | Options to filter the to be returned outputs. |
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
 
 #### Returns
 
@@ -525,7 +525,7 @@ List all the unspent outputs of the account.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `filterOptions?` | `FilterOptions` | Options to filter the to be returned outputs. |
+| `filterOptions?` | [`FilterOptions`](../interfaces/FilterOptions.md) | Options to filter the to be returned outputs. |
 
 #### Returns
 
