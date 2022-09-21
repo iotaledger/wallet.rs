@@ -53,7 +53,14 @@ impl AccountHandle {
         options: Option<AddressGenerationOptions>,
     ) -> crate::Result<Vec<AccountAddress>> {
         let options = options.unwrap_or_default();
-        log::debug!("[ADDRESS GENERATION] generating {} addresses", amount);
+        log::debug!(
+            "[ADDRESS GENERATION] generating {amount} addresses, internal: {}",
+            options.internal
+        );
+        if amount == 0 {
+            return Ok(vec![]);
+        }
+
         let account = self.read().await;
 
         // get the highest index for the public or internal addresses

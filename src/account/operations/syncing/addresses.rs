@@ -47,12 +47,15 @@ impl AccountHandle {
                 }
             }
             addresses_before_syncing = specific_addresses_to_sync.into_iter().collect();
-        }
-
-        // Filter addresses when address_start_index is not 0 so we skip these addresses
-        // If we force syncing, we want to sync all addresses
-        if options.addresses.is_empty() && options.address_start_index != 0 && !options.force_syncing {
-            addresses_before_syncing.retain(|a| a.key_index >= options.address_start_index);
+        } else if options.address_start_index != 0 || options.address_start_index_internal != 0 {
+            // Filter addresses when address_start_index(_internal) is not 0, so we skip these addresses
+            addresses_before_syncing.retain(|a| {
+                if a.internal {
+                    a.key_index >= options.address_start_index_internal
+                } else {
+                    a.key_index >= options.address_start_index
+                }
+            });
         }
 
         // Check if selected addresses contains addresses with balance so we can correctly update them
@@ -62,11 +65,11 @@ impl AccountHandle {
             let mut output_ids = Vec::new();
             // Add currently known unspent output ids, so we can later compare them with the new output ids and see if
             // one got spent (is missing in the new returned output ids)
-            if let Some(address_with_unpsnet_outputs) = addresses_with_unspent_outputs
+            if let Some(address_with_unspent_outputs) = addresses_with_unspent_outputs
                 .iter()
                 .find(|a| a.address == address.address)
             {
-                output_ids = address_with_unpsnet_outputs.output_ids.to_vec();
+                output_ids = address_with_unspent_outputs.output_ids.to_vec();
             }
             addresses_with_old_output_ids.push(AddressWithUnspentOutputs {
                 address: address.address,

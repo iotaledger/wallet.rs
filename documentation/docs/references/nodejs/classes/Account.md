@@ -14,11 +14,11 @@ The Account class.
 - [burnNft](Account.md#burnnft)
 - [claimOutputs](Account.md#claimoutputs)
 - [consolidateOutputs](Account.md#consolidateoutputs)
+- [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
 - [destroyAlias](Account.md#destroyalias)
 - [destroyFoundry](Account.md#destroyfoundry)
 - [generateAddress](Account.md#generateaddress)
 - [generateAddresses](Account.md#generateaddresses)
-- [getAlias](Account.md#getalias)
 - [getBalance](Account.md#getbalance)
 - [getOutput](Account.md#getoutput)
 - [getFoundryOutput](Account.md#getfoundryoutput)
@@ -28,9 +28,10 @@ The Account class.
 - [listAddressesWithUnspentOutputs](Account.md#listaddresseswithunspentoutputs)
 - [listOutputs](Account.md#listoutputs)
 - [listPendingTransactions](Account.md#listpendingtransactions)
+- [listIncomingTransactions](Account.md#listincomingtransactions)
 - [listTransactions](Account.md#listtransactions)
 - [listUnspentOutputs](Account.md#listunspentoutputs)
-- [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
+- [getMetadata](Account.md#getmetadata)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
 - [increaseNativeTokenSupply](Account.md#increasenativetokensupply)
 - [mintNativeToken](Account.md#mintnativetoken)
@@ -220,6 +221,29 @@ The consolidation transaction.
 
 ___
 
+### decreaseNativeTokenSupply
+
+▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+`melted_tokens` field.
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `tokenId` | `string` | The native token id. |
+| `meltAmount` | `string` | To be melted amount. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+The transaction.
+
+___
+
 ### destroyAlias
 
 ▸ **destroyAlias**(`aliasId`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
@@ -303,20 +327,6 @@ Generate new unused addresses.
 `Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 The addresses.
-
-___
-
-### getAlias
-
-▸ **getAlias**(): `string`
-
-Get this accounts alias.
-
-#### Returns
-
-`string`
-
-The accounts alias.
 
 ___
 
@@ -477,6 +487,20 @@ The transactions.
 
 ___
 
+### listIncomingTransactions
+
+▸ **listIncomingTransactions**(): `Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+
+List all incoming transactions of the account.
+
+#### Returns
+
+`Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+
+The incoming transactions with their inputs.
+
+___
+
 ### listTransactions
 
 ▸ **listTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
@@ -511,26 +535,17 @@ The outputs with metadata.
 
 ___
 
-### decreaseNativeTokenSupply
+### getMetadata
 
-▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+▸ **getMetadata**(): [`AccountMetadata`](../interfaces/AccountMetadata.md)
 
-Melt native tokens. This happens with the foundry output which minted them, by increasing it's
-`melted_tokens` field.
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `tokenId` | `string` | The native token id. |
-| `meltAmount` | `string` | To be melted amount. |
-| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+Get the accounts metadata.
 
 #### Returns
 
-`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+[`AccountMetadata`](../interfaces/AccountMetadata.md)
 
-The transaction.
+The accounts metadata.
 
 ___
 

@@ -156,6 +156,14 @@ def list_unspent_outputs(filter_options=None)
 
 Returns all unspent outputs of the account.
 
+### list\_incoming\_transactions
+
+```python
+def list_incoming_transactions()
+```
+
+Returns all incoming transactions of the account.
+
 ### list\_transactions
 
 ```python
@@ -170,7 +178,7 @@ Returns all transaction of the account.
 def list_pending_transactions()
 ```
 
-Returns all pending transaction of the account.
+Returns all pending transactions of the account.
 
 ### decrease\_native\_token\_supply
 

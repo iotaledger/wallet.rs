@@ -252,6 +252,13 @@ class Account:
             }
         )
 
+    def list_incoming_transactions(self):
+        """Returns all incoming transactions of the account.
+        """
+        return self._call_account_method(
+            'ListIncomingTransactions'
+        )
+
     def list_transactions(self):
         """Returns all transaction of the account.
         """
@@ -260,7 +267,7 @@ class Account:
         )
 
     def list_pending_transactions(self):
-        """Returns all pending transaction of the account.
+        """Returns all pending transactions of the account.
         """
         return self._call_account_method(
             'ListPendingTransactions'

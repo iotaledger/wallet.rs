@@ -221,6 +221,7 @@ export class AccountManager {
      * Find accounts with unspent outputs.
      */
     async recoverAccounts(
+        accountStartIndex: number,
         accountGapLimit: number,
         addressGapLimit: number,
         syncOptions: AccountSyncOptions,
@@ -228,6 +229,7 @@ export class AccountManager {
         const response = await this.messageHandler.sendMessage({
             cmd: 'RecoverAccounts',
             payload: {
+                accountStartIndex,
                 accountGapLimit,
                 addressGapLimit,
                 syncOptions,
