@@ -4,6 +4,7 @@
     ".changes/1tx-claiming.md",
     ".changes/account-and-transaction-syncing.md",
     ".changes/account-meta.md",
+    ".changes/accountmeta.md",
     ".changes/add-windows-node-gyp-config.md",
     ".changes/backup.md",
     ".changes/bump-client.md",

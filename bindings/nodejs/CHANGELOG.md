@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.26]
+
+- Make account meta field temporarily public.
+  - [5174b782](https://github.com/iotaledger/wallet.rs/commit/5174b782bdd03bdabd2a6aa59f9c5e752a9d7aa5) Make account meta field temporarily public ([#1444](https://github.com/iotaledger/wallet.rs/pull/1444)) on 2022-09-21
+
 ## \[2.0.2-alpha.25]
 
 - Remove tryClaimOutputs() and only do a single transaction when calling the claimOutputs() function.
