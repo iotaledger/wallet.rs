@@ -7,6 +7,7 @@ public class SyncOptions extends AbstractObject {
     /// Address index from which to start syncing addresses. 0 by default, using a higher index will be faster because
     /// addresses with a lower index will be skipped, but could result in a wrong balance for that reason
     private int addressStartIndex;
+    private int addressStartIndexInternal;
     /// Usually we skip syncing if it's called within a few seconds, because there can only be new changes every 5
     /// seconds. But if we change the client options, we need to resync, because the new node could be from a nother
     /// network and then we need to check all addresses. This will also ignore `address_start_index` and sync all
@@ -38,6 +39,15 @@ public class SyncOptions extends AbstractObject {
 
     public SyncOptions withAddressStartIndex(int addressStartIndex) {
         this.addressStartIndex = addressStartIndex;
+        return this;
+    }
+
+    public int getAddressStartIndexInternal() {
+        return addressStartIndexInternal;
+    }
+
+    public SyncOptions withAddressStartIndexInternal(int addressStartIndexInternal) {
+        this.addressStartIndexInternal = addressStartIndexInternal;
         return this;
     }
 

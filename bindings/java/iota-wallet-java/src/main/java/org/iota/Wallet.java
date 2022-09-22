@@ -71,11 +71,12 @@ public class Wallet extends NativeApi {
         return callBaseApi(new ClientCommand("IsStrongholdPasswordAvailable")).getAsBoolean();
     }
 
-    public void recoverAccounts(int accountGapLimit, int addressGapLimit, SyncOptions sync_options) throws WalletException {
+    public void recoverAccounts(int accountStartIndex, int accountGapLimit, int addressGapLimit, SyncOptions syncOptions) throws WalletException {
         JsonObject o = new JsonObject();
+        o.addProperty("accountStartIndex", accountStartIndex);
         o.addProperty("accountGapLimit", accountGapLimit);
         o.addProperty("addressGapLimit", addressGapLimit);
-        o.add("sync_options", GsonSingleton.getInstance().toJsonTree(sync_options));
+        o.add("syncOptions", GsonSingleton.getInstance().toJsonTree(syncOptions));
 
         callBaseApi(new ClientCommand("RecoverAccounts", o));
     }
