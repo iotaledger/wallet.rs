@@ -53,8 +53,8 @@ impl AccountHandle {
             }
 
             let selected_transaction_data = try_select_inputs(
-                Vec::new(),
                 custom_inputs,
+                Vec::new(),
                 outputs,
                 remainder_address,
                 rent_structure,
