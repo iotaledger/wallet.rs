@@ -1,5 +1,15 @@
 # Changelog
 
+## \[2.0.2-alpha.28]
+
+- Add createAliasOutput().
+  Don't automatically create an alias output in mintNativeToken().
+  - [8207a475](https://github.com/iotaledger/wallet.rs/commit/8207a4758b1c0addd744872f893f14d5c2066aa4) Add create_alias_output ([#1438](https://github.com/iotaledger/wallet.rs/pull/1438)) on 2022-09-22
+- Fix wrong spent output status.
+  - [f8a31305](https://github.com/iotaledger/wallet.rs/commit/f8a31305fabef6256b4559ecc31c2c2242f4448e) Fix spent outputs ([#1449](https://github.com/iotaledger/wallet.rs/pull/1449)) on 2022-09-22
+- Removed automatic syncing after tx confirmation.
+  - [f8a31305](https://github.com/iotaledger/wallet.rs/commit/f8a31305fabef6256b4559ecc31c2c2242f4448e) Fix spent outputs ([#1449](https://github.com/iotaledger/wallet.rs/pull/1449)) on 2022-09-22
+
 ## \[2.0.2-alpha.27]
 
 - Update `@iota/types` dependency to fix a compilation issue.
