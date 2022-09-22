@@ -24,6 +24,3 @@ you should run:
 
 ```bash
 python3 examples/00_get_info.py
-```
-
-
