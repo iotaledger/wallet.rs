@@ -24,10 +24,10 @@ public class GenerateAndListAddresses {
         // Set up an account for this example.
         Account account = wallet.createAccount("Hans");
 
-        // Generate an address
-        AccountAddress[] addresses = wallet.generateAddresses(new AccountAlias("Hans"), new GenerateAddresses().withAmount(1));
+        // Generate 2 addresses.
+        AccountAddress[] addresses = wallet.generateAddresses(new AccountAlias("Hans"), new GenerateAddresses().withAmount(2));
 
-        // Print generated addresses.
+        // Print the generated addresses.
         for (AccountAddress address : addresses)
             System.out.println(address.getAddress());
 

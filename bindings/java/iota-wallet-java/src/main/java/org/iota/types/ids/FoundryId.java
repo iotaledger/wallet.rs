@@ -3,10 +3,7 @@
 
 package org.iota.types.ids;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
@@ -18,11 +15,15 @@ public class FoundryId extends AbstractId {
     }
 }
 
-class FoundryIdAdapter implements JsonDeserializer<FoundryId> {
+class FoundryIdAdapter implements JsonDeserializer<FoundryId>, JsonSerializer<FoundryId> {
     @Override
     public FoundryId deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
         return new FoundryId(json.getAsString());
+    }
+    @Override
+    public JsonElement serialize(FoundryId src, Type typeOfSrc, JsonSerializationContext context) {
+        return new JsonPrimitive(src.toString());
     }
 }
 

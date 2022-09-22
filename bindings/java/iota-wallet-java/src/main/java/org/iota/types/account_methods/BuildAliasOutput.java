@@ -1,6 +1,7 @@
 package org.iota.types.account_methods;
 
 import org.iota.types.NativeToken;
+import org.iota.types.UnsignedByte;
 import org.iota.types.features.Feature;
 import org.iota.types.ids.AliasId;
 import org.iota.types.unlock_conditions.UnlockCondition;
@@ -13,7 +14,7 @@ public class BuildAliasOutput implements AccountMethod {
     private NativeToken[] nativeTokens;
     private AliasId aliasId;
     private Integer stateIndex;
-    private byte[] stateMetadata;
+    private UnsignedByte[] stateMetadata;
     private Integer foundryCounter;
     private UnlockCondition[] unlockConditions;
     private Feature[] features;
@@ -39,7 +40,7 @@ public class BuildAliasOutput implements AccountMethod {
         return this;
     }
 
-    public BuildAliasOutput withStateMetadata(byte[] stateMetadata) {
+    public BuildAliasOutput withStateMetadata(UnsignedByte[] stateMetadata) {
         this.stateMetadata = stateMetadata;
         return this;
     }

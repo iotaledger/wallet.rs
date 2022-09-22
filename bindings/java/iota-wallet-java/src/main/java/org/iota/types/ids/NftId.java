@@ -3,10 +3,7 @@
 
 package org.iota.types.ids;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
@@ -18,11 +15,15 @@ public class NftId extends AbstractId {
     }
 }
 
-class NftIdAdapter implements JsonDeserializer<NftId> {
+class NftIdAdapter implements JsonDeserializer<NftId>, JsonSerializer<NftId> {
     @Override
     public NftId deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
         return new NftId(json.getAsString());
+    }
+    @Override
+    public JsonElement serialize(NftId src, Type typeOfSrc, JsonSerializationContext context) {
+        return new JsonPrimitive(src.toString());
     }
 }
 

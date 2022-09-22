@@ -228,8 +228,8 @@ public class Wallet extends NativeApi {
         return accountAddress;
     }
 
-    public Output getOutput(AccountIdentifier accountIdentifier, GetOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
+    public OutputData getOutput(AccountIdentifier accountIdentifier, GetOutput method) throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), OutputData.class);
     }
 
     public Output getFoundryOutput(AccountIdentifier accountIdentifier, GetFoundryOutput method) throws WalletException {

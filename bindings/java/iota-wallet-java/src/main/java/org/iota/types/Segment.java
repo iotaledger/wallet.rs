@@ -2,9 +2,9 @@ package org.iota.types;
 
 public class Segment extends AbstractObject {
     private boolean hardened;
-    private byte[] bs;
+    private UnsignedByte[] bs;
 
-    public Segment(boolean hardened, byte[] bs) {
+    public Segment(boolean hardened, UnsignedByte[] bs) {
         this.hardened = hardened;
         this.bs = bs;
     }
@@ -13,7 +13,7 @@ public class Segment extends AbstractObject {
         return hardened;
     }
 
-    public byte[] getBs() {
+    public UnsignedByte[] getBs() {
         return bs;
     }
 }
