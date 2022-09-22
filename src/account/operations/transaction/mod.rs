@@ -10,23 +10,11 @@ mod prepare_transaction;
 mod sign_transaction;
 pub(crate) mod submit_transaction;
 
-use std::{
-    collections::HashSet,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    block::{
-        address::Address,
-        output::Output,
-        payload::{
-            transaction::{TransactionEssence, TransactionPayload},
-            Payload,
-        },
-        semantic::ConflictReason,
-        BlockId,
-    },
+    block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason, BlockId},
     secret::types::InputSigningData,
 };
 
@@ -35,7 +23,6 @@ use crate::{
     account::{
         handle::AccountHandle,
         types::{InclusionState, Transaction},
-        SyncOptions,
     },
     iota_client::Error,
 };
@@ -210,48 +197,6 @@ impl AccountHandle {
                             block_id,
                             confirmed_block.0
                         );
-                    }
-                    if let Some(Payload::Transaction(tx_payload)) = confirmed_block.1.payload() {
-                        let TransactionEssence::Regular(regular_essence) = tx_payload.essence();
-                        if let Ok(account_addresses) = account.list_addresses().await {
-                            // Safe to index, because the first address is generated during account creation
-                            let bech32_hrp = account_addresses[0].address.bech32_hrp.clone();
-                            let account_addresses: HashSet<Address> =
-                                HashSet::from_iter(account_addresses.into_iter().map(|a| a.address().inner));
-                            // Filter for addresses from the account
-                            let addresses: Vec<String> = regular_essence
-                                .outputs()
-                                .iter()
-                                .filter_map(|o| {
-                                    o.unlock_conditions().and_then(|unlock_conditions| {
-                                        unlock_conditions.address().and_then(|output_address| {
-                                            if account_addresses.contains(output_address.address()) {
-                                                Some(output_address.address().to_bech32(bech32_hrp.clone()))
-                                            } else {
-                                                None
-                                            }
-                                        })
-                                    })
-                                })
-                                .collect();
-
-                            if !addresses.is_empty() {
-                                // Sync account with output addresses, so the outputs are available
-                                log::debug!("[TRANSACTION] sync addresses from outputs");
-                                // Ignore errors
-                                let _ = account
-                                    .sync(Some(SyncOptions {
-                                        addresses,
-                                        force_syncing: true,
-                                        // Sync only most basic output here since that's expected for remainder outputs
-                                        // and they will be synced with any sync options, but other outputs not, and we
-                                        // don't want to add other outputs when the user doesn't expect to get them
-                                        sync_only_most_basic_outputs: true,
-                                        ..Default::default()
-                                    }))
-                                    .await;
-                            }
-                        }
                     }
                 }
             }
