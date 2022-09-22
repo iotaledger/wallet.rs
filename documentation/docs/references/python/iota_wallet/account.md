@@ -43,7 +43,7 @@ def build_nft_output(amount, native_tokens, nft_id, unlock_conditions,
                      features, immutable_features)
 ```
 
-BuildNftOutput.
+Build NFT output.
 
 ### burn\_native\_token
 
