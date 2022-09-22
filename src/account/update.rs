@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use iota_client::{
     api::ClientBlockBuilder,
@@ -40,8 +40,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_or_not_synced_output_ids: Vec<OutputId>,
-        spent_or_not_synced_output_responses: Vec<OutputResponse>,
+        spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");
@@ -100,17 +99,20 @@ impl AccountHandle {
             .extend(addresses_with_unspent_outputs);
 
         // Update spent outputs
-        'spent_outputs: for output_id in spent_or_not_synced_output_ids {
+        for (output_id, output_response) in spent_or_not_synced_outputs {
             // If we got the output response and it's still unspent, skip it
-            for o in &spent_or_not_synced_output_responses {
-                if !o.metadata.is_spent
-                    && OutputId::new(
-                        TransactionId::from_str(&o.metadata.transaction_id)?,
-                        o.metadata.output_index,
-                    )? == output_id
-                {
+            if let Some(output_response) = output_response {
+                if output_response.metadata.is_spent {
+                    // Update output_response if it got spent to include the new metadata
+                    let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
+                    let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
+                    account.unspent_outputs.remove(&output_id);
+                    if let Some(output_data) = account.outputs.get_mut(&output_id) {
+                        output_data.metadata = output_response.metadata;
+                    }
+                } else {
                     // not spent, just not synced, skip
-                    continue 'spent_outputs;
+                    continue;
                 }
             }
 
@@ -134,18 +136,6 @@ impl AccountHandle {
                             );
                         }
                     }
-                }
-            }
-        }
-
-        // Update output_response if it got spent to include the new metadata
-        for output_response in spent_or_not_synced_output_responses {
-            if output_response.metadata.is_spent {
-                let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-                let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
-                account.unspent_outputs.remove(&output_id);
-                if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                    output_data.metadata = output_response.metadata;
                 }
             }
         }
