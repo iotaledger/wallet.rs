@@ -43,7 +43,7 @@ def build_nft_output(amount, native_tokens, nft_id, unlock_conditions,
                      features, immutable_features)
 ```
 
-Build NFT output.
+BuildNftOutput.
 
 ### burn\_native\_token
 
@@ -72,6 +72,14 @@ def consolidate_outputs(force, output_consolidation_threshold)
 ```
 
 Consolidate outputs.
+
+### create\_alias\_output
+
+```python
+def create_alias_output(alias_output_options, options)
+```
+
+Create an alias output.
 
 ### destroy\_alias
 
@@ -170,7 +178,7 @@ Returns all incoming transactions of the account.
 def list_transactions()
 ```
 
-Returns all transactions of the account.
+Returns all transaction of the account.
 
 ### list\_pending\_transactions
 

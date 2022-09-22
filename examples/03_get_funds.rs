@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 03_get_funds --release
+//! cargo run --example get_funds --release
 // In this example we request funds from the faucet to our address
 // Rename `.env.example` to `.env` first
 

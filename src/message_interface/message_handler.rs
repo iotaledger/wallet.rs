@@ -32,7 +32,8 @@ use crate::events::types::{Event, WalletEventType};
 use crate::{
     account::{
         operations::transaction::{
-            high_level::minting::mint_native_token::MintTokenTransactionDto, prepare_output::OutputOptions,
+            high_level::{create_alias::AliasOutputOptions, minting::mint_native_token::MintTokenTransactionDto},
+            prepare_output::OutputOptions,
         },
         types::{AccountIdentifier, TransactionDto},
         OutputDataDto,
@@ -464,6 +465,22 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .consolidate_outputs(force, output_consolidation_threshold)
+                        .await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            AccountMethod::CreateAliasOutput {
+                alias_output_options,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let alias_output_options = alias_output_options
+                        .map(|options| AliasOutputOptions::try_from(&options))
+                        .transpose()?;
+
+                    let transaction = account_handle
+                        .create_alias_output(alias_output_options, options)
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })

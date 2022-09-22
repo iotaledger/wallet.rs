@@ -1,6 +1,6 @@
 {
   "name": "@iota/wallet",
-  "version": "2.0.2-alpha.26",
+  "version": "2.0.2-alpha.28",
   "description": "Node.js binding to the wallet library",
   "main": "out/lib/index.js",
   "types": "out/lib/index.d.ts",
@@ -20,7 +20,7 @@
   "author": "IOTA Foundation <contact@iota.org>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@iota/types": "^1.0.0-beta.11",
+    "@iota/types": "^1.0.0-beta.15",
     "cargo-cp-artifact": "^0.1.5",
     "prebuild-install": "^7.1.1",
     "typescript": "^4.8.3"

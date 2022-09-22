@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 05_transaction --release
+//! cargo run --example transaction --release
 // In this example we will send a transaction
 // Rename `.env.example` to `.env` first
 

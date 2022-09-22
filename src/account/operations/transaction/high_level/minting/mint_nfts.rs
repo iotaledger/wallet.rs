@@ -122,28 +122,19 @@ impl AccountHandle {
                         .inner
                 }
             };
-            let immutable_metadata = if let Some(immutable_metadata) = nft_options.immutable_metadata {
-                Some(Feature::Metadata(MetadataFeature::new(immutable_metadata)?))
-            } else {
-                None
-            };
-            let metadata = if let Some(metadata) = nft_options.metadata {
-                Some(Feature::Metadata(MetadataFeature::new(metadata)?))
-            } else {
-                None
-            };
 
             // NftId needs to be set to 0 for the creation
             let mut nft_builder =
                 NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), NftId::null())?
                     // Address which will own the nft
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
-            if let Some(immutable_metadata) = immutable_metadata {
-                nft_builder = nft_builder.add_immutable_feature(immutable_metadata);
-            }
-            if let Some(metadata) = metadata {
-                nft_builder = nft_builder.add_feature(metadata);
-            }
+            if let Some(immutable_metadata) = nft_options.immutable_metadata {
+                nft_builder =
+                    nft_builder.add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
+            };
+            if let Some(metadata) = nft_options.metadata {
+                nft_builder = nft_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
+            };
             outputs.push(nft_builder.finish_output()?);
         }
 

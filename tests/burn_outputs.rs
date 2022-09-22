@@ -93,7 +93,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")
+        .with_node("https://api.testnet.shimmer.network")
         .unwrap()
         .with_node_sync_disabled();
 
@@ -124,17 +124,31 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let account_addresses = account.generate_addresses(1, None).await.unwrap();
 
     let faucet_response = request_funds_from_faucet(
-        "http://localhost:14265/api/enqueue",
+        "https://faucet.testnet.shimmer.network/api/enqueue",
         &account_addresses[0].address().to_bech32(),
     )
     .await?;
 
     println!("{}", faucet_response);
 
+    // Wait for faucet transaction
+    tokio::time::sleep(Duration::new(20, 0)).await;
+    account.sync(None).await?;
+
+    // First create an alias output, this needs to be done only once, because an alias can have many foundry outputs
+    let transaction = account.create_alias_output(None, None).await?;
+
+    // Wait for transaction to get included
+    account
+        .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+        .await?;
+
+    account.sync(None).await?;
+
     let circulating_supply = U256::from(60i32);
 
     let native_token_options = NativeTokenOptions {
-        account_address: Some(account_addresses[0].address().to_bech32()),
+        alias_id: None,
         circulating_supply,
         maximum_supply: U256::from(100i32),
         foundry_metadata: None,
