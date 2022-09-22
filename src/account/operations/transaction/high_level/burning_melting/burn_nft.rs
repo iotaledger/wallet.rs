@@ -8,34 +8,51 @@ use iota_client::block::{
 
 use crate::{
     account::{
-        handle::AccountHandle, operations::transaction::Transaction, types::address::AddressWrapper, TransactionOptions,
+        handle::AccountHandle,
+        operations::{helpers::time::can_output_be_unlocked_now, transaction::Transaction},
+        TransactionOptions,
     },
     Error,
 };
 
 impl AccountHandle {
-    /// Function to burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
-    /// deposit return, timelock or expiration unlock condition.
+    /// Function to burn an nft output.
     pub async fn burn_nft(&self, nft_id: NftId, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_nft");
 
-        let bech32_hrp = self.client().get_bech32_hrp().await?;
-        let address = AddressWrapper::new(Address::Nft(NftAddress::new(nft_id)), bech32_hrp);
+        let current_time = self.client().get_time_checked().await?;
 
-        let alias_outputs_state_controller = self.fetch_state_controller_address_alias_outputs(&address).await?;
-        let alias_outputs_governor = self.fetch_governor_address_alias_outputs(&address).await?;
-        // TODO: should we also check outputs with timelock, expiration and storage deposit return?
-        let basic_outputs = self.fetch_address_basic_outputs(&address).await?;
-        let foundry_outputs = self.fetch_foundry_outputs(&address).await?;
-        // TODO: should we also check outputs with timelock, expiration and storage deposit return?
-        let nft_outputs = self.fetch_address_nft_outputs(&address).await?;
+        let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
 
-        if !alias_outputs_state_controller.is_empty()
-            || !alias_outputs_governor.is_empty()
-            || !basic_outputs.is_empty()
-            || !foundry_outputs.is_empty()
-            || !nft_outputs.is_empty()
-        {
+        let mut owned_outputs = Vec::new();
+
+        for output_data in self.list_unspent_outputs(None).await? {
+            // Ignore outputs with a single [UnlockCondition], because then it's an
+            // [AddressUnlockCondition] and we own it already without
+            // further restrictions
+            if output_data
+                .output
+                .unlock_conditions()
+                .expect("output needs to have unlock_conditions")
+                .len()
+                != 1
+            {
+                if can_output_be_unlocked_now(
+                    // We use the addresses with unspent outputs, because other addresses of the
+                    // account without unspent outputs can't be related to this output
+                    &addresses_with_unspent_outputs,
+                    &[Address::Nft(NftAddress::new(nft_id))],
+                    &output_data,
+                    current_time,
+                ) {
+                    owned_outputs.push(output_data);
+                }
+            } else {
+                owned_outputs.push(output_data);
+            }
+        }
+
+        if !owned_outputs.is_empty() {
             return Err(Error::BurningOrMeltingFailed("nft still owns outputs".to_string()));
         }
 

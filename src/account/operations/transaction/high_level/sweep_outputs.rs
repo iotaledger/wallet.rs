@@ -1,6 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+// TODO: remove in the future: https://github.com/iotaledger/wallet.rs/issues/1453
+#![allow(dead_code)]
+
 use std::{pin::Pin, str::FromStr};
 
 use futures::{Future, FutureExt};
@@ -19,7 +22,6 @@ use iota_client::{
         },
         payload::transaction::TransactionId,
     },
-    node_api::indexer::query_parameters::QueryParameter,
 };
 
 use crate::{
@@ -96,8 +98,9 @@ impl AccountHandle {
         Ok((output_id, new_state_alias_output))
     }
 
+    // Enable in the future: https://github.com/iotaledger/wallet.rs/issues/1453
     // Will send outputs owned by the provided address to a remainder address of the account
-    pub fn sweep_address_outputs<'a>(
+    pub(crate) fn sweep_basic_outputs<'a>(
         &'a self,
         address: Address,
         options: &'a Option<TransactionOptions>,
@@ -107,26 +110,47 @@ impl AccountHandle {
             let address = AddressWrapper::new(address, bech32_hrp);
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
-            let alias_outputs_state_controller = self.fetch_state_controller_address_alias_outputs(&address).await?;
-            let alias_outputs_governor = self.fetch_governor_address_alias_outputs(&address).await?;
-            // TODO: should we also check outputs with timelock, expiration and storage deposit return?
-            let basic_outputs = self.fetch_address_basic_outputs(&address).await?;
-            let foundry_outputs = self.fetch_foundry_outputs(&address).await?;
-            // TODO: should we also check outputs with timelock, expiration and storage deposit return?
-            let nft_outputs = self.fetch_address_nft_outputs(&address).await?;
+            // TODO: get outputs from unspent outputs
+            let basic_outputs: Vec<OutputResponse> = Vec::new();
+            // maybe something like below
+            // let mut outputs_to_sweep = Vec::new();
+            // let mut other_owned_outputs = Vec::new();
+
+            // for output_data in self.list_unspent_outputs(None).await? {
+            //     // Ignore outputs with a single [UnlockCondition], because then it's an
+            //     // [AddressUnlockCondition] and we own it already without
+            //     // further restrictions
+            //     if output_data
+            //         .output
+            //         .unlock_conditions()
+            //         .expect("output needs to have unlock_conditions")
+            //         .len()
+            //         != 1
+            //     {
+            //         if can_output_be_unlocked_now(
+            //             // We use the addresses with unspent outputs, because other addresses of the
+            //             // account without unspent outputs can't be related to this output
+            //             &addresses_with_unspent_outputs,
+            //             &[Address::Nft(NftAddress::new(nft_id))],
+            //             &output_data,
+            //             current_time,
+            //         ) {
+            //             outputs_to_sweep.push(output_data);
+            //         } else {
+            //     // do we care about them?
+            //             other_owned_outputs.push(output_data);
+            //         }
+            //     } else {
+            //         outputs_to_sweep.push(output_data);
+            //     }
+            // }
 
             let mut output_ids = Vec::new();
             let mut outputs = Vec::new();
 
             let network_id = self.client.get_network_id().await?;
 
-            for mut output_response in alias_outputs_state_controller
-                .into_iter()
-                .chain(alias_outputs_governor.into_iter())
-                .chain(basic_outputs.into_iter())
-                .chain(foundry_outputs.into_iter())
-                .chain(nft_outputs.into_iter())
-            {
+            for mut output_response in basic_outputs {
                 if output_response.metadata.is_spent {
                     continue;
                 }
@@ -136,59 +160,28 @@ impl AccountHandle {
                 self.update_unspent_output(output_response.clone(), output_id, network_id)
                     .await?;
 
+                // TODO don't mutate the output response, but use the output builder instead.
                 match &mut output_response.output {
                     OutputDto::Basic(output_dto) => {
                         replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
                     }
-                    OutputDto::Alias(alias_dto) => {
-                        // TODO: check if alias doesn't own other outputs
-
-                        // let mut alias_id: AliasId = alias_dto.alias_id.borrow().try_into()?;
-                        // if alias_id.is_null() {
-                        //     alias_id = AliasId::from(output_id);
-                        // }
-                        // // Recursively sweep alias address outputs
-                        // let txn_ids = self
-                        //     .sweep_address_outputs(Address::Alias(AliasAddress::new(alias_id)), options)
-                        //     .await?;
-                        // transaction_ids.extend(txn_ids);
-                        replace_unlock_conditions(&mut alias_dto.unlock_conditions, &remainder_address.inner);
-                    }
-                    OutputDto::Nft(nft_dto) => {
-                        // TODO: check if nft doesn't own other outputs
-
-                        // let mut nft_id: NftId = nft_dto.nft_id.borrow().try_into()?;
-                        // if nft_id.is_null() {
-                        //     nft_id = NftId::from(output_id)
-                        // }
-                        // // Recursively sweep nft address outputs
-                        // let txn_ids = self
-                        //     .sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), options)
-                        //     .await?;
-                        // transaction_ids.extend(txn_ids);
-                        replace_unlock_conditions(&mut nft_dto.unlock_conditions, &remainder_address.inner);
-                    }
                     // Didn't ask for treasury and foundry outputs
-                    OutputDto::Treasury(_) | OutputDto::Foundry(_) => continue,
+                    OutputDto::Alias(_) | OutputDto::Nft(_) | OutputDto::Treasury(_) | OutputDto::Foundry(_) => {
+                        continue;
+                    }
                 }
 
                 let output = Output::try_from(&output_response.output)?;
 
                 output_ids.push(output_id);
                 outputs.push(output);
-
-                // if output_ids.len() == (OUTPUT_COUNT_MAX - 1) as usize {
-                //     let transaction_id = self
-                //         .send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
-                //         .await?;
-                //     transaction_ids.push(transaction_id);
-                // }
             }
 
             if !output_ids.is_empty() {
                 self.send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
                     .await
             } else {
+                // TODO: Other error message?
                 Err(crate::Error::NoOutputsToConsolidate {
                     available_outputs: 0,
                     consolidation_threshold: 0,
@@ -249,82 +242,6 @@ impl AccountHandle {
         }
 
         Ok(transaction)
-    }
-
-    /// Fetches alias outputs with `address` set as Governor unlock condition
-    pub(crate) async fn fetch_governor_address_alias_outputs(
-        &self,
-        address: &AddressWrapper,
-    ) -> crate::Result<Vec<OutputResponse>> {
-        let alias_query_parameters = vec![QueryParameter::Governor(address.to_bech32())];
-
-        let alias_output_ids = self.client.alias_output_ids(alias_query_parameters).await?;
-        let output_responses = self.client.get_outputs(alias_output_ids).await?;
-
-        Ok(output_responses)
-    }
-
-    /// Fetches alias outputs with `address` set as StateController unlock condition
-    pub(crate) async fn fetch_state_controller_address_alias_outputs(
-        &self,
-        address: &AddressWrapper,
-    ) -> crate::Result<Vec<OutputResponse>> {
-        let alias_query_parameters = vec![QueryParameter::StateController(address.to_bech32())];
-
-        let alias_output_ids = self.client.alias_output_ids(alias_query_parameters).await?;
-        let output_responses = self.client.get_outputs(alias_output_ids).await?;
-
-        Ok(output_responses)
-    }
-
-    /// Fetches foundry outputs with `address` set as StateController unlock condition
-    pub(crate) async fn fetch_foundry_outputs(&self, address: &AddressWrapper) -> crate::Result<Vec<OutputResponse>> {
-        if let Address::Alias(_) = &address.inner {
-        } else {
-            return Ok(Vec::new());
-        }
-        let alias_query_parameters = vec![QueryParameter::StateController(address.to_bech32())];
-
-        let alias_output_ids = self.client.alias_output_ids(alias_query_parameters).await?;
-        let output_responses = self.client.get_outputs(alias_output_ids).await?;
-
-        Ok(output_responses)
-    }
-
-    /// Fetches basic outputs with address unlock conditions only
-    pub(crate) async fn fetch_address_basic_outputs(
-        &self,
-        address: &AddressWrapper,
-    ) -> crate::Result<Vec<OutputResponse>> {
-        let query_parameters = vec![
-            QueryParameter::Address(address.to_bech32()),
-            QueryParameter::HasExpiration(false),
-            QueryParameter::HasTimelock(false),
-            QueryParameter::HasStorageDepositReturn(false),
-        ];
-
-        let basic_output_ids = self.client.basic_output_ids(query_parameters.clone()).await?;
-        let output_responses = self.client.get_outputs(basic_output_ids).await?;
-
-        Ok(output_responses)
-    }
-
-    /// Fetches nft outputs with address unlock conditions only
-    pub(crate) async fn fetch_address_nft_outputs(
-        &self,
-        address: &AddressWrapper,
-    ) -> crate::Result<Vec<OutputResponse>> {
-        let query_parameters = vec![
-            QueryParameter::Address(address.to_bech32()),
-            QueryParameter::HasExpiration(false),
-            QueryParameter::HasTimelock(false),
-            QueryParameter::HasStorageDepositReturn(false),
-        ];
-
-        let nfts_output_ids = self.client.nft_output_ids(query_parameters).await?;
-        let output_responses = self.client.get_outputs(nfts_output_ids).await?;
-
-        Ok(output_responses)
     }
 
     /// Update unspent output, this function is originally intended for updating recursively synced alias and nft

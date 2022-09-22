@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use iota_client::block::address::Address;
+
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
 
 // Check if an output can be unlocked by one of the account addresses at the current time
@@ -8,6 +10,7 @@ pub(crate) fn can_output_be_unlocked_now(
     // We use the addresses with unspent outputs, because other addresses of the account without unspent outputs can't
     // be related to this output
     account_addresses: &[AddressWithUnspentOutputs],
+    alias_and_nft_addresses: &[Address],
     output_data: &OutputData,
     current_time: u32,
 ) -> bool {
@@ -23,7 +26,9 @@ pub(crate) fn can_output_be_unlocked_now(
 
         let unlock_address = unlock_conditions.locked_address(output_address, current_time);
         // The address that can unlock the output needs to belong to the account
-        if !account_addresses.iter().any(|a| a.address.inner == *unlock_address) {
+        if !account_addresses.iter().any(|a| a.address.inner == *unlock_address)
+            && alias_and_nft_addresses.iter().any(|a| a == unlock_address)
+        {
             return false;
         };
 
