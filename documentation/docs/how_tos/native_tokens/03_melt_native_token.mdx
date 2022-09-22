@@ -1,0 +1,66 @@
+---
+title: Melt Native Tokens
+sidebar_label: Melt
+description: 'How to melt native tokens with wallet.rs'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- melt native token
+- foundry
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../_admonitions/_guide_coming_soon.md";
+import NodejsOutput from "../../_admonitions/_guide_coming_soon.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import RustCode from "../../libraries/rust/how_to/native_tokens/_03_melt_native_token/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/native_tokens/_03_melt_native_token/_expected_output.md";
+import ReplaceNativeTokenId from '../../_admonitions/_note_replace_native_token_id.md';
+
+You may want to melt some of your circulating native tokens. To do so, you will need to call the
+`Account.melt_native_token(native_token, options)` function.
+
+If you melt your native tokens, you can still destroy the foundry that created them.
+
+## Code Example
+
+<ReplaceNativeTokenId/>
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. Get the account's balance.
+4. Melt 10 native tokens of the supplied ID.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+

@@ -1,0 +1,64 @@
+---
+title: Claim Outputs
+description: 'How to send and claim funds with a time-lock using wallet.rs.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- time-lock
+- unlock conditions
+- claim output
+- send output
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/outputs_and_transactions/_21_claim_outputs/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/outputs_and_transactions/_21_claim_outputs/_expected_output.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import RustCode from  "../../_admonitions/_guide_coming_soon.md";
+import RustOutput from  "../../_admonitions/_guide_coming_soon.md";
+
+You can use wallet.rs to send
+[funds with an expiration](https://wiki.iota.org/introduction/develop/explanations/ledger/simple_transfers#transfer-of-funds-with-expiration).
+If you don't claim these funds within the expiration period, they will be returned to the sender.
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's and Bob's account which were [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. Prepare and send an output with an expiration unlock.
+4. Sync Bob's account to get the output event.
+5. Claim the output by calling the `account.claimOutputs([outputId])` function from Bob's account.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+

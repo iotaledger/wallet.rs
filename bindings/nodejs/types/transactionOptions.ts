@@ -39,7 +39,7 @@ export interface IncreaseNativeTokenSupplyOptions {}
 
 /** Native token options for minting */
 export interface NativeTokenOptions {
-    accountAddress?: string;
+    aliasId?: string;
     /** Hex encoded number */
     circulatingSupply: HexEncodedAmount;
     /** Hex encoded number */
@@ -58,4 +58,18 @@ export interface NftOptions {
     immutableMetadata?: string;
     /** Hex encoded bytes */
     metadata?: string;
+}
+
+/** Options for the alias output creation */
+export interface AliasOutputOptions {
+    /** Bech32 encoded address to which the Nft will be minted. Default will use the
+     * first address of the account
+     */
+    address?: string;
+    /** Hex encoded bytes */
+    immutableMetadata?: string;
+    /** Hex encoded bytes */
+    metadata?: string;
+    /** Hex encoded bytes */
+    stateMetadata?: string;
 }

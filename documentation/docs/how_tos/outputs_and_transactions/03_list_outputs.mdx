@@ -1,0 +1,59 @@
+---
+title: List Outputs
+description: 'How to list all the outputs related to an account using wallet.rs.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- get outputs
+- list outputs
+- listOutputs
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/outputs_and_transactions/_12a_list_outputs/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/outputs_and_transactions/_12a_list_outputs/_expected_output.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import RustCode from  "../../_admonitions/_guide_coming_soon.md";
+import RustOutput from  "../../_admonitions/_guide_coming_soon.md";
+
+You can list all the outputs related to an account by calling the `Account.listOutputs()` function.
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. List all the outputs related to Alice's account.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+
