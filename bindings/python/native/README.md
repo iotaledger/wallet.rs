@@ -58,5 +58,38 @@ print(account)
 
 ```
 
-## Build docs
-`pydoc-markdown -p iota_wallet > ../../../documentation/docs/libraries/python/api_reference.md`
+### Generate API References
+
+You can generate the python API reference with the following command from this directory:
+
+```bash
+pydoc-markdown
+```
+
+### Customize the Output
+
+Pydoc-markdown automatically loads its configuration from the [pydoc-markdown.yml](../../../../../forks/wallet.rs/bindings/python/native/pydoc-markdown.yml) file. You can
+override it with the [CLI](https://niklasrosenstein.github.io/pydoc-markdown/api/cli/), or alter the values.
+
+```yaml 
+loaders:
+  - type: python
+processors:
+  - type: filter
+    skip_empty_modules: true
+  - type: smart
+  - type: crossref
+renderer:
+  type: docusaurus
+  docs_base_path: ../../../documentation/docs/references/
+  relative_output_path: python
+
+  markdown:
+    use_fixed_header_levels: true
+    header_level_by_type:
+      Module: 1
+      Class: 2
+      Method: 3
+      Function: 3
+      Data: 3
+```

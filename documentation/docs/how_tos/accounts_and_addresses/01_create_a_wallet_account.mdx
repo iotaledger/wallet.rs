@@ -1,0 +1,64 @@
+---
+title: Create a Wallet Account
+description: 'How to create a wallet account to start sending value transactions to a Hornet node.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- create account
+- create wallet
+- account manager
+- multi account approach
+- single account approach
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/accounts_and_addresses/_01_create_a_wallet_account/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/accounts_and_addresses/_01_create_a_wallet_account/_expected_output.md";
+import PythonCode from "../../libraries/python/how_to/accounts_and_addresses/_01_create_a_wallet_account/_code_sample.mdx";
+import PythonOutput from "../../libraries/python/how_to/accounts_and_addresses/_01_create_a_wallet_account/_expected_output.md";
+import RustCode from "../../libraries/rust/how_to/accounts_and_addresses/_01_create_a_wallet_account/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/accounts_and_addresses/_01_create_a_wallet_account/_expected_output.md";
+import TipAccountApproaches from "../../_admonitions/_tip_account_approaches.md";
+
+The first thing you will need to do when you are getting started with the wallet.rs library is to create a wallet account.
+
+<TipAccountApproaches/>
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Use it to store the [Stronghold](https://wiki.iota.org/stronghold.rs/welcome) mnemonic.
+3. Create a wallet with the alias "Alice".
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+

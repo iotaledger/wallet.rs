@@ -1,0 +1,58 @@
+---
+title: Run Code Examples
+description: 'The wallet.rs has multiple how-to guides to get you up and running in no time. However, these require a
+specific set up depending on your language of choice.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- examples
+- npm
+- cargo
+- yarn
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsGetCode from "../libraries/nodejs/how_to/_run_how_tos.mdx";
+import PythonGetCode from "../libraries/python/how_to/_run_how_tos.md";
+import RustGetCode from "../libraries/rust/how_to/_run_how_tos.md";
+
+## Hornet Node
+
+Most of the examples require a [Hornet Node](https://wiki.iota.org/hornet/develop/welcome) running the
+[Stardust](https://wiki.iota.org/introduction/develop/welcome) upgrade. You can connect to a node you trust, use the
+[public API](#public-api), [run your own node](#run-your-own-node) or [run a local private tangle](#run-a-local-private-tangle)
+
+### Public API
+
+You can use the [Shimmer Testnet](https://api.testnet.shimmer.network) as well as its
+[Faucet](https://faucet.testnet.shimmer.network/) to quickly run the examples.
+
+### Run Your Own Node
+
+If you want direct access to the Tangle, you can
+[set up a HORNET node using docker](https://wiki.iota.org/hornet/develop/how_tos/using_docker).
+
+### Run a Local Private Tangle
+
+If you want to run the examples locally,
+you can [set up a private tangle](https://wiki.iota.org/hornet/develop/how_tos/private_tangle) in a few simple steps.
+
+## Language Specific Instructions
+
+Each language has different set up instructions you need to follow to get the code examples up and running.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustGetCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsGetCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonGetCode/>
+    </TabItem>
+</Tabs>

@@ -1,0 +1,47 @@
+## Prerequisites
+
+Before you can run the examples, please refer to the [Node.js Getting Started guide](./../getting_started/nodejs) to install
+the library.
+
+## Set Up Your `.env` File
+
+The examples use variables from a `.env` file.  Though you can create your own, for the examples you can simply copy the
+existing [`.env.example`](https://github.com/iotaledger/wallet.rs/blob/develop/bindings/nodejs/.env.example) file. You can
+do this running the following command from the `bindings/nodejs` directory:
+
+```bash
+cp .env.example .env
+```
+
+## Install Dependencies
+
+Before you can try out the examples, you must install the necessary dependencies using npm.  You can do this by running
+the following command from the `binding/nodejs` directory:
+
+```bash
+npm i
+```
+
+### Build the Library
+
+Once you have [set up your `.env` file](#setup-your-env-file) and [installed the necessary dependencies](#install-dependencies)
+, you can build the library by running the following command:
+
+```bash
+npm run build
+```
+
+### Run the Examples
+
+The wallet.rs library has numerous examples you can run to get acquainted with the library.
+After you have followed the instructions to [build the library](#build-the-library), you can run any Node.js example.
+You will need to select any of the
+[Node.js examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/nodejs/examples) and run it with
+your local Node.js interpreter.
+
+To run examples, you will need to change to the `bindings/nodejs/examples` directory, and run any example.
+The following command will run the `10-node-info.js` example:
+
+```bash
+node 10-node-info.js
+```

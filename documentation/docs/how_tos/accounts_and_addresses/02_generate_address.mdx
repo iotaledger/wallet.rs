@@ -1,0 +1,67 @@
+---
+title: Generate an Address
+description: 'How to generate an address for a wallet account.'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- generate address
+- generate wallet address
+- account manager
+- multi account approach
+- single account approach
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../libraries/nodejs/how_to/accounts_and_addresses/_02_generate_address/_code_sample.mdx";
+import NodejsOutput from "../../libraries/nodejs/how_to/accounts_and_addresses/_02_generate_address/_expected_output.md";
+import PythonCode from "../../libraries/python/how_to/accounts_and_addresses/_02_generate_address/_code_sample.mdx";
+import PythonOutput from "../../libraries/python/how_to/accounts_and_addresses/_02_generate_address/_expected_output.md";
+import RustCode from "../../libraries/rust/how_to/accounts_and_addresses/_02_generate_address/_code_sample.mdx";
+import RustOutput from "../../libraries/rust/how_to/accounts_and_addresses/_02_generate_address/_expected_output.md";
+import TipAccountApproaches from "../../_admonitions/_tip_account_approaches.md";
+import IOTAJsExample from "../../_admonitions/_info_iotajs.mdx";
+
+After you have [created an account](01_create_a_wallet_account.mdx), you have a single address in the account. But you can generate more addresses.
+
+<TipAccountApproaches/>
+
+<IOTAJsExample exampleURL={"https://wiki.iota.org/iotajs/how_tos/address"}/>
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](01_create_a_wallet_account.mdx).
+3. Generate an address in Alice's account.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+

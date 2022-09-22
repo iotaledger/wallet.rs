@@ -22,7 +22,7 @@ ___
 
 ### coinType
 
-• **coinType**: `CoinType`
+• **coinType**: [`CoinType`](../enums/CoinType.md)
 
 The used coin type
 
