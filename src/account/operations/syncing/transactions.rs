@@ -168,7 +168,7 @@ impl AccountHandle {
                             }
                         }
                     }
-                    Err(ClientError::NotFound) => {
+                    Err(ClientError::NotFound(_)) => {
                         // no need to reattach if one input got spent
                         if input_got_spent {
                             process_transaction_with_unknown_state(

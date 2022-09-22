@@ -28,38 +28,26 @@ impl AccountHandle {
 
         let current_time = self.client().get_time_checked().await?;
 
-        let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
-
         let mut owned_outputs = Vec::new();
 
         for output_data in self.list_unspent_outputs(None).await? {
-            // Ignore outputs with a single [UnlockCondition], because then it's an
-            // [AddressUnlockCondition] and we own it already without
-            // further restrictions
-            if output_data
-                .output
-                .unlock_conditions()
-                .expect("output needs to have unlock_conditions")
-                .len()
-                != 1
-            {
-                if can_output_be_unlocked_now(
-                    // We use the addresses with unspent outputs, because other addresses of the
-                    // account without unspent outputs can't be related to this output
-                    &addresses_with_unspent_outputs,
-                    &[Address::Alias(AliasAddress::new(alias_id))],
-                    &output_data,
-                    current_time,
-                ) {
-                    owned_outputs.push(output_data);
-                }
-            } else {
+            if can_output_be_unlocked_now(
+                // Don't provide any addresses here, since we're only interested in outputs that can be unlocked by
+                // the nft address
+                &[],
+                &[Address::Alias(AliasAddress::new(alias_id))],
+                &output_data,
+                current_time,
+            ) {
                 owned_outputs.push(output_data);
             }
         }
 
         if !owned_outputs.is_empty() {
-            return Err(Error::BurningOrMeltingFailed("alias still owns outputs".to_string()));
+            return Err(Error::BurningOrMeltingFailed(format!(
+                "alias still owns outputs: {:?}",
+                owned_outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()
+            )));
         }
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_alias(alias_id).await?;
@@ -73,10 +61,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
+                options.allow_burning = true;
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
+                allow_burning: true,
                 ..Default::default()
             }),
         };

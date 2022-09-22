@@ -32,10 +32,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
+                options.allow_burning = true;
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
+                allow_burning: true,
                 ..Default::default()
             }),
         };

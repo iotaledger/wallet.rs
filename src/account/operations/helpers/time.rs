@@ -1,7 +1,7 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::address::Address;
+use iota_client::block::{address::Address, output::Output};
 
 use crate::account::types::{AddressWithUnspentOutputs, OutputData};
 
@@ -19,20 +19,29 @@ pub(crate) fn can_output_be_unlocked_now(
             return false;
         }
 
-        let output_address = unlock_conditions
-            .address()
-            .expect("output needs to have an address unlock condition")
-            .address();
+        if let Some(address_unlock_condition) = unlock_conditions.address() {
+            let address = address_unlock_condition.address();
 
-        let unlock_address = unlock_conditions.locked_address(output_address, current_time);
-        // The address that can unlock the output needs to belong to the account
-        if !account_addresses.iter().any(|a| a.address.inner == *unlock_address)
-            && alias_and_nft_addresses.iter().any(|a| a == unlock_address)
-        {
-            return false;
-        };
+            let unlock_address = unlock_conditions.locked_address(address, current_time);
+            // The address that can unlock the output needs to belong to the account
+            if !account_addresses.iter().any(|a| a.address.inner == *unlock_address)
+                && !alias_and_nft_addresses.iter().any(|a| a == unlock_address)
+            {
+                return false;
+            };
+        }
 
-        true
+        match &output_data.output {
+            Output::Alias(alias_output) => {
+                alias_and_nft_addresses.contains(alias_output.governor_address())
+                    || alias_and_nft_addresses.contains(alias_output.state_controller_address())
+            }
+            Output::Foundry(foundry_output) => {
+                alias_and_nft_addresses.contains(&Address::Alias(*foundry_output.alias_address()))
+            }
+            // Checked these cases before
+            _ => true,
+        }
     } else {
         false
     }
