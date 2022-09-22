@@ -6,11 +6,15 @@ pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
 
-use std::time::{Instant, SystemTime, UNIX_EPOCH};
+use std::{
+    collections::HashMap,
+    str::FromStr,
+    time::{Instant, SystemTime, UNIX_EPOCH},
+};
 
 use iota_client::{
     api_types::responses::OutputResponse,
-    block::{Block, BlockId},
+    block::{output::OutputId, payload::transaction::TransactionId, Block, BlockId},
 };
 
 pub use self::options::SyncOptions;
@@ -68,8 +72,22 @@ impl AccountHandle {
             self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
 
         // request possible spent outputs
+        // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
+        // `spent_or_not_synced_outputs` directly from a new method
         let (spent_or_not_synced_output_responses, _loaded_output_responses) =
             self.get_outputs(spent_or_not_synced_output_ids.clone(), true).await?;
+
+        // Add the output response to the output ids, the output response is optional, because an output could be pruned
+        // and then we can't get the metadata
+        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>> =
+            spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
+        for output_response in spent_or_not_synced_output_responses {
+            let output_id = OutputId::new(
+                TransactionId::from_str(&output_response.metadata.transaction_id)?,
+                output_response.metadata.output_index,
+            )?;
+            spent_or_not_synced_outputs.insert(output_id, Some(output_response));
+        }
 
         if options.sync_incoming_transactions {
             let transaction_ids = output_data
@@ -84,8 +102,7 @@ impl AccountHandle {
         self.update_account(
             addresses_with_unspent_outputs_and_outputs,
             output_data,
-            spent_or_not_synced_output_ids,
-            spent_or_not_synced_output_responses,
+            spent_or_not_synced_outputs,
             &options,
         )
         .await?;
