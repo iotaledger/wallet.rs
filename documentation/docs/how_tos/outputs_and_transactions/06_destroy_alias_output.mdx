@@ -21,12 +21,7 @@ import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
 import RustCode from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_code_sample.mdx";
 import RustOutput from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_expected_output.md";
 
-You can destroy an alias output by ID using the `Account.destroy_alias(alias_id, options)` function. Any outputs
-controlled by the alias will be swept unless they have a
-[storage deposit return](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#storage-deposit-returns-in-transfers),
-[time-lock](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#timelocking-funds-in-transfers)
-or [expiration unlock](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#transfer-of-funds-with-expiration)
-conditions.
+You can destroy an alias output by ID using the `Account.destroy_alias(alias_id, options)` function. If the alias still owns any outputs when you try to destroy it, you will get an error.   
 
 ## Code Example
 
