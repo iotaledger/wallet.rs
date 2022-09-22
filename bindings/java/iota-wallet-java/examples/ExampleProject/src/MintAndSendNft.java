@@ -1,19 +1,11 @@
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.PrepareTransaction;
-import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.account_methods.MintNfts;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.OutputId;
 import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.outputs.BasicOutput;
-import org.iota.types.outputs.Output;
 import org.iota.types.secret.MnemonicSecretManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
-public class ListTransactions {
+public class MintAndSendNft {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
@@ -27,20 +19,18 @@ public class ListTransactions {
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
 
-        // Set up an account with funds for this example
+        // Set up an account for this example.
         ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
-        // Sync account
-        wallet.syncAccount(new AccountAlias("Hans"), new SyncAccount());
+        // Configure the NFT
+        NftOptions options = new NftOptions();
+        options.withMetadata("0x5368696d6d65722e20546f6b656e697a652045766572797468696e672e2048656c6c6f2066726f6d20746865204a6176612062696e64696e672e");
 
-        // List transactions
-        Transaction[] transactions = wallet.listTransactions(new AccountAlias("Hans"));
+        // Mint the NFT
+        Transaction nftTransaction = wallet.mintNfts(new AccountAlias("Hans"), new MintNfts().withNftsOptions(new NftOptions[]{ options }));
 
-        // Print transactions
-        for (Transaction tx : transactions) {
-            System.out.println(tx.toString());
-        }
-
+        // Print NFT transaction
+        System.out.println(nftTransaction);
     }
 
 }

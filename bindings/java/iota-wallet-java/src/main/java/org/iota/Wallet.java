@@ -15,7 +15,6 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.outputs.Output;
 import org.iota.types.payload.TaggedDataPayload;
-import org.iota.types.payload.TransactionPayload;
 
 public class Wallet extends NativeApi {
 
@@ -246,8 +245,8 @@ public class Wallet extends NativeApi {
         return outputs;
     }
 
-    public TransactionPayload getTransaction(AccountIdentifier accountIdentifier, GetTransaction method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), TransactionPayload.class);
+    public Transaction getTransaction(AccountIdentifier accountIdentifier, GetTransaction method) throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
     }
 
     public JsonElement getIncomingTransactionData(AccountIdentifier accountIdentifier, GetIncomingTransactionData method) throws WalletException {
@@ -322,8 +321,12 @@ public class Wallet extends NativeApi {
         return callAccountMethod(accountIdentifier, method).getAsJsonPrimitive().getAsString();
     }
 
-    public TransactionPayload mintNfts(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), TransactionPayload.class);
+    public MintTokenTransaction mintNativeToken(AccountIdentifier accountIdentifier, MintNativeToken method) throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), MintTokenTransaction.class);
+    }
+
+    public Transaction mintNfts(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
     }
 
     public AccountBalance getBalance(AccountIdentifier accountIdentifier) throws WalletException {

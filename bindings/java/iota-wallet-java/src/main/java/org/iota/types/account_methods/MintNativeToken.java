@@ -6,10 +6,10 @@ import org.iota.types.TransactionOptions;
 /// Mint native token.
 public class MintNativeToken implements AccountMethod {
 
-    private NativeTokenOptions[] nativeTokenOptions;
+    private NativeTokenOptions nativeTokenOptions;
     private TransactionOptions options;
 
-    public MintNativeToken withNativeTokenOptions(NativeTokenOptions[] nativeTokenOptions) {
+    public MintNativeToken withNativeTokenOptions(NativeTokenOptions nativeTokenOptions) {
         this.nativeTokenOptions = nativeTokenOptions;
         return this;
     }

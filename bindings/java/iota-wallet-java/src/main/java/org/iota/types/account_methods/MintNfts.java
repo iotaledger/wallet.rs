@@ -6,11 +6,11 @@ import org.iota.types.TransactionOptions;
 /// Mint nft.
 public class MintNfts implements AccountMethod {
 
-    private NftOptions[] nftOptions;
+    private NftOptions[] nftsOptions;
     private TransactionOptions options;
 
-    public MintNfts withNftOptions(NftOptions[] nftOptions) {
-        this.nftOptions = nftOptions;
+    public MintNfts withNftsOptions(NftOptions[] nftsOptions) {
+        this.nftsOptions = nftsOptions;
         return this;
     }
 
