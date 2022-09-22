@@ -14,23 +14,25 @@ public class GenerateAndListAddresses {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException {
-        // Build the wallet
+        // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(new String[] { SHIMMER_TESTNET_NODE_URL }))
                 .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
 
-        // Create an account
+        // Set up an account for this example.
         Account account = wallet.createAccount("Hans");
 
         // Generate an address
         AccountAddress[] addresses = wallet.generateAddresses(new AccountAlias("Hans"), new GenerateAddresses().withAmount(1));
 
-        // Print addresses
-        for (AccountAddress address : addresses) {
+        // Print generated addresses.
+        for (AccountAddress address : addresses)
             System.out.println(address.getAddress());
-        }
 
+        // Print all addresses.
+        for (AccountAddress address : wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses())
+            System.out.println(address.getAddress());
     }
 }

@@ -13,20 +13,20 @@ public class GetAccountByAlias {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException {
-        // Build the wallet
+        // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(new String[] { SHIMMER_TESTNET_NODE_URL }))
                 .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
 
-        // Create an account
-        Account createdAccount = wallet.createAccount("Hans");
+        // Set up an account for this example.
+        wallet.createAccount("Hans");
 
-        // Get the account by alias
-        Account fetched = wallet.getAccount(new AccountAlias(createdAccount.getAlias()));
+        // Get the account by alias.
+        Account a = wallet.getAccount(new AccountAlias("Hans"));
 
-        // Print the account
-        System.out.println(fetched);
+        // Print the account.
+        System.out.println(a);
     }
 }

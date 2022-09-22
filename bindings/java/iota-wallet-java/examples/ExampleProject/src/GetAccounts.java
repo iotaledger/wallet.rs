@@ -19,11 +19,8 @@ public class GetAccounts {
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
 
-        // Create an account
-        Account firstAccount = wallet.createAccount("Hans");
-
-        // Create another account
-        Account secondAccount = wallet.createAccount("Billy");
+        // Set up an account for this example
+        wallet.createAccount("Hans");
 
         for(Account a : wallet.getAccounts()) {
             System.out.println(a);

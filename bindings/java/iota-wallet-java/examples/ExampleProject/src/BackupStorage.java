@@ -18,11 +18,7 @@ public class BackupStorage {
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
 
-        // Create an account
-        wallet.createAccount("Hans");
-
         // Backup wallet
-        wallet.backup("./mywallet", "YOUR_SECRET_PASSWORD");
-
+        wallet.backup("./wallet_backup", "THE PASSWORD TO ENCRYPT THE BACKUP");
     }
 }
