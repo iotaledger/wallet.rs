@@ -12,6 +12,7 @@ import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
+import org.iota.types.ids.account.AccountIndex;
 
 public class Wallet extends NativeApi {
 
@@ -26,14 +27,14 @@ public class Wallet extends NativeApi {
         o.addProperty("alias", alias);
 
         Account a = GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
-        AccountHandle handle = new AccountHandle(this, a);
+        AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
     }
 
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
         Account a =  GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
-        AccountHandle handle = new AccountHandle(this, a);
+        AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
     }
@@ -43,7 +44,7 @@ public class Wallet extends NativeApi {
 
         AccountHandle[] accountHandles = new AccountHandle[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accountHandles[i] = new AccountHandle(this, GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class));
+            accountHandles[i] = new AccountHandle(this, new AccountIndex(GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class).getIndex()));
 
         return accountHandles;
     }

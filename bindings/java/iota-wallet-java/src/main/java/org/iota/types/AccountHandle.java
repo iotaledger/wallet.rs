@@ -25,67 +25,63 @@ import static org.iota.api.NativeApi.callBaseApi;
 public class AccountHandle extends AbstractObject {
 
     private Wallet wallet;
-    private Account account;
+    private AccountIdentifier accountIdentifier;
 
-    public AccountHandle(Wallet wallet, Account account) {
+    public AccountHandle(Wallet wallet, AccountIdentifier accountIdentifier) {
         this.wallet = wallet;
-        this.account = account;
+        this.accountIdentifier = accountIdentifier;
     }
 
     public int getIndex() throws WalletException {
-        return getAccount().getIndex();
+        return getAccountCopy().getIndex();
     }
 
     public int getCoinType() throws WalletException {
-        return getAccount().getCoinType();
+        return getAccountCopy().getCoinType();
     }
 
     public String getAlias() throws WalletException {
-        return getAccount().getAlias();
+        return getAccountCopy().getAlias();
     }
 
     public AccountAddress[] getPublicAddresses() throws WalletException {
-        return getAccount().getPublicAddresses();
+        return getAccountCopy().getPublicAddresses();
     }
 
     public AccountAddress[] getInternalAddresses() throws WalletException {
-        return getAccount().getInternalAddresses();
+        return getAccountCopy().getInternalAddresses();
     }
 
     public AddressWithUnspentOutputs[] getAddressesWithUnspentOutputs() throws WalletException {
-        return getAccount().getAddressesWithUnspentOutputs();
+        return getAccountCopy().getAddressesWithUnspentOutputs();
     }
 
     public Map<OutputId, OutputData> getOutputs() throws WalletException {
-        return getAccount().getOutputs();
+        return getAccountCopy().getOutputs();
     }
 
     public Set<OutputId> getLockedOutputs() throws WalletException {
-        return getAccount().getLockedOutputs();
+        return getAccountCopy().getLockedOutputs();
     }
 
     public Map<OutputId, OutputData> getUnspentOutputs() throws WalletException {
-        return getAccount().getUnspentOutputs();
+        return getAccountCopy().getUnspentOutputs();
     }
 
     public Map<TransactionId, Transaction> getTransactions() throws WalletException {
-        return getAccount().getTransactions();
+        return getAccountCopy().getTransactions();
     }
 
     public Set<TransactionId> getPendingTransactions() throws WalletException {
-        return getAccount().getPendingTransactions();
+        return getAccountCopy().getPendingTransactions();
     }
 
     public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() throws WalletException {
-        return getAccount().getIncomingTransactions();
+        return getAccountCopy().getIncomingTransactions();
     }
 
-    public Account getAccount() throws WalletException {
-        return wallet.getAccount(new AccountIndex(account.getIndex())).getAccountCopy();
-    }
-
-    public Account getAccountCopy() {
-        return this.account;
+    public Account getAccountCopy() throws WalletException {
+        return GsonSingleton.getInstance().fromJson(callBaseApi(new NativeApi.ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
     }
 
     // Account Method APIs
@@ -100,7 +96,7 @@ public class AccountHandle extends AbstractObject {
             method.add("data", data);
 
         JsonObject o = new JsonObject();
-        o.add("accountId", GsonSingleton.getInstance().toJsonTree(new AccountIndex(account.getIndex())));
+        o.add("accountId", GsonSingleton.getInstance().toJsonTree(accountIdentifier));
         o.add("method", method);
 
         return callBaseApi(new NativeApi.ClientCommand("CallAccountMethod", o));
@@ -320,7 +316,7 @@ class AccountHandleAdapter implements JsonSerializer<AccountHandle> {
     @Override
     public JsonElement serialize(AccountHandle src, Type typeOfSrc, JsonSerializationContext context) {
         try {
-            return new Gson().toJsonTree(src.getAccount());
+            return new Gson().toJsonTree(src.getAccountCopy());
         } catch (WalletException e) {
             throw new RuntimeException(e);
         }
