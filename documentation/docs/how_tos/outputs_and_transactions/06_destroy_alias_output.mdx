@@ -1,0 +1,66 @@
+---
+title: Destroy an Alias Output
+description: 'How to destroy an alias output using wallet.rs'
+image: /img/logo/iota_mark_light.png
+keywords:
+- how to
+- outputs
+- destroy
+- destroy alias output
+- nodejs
+- python
+- rust
+---
+
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+import NodejsCode from "../../_admonitions/_guide_coming_soon.md";
+import NodejsOutput from "../../_admonitions/_guide_coming_soon.md";
+import PythonCode from "../../_admonitions/_guide_coming_soon.md";
+import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
+import RustCode from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_code_sample.mdx";
+import RustOutput from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_expected_output.md";
+
+You can destroy an alias output by ID using the `Account.destroy_alias(alias_id, options)` function. Any outputs
+controlled by the alias will be swept unless they have a
+[storage deposit return](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#storage-deposit-returns-in-transfers),
+[time-lock](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#timelocking-funds-in-transfers)
+or [expiration unlock](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/simple_transfers#transfer-of-funds-with-expiration)
+conditions.
+
+## Code Example
+
+The following example will:
+
+1. Create an account manager.
+2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
+3. Get the account's balance.
+4. Destroy an [Alias](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/alias) output by id.
+5. Get the account's balance again to show the difference after step 4.
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustCode/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsCode/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonCode/>
+    </TabItem>
+</Tabs>
+
+## Expected Output
+
+<Tabs groupId="language">
+    <TabItem value="rust" label="Rust">
+        <RustOutput/>
+    </TabItem>
+    <TabItem value="nodejs" label="Nodejs">
+        <NodejsOutput/>
+    </TabItem>
+    <TabItem value="python" label="Python">
+        <PythonOutput/>
+    </TabItem>
+</Tabs>
+
