@@ -1,5 +1,6 @@
 import org.iota.Wallet;
 import org.iota.types.AccountBalance;
+import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
@@ -21,10 +22,10 @@ public class SyncAccount {
         );
 
         // Create an account.
-        wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Hans");
 
         // Sync account with the registered node to make sure the correct balance is returned.
-        AccountBalance balance = wallet.syncAccount(new AccountAlias("Hans"), new org.iota.types.account_methods.SyncAccount());
+        AccountBalance balance = a.syncAccount(new org.iota.types.account_methods.SyncAccount());
 
         // Print the balance.
         System.out.println(balance.getBaseCoin().getTotal());

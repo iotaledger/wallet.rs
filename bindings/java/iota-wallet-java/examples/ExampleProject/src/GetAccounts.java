@@ -1,5 +1,6 @@
 import org.iota.Wallet;
 import org.iota.types.Account;
+import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
@@ -22,7 +23,7 @@ public class GetAccounts {
         // Set up an account for this example
         wallet.createAccount("Hans");
 
-        for(Account a : wallet.getAccounts()) {
+        for(AccountHandle a : wallet.getAccounts()) {
             System.out.println(a);
         }
 

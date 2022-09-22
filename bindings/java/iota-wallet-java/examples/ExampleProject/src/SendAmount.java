@@ -29,13 +29,13 @@ public class SendAmount {
         );
 
         // Set up an account with funds for this example
-        ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Set up receiver address
         AccountAddress address = wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses()[0];
 
         // Configure outputs
-        Transaction p = wallet.sendAmount(new AccountAlias("Hans"), new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
+        Transaction p = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
                 new AddressWithAmount[] { new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
         ));
 

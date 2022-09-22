@@ -1,5 +1,5 @@
 import org.iota.Wallet;
-import org.iota.types.Account;
+import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
@@ -19,10 +19,10 @@ public class CreateAccounts {
         );
 
         // Create an account.
-        Account a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Hans");
 
         // Create another account.
-        Account b = wallet.createAccount("Billy");
+        AccountHandle b = wallet.createAccount("Billy");
 
         // Print the accounts.
         System.out.println(a);

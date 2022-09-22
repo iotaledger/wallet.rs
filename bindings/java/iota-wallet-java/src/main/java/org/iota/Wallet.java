@@ -10,11 +10,8 @@ import com.google.gson.JsonPrimitive;
 import org.iota.api.GsonSingleton;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
-import org.iota.types.account_methods.*;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
-import org.iota.types.outputs.Output;
-import org.iota.types.payload.TaggedDataPayload;
 
 public class Wallet extends NativeApi {
 
@@ -24,25 +21,31 @@ public class Wallet extends NativeApi {
 
     // Account manager APIs
 
-    public Account createAccount(String alias) throws WalletException {
+    public AccountHandle createAccount(String alias) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
 
-        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
+        Account a = GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
+        AccountHandle handle = new AccountHandle(this, a);
+
+        return handle;
     }
 
-    public Account getAccount(AccountIdentifier accountIdentifier) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
+    public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
+        Account a =  GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
+        AccountHandle handle = new AccountHandle(this, a);
+
+        return handle;
     }
 
-    public Account[] getAccounts() throws WalletException {
+    public AccountHandle[] getAccounts() throws WalletException {
         JsonArray responsePayload = (JsonArray) callBaseApi(new ClientCommand("GetAccounts"));
 
-        Account[] accounts = new Account[responsePayload.size()];
+        AccountHandle[] accountHandles = new AccountHandle[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accounts[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class);
+            accountHandles[i] = new AccountHandle(this, GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class));
 
-        return accounts;
+        return accountHandles;
     }
 
 
@@ -158,231 +161,6 @@ public class Wallet extends NativeApi {
         p.addProperty("bech32Hrp", bech32Hrp);
 
         return callBaseApi(new ClientCommand("HexToBech32", p)).getAsString();
-    }
-
-    // Account Method APIs
-
-    private JsonElement callAccountMethod(AccountIdentifier accountIdentifier, AccountMethod accountMethod) throws WalletException {
-        JsonObject method = new JsonObject();
-        method.addProperty("name", accountMethod.getClass().getSimpleName());
-        JsonElement data = GsonSingleton.getInstance().toJsonTree(accountMethod);
-        if(data.toString().equals("{}"))
-            method.add("data", null);
-        else
-            method.add("data", data);
-
-        JsonObject o = new JsonObject();
-        o.add("accountId", GsonSingleton.getInstance().toJsonTree(accountIdentifier));
-        o.add("method", method);
-
-        return callBaseApi(new ClientCommand("CallAccountMethod", o));
-    }
-
-    public Output buildAliasOutput(AccountIdentifier accountIdentifier, BuildAliasOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public Output buildBasicOutput(AccountIdentifier accountIdentifier, BuildBasicOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public Output buildFoundryOutput(AccountIdentifier accountIdentifier, BuildFoundryOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public Output buildNftOutput(AccountIdentifier accountIdentifier, BuildNftOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public Transaction burnNativeToken(AccountIdentifier accountIdentifier, BurnNativeToken method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction burnNft(AccountIdentifier accountIdentifier, BurnNft method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-
-    public Transaction consolidateOutputs(AccountIdentifier accountIdentifier, ConsolidateOutputs method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-
-    public Transaction destroyAlias(AccountIdentifier accountIdentifier, DestroyAlias method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-
-    public Transaction destroyFoundry(AccountIdentifier accountIdentifier, DestroyFoundry method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public AccountAddress[] generateAddresses(AccountIdentifier accountIdentifier, GenerateAddresses method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
-
-        AccountAddress[] accountAddress = new AccountAddress[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            accountAddress[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
-
-        return accountAddress;
-    }
-
-    public OutputData getOutput(AccountIdentifier accountIdentifier, GetOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), OutputData.class);
-    }
-
-    public Output getFoundryOutput(AccountIdentifier accountIdentifier, GetFoundryOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public Output[] getOutputsWithAdditionalUnlockConditions(AccountIdentifier accountIdentifier, GetOutputsWithAdditionalUnlockConditions method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
-
-        Output[] outputs = new Output[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            outputs[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Output.class);
-
-        return outputs;
-    }
-
-    public Transaction getTransaction(AccountIdentifier accountIdentifier, GetTransaction method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public JsonElement getIncomingTransactionData(AccountIdentifier accountIdentifier, GetIncomingTransactionData method) throws WalletException {
-        return callAccountMethod(accountIdentifier, method);
-    }
-
-    public AccountAddress[] listAddresses(AccountIdentifier accountIdentifier) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListAddresses());
-
-        AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
-
-        return addresses;
-    }
-
-    public AccountAddress[] listAddressesWithUnspentOutputs(AccountIdentifier accountIdentifier) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListAddressesWithUnspentOutputs());
-
-        AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            addresses[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), AccountAddress.class);
-
-        return addresses;
-    }
-
-    public OutputData[] listOutputs(AccountIdentifier accountIdentifier, ListOutputs method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
-
-        OutputData[] outputsData = new OutputData[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            outputsData[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
-
-        return outputsData;
-    }
-
-    public Transaction[] listPendingTransactions(AccountIdentifier accountIdentifier) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListPendingTransactions());
-
-        Transaction[] transactions = new Transaction[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            transactions[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Transaction.class);
-
-        return transactions;
-    }
-
-    public Transaction[] listTransactions(AccountIdentifier accountIdentifier) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, new ListTransactions());
-
-        Transaction[] transactions = new Transaction[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            transactions[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Transaction.class);
-
-        return transactions;
-    }
-
-    public OutputData[] listUnspentOutputs(AccountIdentifier accountIdentifier, ListUnspentOutputs method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(accountIdentifier, method);
-
-        OutputData[] outputsData = new OutputData[responsePayload.size()];
-        for (int i = 0; i < responsePayload.size(); i++)
-            outputsData[i] = GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), OutputData.class);
-
-        return outputsData;
-    }
-
-    public TaggedDataPayload meltNativeToken(AccountIdentifier accountIdentifier, DecreaseNativeTokenSupply method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), TaggedDataPayload.class);
-    }
-
-    public String minimumRequiredStorageDeposit(AccountIdentifier accountIdentifier, MinimumRequiredStorageDeposit method) throws WalletException {
-        return callAccountMethod(accountIdentifier, method).getAsJsonPrimitive().getAsString();
-    }
-
-    public MintTokenTransaction mintNativeToken(AccountIdentifier accountIdentifier, MintNativeToken method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), MintTokenTransaction.class);
-    }
-
-    public Transaction mintNfts(AccountIdentifier accountIdentifier, MintNfts method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public AccountBalance getBalance(AccountIdentifier accountIdentifier) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, new GetBalance()), AccountBalance.class);
-    }
-
-    public Output prepareOutput(AccountIdentifier accountIdentifier, PrepareOutput method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Output.class);
-    }
-
-    public PreparedTransactionData prepareTransaction(AccountIdentifier accountIdentifier, PrepareTransaction method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), PreparedTransactionData.class);
-    }
-
-    public PreparedTransactionData prepareSendAmount(AccountIdentifier accountIdentifier, PrepareSendAmount method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), PreparedTransactionData.class);
-    }
-
-    public AccountBalance syncAccount(AccountIdentifier accountIdentifier, SyncAccount method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), AccountBalance.class);
-    }
-
-    public Transaction sendAmount(AccountIdentifier accountIdentifier, SendAmount method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction sendMicroTransaction(AccountIdentifier accountIdentifier, SendMicroTransaction method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction sendNativeTokens(AccountIdentifier accountIdentifier, SendNativeTokens method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction sendNft(AccountIdentifier accountIdentifier, SendNft method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public void setAlias(AccountIdentifier accountIdentifier, SetAlias method) throws WalletException {
-        callAccountMethod(accountIdentifier, method);
-    }
-
-    public Transaction sendOutputs(AccountIdentifier accountIdentifier, SendOutputs method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction signTransactionEssence(AccountIdentifier accountIdentifier, SignTransactionEssence method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction submitAndStoreTransaction(AccountIdentifier accountIdentifier, SubmitAndStoreTransaction method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
-    }
-
-    public Transaction claimOutputs(AccountIdentifier accountIdentifier, ClaimOutputs method) throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callAccountMethod(accountIdentifier, method), Transaction.class);
     }
 
 }

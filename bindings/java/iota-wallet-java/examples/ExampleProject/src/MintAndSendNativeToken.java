@@ -22,7 +22,7 @@ public class MintAndSendNativeToken {
         );
 
         // Set up an account for this example.
-        ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Configure the Native Token
         NativeTokenOptions options = new NativeTokenOptions();
@@ -30,7 +30,7 @@ public class MintAndSendNativeToken {
         options.withMaximumSupply("0x64");
 
         // Mint the Native Token
-        MintTokenTransaction t = wallet.mintNativeToken(new AccountAlias("Hans"), new MintNativeToken().withNativeTokenOptions(options));
+        MintTokenTransaction t = a.mintNativeToken(new MintNativeToken().withNativeTokenOptions(options));
 
         // Print Native Token
         System.out.println(t);

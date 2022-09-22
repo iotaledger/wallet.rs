@@ -1,5 +1,6 @@
 import org.iota.Wallet;
 import org.iota.types.Account;
+import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
@@ -24,7 +25,7 @@ public class GetAccountByIndex {
         wallet.createAccount("Hans");
 
         // Get the account by alias.
-        Account a = wallet.getAccount(new AccountIndex(0));
+        AccountHandle a = wallet.getAccount(new AccountIndex(0));
 
         // Print the account.
         System.out.println(a);

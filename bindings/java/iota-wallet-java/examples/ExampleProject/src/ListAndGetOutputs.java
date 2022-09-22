@@ -21,23 +21,23 @@ public class ListAndGetOutputs {
         );
 
         // Set up an account for this example.
-        Account firstAccount = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Hans");
 
         // Check if the account is funded, else ask for funding.
-        while(wallet.syncAccount(new AccountAlias("Hans"), new SyncAccount()).getBaseCoin().getAvailable().equals("0")) {
+        while(a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable().equals("0")) {
             Thread.sleep(5000);
-            System.out.println("Please fund following address: " + firstAccount.getPublicAddresses()[0]);
+            System.out.println("Please fund following address: " + a.getPublicAddresses()[0]);
         }
 
         // Get outputs
-        OutputData[] outputs = wallet.listOutputs(new AccountAlias(firstAccount.getAlias()), new org.iota.types.account_methods.ListOutputs());
+        OutputData[] outputs = a.listOutputs(new org.iota.types.account_methods.ListOutputs());
 
         // Print outputs
         for(OutputData o : outputs)
             System.out.println(o);
 
         // Get a specific output by id
-        OutputData o = wallet.getOutput(new AccountAlias("Hans"), new GetOutput().withOutputId(outputs[0].getOutputId()));
+        OutputData o = a.getOutput(new GetOutput().withOutputId(outputs[0].getOutputId()));
 
         // Print the output
         System.out.println(o);

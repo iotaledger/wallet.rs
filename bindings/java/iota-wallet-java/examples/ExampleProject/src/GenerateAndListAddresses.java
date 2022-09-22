@@ -1,8 +1,5 @@
 import org.iota.Wallet;
-import org.iota.types.Account;
-import org.iota.types.AccountAddress;
-import org.iota.types.ClientConfig;
-import org.iota.types.WalletConfig;
+import org.iota.types.*;
 import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
@@ -22,17 +19,17 @@ public class GenerateAndListAddresses {
         );
 
         // Set up an account for this example.
-        Account account = wallet.createAccount("Hans");
+        AccountHandle account = wallet.createAccount("Hans");
 
-        // Generate 2 addresses.
-        AccountAddress[] addresses = wallet.generateAddresses(new AccountAlias("Hans"), new GenerateAddresses().withAmount(2));
+        // Generate two addresses.
+        AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(2));
 
         // Print the generated addresses.
         for (AccountAddress address : addresses)
             System.out.println(address.getAddress());
 
         // Print all addresses.
-        for (AccountAddress address : wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses())
+        for (AccountAddress address : account.getPublicAddresses())
             System.out.println(address.getAddress());
     }
 }

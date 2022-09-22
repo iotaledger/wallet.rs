@@ -20,14 +20,14 @@ public class MintAndSendNft {
         );
 
         // Set up an account for this example.
-        ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Configure the NFT
         NftOptions options = new NftOptions();
         options.withMetadata("0x5368696d6d65722e20546f6b656e697a652045766572797468696e672e2048656c6c6f2066726f6d20746865204a6176612062696e64696e672e");
 
         // Mint the NFT
-        Transaction nftTransaction = wallet.mintNfts(new AccountAlias("Hans"), new MintNfts().withNftsOptions(new NftOptions[]{ options }));
+        Transaction nftTransaction = a.mintNfts(new MintNfts().withNftsOptions(new NftOptions[]{ options }));
 
         // Print NFT transaction
         System.out.println(nftTransaction);

@@ -42,7 +42,7 @@ public class NativeApi {
 
     private static native String sendMessage(String command);
 
-    protected JsonElement callBaseApi(ClientCommand command) throws WalletException {
+    public static JsonElement callBaseApi(ClientCommand command) throws WalletException {
         System.out.println("REQUEST: " + command);
         String jsonResponse = sendMessage(command.toString());
         System.out.println("RESPONSE: " + jsonResponse);
@@ -64,7 +64,7 @@ public class NativeApi {
         JsonElement payload;
     }
 
-    protected static class ClientCommand {
+    public static class ClientCommand {
 
         private String methodName;
         private JsonElement methodParams;

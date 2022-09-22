@@ -21,23 +21,23 @@ public class ListAndGetTransactions {
         );
 
         // Set up an account for this example.
-        ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Set up a transaction for this example.
         AccountAddress address = wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses()[0];
-        wallet.sendAmount(new AccountAlias("Hans"), new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
+        a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
                 new AddressWithAmount[] { new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
         ));
 
         // List transactions
-        Transaction[] transactions = wallet.listTransactions(new AccountAlias("Hans"));
+        Transaction[] transactions = a.listTransactions();
 
         // Print transactions
         for (Transaction tx : transactions)
             System.out.println(tx.toString());
 
         // Get a specific transaction
-        Transaction transaction = wallet.getTransaction(new AccountAlias("Hans"), new GetTransaction().withTransactionId(transactions[0].getTransactionId()));
+        Transaction transaction = a.getTransaction(new GetTransaction().withTransactionId(transactions[0].getTransactionId()));
 
         // Print transaction
         System.out.println(transaction);
