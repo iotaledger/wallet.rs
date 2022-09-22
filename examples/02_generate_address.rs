@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-//! cargo run --example 02_generate_address --release
+//! cargo run --example generate_address --release
 // In this example we will generate an address
 // Rename `.env.example` to `.env` first
 

@@ -14,6 +14,7 @@ The Account class.
 - [burnNft](Account.md#burnnft)
 - [claimOutputs](Account.md#claimoutputs)
 - [consolidateOutputs](Account.md#consolidateoutputs)
+- [createAliasOutput](Account.md#createaliasoutput)
 - [decreaseNativeTokenSupply](Account.md#decreasenativetokensupply)
 - [destroyAlias](Account.md#destroyalias)
 - [destroyFoundry](Account.md#destroyfoundry)
@@ -192,7 +193,7 @@ to their `AddressUnlockCondition` from the account.
 
 #### Returns
 
-`Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The resulting transaction.
 
@@ -221,11 +222,32 @@ The consolidation transaction.
 
 ___
 
+### createAliasOutput
+
+▸ **createAliasOutput**(`aliasOutputOptions?`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+`createAliasOutput` creates an alias output
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `aliasOutputOptions?` | [`AliasOutputOptions`](../interfaces/AliasOutputOptions.md) | The alias output options. |
+| `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
+
+#### Returns
+
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
+
+A transaction object.
+
+___
+
 ### decreaseNativeTokenSupply
 
 ▸ **decreaseNativeTokenSupply**(`tokenId`, `meltAmount`, `transactionOptions?`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
-Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+Melt native tokens. This happens with the foundry output which minted them, by increasing its
 `melted_tokens` field.
 
 #### Parameters
