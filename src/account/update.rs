@@ -103,9 +103,6 @@ impl AccountHandle {
             // If we got the output response and it's still unspent, skip it
             if let Some(output_response) = output_response {
                 if output_response.metadata.is_spent {
-                    // Update output_response if it got spent to include the new metadata
-                    let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-                    let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
                     account.unspent_outputs.remove(&output_id);
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
                         output_data.metadata = output_response.metadata;
