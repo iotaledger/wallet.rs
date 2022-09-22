@@ -170,7 +170,7 @@ Returns all incoming transactions of the account.
 def list_transactions()
 ```
 
-Returns all transaction of the account.
+Returns all transactions of the account.
 
 ### list\_pending\_transactions
 
