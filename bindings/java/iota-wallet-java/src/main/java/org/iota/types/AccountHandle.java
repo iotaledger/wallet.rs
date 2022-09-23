@@ -323,5 +323,3 @@ class AccountHandleAdapter implements JsonSerializer<AccountHandle> {
     }
 }
 
-
-
