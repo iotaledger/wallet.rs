@@ -135,7 +135,7 @@ Get transaction.
 ### list\_addresses
 
 ```python
-def list_addresses()
+def addresses()
 ```
 
 List addresses.
@@ -143,7 +143,7 @@ List addresses.
 ### list\_addresses\_with\_unspent\_outputs
 
 ```python
-def list_addresses_with_unspent_outputs()
+def addresses_with_unspent_outputs()
 ```
 
 Returns only addresses of the account with unspent outputs.
@@ -151,7 +151,7 @@ Returns only addresses of the account with unspent outputs.
 ### list\_outputs
 
 ```python
-def list_outputs(filter_options=None)
+def outputs(filter_options=None)
 ```
 
 Returns all outputs of the account.
@@ -159,7 +159,7 @@ Returns all outputs of the account.
 ### list\_unspent\_outputs
 
 ```python
-def list_unspent_outputs(filter_options=None)
+def unspent_outputs(filter_options=None)
 ```
 
 Returns all unspent outputs of the account.
@@ -167,7 +167,7 @@ Returns all unspent outputs of the account.
 ### list\_incoming\_transactions
 
 ```python
-def list_incoming_transactions()
+def incoming_transactions()
 ```
 
 Returns all incoming transactions of the account.
@@ -175,7 +175,7 @@ Returns all incoming transactions of the account.
 ### list\_transactions
 
 ```python
-def list_transactions()
+def transactions()
 ```
 
 Returns all transaction of the account.
@@ -183,7 +183,7 @@ Returns all transaction of the account.
 ### list\_pending\_transactions
 
 ```python
-def list_pending_transactions()
+def pending_transactions()
 ```
 
 Returns all pending transactions of the account.

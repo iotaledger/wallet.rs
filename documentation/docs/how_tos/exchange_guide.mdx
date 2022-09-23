@@ -126,7 +126,7 @@ You get an instance of any created account using `AccountManager.getAccount(acco
 
 Common methods of `account` instance include:
 
-* `account.listAddresses()` - returns list of addresses related to the account.
+* `account.addresses()` - returns list of addresses related to the account.
 * `account.generateAddress()` - generate a new address for the address index incremented by 1.
 * `account.balance()` - returns the balance for the given account.
 * `account.sync()` - sync the account information with the tangle.
@@ -138,10 +138,10 @@ Common methods of `account` instance include:
   {generate_address}
 </CodeBlock>
 
-Every account can have multiple addresses. Addresses are represented by an `index` which is incremented by one every time a new address is created. You can access the addresses using the `account.listAddress()` method: 
+Every account can have multiple addresses. Addresses are represented by an `index` which is incremented by one every time a new address is created. You can access the addresses using the `account.address()` method: 
 
 ```javascript
-    const addresses = account.listAddresses()
+    const addresses = account.addresses()
 
     console.log('Need a refill? Send it to this address:', addresses[0])
 ```
@@ -205,7 +205,7 @@ NewOutput: {
 }
 ```
 
-Alternatively you can use `account.listOutputs()` to get all outputs that are stored in the account, or `account.listUnspentOutputs()`, to get only unspent outputs.
+Alternatively you can use `account.outputs()` to get all outputs that are stored in the account, or `account.unspentOutputs()`, to get only unspent outputs.
 
 ### 6. Enable Withdrawals
 
@@ -231,7 +231,7 @@ TransactionOptions {
 }
 ```
 
-The `account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. You can obtain individual transactions related to the given account using the `account.listTransactions()` function.
+The `account.sendAmount()` function returns a `transaction` with it's id. The `blockId` can be used later for checking a confirmation status. You can obtain individual transactions related to the given account using the `account.transactions()` function.
 
 :::note  Dust Protection
 

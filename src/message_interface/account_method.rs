@@ -204,32 +204,32 @@ pub enum AccountMethod {
     },
     /// Expected response: [`Addresses`](crate::message_interface::Response::Addresses)
     /// List addresses.
-    ListAddresses,
+    Addresses,
     /// Returns only addresses of the account with unspent outputs
     /// Expected response:
     /// [`AddressesWithUnspentOutputs`](crate::message_interface::Response::AddressesWithUnspentOutputs)
-    ListAddressesWithUnspentOutputs,
+    AddressesWithUnspentOutputs,
     /// Returns all outputs of the account
     /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListOutputs {
+    Outputs {
         #[serde(rename = "filterOptions")]
         filter_options: Option<FilterOptions>,
     },
     /// Returns all unspent outputs of the account
     /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListUnspentOutputs {
+    UnspentOutputs {
         #[serde(rename = "filterOptions")]
         filter_options: Option<FilterOptions>,
     },
     /// Returns all incoming transactions of the account
     /// Expected response: [`IncomingTransactionsData`](crate::message_interface::Response::IncomingTransactionsData)
-    ListIncomingTransactions,
+    IncomingTransactions,
     /// Returns all transaction of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
-    ListTransactions,
+    Transactions,
     /// Returns all pending transactions of the account
     /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
-    ListPendingTransactions,
+    PendingTransactions,
     /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
     /// `melted_tokens` field.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)

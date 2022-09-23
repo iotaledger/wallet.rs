@@ -29,7 +29,7 @@ async function run() {
 
         // Use the Faucet to send testnet tokens to your address:
         console.log("Fill your address with the Faucet: https://faucet.testnet.shimmer.network/")
-        const addressObjects = await account.listAddresses();
+        const addressObjects = await account.addresses();
         console.log('Send funds to:', addressObjects[0].address);
 
         // Sync every 5 seconds until the faucet transaction gets confirmed

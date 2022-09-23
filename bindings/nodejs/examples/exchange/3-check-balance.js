@@ -12,7 +12,7 @@ async function run() {
         });
 
         const account = await manager.getAccount('Alice');
-        const addressObject = await account.listAddresses();
+        const addressObject = await account.addresses();
         console.log('Addresses before:', addressObject);
 
         // syncOnlyMostBasicOutputs if not interested in outputs that are timelocked, 

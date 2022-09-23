@@ -8,7 +8,7 @@ async function run() {
     try {
         const manager = await getUnlockedManager();
         const account = await manager.getAccount('Alice');
-        const addressObject = await account.listAddresses();
+        const addressObject = await account.addresses();
         console.log('Addresses before:', addressObject);
 
         // Always sync before calling getBalance()

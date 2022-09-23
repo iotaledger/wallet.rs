@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
     // unlock condition and it is an `AddressUnlockCondition`, and so they are valid for consolidation. They have the
     // same `AddressUnlockCondition`(the first address of the account), so they will be consolidated into one
     // output.
-    let outputs = account.list_unspent_outputs(None).await?;
+    let outputs = account.unspent_outputs(None).await?;
     println!("Outputs before consolidation:");
     outputs.iter().for_each(|output_data| {
         println!(
@@ -69,7 +69,7 @@ async fn main() -> Result<()> {
     let _ = account.sync(None).await?;
 
     // Outputs after consolidation
-    let outputs = account.list_unspent_outputs(None).await?;
+    let outputs = account.unspent_outputs(None).await?;
     println!("Outputs after consolidation:");
     outputs.iter().for_each(|output_data| {
         println!(

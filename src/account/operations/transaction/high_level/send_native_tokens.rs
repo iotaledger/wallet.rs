@@ -89,7 +89,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] prepare_send_native_tokens");
         let rent_structure = self.client.get_rent_structure().await?;
 
-        let account_addresses = self.list_addresses().await?;
+        let account_addresses = self.addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
 
         let local_time = self.client.get_time_checked().await?;

@@ -20,7 +20,7 @@ import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
 import RustCode from  "../../_admonitions/_guide_coming_soon.md";
 import RustOutput from  "../../_admonitions/_guide_coming_soon.md";
 
-You can list all the transactions related to an account by calling the `Account.listTransactions()` function after you
+You can list all the transactions related to an account by calling the `Account.transactions()` function after you
 have instantiated the account. Bear in mind that you will need to call the `Account.sync()` function to get the latest
 information from the node.
 
@@ -31,7 +31,7 @@ The following example will:
 1. Create an account manager.
 2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
 3. Sync the account to get the latest transactions from the node.
-4. List the transactions using the `Account.listTransactions()` function.
+4. List the transactions using the `Account.transactions()` function.
 
 <Tabs groupId="language">
     <TabItem value="rust" label="Rust">

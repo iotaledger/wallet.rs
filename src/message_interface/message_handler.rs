@@ -531,26 +531,26 @@ impl WalletMessageHandler {
                     None => Ok(Response::IncomingTransactionData(None)),
                 }
             }
-            AccountMethod::ListAddresses => {
-                let addresses = account_handle.list_addresses().await?;
+            AccountMethod::Addresses => {
+                let addresses = account_handle.addresses().await?;
                 Ok(Response::Addresses(addresses))
             }
-            AccountMethod::ListAddressesWithUnspentOutputs => {
-                let addresses = account_handle.list_addresses_with_unspent_outputs().await?;
+            AccountMethod::AddressesWithUnspentOutputs => {
+                let addresses = account_handle.addresses_with_unspent_outputs().await?;
                 Ok(Response::AddressesWithUnspentOutputs(
                     addresses.iter().map(AddressWithUnspentOutputsDto::from).collect(),
                 ))
             }
-            AccountMethod::ListOutputs { filter_options } => {
-                let outputs = account_handle.list_outputs(filter_options).await?;
+            AccountMethod::Outputs { filter_options } => {
+                let outputs = account_handle.outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
-            AccountMethod::ListUnspentOutputs { filter_options } => {
-                let outputs = account_handle.list_unspent_outputs(filter_options).await?;
+            AccountMethod::UnspentOutputs { filter_options } => {
+                let outputs = account_handle.unspent_outputs(filter_options).await?;
                 Ok(Response::OutputsData(outputs.iter().map(OutputDataDto::from).collect()))
             }
-            AccountMethod::ListIncomingTransactions => {
-                let transactions = account_handle.list_incoming_transactions().await?;
+            AccountMethod::IncomingTransactions => {
+                let transactions = account_handle.incoming_transactions().await?;
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
@@ -558,14 +558,14 @@ impl WalletMessageHandler {
                         .collect(),
                 ))
             }
-            AccountMethod::ListTransactions => {
-                let transactions = account_handle.list_transactions().await?;
+            AccountMethod::Transactions => {
+                let transactions = account_handle.transactions().await?;
                 Ok(Response::Transactions(
                     transactions.iter().map(TransactionDto::from).collect(),
                 ))
             }
-            AccountMethod::ListPendingTransactions => {
-                let transactions = account_handle.list_pending_transactions().await?;
+            AccountMethod::PendingTransactions => {
+                let transactions = account_handle.pending_transactions().await?;
                 Ok(Response::Transactions(
                     transactions.iter().map(TransactionDto::from).collect(),
                 ))
