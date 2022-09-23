@@ -1,3 +1,5 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 package org.iota;
 
 import org.iota.types.AccountAddress;
@@ -10,11 +12,16 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class SimpleTest extends ApiTest {
-
     @Test
     public void testCreateAccount() throws WalletException {
+        System.out.println(wallet.createAccount("Hans"));
+    }
+
+
+    @Test(expected = WalletException.class)
+    public void testCreateAccountsWithSameAlias() {
+        System.out.println(wallet.createAccount("Hans"));
         System.out.println(wallet.createAccount("Hans"));
     }
 
