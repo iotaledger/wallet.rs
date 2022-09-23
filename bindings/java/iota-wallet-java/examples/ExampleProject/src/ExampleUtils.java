@@ -8,8 +8,8 @@ public class ExampleUtils {
     public static AccountHandle setUpAccountWithFunds(Wallet wallet, String alias) throws WalletException, InterruptedException {
         AccountHandle a = wallet.createAccount(alias);
         while(a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable().equals("0")) {
-            Thread.sleep(5000);
             System.out.println("Please fund following address: " + a.getPublicAddresses()[0]);
+            Thread.sleep(5000);
         }
         return a;
     }
