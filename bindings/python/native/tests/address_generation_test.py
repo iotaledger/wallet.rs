@@ -26,9 +26,6 @@ def test_address_generation_iota():
 
     addresses = account.list_addresses()
 
-    # Clear up
-    wallet.delete_accounts_and_database()
-
     assert 'rms1qpg2xkj66wwgn8p2ggnp7p582gj8g6p79us5hve2tsudzpsr2ap4s4k35lq' == addresses[
         0]['address']
 
@@ -53,9 +50,6 @@ def test_address_generation_shimmer():
     account = wallet.get_account('Alice')
 
     addresses = account.list_addresses()
-
-    # Clear up
-    wallet.delete_accounts_and_database()
 
     assert 'rms1qzev36lk0gzld0k28fd2fauz26qqzh4hd4cwymlqlv96x7phjxcw6v3ea5a' == addresses[
         0]['address']

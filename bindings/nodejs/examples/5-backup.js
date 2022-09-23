@@ -10,11 +10,7 @@ async function run() {
     try {
         const manager = await getUnlockedManager();
         const path = await manager.backup('./backup', process.env.SH_PASSWORD);
-        console.log('Backup created at:', path);
-
-        await manager.deleteAccountsAndDatabase();
-
-        console.log('Successfully created backup');
+        console.log('Successfully created backup at:', path);
     } catch (error) {
         console.log('Error: ', error);
     }
