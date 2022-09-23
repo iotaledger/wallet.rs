@@ -36,5 +36,5 @@ export interface OutputData {
 /** A Segment of the BIP32 path*/
 export interface Segment {
     hardened: boolean;
-    bs: number[];
+    bs: Uint8Array;
 }
