@@ -11,7 +11,6 @@ The AccountManager class.
 - [changeStrongholdPassword](AccountManager.md#changestrongholdpassword)
 - [clearStrongholdPassword](AccountManager.md#clearstrongholdpassword)
 - [createAccount](AccountManager.md#createaccount)
-- [deleteAccountsAndDatabase](AccountManager.md#deleteaccountsanddatabase)
 - [destroy](AccountManager.md#destroy)
 - [emitTestEvent](AccountManager.md#emittestevent)
 - [generateMnemonic](AccountManager.md#generatemnemonic)
@@ -119,18 +118,6 @@ Create a new account.
 #### Returns
 
 `Promise`<[`Account`](Account.md)\>
-
-___
-
-### deleteAccountsAndDatabase
-
-▸ **deleteAccountsAndDatabase**(): `Promise`<`void`\>
-
-Delete all accounts and the database folder.
-
-#### Returns
-
-`Promise`<`void`\>
 
 ___
 

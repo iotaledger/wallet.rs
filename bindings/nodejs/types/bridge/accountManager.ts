@@ -36,10 +36,6 @@ export type __CreateAccountMessage__ = {
     payload: CreateAccountPayload;
 };
 
-export type __DeleteAccountsAndDatabaseMessage__ = {
-    cmd: 'DeleteAccountsAndDatabase';
-};
-
 export type __EmitTestEventMessage__ = {
     cmd: 'EmitTestEvent';
     payload: WalletEvent;

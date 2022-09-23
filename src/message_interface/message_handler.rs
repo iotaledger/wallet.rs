@@ -194,14 +194,6 @@ impl WalletMessageHandler {
             Message::RestoreBackup { source, password } => {
                 convert_async_panics(|| async { self.restore_backup(source.to_path_buf(), password).await }).await
             }
-            #[cfg(feature = "storage")]
-            Message::DeleteAccountsAndDatabase => {
-                convert_async_panics(|| async {
-                    self.account_manager.delete_accounts_and_database().await?;
-                    Ok(Response::Ok(()))
-                })
-                .await
-            }
             Message::GenerateMnemonic => convert_panics(|| {
                 self.account_manager
                     .generate_mnemonic()

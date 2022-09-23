@@ -86,15 +86,6 @@ export class AccountManager {
     }
 
     /**
-     * Delete all accounts and the database folder.
-     */
-    async deleteAccountsAndDatabase(): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'DeleteAccountsAndDatabase',
-        });
-    }
-
-    /**
      * Destroy the AccountManager and drop its database connection.
      */
     destroy(): void {
