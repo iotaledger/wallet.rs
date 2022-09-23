@@ -24,7 +24,7 @@ public class GetAccountByIndex {
         // Set up an account for this example.
         wallet.createAccount("Hans");
 
-        // Get the account by alias.
+        // Get the account by index.
         AccountHandle a = wallet.getAccount(new AccountIndex(0));
 
         // Print the account.
