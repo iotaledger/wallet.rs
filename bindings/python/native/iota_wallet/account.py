@@ -232,57 +232,57 @@ class Account:
             }
         )
 
-    def list_addresses(self):
+    def addresses(self):
         """List addresses.
         """
         return self._call_account_method(
-            'ListAddresses'
+            'Addresses'
         )
 
-    def list_addresses_with_unspent_outputs(self):
+    def addresses_with_unspent_outputs(self):
         """Returns only addresses of the account with unspent outputs.
         """
         return self._call_account_method(
-            'ListAddressesWithUnspentOutputs'
+            'AddressesWithUnspentOutputs'
         )
 
-    def list_outputs(self, filter_options=None):
+    def outputs(self, filter_options=None):
         """Returns all outputs of the account.
         """
         return self._call_account_method(
-            'ListOutputs', {
+            'Outputs', {
                 'filterOptions': filter_options
             }
         )
 
-    def list_unspent_outputs(self, filter_options=None):
+    def unspent_outputs(self, filter_options=None):
         """Returns all unspent outputs of the account.
         """
         return self._call_account_method(
-            'ListUnspentOutputs', {
+            'UnspentOutputs', {
                 'filterOptions': filter_options
             }
         )
 
-    def list_incoming_transactions(self):
+    def incoming_transactions(self):
         """Returns all incoming transactions of the account.
         """
         return self._call_account_method(
-            'ListIncomingTransactions'
+            'IncomingTransactions'
         )
 
-    def list_transactions(self):
+    def transactions(self):
         """Returns all transaction of the account.
         """
         return self._call_account_method(
-            'ListTransactions'
+            'Transactions'
         )
 
-    def list_pending_transactions(self):
+    def pending_transactions(self):
         """Returns all pending transactions of the account.
         """
         return self._call_account_method(
-            'ListPendingTransactions'
+            'PendingTransactions'
         )
 
     def decrease_native_token_supply(self,

@@ -139,7 +139,7 @@ impl AccountHandle {
                 .map(|a| *a.key_index())
                 .unwrap_or(0);
 
-            let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
+            let addresses_with_unspent_outputs = self.addresses_with_unspent_outputs().await?;
 
             let (addresses_with_outputs_internal, address_with_outputs): (
                 Vec<&AddressWithUnspentOutputs>,

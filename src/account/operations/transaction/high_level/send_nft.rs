@@ -67,7 +67,7 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_nft");
 
-        let unspent_outputs = self.list_unspent_outputs(None).await?;
+        let unspent_outputs = self.unspent_outputs(None).await?;
 
         let mut outputs = Vec::new();
         let mut custom_inputs = Vec::new();

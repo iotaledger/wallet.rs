@@ -457,7 +457,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListAddresses',
+                name: 'Addresses',
             },
         );
 
@@ -474,7 +474,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListAddressesWithUnspentOutputs',
+                name: 'AddressesWithUnspentOutputs',
             },
         );
 
@@ -490,7 +490,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListOutputs',
+                name: 'Outputs',
                 data: { filterOptions },
             },
         );
@@ -506,7 +506,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListPendingTransactions',
+                name: 'PendingTransactions',
             },
         );
         return JSON.parse(response).payload;
@@ -522,7 +522,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListIncomingTransactions',
+                name: 'IncomingTransactions',
             },
         );
 
@@ -537,7 +537,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListTransactions',
+                name: 'Transactions',
             },
         );
 
@@ -555,7 +555,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ListUnspentOutputs',
+                name: 'UnspentOutputs',
                 data: { filterOptions },
             },
         );

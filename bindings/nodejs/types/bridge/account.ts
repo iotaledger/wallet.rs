@@ -150,35 +150,35 @@ export type __GetTransactionMethod__ = {
     };
 };
 
-export type __ListAddressesMethod__ = {
-    name: 'ListAddresses';
+export type __AddressesMethod__ = {
+    name: 'Addresses';
 };
 
-export type __ListAddressesWithUnspentOutputsMethod__ = {
-    name: 'ListAddressesWithUnspentOutputs';
+export type __AddressesWithUnspentOutputsMethod__ = {
+    name: 'AddressesWithUnspentOutputs';
 };
 
-export type __ListOutputsMethod__ = {
-    name: 'ListOutputs';
+export type __OutputsMethod__ = {
+    name: 'Outputs';
     data: {
         filterOptions?: FilterOptions;
     };
 };
 
-export type __ListPendingTransactionsMethod__ = {
-    name: 'ListPendingTransactions';
+export type __PendingTransactionsMethod__ = {
+    name: 'PendingTransactions';
 };
 
-export type __ListIncomingTransactionsMethod__ = {
-    name: 'ListIncomingTransactions';
+export type __IncomingTransactionsMethod__ = {
+    name: 'IncomingTransactions';
 };
 
-export type __ListTransactionsMethod__ = {
-    name: 'ListTransactions';
+export type __TransactionsMethod__ = {
+    name: 'Transactions';
 };
 
-export type __ListUnspentOutputsMethod__ = {
-    name: 'ListUnspentOutputs';
+export type __UnspentOutputsMethod__ = {
+    name: 'UnspentOutputs';
     data: {
         filterOptions?: FilterOptions;
     };

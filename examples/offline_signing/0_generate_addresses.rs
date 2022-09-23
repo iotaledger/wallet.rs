@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
 
     println!("Generated a new account");
 
-    let addresses = account.list_addresses().await?;
+    let addresses = account.addresses().await?;
 
     write_addresses_to_file(ADDRESS_FILE_NAME, addresses)
 }

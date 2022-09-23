@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
     );
 
     // Build nft output manually
-    let sender_address = account.list_addresses().await?[0].address().clone();
+    let sender_address = account.addresses().await?[0].address().clone();
     let outputs = vec![
         // address of the owner of the NFT
         NftOutputBuilder::new_with_amount(1_000_000, NftId::null())?

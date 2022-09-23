@@ -18,7 +18,7 @@ async function run() {
                 amount,
             },
         ]);
-        const pendingTransactions = await account.listPendingTransactions()
+        const pendingTransactions = await account.pendingTransactions()
         console.log('Listing Pending Transactions:', pendingTransactions[0]?.payload);
     } catch (error) {
         console.log('Error: ', error);

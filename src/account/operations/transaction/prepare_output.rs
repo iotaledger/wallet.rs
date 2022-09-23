@@ -183,7 +183,7 @@ impl AccountHandle {
     ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_nft_output {options:?}");
 
-        let unspent_outputs = self.list_unspent_outputs(None).await?;
+        let unspent_outputs = self.unspent_outputs(None).await?;
 
         // Find nft output from the inputs
         let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
@@ -355,7 +355,7 @@ impl AccountHandle {
         let remainder_address = match remainder_address {
             Some(address) => address,
             None => {
-                self.list_addresses()
+                self.addresses()
                     .await?
                     .first()
                     .ok_or(crate::Error::FailedToGetRemainder)?

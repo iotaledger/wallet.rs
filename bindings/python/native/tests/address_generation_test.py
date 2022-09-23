@@ -24,7 +24,7 @@ def test_address_generation_iota():
 
     account = wallet.get_account('Alice')
 
-    addresses = account.list_addresses()
+    addresses = account.addresses()
 
     # Clear up
     wallet.delete_accounts_and_database()
@@ -52,7 +52,7 @@ def test_address_generation_shimmer():
 
     account = wallet.get_account('Alice')
 
-    addresses = account.list_addresses()
+    addresses = account.addresses()
 
     # Clear up
     wallet.delete_accounts_and_database()

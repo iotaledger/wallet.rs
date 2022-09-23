@@ -32,7 +32,7 @@ impl AccountHandle {
     ) -> crate::Result<Vec<AddressWithUnspentOutputs>> {
         log::debug!("[SYNC] get_addresses_to_sync");
 
-        let mut addresses_before_syncing = self.list_addresses().await?;
+        let mut addresses_before_syncing = self.addresses().await?;
 
         // If custom addresses are provided check if they are in the account and only use them
         if !options.addresses.is_empty() {
@@ -59,7 +59,7 @@ impl AccountHandle {
         }
 
         // Check if selected addresses contains addresses with balance so we can correctly update them
-        let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
+        let addresses_with_unspent_outputs = self.addresses_with_unspent_outputs().await?;
         let mut addresses_with_old_output_ids = Vec::new();
         for address in addresses_before_syncing {
             let mut output_ids = Vec::new();

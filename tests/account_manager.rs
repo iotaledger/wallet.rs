@@ -183,7 +183,7 @@ async fn shimmer_coin_type() -> Result<()> {
 
     // Creating a new account with providing a coin type will use the Shimmer coin type with shimmer testnet bech32 hrp
     assert_eq!(
-        &account.list_addresses().await?[0].address().to_bech32(),
+        &account.addresses().await?[0].address().to_bech32(),
         // Address generated with bip32 path: [44, 4219, 0, 0, 0]
         "rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm"
     );
@@ -216,7 +216,7 @@ async fn iota_coin_type() -> Result<()> {
 
     // Creating a new account with providing a coin type will use the iota coin type with shimmer testnet bech32 hrp
     assert_eq!(
-        &account.list_addresses().await?[0].address().to_bech32(),
+        &account.addresses().await?[0].address().to_bech32(),
         // Address generated with bip32 path: [44, 4218, 0, 0, 0]
         "rms1qrpwecegav7eh0z363ca69laxej64rrt4e3u0rtycyuh0mam3vq3utrrg7c"
     );

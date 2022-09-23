@@ -126,7 +126,7 @@ async fn main() -> Result<()> {
 
     println!(
         "Generated a new account with addresses {:?}",
-        account.list_addresses().await?
+        account.addresses().await?
     );
 
     Ok(())
