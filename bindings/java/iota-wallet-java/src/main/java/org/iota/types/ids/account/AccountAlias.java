@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.ids.account;
 
 import com.google.gson.JsonElement;
@@ -8,7 +11,6 @@ import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
 import java.util.Objects;
-
 @JsonAdapter(AccountAlias.AccountAliasAdapter.class)
 public class AccountAlias implements AccountIdentifier {
     private String accountAlias;

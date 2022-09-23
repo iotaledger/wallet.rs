@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.token_scheme;
 
 import com.google.gson.*;
@@ -6,7 +9,6 @@ import org.iota.types.transaction_essence.RegularTransactionEssence;
 import org.iota.types.transaction_essence.TransactionEssence;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(TokenSchemeAdapter.class)
 public abstract class TokenScheme  {}
 

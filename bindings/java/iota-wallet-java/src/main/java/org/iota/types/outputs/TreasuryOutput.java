@@ -1,5 +1,7 @@
-package org.iota.types.outputs;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.outputs;
 public class TreasuryOutput extends Output {
 
     private int type = 2;

@@ -1,8 +1,10 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import org.iota.Wallet;
 import org.iota.types.AccountHandle;
 import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
-
 public class ExampleUtils {
 
     public static AccountHandle setUpAccountWithFunds(Wallet wallet, String alias) throws WalletException, InterruptedException {

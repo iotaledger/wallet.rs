@@ -1,5 +1,7 @@
-package org.iota.types;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types;
 public class FilterOptions extends AbstractObject {
 
     /// Filter all outputs where the booked milestone index is below the specified timestamp

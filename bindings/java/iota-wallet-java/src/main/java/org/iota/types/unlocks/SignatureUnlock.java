@@ -1,7 +1,9 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.unlocks;
 
 import org.iota.types.signature.Signature;
-
 public class SignatureUnlock extends Unlock {
     private int type = 0;
     private Signature signature;

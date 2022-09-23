@@ -1,5 +1,7 @@
-package org.iota.types.features;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.features;
 public class TagFeature extends Feature {
 
     private int type = 3;

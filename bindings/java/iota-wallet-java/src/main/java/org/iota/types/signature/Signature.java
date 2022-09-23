@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.signature;
 
 import com.google.gson.*;
@@ -5,7 +8,6 @@ import com.google.gson.annotations.JsonAdapter;
 import org.iota.types.features.*;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(SignatureAdapter.class)
 public abstract class Signature {}
 

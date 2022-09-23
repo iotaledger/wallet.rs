@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.MintNativeToken;
@@ -6,7 +9,6 @@ import org.iota.types.account_methods.SendNativeTokens;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.MnemonicSecretManager;
-
 public class MintAndSendNativeToken {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;
@@ -26,8 +28,8 @@ public class MintAndSendNativeToken {
 
         // Configure the Native Token
         NativeTokenOptions options = new NativeTokenOptions();
-        options.withCirculatingSupply("0x17");
-        options.withMaximumSupply("0x64");
+        options.withCirculatingSupply("0x17"); // number 23 hex encoded
+        options.withMaximumSupply("0x64"); // number 100 hex encocded
 
         // Mint the Native Token
         MintTokenTransaction t = a.mintNativeToken(new MintNativeToken().withNativeTokenOptions(options));

@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.unlock_conditions;
 
 import com.google.gson.*;
@@ -6,7 +9,6 @@ import org.iota.types.AbstractObject;
 import org.iota.types.outputs.*;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(UnlockCondition.UnlockConditionAdapter.class)
 public abstract class UnlockCondition extends AbstractObject {
 

@@ -1,5 +1,7 @@
-package org.iota.types;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types;
 public class NativeTokenOptions extends AbstractObject {
     /// Bech32 encoded address. Needs to be an account address. Default will use the first address of the account
     private String accountAddress;

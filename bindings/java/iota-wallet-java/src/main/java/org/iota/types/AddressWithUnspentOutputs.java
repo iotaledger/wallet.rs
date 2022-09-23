@@ -1,7 +1,9 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types;
 
 import org.iota.types.ids.OutputId;
-
 public class AddressWithUnspentOutputs extends AbstractObject {
 
     /// The address.

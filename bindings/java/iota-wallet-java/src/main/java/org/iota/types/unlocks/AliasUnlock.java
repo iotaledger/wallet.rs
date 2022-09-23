@@ -1,5 +1,7 @@
-package org.iota.types.unlocks;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.unlocks;
 public class AliasUnlock extends Unlock {
     private int type = 2;
     private int reference;

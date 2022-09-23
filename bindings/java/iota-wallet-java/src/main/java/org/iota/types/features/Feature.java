@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.features;
 
 import com.google.gson.*;
@@ -8,7 +11,6 @@ import org.iota.types.addresses.Ed25519Address;
 import org.iota.types.addresses.NftAddress;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(Feature.FeatureAdapter.class)
 public abstract class Feature {
 

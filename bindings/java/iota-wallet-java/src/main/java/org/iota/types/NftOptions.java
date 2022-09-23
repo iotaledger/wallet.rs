@@ -1,5 +1,7 @@
-package org.iota.types;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types;
 public class NftOptions extends AbstractObject {
     /// Bech32 encoded address to which the Nft will be minted. Default will use the first address of the account
     private String address;

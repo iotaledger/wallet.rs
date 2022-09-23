@@ -1,5 +1,7 @@
-package org.iota.types.addresses;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.addresses;
 public class Ed25519Address extends Address {
 
     private int type = 0;

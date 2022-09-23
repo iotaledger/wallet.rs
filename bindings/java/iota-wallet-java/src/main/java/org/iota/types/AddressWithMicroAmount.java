@@ -1,5 +1,7 @@
-package org.iota.types;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types;
 public class AddressWithMicroAmount extends AbstractObject {
     /// Bech32 encoded address
     private String address;

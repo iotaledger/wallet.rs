@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types;
 
 import org.iota.types.ids.OutputId;
@@ -6,7 +9,6 @@ import org.iota.types.payload.TransactionPayload;
 
 import java.util.Map;
 import java.util.Set;
-
 public class Account extends AbstractObject {
 
     /// The account index.

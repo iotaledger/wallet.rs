@@ -10,7 +10,6 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(PlaceholderSecretManagerAdapter.class)
 public class PlaceholderSecretManager extends SecretManager {}
 class PlaceholderSecretManagerAdapter implements JsonSerializer<PlaceholderSecretManager> {

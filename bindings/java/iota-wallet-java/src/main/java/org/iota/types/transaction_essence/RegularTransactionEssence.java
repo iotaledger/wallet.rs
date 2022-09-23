@@ -1,9 +1,11 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.transaction_essence;
 
 import org.iota.types.inputs.Input;
 import org.iota.types.outputs.Output;
 import org.iota.types.payload.TaggedDataPayload;
-
 public class RegularTransactionEssence extends TransactionEssence {
     private int type = 1;
     private String networkId;
