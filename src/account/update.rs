@@ -1,13 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
-use iota_client::{
-    api_types::responses::OutputResponse,
-    block::{output::OutputId, payload::transaction::TransactionId},
-    Client,
-};
+use iota_client::{api_types::responses::OutputResponse, block::output::OutputId, Client};
 
 use crate::account::{
     handle::AccountHandle,
