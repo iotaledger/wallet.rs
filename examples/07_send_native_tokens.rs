@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
                 Address::try_from_bech32(bech32_address)?.1,
             )))
             .with_native_tokens(vec![NativeToken::new(token_id, U256::from(10))?])
-            .finish_output()?,
+            .finish_output(account.client().get_token_supply()?)?,
     ];
 
     let transaction = account.send(outputs, None).await?;
