@@ -1,15 +1,14 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(all(feature = "events", feature = "ledger_nano"))]
-use iota_client::api::PreparedTransactionDataDto;
-#[cfg(all(feature = "events", feature = "ledger_nano"))]
-use iota_client::secret::ledger_nano::needs_blind_signing;
-#[cfg(feature = "stronghold")]
-use iota_client::secret::SecretManager;
 use iota_client::{
     api::{PreparedTransactionData, SignedTransactionData},
     secret::SecretManageExt,
+};
+#[cfg(all(feature = "events", feature = "ledger_nano"))]
+use {
+    iota_client::api::PreparedTransactionDataDto, iota_client::secret::ledger_nano::needs_blind_signing,
+    iota_client::secret::SecretManager,
 };
 
 use crate::account::{handle::AccountHandle, operations::transaction::TransactionPayload};
@@ -28,12 +27,6 @@ impl AccountHandle {
             self.read().await.index,
             WalletEvent::TransactionProgress(TransactionProgressEvent::SigningTransaction),
         );
-
-        // If we use stronghold we need to read the snapshot in case it hasn't been done already
-        #[cfg(feature = "stronghold")]
-        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
-            stronghold_secret_manager.read_stronghold_snapshot().await?;
-        }
 
         #[cfg(all(feature = "events", feature = "ledger_nano"))]
         if let SecretManager::LedgerNano(ledger) = &*self.secret_manager.read().await {
