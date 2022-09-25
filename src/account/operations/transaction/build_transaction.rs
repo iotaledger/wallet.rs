@@ -20,7 +20,7 @@ use crate::account::{handle::AccountHandle, operations::transaction::Transaction
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
-    pub(crate) async fn build_transaction_essence(
+    pub(crate) fn build_transaction_essence(
         &self,
         selected_transaction_data: SelectedTransactionData,
         options: Option<TransactionOptions>,
