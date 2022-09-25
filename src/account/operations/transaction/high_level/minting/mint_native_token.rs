@@ -128,7 +128,7 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
         log::debug!("[TRANSACTION] mint_native_token");
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         let (alias_id, alias_output) = self
             .get_alias_output(native_token_options.alias_id)

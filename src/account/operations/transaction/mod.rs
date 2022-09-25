@@ -54,7 +54,7 @@ impl AccountHandle {
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
         // Checking it also here is good to return earlier if something is invalid
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {

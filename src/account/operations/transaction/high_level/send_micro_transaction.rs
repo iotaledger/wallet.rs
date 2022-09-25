@@ -83,7 +83,8 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         let account_addresses = self.addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
@@ -114,13 +115,17 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the storage_deposit_amount back to the sender, so only the additional amount is sent
-                        StorageDepositReturnUnlockCondition::new(return_address.address.inner, storage_deposit_amount)?,
+                        StorageDepositReturnUnlockCondition::new(
+                            return_address.address.inner,
+                            storage_deposit_amount,
+                            token_supply,
+                        )?,
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         return_address.address.inner,
                         expiration_time,
                     )?))
-                    .finish_output()?,
+                    .finish_output(token_supply)?,
             )
         }
 

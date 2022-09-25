@@ -106,7 +106,7 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_mint_nfts");
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
         let account_addresses = self.addresses().await?;
         let mut outputs = Vec::new();
 

@@ -175,7 +175,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
         let current_time = self.client.get_time_checked().await?;
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         let account = self.read().await;
 
@@ -363,7 +363,11 @@ pub(crate) fn sdr_not_expired(output: &Output, current_time: u32) -> Option<&Sto
             };
 
             // We only have to send the storage deposit return back if the output is not expired
-            if !expired { Some(sdr) } else { None }
+            if !expired {
+                Some(sdr)
+            } else {
+                None
+            }
         } else {
             None
         }

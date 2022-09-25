@@ -29,7 +29,7 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {

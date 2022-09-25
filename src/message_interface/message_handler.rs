@@ -345,7 +345,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure()?)
                     },
                     native_tokens,
                     &alias_id,
@@ -369,7 +369,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure()?)
                     },
                     native_tokens,
                     unlock_conditions,
@@ -391,7 +391,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure()?)
                     },
                     native_tokens,
                     serial_number,
@@ -415,7 +415,7 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure()?)
                     },
                     native_tokens,
                     &nft_id,
@@ -554,7 +554,7 @@ impl WalletMessageHandler {
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1 .0), d.1 .1)))
                         .collect(),
                 ))
             }
@@ -631,7 +631,7 @@ impl WalletMessageHandler {
             AccountMethod::MinimumRequiredStorageDeposit { output } => {
                 convert_async_panics(|| async {
                     let output = Output::try_from(&output)?;
-                    let rent_structure = account_handle.client.get_rent_structure().await?;
+                    let rent_structure = account_handle.client.get_rent_structure()?;
 
                     let minimum_storage_deposit = output.rent_cost(&rent_structure);
 
