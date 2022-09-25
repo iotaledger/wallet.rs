@@ -31,9 +31,10 @@ impl AccountHandle {
         let account = self.read().await;
         let network_id = self.client.get_network_id()?;
         let mut outputs = Vec::new();
+        let token_supply = self.client.get_token_supply()?;
 
         for output_response in output_responses {
-            let output = Output::try_from(&output_response.output)?;
+            let output = Output::try_from_dto(&output_response.output, token_supply)?;
             let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
             // check if we know the transaction that created this output and if we created it (if we store incoming
             // transactions separated, then this check wouldn't be required)

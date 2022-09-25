@@ -74,6 +74,7 @@ impl AccountHandle {
 
     async fn output_id_and_next_alias_output_state(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
 
         let (output_id, alias_output) = account
             .unspent_outputs()
@@ -93,7 +94,7 @@ impl AccountHandle {
         let new_state_alias_output = AliasOutputBuilder::from(alias_output)
             .with_alias_id(alias_id)
             .with_state_index(alias_output.state_index() + 1)
-            .finish()?;
+            .finish(token_supply)?;
 
         Ok((output_id, new_state_alias_output))
     }
@@ -106,6 +107,7 @@ impl AccountHandle {
         options: &'a Option<TransactionOptions>,
     ) -> Pin<Box<dyn Future<Output = crate::Result<Transaction>> + Send + 'a>> {
         async move {
+            let token_supply = self.client.get_token_supply()?;
             let bech32_hrp = self.client().get_bech32_hrp()?;
             let address = AddressWrapper::new(address, bech32_hrp);
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
@@ -171,7 +173,7 @@ impl AccountHandle {
                     }
                 }
 
-                let output = Output::try_from(&output_response.output)?;
+                let output = Output::try_from_dto(&output_response.output, token_supply)?;
 
                 output_ids.push(output_id);
                 outputs.push(output);
@@ -253,7 +255,8 @@ impl AccountHandle {
         network_id: u64,
     ) -> crate::Result<()> {
         let mut account = self.write().await;
-        let output = Output::try_from(&output_response.output)?;
+        let token_supply = self.client.get_token_supply()?;
+        let output = Output::try_from_dto(&output_response.output, token_supply)?;
         let local_time = self.client.get_time_checked().await?;
 
         let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;

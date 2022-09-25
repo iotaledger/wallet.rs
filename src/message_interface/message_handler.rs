@@ -341,7 +341,7 @@ impl WalletMessageHandler {
                 features,
                 immutable_features,
             } => {
-                let output = Output::from(AliasOutput::from_dtos(
+                let output = Output::from(AliasOutput::try_from_dtos(
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
@@ -355,6 +355,7 @@ impl WalletMessageHandler {
                     unlock_conditions,
                     features,
                     immutable_features,
+                    self.client.get_token_supply()?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -365,7 +366,7 @@ impl WalletMessageHandler {
                 unlock_conditions,
                 features,
             } => {
-                let output = Output::from(BasicOutput::from_dtos(
+                let output = Output::from(BasicOutput::try_from_dtos(
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
@@ -374,6 +375,7 @@ impl WalletMessageHandler {
                     native_tokens,
                     unlock_conditions,
                     features,
+                    self.client.get_token_supply()?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -387,7 +389,7 @@ impl WalletMessageHandler {
                 features,
                 immutable_features,
             } => {
-                let output = Output::from(FoundryOutput::from_dtos(
+                let output = Output::from(FoundryOutput::try_from_dtos(
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
@@ -399,6 +401,7 @@ impl WalletMessageHandler {
                     unlock_conditions,
                     features,
                     immutable_features,
+                    self.client.get_token_supply()?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -411,7 +414,7 @@ impl WalletMessageHandler {
                 features,
                 immutable_features,
             } => {
-                let output = Output::from(NftOutput::from_dtos(
+                let output = Output::from(NftOutput::try_from_dtos(
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
@@ -422,6 +425,7 @@ impl WalletMessageHandler {
                     unlock_conditions,
                     features,
                     immutable_features,
+                    self.client.get_token_supply()?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -554,7 +558,7 @@ impl WalletMessageHandler {
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1 .0), d.1 .1)))
                         .collect(),
                 ))
             }
@@ -630,7 +634,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::MinimumRequiredStorageDeposit { output } => {
                 convert_async_panics(|| async {
-                    let output = Output::try_from(&output)?;
+                    let output = Output::try_from_dto(&output)?;
                     let rent_structure = account_handle.client.get_rent_structure()?;
 
                     let minimum_storage_deposit = output.rent_cost(&rent_structure);
@@ -695,7 +699,7 @@ impl WalletMessageHandler {
                         .prepare_transaction(
                             outputs
                                 .iter()
-                                .map(|o| Ok(Output::try_from(o)?))
+                                .map(|o| Ok(Output::try_from_dto(o)?))
                                 .collect::<Result<Vec<Output>>>()?,
                             options.clone(),
                         )
@@ -780,7 +784,7 @@ impl WalletMessageHandler {
                         .send(
                             outputs
                                 .iter()
-                                .map(|o| Ok(Output::try_from(o)?))
+                                .map(|o| Ok(Output::try_from_dto(o)?))
                                 .collect::<crate::Result<Vec<Output>>>()?,
                             options.clone(),
                         )
