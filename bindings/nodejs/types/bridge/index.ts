@@ -112,7 +112,7 @@ export type __AccountMethod__ =
     | __SyncAccountMethod__;
 
 export type __CallAccountMethodMessage__ = {
-    cmd: 'CallAccountMethod';
+    cmd: 'callAccountMethod';
     payload: {
         accountId: AccountId;
         method: __AccountMethod__;

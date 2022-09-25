@@ -48,7 +48,7 @@ export class MessageHandler {
         method: __AccountMethod__,
     ): Promise<string> {
         return this.sendMessage({
-            cmd: 'CallAccountMethod',
+            cmd: 'callAccountMethod',
             payload: {
                 accountId: accountIndex,
                 method,

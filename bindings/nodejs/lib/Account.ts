@@ -65,7 +65,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BuildAliasOutput',
+                name: 'buildAliasOutput',
                 data,
             },
         );
@@ -81,7 +81,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BuildBasicOutput',
+                name: 'buildBasicOutput',
                 data,
             },
         );
@@ -99,7 +99,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BuildFoundryOutput',
+                name: 'buildFoundryOutput',
                 data,
             },
         );
@@ -115,7 +115,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BuildNftOutput',
+                name: 'buildNftOutput',
                 data,
             },
         );
@@ -140,7 +140,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BurnNativeToken',
+                name: 'burnNativeToken',
                 data: {
                     tokenId,
                     burnAmount,
@@ -167,7 +167,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'BurnNft',
+                name: 'burnNft',
                 data: {
                     nftId,
                     options: transactionOptions,
@@ -187,7 +187,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ClaimOutputs',
+                name: 'claimOutputs',
                 data: {
                     outputIdsToClaim: outputIds,
                 },
@@ -211,7 +211,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'ConsolidateOutputs',
+                name: 'consolidateOutputs',
                 data: {
                     force,
                     outputConsolidationThreshold,
@@ -235,7 +235,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'CreateAliasOutput',
+                name: 'createAliasOutput',
                 data: {
                     aliasOutputOptions,
                     options: transactionOptions,
@@ -262,7 +262,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'DecreaseNativeTokenSupply',
+                name: 'decreaseNativeTokenSupply',
                 data: {
                     tokenId,
                     meltAmount,
@@ -289,7 +289,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'DestroyAlias',
+                name: 'destroyAlias',
                 data: {
                     aliasId,
                     options: transactionOptions,
@@ -314,7 +314,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'DestroyFoundry',
+                name: 'destroyFoundry',
                 data: {
                     foundryId,
                     options: transactionOptions,
@@ -349,7 +349,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GenerateAddresses',
+                name: 'generateAddresses',
                 data: {
                     amount,
                     options,
@@ -367,7 +367,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GetBalance',
+                name: 'getBalance',
             },
         );
 
@@ -383,7 +383,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GetOutput',
+                name: 'getOutput',
                 data: {
                     outputId,
                 },
@@ -402,7 +402,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GetFoundryOutput',
+                name: 'getFoundryOutput',
                 data: {
                     tokenId,
                 },
@@ -422,7 +422,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GetOutputsWithAdditionalUnlockConditions',
+                name: 'getOutputsWithAdditionalUnlockConditions',
                 data: {
                     outputsToClaim: outputs,
                 },
@@ -440,7 +440,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'GetTransaction',
+                name: 'getTransaction',
                 data: {
                     transactionId,
                 },
@@ -453,11 +453,11 @@ export class Account {
      * List all the addresses of the account.
      * @returns The addresses.
      */
-    async listAddresses(): Promise<Address[]> {
+    async addresses(): Promise<Address[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'Addresses',
+                name: 'addresses',
             },
         );
 
@@ -468,13 +468,11 @@ export class Account {
      * List the addresses of the account with unspent outputs.
      * @returns The addresses.
      */
-    async listAddressesWithUnspentOutputs(): Promise<
-        AddressWithUnspentOutputs[]
-    > {
+    async addressesWithUnspentOutputs(): Promise<AddressWithUnspentOutputs[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'AddressesWithUnspentOutputs',
+                name: 'addressesWithUnspentOutputs',
             },
         );
 
@@ -486,11 +484,11 @@ export class Account {
      * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listOutputs(filterOptions?: FilterOptions): Promise<OutputData[]> {
+    async outputs(filterOptions?: FilterOptions): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'Outputs',
+                name: 'outputs',
                 data: { filterOptions },
             },
         );
@@ -502,11 +500,11 @@ export class Account {
      * List all the pending transactions of the account.
      * @returns The transactions.
      */
-    async listPendingTransactions(): Promise<Transaction[]> {
+    async pendingTransactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'PendingTransactions',
+                name: 'pendingTransactions',
             },
         );
         return JSON.parse(response).payload;
@@ -516,13 +514,13 @@ export class Account {
      * List all incoming transactions of the account.
      * @returns The incoming transactions with their inputs.
      */
-    async listIncomingTransactions(): Promise<
+    async incomingTransactions(): Promise<
         [string, ITransactionPayload, IOutputResponse][]
     > {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'IncomingTransactions',
+                name: 'incomingTransactions',
             },
         );
 
@@ -533,11 +531,11 @@ export class Account {
      * List all the transactions of the account.
      * @returns The transactions.
      */
-    async listTransactions(): Promise<Transaction[]> {
+    async transactions(): Promise<Transaction[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'Transactions',
+                name: 'transactions',
             },
         );
 
@@ -549,13 +547,11 @@ export class Account {
      * @param filterOptions Options to filter the to be returned outputs.
      * @returns The outputs with metadata.
      */
-    async listUnspentOutputs(
-        filterOptions?: FilterOptions,
-    ): Promise<OutputData[]> {
+    async unspentOutputs(filterOptions?: FilterOptions): Promise<OutputData[]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'UnspentOutputs',
+                name: 'unspentOutputs',
                 data: { filterOptions },
             },
         );
@@ -584,7 +580,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MinimumRequiredStorageDeposit',
+                name: 'minimumRequiredStorageDeposit',
                 data: {
                     output,
                 },
@@ -611,7 +607,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'IncreaseNativeTokenSupply',
+                name: 'increaseNativeTokenSupply',
                 data: {
                     tokenId,
                     mintAmount,
@@ -638,7 +634,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MintNativeToken',
+                name: 'mintNativeToken',
                 data: {
                     nativeTokenOptions: nativeTokenOptions,
                     options: transactionOptions,
@@ -663,7 +659,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'MintNfts',
+                name: 'mintNfts',
                 data: {
                     nftsOptions,
                     options: transactionOptions,
@@ -694,7 +690,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'PrepareOutput',
+                name: 'prepareOutput',
                 data: {
                     options,
                     transactionOptions,
@@ -718,7 +714,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'PrepareSendAmount',
+                name: 'prepareSendAmount',
                 data: {
                     addressesWithAmount,
                     options,
@@ -742,7 +738,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'PrepareTransaction',
+                name: 'prepareTransaction',
                 data: {
                     outputs,
                     options,
@@ -766,7 +762,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SendAmount',
+                name: 'sendAmount',
                 data: {
                     addressesWithAmount,
                     options: transactionOptions,
@@ -791,7 +787,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SendMicroTransaction',
+                name: 'sendMicroTransaction',
                 data: {
                     addressesWithMicroAmount,
                     options: transactionOptions,
@@ -816,7 +812,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SendNativeTokens',
+                name: 'sendNativeTokens',
                 data: {
                     addressesNativeTokens,
                     options: transactionOptions,
@@ -841,7 +837,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SendNft',
+                name: 'sendNft',
                 data: {
                     addressesAndNftIds,
                     options: transactionOptions,
@@ -866,7 +862,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SendOutputs',
+                name: 'sendOutputs',
                 data: {
                     outputs,
                     options: transactionOptions,
@@ -879,7 +875,7 @@ export class Account {
 
     async setAlias(alias: string): Promise<void> {
         await this.messageHandler.callAccountMethod(this.meta.index, {
-            name: 'SetAlias',
+            name: 'setAlias',
             data: {
                 alias,
             },
@@ -897,7 +893,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SignTransactionEssence',
+                name: 'signTransactionEssence',
                 data: {
                     preparedTransactionData,
                 },
@@ -917,7 +913,7 @@ export class Account {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SubmitAndStoreTransaction',
+                name: 'submitAndStoreTransaction',
                 data: {
                     signedTransactionData,
                 },
@@ -936,7 +932,7 @@ export class Account {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'SyncAccount',
+                name: 'syncAccount',
                 data: {
                     options,
                 },

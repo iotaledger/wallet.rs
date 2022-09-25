@@ -30,7 +30,7 @@ type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputResponse>);
 
 /// The response message.
 #[derive(Serialize)]
-#[serde(tag = "type", content = "payload")]
+#[serde(tag = "type", content = "payload", rename_all = "camelCase")]
 pub enum Response {
     /// Response for
     /// [`CreateAccount`](crate::message_interface::Message::CreateAccount),

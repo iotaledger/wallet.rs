@@ -25,13 +25,13 @@ The Account class.
 - [getFoundryOutput](Account.md#getfoundryoutput)
 - [getOutputsWithAdditionalUnlockConditions](Account.md#getoutputswithadditionalunlockconditions)
 - [getTransaction](Account.md#gettransaction)
-- [listAddresses](Account.md#listaddresses)
-- [listAddressesWithUnspentOutputs](Account.md#listaddresseswithunspentoutputs)
-- [listOutputs](Account.md#listoutputs)
-- [listPendingTransactions](Account.md#listpendingtransactions)
-- [listIncomingTransactions](Account.md#listincomingtransactions)
-- [listTransactions](Account.md#listtransactions)
-- [listUnspentOutputs](Account.md#listunspentoutputs)
+- [addresses](Account.md#addresses)
+- [addressesWithUnspentOutputs](Account.md#addresseswithunspentoutputs)
+- [outputs](Account.md#outputs)
+- [pendingTransactions](Account.md#pendingtransactions)
+- [incomingTransactions](Account.md#incomingtransactions)
+- [transactions](Account.md#transactions)
+- [unspentOutputs](Account.md#unspentoutputs)
 - [getMetadata](Account.md#getmetadata)
 - [minimumRequiredStorageDeposit](Account.md#minimumrequiredstoragedeposit)
 - [increaseNativeTokenSupply](Account.md#increasenativetokensupply)
@@ -447,9 +447,9 @@ The transaction.
 
 ___
 
-### listAddresses
+### addresses
 
-▸ **listAddresses**(): `Promise`<[`Address`](../interfaces/Address.md)[]\>
+▸ **addresses**(): `Promise`<[`Address`](../interfaces/Address.md)[]\>
 
 List all the addresses of the account.
 
@@ -461,9 +461,9 @@ The addresses.
 
 ___
 
-### listAddressesWithUnspentOutputs
+### addressesWithUnspentOutputs
 
-▸ **listAddressesWithUnspentOutputs**(): `Promise`<[`AddressWithUnspentOutputs`](../interfaces/AddressWithUnspentOutputs.md)[]\>
+▸ **addressesWithUnspentOutputs**(): `Promise`<[`AddressWithUnspentOutputs`](../interfaces/AddressWithUnspentOutputs.md)[]\>
 
 List the addresses of the account with unspent outputs.
 
@@ -475,9 +475,9 @@ The addresses.
 
 ___
 
-### listOutputs
+### outputs
 
-▸ **listOutputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
+▸ **outputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
 
 List all outputs of the account.
 
@@ -495,9 +495,9 @@ The outputs with metadata.
 
 ___
 
-### listPendingTransactions
+### pendingTransactions
 
-▸ **listPendingTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **pendingTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 List all the pending transactions of the account.
 
@@ -509,9 +509,9 @@ The transactions.
 
 ___
 
-### listIncomingTransactions
+### incomingTransactions
 
-▸ **listIncomingTransactions**(): `Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+▸ **incomingTransactions**(): `Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
 
 List all incoming transactions of the account.
 
@@ -523,9 +523,9 @@ The incoming transactions with their inputs.
 
 ___
 
-### listTransactions
+### transactions
 
-▸ **listTransactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
+▸ **transactions**(): `Promise`<[`Transaction`](../interfaces/Transaction.md)[]\>
 
 List all the transactions of the account.
 
@@ -537,9 +537,9 @@ The transactions.
 
 ___
 
-### listUnspentOutputs
+### unspentOutputs
 
-▸ **listUnspentOutputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
+▸ **unspentOutputs**(`filterOptions?`): `Promise`<[`OutputData`](../interfaces/OutputData.md)[]\>
 
 List all the unspent outputs of the account.
 

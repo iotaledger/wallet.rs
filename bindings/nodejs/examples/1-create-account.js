@@ -33,7 +33,7 @@ async function createAccountManager() {
         },
         coinType: CoinType.Shimmer,
         secretManager: {
-            Stronghold: {
+            stronghold: {
                 snapshotPath: `./wallet.stronghold`,
                 password: `${process.env.SH_PASSWORD}`,
             },
