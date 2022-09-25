@@ -33,7 +33,7 @@ impl AccountHandle {
         for output_data in self.list_unspent_outputs(None).await? {
             if can_output_be_unlocked_now(
                 // Don't provide any addresses here, since we're only interested in outputs that can be unlocked by
-                // the nft address
+                // the alias address
                 &[],
                 &[Address::Alias(AliasAddress::new(alias_id))],
                 &output_data,

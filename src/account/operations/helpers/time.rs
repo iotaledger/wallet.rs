@@ -25,7 +25,7 @@ pub(crate) fn can_output_be_unlocked_now(
             let unlock_address = unlock_conditions.locked_address(address, current_time);
             // The address that can unlock the output needs to belong to the account
             if !account_addresses.iter().any(|a| a.address.inner == *unlock_address)
-                && !alias_and_nft_addresses.iter().any(|a| a == unlock_address)
+                && !alias_and_nft_addresses.contains(unlock_address)
             {
                 return false;
             };
