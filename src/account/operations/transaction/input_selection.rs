@@ -54,8 +54,8 @@ impl AccountHandle {
 
             let selected_transaction_data = try_select_inputs(
                 custom_inputs,
+                Vec::new(),
                 outputs,
-                true,
                 remainder_address,
                 rent_structure,
                 allow_burning,
@@ -82,9 +82,9 @@ impl AccountHandle {
         )?;
 
         let selected_transaction_data = match try_select_inputs(
+            Vec::new(),
             available_outputs_signing_data,
             outputs,
-            false,
             remainder_address,
             rent_structure,
             allow_burning,

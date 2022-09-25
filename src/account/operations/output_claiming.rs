@@ -59,6 +59,7 @@ impl AccountHandle {
                                     // We use the addresses with unspent outputs, because other addresses of the
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
+                                    &[],
                                     output,
                                     local_time,
                                 )
@@ -93,6 +94,7 @@ impl AccountHandle {
                                     // We use the addresses with unspent outputs, because other addresses of the
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
+                                    &[],
                                     output,
                                     local_time,
                                 )

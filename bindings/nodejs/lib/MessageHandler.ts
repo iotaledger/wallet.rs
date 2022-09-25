@@ -23,9 +23,9 @@ export class MessageHandler {
     constructor(options?: AccountManagerOptions) {
         const messageOptions = {
             storagePath: options?.storagePath,
-            clientOptions: JSON.stringify(options?.clientOptions),
+            clientOptions: options?.clientOptions,
             coinType: options?.coinType,
-            secretManager: JSON.stringify(options?.secretManager),
+            secretManager: options?.secretManager,
         };
 
         this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
