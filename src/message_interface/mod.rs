@@ -134,6 +134,8 @@ mod tests {
     use crate::events::types::WalletEvent;
     use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, Message, Response};
 
+    const TOKEN_SUPPLY: u64 = 1_813_620_509_061_365;
+
     #[tokio::test]
     async fn message_interface_create_account() {
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
@@ -230,7 +232,7 @@ mod tests {
                         .unwrap()
                         .1,
                 )))
-                .finish_output()
+                .finish_output(TOKEN_SUPPLY)
                 .unwrap(),
         )];
 

@@ -102,6 +102,7 @@ impl AccountHandle {
                 &address,
                 &return_address.address.inner,
                 None,
+                token_supply,
             )?;
 
             let expiration_time = match address_with_amount.expiration {
