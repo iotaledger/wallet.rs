@@ -7,9 +7,7 @@ mod message;
 mod message_handler;
 mod response;
 
-use std::str::FromStr;
-
-use iota_client::secret::SecretManager;
+use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -29,19 +27,36 @@ pub struct ManagerOptions {
     #[serde(rename = "storagePath")]
     storage_path: Option<String>,
     #[serde(rename = "clientOptions")]
-    client_options: Option<String>,
+    client_options: Option<ClientOptions>,
     #[serde(rename = "coinType")]
     pub coin_type: Option<u32>,
     #[serde(rename = "secretManager", serialize_with = "secret_manager_serialize")]
-    secret_manager: Option<String>,
+    secret_manager: Option<SecretManagerDto>,
 }
 
-// Don't serialize the secret_manager, because we don't want to log the mnemonic or password
-fn secret_manager_serialize<S>(x: &Option<String>, s: S) -> Result<S::Ok, S::Error>
+// Serialize secret manager with secrets removed
+fn secret_manager_serialize<S>(secret_manager: &Option<SecretManagerDto>, s: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
 {
-    s.serialize_str(&format!("is_some: {}", x.is_some()))
+    if let Some(secret_manager) = secret_manager {
+        match secret_manager {
+            SecretManagerDto::HexSeed(_) => s.serialize_str("hexSeed(<omitted>)"),
+            #[cfg(feature = "ledger_nano")]
+            SecretManagerDto::LedgerNano(is_simulator) => s.serialize_str(&format!("ledgerNano({is_simulator})")),
+            SecretManagerDto::Mnemonic(_) => s.serialize_str("mnemonic(<omitted>)"),
+            SecretManagerDto::Placeholder => s.serialize_str("placeholder"),
+            #[cfg(feature = "stronghold")]
+            SecretManagerDto::Stronghold(stronghold) => {
+                let mut stronghold_dto = stronghold.clone();
+                // Remove password
+                stronghold_dto.password = None;
+                s.serialize_str(&format!("{:?}", stronghold_dto))
+            }
+        }
+    } else {
+        s.serialize_str("null")
+    }
 }
 
 pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::Result<WalletMessageHandler> {
@@ -58,11 +73,11 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
         }
 
         if let Some(secret_manager) = options.secret_manager {
-            builder = builder.with_secret_manager(SecretManager::from_str(&secret_manager)?);
+            builder = builder.with_secret_manager(SecretManager::try_from(&secret_manager)?);
         }
 
         if let Some(client_options) = options.client_options {
-            builder = builder.with_client_options(ClientOptions::new().from_json(&client_options)?);
+            builder = builder.with_client_options(client_options);
         }
 
         if let Some(coin_type) = options.coin_type {
@@ -112,6 +127,7 @@ mod tests {
             },
         },
         constants::SHIMMER_COIN_TYPE,
+        ClientBuilder,
     };
 
     #[cfg(feature = "events")]
@@ -121,7 +137,7 @@ mod tests {
     #[tokio::test]
     async fn message_interface_create_account() {
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
-        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
         let client_options = r#"{
             "nodes":[
                {
@@ -140,15 +156,14 @@ mod tests {
                "secs":20,
                "nanos":0
             }
-         }"#
-        .to_string();
+         }"#;
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_create_account".to_string()),
-            client_options: Some(client_options),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
             coin_type: Some(SHIMMER_COIN_TYPE),
-            secret_manager: Some(secret_manager),
+            secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
@@ -171,7 +186,7 @@ mod tests {
     #[tokio::test]
     async fn message_interface_events() {
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
-        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
         let client_options = r#"{
             "nodes":[
                {
@@ -180,15 +195,14 @@ mod tests {
                   "disabled":false
                }
             ]
-         }"#
-        .to_string();
+         }"#;
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_events".to_string()),
-            client_options: Some(client_options),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
             coin_type: Some(SHIMMER_COIN_TYPE),
-            secret_manager: Some(secret_manager),
+            secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
@@ -245,15 +259,14 @@ mod tests {
                   "disabled":false
                }
             ]
-         }"#
-        .to_string();
+         }"#;
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/message_interface_stronghold".to_string()),
-            client_options: Some(client_options),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
             coin_type: Some(SHIMMER_COIN_TYPE),
-            secret_manager: Some(secret_manager),
+            secret_manager: Some(serde_json::from_str(&secret_manager).unwrap()),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
@@ -287,15 +300,15 @@ mod tests {
     #[tokio::test]
     async fn address_conversion_methods() {
         std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());
-        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#.to_string();
-        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#.to_string();
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
+        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#;
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
             storage_path: Some("test-storage/address_conversion_methods".to_string()),
-            client_options: Some(client_options),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
             coin_type: Some(SHIMMER_COIN_TYPE),
-            secret_manager: Some(secret_manager),
+            secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
         };
 
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
