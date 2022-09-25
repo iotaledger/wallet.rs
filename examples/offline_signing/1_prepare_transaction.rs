@@ -14,6 +14,7 @@ use std::{
 use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto},
+    constants::SHIMMER_COIN_TYPE,
     secret::{placeholder::PlaceholderSecretManager, SecretManager},
 };
 use iota_wallet::{
@@ -47,6 +48,7 @@ async fn main() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Placeholder(PlaceholderSecretManager))
         .with_client_options(client_options.clone())
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("examples/offline_signing/online_walletdb")
         .finish()
         .await?;

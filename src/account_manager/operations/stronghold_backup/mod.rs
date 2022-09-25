@@ -9,7 +9,9 @@ use iota_client::secret::{stronghold::StrongholdSecretManager, SecretManager, Se
 use zeroize::Zeroize;
 
 use self::stronghold_snapshot::{read_data_from_stronghold_snapshot, store_data_to_stronghold};
-use crate::account_manager::{AccountHandle, AccountManager, AccountManagerBuilder};
+#[cfg(feature = "storage")]
+use crate::account_manager::AccountManagerBuilder;
+use crate::account_manager::{AccountHandle, AccountManager};
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file
