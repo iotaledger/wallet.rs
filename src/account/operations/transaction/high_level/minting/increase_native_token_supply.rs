@@ -56,6 +56,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] increase_native_token_supply");
 
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
         let existing_foundry_output = account.unspent_outputs().values().into_iter().find(|output_data| {
             if let Output::Foundry(output) = &output_data.output {
                 TokenId::new(*output.id()) == token_id
@@ -125,8 +126,8 @@ impl AccountHandle {
             FoundryOutputBuilder::from(&foundry_output).with_token_scheme(updated_token_scheme);
 
         let outputs = vec![
-            new_alias_output_builder.finish_output()?,
-            new_foundry_output_builder.finish_output()?,
+            new_alias_output_builder.finish_output(token_supply)?,
+            new_foundry_output_builder.finish_output(token_supply)?,
             // Native Tokens will be added automatically in the remainder output in try_select_inputs()
         ];
 

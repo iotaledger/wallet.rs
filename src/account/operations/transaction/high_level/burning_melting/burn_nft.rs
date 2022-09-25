@@ -68,6 +68,7 @@ impl AccountHandle {
     // governor address from the nft output.
     async fn output_id_and_basic_output_for_nft(&self, nft_id: NftId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
 
         let (output_id, nft_output) = account
             .unspent_outputs()
@@ -94,7 +95,7 @@ impl AccountHandle {
             BasicOutputBuilder::new_with_amount(nft_output.amount())?
                 .add_unlock_condition(UnlockCondition::Address(address_unlock_condition))
                 .with_native_tokens(nft_output.native_tokens().clone())
-                .finish()?,
+                .finish(token_supply)?,
         );
 
         Ok((output_id, basic_output))

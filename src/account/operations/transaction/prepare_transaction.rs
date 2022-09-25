@@ -30,10 +30,11 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
         let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(rent_structure)?;
+            output.verify_storage_deposit(rent_structure.clone(), token_supply)?;
         }
 
         // validate amounts

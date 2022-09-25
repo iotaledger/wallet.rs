@@ -54,11 +54,14 @@ impl AccountHandle {
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
         // Checking it also here is good to return earlier if something is invalid
-        let rent_structure = self.client.get_rent_structure()?;
+        let protocol_parameters = self.client.get_protocol_parameters()?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(rent_structure)?;
+            output.verify_storage_deposit(
+                protocol_parameters.rent_structure().clone(),
+                protocol_parameters.token_supply(),
+            )?;
         }
 
         self.finish_transaction(outputs, options).await

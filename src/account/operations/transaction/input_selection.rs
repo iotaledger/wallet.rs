@@ -29,8 +29,11 @@ impl AccountHandle {
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
+
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
+        let token_supply = self.client.get_token_supply()?;
+
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             account.index,
@@ -60,6 +63,7 @@ impl AccountHandle {
                 rent_structure,
                 allow_burning,
                 current_time,
+                token_supply,
             )?;
 
             // lock outputs so they don't get used by another transaction
@@ -89,6 +93,7 @@ impl AccountHandle {
             rent_structure,
             allow_burning,
             current_time,
+            token_supply,
         ) {
             Ok(r) => r,
             Err(iota_client::Error::ConsolidationRequired(output_count)) => {
