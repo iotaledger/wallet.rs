@@ -1,17 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::HashSet;
-
-use iota_client::block::{
-    output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme, OUTPUT_COUNT_MAX},
-    payload::transaction::TransactionId,
-};
+use iota_client::block::output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme};
 
 use crate::{
-    account::{
-        handle::AccountHandle, operations::transaction::Transaction, types::OutputData, SyncOptions, TransactionOptions,
-    },
+    account::{handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions},
     Error,
 };
 
@@ -39,10 +32,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
+                options.allow_burning = true;
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
+                allow_burning: true,
                 ..Default::default()
             }),
         };
@@ -72,92 +67,6 @@ impl AccountHandle {
         };
 
         self.send(outputs, options).await
-    }
-
-    /// Destroy all foundries in the given set `foundry_ids`
-    // TODO: allow destroying of multiple foundries of the same alias, currently only one foundry output per alias can
-    // be destroyed when calling it once
-    pub async fn destroy_foundries(
-        &self,
-        foundry_ids: HashSet<FoundryId>,
-        options: Option<TransactionOptions>,
-    ) -> crate::Result<Vec<TransactionId>> {
-        log::debug!("[TRANSACTION] destroy_foundries");
-
-        let mut transaction_ids = Vec::new();
-        let foundries = foundry_ids.into_iter().collect::<Vec<_>>();
-
-        for foundry_ids in foundries.chunks(OUTPUT_COUNT_MAX as usize) {
-            let mut custom_inputs = Vec::new();
-            let mut outputs = Vec::new();
-            let mut included_aliases = HashSet::new();
-
-            for foundry_id in foundry_ids {
-                let alias_id = *foundry_id.alias_address().alias_id();
-                let (alias_output_data, foundry_output_data) =
-                    self.find_alias_and_foundry_output_data(alias_id, *foundry_id).await?;
-
-                validate_empty_state(&foundry_output_data.output)?;
-
-                // To burn foundries we need the controlling alias to go into the inputs as well
-                if !included_aliases.contains(&alias_id) {
-                    included_aliases.insert(alias_id);
-                    custom_inputs.push(alias_output_data.output_id);
-
-                    // Alias output state transition
-                    if let Output::Alias(alias_output) = alias_output_data.output {
-                        let amount = alias_output.amount() + foundry_output_data.output.amount();
-                        let mut native_tokens_builder = NativeTokensBuilder::from(alias_output.native_tokens().clone());
-                        // Transfer native tokens from foundry to alias
-                        if let Output::Foundry(foundry_output) = foundry_output_data.output {
-                            native_tokens_builder.add_native_tokens(foundry_output.native_tokens().clone())?;
-                        } else {
-                            unreachable!("We already checked output is a foundry");
-                        }
-
-                        // Create the new alias output with updated amount, state_index and native token
-                        let alias_output = AliasOutputBuilder::from(&alias_output)
-                            .with_alias_id(alias_output.alias_id().or_from_output_id(alias_output_data.output_id))
-                            .with_amount(amount)?
-                            .with_native_tokens(native_tokens_builder.finish()?)
-                            .with_state_index(alias_output.state_index() + 1)
-                            .finish()?;
-
-                        outputs.push(Output::Alias(alias_output));
-                    } else {
-                        unreachable!("We checked if it's an alias output before");
-                    }
-                }
-                custom_inputs.push(foundry_output_data.output_id);
-            }
-
-            let options = match options.clone() {
-                Some(mut options) => {
-                    options.custom_inputs.replace(custom_inputs);
-                    Some(options)
-                }
-                None => Some(TransactionOptions {
-                    custom_inputs: Some(custom_inputs),
-                    ..Default::default()
-                }),
-            };
-
-            let transaction = self.send(outputs, options).await?;
-            transaction_ids.push(transaction.transaction_id);
-            match transaction.block_id {
-                Some(block_id) => {
-                    let _ = self.client.retry_until_included(&block_id, None, None).await?;
-                    let sync_options = Some(SyncOptions {
-                        force_syncing: true,
-                        ..Default::default()
-                    });
-                    let _ = self.sync(sync_options).await?;
-                }
-                None => return Err(Error::BurningOrMeltingFailed("could not burn foundries".to_string())),
-            }
-        }
-
-        Ok(transaction_ids)
     }
 
     /// Find and return unspent `OutputData` for given `alias_id` and `foundry_id`

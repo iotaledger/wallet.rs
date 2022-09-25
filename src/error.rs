@@ -25,7 +25,7 @@ pub enum Error {
     #[error("{0}")]
     BlockDtoError(#[from] iota_client::block::DtoError),
     /// Burning or melting failed
-    #[error("burning or melting failed {0}")]
+    #[error("burning or melting failed: {0}")]
     BurningOrMeltingFailed(String),
     /// iota.rs error.
     #[error("`{0}`")]
