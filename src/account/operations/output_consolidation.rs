@@ -38,6 +38,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
 
         // Get outputs for the consolidation
         let mut outputs_to_consolidate = Vec::new();
@@ -119,14 +120,12 @@ impl AccountHandle {
             custom_inputs.push(output_data.output_id);
         }
 
-        let consolidation_output = vec![
-            BasicOutputBuilder::new_with_amount(total_amount)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    outputs_to_consolidate[0].address,
-                )))
-                .with_native_tokens(total_native_tokens.finish()?)
-                .finish_output()?,
-        ];
+        let consolidation_output = vec![BasicOutputBuilder::new_with_amount(total_amount)?
+            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                outputs_to_consolidate[0].address,
+            )))
+            .with_native_tokens(total_native_tokens.finish()?)
+            .finish_output(token_supply)?];
 
         let consolidation_tx = self
             .finish_transaction(

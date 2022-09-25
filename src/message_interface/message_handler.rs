@@ -554,7 +554,7 @@ impl WalletMessageHandler {
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1 .0), d.1 .1)))
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
                         .collect(),
                 ))
             }

@@ -176,6 +176,7 @@ impl AccountHandle {
 
         let current_time = self.client.get_time_checked().await?;
         let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         let account = self.read().await;
 
@@ -245,7 +246,7 @@ impl AccountHandle {
                     ))])
                     // Set native tokens empty, we will collect them from all inputs later
                     .with_native_tokens([])
-                    .finish_output()?;
+                    .finish_output(token_supply)?;
 
                 outputs_to_send.push(nft_output);
             }
@@ -262,6 +263,7 @@ impl AccountHandle {
             &rent_structure,
             &first_account_address.address.inner,
             &option_native_token,
+            token_supply,
         )?;
 
         let mut additional_inputs = Vec::new();
@@ -277,6 +279,7 @@ impl AccountHandle {
                     &rent_structure,
                     &first_account_address.address.inner,
                     &option_native_token,
+                    token_supply,
                 )?;
                 if new_amount < required_storage_deposit {
                     if !additional_inputs_used.contains(&output_data.output_id) {
@@ -312,7 +315,7 @@ impl AccountHandle {
             outputs_to_send.push(
                 BasicOutputBuilder::new_with_amount(return_amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(return_address)))
-                    .finish_output()?,
+                    .finish_output(token_supply)?,
             );
         }
 
@@ -323,7 +326,7 @@ impl AccountHandle {
                     first_account_address.address.inner,
                 )))
                 .with_native_tokens(new_native_tokens.finish()?)
-                .finish_output()?,
+                .finish_output(token_supply)?,
         );
 
         let claim_tx = self

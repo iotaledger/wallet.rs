@@ -88,6 +88,7 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_native_tokens");
         let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         let account_addresses = self.addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
@@ -105,6 +106,7 @@ impl AccountHandle {
                 &address,
                 &return_address.address.inner,
                 Some(address_with_amount.native_tokens.clone()),
+                token_supply,
             )?;
 
             let expiration_time = match address_with_amount.expiration {
@@ -127,13 +129,17 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::StorageDepositReturn(
                         // We send the full storage_deposit_amount back to the sender, so only the native tokens are
                         // sent
-                        StorageDepositReturnUnlockCondition::new(return_address.address.inner, storage_deposit_amount)?,
+                        StorageDepositReturnUnlockCondition::new(
+                            return_address.address.inner,
+                            storage_deposit_amount,
+                            token_supply,
+                        )?,
                     ))
                     .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
                         return_address.address.inner,
                         expiration_time,
                     )?))
-                    .finish_output()?,
+                    .finish_output(token_supply)?,
             )
         }
 
