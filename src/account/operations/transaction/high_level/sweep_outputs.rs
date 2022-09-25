@@ -106,7 +106,7 @@ impl AccountHandle {
         options: &'a Option<TransactionOptions>,
     ) -> Pin<Box<dyn Future<Output = crate::Result<Transaction>> + Send + 'a>> {
         async move {
-            let bech32_hrp = self.client().get_bech32_hrp().await?;
+            let bech32_hrp = self.client().get_bech32_hrp()?;
             let address = AddressWrapper::new(address, bech32_hrp);
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
@@ -148,7 +148,7 @@ impl AccountHandle {
             let mut output_ids = Vec::new();
             let mut outputs = Vec::new();
 
-            let network_id = self.client.get_network_id().await?;
+            let network_id = self.client.get_network_id()?;
 
             for mut output_response in basic_outputs {
                 if output_response.metadata.is_spent {

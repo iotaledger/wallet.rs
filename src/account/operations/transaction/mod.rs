@@ -58,7 +58,7 @@ impl AccountHandle {
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(&rent_structure)?;
+            output.verify_storage_deposit(rent_structure)?;
         }
 
         self.finish_transaction(outputs, options).await
@@ -139,7 +139,7 @@ impl AccountHandle {
         };
 
         // store transaction payload to account (with db feature also store the account to the db)
-        let network_id = self.client.get_network_id().await?;
+        let network_id = self.client.get_network_id()?;
         let transaction_id = signed_transaction_data.transaction_payload.id();
         let transaction = Transaction {
             transaction_id: signed_transaction_data.transaction_payload.id(),

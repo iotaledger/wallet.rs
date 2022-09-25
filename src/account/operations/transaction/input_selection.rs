@@ -71,7 +71,7 @@ impl AccountHandle {
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
+        let bech32_hrp = self.client.get_bech32_hrp()?;
         let available_outputs_signing_data = filter_inputs(
             &account,
             account.unspent_outputs.values(),

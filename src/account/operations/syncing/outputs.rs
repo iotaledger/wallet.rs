@@ -29,7 +29,7 @@ impl AccountHandle {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
         let account = self.read().await;
-        let network_id = self.client.get_network_id().await?;
+        let network_id = self.client.get_network_id()?;
         let mut outputs = Vec::new();
 
         for output_response in output_responses {

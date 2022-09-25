@@ -37,7 +37,7 @@ impl AccountHandle {
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");
 
-        let network_id = self.client.get_network_id().await?;
+        let network_id = self.client.get_network_id()?;
         let mut account = self.write().await;
         #[cfg(feature = "events")]
         let account_index = account.index;
@@ -261,7 +261,7 @@ impl AccountHandle {
     // Should only be called from the AccountManager so all accounts are on the same state
     pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> crate::Result<()> {
         self.client = client;
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
+        let bech32_hrp = self.client.get_bech32_hrp()?;
         log::debug!("[UPDATE ACCOUNT WITH NEW CLIENT] new bech32_hrp: {}", bech32_hrp);
         let mut account = self.write().await;
         for address in &mut account.addresses_with_unspent_outputs {

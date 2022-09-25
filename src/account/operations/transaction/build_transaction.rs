@@ -44,8 +44,7 @@ impl AccountHandle {
             .map(|i| i.output.clone())
             .collect::<Vec<Output>>();
         let inputs_commitment = InputsCommitment::new(input_outputs.iter());
-        let mut essence_builder =
-            RegularTransactionEssence::builder(self.client.get_network_id().await?, inputs_commitment);
+        let mut essence_builder = RegularTransactionEssence::builder(self.client.get_network_id()?, inputs_commitment);
         essence_builder = essence_builder.with_inputs(inputs_for_essence);
 
         for output in &selected_transaction_data.outputs {

@@ -33,7 +33,7 @@ impl AccountHandle {
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(&rent_structure)?;
+            output.verify_storage_deposit(rent_structure)?;
         }
 
         // validate amounts
@@ -53,7 +53,7 @@ impl AccountHandle {
                         )));
                     }
                     let current_time = self.client.get_time_checked().await?;
-                    let bech32_hrp = self.client.get_bech32_hrp().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp()?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {
