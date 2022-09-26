@@ -6,11 +6,11 @@ package org.iota.types.account_methods;
 import org.iota.types.FilterOptions;
 
 /// Returns all unspent outputs of the account
-public class ListUnspentOutputs implements AccountMethod {
+public class UnspentOutputs implements AccountMethod {
 
     private FilterOptions filterOptions;
 
-    public ListUnspentOutputs withFilterOptions(FilterOptions filterOptions) {
+    public UnspentOutputs withFilterOptions(FilterOptions filterOptions) {
         this.filterOptions = filterOptions;
         return this;
     }

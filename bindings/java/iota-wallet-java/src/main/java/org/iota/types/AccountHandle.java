@@ -179,7 +179,7 @@ public class AccountHandle extends AbstractObject {
     }
 
     public AccountAddress[] listAddresses() throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(new ListAddresses());
+        JsonArray responsePayload = (JsonArray) callAccountMethod(new Addresses());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -189,7 +189,7 @@ public class AccountHandle extends AbstractObject {
     }
 
     public AccountAddress[] listAddressesWithUnspentOutputs() throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(new ListAddressesWithUnspentOutputs());
+        JsonArray responsePayload = (JsonArray) callAccountMethod(new AddressesWithUnspentOutputs());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -198,7 +198,7 @@ public class AccountHandle extends AbstractObject {
         return addresses;
     }
 
-    public OutputData[] listOutputs(ListOutputs method) throws WalletException {
+    public OutputData[] listOutputs(Outputs method) throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(method);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
@@ -209,7 +209,7 @@ public class AccountHandle extends AbstractObject {
     }
 
     public Transaction[] listPendingTransactions() throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(new ListPendingTransactions());
+        JsonArray responsePayload = (JsonArray) callAccountMethod(new PendingTransactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -219,7 +219,7 @@ public class AccountHandle extends AbstractObject {
     }
 
     public Transaction[] listTransactions() throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(new ListTransactions());
+        JsonArray responsePayload = (JsonArray) callAccountMethod(new Transactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -228,7 +228,7 @@ public class AccountHandle extends AbstractObject {
         return transactions;
     }
 
-    public OutputData[] listUnspentOutputs(ListUnspentOutputs method) throws WalletException {
+    public OutputData[] listUnspentOutputs(UnspentOutputs method) throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(method);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];

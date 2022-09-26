@@ -3,5 +3,5 @@
 
 package org.iota.types.account_methods;
 
-/// Expected response: [`Addresses`]
-public class ListAddresses implements AccountMethod {}
+/// Returns all transactions of the account
+public class Transactions implements AccountMethod {}
