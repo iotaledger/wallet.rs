@@ -12,6 +12,7 @@ import org.iota.types.outputs.BasicOutput;
 import org.iota.types.outputs.Output;
 import org.iota.types.payload.TransactionPayload;
 import org.iota.types.secret.MnemonicSecretManager;
+import org.iota.types.secret.StrongholdSecretManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,12 +23,13 @@ public class SendAmount {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
-        // Build the wallet
+        // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
-                .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", 5, "example-wallet"))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
+        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account with funds for this example
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
@@ -42,7 +44,6 @@ public class SendAmount {
 
         // Print transaction
         System.out.println(new Gson().toJson(p));
-
     }
 
 }

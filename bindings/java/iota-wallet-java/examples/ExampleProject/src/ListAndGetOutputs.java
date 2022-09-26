@@ -4,11 +4,14 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.GetOutput;
+import org.iota.types.account_methods.Outputs;
 import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.outputs.Output;
 import org.iota.types.secret.MnemonicSecretManager;
+import org.iota.types.secret.StrongholdSecretManager;
+
 public class ListAndGetOutputs {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;
@@ -18,9 +21,10 @@ public class ListAndGetOutputs {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
-                .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", 5, "example-wallet"))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
+        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
         AccountHandle a = wallet.createAccount("Hans");
@@ -32,7 +36,7 @@ public class ListAndGetOutputs {
         }
 
         // Get outputs
-        OutputData[] outputs = a.listOutputs(new org.iota.types.account_methods.ListOutputs());
+        OutputData[] outputs = a.listOutputs(new Outputs());
 
         // Print outputs
         for(OutputData o : outputs)

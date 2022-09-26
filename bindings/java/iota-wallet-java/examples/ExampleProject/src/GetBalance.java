@@ -10,6 +10,8 @@ import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.MnemonicSecretManager;
+import org.iota.types.secret.StrongholdSecretManager;
+
 public class GetBalance {
 
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
@@ -21,9 +23,10 @@ public class GetBalance {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
-                .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", 5, "example-wallet"))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
+        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
         AccountHandle a = wallet.createAccount("Hans");
@@ -33,6 +36,5 @@ public class GetBalance {
 
         // Print the balance.
         System.out.println(balance.getBaseCoin().getTotal());
-
     }
 }

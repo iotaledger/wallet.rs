@@ -26,7 +26,7 @@ import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.secret.MnemonicSecretManager;
+import org.iota.types.secret.StrongholdSecretManager;
 
 public class CreateAccounts {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
@@ -36,10 +36,12 @@ public class CreateAccounts {
     public static void main(String[] args) throws WalletException {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(new String[] { SHIMMER_TESTNET_NODE_URL }))
-                .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
+                .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", 5, "example-wallet"))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );
+
+        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
         AccountHandle a = wallet.createAccount("Hans");
@@ -48,6 +50,7 @@ public class CreateAccounts {
         System.out.println(a);
     }
 }
+
 ```
 
 # Documentation
