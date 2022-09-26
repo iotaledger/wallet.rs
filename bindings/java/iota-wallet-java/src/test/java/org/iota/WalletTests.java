@@ -12,17 +12,18 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-public class SimpleTest extends ApiTest {
+public class WalletTests extends TestSettings {
     @Test
     public void testCreateAccount() throws WalletException {
         System.out.println(wallet.createAccount("Hans"));
     }
 
-
-    @Test(expected = WalletException.class)
-    public void testCreateAccountsWithSameAlias() {
+    @Test
+    public void testCreateAccountsWithSameAlias() throws WalletException {
         System.out.println(wallet.createAccount("Hans"));
-        System.out.println(wallet.createAccount("Hans"));
+        try {
+            System.out.println(wallet.createAccount("Hans"));
+        } catch (WalletException expectedException) { ; }
     }
 
     @Test
@@ -46,22 +47,6 @@ public class SimpleTest extends ApiTest {
         assertTrue(wallet.getAccounts().length == 2);
         for (AccountHandle x : wallet.getAccounts())
             System.out.println(x);
-    }
-
-    @Test
-    public void testListAddresses() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
-        AccountAddress[] addresses = a.listAddresses();
-        for(AccountAddress address : addresses) {
-            System.out.println(address.getAddress());
-        }
-    }
-
-    @Test
-    public void testSetAlias() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
-        a.setAlias(new SetAlias().withAlias("Billy"));
-        System.out.println(wallet.getAccount(new AccountIndex(0)).getAlias());
     }
 
 }

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.AfterEach;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ApiTest {
+public class TestSettings {
 
     protected static final String DEFAULT_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     protected static final String DEFAULT_TESTNET_FAUCET_URL = "https://faucet.testnet.shimmer.network/api/enqueue";
