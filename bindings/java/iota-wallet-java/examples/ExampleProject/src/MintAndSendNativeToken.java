@@ -18,7 +18,7 @@ public class MintAndSendNativeToken {
 
         // Build the wallet
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(new String[] { SHIMMER_TESTNET_NODE_URL }))
+                .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
                 .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );

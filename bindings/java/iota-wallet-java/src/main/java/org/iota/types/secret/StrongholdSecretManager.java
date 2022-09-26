@@ -14,10 +14,10 @@ import java.lang.reflect.Type;
 public class StrongholdSecretManager extends SecretManager {
 
     private String password;
-    private String timeout;
+    private Integer timeout;
     private String snapshotPath;
 
-    public StrongholdSecretManager(String password, String timeout, String snapshotPath) {
+    public StrongholdSecretManager(String password, Integer timeout, String snapshotPath) {
         this.password = password;
         this.timeout = timeout;
         this.snapshotPath = snapshotPath;

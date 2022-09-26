@@ -46,7 +46,7 @@ public class NativeApi {
         // System.out.println("REQUEST: " + command);
         String jsonResponse = sendMessage(command.toString());
         // System.out.println("RESPONSE: " + jsonResponse);
-        ClientResponse response = new Gson().fromJson(jsonResponse, ClientResponse.class);
+        ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
 
         switch (response.type) {
             case "Panic":

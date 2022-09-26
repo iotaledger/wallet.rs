@@ -16,7 +16,7 @@ public class TestSettings {
 
     protected static Wallet wallet;
     protected static WalletConfig config = new WalletConfig()
-            .withClientOptions(new ClientConfig().withNodes(new String[] { DEFAULT_TESTNET_NODE_URL }))
+            .withClientOptions(new ClientConfig().withNodes(DEFAULT_TESTNET_NODE_URL))
             .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC));
 
     static {

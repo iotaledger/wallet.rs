@@ -4,7 +4,7 @@
 package org.iota.types;
 
 import com.google.gson.Gson;
-import org.iota.api.GsonSingleton;
+import org.iota.api.CustomGson;
 import org.iota.types.secret.SecretManager;
 
 public class WalletConfig extends AbstractObject {
@@ -30,7 +30,7 @@ public class WalletConfig extends AbstractObject {
     }
 
     public WalletConfig withSecretManager(SecretManager secretManager) {
-        this.secretManager = GsonSingleton.getInstance().toJsonTree(secretManager).toString();
+        this.secretManager = CustomGson.get().toJsonTree(secretManager).toString();
         return this;
     }
 

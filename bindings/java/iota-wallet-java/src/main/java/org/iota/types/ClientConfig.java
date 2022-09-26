@@ -102,12 +102,12 @@ public class ClientConfig extends AbstractObject {
         return this;
     }
 
-    public ClientConfig withNodes(String[] nodes) {
+    public ClientConfig withNodes(String... nodes) {
         this.nodes = nodes;
         return this;
     }
 
-    public ClientConfig withPermanodes(String[] permanodes) {
+    public ClientConfig withPermanodes(String... permanodes) {
         this.permanodes = permanodes;
         return this;
     }

@@ -22,10 +22,9 @@ public class SendAmount {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
-
         // Build the wallet
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(new String[] { SHIMMER_TESTNET_NODE_URL }))
+                .withClientOptions(new ClientConfig().withNodes(SHIMMER_TESTNET_NODE_URL))
                 .withSecretManager(new MnemonicSecretManager(DEFAULT_DEVELOPMENT_MNEMONIC))
                 .withCoinType(SHIMMER_COIN_TYPE)
         );

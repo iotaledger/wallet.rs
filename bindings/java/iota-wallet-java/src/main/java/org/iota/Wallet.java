@@ -7,7 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import org.iota.api.GsonSingleton;
+import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.exceptions.WalletException;
@@ -26,14 +26,14 @@ public class Wallet extends NativeApi {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
 
-        Account a = GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
+        Account a = CustomGson.get().fromJson(callBaseApi(new ClientCommand("CreateAccount", o)), Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
     }
 
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
-        Account a =  GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetAccount", GsonSingleton.getInstance().toJsonTree(accountIdentifier))), Account.class);
+        Account a =  CustomGson.get().fromJson(callBaseApi(new ClientCommand("GetAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
@@ -44,7 +44,7 @@ public class Wallet extends NativeApi {
 
         AccountHandle[] accountHandles = new AccountHandle[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accountHandles[i] = new AccountHandle(this, new AccountIndex(GsonSingleton.getInstance().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class).getIndex()));
+            accountHandles[i] = new AccountHandle(this, new AccountIndex(CustomGson.get().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class).getIndex()));
 
         return accountHandles;
     }
@@ -79,7 +79,7 @@ public class Wallet extends NativeApi {
         o.addProperty("accountStartIndex", accountStartIndex);
         o.addProperty("accountGapLimit", accountGapLimit);
         o.addProperty("addressGapLimit", addressGapLimit);
-        o.add("syncOptions", GsonSingleton.getInstance().toJsonTree(syncOptions));
+        o.add("syncOptions", CustomGson.get().toJsonTree(syncOptions));
 
         callBaseApi(new ClientCommand("RecoverAccounts", o));
     }
@@ -106,17 +106,17 @@ public class Wallet extends NativeApi {
     }
 
     public String setClientOptions(ClientConfig config) throws WalletException {
-        return callBaseApi(new ClientCommand("SetClientOptions", GsonSingleton.getInstance().toJsonTree(config))).getAsString();
+        return callBaseApi(new ClientCommand("SetClientOptions", CustomGson.get().toJsonTree(config))).getAsString();
     }
 
     public LedgerNanoStatus getLedgerNanoStatus() throws WalletException {
-        return GsonSingleton.getInstance().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
+        return CustomGson.get().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
     }
 
     public JsonObject getNodeInfo(String url, NodeAuth auth) throws WalletException {
         JsonObject p = new JsonObject();
         p.addProperty("url", url);
-        p.add("auth", GsonSingleton.getInstance().toJsonTree(auth));
+        p.add("auth", CustomGson.get().toJsonTree(auth));
 
         return (JsonObject) callBaseApi(new ClientCommand("GetNodeInfo", p));
     }
@@ -138,7 +138,7 @@ public class Wallet extends NativeApi {
 
     public void startBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
         JsonObject o = new JsonObject();
-        o.add("options", GsonSingleton.getInstance().toJsonTree(options));
+        o.add("options", CustomGson.get().toJsonTree(options));
         o.addProperty("intervalInMilliseconds", intervalInMilliseconds);
 
         callBaseApi(new ClientCommand("StartBackgroundSync", o));
