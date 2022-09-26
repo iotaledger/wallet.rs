@@ -150,32 +150,9 @@ fn filter_inputs(
         }
 
         match &output_data.output {
-            Output::Nft(nft_input) => {
-                // Don't add if output has not the same NftId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Nft(nft_output) = output {
-                        nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
-                    } else {
-                        false
-                    }
-                }) {
-                    continue;
-                }
-            }
-            Output::Alias(alias_input) => {
-                // Don't add if output has not the same AliasId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Alias(alias_output) = output {
-                        alias_input.alias_id().or_from_output_id(output_data.output_id) == *alias_output.alias_id()
-                    } else {
-                        false
-                    }
-                }) {
-                    continue;
-                }
-            }
             Output::Foundry(foundry_input) => {
-                // Don't add if output has not the same FoundryId, so we don't burn it
+                // Don't add if output has not the same FoundryId, because it's the not needed unless for burning, but
+                // then it should be provided in the mandatory inputs
                 if !outputs.iter().any(|output| {
                     if let Output::Foundry(foundry_output) = output {
                         foundry_input.id() == foundry_output.id()
