@@ -6,7 +6,7 @@ package org.iota.types.account_methods;
 import org.iota.types.TransactionOptions;
 import org.iota.types.ids.TokenId;
 
-/// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+/// Melt native tokens. This happens with the foundry output which minted them, by increasing its
 /// `melted_tokens` field.
 public class DecreaseNativeTokenSupply implements AccountMethod {
 
