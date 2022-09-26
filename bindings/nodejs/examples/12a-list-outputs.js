@@ -9,7 +9,7 @@ async function run() {
         const account = await manager.getAccount('Alice');
         
         await account.sync();
-        const outputs = await account.listOutputs()
+        const outputs = await account.outputs()
         console.log('Listing Outputs:', outputs); 
     } catch (error) {
         console.log('Error: ', error);

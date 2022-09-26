@@ -92,10 +92,7 @@ async fn backup_and_restore() -> Result<()> {
 
     // Get account
     let recovered_account = restore_manager.get_account("Alice").await?;
-    assert_eq!(
-        account.list_addresses().await?,
-        recovered_account.list_addresses().await?
-    );
+    assert_eq!(account.addresses().await?, recovered_account.addresses().await?);
 
     // secret manager is the same
     assert_eq!(
@@ -177,10 +174,7 @@ async fn backup_and_restore_mnemonic_secret_manager() -> Result<()> {
 
     // Get account
     let recovered_account = restore_manager.get_account("Alice").await?;
-    assert_eq!(
-        account.list_addresses().await?,
-        recovered_account.list_addresses().await?
-    );
+    assert_eq!(account.addresses().await?, recovered_account.addresses().await?);
 
     // secret manager is the same
     assert_eq!(

@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
     );
     tokio::time::sleep(std::time::Duration::from_secs(15)).await;
 
-    let addresses = account.list_addresses().await?;
+    let addresses = account.addresses().await?;
     println!("Addresses: {}", addresses.len());
 
     let now = Instant::now();

@@ -13,6 +13,7 @@ use std::{
 };
 
 use dotenv::dotenv;
+use iota_client::constants::SHIMMER_COIN_TYPE;
 use iota_wallet::{
     account::types::AccountAddress,
     account_manager::AccountManager,
@@ -43,6 +44,7 @@ async fn main() -> Result<()> {
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Stronghold(secret_manager))
         .with_client_options(offline_client)
+        .with_coin_type(SHIMMER_COIN_TYPE)
         .with_storage_path("examples/offline_signing/offline_walletdb")
         .finish()
         .await?;
@@ -56,7 +58,7 @@ async fn main() -> Result<()> {
 
     println!("Generated a new account");
 
-    let addresses = account.list_addresses().await?;
+    let addresses = account.addresses().await?;
 
     write_addresses_to_file(ADDRESS_FILE_NAME, addresses)
 }

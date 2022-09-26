@@ -12,11 +12,11 @@ class IotaWallet():
         # Setup the options
         options = {'storagePath': storage_path}
         if client_options:
-            options['clientOptions'] = dumps(client_options)
+            options['clientOptions'] = client_options
         if coin_type:
             options['coinType'] = coin_type
         if secret_manager:
-            options['secretManager'] = dumps(secret_manager)
+            options['secretManager'] = secret_manager
 
         options = dumps(options)
 
@@ -128,13 +128,6 @@ class IotaWallet():
                 'source': source,
                 'password': password
             }
-        )
-
-    def delete_accounts_and_database(self):
-        """Deletes the accounts and database.
-        """
-        return self._send_cmd_routine(
-            'DeleteAccountsAndDatabase'
         )
 
     def generate_mnemonic(self):

@@ -131,7 +131,7 @@ impl AccountHandle {
     }
 
     /// Returns all addresses of the account
-    pub async fn list_addresses(&self) -> Result<Vec<AccountAddress>> {
+    pub async fn addresses(&self) -> Result<Vec<AccountAddress>> {
         let account = self.read().await;
         let mut all_addresses = account.public_addresses().clone();
         all_addresses.extend(account.internal_addresses().clone());
@@ -145,13 +145,13 @@ impl AccountHandle {
     }
 
     /// Returns only addresses of the account with balance
-    pub async fn list_addresses_with_unspent_outputs(&self) -> Result<Vec<AddressWithUnspentOutputs>> {
+    pub async fn addresses_with_unspent_outputs(&self) -> Result<Vec<AddressWithUnspentOutputs>> {
         let account = self.read().await;
         Ok(account.addresses_with_unspent_outputs().to_vec())
     }
 
     /// Returns outputs of the account
-    pub async fn list_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
+    pub async fn outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.outputs.values() {
@@ -173,7 +173,7 @@ impl AccountHandle {
     }
 
     /// Returns unspent outputs of the account
-    pub async fn list_unspent_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
+    pub async fn unspent_outputs(&self, filter: Option<FilterOptions>) -> Result<Vec<OutputData>> {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.unspent_outputs.values() {
@@ -195,7 +195,7 @@ impl AccountHandle {
     }
 
     /// Returns all incoming transactions of the account
-    pub async fn list_incoming_transactions(
+    pub async fn incoming_transactions(
         &self,
     ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>> {
         let account = self.read().await;
@@ -203,7 +203,7 @@ impl AccountHandle {
     }
 
     /// Returns all transactions of the account
-    pub async fn list_transactions(&self) -> Result<Vec<Transaction>> {
+    pub async fn transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();
         for transaction in account.transactions.values() {
@@ -213,7 +213,7 @@ impl AccountHandle {
     }
 
     /// Returns all pending transactions of the account
-    pub async fn list_pending_transactions(&self) -> Result<Vec<Transaction>> {
+    pub async fn pending_transactions(&self) -> Result<Vec<Transaction>> {
         let account = self.read().await;
         let mut transactions = Vec::new();
         for transaction_id in &account.pending_transactions {

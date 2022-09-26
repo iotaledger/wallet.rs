@@ -18,13 +18,13 @@ import type {
     __GetFoundryOutputMethod__,
     __GetOutputsWithAdditionalUnlockConditionsMethod__,
     __GetTransactionMethod__,
-    __ListAddressesMethod__,
-    __ListAddressesWithUnspentOutputsMethod__,
-    __ListOutputsMethod__,
-    __ListPendingTransactionsMethod__,
-    __ListIncomingTransactionsMethod__,
-    __ListTransactionsMethod__,
-    __ListUnspentOutputsMethod__,
+    __AddressesMethod__,
+    __AddressesWithUnspentOutputsMethod__,
+    __OutputsMethod__,
+    __PendingTransactionsMethod__,
+    __IncomingTransactionsMethod__,
+    __TransactionsMethod__,
+    __UnspentOutputsMethod__,
     __MinimumRequiredStorageDepositMethod__,
     __IncreaseNativeTokenSupplyMethod__,
     __MintNativeTokenMethod__,
@@ -48,7 +48,6 @@ import type {
     __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
     __CreateAccountMessage__,
-    __DeleteAccountsAndDatabaseMessage__,
     __EmitTestEventMessage__,
     __GenerateMnemonicMessage__,
     __GetAccountMessage__,
@@ -87,13 +86,13 @@ export type __AccountMethod__ =
     | __GetFoundryOutputMethod__
     | __GetOutputsWithAdditionalUnlockConditionsMethod__
     | __GetTransactionMethod__
-    | __ListAddressesMethod__
-    | __ListAddressesWithUnspentOutputsMethod__
-    | __ListOutputsMethod__
-    | __ListPendingTransactionsMethod__
-    | __ListIncomingTransactionsMethod__
-    | __ListTransactionsMethod__
-    | __ListUnspentOutputsMethod__
+    | __AddressesMethod__
+    | __AddressesWithUnspentOutputsMethod__
+    | __OutputsMethod__
+    | __PendingTransactionsMethod__
+    | __IncomingTransactionsMethod__
+    | __TransactionsMethod__
+    | __UnspentOutputsMethod__
     | __DecreaseNativeTokenSupplyMethod__
     | __MinimumRequiredStorageDepositMethod__
     | __IncreaseNativeTokenSupplyMethod__
@@ -127,7 +126,6 @@ export type __Message__ =
     | __ChangeStrongholdPasswordMessage__
     | __ClearStrongholdPasswordMessage__
     | __CreateAccountMessage__
-    | __DeleteAccountsAndDatabaseMessage__
     | __EmitTestEventMessage__
     | __GenerateMnemonicMessage__
     | __GetAccountMessage__

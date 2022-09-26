@@ -134,12 +134,6 @@ pub enum AccountMethod {
         nft_id: NftIdDto,
         options: Option<TransactionOptions>,
     },
-    /// Claim outputs.
-    /// Expected response: [`SentTransactions`](crate::message_interface::Response::SentTransactions)
-    ClaimOutputs {
-        #[serde(rename = "outputIdsToClaim")]
-        output_ids_to_claim: Vec<OutputId>,
-    },
     /// Consolidate outputs.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     ConsolidateOutputs {
@@ -152,18 +146,6 @@ pub enum AccountMethod {
     CreateAliasOutput {
         #[serde(rename = "aliasOutputOptions")]
         alias_output_options: Option<AliasOutputOptionsDto>,
-        options: Option<TransactionOptions>,
-    },
-    /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
-    /// `melted_tokens` field.
-    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
-    DecreaseNativeTokenSupply {
-        /// Native token id
-        #[serde(rename = "tokenId")]
-        token_id: TokenIdDto,
-        /// To be melted amount
-        #[serde(rename = "meltAmount")]
-        melt_amount: U256Dto,
         options: Option<TransactionOptions>,
     },
     /// Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
@@ -189,27 +171,17 @@ pub enum AccountMethod {
         amount: u32,
         options: Option<AddressGenerationOptions>,
     },
-    /// Get account balance information.
-    /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
-    GetBalance,
-    /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
-    /// Expected response: [`Output`](crate::message_interface::Response::Output)
-    GetFoundryOutput {
-        #[serde(rename = "tokenId")]
-        token_id: TokenIdDto,
-    },
-    /// Get the transaction with inputs of an incoming transaction stored in the account
-    /// List might not be complete, if the node pruned the data already
-    /// Expected response: [`IncomingTransactionData`](crate::message_interface::Response::IncomingTransactionData)
-    GetIncomingTransactionData {
-        #[serde(rename = "transactionId")]
-        transaction_id: TransactionId,
-    },
     /// Get the [`OutputData`](crate::account::types::OutputData) of an output stored in the account
     /// Expected response: [`OutputData`](crate::message_interface::Response::OutputData)
     GetOutput {
         #[serde(rename = "outputId")]
         output_id: OutputId,
+    },
+    /// Get the [`Output`](crate::account::types::Output) that minted a native token by its TokenId
+    /// Expected response: [`Output`](crate::message_interface::Response::Output)
+    GetFoundryOutput {
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
     },
     /// Get outputs with additional unlock conditions
     /// Expected response: [`OutputIds`](crate::message_interface::Response::OutputIds)
@@ -223,6 +195,57 @@ pub enum AccountMethod {
         #[serde(rename = "transactionId")]
         transaction_id: TransactionId,
     },
+    /// Get the transaction with inputs of an incoming transaction stored in the account
+    /// List might not be complete, if the node pruned the data already
+    /// Expected response: [`IncomingTransactionData`](crate::message_interface::Response::IncomingTransactionData)
+    GetIncomingTransactionData {
+        #[serde(rename = "transactionId")]
+        transaction_id: TransactionId,
+    },
+    /// Expected response: [`Addresses`](crate::message_interface::Response::Addresses)
+    /// List addresses.
+    Addresses,
+    /// Returns only addresses of the account with unspent outputs
+    /// Expected response:
+    /// [`AddressesWithUnspentOutputs`](crate::message_interface::Response::AddressesWithUnspentOutputs)
+    AddressesWithUnspentOutputs,
+    /// Returns all outputs of the account
+    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
+    Outputs {
+        #[serde(rename = "filterOptions")]
+        filter_options: Option<FilterOptions>,
+    },
+    /// Returns all unspent outputs of the account
+    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
+    UnspentOutputs {
+        #[serde(rename = "filterOptions")]
+        filter_options: Option<FilterOptions>,
+    },
+    /// Returns all incoming transactions of the account
+    /// Expected response: [`IncomingTransactionsData`](crate::message_interface::Response::IncomingTransactionsData)
+    IncomingTransactions,
+    /// Returns all transaction of the account
+    /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
+    Transactions,
+    /// Returns all pending transactions of the account
+    /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
+    PendingTransactions,
+    /// Melt native tokens. This happens with the foundry output which minted them, by increasing it's
+    /// `melted_tokens` field.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    DecreaseNativeTokenSupply {
+        /// Native token id
+        #[serde(rename = "tokenId")]
+        token_id: TokenIdDto,
+        /// To be melted amount
+        #[serde(rename = "meltAmount")]
+        melt_amount: U256Dto,
+        options: Option<TransactionOptions>,
+    },
+    /// Calculate the minimum required storage deposit for an output.
+    /// Expected response:
+    /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
+    MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint more native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     IncreaseNativeTokenSupply {
@@ -236,38 +259,6 @@ pub enum AccountMethod {
         increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptionsDto>,
         options: Option<TransactionOptions>,
     },
-    /// Expected response: [`Addresses`](crate::message_interface::Response::Addresses)
-    /// List addresses.
-    ListAddresses,
-    /// Returns only addresses of the account with unspent outputs
-    /// Expected response:
-    /// [`AddressesWithUnspentOutputs`](crate::message_interface::Response::AddressesWithUnspentOutputs)
-    ListAddressesWithUnspentOutputs,
-    /// Returns all incoming transactions of the account
-    /// Expected response: [`IncomingTransactionsData`](crate::message_interface::Response::IncomingTransactionsData)
-    ListIncomingTransactions,
-    /// Returns all outputs of the account
-    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListOutputs {
-        #[serde(rename = "filterOptions")]
-        filter_options: Option<FilterOptions>,
-    },
-    /// Returns all pending transaction of the account
-    /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
-    ListPendingTransactions,
-    /// Returns all transaction of the account
-    /// Expected response: [`Transactions`](crate::message_interface::Response::Transactions)
-    ListTransactions,
-    /// Returns all unspent outputs of the account
-    /// Expected response: [`OutputsData`](crate::message_interface::Response::OutputsData)
-    ListUnspentOutputs {
-        #[serde(rename = "filterOptions")]
-        filter_options: Option<FilterOptions>,
-    },
-    /// Calculate the minimum required storage deposit for an output.
-    /// Expected response:
-    /// [`MinimumRequiredStorageDeposit`](crate::message_interface::Response::MinimumRequiredStorageDeposit)
-    MinimumRequiredStorageDeposit { output: OutputDto },
     /// Mint native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
@@ -282,11 +273,20 @@ pub enum AccountMethod {
         nfts_options: Vec<NftOptionsDto>,
         options: Option<TransactionOptions>,
     },
+    /// Get account balance information.
+    /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
+    GetBalance,
     /// Prepare an output.
     /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     PrepareOutput {
         options: OutputOptionsDto,
         transaction_options: Option<TransactionOptions>,
+    },
+    /// Prepare transaction.
+    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
+    PrepareTransaction {
+        outputs: Vec<OutputDto>,
+        options: Option<TransactionOptions>,
     },
     /// Prepare send amount.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
@@ -295,11 +295,12 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
-    /// Prepare transaction.
-    /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
-    PrepareTransaction {
-        outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
+    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
+    /// if necessary.
+    /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
+    SyncAccount {
+        /// Sync options
+        options: Option<SyncOptions>,
     },
     /// Send amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -329,15 +330,15 @@ pub enum AccountMethod {
         addresses_nft_ids: Vec<AddressAndNftId>,
         options: Option<TransactionOptions>,
     },
+    /// Set the alias of the account.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    SetAlias { alias: String },
     /// Send outputs in a transaction.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendOutputs {
         outputs: Vec<OutputDto>,
         options: Option<TransactionOptions>,
     },
-    /// Set the alias of the account.
-    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    SetAlias { alias: String },
     /// Sign a prepared transaction.
     /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
     SignTransactionEssence {
@@ -350,11 +351,10 @@ pub enum AccountMethod {
         #[serde(rename = "signedTransactionData")]
         signed_transaction_data: SignedTransactionDataDto,
     },
-    /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
-    /// if necessary.
-    /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
-    SyncAccount {
-        /// Sync options
-        options: Option<SyncOptions>,
+    /// Claim outputs.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    ClaimOutputs {
+        #[serde(rename = "outputIdsToClaim")]
+        output_ids_to_claim: Vec<OutputId>,
     },
 }

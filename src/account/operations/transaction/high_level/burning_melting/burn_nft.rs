@@ -7,19 +7,42 @@ use iota_client::block::{
 };
 
 use crate::{
-    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    account::{
+        handle::AccountHandle,
+        operations::{helpers::time::can_output_be_unlocked_now, transaction::Transaction},
+        TransactionOptions,
+    },
     Error,
 };
 
 impl AccountHandle {
-    /// Function to burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
-    /// deposit return, timelock or expiration unlock condition.
+    /// Function to burn an nft output.
     pub async fn burn_nft(&self, nft_id: NftId, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_nft");
 
-        let address = self.get_sweep_remainder_address(&options).await?;
-        self.sweep_address_outputs(Address::Nft(NftAddress::new(nft_id)), &address)
-            .await?;
+        let current_time = self.client().get_time_checked().await?;
+
+        let mut owned_outputs = Vec::new();
+
+        for output_data in self.unspent_outputs(None).await? {
+            if can_output_be_unlocked_now(
+                // Don't provide any addresses here, since we're only interested in outputs that can be unlocked by
+                // the nft address
+                &[],
+                &[Address::Nft(NftAddress::new(nft_id))],
+                &output_data,
+                current_time,
+            ) {
+                owned_outputs.push(output_data);
+            }
+        }
+
+        if !owned_outputs.is_empty() {
+            return Err(Error::BurningOrMeltingFailed(format!(
+                "nft still owns outputs: {:?}",
+                owned_outputs.iter().map(|o| o.output_id).collect::<Vec<OutputId>>()
+            )));
+        }
 
         let (output_id, basic_output) = self.output_id_and_basic_output_for_nft(nft_id).await?;
         let custom_inputs = vec![output_id];
@@ -28,10 +51,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
+                options.allow_burning = true;
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
+                allow_burning: true,
                 ..Default::default()
             }),
         };

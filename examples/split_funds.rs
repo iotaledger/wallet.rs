@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
         bech32_addresses.push(ad.address().to_bech32());
     }
 
-    let addresses = account.list_addresses().await?;
+    let addresses = account.addresses().await?;
     println!("Addresses: {}", addresses.len());
 
     let now = Instant::now();
@@ -65,7 +65,7 @@ async fn main() -> Result<()> {
     println!("Syncing took: {:.2?}", now.elapsed());
     println!("Balance: {:?}", balance);
 
-    let addresses_with_unspent_outputs = account.list_addresses_with_unspent_outputs().await?;
+    let addresses_with_unspent_outputs = account.addresses_with_unspent_outputs().await?;
     println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
     // send transaction

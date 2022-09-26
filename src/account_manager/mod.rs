@@ -246,12 +246,4 @@ impl AccountManager {
         self.event_emitter.lock().await.emit(0, event);
         Ok(())
     }
-
-    /// Deletes the accounts and database folder.
-    #[cfg(feature = "storage")]
-    pub async fn delete_accounts_and_database(&self) -> crate::Result<()> {
-        self.accounts.write().await.clear();
-        std::fs::remove_dir_all(self.storage_options.storage_path.clone())?;
-        Ok(())
-    }
 }

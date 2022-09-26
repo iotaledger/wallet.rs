@@ -9,7 +9,7 @@ import type {
 export interface BuildAliasOutputData extends BuildBasicOutputData {
     aliasId: string;
     stateIndex?: number;
-    stateMetadata?: number[];
+    stateMetadata?: Uint8Array;
     foundryCounter?: number;
     immutableFeatures?: FeatureTypes[];
 }

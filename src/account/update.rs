@@ -1,17 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{collections::HashMap, str::FromStr};
+use std::collections::HashMap;
 
-use iota_client::{
-    api::ClientBlockBuilder,
-    api_types::responses::OutputResponse,
-    block::{
-        output::{Output, OutputId},
-        payload::transaction::TransactionId,
-    },
-    Client,
-};
+use iota_client::{api_types::responses::OutputResponse, block::output::OutputId, Client};
 
 use crate::account::{
     handle::AccountHandle,
@@ -281,44 +273,6 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
-        Ok(())
-    }
-
-    /// Update unspent outputs, this function is originally intended for updating recursively synced alias and nft
-    /// address outputs
-    pub(crate) async fn update_unspent_outputs(&self, output_responses: Vec<OutputResponse>) -> crate::Result<()> {
-        let network_id = self.client.get_network_id().await?;
-        let mut account = self.write().await;
-        let local_time = self.client.get_time_checked().await?;
-
-        for output_response in output_responses.into_iter() {
-            let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-            let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
-            let output = Output::try_from(&output_response.output)?;
-
-            let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
-            // check if we know the transaction that created this output and if we created it (if we store incoming
-            // transactions separated, then this check wouldn't be required)
-            let remainder = {
-                match account.transactions.get(&transaction_id) {
-                    Some(tx) => !tx.incoming,
-                    None => false,
-                }
-            };
-
-            let output_data = OutputData {
-                output_id,
-                output: Output::try_from(&output_response.output)?,
-                is_spent: output_response.metadata.is_spent,
-                metadata: output_response.metadata,
-                address,
-                network_id,
-                remainder,
-                chain: None,
-            };
-            account.unspent_outputs.entry(output_id).or_insert(output_data);
-        }
-
         Ok(())
     }
 }

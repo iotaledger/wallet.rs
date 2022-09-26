@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
 
-    let address = account.list_addresses().await?;
+    let address = account.addresses().await?;
 
     let faucet_response =
         request_funds_from_faucet(&env::var("FAUCET_URL").unwrap(), &address[0].address().to_bech32()).await?;

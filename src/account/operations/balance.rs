@@ -21,7 +21,7 @@ impl AccountHandle {
             .get_unlockable_outputs_with_additional_unlock_conditions(OutputsToClaim::All)
             .await?;
 
-        let account_addresses = self.list_addresses().await?;
+        let account_addresses = self.addresses().await?;
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;

@@ -38,10 +38,10 @@ pub enum Response {
     Account(AccountDto),
     /// Response for [`GetAccounts`](crate::message_interface::Message::GetAccounts)
     Accounts(Vec<AccountDto>),
-    /// Response for [`ListAddresses`](crate::message_interface::AccountMethod::ListAddresses)
+    /// Response for [`Addresses`](crate::message_interface::AccountMethod::Addresses)
     Addresses(Vec<AccountAddress>),
     /// Response for
-    /// [`ListAddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::ListAddressesWithUnspentOutputs)
+    /// [`AddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::AddressesWithUnspentOutputs)
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
     /// Response for
     /// [`BuildAliasOutput`](crate::message_interface::AccountMethod::BuildAliasOutput)
@@ -61,8 +61,8 @@ pub enum Response {
     /// Response for [`GetOutput`](crate::message_interface::AccountMethod::GetOutput)
     OutputData(Option<Box<OutputDataDto>>),
     /// Response for
-    /// [`ListOutputs`](crate::message_interface::AccountMethod::ListOutputs),
-    /// [`ListUnspentOutputs`](crate::message_interface::AccountMethod::ListUnspentOutputs)
+    /// [`Outputs`](crate::message_interface::AccountMethod::Outputs),
+    /// [`UnspentOutputs`](crate::message_interface::AccountMethod::UnspentOutputs)
     OutputsData(Vec<OutputDataDto>),
     /// Response for
     /// [`PrepareSendAmount`](crate::message_interface::AccountMethod::PrepareSendAmount),
@@ -72,8 +72,8 @@ pub enum Response {
     /// [`GetTransaction`](crate::message_interface::AccountMethod::GetTransaction),
     Transaction(Option<Box<TransactionDto>>),
     /// Response for
-    /// [`ListTransactions`](crate::message_interface::AccountMethod::ListTransactions),
-    /// [`ListPendingTransactions`](crate::message_interface::AccountMethod::ListPendingTransactions)
+    /// [`Transactions`](crate::message_interface::AccountMethod::Transactions),
+    /// [`PendingTransactions`](crate::message_interface::AccountMethod::PendingTransactions)
     Transactions(Vec<TransactionDto>),
     /// Response for
     /// [`SignTransaction`](crate::message_interface::AccountMethod::SignTransaction)
@@ -93,7 +93,7 @@ pub enum Response {
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
     IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
     /// Response for
-    /// [`ListIncomingTransactions`](crate::message_interface::AccountMethod::ListIncomingTransactions),
+    /// [`IncomingTransactions`](crate::message_interface::AccountMethod::IncomingTransactions),
     IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
     /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
@@ -130,7 +130,6 @@ pub enum Response {
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
     /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
-    /// [`DeleteAccountsAndDatabase`](crate::message_interface::Message::DeleteAccountsAndDatabase),
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
     /// [`SetStrongholdPassword`](crate::message_interface::Message::SetStrongholdPassword),

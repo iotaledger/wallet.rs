@@ -261,9 +261,9 @@ async fn account_first_address_exists() -> Result<()> {
         .await?;
 
     // When the account is generated, the first public address also gets generated and added to it
-    assert_eq!(account.list_addresses().await?.len(), 1);
+    assert_eq!(account.addresses().await?.len(), 1);
     // First address is a public address
-    assert_eq!(account.list_addresses().await?.first().unwrap().internal(), &false);
+    assert_eq!(account.addresses().await?.first().unwrap().internal(), &false);
 
     std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
     Ok(())

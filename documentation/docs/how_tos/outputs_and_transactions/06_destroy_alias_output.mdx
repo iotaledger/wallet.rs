@@ -1,11 +1,12 @@
 ---
-title: List Transactions
-description: 'How to list all the transactions related to a wallet.rs account.'
+title: Destroy an Alias Output
+description: 'How to destroy an alias output using wallet.rs'
 image: /img/logo/iota_mark_light.png
 keywords:
 - how to
-- account
-- list transactions
+- outputs
+- destroy
+- destroy alias output
 - nodejs
 - python
 - rust
@@ -13,16 +14,14 @@ keywords:
 
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
-import NodejsCode from "../../libraries/nodejs/how_to/outputs_and_transactions/_12c_list_transactions/_code_sample.mdx";
-import NodejsOutput from "../../libraries/nodejs/how_to/outputs_and_transactions/_12c_list_transactions/_expected_output.md";
+import NodejsCode from "../../_admonitions/_guide_coming_soon.md";
+import NodejsOutput from "../../_admonitions/_guide_coming_soon.md";
 import PythonCode from "../../_admonitions/_guide_coming_soon.md";
 import PythonOutput from "../../_admonitions/_guide_coming_soon.md";
-import RustCode from  "../../_admonitions/_guide_coming_soon.md";
-import RustOutput from  "../../_admonitions/_guide_coming_soon.md";
+import RustCode from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_code_sample.mdx";
+import RustOutput from  "../../libraries/rust/how_to/outputs_and_transactions/_16_destroy_alias_output/_expected_output.md";
 
-You can list all the transactions related to an account by calling the `Account.transactions()` function after you
-have instantiated the account. Bear in mind that you will need to call the `Account.sync()` function to get the latest
-information from the node.
+You can destroy an alias output by ID using the `Account.destroy_alias(alias_id, options)` function. If the alias still owns any outputs when you try to destroy it, you will get an error.   
 
 ## Code Example
 
@@ -30,8 +29,9 @@ The following example will:
 
 1. Create an account manager.
 2. Get Alice's account which was [created in the first guide](../accounts_and_addresses/01_create_a_wallet_account.mdx).
-3. Sync the account to get the latest transactions from the node.
-4. List the transactions using the `Account.transactions()` function.
+3. [Get the account's balance](./../accounts_and_addresses/04_check_balance.mdx).
+4. Destroy an [alias output](https://wiki.iota-community.org/shimmer/introduction/develop/explanations/ledger/alias) by id.
+5. Get the account's balance again to show the difference after step 4.
 
 <Tabs groupId="language">
     <TabItem value="rust" label="Rust">
