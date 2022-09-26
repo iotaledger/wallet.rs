@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types;
 
 import org.iota.types.ids.AliasId;
@@ -6,7 +9,6 @@ import org.iota.types.ids.NftId;
 import org.iota.types.ids.OutputId;
 
 import java.util.Map;
-
 public class AccountBalance extends AbstractObject {
 
     /// Total and available amount of the base coin

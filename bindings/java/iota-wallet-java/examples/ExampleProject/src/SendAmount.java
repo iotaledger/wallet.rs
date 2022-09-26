@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import com.google.gson.Gson;
 import org.iota.Wallet;
 import org.iota.types.*;
@@ -13,7 +16,6 @@ import org.iota.types.secret.MnemonicSecretManager;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 public class SendAmount {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;

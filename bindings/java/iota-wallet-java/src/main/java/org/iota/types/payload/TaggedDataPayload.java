@@ -1,5 +1,7 @@
-package org.iota.types.payload;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.payload;
 public class TaggedDataPayload extends Payload {
     private int type;
     private String tag;

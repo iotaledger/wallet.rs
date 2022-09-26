@@ -10,7 +10,6 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(StrongholdSecretManager.StrongholdSecretManagerAdapter.class)
 public class StrongholdSecretManager extends SecretManager {
 

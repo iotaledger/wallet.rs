@@ -1,7 +1,9 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.unlock_conditions;
 
 import org.iota.types.addresses.Address;
-
 public class ImmutableAliasAddressUnlockCondition extends UnlockCondition {
 
         private int type = 6;

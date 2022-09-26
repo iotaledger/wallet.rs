@@ -1,7 +1,9 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.addresses;
 
 import org.iota.types.ids.NftId;
-
 public class NftAddress extends Address {
 
     private int type = 16;

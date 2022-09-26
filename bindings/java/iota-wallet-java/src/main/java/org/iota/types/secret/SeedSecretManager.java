@@ -10,7 +10,6 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(SeedSecretManager.SeedSecretManagerAdapter.class)
 public class SeedSecretManager extends SecretManager {
 

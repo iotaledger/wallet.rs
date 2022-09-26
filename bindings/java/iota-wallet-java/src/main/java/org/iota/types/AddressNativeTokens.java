@@ -1,9 +1,11 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types;
 
 import org.iota.types.ids.TokenId;
 
 import java.util.Map;
-
 public class AddressNativeTokens extends AbstractObject {
 
     /// Bech32 encoded address

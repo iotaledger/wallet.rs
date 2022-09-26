@@ -1,9 +1,11 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.outputs;
 
 import org.iota.types.NativeToken;
 import org.iota.types.features.Feature;
 import org.iota.types.unlock_conditions.UnlockCondition;
-
 public class BasicOutput extends Output {
 
         private int type = 3;

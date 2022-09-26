@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.outputs;
 
 import com.google.gson.*;
@@ -8,7 +11,6 @@ import org.iota.types.inputs.TreasuryInput;
 import org.iota.types.inputs.UtxoInput;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(OutputAdapter.class)
 public abstract class Output extends AbstractObject {}
 

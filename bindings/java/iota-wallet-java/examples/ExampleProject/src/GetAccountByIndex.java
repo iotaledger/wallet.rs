@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import org.iota.Wallet;
 import org.iota.types.Account;
 import org.iota.types.AccountHandle;
@@ -7,7 +10,6 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.ids.account.AccountIndex;
 import org.iota.types.secret.MnemonicSecretManager;
-
 public class GetAccountByIndex {
     private static final String SHIMMER_TESTNET_NODE_URL = "https://api.testnet.shimmer.network";
     private static final int SHIMMER_COIN_TYPE = 4219;
@@ -24,7 +26,7 @@ public class GetAccountByIndex {
         // Set up an account for this example.
         wallet.createAccount("Hans");
 
-        // Get the account by alias.
+        // Get the account by index.
         AccountHandle a = wallet.getAccount(new AccountIndex(0));
 
         // Print the account.

@@ -1,5 +1,7 @@
-package org.iota.types;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types;
 public class SyncOptions extends AbstractObject {
     /// Specific Bech32 encoded addresses of the account to sync, if addresses are provided, then `address_start_index`
     /// will be ignored

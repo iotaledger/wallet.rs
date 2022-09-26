@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types;
 
 import com.google.gson.*;
@@ -20,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.iota.api.NativeApi.callBaseApi;
-
 @JsonAdapter(AccountHandleAdapter.class)
 public class AccountHandle extends AbstractObject {
 
@@ -322,6 +324,4 @@ class AccountHandleAdapter implements JsonSerializer<AccountHandle> {
         }
     }
 }
-
-
 

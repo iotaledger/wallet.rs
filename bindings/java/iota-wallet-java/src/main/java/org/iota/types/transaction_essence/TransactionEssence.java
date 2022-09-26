@@ -1,3 +1,6 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 package org.iota.types.transaction_essence;
 
 import com.google.gson.*;
@@ -6,7 +9,6 @@ import org.iota.types.AbstractObject;
 import org.iota.types.unlock_conditions.*;
 
 import java.lang.reflect.Type;
-
 @JsonAdapter(TransactionEssenceAdapter.class)
 public abstract class TransactionEssence extends AbstractObject {}
 

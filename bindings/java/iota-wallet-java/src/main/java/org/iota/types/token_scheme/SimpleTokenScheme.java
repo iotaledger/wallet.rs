@@ -1,5 +1,7 @@
-package org.iota.types.token_scheme;
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
 
+package org.iota.types.token_scheme;
 public class SimpleTokenScheme extends TokenScheme {
     private int type = 0;
     private String mintedTokens;
