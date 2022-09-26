@@ -26,7 +26,7 @@ test {
 
 task buildRustRelease(type:Exec){
     workingDir 'native'
-    commandLine 'cargo', 'build'
+    commandLine 'cargo', 'build', '--release'
 }
 
 jar {
@@ -34,7 +34,7 @@ jar {
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from('native/target/debug') {
+    from('native/target/release') {
         include '*.so', '*.dylib', '*.dll'
     }
 
