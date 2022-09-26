@@ -10,6 +10,8 @@ import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 
 import java.lang.reflect.Type;
+
+/** Secret manager that uses a seed in plain memory. It's not recommended for production use. Use LedgerNano or Stronghold instead. */
 @JsonAdapter(SeedSecretManager.SeedSecretManagerAdapter.class)
 public class SeedSecretManager extends SecretManager {
 
