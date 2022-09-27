@@ -30,7 +30,7 @@ class IotaWallet():
         """Create a new account
         """
         return self._send_cmd_routine(
-            'CreateAccount', {
+            'createAccount', {
                 'alias': self.__return_str_or_none(alias),
             }
         )
@@ -53,7 +53,7 @@ class IotaWallet():
         """Get account data
         """
         return self._send_cmd_routine(
-            'GetAccount',
+            'getAccount',
             alias_index
         )
 
@@ -61,14 +61,14 @@ class IotaWallet():
         """Get accounts
         """
         return self._send_cmd_routine(
-            'GetAccounts',
+            'getAccounts',
         )
 
     def backup(self, destination, password):
         """Backup storage.
         """
         return self._send_cmd_routine(
-            'Backup', {
+            'backup', {
                 'destination': destination,
                 'password': password
             }
@@ -78,7 +78,7 @@ class IotaWallet():
         """Change stronghold password.
         """
         return self._send_cmd_routine(
-            'ChangeStrongholdPassword', {
+            'changeStrongholdPassword', {
                 'currentPassword': password,
                 'newPassword': password
             }
@@ -88,21 +88,21 @@ class IotaWallet():
         """Clear stronghold password.
         """
         return self._send_cmd_routine(
-            'ClearStrongholdPassword'
+            'clearStrongholdPassword'
         )
 
     def is_stronghold_password_available(self):
         """Is stronghold password available.
         """
         return self._send_cmd_routine(
-            'IsStrongholdPasswordAvailable'
+            'isStrongholdPasswordAvailable'
         )
 
     def recover_accounts(self, account_start_index, account_gap_limit, address_gap_limit, sync_options):
         """Recover accounts.
         """
         return self._send_cmd_routine(
-            'RecoverAccounts', {
+            'recoverAccounts', {
                 'accountStartIndex': account_start_index,
                 'accountGapLimit': account_gap_limit,
                 'addressGapLimit': address_gap_limit,
@@ -114,7 +114,7 @@ class IotaWallet():
         """Remove latest account.
         """
         return self._send_cmd_routine(
-            'RemoveLatestAccount'
+            'removeLatestAccount'
         )
 
     def restore_back(self, source, password):
@@ -124,7 +124,7 @@ class IotaWallet():
            stored, it will be gone.
         """
         return self._send_cmd_routine(
-            'RestoreBackup', {
+            'restoreBackup', {
                 'source': source,
                 'password': password
             }
@@ -134,14 +134,14 @@ class IotaWallet():
         """Generates a new mnemonic.
         """
         return self._send_cmd_routine(
-            'GenerateMnemonic'
+            'generateMnemonic'
         )
 
     def verify_mnemonic(self, mnemonic):
         """Checks if the given mnemonic is valid.
         """
         return self._send_cmd_routine(
-            'VerifyMnemonic',
+            'verifyMnemonic',
             mnemonic
         )
 
@@ -149,7 +149,7 @@ class IotaWallet():
         """Updates the client options for all accounts.
         """
         return self._send_cmd_routine(
-            'SetClientOptions',
+            'setClientOptions',
             client_options
         )
 
@@ -157,7 +157,7 @@ class IotaWallet():
         """Get node info.
         """
         return self._send_cmd_routine(
-            'GetNodeInfo', {
+            'getNodeInfo', {
                 'url': url,
                 'auth': auth
             }
@@ -167,7 +167,7 @@ class IotaWallet():
         """Set stronghold password.
         """
         return self._send_cmd_routine(
-            'SetStrongholdPassword',
+            'setStrongholdPassword',
             password
         )
 
@@ -175,7 +175,7 @@ class IotaWallet():
         """Set stronghold password clear interval.
         """
         return self._send_cmd_routine(
-            'SetStrongholdPasswordClearInterval', {
+            'setStrongholdPasswordClearInterval', {
                 'intervalInMilliseconds': interval_in_milliseconds
             }
         )
@@ -184,7 +184,7 @@ class IotaWallet():
         """Store mnemonic.
         """
         return self._send_cmd_routine(
-            'StoreMnemonic',
+            'storeMnemonic',
             mnemonic
         )
 
@@ -192,7 +192,7 @@ class IotaWallet():
         """Start background sync.
         """
         return self._send_cmd_routine(
-            'StartBackgroundSync', {
+            'startBackgroundSync', {
                 'options': options,
                 'intervalInMilliseconds': interval_in_milliseconds
             }
@@ -202,7 +202,7 @@ class IotaWallet():
         """Stop background syncing.
         """
         return self._send_cmd_routine(
-            'StopBackgroundSync',
+            'stopBackgroundSync',
         )
 
     @staticmethod

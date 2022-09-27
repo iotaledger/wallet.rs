@@ -9,7 +9,7 @@ class Account:
     @send_message_routine
     def __str__(self):
         message = {
-            'cmd': 'GetAccount',
+            'cmd': 'getAccount',
             'payload': self.alias_index,
         }
         return message
@@ -17,7 +17,7 @@ class Account:
     @send_message_routine
     def _call_account_method(self, method, data=None):
         message = {
-            'cmd': 'CallAccountMethod',
+            'cmd': 'callAccountMethod',
             'payload': {
                 'accountId': self.alias_index,
                 'method': {
@@ -43,7 +43,7 @@ class Account:
         """Build alias output.
         """
         return self._call_account_method(
-            'BuildAliasOutput', {
+            'buildAliasOutput', {
                 'amount': amount,
                 'nativeTokens': native_tokens,
                 'aliasId': alias_id,
@@ -64,7 +64,7 @@ class Account:
         """Build basic output.
         """
         return self._call_account_method(
-            'BuildBasicOutput', {
+            'buildBasicOutput', {
                 'amount': amount,
                 'nativeTokens': native_tokens,
                 'unlockConditions': unlock_conditions,
@@ -83,7 +83,7 @@ class Account:
         """Build foundry output.
         """
         return self._call_account_method(
-            'BuildFoundryOutput', {
+            'buildFoundryOutput', {
                 'amount': amount,
                 'nativeTokens': native_tokens,
                 'serialNumber': serial_number,
@@ -104,7 +104,7 @@ class Account:
         """BuildNftOutput.
         """
         return self._call_account_method(
-            'BuildNftOutput', {
+            'buildNftOutput', {
                 'amount': amount,
                 'nativeTokens': native_tokens,
                 'nftId': nft_id,
@@ -123,7 +123,7 @@ class Account:
         recommended to use melting, if the foundry output is available.
         """
         return self._call_account_method(
-            'BurnNativeToken', {
+            'burnNativeToken', {
                 'tokenId': token_id,
                 'burnAmount': burn_amount,
                 'options':  options
@@ -138,7 +138,7 @@ class Account:
         burning, the foundry can never be destroyed anymore.
         """
         return self._call_account_method(
-            'BurnNft', {
+            'burnNft', {
                 'nftId': nft_id,
                 'options':  options
             }
@@ -150,7 +150,7 @@ class Account:
         """Consolidate outputs.
         """
         return self._call_account_method(
-            'ConsolidateOutputs', {
+            'consolidateOutputs', {
                 'force': force,
                 'outputConsolidationThreshold':  output_consolidation_threshold
             }
@@ -162,7 +162,7 @@ class Account:
         """Create an alias output.
         """
         return self._call_account_method(
-            'CreateAliasOutput', {
+            'createAliasOutput', {
                 'aliasOutputOptions': alias_output_options,
                 'options':  options
             }
@@ -176,7 +176,7 @@ class Account:
         sent to the governor address.
         """
         return self._call_account_method(
-            'DestroyAlias', {
+            'destroyAlias', {
                 'aliasId': alias_id,
                 'options':  options
             }
@@ -189,7 +189,7 @@ class Account:
         Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
         """
         return self._call_account_method(
-            'DestroyFoundry', {
+            'destroyFoundry', {
                 'foundryId': foundry_id,
                 'options':  options
             }
@@ -199,7 +199,7 @@ class Account:
         """Generate new addresses.
         """
         return self._call_account_method(
-            'GenerateAddresses', {
+            'generateAddresses', {
                 'amount': amount,
                 'options': options
             }
@@ -209,7 +209,7 @@ class Account:
         """Get outputs with additional unlock conditions.
         """
         return self._call_account_method(
-            'GetOutputsWithAdditionalUnlockConditions', {
+            'getOutputsWithAdditionalUnlockConditions', {
                 'outputsToClaim': outputs_to_claim
             }
         )
@@ -218,7 +218,7 @@ class Account:
         """Get output.
         """
         return self._call_account_method(
-            'GetOutput', {
+            'getOutput', {
                 'outputId': output_id
             }
         )
@@ -227,7 +227,7 @@ class Account:
         """Get transaction.
         """
         return self._call_account_method(
-            'GetTransaction', {
+            'getTransaction', {
                 'transactionId': transaction_id
             }
         )
@@ -236,21 +236,21 @@ class Account:
         """List addresses.
         """
         return self._call_account_method(
-            'Addresses'
+            'addresses'
         )
 
     def addresses_with_unspent_outputs(self):
         """Returns only addresses of the account with unspent outputs.
         """
         return self._call_account_method(
-            'AddressesWithUnspentOutputs'
+            'addressesWithUnspentOutputs'
         )
 
     def outputs(self, filter_options=None):
         """Returns all outputs of the account.
         """
         return self._call_account_method(
-            'Outputs', {
+            'outputs', {
                 'filterOptions': filter_options
             }
         )
@@ -259,7 +259,7 @@ class Account:
         """Returns all unspent outputs of the account.
         """
         return self._call_account_method(
-            'UnspentOutputs', {
+            'unspentOutputs', {
                 'filterOptions': filter_options
             }
         )
@@ -268,21 +268,21 @@ class Account:
         """Returns all incoming transactions of the account.
         """
         return self._call_account_method(
-            'IncomingTransactions'
+            'incomingTransactions'
         )
 
     def transactions(self):
         """Returns all transaction of the account.
         """
         return self._call_account_method(
-            'Transactions'
+            'transactions'
         )
 
     def pending_transactions(self):
         """Returns all pending transactions of the account.
         """
         return self._call_account_method(
-            'PendingTransactions'
+            'pendingTransactions'
         )
 
     def decrease_native_token_supply(self,
@@ -293,7 +293,7 @@ class Account:
         `melted_tokens` field.
         """
         return self._call_account_method(
-            'DecreaseNativeTokenSupply', {
+            'decreaseNativeTokenSupply', {
                 'tokenId': token_id,
                 'meltAmount': melt_amount,
                 'options':  options
@@ -304,7 +304,7 @@ class Account:
         """Mint more native token.
         """
         return self._call_account_method(
-            'IncreaseNativeTokenSupply', {
+            'increaseNativeTokenSupply', {
                 'tokenId': token_id,
                 'mintAmount': mint_amount,
                 'increaseNativeTokenSupplyOptions': increase_native_token_supply_options,
@@ -316,7 +316,7 @@ class Account:
         """Mint native token.
         """
         return self._call_account_method(
-            'MintNativeToken', {
+            'mintNativeToken', {
                 'nativeTokenOptions': native_token_options,
                 'options': options
             }
@@ -326,7 +326,7 @@ class Account:
         """Minimum required storage deposit.
         """
         return self._call_account_method(
-            'MinimumRequiredStorageDeposit', {
+            'minimumRequiredStorageDeposit', {
                 'output': output
             }
         )
@@ -335,7 +335,7 @@ class Account:
         """Mint nfts.
         """
         return self._call_account_method(
-            'MintNfts', {
+            'mintNfts', {
                 'nftsOptions': nfts_options,
                 'options': options
             }
@@ -345,14 +345,14 @@ class Account:
         """Get account balance information.
         """
         return self._call_account_method(
-            'GetBalance'
+            'getBalance'
         )
 
     def prepare_send_amount(self, addresses_with_amount, options=None):
         """Prepare send amount.
         """
         return self._call_account_method(
-            'PrepareSendAmount', {
+            'prepareSendAmount', {
                 'addressesWithAmount': addresses_with_amount,
                 'options': options
             }
@@ -362,7 +362,7 @@ class Account:
         """Prepare transaction.
         """
         return self._call_account_method(
-            'PrepareTransaction', {
+            'prepareTransaction', {
                 'outputs': outputs,
                 'options': options
             }
@@ -373,7 +373,7 @@ class Account:
            Will also retry pending transactions and consolidate outputs if necessary.
         """
         return self._call_account_method(
-            'SyncAccount', {
+            'syncAccount', {
                 'options': options,
             }
         )
@@ -382,7 +382,7 @@ class Account:
         """Send amount.
         """
         return self._call_account_method(
-            'SendAmount', {
+            'sendAmount', {
                 'addressesWithAmount': addresses_with_amount,
                 'options': options
             }
@@ -392,7 +392,7 @@ class Account:
         """Send micro transaction.
         """
         return self._call_account_method(
-            'SendMicroTransaction', {
+            'sendMicroTransaction', {
                 'addressesWithMicroAmount': addresses_with_micro_amount,
                 'options': options
             }
@@ -402,7 +402,7 @@ class Account:
         """Send native tokens.
         """
         return self._call_account_method(
-            'SendNativeTokens', {
+            'sendNativeTokens', {
                 'addressesNativeTokens': addresses_native_tokens,
                 'options': options
             }
@@ -412,7 +412,7 @@ class Account:
         """Send nft.
         """
         return self._call_account_method(
-            'SendNft', {
+            'sendNft', {
                 'addressesAndNftIds': addresses_nft_ids,
                 'options': options
             }
@@ -422,7 +422,7 @@ class Account:
         """Set alias.
         """
         return self._call_account_method(
-            'SetAlias', {
+            'setAlias', {
                 'alias': alias
 
             }
@@ -432,7 +432,7 @@ class Account:
         """Send a transaction.
         """
         return self._call_account_method(
-            'SendTransaction', {
+            'sendTransaction', {
                 'outputs': outputs,
                 'options': options
             }
@@ -442,7 +442,7 @@ class Account:
         """Sign a transaction essence.
         """
         return self._call_account_method(
-            'SignTransactionEssence', {
+            'signTransactionEssence', {
                 'preparedTransactionData': prepared_transaction_data
 
             }
@@ -452,7 +452,7 @@ class Account:
         """Submit and store transaction.
         """
         return self._call_account_method(
-            'SubmitAndStoreTransaction', {
+            'submitAndStoreTransaction', {
                 'signedTransactionData': signed_transaction_data
 
             }
@@ -462,7 +462,7 @@ class Account:
         """Claim outputs.
         """
         return self._call_account_method(
-            'ClaimOutputs', {
+            'claimOutputs', {
                 'outputIdsToClaim': output_ids_to_claim
 
             }
@@ -473,7 +473,7 @@ class Account:
         """Send outputs in a transaction.
         """
         return self._call_account_method(
-            'SendOutputs', {
+            'sendOutputs', {
                 'outputs': outputs,
                 'options': options,
             }

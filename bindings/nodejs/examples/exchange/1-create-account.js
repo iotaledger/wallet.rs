@@ -29,8 +29,7 @@ async function run() {
         await manager.storeMnemonic(process.env.MNEMONIC);
 
         const account = await manager.createAccount({
-            alias: 'Alice',
-            coinType: CoinType.IOTA,
+            alias: 'Alice'
         });
         console.log('Account created:', account);
 

@@ -27,10 +27,10 @@ async function run() {
 async function createAccountManager() {
     const accountManagerOptions = {
         storagePath: './alice-database',
-        clientOptions: {
+        clientOptions: JSON.stringify({
             nodes: ['https://api.testnet.shimmer.network'],
             localPow: true,
-        },
+        }),
         coinType: CoinType.Shimmer,
         secretManager: {
             Stronghold: {

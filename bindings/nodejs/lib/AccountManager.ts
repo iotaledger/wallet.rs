@@ -30,7 +30,7 @@ export class AccountManager {
      */
     async backup(destination: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'Backup',
+            cmd: 'backup',
             payload: {
                 destination,
                 password,
@@ -43,7 +43,7 @@ export class AccountManager {
      */
     async bech32ToHex(bech32Address: string): Promise<string> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'Bech32ToHex',
+            cmd: 'bech32ToHex',
             payload: bech32Address,
         });
         return JSON.parse(response).payload;
@@ -57,7 +57,7 @@ export class AccountManager {
         newPassword: string,
     ): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'ChangeStrongholdPassword',
+            cmd: 'changeStrongholdPassword',
             payload: {
                 currentPassword,
                 newPassword,
@@ -70,7 +70,7 @@ export class AccountManager {
      */
     async clearStrongholdPassword(): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'ClearStrongholdPassword',
+            cmd: 'clearStrongholdPassword',
         });
     }
 
@@ -79,7 +79,7 @@ export class AccountManager {
      */
     async createAccount(payload: CreateAccountPayload): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'CreateAccount',
+            cmd: 'createAccount',
             payload,
         });
         return new Account(JSON.parse(response).payload, this.messageHandler);
@@ -97,7 +97,7 @@ export class AccountManager {
      */
     async emitTestEvent(event: WalletEvent): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'EmitTestEvent',
+            cmd: 'emitTestEvent',
             payload: event,
         });
     }
@@ -107,7 +107,7 @@ export class AccountManager {
      */
     async generateMnemonic(): Promise<string> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GenerateMnemonic',
+            cmd: 'generateMnemonic',
         });
         return JSON.parse(response).payload;
     }
@@ -117,7 +117,7 @@ export class AccountManager {
      */
     async getAccount(accountId: AccountId): Promise<Account> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GetAccount',
+            cmd: 'getAccount',
             payload: accountId,
         });
 
@@ -134,7 +134,7 @@ export class AccountManager {
      */
     async getAccounts(): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GetAccounts',
+            cmd: 'getAccounts',
         });
 
         const { payload } = JSON.parse(response);
@@ -152,7 +152,7 @@ export class AccountManager {
      */
     async getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GetNodeInfo',
+            cmd: 'getNodeInfo',
             payload: { url, auth },
         });
         return JSON.parse(response).payload;
@@ -163,7 +163,7 @@ export class AccountManager {
      */
     async getLedgerNanoStatus(): Promise<LedgerNanoStatus> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'GetLedgerNanoStatus',
+            cmd: 'getLedgerNanoStatus',
         });
         return JSON.parse(response).payload;
     }
@@ -175,7 +175,7 @@ export class AccountManager {
      */
     async hexToBech32(hex: string, bech32Hrp?: string): Promise<string> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'HexToBech32',
+            cmd: 'hexToBech32',
             payload: { hex, bech32Hrp },
         });
         return JSON.parse(response).payload;
@@ -186,7 +186,7 @@ export class AccountManager {
      */
     async isStrongholdPasswordAvailable(): Promise<boolean> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'IsStrongholdPasswordAvailable',
+            cmd: 'isStrongholdPasswordAvailable',
         });
         return JSON.parse(response).payload;
     }
@@ -218,7 +218,7 @@ export class AccountManager {
         syncOptions: AccountSyncOptions,
     ): Promise<Account[]> {
         const response = await this.messageHandler.sendMessage({
-            cmd: 'RecoverAccounts',
+            cmd: 'recoverAccounts',
             payload: {
                 accountStartIndex,
                 accountGapLimit,
@@ -240,7 +240,7 @@ export class AccountManager {
      */
     async removeLatestAccount(): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'RemoveLatestAccount',
+            cmd: 'removeLatestAccount',
         });
     }
 
@@ -252,7 +252,7 @@ export class AccountManager {
      */
     async restoreBackup(source: string, password: string): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'RestoreBackup',
+            cmd: 'restoreBackup',
             payload: {
                 source,
                 password,
@@ -265,7 +265,7 @@ export class AccountManager {
      */
     async setClientOptions(options: ClientOptions): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'SetClientOptions',
+            cmd: 'setClientOptions',
             payload: options,
         });
     }
@@ -275,7 +275,7 @@ export class AccountManager {
      */
     async setStrongholdPassword(password: string): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'SetStrongholdPassword',
+            cmd: 'setStrongholdPassword',
             payload: password,
         });
     }
@@ -287,7 +287,7 @@ export class AccountManager {
         intervalInMilliseconds?: number,
     ): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'SetStrongholdPasswordClearInterval',
+            cmd: 'setStrongholdPasswordClearInterval',
             payload: intervalInMilliseconds,
         });
     }
@@ -300,7 +300,7 @@ export class AccountManager {
         intervalInMilliseconds?: number,
     ): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'StartBackgroundSync',
+            cmd: 'startBackgroundSync',
             payload: {
                 options,
                 intervalInMilliseconds,
@@ -313,7 +313,7 @@ export class AccountManager {
      */
     async stopBackgroundSync(): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'StopBackgroundSync',
+            cmd: 'stopBackgroundSync',
         });
     }
 
@@ -322,7 +322,7 @@ export class AccountManager {
      */
     async storeMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'StoreMnemonic',
+            cmd: 'storeMnemonic',
             payload: mnemonic,
         });
     }
@@ -332,7 +332,7 @@ export class AccountManager {
      */
     async verifyMnemonic(mnemonic: string): Promise<void> {
         await this.messageHandler.sendMessage({
-            cmd: 'VerifyMnemonic',
+            cmd: 'verifyMnemonic',
             payload: mnemonic,
         });
     }

@@ -27,7 +27,7 @@ pub struct AccountToCreate {
 
 /// The messages that can be sent to the actor.
 #[derive(Clone, Deserialize)]
-#[serde(tag = "cmd", content = "payload")]
+#[serde(tag = "cmd", content = "payload", rename_all = "camelCase")]
 #[allow(clippy::large_enum_variant)]
 pub enum Message {
     /// Creates an account.
