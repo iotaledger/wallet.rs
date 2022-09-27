@@ -11,7 +11,7 @@ public class ExampleUtils {
     public static AccountHandle setUpAccountWithFunds(Wallet wallet, String alias) throws WalletException, InterruptedException {
         AccountHandle a = wallet.createAccount(alias);
 
-        int available = Integer.parseInt(a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable());
+        int available = a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable();
 
         while(available < 10000000) {
             System.out.println("Please fund following address: " + a.getPublicAddresses()[0]);

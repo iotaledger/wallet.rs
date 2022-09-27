@@ -3,7 +3,6 @@
 
 package org.iota.types;
 
-import org.iota.api.CustomGson;
 import org.iota.types.secret.SecretManager;
 
 public class WalletConfig extends AbstractObject {
@@ -23,8 +22,8 @@ public class WalletConfig extends AbstractObject {
         return this;
     }
 
-    public WalletConfig withCoinType(Integer coinType) {
-        this.coinType = coinType;
+    public WalletConfig withCoinType(CoinType coinType) {
+        this.coinType = coinType.getCoinTypeValue();
         return this;
     }
 
