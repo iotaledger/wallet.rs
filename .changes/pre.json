@@ -16,6 +16,7 @@
     ".changes/error-message-and-ledger.md",
     ".changes/errorthrown.md",
     ".changes/expiration-remainder-address.md",
+    ".changes/explicit-drops.md",
     ".changes/filter-options.md",
     ".changes/fix-binary-location.md",
     ".changes/fix-depdendencies.md",

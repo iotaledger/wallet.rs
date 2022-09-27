@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.31]
+
+- Attempt to fix deadlock in recoverAccounts()
+  - [a2eb9e9a](https://github.com/iotaledger/wallet.rs/commit/a2eb9e9af9e736f173d946cd76ccc4e11f638caa) Attempt to fix deadlock on 2022-09-27
+
 ## \[2.0.2-alpha.30]
 
 - Fix address start indexes in recoverAccounts().
