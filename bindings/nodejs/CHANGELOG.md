@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.32]
+
+- Fix claimOutputs() with additional native tokens in the inputs.
+  - [30d17879](https://github.com/iotaledger/wallet.rs/commit/30d178797af26078e94641cd4c185328d41e599d) Fix output claiming with native tokens on 2022-09-28
+
 ## \[2.0.2-alpha.31]
 
 - Attempt to fix deadlock in recoverAccounts()

@@ -12,6 +12,7 @@
     ".changes/bump-depdendencies.md",
     ".changes/bump-ledger-nano.md",
     ".changes/burning.md",
+    ".changes/claiming-with-nt.md",
     ".changes/consolidation.md",
     ".changes/error-message-and-ledger.md",
     ".changes/errorthrown.md",
