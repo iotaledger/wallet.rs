@@ -1,7 +1,6 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "ledger_nano")]
 use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
