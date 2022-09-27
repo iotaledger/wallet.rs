@@ -10,7 +10,7 @@ use crate::{
 
 impl AccountHandle {
     /// Function to destroy a foundry output with a circulating supply of 0.
-    /// Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+    /// Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
     pub async fn destroy_foundry(
         &self,
         foundry_id: FoundryId,
@@ -18,6 +18,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_foundry");
 
+        let token_supply = self.client.get_token_supply()?;
         let alias_id = *foundry_id.alias_address().alias_id();
         let (existing_alias_output_data, existing_foundry_output_data) =
             self.find_alias_and_foundry_output_data(alias_id, foundry_id).await?;
@@ -59,7 +60,7 @@ impl AccountHandle {
                     .with_amount(amount)?
                     .with_native_tokens(native_tokens_builder.finish()?)
                     .with_state_index(alias_output.state_index() + 1)
-                    .finish()?;
+                    .finish(token_supply)?;
 
                 vec![Output::Alias(alias_output)]
             }

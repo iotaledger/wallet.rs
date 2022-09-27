@@ -23,8 +23,6 @@ impl AccountHandle {
     ) -> crate::Result<usize> {
         log::debug!("[search_addresses_with_outputs]");
 
-        let mut address_gap_limit_internal = address_gap_limit;
-
         // store the current index, so we can remove new addresses with higher indexes later again, if they don't have
         // outputs
         let (highest_public_address_index, highest_internal_address_index) = {
@@ -38,6 +36,55 @@ impl AccountHandle {
                 account.internal_addresses.last().map(|a| a.key_index),
             )
         };
+
+        // Generate addresses below the start indexes
+        if let Some(sync_options) = &sync_options {
+            // public addresses
+            if sync_options.address_start_index != 0 {
+                let mut address_amount_to_generate =
+                    sync_options.address_start_index.abs_diff(highest_public_address_index);
+                // -1 if it's larger than 0, to get the correct amount, because the address with the actual start index
+                // gets generated later
+                if address_amount_to_generate > 0 {
+                    address_amount_to_generate -= 1;
+                }
+                log::debug!(
+                    "[search_addresses_with_outputs] generate {address_amount_to_generate} public addresses below the start index"
+                );
+                self.generate_addresses(
+                    address_amount_to_generate,
+                    Some(AddressGenerationOptions {
+                        internal: false,
+                        metadata: GenerateAddressMetadata { syncing: true },
+                    }),
+                )
+                .await?;
+            }
+            // internal addresses
+            if sync_options.address_start_index_internal != 0 {
+                let mut address_amount_to_generate = sync_options
+                    .address_start_index_internal
+                    .abs_diff(highest_internal_address_index.unwrap_or(0));
+                // -1 if it's larger than 0, to get the correct amount, because the address with the actual start index
+                // gets generated later
+                if address_amount_to_generate > 0 && highest_internal_address_index.is_some() {
+                    address_amount_to_generate -= 1;
+                }
+                log::debug!(
+                    "[search_addresses_with_outputs] generate {address_amount_to_generate} internal addresses below the start index"
+                );
+                self.generate_addresses(
+                    address_amount_to_generate,
+                    Some(AddressGenerationOptions {
+                        internal: true,
+                        metadata: GenerateAddressMetadata { syncing: true },
+                    }),
+                )
+                .await?;
+            }
+        }
+
+        let mut address_gap_limit_internal = address_gap_limit;
 
         let mut latest_outputs_count = 0;
         loop {

@@ -107,7 +107,7 @@ async fn main() -> Result<()> {
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 *ping_addresses_[address_index % amount_addresses].address().as_ref(),
                             )))
-                            .finish_output()?,
+                            .finish_output(pong_account_.client().get_token_supply()?)?,
                     ];
                     let tx = pong_account_.send(outputs, None).await?;
                     println!(

@@ -68,6 +68,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] prepare_send_nft");
 
         let unspent_outputs = self.unspent_outputs(None).await?;
+        let token_supply = self.client.get_token_supply()?;
 
         let mut outputs = Vec::new();
         let mut custom_inputs = Vec::new();
@@ -87,7 +88,7 @@ impl AccountHandle {
                     let nft_builder = NftOutputBuilder::from(nft_output)
                         .with_nft_id(address_and_nft_id.nft_id)
                         .with_unlock_conditions(vec![UnlockCondition::Address(AddressUnlockCondition::new(address))]);
-                    outputs.push(nft_builder.finish_output()?);
+                    outputs.push(nft_builder.finish_output(token_supply)?);
                     // Add custom input
                     custom_inputs.push(nft_output_data.output_id);
                 }

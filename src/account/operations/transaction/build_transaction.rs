@@ -20,13 +20,15 @@ use crate::account::{handle::AccountHandle, operations::transaction::Transaction
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
-    pub(crate) async fn build_transaction_essence(
+    pub(crate) fn build_transaction_essence(
         &self,
         selected_transaction_data: SelectedTransactionData,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] build_transaction");
+
         let build_transaction_essence_start_time = Instant::now();
+        let protocol_parameters = self.client.get_protocol_parameters()?;
 
         let mut inputs_for_essence: Vec<Input> = Vec::new();
         let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
@@ -44,8 +46,7 @@ impl AccountHandle {
             .map(|i| i.output.clone())
             .collect::<Vec<Output>>();
         let inputs_commitment = InputsCommitment::new(input_outputs.iter());
-        let mut essence_builder =
-            RegularTransactionEssence::builder(self.client.get_network_id().await?, inputs_commitment);
+        let mut essence_builder = RegularTransactionEssence::builder(inputs_commitment);
         essence_builder = essence_builder.with_inputs(inputs_for_essence);
 
         for output in &selected_transaction_data.outputs {
@@ -69,7 +70,7 @@ impl AccountHandle {
             }
         }
 
-        let essence = essence_builder.finish()?;
+        let essence = essence_builder.finish(&protocol_parameters)?;
         let essence = TransactionEssence::Regular(essence);
 
         let prepared_transaction_data = PreparedTransactionData {

@@ -15,7 +15,7 @@ use std::{
 use dotenv::dotenv;
 use iota_client::{
     api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    block::payload::TransactionPayload,
+    block::{output::RentStructureBuilder, payload::TransactionPayload, protocol::ProtocolParameters},
     secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
 };
 use iota_wallet::Result;
@@ -28,11 +28,32 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     // Setup Stronghold secret_manager
-    let secret_manager = StrongholdSecretManager::builder()
+    let mut secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .build(PathBuf::from("examples/offline_signing/offline_signing.stronghold"))?;
 
-    let prepared_transaction_data = read_prepared_transaction_from_file(PREPARED_TRANSACTION_FILE_NAME)?;
+    // Load snapshot file
+    secret_manager.read_stronghold_snapshot().await?;
+
+    // TODO: read from file, similar to https://github.com/iotaledger/iota.rs/issues/1267
+    // Make sure that these values match the network you use.
+    let protocol_parameters = ProtocolParameters::new(
+        2,
+        String::from("testnet"),
+        String::from("smr"),
+        1500,
+        15,
+        RentStructureBuilder::new()
+            .byte_cost(100)
+            .key_factor(1)
+            .data_factor(10)
+            .finish(),
+        1813620509061365,
+    )
+    .unwrap();
+
+    let prepared_transaction_data =
+        read_prepared_transaction_from_file(PREPARED_TRANSACTION_FILE_NAME, &protocol_parameters)?;
 
     // Signs prepared transaction offline.
     let unlocks = SecretManager::Stronghold(secret_manager)
@@ -52,14 +73,18 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_prepared_transaction_from_file<P: AsRef<Path>>(path: P) -> Result<PreparedTransactionData> {
+fn read_prepared_transaction_from_file<P: AsRef<Path>>(
+    path: P,
+    protocol_parameters: &ProtocolParameters,
+) -> Result<PreparedTransactionData> {
     let mut file = File::open(&path)?;
     let mut json = String::new();
     file.read_to_string(&mut json)?;
 
-    Ok(PreparedTransactionData::try_from(&serde_json::from_str::<
-        PreparedTransactionDataDto,
-    >(&json)?)?)
+    Ok(PreparedTransactionData::try_from_dto(
+        &serde_json::from_str::<PreparedTransactionDataDto>(&json)?,
+        protocol_parameters,
+    )?)
 }
 
 fn write_signed_transaction_to_file<P: AsRef<Path>>(

@@ -59,13 +59,15 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_amount");
         let mut outputs = Vec::new();
+        let token_supply = self.client.get_token_supply()?;
+
         for address_with_amount in addresses_with_amount {
             outputs.push(
                 BasicOutputBuilder::new_with_amount(address_with_amount.amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         Address::try_from_bech32(&address_with_amount.address)?.1,
                     )))
-                    .finish_output()?,
+                    .finish_output(token_supply)?,
             )
         }
 

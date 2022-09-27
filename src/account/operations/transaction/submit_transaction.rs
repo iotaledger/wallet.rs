@@ -23,7 +23,7 @@ impl AccountHandle {
         // Drop account so it's not locked during PoW
         drop(account);
 
-        let local_pow = self.client.get_local_pow().await;
+        let local_pow = self.client.get_local_pow();
         if local_pow {
             log::debug!("[TRANSACTION] doing local pow");
             #[cfg(feature = "events")]
