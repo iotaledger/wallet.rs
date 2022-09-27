@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.30]
+
+- Fix address start indexes in recoverAccounts().
+  - [801f426e](https://github.com/iotaledger/wallet.rs/commit/801f426ebd7a2ea8528bc3a220f4391151286aa9) Fix address start indexes in recoverAccounts() on 2022-09-27
+
 ## \[2.0.2-alpha.29]
 
 - Fix sync options in recoverAccounts().
