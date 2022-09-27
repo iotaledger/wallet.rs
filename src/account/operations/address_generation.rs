@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "stronghold")]
+#[cfg(feature = "ledger_nano")]
 use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
@@ -85,12 +85,6 @@ impl AccountHandle {
         };
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
-
-        // If we use stronghold we need to read the snapshot in case it hasn't been done already
-        #[cfg(feature = "stronghold")]
-        if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *self.secret_manager.write().await {
-            stronghold_secret_manager.read_stronghold_snapshot().await?;
-        }
 
         let addresses = match *self.secret_manager.read().await {
             #[cfg(feature = "ledger_nano")]

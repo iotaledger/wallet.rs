@@ -206,11 +206,6 @@ pub(crate) async fn get_first_public_address(
     coin_type: u32,
     account_index: u32,
 ) -> crate::Result<Address> {
-    // If we use stronghold we need to read the snapshot in case it hasn't been done already
-    #[cfg(feature = "stronghold")]
-    if let SecretManager::Stronghold(stronghold_secret_manager) = &mut *secret_manager.write().await {
-        stronghold_secret_manager.read_stronghold_snapshot().await?;
-    }
     Ok(secret_manager
         .read()
         .await

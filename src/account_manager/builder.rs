@@ -5,7 +5,7 @@ use std::sync::{
     atomic::{AtomicU32, AtomicUsize},
     Arc,
 };
-#[cfg(any(feature = "storage", feature = "stronghold"))]
+#[cfg(feature = "storage")]
 use std::{path::PathBuf, sync::atomic::Ordering};
 
 use iota_client::secret::SecretManager;
