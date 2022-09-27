@@ -27,9 +27,14 @@ jobs:
         run: |
           git config --global user.name "${{ github.event.pusher.name }}"
           git config --global user.email "${{ github.event.pusher.email }}"
-      
-      - name: Install Dasel
-        run: brew install dasel
+      - name: Install Homebrew and Dasel
+        run: |
+          /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+          test -d ~/.linuxbrew && eval "$(~/.linuxbrew/bin/brew shellenv)"
+          test -d /home/linuxbrew/.linuxbrew && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+          test -r ~/.bash_profile && echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.bash_profile
+          echo "eval \"\$($(brew --prefix)/bin/brew shellenv)\"" >> ~/.profile
+          brew install dasel
 
       - name: covector version or publish (publish when no change files present)
         uses: jbolda/covector/packages/action@covector-v0
