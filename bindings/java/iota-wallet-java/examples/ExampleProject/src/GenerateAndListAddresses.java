@@ -5,8 +5,6 @@ import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.secret.MnemonicSecretManager;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class GenerateAndListAddresses {

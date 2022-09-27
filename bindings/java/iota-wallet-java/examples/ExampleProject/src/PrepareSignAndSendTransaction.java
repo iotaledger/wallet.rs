@@ -22,7 +22,7 @@ public class PrepareSignAndSendTransaction {
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Send a transaction with 1 RMS
-        Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[] {
+        Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[]{
                 new AddressWithAmount().withAmount("1000000").withAddress("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")
         }));
 

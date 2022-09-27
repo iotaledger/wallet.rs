@@ -7,7 +7,6 @@ import org.iota.types.CoinType;
 import org.iota.types.SyncOptions;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.secret.MnemonicSecretManager;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class RecoverAccounts {
@@ -34,6 +33,6 @@ public class RecoverAccounts {
         // Optional parameter to specify the sync options. The `address_start_index` and `force_syncing` fields will be overwritten to skip existing addresses.
         SyncOptions syncOptions = null;
 
-        wallet.recoverAccounts(accountStartIndex,accountGapLimit,addressGapLimit, syncOptions);
+        wallet.recoverAccounts(accountStartIndex, accountGapLimit, addressGapLimit, syncOptions);
     }
 }

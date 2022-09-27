@@ -13,7 +13,7 @@ public class ExampleUtils {
 
         int available = a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable();
 
-        while(available < 10000000) {
+        while (available < 1000000) {
             System.out.println("Please fund following address: " + a.getPublicAddresses()[0]);
             Thread.sleep(5000);
         }

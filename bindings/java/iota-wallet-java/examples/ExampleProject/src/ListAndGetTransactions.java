@@ -6,8 +6,6 @@ import org.iota.types.*;
 import org.iota.types.account_methods.GetTransaction;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.payload.TransactionPayload;
-import org.iota.types.secret.MnemonicSecretManager;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class ListAndGetTransactions {
@@ -28,7 +26,7 @@ public class ListAndGetTransactions {
         // Set up a transaction for this example.
         AccountAddress address = wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses()[0];
         a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
-                new AddressWithAmount[] { new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
+                new AddressWithAmount[]{new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
         ));
 
         // List transactions

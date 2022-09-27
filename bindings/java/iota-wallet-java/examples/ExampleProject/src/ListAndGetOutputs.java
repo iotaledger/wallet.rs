@@ -5,11 +5,7 @@ import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.GetOutput;
 import org.iota.types.account_methods.Outputs;
-import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.outputs.Output;
-import org.iota.types.secret.MnemonicSecretManager;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class ListAndGetOutputs {
@@ -31,7 +27,7 @@ public class ListAndGetOutputs {
         OutputData[] outputs = a.listOutputs(new Outputs());
 
         // Print outputs
-        for(OutputData o : outputs)
+        for (OutputData o : outputs)
             System.out.println(o);
 
         // Get a specific output by id

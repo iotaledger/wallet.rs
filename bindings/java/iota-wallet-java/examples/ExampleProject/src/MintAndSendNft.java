@@ -5,8 +5,6 @@ import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.MintNfts;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.secret.MnemonicSecretManager;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class MintAndSendNft {
@@ -29,7 +27,7 @@ public class MintAndSendNft {
         options.withMetadata("0x5368696d6d65722e20546f6b656e697a652045766572797468696e672e2048656c6c6f2066726f6d20746865204a6176612062696e64696e672e");
 
         // Mint the NFT
-        Transaction nftTransaction = a.mintNfts(new MintNfts().withNftsOptions(new NftOptions[]{ options }));
+        Transaction nftTransaction = a.mintNfts(new MintNfts().withNftsOptions(new NftOptions[]{options}));
 
         // Print NFT transaction
         System.out.println(nftTransaction);

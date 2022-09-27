@@ -24,7 +24,7 @@ public class ClaimOutputs {
 
         // Claim the given outputs
         Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{
-            new OutputId("0x2b7ce5910867474aa213a7562388b9fd68ad464168586bc175e7ee6d86151b590000")
+                new OutputId("0x2b7ce5910867474aa213a7562388b9fd68ad464168586bc175e7ee6d86151b590000")
         }));
 
         // Print the transaction
