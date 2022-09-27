@@ -77,7 +77,7 @@ async fn main() -> Result<()> {
                     let outputs = vec![
                         BasicOutputBuilder::new_with_amount(1_000_000)?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address_)))
-                            .finish_output()?;
+                            .finish_output(account_.client().get_token_supply()?)?;
                         // amount of outputs in the transaction (one additional output might be added for the remaining amount)
                         1
                     ];

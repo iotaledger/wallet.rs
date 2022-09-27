@@ -128,7 +128,8 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<MintTokenTransaction> {
         log::debug!("[TRANSACTION] mint_native_token");
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         let (alias_id, alias_output) = self
             .get_alias_output(native_token_options.alias_id)
@@ -151,7 +152,7 @@ impl AccountHandle {
             let token_id = TokenId::from(foundry_id);
 
             let outputs = vec![
-                new_alias_output_builder.finish_output()?,
+                new_alias_output_builder.finish_output(token_supply)?,
                 {
                     let mut foundry_builder = FoundryOutputBuilder::new_with_minimum_storage_deposit(
                         rent_structure.clone(),
@@ -171,7 +172,7 @@ impl AccountHandle {
                             .add_immutable_feature(Feature::Metadata(MetadataFeature::new(foundry_metadata)?))
                     }
 
-                    foundry_builder.finish_output()?
+                    foundry_builder.finish_output(token_supply)?
                 }, // Native Tokens will be added automatically in the remainder output in try_select_inputs()
             ];
             self.send(outputs, options)

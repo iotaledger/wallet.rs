@@ -78,6 +78,7 @@ impl AccountHandle {
     // governor address from the alias output.
     async fn output_id_and_basic_output_for_alias(&self, alias_id: AliasId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
 
         let (output_id, output_data) = account
             .unspent_outputs()
@@ -99,7 +100,7 @@ impl AccountHandle {
                     *alias_output.governor_address(),
                 )))
                 .with_native_tokens(alias_output.native_tokens().clone())
-                .finish()?,
+                .finish(token_supply)?,
         );
 
         Ok((*output_id, basic_output))

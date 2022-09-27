@@ -24,8 +24,8 @@ impl AccountHandle {
         let account_addresses = self.addresses().await?;
         let account = self.read().await;
 
-        let network_id = self.client.get_network_id().await?;
-        let rent_structure = self.client.get_rent_structure().await?;
+        let network_id = self.client.get_network_id()?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         let local_time = self.client.get_time_checked().await?;
 
@@ -217,8 +217,8 @@ impl AccountHandle {
 
             native_tokens_balance.push(NativeTokensBalance {
                 token_id: *native_token.token_id(),
-                total: *native_token.amount(),
-                available: *native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
+                total: native_token.amount(),
+                available: native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
             })
         }
 

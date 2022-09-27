@@ -369,8 +369,10 @@ async fn get_basic_outputs_for_nft_outputs(
     bech32_hrp: String,
 ) -> crate::Result<Vec<OutputId>> {
     let mut nft_basic_output_ids = Vec::new();
+    let token_supply = client.get_token_supply()?;
+
     for nft_output_response in nft_output_responses {
-        let output = Output::try_from(&nft_output_response.output)?;
+        let output = Output::try_from_dto(&nft_output_response.output, token_supply)?;
         if let Output::Nft(nft_output) = output {
             let transaction_id = TransactionId::from_str(&nft_output_response.metadata.transaction_id)?;
             let output_id = OutputId::new(transaction_id, nft_output_response.metadata.output_index)?;
@@ -394,8 +396,10 @@ async fn get_foundry_and_basic_outputs_for_alias_outputs(
 ) -> crate::Result<Vec<OutputId>> {
     let mut foundry_output_ids = Vec::new();
     let mut alias_basic_output_ids = Vec::new();
+    let token_supply = client.get_token_supply()?;
+
     for alias_output_response in alias_output_responses {
-        let output = Output::try_from(&alias_output_response.output)?;
+        let output = Output::try_from_dto(&alias_output_response.output, token_supply)?;
         if let Output::Alias(alias_output) = output {
             let transaction_id = TransactionId::from_str(&alias_output_response.metadata.transaction_id)?;
             let output_id = OutputId::new(transaction_id, alias_output_response.metadata.output_index)?;

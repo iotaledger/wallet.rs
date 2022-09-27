@@ -29,11 +29,12 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
-            output.verify_storage_deposit(&rent_structure)?;
+            output.verify_storage_deposit(rent_structure.clone(), token_supply)?;
         }
 
         // validate amounts
@@ -53,7 +54,7 @@ impl AccountHandle {
                         )));
                     }
                     let current_time = self.client.get_time_checked().await?;
-                    let bech32_hrp = self.client.get_bech32_hrp().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp()?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {
@@ -119,9 +120,7 @@ impl AccountHandle {
             )
             .await?;
 
-        let prepared_transaction_data = match self
-            .build_transaction_essence(selected_transaction_data.clone(), options)
-            .await
+        let prepared_transaction_data = match self.build_transaction_essence(selected_transaction_data.clone(), options)
         {
             Ok(res) => res,
             Err(err) => {

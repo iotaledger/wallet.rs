@@ -185,7 +185,7 @@ async fn shimmer_coin_type() -> Result<()> {
     assert_eq!(
         &account.addresses().await?[0].address().to_bech32(),
         // Address generated with bip32 path: [44, 4219, 0, 0, 0]
-        "rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm"
+        "smr1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat65xq7jz"
     );
 
     std::fs::remove_dir_all("test-storage/shimmer_coin_type").unwrap_or(());
@@ -218,7 +218,7 @@ async fn iota_coin_type() -> Result<()> {
     assert_eq!(
         &account.addresses().await?[0].address().to_bech32(),
         // Address generated with bip32 path: [44, 4218, 0, 0, 0]
-        "rms1qrpwecegav7eh0z363ca69laxej64rrt4e3u0rtycyuh0mam3vq3utrrg7c"
+        "smr1qrpwecegav7eh0z363ca69laxej64rrt4e3u0rtycyuh0mam3vq3ulygj9p"
     );
 
     std::fs::remove_dir_all("test-storage/iota_coin_type").unwrap_or(());

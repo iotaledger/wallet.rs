@@ -7,7 +7,7 @@ use iota_client::block::{
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
         },
-        BasicOutputBuilder, NativeToken, OutputAmount, Rent, RentStructure, TokenId,
+        BasicOutputBuilder, NativeToken, Output, Rent, RentStructure, TokenId,
     },
 };
 use primitive_types::U256;
@@ -23,14 +23,15 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
     address: &Address,
     return_address: &Address,
     native_tokens: Option<Vec<(TokenId, U256)>>,
+    token_supply: u64,
 ) -> Result<u64> {
     let address_condition = UnlockCondition::Address(AddressUnlockCondition::new(*address));
     // Safety: This can never fail because the amount will always be within the valid range. Also, the actual value is
     // not important, we are only interested in the storage requirements of the type.
-    let mut basic_output_builder = BasicOutputBuilder::new_with_amount(OutputAmount::MIN)?
+    let mut basic_output_builder = BasicOutputBuilder::new_with_amount(Output::AMOUNT_MIN)?
         .add_unlock_condition(address_condition)
         .add_unlock_condition(UnlockCondition::StorageDepositReturn(
-            StorageDepositReturnUnlockCondition::new(*return_address, OutputAmount::MIN)?,
+            StorageDepositReturnUnlockCondition::new(*return_address, Output::AMOUNT_MIN, token_supply)?,
         ))
         .add_unlock_condition(UnlockCondition::Expiration(ExpirationUnlockCondition::new(
             *return_address,
@@ -48,5 +49,7 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
         );
     }
 
-    Ok(basic_output_builder.finish_output()?.rent_cost(rent_structure))
+    Ok(basic_output_builder
+        .finish_output(token_supply)?
+        .rent_cost(rent_structure))
 }

@@ -86,6 +86,7 @@ impl AccountHandle {
         burn_token_amount: U256,
     ) -> crate::Result<StrippedOutputAggregate> {
         let account = self.read().await;
+        let token_supply = self.client.get_token_supply()?;
 
         let mut basic_and_nft_selection = Vec::new();
 
@@ -96,12 +97,12 @@ impl AccountHandle {
         for (output_id, output_data) in account.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Basic(_) | Output::Nft(_) => {
-                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data)? {
+                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data, token_supply)? {
                         basic_and_nft_selection.push(StrippedOutput::new(*output_id, amount, output));
                     }
                 }
                 Output::Alias(alias_output) => {
-                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data)? {
+                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data, token_supply)? {
                         alias_selection.insert(
                             alias_output.alias_id().or_from_output_id(*output_id),
                             StrippedOutput::new(*output_id, amount, output),
@@ -109,7 +110,7 @@ impl AccountHandle {
                     }
                 }
                 Output::Foundry(_) => {
-                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data)? {
+                    if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data, token_supply)? {
                         foundry_selection.push(StrippedOutput::new(*output_id, amount, output));
                     }
                 }
@@ -128,7 +129,7 @@ impl AccountHandle {
         let aggregate = {
             // Select unspent outputs with native tokens that sum up to the required amount to be burned
             let mut basic_and_nft_aggregate =
-                aggregate_stripped_outputs(token_id, burn_token_amount, basic_and_nft_selection)?;
+                aggregate_stripped_outputs(token_id, burn_token_amount, basic_and_nft_selection, token_supply)?;
 
             if basic_and_nft_aggregate.amount < burn_token_amount {
                 // Select more outputs from aliases and foundries if we don't have enough tokens to burn from basic and
@@ -189,6 +190,7 @@ impl AccountHandle {
         stripped_foundry_output: Vec<StrippedOutput>,
         stripped_alias_outputs: HashMap<AliasId, StrippedOutput>,
     ) -> crate::Result<StrippedOutputAggregate> {
+        let token_supply = self.client.get_token_supply()?;
         let mut stripped_foundry_outputs = stripped_foundry_output;
         let mut stripped_alias_outputs = stripped_alias_outputs;
         // Sort descending order based on token amount
@@ -235,7 +237,8 @@ impl AccountHandle {
                 Ordering::Greater => {
                     // Add remaining native tokens back to an output, so we don't burn more than we should
                     let native_token = NativeToken::new(token_id, aggregate.amount - burn_token_amount)?;
-                    let output = add_native_token_to_output(&stripped_foundry_output.output, native_token)?;
+                    let output =
+                        add_native_token_to_output(&stripped_foundry_output.output, native_token, token_supply)?;
                     aggregate.outputs.push(output);
                     break;
                 }
@@ -248,6 +251,7 @@ impl AccountHandle {
                 token_id,
                 aggregate.amount - burn_token_amount,
                 stripped_alias_outputs.into_values().collect(),
+                token_supply,
             )?;
             aggregate.amount = aggregate
                 .amount
@@ -266,6 +270,8 @@ impl AccountHandle {
         aggregate: &mut StrippedOutputAggregate,
         stripped_alias_outputs: &mut HashMap<AliasId, StrippedOutput>,
     ) -> crate::Result<bool> {
+        let token_supply = self.client.get_token_supply()?;
+
         match stripped_alias_outputs.remove(&alias_id) {
             Some(StrippedOutput {
                 output_id,
@@ -291,7 +297,7 @@ impl AccountHandle {
                                 let alias_output = AliasOutputBuilder::from(alias_output)
                                     .with_alias_id(alias_output.alias_id().or_from_output_id(*output_id))
                                     .with_state_index(alias_output.state_index() + 1)
-                                    .finish_output()?;
+                                    .finish_output(token_supply)?;
                                 aggregate.custom_inputs.push(*output_id);
                                 aggregate.outputs.push(alias_output);
 
@@ -310,7 +316,11 @@ impl AccountHandle {
 
 // If output has the to be burned native token, recreate the output with the native token removed and return the amount
 // for the native token together with the new output.
-fn strip_native_token_if_found(token_id: TokenId, output_data: &OutputData) -> crate::Result<Option<(U256, Output)>> {
+fn strip_native_token_if_found(
+    token_id: TokenId,
+    output_data: &OutputData,
+    token_supply: u64,
+) -> crate::Result<Option<(U256, Output)>> {
     if let Some(native_tokens) = output_data.output.native_tokens() {
         let mut native_token_amount = U256::from(0);
         let mut not_to_be_stripped_native_tokens = NativeTokensBuilder::new();
@@ -318,7 +328,7 @@ fn strip_native_token_if_found(token_id: TokenId, output_data: &OutputData) -> c
         for native_token in native_tokens.iter() {
             if *native_token.token_id() == token_id {
                 native_token_amount = native_token_amount
-                    .checked_add(*native_token.amount())
+                    .checked_add(native_token.amount())
                     .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
             } else {
                 not_to_be_stripped_native_tokens.add_native_token(native_token.clone())?;
@@ -330,6 +340,7 @@ fn strip_native_token_if_found(token_id: TokenId, output_data: &OutputData) -> c
             let output = create_output_and_replace_native_tokens(
                 output_data,
                 not_to_be_stripped_native_tokens.finish()?.into_iter(),
+                token_supply,
             )?;
             return Ok(Some((native_token_amount, output)));
         }
@@ -343,6 +354,7 @@ fn aggregate_stripped_outputs(
     token_id: TokenId,
     burn_token_amount: U256,
     stripped_output: Vec<StrippedOutput>,
+    token_supply: u64,
 ) -> crate::Result<StrippedOutputAggregate> {
     let mut stripped_outputs = stripped_output;
     // Sort descending order based on token amount
@@ -370,7 +382,7 @@ fn aggregate_stripped_outputs(
             Ordering::Greater => {
                 // Add remaining native tokens back to an output, so we don't burn more than we should
                 let native_token = NativeToken::new(token_id, aggregate.amount - burn_token_amount)?;
-                let output = add_native_token_to_output(&stripped_output.output, native_token)?;
+                let output = add_native_token_to_output(&stripped_output.output, native_token, token_supply)?;
                 aggregate.outputs.push(output);
                 break;
             }
@@ -383,35 +395,24 @@ fn aggregate_stripped_outputs(
 fn create_output_and_replace_native_tokens(
     output_data: &OutputData,
     native_tokens: impl IntoIterator<Item = NativeToken>,
+    token_supply: u64,
 ) -> crate::Result<Output> {
     let output = match &output_data.output {
-        Output::Alias(alias_output) => {
-            let alias_output = AliasOutputBuilder::from(alias_output)
-                .with_alias_id(alias_output.alias_id().or_from_output_id(output_data.output_id))
-                .with_state_index(alias_output.state_index() + 1)
-                .with_native_tokens(native_tokens)
-                .finish()?;
-            Output::Alias(alias_output)
-        }
-        Output::Basic(basic_output) => {
-            let output = BasicOutputBuilder::from(basic_output)
-                .with_native_tokens(native_tokens)
-                .finish()?;
-            Output::Basic(output)
-        }
-        Output::Foundry(foundry_output) => {
-            let output = FoundryOutputBuilder::from(foundry_output)
-                .with_native_tokens(native_tokens)
-                .finish()?;
-            Output::Foundry(output)
-        }
-        Output::Nft(nft_output) => {
-            let output = NftOutputBuilder::from(nft_output)
-                .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
-                .with_native_tokens(native_tokens)
-                .finish()?;
-            Output::Nft(output)
-        }
+        Output::Alias(alias_output) => AliasOutputBuilder::from(alias_output)
+            .with_alias_id(alias_output.alias_id().or_from_output_id(output_data.output_id))
+            .with_state_index(alias_output.state_index() + 1)
+            .with_native_tokens(native_tokens)
+            .finish_output(token_supply)?,
+        Output::Basic(basic_output) => BasicOutputBuilder::from(basic_output)
+            .with_native_tokens(native_tokens)
+            .finish_output(token_supply)?,
+        Output::Foundry(foundry_output) => FoundryOutputBuilder::from(foundry_output)
+            .with_native_tokens(native_tokens)
+            .finish_output(token_supply)?,
+        Output::Nft(nft_output) => NftOutputBuilder::from(nft_output)
+            .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+            .with_native_tokens(native_tokens)
+            .finish_output(token_supply)?,
         Output::Treasury(_) => {
             return Err(crate::Error::InvalidOutputKind(
                 "treasury output cannot hold native tokens".to_string(),
@@ -422,32 +423,20 @@ fn create_output_and_replace_native_tokens(
     Ok(output)
 }
 
-fn add_native_token_to_output(output: &Output, native_token: NativeToken) -> crate::Result<Output> {
+fn add_native_token_to_output(output: &Output, native_token: NativeToken, token_supply: u64) -> crate::Result<Output> {
     let output = match &output {
-        Output::Alias(alias_output) => {
-            let alias_output = AliasOutputBuilder::from(alias_output)
-                .add_native_token(native_token)
-                .finish()?;
-            Output::Alias(alias_output)
-        }
-        Output::Basic(basic_output) => {
-            let output = BasicOutputBuilder::from(basic_output)
-                .add_native_token(native_token)
-                .finish()?;
-            Output::Basic(output)
-        }
-        Output::Foundry(foundry_output) => {
-            let output = FoundryOutputBuilder::from(foundry_output)
-                .add_native_token(native_token)
-                .finish()?;
-            Output::Foundry(output)
-        }
-        Output::Nft(nft_output) => {
-            let output = NftOutputBuilder::from(nft_output)
-                .add_native_token(native_token)
-                .finish()?;
-            Output::Nft(output)
-        }
+        Output::Alias(alias_output) => AliasOutputBuilder::from(alias_output)
+            .add_native_token(native_token)
+            .finish_output(token_supply)?,
+        Output::Basic(basic_output) => BasicOutputBuilder::from(basic_output)
+            .add_native_token(native_token)
+            .finish_output(token_supply)?,
+        Output::Foundry(foundry_output) => FoundryOutputBuilder::from(foundry_output)
+            .add_native_token(native_token)
+            .finish_output(token_supply)?,
+        Output::Nft(nft_output) => NftOutputBuilder::from(nft_output)
+            .add_native_token(native_token)
+            .finish_output(token_supply)?,
         Output::Treasury(_) => {
             return Err(crate::Error::InvalidOutputKind(
                 "treasury output cannot hold native tokens".to_string(),

@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         *a.address().as_ref(),
                     )))
-                    .finish_output()
+                    .finish_output(account.client().get_token_supply().unwrap())
                     .unwrap()
             })
             .collect();

@@ -8,7 +8,7 @@ from iota_wallet import IotaWallet, MnemonicSecretManager
 def test_address_generation_iota():
 
     client_options = {
-        'offline': True,
+        'nodes': [],
     }
 
     # IOTA coin type
@@ -26,14 +26,14 @@ def test_address_generation_iota():
 
     addresses = account.addresses()
 
-    assert 'rms1qpg2xkj66wwgn8p2ggnp7p582gj8g6p79us5hve2tsudzpsr2ap4s4k35lq' == addresses[
+    assert 'smr1qpg2xkj66wwgn8p2ggnp7p582gj8g6p79us5hve2tsudzpsr2ap4sp36wye' == addresses[
         0]['address']
 
 
 def test_address_generation_shimmer():
 
     client_options = {
-        'offline': True,
+        'nodes': [],
     }
 
     # Shimmer coin type
@@ -51,5 +51,5 @@ def test_address_generation_shimmer():
 
     addresses = account.addresses()
 
-    assert 'rms1qzev36lk0gzld0k28fd2fauz26qqzh4hd4cwymlqlv96x7phjxcw6v3ea5a' == addresses[
+    assert 'smr1qzev36lk0gzld0k28fd2fauz26qqzh4hd4cwymlqlv96x7phjxcw6ckj80y' == addresses[
         0]['address']

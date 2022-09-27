@@ -109,7 +109,8 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_create_alias_output");
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
 
         let controller_address = match alias_output_options
             .as_ref()
@@ -150,7 +151,7 @@ impl AccountHandle {
             }
         }
 
-        let outputs = vec![alias_output_builder.finish_output()?];
+        let outputs = vec![alias_output_builder.finish_output(token_supply)?];
 
         self.prepare_transaction(outputs, options).await
     }

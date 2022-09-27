@@ -61,7 +61,7 @@ async fn main() -> Result<()> {
             )))
             .add_feature(Feature::Sender(SenderFeature::new(*sender_address.as_ref())))
             .add_immutable_feature(Feature::Issuer(IssuerFeature::new(*sender_address.as_ref())))
-            .finish_output()?,
+            .finish_output(account.client().get_token_supply()?)?,
     ];
 
     let transaction = account.send(outputs, None).await?;

@@ -32,6 +32,7 @@ impl AccountHandle {
         transaction_options: Option<TransactionOptions>,
     ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_output {options:?}");
+        let token_supply = self.client.get_token_supply()?;
 
         if let Some(assets) = &options.assets {
             if let Some(nft_id) = assets.nft_id {
@@ -40,7 +41,7 @@ impl AccountHandle {
                     .await;
             }
         }
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         // We start building with minimum storage deposit, so we know the minimum required amount and can later replace
         // it, if needed
@@ -81,7 +82,7 @@ impl AccountHandle {
             }
         }
 
-        let first_output = first_output_builder.finish()?;
+        let first_output = first_output_builder.finish(token_supply)?;
 
         let mut second_output_builder = BasicOutputBuilder::from(&first_output);
 
@@ -105,7 +106,7 @@ impl AccountHandle {
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
                             )))
-                            .finish_output()?
+                            .finish_output(token_supply)?
                             .amount();
 
                     second_output_builder = second_output_builder.add_unlock_condition(
@@ -114,6 +115,7 @@ impl AccountHandle {
                             // Return minimum storage deposit + any additional required storage deposit from features
                             // or unlock conditions
                             min_storage_deposit_return_amount,
+                            token_supply,
                         )?),
                     );
                 }
@@ -131,7 +133,7 @@ impl AccountHandle {
                                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                     Address::try_from_bech32(options.recipient_address)?.1,
                                 )))
-                                .finish_output()?
+                                .finish_output(token_supply)?
                                 .amount();
 
                         if balance_minus_output < minimum_required_storage_deposit {
@@ -143,7 +145,7 @@ impl AccountHandle {
             }
         }
 
-        let second_output = second_output_builder.finish()?;
+        let second_output = second_output_builder.finish(token_supply)?;
 
         let required_storage_deposit = Output::Basic(second_output.clone()).rent_cost(&rent_structure);
 
@@ -164,14 +166,14 @@ impl AccountHandle {
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
-                    StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount)?,
+                    StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount, token_supply)?,
                 );
                 third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition)?;
             }
         }
 
         // Build and return the final output
-        Ok(third_output_builder.finish_output()?)
+        Ok(third_output_builder.finish_output(token_supply)?)
     }
 
     /// Prepare an nft output
@@ -183,6 +185,7 @@ impl AccountHandle {
     ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_nft_output {options:?}");
 
+        let token_supply = self.client.get_token_supply()?;
         let unspent_outputs = self.unspent_outputs(None).await?;
 
         // Find nft output from the inputs
@@ -209,7 +212,7 @@ impl AccountHandle {
 
         // from here basically the same as in `prepare_output()`, just with Nft outputs
 
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
 
         if let Some(assets) = options.assets {
             if let Some(native_tokens) = assets.native_tokens {
@@ -243,7 +246,7 @@ impl AccountHandle {
             }
         }
 
-        let first_output = first_output_builder.finish()?;
+        let first_output = first_output_builder.finish(token_supply)?;
 
         let mut second_output_builder = NftOutputBuilder::from(&first_output);
 
@@ -267,7 +270,7 @@ impl AccountHandle {
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
                             )))
-                            .finish_output()?
+                            .finish_output(token_supply)?
                             .amount();
 
                     second_output_builder = second_output_builder.add_unlock_condition(
@@ -276,6 +279,7 @@ impl AccountHandle {
                             // Return minimum storage deposit + any additional required storage deposit from features
                             // or unlock conditions
                             min_storage_deposit_return_amount,
+                            token_supply,
                         )?),
                     );
                 }
@@ -293,7 +297,7 @@ impl AccountHandle {
                                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                     Address::try_from_bech32(options.recipient_address)?.1,
                                 )))
-                                .finish_output()?
+                                .finish_output(token_supply)?
                                 .amount();
 
                         if balance_minus_output < minimum_required_storage_deposit {
@@ -305,7 +309,7 @@ impl AccountHandle {
             }
         }
 
-        let second_output = second_output_builder.finish()?;
+        let second_output = second_output_builder.finish(token_supply)?;
 
         let required_storage_deposit = Output::Nft(second_output.clone()).rent_cost(&rent_structure);
 
@@ -324,14 +328,14 @@ impl AccountHandle {
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
-                    StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount)?,
+                    StorageDepositReturnUnlockCondition::new(*sdr.return_address(), new_sdr_amount, token_supply)?,
                 );
                 third_output_builder = third_output_builder.replace_unlock_condition(new_sdr_unlock_condition)?;
             }
         }
 
         // Build and return the final output
-        Ok(third_output_builder.finish_output()?)
+        Ok(third_output_builder.finish_output(token_supply)?)
     }
 
     // Get a remainder address based on transaction_options or use the first account address

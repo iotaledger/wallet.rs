@@ -106,7 +106,8 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_mint_nfts");
-        let rent_structure = self.client.get_rent_structure().await?;
+        let rent_structure = self.client.get_rent_structure()?;
+        let token_supply = self.client.get_token_supply()?;
         let account_addresses = self.addresses().await?;
         let mut outputs = Vec::new();
 
@@ -135,7 +136,7 @@ impl AccountHandle {
             if let Some(metadata) = nft_options.metadata {
                 nft_builder = nft_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
             };
-            outputs.push(nft_builder.finish_output()?);
+            outputs.push(nft_builder.finish_output(token_supply)?);
         }
 
         self.prepare_transaction(outputs, options).await

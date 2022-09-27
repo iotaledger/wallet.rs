@@ -54,7 +54,7 @@ async fn main() -> Result<()> {
     );
 
     // Send native tokens together with the required storage deposit
-    let rent_structure = account.client().get_rent_structure().await?;
+    let rent_structure = account.client().get_rent_structure()?;
 
     let outputs = vec![
         BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure)?
@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
                 Address::try_from_bech32(bech32_address)?.1,
             )))
             .with_native_tokens(vec![NativeToken::new(token_id, U256::from(10))?])
-            .finish_output()?,
+            .finish_output(account.client().get_token_supply()?)?,
     ];
 
     let transaction = account.send(outputs, None).await?;
