@@ -1,10 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, SecretManage},
+    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
 use serde::{Deserialize, Serialize};
 
