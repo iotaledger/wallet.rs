@@ -7,7 +7,9 @@ from iota_wallet import IotaWallet, MnemonicSecretManager
 
 def test_address_generation_iota():
 
-    client_options = None
+    client_options = {
+        'nodes': [],
+    }
 
     # IOTA coin type
     coin_type = 4218
@@ -30,7 +32,9 @@ def test_address_generation_iota():
 
 def test_address_generation_shimmer():
 
-    client_options = None
+    client_options = {
+        'nodes': [],
+    }
 
     # Shimmer coin type
     coin_type = 4219
