@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - develop
+      - nodejsfix
 
 jobs:
   version-or-publish:
