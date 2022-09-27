@@ -176,7 +176,7 @@ impl AccountHandle {
                     nft_builder.add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
             }
 
-            outputs.push(nft_builder.finish_output()?);
+            outputs.push(nft_builder.finish_output(token_supply)?);
         }
 
         self.prepare_transaction(outputs, options).await

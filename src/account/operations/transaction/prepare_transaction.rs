@@ -120,8 +120,7 @@ impl AccountHandle {
             )
             .await?;
 
-        let prepared_transaction_data = match self
-            .build_transaction_essence(selected_transaction_data.clone(), options)
+        let prepared_transaction_data = match self.build_transaction_essence(selected_transaction_data.clone(), options)
         {
             Ok(res) => res,
             Err(err) => {
