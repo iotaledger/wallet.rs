@@ -45,7 +45,6 @@ export interface ClientOptions {
     nodes?: Array<string | Node>;
     nodeSyncEnabled?: boolean;
     nodeSyncInterval?: number;
-    offline?: boolean;
     permanodes?: Array<string | Node>;
     port?: number;
     powWorkerCount?: number;

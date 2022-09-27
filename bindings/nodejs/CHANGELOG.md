@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.2-alpha.29]
+
+- Fix sync options in recoverAccounts().
+  - [8a382b45](https://github.com/iotaledger/wallet.rs/commit/8a382b45d3a2bea92ab1cdf17eaa06e6a5cbffc4) Fix sync options in recoverAccounts() on 2022-09-27
+
 ## \[2.0.2-alpha.28]
 
 - Add createAliasOutput().

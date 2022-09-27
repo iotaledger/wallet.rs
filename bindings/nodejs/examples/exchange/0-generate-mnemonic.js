@@ -8,9 +8,7 @@ async function run() {
     try {
         const manager = new AccountManager({
             storagePath: './mnemonic-generation',
-            clientOptions: {
-                offline: true
-            },
+            clientOptions: {},
             coinType: CoinType.Shimmer,
             // Placeholder can't be used for address generation or signing, but we can use it since we only want to generate a mnemonic
             secretManager: "Placeholder",

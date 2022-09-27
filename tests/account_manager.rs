@@ -92,12 +92,14 @@ async fn different_seed() -> Result<()> {
         .await?;
 
     // Generating a new account needs to return an error, because the seed from the secret_manager is different
-    assert!(manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
 
     std::fs::remove_dir_all("test-storage/different_seed").unwrap_or(());
     Ok(())
@@ -144,12 +146,14 @@ async fn changed_coin_type() -> Result<()> {
 
     // Generating a new account needs to return an error, because a different coin type was set and we require all
     // accounts to have the same coin type
-    assert!(manager
-        .create_account()
-        .with_alias("Bob".to_string())
-        .finish()
-        .await
-        .is_err());
+    assert!(
+        manager
+            .create_account()
+            .with_alias("Bob".to_string())
+            .finish()
+            .await
+            .is_err()
+    );
 
     std::fs::remove_dir_all("test-storage/changed_coin_type").unwrap_or(());
     Ok(())
