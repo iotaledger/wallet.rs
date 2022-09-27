@@ -11,7 +11,7 @@ async function run() {
             clientOptions: {},
             coinType: CoinType.Shimmer,
             // Placeholder can't be used for address generation or signing, but we can use it since we only want to generate a mnemonic
-            secretManager: "Placeholder",
+            secretManager: "placeholder",
         });
 
         console.log('Generated mnemonic:', await manager.generateMnemonic());

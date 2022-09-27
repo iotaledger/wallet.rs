@@ -3,18 +3,22 @@
  */
 
 require('dotenv').config({ path: '../.env' });
-const { AccountManager } = require('@iota/wallet');
+const { AccountManager, CoinType } = require('@iota/wallet');
 async function run() {
     try {
-        const manager = new AccountManager({
-            storagePath: './alice-database',
+        const accountManagerOptions = {
+            storagePath: './restore-database',
             clientOptions: {
                 nodes: ['https://api.testnet.shimmer.network'],
+                localPow: true,
             },
+            coinType: CoinType.Shimmer,
             secretManager: {
-                Stronghold: {},
+                stronghold: { snapshotPath: 'restore.stronghold'},
             },
-        });
+        };
+
+        const manager = new AccountManager(accountManagerOptions);
 
         // Add the path to the file from example 5-backup.js
         // for example: ./backup/2021-02-12T01-23-11-iota-wallet-backup-wallet.stronghold
@@ -22,7 +26,7 @@ async function run() {
 
         await manager.restoreBackup(path, process.env.SH_PASSWORD);
         const account = await manager.getAccount('Alice');
-        console.log('Account:', account.getAlias());
+        console.log('Account:', account.getMetadata().alias);
     } catch (error) {
         console.log('Error: ', error);
     }

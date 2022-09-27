@@ -26,27 +26,27 @@ import type {
 } from '../transactionOptions';
 
 export type __BuildAliasOutputMethod__ = {
-    name: 'BuildAliasOutput';
+    name: 'buildAliasOutput';
     data: BuildAliasOutputData;
 };
 
 export type __BuildBasicOutputMethod__ = {
-    name: 'BuildBasicOutput';
+    name: 'buildBasicOutput';
     data: BuildBasicOutputData;
 };
 
 export type __BuildFoundryOutputMethod__ = {
-    name: 'BuildFoundryOutput';
+    name: 'buildFoundryOutput';
     data: BuildFoundryOutputData;
 };
 
 export type __BuildNftOutputMethod__ = {
-    name: 'BuildNftOutput';
+    name: 'buildNftOutput';
     data: BuildNftOutputData;
 };
 
 export type __BurnNativeTokenMethod__ = {
-    name: 'BurnNativeToken';
+    name: 'burnNativeToken';
     data: {
         tokenId: string;
         burnAmount: HexEncodedAmount;
@@ -55,7 +55,7 @@ export type __BurnNativeTokenMethod__ = {
 };
 
 export type __BurnNftMethod__ = {
-    name: 'BurnNft';
+    name: 'burnNft';
     data: {
         nftId: string;
         options?: TransactionOptions;
@@ -63,14 +63,14 @@ export type __BurnNftMethod__ = {
 };
 
 export type __ClaimOutputsMethod__ = {
-    name: 'ClaimOutputs';
+    name: 'claimOutputs';
     data: {
         outputIdsToClaim: string[];
     };
 };
 
 export type __ConsolidateOutputsMethod__ = {
-    name: 'ConsolidateOutputs';
+    name: 'consolidateOutputs';
     data: {
         force: boolean;
         outputConsolidationThreshold?: number;
@@ -78,7 +78,7 @@ export type __ConsolidateOutputsMethod__ = {
 };
 
 export type __CreateAliasOutputMethod__ = {
-    name: 'CreateAliasOutput';
+    name: 'createAliasOutput';
     data: {
         aliasOutputOptions?: AliasOutputOptions;
         options?: TransactionOptions;
@@ -86,7 +86,7 @@ export type __CreateAliasOutputMethod__ = {
 };
 
 export type __DecreaseNativeTokenSupplyMethod__ = {
-    name: 'DecreaseNativeTokenSupply';
+    name: 'decreaseNativeTokenSupply';
     data: {
         tokenId: string;
         meltAmount: HexEncodedAmount;
@@ -95,7 +95,7 @@ export type __DecreaseNativeTokenSupplyMethod__ = {
 };
 
 export type __DestroyAliasMethod__ = {
-    name: 'DestroyAlias';
+    name: 'destroyAlias';
     data: {
         aliasId: string;
         options?: TransactionOptions;
@@ -103,7 +103,7 @@ export type __DestroyAliasMethod__ = {
 };
 
 export type __DestroyFoundryMethod__ = {
-    name: 'DestroyFoundry';
+    name: 'destroyFoundry';
     data: {
         foundryId: string;
         options?: TransactionOptions;
@@ -111,7 +111,7 @@ export type __DestroyFoundryMethod__ = {
 };
 
 export type __GenerateAddressesMethod__ = {
-    name: 'GenerateAddresses';
+    name: 'generateAddresses';
     data: {
         amount: number;
         options?: AddressGenerationOptions;
@@ -119,80 +119,80 @@ export type __GenerateAddressesMethod__ = {
 };
 
 export type __GetBalanceMethod__ = {
-    name: 'GetBalance';
+    name: 'getBalance';
 };
 
 export type __GetOutputMethod__ = {
-    name: 'GetOutput';
+    name: 'getOutput';
     data: {
         outputId: string;
     };
 };
 
 export type __GetFoundryOutputMethod__ = {
-    name: 'GetFoundryOutput';
+    name: 'getFoundryOutput';
     data: {
         tokenId: string;
     };
 };
 
 export type __GetOutputsWithAdditionalUnlockConditionsMethod__ = {
-    name: 'GetOutputsWithAdditionalUnlockConditions';
+    name: 'getOutputsWithAdditionalUnlockConditions';
     data: {
         outputsToClaim: OutputsToClaim;
     };
 };
 
 export type __GetTransactionMethod__ = {
-    name: 'GetTransaction';
+    name: 'getTransaction';
     data: {
         transactionId: string;
     };
 };
 
 export type __AddressesMethod__ = {
-    name: 'Addresses';
+    name: 'addresses';
 };
 
 export type __AddressesWithUnspentOutputsMethod__ = {
-    name: 'AddressesWithUnspentOutputs';
+    name: 'addressesWithUnspentOutputs';
 };
 
 export type __OutputsMethod__ = {
-    name: 'Outputs';
+    name: 'outputs';
     data: {
         filterOptions?: FilterOptions;
     };
 };
 
 export type __PendingTransactionsMethod__ = {
-    name: 'PendingTransactions';
+    name: 'pendingTransactions';
 };
 
 export type __IncomingTransactionsMethod__ = {
-    name: 'IncomingTransactions';
+    name: 'incomingTransactions';
 };
 
 export type __TransactionsMethod__ = {
-    name: 'Transactions';
+    name: 'transactions';
 };
 
 export type __UnspentOutputsMethod__ = {
-    name: 'UnspentOutputs';
+    name: 'unspentOutputs';
     data: {
         filterOptions?: FilterOptions;
     };
 };
 
 export type __MinimumRequiredStorageDepositMethod__ = {
-    name: 'MinimumRequiredStorageDeposit';
+    name: 'minimumRequiredStorageDeposit';
     data: {
         output: OutputTypes;
     };
 };
 
 export type __IncreaseNativeTokenSupplyMethod__ = {
-    name: 'IncreaseNativeTokenSupply';
+    name: 'increaseNativeTokenSupply';
     data: {
         tokenId: string;
         mintAmount: HexEncodedAmount;
@@ -202,7 +202,7 @@ export type __IncreaseNativeTokenSupplyMethod__ = {
 };
 
 export type __MintNativeTokenMethod__ = {
-    name: 'MintNativeToken';
+    name: 'mintNativeToken';
     data: {
         nativeTokenOptions: NativeTokenOptions;
         options?: TransactionOptions;
@@ -210,7 +210,7 @@ export type __MintNativeTokenMethod__ = {
 };
 
 export type __MintNftsMethod__ = {
-    name: 'MintNfts';
+    name: 'mintNfts';
     data: {
         nftsOptions: NftOptions[];
         options?: TransactionOptions;
@@ -218,7 +218,7 @@ export type __MintNftsMethod__ = {
 };
 
 export type __PrepareOutputMethod__ = {
-    name: 'PrepareOutput';
+    name: 'prepareOutput';
     data: {
         options: OutputOptions;
         transactionOptions?: TransactionOptions;
@@ -226,7 +226,7 @@ export type __PrepareOutputMethod__ = {
 };
 
 export type __PrepareSendAmountMethod__ = {
-    name: 'PrepareSendAmount';
+    name: 'prepareSendAmount';
     data: {
         addressesWithAmount: AddressWithAmount[];
         options?: TransactionOptions;
@@ -234,7 +234,7 @@ export type __PrepareSendAmountMethod__ = {
 };
 
 export type __PrepareTransactionMethod__ = {
-    name: 'PrepareTransaction';
+    name: 'prepareTransaction';
     data: {
         outputs: OutputTypes[];
         options?: TransactionOptions;
@@ -242,7 +242,7 @@ export type __PrepareTransactionMethod__ = {
 };
 
 export type __SendAmountMethod__ = {
-    name: 'SendAmount';
+    name: 'sendAmount';
     data: {
         addressesWithAmount: AddressWithAmount[];
         options?: TransactionOptions;
@@ -250,7 +250,7 @@ export type __SendAmountMethod__ = {
 };
 
 export type __SendMicroTransactionMethod__ = {
-    name: 'SendMicroTransaction';
+    name: 'sendMicroTransaction';
     data: {
         addressesWithMicroAmount: AddressWithMicroAmount[];
         options?: TransactionOptions;
@@ -258,7 +258,7 @@ export type __SendMicroTransactionMethod__ = {
 };
 
 export type __SendNativeTokensMethod__ = {
-    name: 'SendNativeTokens';
+    name: 'sendNativeTokens';
     data: {
         addressesNativeTokens: AddressNativeTokens[];
         options?: TransactionOptions;
@@ -266,7 +266,7 @@ export type __SendNativeTokensMethod__ = {
 };
 
 export type __SendNftMethod__ = {
-    name: 'SendNft';
+    name: 'sendNft';
     data: {
         addressesAndNftIds: AddressNftId[];
         options?: TransactionOptions;
@@ -274,7 +274,7 @@ export type __SendNftMethod__ = {
 };
 
 export type __SendOutputsMethod__ = {
-    name: 'SendOutputs';
+    name: 'sendOutputs';
     data: {
         outputs: OutputTypes[];
         options?: TransactionOptions;
@@ -282,28 +282,28 @@ export type __SendOutputsMethod__ = {
 };
 
 export type __SetAliasMethod__ = {
-    name: 'SetAlias';
+    name: 'setAlias';
     data: {
         alias: string;
     };
 };
 
 export type __SignTransactionEssenceMethod__ = {
-    name: 'SignTransactionEssence';
+    name: 'signTransactionEssence';
     data: {
         preparedTransactionData: PreparedTransactionData;
     };
 };
 
 export type __SubmitAndStoreTransactionMethod__ = {
-    name: 'SubmitAndStoreTransaction';
+    name: 'submitAndStoreTransaction';
     data: {
         signedTransactionData: SignedTransactionEssence;
     };
 };
 
 export type __SyncAccountMethod__ = {
-    name: 'SyncAccount';
+    name: 'syncAccount';
     data: {
         options?: AccountSyncOptions;
     };

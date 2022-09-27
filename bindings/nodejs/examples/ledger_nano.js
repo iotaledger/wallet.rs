@@ -21,7 +21,7 @@ async function run() {
             },
             coinType: CoinType.Shimmer,
             secretManager: {
-                LedgerNano: true,
+                ledgerNano: true,
             },
         });
 
