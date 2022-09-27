@@ -27,7 +27,7 @@ async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
-    let offline_client = ClientOptions::new().with_offline_mode();
+    let offline_client = ClientOptions::new();
 
     // Setup Stronghold secret_manager
     let mut secret_manager = StrongholdSecretManager::builder()

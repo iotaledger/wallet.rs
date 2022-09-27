@@ -328,7 +328,7 @@ fn strip_native_token_if_found(
         for native_token in native_tokens.iter() {
             if *native_token.token_id() == token_id {
                 native_token_amount = native_token_amount
-                    .checked_add(*native_token.amount())
+                    .checked_add(native_token.amount())
                     .ok_or_else(|| crate::Error::BurningOrMeltingFailed(NATIVE_TOKEN_OVERFLOW.to_string()))?;
             } else {
                 not_to_be_stripped_native_tokens.add_native_token(native_token.clone())?;

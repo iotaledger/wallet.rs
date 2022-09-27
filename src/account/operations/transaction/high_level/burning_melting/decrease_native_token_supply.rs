@@ -44,9 +44,9 @@ impl AccountHandle {
                 alias_output,
                 FoundryOutputBuilder::from(&existing_foundry_output)
                     .with_token_scheme(TokenScheme::Simple(SimpleTokenScheme::new(
-                        *token_scheme.minted_tokens(),
+                        token_scheme.minted_tokens(),
                         token_scheme.melted_tokens() + melt_amount,
-                        *token_scheme.maximum_supply(),
+                        token_scheme.maximum_supply(),
                     )?))
                     .finish_output(token_supply)?,
             ];

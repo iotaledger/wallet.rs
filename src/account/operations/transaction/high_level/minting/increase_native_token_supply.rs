@@ -118,8 +118,8 @@ impl AccountHandle {
 
         let updated_token_scheme = TokenScheme::Simple(SimpleTokenScheme::new(
             token_scheme.minted_tokens() + mint_amount,
-            *token_scheme.melted_tokens(),
-            *token_scheme.maximum_supply(),
+            token_scheme.melted_tokens(),
+            token_scheme.maximum_supply(),
         )?);
 
         let new_foundry_output_builder =

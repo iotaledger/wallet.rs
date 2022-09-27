@@ -217,8 +217,8 @@ impl AccountHandle {
 
             native_tokens_balance.push(NativeTokensBalance {
                 token_id: *native_token.token_id(),
-                total: *native_token.amount(),
-                available: *native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
+                total: native_token.amount(),
+                available: native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
             })
         }
 
