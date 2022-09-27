@@ -1,10 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use serde::ser::{SerializeStruct, Serializer};
+use std::fmt::{Debug, Display};
+
+use serde::{ser::Serializer, Serialize};
 
 /// The wallet error type.
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, thiserror::Error, Serialize)]
+#[serde(tag = "type", content = "error", rename_all = "camelCase")]
 pub enum Error {
     /// Account alias must be unique.
     #[error("can't create account: account alias {0} already exists")]
@@ -20,9 +23,11 @@ pub enum Error {
     BackupError(&'static str),
     /// Error from block crate.
     #[error("{0}")]
-    Block(iota_client::block::Error),
+    #[serde(serialize_with = "display_string")]
+    Block(#[from] iota_client::block::Error),
     /// Block dtos error
     #[error("{0}")]
+    #[serde(serialize_with = "display_string")]
     BlockDtoError(#[from] iota_client::block::DtoError),
     /// Burning or melting failed
     #[error("burning or melting failed: {0}")]
@@ -35,6 +40,7 @@ pub enum Error {
     ConsolidationRequired(usize, u16),
     /// Crypto.rs error
     #[error("{0}")]
+    #[serde(serialize_with = "display_string")]
     CryptoError(#[from] crypto::Error),
     /// Custom input error
     #[error("custom input error {0}")]
@@ -56,9 +62,15 @@ pub enum Error {
     InvalidOutputKind(String),
     /// IO error. (storage, backup, restore)
     #[error("`{0}`")]
+    #[serde(serialize_with = "display_string")]
     IoError(#[from] std::io::Error),
+    /// IOTA client error.
+    #[error("`{0}`")]
+    #[serde(serialize_with = "display_string")]
+    IotaClientError(#[from] iota_client::Error),
     /// serde_json error.
     #[error("`{0}`")]
+    #[serde(serialize_with = "display_string")]
     JsonError(#[from] serde_json::error::Error),
     /// Minting failed
     #[error("minting failed {0}")]
@@ -92,64 +104,15 @@ pub enum Error {
     StorageIsEncrypted,
     /// Tokio task join error
     #[error("{0}")]
+    #[serde(serialize_with = "display_string")]
     TaskJoinError(#[from] tokio::task::JoinError),
 }
 
-impl From<iota_client::block::Error> for Error {
-    fn from(error: iota_client::block::Error) -> Self {
-        Self::Block(error)
-    }
-}
-
-impl From<iota_client::Error> for Error {
-    fn from(error: iota_client::Error) -> Self {
-        Self::ClientError(Box::new(error))
-    }
-}
-
-impl serde::Serialize for Error {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        fn serialize_variant<S: Serializer>(
-            error: &Error,
-            serializer: S,
-            variant_name: &str,
-        ) -> std::result::Result<S::Ok, S::Error> {
-            let mut state = serializer.serialize_struct("Error", 2)?;
-            state.serialize_field("type", variant_name)?;
-            state.serialize_field("error", &error.to_string())?;
-            state.end()
-        }
-
-        match self {
-            Self::AccountAliasAlreadyExists(_) => serialize_variant(self, serializer, "AccountAliasAlreadyExists"),
-            Self::AccountNotFound(_) => serialize_variant(self, serializer, "AccountNotFound"),
-            Self::AddressNotFoundInAccount(_) => serialize_variant(self, serializer, "AddressNotFoundInAccount"),
-            Self::BackupError(_) => serialize_variant(self, serializer, "BackupError"),
-            Self::Block(_) => serialize_variant(self, serializer, "Block"),
-            Self::BlockDtoError(_) => serialize_variant(self, serializer, "BlockDtoError"),
-            Self::BurningOrMeltingFailed(_) => serialize_variant(self, serializer, "BurningOrMeltingFailed"),
-            Self::ClientError(_) => serialize_variant(self, serializer, "ClientError"),
-            Self::ConsolidationRequired(..) => serialize_variant(self, serializer, "ConsolidationRequired"),
-            Self::CryptoError(..) => serialize_variant(self, serializer, "CryptoError"),
-            Self::CustomInputError(_) => serialize_variant(self, serializer, "CustomInputError"),
-            Self::FailedToGetRemainder => serialize_variant(self, serializer, "FailedToGetRemainder"),
-            Self::InsufficientFunds(..) => serialize_variant(self, serializer, "InsufficientFunds"),
-            Self::InvalidCoinType(..) => serialize_variant(self, serializer, "InvalidCoinType"),
-            Self::InvalidMnemonic(_) => serialize_variant(self, serializer, "InvalidMnemonic"),
-            Self::InvalidOutputKind(_) => serialize_variant(self, serializer, "InvalidOutputKind"),
-            Self::IoError(_) => serialize_variant(self, serializer, "IoError"),
-            Self::JsonError(_) => serialize_variant(self, serializer, "JsonError"),
-            Self::MintingFailed(_) => serialize_variant(self, serializer, "MintingFailed"),
-            Self::MissingParameter(_) => serialize_variant(self, serializer, "MissingParameter"),
-            Self::NftNotFoundInUnspentOutputs => serialize_variant(self, serializer, "NftNotFoundInUnspentOutputs"),
-            Self::NoOutputsToConsolidate { .. } => serialize_variant(self, serializer, "NoOutputsToConsolidate"),
-            Self::RecordNotFound(_) => serialize_variant(self, serializer, "RecordNotFound"),
-            Self::Storage(_) => serialize_variant(self, serializer, "Storage"),
-            Self::StorageIsEncrypted => serialize_variant(self, serializer, "StorageIsEncrypted"),
-            Self::TaskJoinError(_) => serialize_variant(self, serializer, "TaskJoinError"),
-        }
-    }
+/// Use this to serialize Error variants that implements Debug but not Serialize
+fn display_string<T, S>(value: &T, serializer: S) -> std::result::Result<S::Ok, S::Error>
+where
+    T: Display,
+    S: Serializer,
+{
+    value.to_string().serialize(serializer)
 }
