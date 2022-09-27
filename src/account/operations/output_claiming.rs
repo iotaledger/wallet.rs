@@ -271,6 +271,11 @@ impl AccountHandle {
 
             // add more inputs
             for output_data in &possible_additional_inputs {
+                let option_native_token = if new_native_tokens.is_empty() {
+                    None
+                } else {
+                    Some(new_native_tokens.clone().finish()?)
+                };
                 // Recalculate every time, because new inputs can also add more native tokens, which would increase
                 // the required storage deposit
                 required_storage_deposit = minimum_storage_deposit_basic_output(
