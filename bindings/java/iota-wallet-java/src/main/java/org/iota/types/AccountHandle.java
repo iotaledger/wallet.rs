@@ -79,57 +79,12 @@ public class AccountHandle extends AbstractObject {
     }
 
     /**
-     * Get all addresses with unspent outputs.
-     *
-     * @return An array of addresses with unspent outputs.
-     */
-    public AddressWithUnspentOutputs[] getAddressesWithUnspentOutputs() throws WalletException {
-        return getAccountCopy().getAddressesWithUnspentOutputs();
-    }
-
-    /**
-     * Returns all outputs of the account.
-     *
-     * @return A map of OutputId to OutputData
-     */
-    public Map<OutputId, OutputData> getOutputs() throws WalletException {
-        return getAccountCopy().getOutputs();
-    }
-
-    /**
      * Returns all locked outputs of the account.
      *
      * @return A set of OutputIds
      */
     public Set<OutputId> getLockedOutputs() throws WalletException {
         return getAccountCopy().getLockedOutputs();
-    }
-
-    /**
-     * Returns all unspent outputs of the account.
-     *
-     * @return A map of OutputId to OutputData.
-     */
-    public Map<OutputId, OutputData> getUnspentOutputs() throws WalletException {
-        return getAccountCopy().getUnspentOutputs();
-    }
-
-    /**
-     * Returns all transactions created by the account.
-     *
-     * @return All transactions created by the account
-     */
-    public Map<TransactionId, Transaction> getTransactions() throws WalletException {
-        return getAccountCopy().getTransactions();
-    }
-
-    /**
-     * Returns all pending transactions created by the account.
-     *
-     * @return All pending transactions created by the account.
-     */
-    public Set<TransactionId> getPendingTransactions() throws WalletException {
-        return getAccountCopy().getPendingTransactions();
     }
 
     /**
@@ -147,25 +102,28 @@ public class AccountHandle extends AbstractObject {
      * @return A copy of the account.
      */
     public Account getAccountCopy() throws WalletException {
-        return CustomGson.get().fromJson(callBaseApi(new NativeApi.ClientCommand("GetAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
+        return CustomGson.get().fromJson(callBaseApi(new NativeApi.ClientCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
     }
 
     // Account Method APIs
 
     private JsonElement callAccountMethod(AccountMethod accountMethod) throws WalletException {
-        JsonObject options = new JsonObject();
-        options.addProperty("name", accountMethod.getClass().getSimpleName());
+        JsonObject method = new JsonObject();
+
+        String methodName = accountMethod.getClass().getSimpleName();
+        method.addProperty("name", methodName.substring(0, 1).toLowerCase() + methodName.substring(1));
+
         JsonElement data = CustomGson.get().toJsonTree(accountMethod);
         if(data.toString().equals("{}"))
-            options.add("data", null);
+            method.add("data", null);
         else
-            options.add("data", data);
+            method.add("data", data);
 
         JsonObject o = new JsonObject();
         o.add("accountId", CustomGson.get().toJsonTree(accountIdentifier));
-        o.add("options", options);
+        o.add("method", method);
 
-        return callBaseApi(new NativeApi.ClientCommand("CallAccountMethod", o));
+        return callBaseApi(new NativeApi.ClientCommand("callAccountMethod", o));
     }
 
     /**
@@ -335,7 +293,7 @@ public class AccountHandle extends AbstractObject {
     /**
      * Returns all the addresses of the account.
      */
-    public AccountAddress[] listAddresses() throws WalletException {
+    public AccountAddress[] getAddresses() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new Addresses());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
@@ -348,7 +306,7 @@ public class AccountHandle extends AbstractObject {
     /**
      * Returns all the unspent outputs of the account.
      */
-    public AccountAddress[] listAddressesWithUnspentOutputs() throws WalletException {
+    public AccountAddress[] getAddressesWithUnspentOutputs() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new AddressesWithUnspentOutputs());
 
         AccountAddress[] addresses = new AccountAddress[responsePayload.size()];
@@ -361,7 +319,7 @@ public class AccountHandle extends AbstractObject {
     /**
      * Returns all the outputs of the account.
      */
-    public OutputData[] listOutputs(Outputs options) throws WalletException {
+    public OutputData[] getOutputs(Outputs options) throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
@@ -374,7 +332,7 @@ public class AccountHandle extends AbstractObject {
     /**
      * Returns all the pending transactions created by account.
      */
-    public Transaction[] listPendingTransactions() throws WalletException {
+    public Transaction[] getPendingTransactions() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new PendingTransactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
@@ -387,7 +345,7 @@ public class AccountHandle extends AbstractObject {
     /**
      * Returns all the transactions created by the account.
      */
-    public Transaction[] listTransactions() throws WalletException {
+    public Transaction[] getTransactions() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new Transactions());
 
         Transaction[] transactions = new Transaction[responsePayload.size()];
@@ -402,7 +360,7 @@ public class AccountHandle extends AbstractObject {
      *
      * @param options The options.
      */
-    public OutputData[] listUnspentOutputs(UnspentOutputs options) throws WalletException {
+    public OutputData[] getUnspentOutputs(UnspentOutputs options) throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];

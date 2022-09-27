@@ -24,7 +24,7 @@ public class ListAndGetOutputs {
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
         // Get outputs
-        OutputData[] outputs = a.listOutputs(new Outputs());
+        OutputData[] outputs = a.getOutputs(new Outputs());
 
         // Print outputs
         for (OutputData o : outputs)

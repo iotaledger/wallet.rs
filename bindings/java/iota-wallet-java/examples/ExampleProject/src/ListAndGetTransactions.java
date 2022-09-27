@@ -30,7 +30,7 @@ public class ListAndGetTransactions {
         ));
 
         // List transactions
-        Transaction[] transactions = a.listTransactions();
+        Transaction[] transactions = a.getTransactions();
 
         // Print transactions
         for (Transaction tx : transactions)

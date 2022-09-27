@@ -14,7 +14,7 @@ public class AccountTests extends TestSettings {
     @Test
     public void testListAddresses() throws WalletException {
         AccountHandle a = wallet.createAccount("Hans");
-        AccountAddress[] addresses = a.listAddresses();
+        AccountAddress[] addresses = a.getAddresses();
         for(AccountAddress address : addresses) {
             System.out.println(address.getAddress());
         }
