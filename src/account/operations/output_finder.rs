@@ -186,6 +186,8 @@ impl AccountHandle {
                 .map(|a| *a.key_index())
                 .unwrap_or(0);
 
+            drop(account);
+
             let addresses_with_unspent_outputs = self.list_addresses_with_unspent_outputs().await?;
 
             let (addresses_with_outputs_internal, address_with_outputs): (
@@ -269,7 +271,7 @@ impl AccountHandle {
         &self,
         old_highest_public_address_index: u32,
         old_highest_internal_address_index: Option<u32>,
-    ) -> AccountHandle {
+    ) {
         let mut account = self.write().await;
 
         let (internal_addresses_with_unspent_outputs, public_addresses_with_spent_outputs): (
@@ -318,7 +320,5 @@ impl AccountHandle {
                     .filter(|a| a.key_index <= new_latest_internal_index)
                     .collect()
             };
-
-        self.clone()
     }
 }
