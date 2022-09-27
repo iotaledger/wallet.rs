@@ -42,6 +42,7 @@
     ".changes/spent-outputs.md",
     ".changes/stardust-release.md",
     ".changes/stronghold-update.md",
+    ".changes/sync-options.md",
     ".changes/tx-monitoring.md",
     ".changes/types.md",
     ".changes/typescript-declarations.md",
