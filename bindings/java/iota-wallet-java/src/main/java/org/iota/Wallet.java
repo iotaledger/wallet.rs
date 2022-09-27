@@ -22,6 +22,12 @@ public class Wallet extends NativeApi {
 
     // Account manager APIs
 
+    /**
+     * Create an account with the given alias and return an AccountHandle for it.
+     *
+     * @param alias The name of the account.
+     * @return An AccountHandle object.
+     */
     public AccountHandle createAccount(String alias) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
@@ -32,6 +38,12 @@ public class Wallet extends NativeApi {
         return handle;
     }
 
+    /**
+     * Return a given account from the wallet.
+     *
+     * @param accountIdentifier The account identifier.
+     * @return An AccountHandle object.
+     */
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
         Account a =  CustomGson.get().fromJson(callBaseApi(new ClientCommand("GetAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
@@ -39,6 +51,11 @@ public class Wallet extends NativeApi {
         return handle;
     }
 
+    /**
+     * Returns all the accounts from the wallet.
+     *
+     * @return An array of AccountHandles.
+     */
     public AccountHandle[] getAccounts() throws WalletException {
         JsonArray responsePayload = (JsonArray) callBaseApi(new ClientCommand("GetAccounts"));
 
@@ -49,7 +66,12 @@ public class Wallet extends NativeApi {
         return accountHandles;
     }
 
-
+    /**
+     * Backup the wallet to the specified destination, encrypting it with the specified password.
+     *
+     * @param destination The path to the file to be created.
+     * @param password The password to encrypt the backup with.
+     */
     public void backup(String destination, String password) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("destination", destination);
@@ -58,6 +80,12 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("Backup", o));
     }
 
+    /**
+     * Change the password of the Stronghold file.
+     *
+     * @param currentPassword The current password for the Stronghold
+     * @param newPassword The new password you want to use for your Stronghold.
+     */
     public void changeStrongholdPassword(String currentPassword, String newPassword) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("currentPassword", currentPassword);
@@ -66,14 +94,25 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("ChangeStrongholdPassword", o));
     }
 
+    /**
+     * Clears the Stronghold password from memory.
+     */
     public void clearStrongholdPassword() throws WalletException {
         callBaseApi(new ClientCommand("ClearStrongholdPassword"));
     }
 
+    /**
+     * Checks if the Stronghold password is available.
+     *
+     * @return A boolean value.
+     */
     public boolean isStrongholdPasswordAvailable() throws WalletException {
         return callBaseApi(new ClientCommand("IsStrongholdPasswordAvailable")).getAsBoolean();
     }
 
+    /**
+     * Find accounts with unspent outputs.
+     */
     public void recoverAccounts(int accountStartIndex, int accountGapLimit, int addressGapLimit, SyncOptions syncOptions) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("accountStartIndex", accountStartIndex);
@@ -84,6 +123,15 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("RecoverAccounts", o));
     }
 
+    /**
+     * Restore a backup from a Stronghold file
+     * Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already
+     * created If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a
+     * mnemonic was stored, it will be gone.
+     *
+     * @param source The path to the backup file.
+     * @param password The password you used to encrypt the backup file.
+     */
     public void restoreBackup(String source, String password) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("source", source);
@@ -92,27 +140,58 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("RestoreBackup", o));
     }
 
+    /**
+     * Removes the latest account (account with the largest account index).
+     */
     public void removeLatestAccount() throws WalletException {
         callBaseApi(new ClientCommand("RemoveLatestAccount"));
     }
 
+    /**
+     * Generate a mnemonic phrase
+     *
+     * @return A string of words.
+     */
     public String generateMnemonic() throws WalletException {
         return callBaseApi(new ClientCommand("GenerateMnemonic")).getAsString();
     }
 
-    public String verifyMnemonic(String mnemonic) throws WalletException {
+    /**
+     * Checks if the given mnemonic is valid.
+     *
+     * @param mnemonic The mnemonic to verify.
+     * @return The wallet address.
+     */
+    public void verifyMnemonic(String mnemonic) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(mnemonic);
-        return callBaseApi(new ClientCommand("VerifyMnemonic", p)).getAsString();
+        callBaseApi(new ClientCommand("VerifyMnemonic", p));
     }
 
-    public String setClientOptions(ClientConfig config) throws WalletException {
-        return callBaseApi(new ClientCommand("SetClientOptions", CustomGson.get().toJsonTree(config))).getAsString();
+    /**
+     * Updates the client options for all accounts.
+     *
+     * @param config A ClientConfig object that contains the options to set.
+     */
+    public void setClientOptions(ClientConfig config) throws WalletException {
+        callBaseApi(new ClientCommand("SetClientOptions", CustomGson.get().toJsonTree(config)));
     }
 
+    /**
+     * Get the status of the Ledger Nano.
+     *
+     * @return The status of the Ledger Nano
+     */
     public LedgerNanoStatus getLedgerNanoStatus() throws WalletException {
         return CustomGson.get().fromJson(callBaseApi(new ClientCommand("GetLedgerNanoStatus")), LedgerNanoStatus.class);
     }
 
+    /**
+     * Get node information.
+     *
+     * @param url The URL of the node you want information from.
+     * @param auth The authentication information for the node.
+     * @return A JsonObject
+     */
     public JsonObject getNodeInfo(String url, NodeAuth auth) throws WalletException {
         JsonObject p = new JsonObject();
         p.addProperty("url", url);
@@ -121,21 +200,42 @@ public class Wallet extends NativeApi {
         return (JsonObject) callBaseApi(new ClientCommand("GetNodeInfo", p));
     }
 
+    /**
+     * Set the stronghold password clear interval.
+     *
+     * @param password The password to set for the stronghold.
+     */
     public void setStrongholdPassword(String password) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(password);
         callBaseApi(new ClientCommand("SetStrongholdPassword", p));
     }
 
-    public void setStrongholdPassword(int interval) throws WalletException {
+    /**
+     * Set the stronghold password clear interval.
+     *
+     * @param interval The number of seconds to wait before clearing the password.
+     */
+    public void SetStrongholdPasswordClearInterval(int interval) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(interval);
         callBaseApi(new ClientCommand("SetStrongholdPasswordClearInterval", p));
     }
 
+    /**
+     * Store a mnemonic into the Stronghold vault.
+     *
+     * @param mnemonic The mnemonic to store.
+     */
     public void storeMnemonic(String mnemonic) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(mnemonic);
         callBaseApi(new ClientCommand("StoreMnemonic", p));
     }
 
+    /**
+     * Start a background sync with the specified options and interval.
+     *
+     * @param options The options for the sync.
+     * @param intervalInMilliseconds The interval in milliseconds at which the background sync will be performed.
+     */
     public void startBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
         JsonObject o = new JsonObject();
         o.add("options", CustomGson.get().toJsonTree(options));
@@ -144,18 +244,40 @@ public class Wallet extends NativeApi {
         callBaseApi(new ClientCommand("StartBackgroundSync", o));
     }
 
-    public void stopBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
+
+    /**
+     * Stop the background sync process.
+     */
+    public void stopBackgroundSync() throws WalletException {
         callBaseApi(new ClientCommand("StopBackgroundSync"));
     }
 
+    /**
+     * Emits an event for testing if the event system is working
+     *
+     * @param event The event to emit.
+     */
     public void emitTestEvent(JsonElement event) throws WalletException {
         callBaseApi(new ClientCommand("EmitTestEvent", event));
     }
 
+    /**
+     * Converts a bech32 address to a hex address.
+     *
+     * @param bech32 The bech32 string to convert to hex.
+     * @return A hex string.
+     */
     public String bech32ToHex(String bech32) throws WalletException {
         return callBaseApi(new ClientCommand("Bech32ToHex", new JsonPrimitive(bech32))).getAsString();
     }
 
+    /**
+     * Converts a hex address to a bech32 address.
+     *
+     * @param hex The hex address to convert.
+     * @param bech32Hrp The bech32 human-readable part.
+     * @return The bech32 address.
+     */
     public String hexToBech32(String hex, String bech32Hrp) throws WalletException {
         JsonObject p = new JsonObject();
         p.addProperty("hex", hex);

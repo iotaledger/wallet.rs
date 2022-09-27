@@ -33,54 +33,119 @@ public class AccountHandle extends AbstractObject {
         this.accountIdentifier = accountIdentifier;
     }
 
+    /**
+     * Returns the index of the account
+     *
+     * @return The index of the account.
+     */
     public int getIndex() throws WalletException {
         return getAccountCopy().getIndex();
     }
 
+    /**
+     * Returns the coin type that is configured with the account
+     *
+     * @return The coin type of the account.
+     */
     public int getCoinType() throws WalletException {
         return getAccountCopy().getCoinType();
     }
 
+    /**
+     * Returns the alias of the account
+     *
+     * @return The alias of the account.
+     */
     public String getAlias() throws WalletException {
         return getAccountCopy().getAlias();
     }
 
+    /**
+     * Returns an array of all public addresses of the account.
+     *
+     * @return An array of AccountAddress objects.
+     */
     public AccountAddress[] getPublicAddresses() throws WalletException {
         return getAccountCopy().getPublicAddresses();
     }
 
+    /**
+     * Returns an array of all internal addresses of the account.
+     *
+     * @return An array of AccountAddress objects.
+     */
     public AccountAddress[] getInternalAddresses() throws WalletException {
         return getAccountCopy().getInternalAddresses();
     }
 
+    /**
+     * Get all addresses with unspent outputs.
+     *
+     * @return An array of addresses with unspent outputs.
+     */
     public AddressWithUnspentOutputs[] getAddressesWithUnspentOutputs() throws WalletException {
         return getAccountCopy().getAddressesWithUnspentOutputs();
     }
 
+    /**
+     * Returns all outputs of the account.
+     *
+     * @return A map of OutputId to OutputData
+     */
     public Map<OutputId, OutputData> getOutputs() throws WalletException {
         return getAccountCopy().getOutputs();
     }
 
+    /**
+     * Returns all locked outputs of the account.
+     *
+     * @return A set of OutputIds
+     */
     public Set<OutputId> getLockedOutputs() throws WalletException {
         return getAccountCopy().getLockedOutputs();
     }
 
+    /**
+     * Returns all unspent outputs of the account.
+     *
+     * @return A map of OutputId to OutputData.
+     */
     public Map<OutputId, OutputData> getUnspentOutputs() throws WalletException {
         return getAccountCopy().getUnspentOutputs();
     }
 
+    /**
+     * Returns all transactions created by the account.
+     *
+     * @return All transactions created by the account
+     */
     public Map<TransactionId, Transaction> getTransactions() throws WalletException {
         return getAccountCopy().getTransactions();
     }
 
+    /**
+     * Returns all pending transactions created by the account.
+     *
+     * @return All pending transactions created by the account.
+     */
     public Set<TransactionId> getPendingTransactions() throws WalletException {
         return getAccountCopy().getPendingTransactions();
     }
 
+    /**
+     * Returns all incoming transactions for the account.
+     *
+     * @return All incoming transactions for the account.
+     */
     public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() throws WalletException {
         return getAccountCopy().getIncomingTransactions();
     }
 
+    /**
+     * Get a snapshot of the current account state.
+     *
+     * @return A copy of the account.
+     */
     public Account getAccountCopy() throws WalletException {
         return CustomGson.get().fromJson(callBaseApi(new NativeApi.ClientCommand("GetAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
     }
@@ -88,62 +153,119 @@ public class AccountHandle extends AbstractObject {
     // Account Method APIs
 
     private JsonElement callAccountMethod(AccountMethod accountMethod) throws WalletException {
-        JsonObject method = new JsonObject();
-        method.addProperty("name", accountMethod.getClass().getSimpleName());
+        JsonObject options = new JsonObject();
+        options.addProperty("name", accountMethod.getClass().getSimpleName());
         JsonElement data = CustomGson.get().toJsonTree(accountMethod);
         if(data.toString().equals("{}"))
-            method.add("data", null);
+            options.add("data", null);
         else
-            method.add("data", data);
+            options.add("data", data);
 
         JsonObject o = new JsonObject();
         o.add("accountId", CustomGson.get().toJsonTree(accountIdentifier));
-        o.add("method", method);
+        o.add("options", options);
 
         return callBaseApi(new NativeApi.ClientCommand("CallAccountMethod", o));
     }
 
-    public Output buildAliasOutput(BuildAliasOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Builds an alias output.
+     *
+     * @param options The options to call.
+     * @return The built output.
+     */
+    public Output buildAliasOutput(BuildAliasOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public Output buildBasicOutput(BuildBasicOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Builds a basic output.
+     *
+     * @param options The options to call.
+     * @return The built output.
+     */
+    public Output buildBasicOutput(BuildBasicOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public Output buildFoundryOutput(BuildFoundryOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Builds a foundry output.
+     *
+     * @param options The options to call.
+     * @return The built output.
+     */
+    public Output buildFoundryOutput(BuildFoundryOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public Output buildNftOutput(BuildNftOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Builds a NFT output.
+     *
+     * @param options The options to call.
+     * @return The built output.
+     */
+    public Output buildNftOutput(BuildNftOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public Transaction burnNativeToken(BurnNativeToken method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Burns native tokens for the account.
+     *
+     * @param options The options to be called.
+     * @return A transaction object.
+     */
+    public Transaction burnNativeToken(BurnNativeToken options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction burnNft(BurnNft method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Burns a NFT.
+     *
+     * @param options The options.
+     * @return The transaction that destroyed the alias.
+     */
+    public Transaction burnNft(BurnNft options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-
-    public Transaction consolidateOutputs(ConsolidateOutputs method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Destroy an alias.
+     *
+     * @param options The options.
+     * @return The transaction that destroyed the alias.
+     */
+    public Transaction consolidateOutputs(ConsolidateOutputs options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-
-    public Transaction destroyAlias(DestroyAlias method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Destroy an alias.
+     *
+     * @param options The options.
+     * @return The transaction that destroyed the alias.
+     */
+    public Transaction destroyAlias(DestroyAlias options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-
-    public Transaction destroyFoundry(DestroyFoundry method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Destroy a foundry.
+     *
+     * @param options The options.
+     * @return The transaction that destroyed the foundry.
+     */
+    public Transaction destroyFoundry(DestroyFoundry options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public AccountAddress[] generateAddresses(GenerateAddresses method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(method);
+    /**
+     * Generate addresses.
+     *
+     * @param options The options.
+     * @return The generated addresses.
+     */
+    public AccountAddress[] generateAddresses(GenerateAddresses options) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         AccountAddress[] accountAddress = new AccountAddress[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -152,16 +274,34 @@ public class AccountHandle extends AbstractObject {
         return accountAddress;
     }
 
-    public OutputData getOutput(GetOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), OutputData.class);
+    /**
+     * Get a specific output.
+     *
+     * @param options The options.
+     * @return The given output.
+     */
+    public OutputData getOutput(GetOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), OutputData.class);
     }
 
-    public Output getFoundryOutput(GetFoundryOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Get a specific foundry output.
+     *
+     * @param options The options.
+     * @return The given output.
+     */
+    public Output getFoundryOutput(GetFoundryOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public Output[] getOutputsWithAdditionalUnlockConditions(GetOutputsWithAdditionalUnlockConditions method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(method);
+    /**
+     * Get all outputs with additional unlock conditions.
+     *
+     * @param options The options.
+     * @return The given transaction.
+     */
+    public Output[] getOutputsWithAdditionalUnlockConditions(GetOutputsWithAdditionalUnlockConditions options) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         Output[] outputs = new Output[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -170,14 +310,31 @@ public class AccountHandle extends AbstractObject {
         return outputs;
     }
 
-    public Transaction getTransaction(GetTransaction method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Get a specific transaction.
+     *
+     * @param options The options.
+     * @return The given transaction.
+     */
+    public Transaction getTransaction(GetTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public JsonElement getIncomingTransactionData(GetIncomingTransactionData method) throws WalletException {
-        return callAccountMethod(method);
+
+    /**
+     * Get the transaction with inputs of an incoming transaction stored in the account.
+     * List might not be complete, if the node pruned the data already.
+     *
+     * @param options The options.
+     * @return A JsonElement object.
+     */
+    public JsonElement getIncomingTransactionData(GetIncomingTransactionData options) throws WalletException {
+        return callAccountMethod(options);
     }
 
+    /**
+     * Returns all the addresses of the account.
+     */
     public AccountAddress[] listAddresses() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new Addresses());
 
@@ -188,6 +345,9 @@ public class AccountHandle extends AbstractObject {
         return addresses;
     }
 
+    /**
+     * Returns all the unspent outputs of the account.
+     */
     public AccountAddress[] listAddressesWithUnspentOutputs() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new AddressesWithUnspentOutputs());
 
@@ -198,8 +358,11 @@ public class AccountHandle extends AbstractObject {
         return addresses;
     }
 
-    public OutputData[] listOutputs(Outputs method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(method);
+    /**
+     * Returns all the outputs of the account.
+     */
+    public OutputData[] listOutputs(Outputs options) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -208,6 +371,9 @@ public class AccountHandle extends AbstractObject {
         return outputsData;
     }
 
+    /**
+     * Returns all the pending transactions created by account.
+     */
     public Transaction[] listPendingTransactions() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new PendingTransactions());
 
@@ -218,6 +384,9 @@ public class AccountHandle extends AbstractObject {
         return transactions;
     }
 
+    /**
+     * Returns all the transactions created by the account.
+     */
     public Transaction[] listTransactions() throws WalletException {
         JsonArray responsePayload = (JsonArray) callAccountMethod(new Transactions());
 
@@ -228,8 +397,13 @@ public class AccountHandle extends AbstractObject {
         return transactions;
     }
 
-    public OutputData[] listUnspentOutputs(UnspentOutputs method) throws WalletException {
-        JsonArray responsePayload = (JsonArray) callAccountMethod(method);
+    /**
+     * Returns all unspent outputs.
+     *
+     * @param options The options.
+     */
+    public OutputData[] listUnspentOutputs(UnspentOutputs options) throws WalletException {
+        JsonArray responsePayload = (JsonArray) callAccountMethod(options);
 
         OutputData[] outputsData = new OutputData[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -238,77 +412,170 @@ public class AccountHandle extends AbstractObject {
         return outputsData;
     }
 
-    public TaggedDataPayload meltNativeToken(DecreaseNativeTokenSupply method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), TaggedDataPayload.class);
+    /**
+     * Melts a Native Token.
+     *
+     * @param options The options.
+     */
+    public TaggedDataPayload meltNativeToken(DecreaseNativeTokenSupply options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), TaggedDataPayload.class);
     }
 
-    public String minimumRequiredStorageDeposit(MinimumRequiredStorageDeposit method) throws WalletException {
-        return callAccountMethod(method).getAsJsonPrimitive().getAsString();
+    /**
+     * Calculates the minimum required storage deposit for an output.
+     *
+     * @param options The options.
+     */
+    public String minimumRequiredStorageDeposit(MinimumRequiredStorageDeposit options) throws WalletException {
+        return callAccountMethod(options).getAsJsonPrimitive().getAsString();
     }
 
-    public MintTokenTransaction mintNativeToken(MintNativeToken method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), MintTokenTransaction.class);
+    /**
+     * Mints Native Tokens.
+     *
+     * @param options The options.
+     */
+    public MintTokenTransaction mintNativeToken(MintNativeToken options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), MintTokenTransaction.class);
     }
 
-    public Transaction mintNfts(MintNfts method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Mints NFTs.
+     *
+     * @param options The options.
+     */
+    public Transaction mintNfts(MintNfts options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
+    /**
+     * Gets the balance of the account.
+     */
     public AccountBalance getBalance() throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(new GetBalance()), AccountBalance.class);
     }
 
-    public Output prepareOutput(PrepareOutput method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Output.class);
+    /**
+     * Prepares an output.
+     *
+     * @param options The options.
+     */
+    public Output prepareOutput(PrepareOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Output.class);
     }
 
-    public PreparedTransactionData prepareTransaction(PrepareTransaction method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), PreparedTransactionData.class);
+    /**
+     * Prepares a transaction.
+     *
+     * @param options The options.
+     */
+    public PreparedTransactionData prepareTransaction(PrepareTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), PreparedTransactionData.class);
     }
 
-    public PreparedTransactionData prepareSendAmount(PrepareSendAmount method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), PreparedTransactionData.class);
+    /**
+     * Prepares a transaction.
+     *
+     * @param options The options.
+     */
+    public PreparedTransactionData prepareSendAmount(PrepareSendAmount options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), PreparedTransactionData.class);
     }
 
-    public AccountBalance syncAccount(SyncAccount method) throws WalletException {
-        AccountBalance balance = CustomGson.get().fromJson(callAccountMethod(method), AccountBalance.class);
+    /**
+     * Sync the account by fetching new information from the nodes. Will also retry pending transactions if necessary.
+     *
+     * @param options The options.
+     */
+    public AccountBalance syncAccount(SyncAccount options) throws WalletException {
+        AccountBalance balance = CustomGson.get().fromJson(callAccountMethod(options), AccountBalance.class);
         return balance;
     }
 
-    public Transaction sendAmount(SendAmount method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Sends an amount.
+     *
+     * @param options The options.
+     */
+    public Transaction sendAmount(SendAmount options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction sendMicroTransaction(SendMicroTransaction method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Sends a micro transaction.
+     *
+     * @param options The options.
+     */
+    public Transaction sendMicroTransaction(SendMicroTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction sendNativeTokens(SendNativeTokens method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Sends Native Tokens.
+     *
+     * @param options The options.
+     */
+    public Transaction sendNativeTokens(SendNativeTokens options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction sendNft(SendNft method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Sends a NFT.
+     *
+     * @param options The options.
+     */
+    public Transaction sendNft(SendNft options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public void setAlias(SetAlias method) throws WalletException {
-        callAccountMethod(method);
+    /**
+     * Set the alias of the account.
+     *
+     * @param options The options.
+     */
+    public void setAlias(SetAlias options) throws WalletException {
+        callAccountMethod(options);
     }
 
-    public Transaction sendOutputs(SendOutputs method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Send outputs in a transaction.
+     *
+     * @param options The options.
+     * @return The transaction.
+     */
+    public Transaction sendOutputs(SendOutputs options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction signTransactionEssence(SignTransactionEssence method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Signs a transaction essence.
+     *
+     * @param options The options.
+     * @return The signed transaction.
+     */
+    public Transaction signTransactionEssence(SignTransactionEssence options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction submitAndStoreTransaction(SubmitAndStoreTransaction method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+    /**
+     * Submits and stores a transaction.
+     *
+     * @param options The options.
+     * @return The submitted and stored transaction.
+     */
+    public Transaction submitAndStoreTransaction(SubmitAndStoreTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
-    public Transaction claimOutputs(ClaimOutputs method) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(method), Transaction.class);
+
+    /**
+     * This function claims all unclaimed outputs for the account
+     *
+     * @param options The options.
+     * @return A transaction object.
+     */
+    public Transaction claimOutputs(ClaimOutputs options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
 }
