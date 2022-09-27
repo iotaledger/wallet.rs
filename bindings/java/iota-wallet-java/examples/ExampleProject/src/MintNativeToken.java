@@ -3,14 +3,13 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class GenerateAndListAddresses {
+public class MintNativeToken {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
-    public static void main(String[] args) throws WalletException {
+    public static void main(String[] args) throws WalletException, InterruptedException {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
@@ -20,17 +19,19 @@ public class GenerateAndListAddresses {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle account = wallet.createAccount("Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
 
-        // Generate two addresses.
-        AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(2));
+        // Configure the Native Token
+        NativeTokenOptions options = new NativeTokenOptions();
+        options.withCirculatingSupply("0x17"); // number 23 hex encoded
+        options.withMaximumSupply("0x64"); // number 100 hex encocded
 
-        // Print the generated addresses.
-        for (AccountAddress address : addresses)
-            System.out.println(address.getAddress());
+        // Mint the Native Token
+        MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
 
-        // Print all addresses.
-        for (AccountAddress address : account.getPublicAddresses())
-            System.out.println(address.getAddress());
+        // Print Native Token
+        System.out.println(t);
     }
+
 }
+

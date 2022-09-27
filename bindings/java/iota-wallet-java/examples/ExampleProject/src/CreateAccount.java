@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import org.iota.Wallet;
+import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class BackupStorage {
+public class CreateAccount {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException {
@@ -20,7 +21,10 @@ public class BackupStorage {
         );
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Backup wallet
-        wallet.backup("./backup-example-wallet", "PASSWORD_FOR_ENCRYPTION");
+        // Create an account.
+        AccountHandle a = wallet.createAccount("Hans");
+
+        // Print the account.
+        System.out.println(a);
     }
 }

@@ -7,7 +7,7 @@ import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class GetBalance {
+public class CheckBalance {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -26,6 +26,6 @@ public class GetBalance {
         AccountBalance balance = a.syncAccount(new SyncAccount());
 
         // Print the balance.
-        System.out.println(balance.getBaseCoin().getTotal());
+        System.out.println(balance);
     }
 }
