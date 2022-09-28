@@ -1089,9 +1089,9 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "2.0.0"
+version = "2.0.1-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73ae94587047347f002c1ced9dfcc2a423ab3255fc16c8dba9a1c9bc515290f8"
+checksum = "c8dd378840fa78c8927d83b18a689f8755f0458d9a8019dbc731f5eb85c88c1e"
 dependencies = [
  "async-trait",
  "backtrace",
