@@ -56,6 +56,7 @@ async fn main() -> Result<()> {
 
     // Build nft output manually
     let sender_address = account.addresses().await?[0].address().clone();
+    let token_supply = account.client().get_token_supply()?;
     let outputs = vec![
         // address of the owner of the NFT
         NftOutputBuilder::new_with_amount(1_000_000, NftId::null())?
@@ -64,7 +65,7 @@ async fn main() -> Result<()> {
             )))
             .add_feature(Feature::Sender(SenderFeature::new(*sender_address.as_ref())))
             .add_immutable_feature(Feature::Issuer(IssuerFeature::new(*sender_address.as_ref())))
-            .finish_output()?,
+            .finish_output(token_supply)?,
     ];
 
     let transaction = account.send(outputs, None).await?;
