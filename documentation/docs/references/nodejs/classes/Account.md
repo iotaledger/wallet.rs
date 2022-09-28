@@ -511,13 +511,13 @@ ___
 
 ### incomingTransactions
 
-▸ **incomingTransactions**(): `Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+▸ **incomingTransactions**(): `Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]][]][]\>
 
 List all incoming transactions of the account.
 
 #### Returns
 
-`Promise`<[`string`, `ITransactionPayload`, `IOutputResponse`][]\>
+`Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]][]][]\>
 
 The incoming transactions with their inputs.
 

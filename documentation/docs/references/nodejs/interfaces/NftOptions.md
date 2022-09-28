@@ -7,8 +7,11 @@ Nft options for minting
 ### Properties
 
 - [address](NftOptions.md#address)
-- [immutableMetadata](NftOptions.md#immutablemetadata)
+- [sender](NftOptions.md#sender)
 - [metadata](NftOptions.md#metadata)
+- [tag](NftOptions.md#tag)
+- [issuer](NftOptions.md#issuer)
+- [immutableMetadata](NftOptions.md#immutablemetadata)
 
 ## Properties
 
@@ -21,16 +24,40 @@ first address of the account
 
 ___
 
-### immutableMetadata
+### sender
 
-• `Optional` **immutableMetadata**: `string`
+• `Optional` **sender**: `string`
 
-Hex encoded bytes
+Bech32 encoded sender address *
 
 ___
 
 ### metadata
 
 • `Optional` **metadata**: `string`
+
+Hex encoded bytes
+
+___
+
+### tag
+
+• `Optional` **tag**: `string`
+
+Hex encoded bytes
+
+___
+
+### issuer
+
+• `Optional` **issuer**: `string`
+
+Bech32 encoded issuer address *
+
+___
+
+### immutableMetadata
+
+• `Optional` **immutableMetadata**: `string`
 
 Hex encoded bytes
