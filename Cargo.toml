@@ -1,6 +1,6 @@
 [package]
 name = "iota-wallet"
-version = "0.2.0"
+version = "1.0.0-rc.1"
 authors = [ "IOTA Stiftung" ]
 edition = "2021"
 description = "A stateful package for IOTA value transactions"
