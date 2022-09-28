@@ -43,9 +43,9 @@ public class NativeApi {
     private static native String sendMessage(String command);
 
     public static JsonElement callBaseApi(ClientCommand command) throws WalletException {
-         System.out.println("REQUEST: " + command);
+        //System.out.println("REQUEST: " + command);
         String jsonResponse = sendMessage(command.toString());
-         System.out.println("RESPONSE: " + jsonResponse);
+        //System.out.println("RESPONSE: " + jsonResponse);
         ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
 
         switch (response.type) {
