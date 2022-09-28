@@ -47,8 +47,8 @@ import type {
 
 /** The Account class. */
 export class Account {
-    // TODO: make private because the data isn't updated
-    meta: AccountMeta;
+    // private because the data isn't updated
+    private meta: AccountMeta;
     private messageHandler: MessageHandler;
 
     constructor(accountMeta: AccountMeta, messageHandler: MessageHandler) {
