@@ -29,7 +29,6 @@ impl AccountHandle {
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
-
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply()?;
@@ -70,6 +69,7 @@ impl AccountHandle {
             for output in &selected_transaction_data.inputs {
                 account.locked_outputs.insert(output.output_id()?);
             }
+
             return Ok(selected_transaction_data);
         }
 
@@ -149,44 +149,18 @@ fn filter_inputs(
             continue;
         }
 
-        match &output_data.output {
-            Output::Nft(nft_input) => {
-                // Don't add if output has not the same NftId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Nft(nft_output) = output {
-                        nft_input.nft_id().or_from_output_id(output_data.output_id) == *nft_output.nft_id()
-                    } else {
-                        false
-                    }
-                }) {
-                    continue;
+        if let Output::Foundry(foundry_input) = &output_data.output {
+            // Don't add if output has not the same FoundryId, because it's the not needed unless for burning, but
+            // then it should be provided in the mandatory inputs
+            if !outputs.iter().any(|output| {
+                if let Output::Foundry(foundry_output) = output {
+                    foundry_input.id() == foundry_output.id()
+                } else {
+                    false
                 }
+            }) {
+                continue;
             }
-            Output::Alias(alias_input) => {
-                // Don't add if output has not the same AliasId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Alias(alias_output) = output {
-                        alias_input.alias_id().or_from_output_id(output_data.output_id) == *alias_output.alias_id()
-                    } else {
-                        false
-                    }
-                }) {
-                    continue;
-                }
-            }
-            Output::Foundry(foundry_input) => {
-                // Don't add if output has not the same FoundryId, so we don't burn it
-                if !outputs.iter().any(|output| {
-                    if let Output::Foundry(foundry_output) = output {
-                        foundry_input.id() == foundry_output.id()
-                    } else {
-                        false
-                    }
-                }) {
-                    continue;
-                }
-            }
-            _ => {}
         }
 
         let unlock_conditions = output_data

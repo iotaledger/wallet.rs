@@ -45,7 +45,7 @@ impl AccountHandle {
         }
 
         let custom_inputs: Option<Vec<InputSigningData>> = {
-            if let Some(options) = options.clone() {
+            if let Some(options) = &options {
                 // validate inputs amount
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
