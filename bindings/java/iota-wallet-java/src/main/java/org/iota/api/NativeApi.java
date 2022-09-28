@@ -49,9 +49,9 @@ public class NativeApi {
         ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
 
         switch (response.type) {
-            case "Panic":
+            case "panic":
                 throw new RuntimeException(response.toString());
-            case "Error":
+            case "error":
                 throw new WalletException(command.methodName, response.payload.getAsJsonObject().toString());
 
             default:
