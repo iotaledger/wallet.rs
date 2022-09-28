@@ -233,12 +233,20 @@ impl AccountHandle {
     pub(crate) async fn save(&self, updated_account: Option<&Account>) -> Result<()> {
         log::debug!("[save] saving account to database");
         match updated_account {
-            Some(account) => self.storage_manager.lock().await.save_account(account).await,
+            Some(account) => {
+                let mut storage_manager = self.storage_manager.lock().await;
+                storage_manager.save_account(account).await?;
+                drop(storage_manager);
+            }
             None => {
                 let account = self.read().await;
-                self.storage_manager.lock().await.save_account(&account).await
+                let mut storage_manager = self.storage_manager.lock().await;
+                storage_manager.save_account(&account).await?;
+                drop(storage_manager);
+                drop(account);
             }
         }
+        Ok(())
     }
 }
 

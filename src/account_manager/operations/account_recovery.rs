@@ -35,7 +35,8 @@ impl AccountManager {
         let mut max_account_index_to_keep = None;
 
         // Search for addresses in current accounts
-        for account_handle in self.accounts.read().await.iter() {
+        let accounts = self.accounts.read().await;
+        for account_handle in accounts.iter() {
             // If the gap limit is 0, there is no need to search for funds
             if address_gap_limit > 0 {
                 account_handle
@@ -52,6 +53,7 @@ impl AccountManager {
                 None => max_account_index_to_keep = Some(account_index),
             }
         }
+        drop(accounts);
 
         // Create accounts below account_start_index, because we don't want to have gaps in the accounts, but we also
         // don't want to sync them

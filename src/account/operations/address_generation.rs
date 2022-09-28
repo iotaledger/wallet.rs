@@ -1,11 +1,9 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "ledger_nano")]
-use iota_client::secret::SecretManager;
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, SecretManage},
+    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
 };
 use serde::{Deserialize, Serialize};
 
@@ -86,9 +84,9 @@ impl AccountHandle {
 
         let address_range = highest_current_index_plus_one..highest_current_index_plus_one + amount;
 
-        let addresses = match *self.secret_manager.read().await {
+        let addresses = match &*self.secret_manager.read().await {
             #[cfg(feature = "ledger_nano")]
-            SecretManager::LedgerNano(_) => {
+            SecretManager::LedgerNano(ledger_nano) => {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first
@@ -102,10 +100,7 @@ impl AccountHandle {
                         #[cfg(feature = "events")]
                         {
                             // Generate without prompt to be able to display it
-                            let address = self
-                                .secret_manager
-                                .read()
-                                .await
+                            let address = ledger_nano
                                 .generate_addresses(
                                     account.coin_type,
                                     account.index,
@@ -122,10 +117,7 @@ impl AccountHandle {
                             );
                         }
                         // Generate with prompt so the user can verify
-                        let address = self
-                            .secret_manager
-                            .read()
-                            .await
+                        let address = ledger_nano
                             .generate_addresses(
                                 account.coin_type,
                                 account.index,
@@ -138,9 +130,7 @@ impl AccountHandle {
                     }
                     addresses
                 } else {
-                    self.secret_manager
-                        .read()
-                        .await
+                    ledger_nano
                         .generate_addresses(
                             account.coin_type,
                             account.index,
@@ -151,10 +141,8 @@ impl AccountHandle {
                         .await?
                 }
             }
-            _ => {
-                self.secret_manager
-                    .read()
-                    .await
+            SecretManager::Stronghold(stronghold) => {
+                stronghold
                     .generate_addresses(
                         account.coin_type,
                         account.index,
@@ -164,6 +152,18 @@ impl AccountHandle {
                     )
                     .await?
             }
+            SecretManager::Mnemonic(mnemonic) => {
+                mnemonic
+                    .generate_addresses(
+                        account.coin_type,
+                        account.index,
+                        address_range,
+                        options.internal,
+                        options.metadata.clone(),
+                    )
+                    .await?
+            }
+            SecretManager::Placeholder(_) => vec![],
         };
 
         let generate_addresses: Vec<AccountAddress> = addresses
