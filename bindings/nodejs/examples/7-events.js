@@ -54,7 +54,7 @@ async function run() {
             ],
         });
         // send transaction with the output we created
-        await account.sendTransaction([output]);
+        await account.sendOutputs([output]);
 
         // provide empty array to clear all listeners for all event types
         setTimeout(() => {
