@@ -14,7 +14,7 @@ use iota_client::{
         payload::transaction::TransactionId,
     },
 };
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
@@ -41,7 +41,7 @@ use crate::{
 };
 
 /// Each public account method.
-#[derive(Clone, Debug, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "name", content = "data", rename_all = "camelCase")]
 pub enum AccountMethod {
     /// Build an AliasOutput.

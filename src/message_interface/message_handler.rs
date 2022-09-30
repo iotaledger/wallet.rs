@@ -42,7 +42,7 @@ use crate::{
     message_interface::{
         account_method::AccountMethod,
         dtos::{AccountBalanceDto, AccountDto},
-        message::{AccountToCreate, Message},
+        message::Message,
         response::Response,
         AddressWithUnspentOutputsDto,
     },
@@ -118,8 +118,8 @@ impl WalletMessageHandler {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
-            Message::CreateAccount(account) => {
-                convert_async_panics(|| async { self.create_account(&account).await }).await
+            Message::CreateAccount { alias } => {
+                convert_async_panics(|| async { self.create_account(alias).await }).await
             }
             Message::GetAccount(account_id) => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
@@ -848,11 +848,11 @@ impl WalletMessageHandler {
     }
 
     /// The create account message handler.
-    async fn create_account(&self, account: &AccountToCreate) -> Result<Response> {
+    async fn create_account(&self, alias: Option<String>) -> Result<Response> {
         let mut builder = self.account_manager.create_account();
 
-        if let Some(alias) = &account.alias {
-            builder = builder.with_alias(alias.clone());
+        if let Some(alias) = alias {
+            builder = builder.with_alias(alias);
         }
 
         match builder.finish().await {
