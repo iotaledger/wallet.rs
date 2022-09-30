@@ -6,7 +6,7 @@ use iota_client::{
     block::{
         address::Address,
         output::{
-            feature::{Feature, MetadataFeature},
+            feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
             unlock_condition::{AddressUnlockCondition, UnlockCondition},
             NftId, NftOutputBuilder,
         },
@@ -20,30 +20,42 @@ use crate::{
     Error,
 };
 
-/// Address and nft for `send_nft()`
+/// Address and NFT for `send_nft()`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftOptions {
-    /// Bech32 encoded address to which the Nft will be minted. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address to which the NFT will be minted. Default will use the
+    /// first address of the account.
     pub address: Option<String>,
-    /// Immutable nft metadata
+    /// NFT sender feature.
+    pub sender: Option<String>,
+    /// NFT metadata feature.
+    pub metadata: Option<Vec<u8>>,
+    /// NFT tag feature.
+    pub tag: Option<Vec<u8>>,
+    /// NFT issuer feature.
+    pub issuer: Option<String>,
+    /// NFT immutable metadata feature.
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<Vec<u8>>,
-    /// Nft metadata
-    pub metadata: Option<Vec<u8>>,
 }
 
-/// Dto for NftOptions
+/// Dto for NftOptions.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NftOptionsDto {
-    /// Bech32 encoded address to which the Nft will be minted. Default will use the
-    /// first address of the account
+    /// Bech32 encoded address to which the NFT will be minted. Default will use the
+    /// first address of the account.
     pub address: Option<String>,
-    /// Immutable nft metadata, hex encoded bytes
+    /// NFT sender feature, bech32 encoded address.
+    pub sender: Option<String>,
+    /// NFT metadata feature, hex encoded bytes.
+    pub metadata: Option<String>,
+    /// NFT tag feature, hex encoded bytes.
+    pub tag: Option<String>,
+    /// NFT issuer feature, bech32 encoded address.
+    pub issuer: Option<String>,
+    /// Immutable NFT metadata, hex encoded bytes.
     #[serde(rename = "immutableMetadata")]
     pub immutable_metadata: Option<String>,
-    /// Nft metadata, hex encoded bytes
-    pub metadata: Option<String>,
 }
 
 impl TryFrom<&NftOptionsDto> for NftOptions {
@@ -52,14 +64,20 @@ impl TryFrom<&NftOptionsDto> for NftOptions {
     fn try_from(value: &NftOptionsDto) -> crate::Result<Self> {
         Ok(Self {
             address: value.address.clone(),
+            sender: value.sender.clone(),
+            metadata: match &value.metadata {
+                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
+                None => None,
+            },
+            tag: match &value.tag {
+                Some(tag) => Some(prefix_hex::decode(tag).map_err(|_| DtoError::InvalidField("tag"))?),
+                None => None,
+            },
+            issuer: value.issuer.clone(),
             immutable_metadata: match &value.immutable_metadata {
                 Some(metadata) => {
                     Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("immutable_metadata"))?)
                 }
-                None => None,
-            },
-            metadata: match &value.metadata {
-                Some(metadata) => Some(prefix_hex::decode(metadata).map_err(|_| DtoError::InvalidField("metadata"))?),
                 None => None,
             },
         })
@@ -78,8 +96,11 @@ impl AccountHandle {
     ///         .unwrap();
     /// let nft_options = vec![NftOptions {
     ///     address: Some("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string()),
-    ///     immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
+    ///     sender: None,
     ///     metadata: Some(b"some nft metadata".to_vec()),
+    ///     tag: None,
+    ///     issuer: None,
+    ///     immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
     /// }];
     ///
     /// let transaction = account.mint_nfts(nft_options, None).await?;
@@ -129,13 +150,32 @@ impl AccountHandle {
                 NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), NftId::null())?
                     // Address which will own the nft
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
+
+            if let Some(sender) = nft_options.sender {
+                nft_builder = nft_builder.add_feature(Feature::Sender(SenderFeature::new(
+                    Address::try_from_bech32(&sender)?.1,
+                )));
+            }
+
+            if let Some(metadata) = nft_options.metadata {
+                nft_builder = nft_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
+            }
+
+            if let Some(tag) = nft_options.tag {
+                nft_builder = nft_builder.add_feature(Feature::Tag(TagFeature::new(tag)?));
+            }
+
+            if let Some(issuer) = nft_options.issuer {
+                nft_builder = nft_builder.add_immutable_feature(Feature::Issuer(IssuerFeature::new(
+                    Address::try_from_bech32(&issuer)?.1,
+                )));
+            }
+
             if let Some(immutable_metadata) = nft_options.immutable_metadata {
                 nft_builder =
                     nft_builder.add_immutable_feature(Feature::Metadata(MetadataFeature::new(immutable_metadata)?));
-            };
-            if let Some(metadata) = nft_options.metadata {
-                nft_builder = nft_builder.add_feature(Feature::Metadata(MetadataFeature::new(metadata)?));
-            };
+            }
+
             outputs.push(nft_builder.finish_output(token_supply)?);
         }
 

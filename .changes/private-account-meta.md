@@ -2,4 +2,4 @@
 "nodejs-binding": patch
 ---
 
-Bumped dependencies.
+Make account meta private again.

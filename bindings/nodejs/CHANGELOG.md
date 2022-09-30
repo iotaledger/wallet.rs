@@ -1,5 +1,20 @@
 # Changelog
 
+## \[2.0.3-rc.0]
+
+- Fix incomingTransactions() return type definition.
+  - [450e93cb](https://github.com/iotaledger/wallet.rs/commit/450e93cbef3ed821757757348df9720aebf3510e) Fix incomingTransactions() return type definition ([#1474](https://github.com/iotaledger/wallet.rs/pull/1474)) on 2022-09-28
+- Add `sender`, `tag` and `issuer` fields to `NftOptions`.
+  - [75c68220](https://github.com/iotaledger/wallet.rs/commit/75c682202c06b7d7d7677e2a77e73e60f2630ac6) Add features missing from NftOptions ([#1412](https://github.com/iotaledger/wallet.rs/pull/1412)) on 2022-09-28
+- Make account meta private again.
+  - [aa3ed622](https://github.com/iotaledger/wallet.rs/commit/aa3ed6228e649ecc4d3bce30a0fb364b0dfdce8d) Make account meta private again ([#1471](https://github.com/iotaledger/wallet.rs/pull/1471)) on 2022-09-28
+- Remove broken deleteAccountsAndDatabase().
+  - [cfc19ac6](https://github.com/iotaledger/wallet.rs/commit/cfc19ac69ef40a2cac57642dae6b3369cdf5d8eb) Remove broken delete_accounts_and_database() ([#1455](https://github.com/iotaledger/wallet.rs/pull/1455)) on 2022-09-23
+- Remove `list` prefix from functions.
+  - [6e1df531](https://github.com/iotaledger/wallet.rs/commit/6e1df5313f27a560aca98cfa17d544abeff08124) Remove "list" prefix from functions ([#1456](https://github.com/iotaledger/wallet.rs/pull/1456)) on 2022-09-23
+- Use `Uint8Array` over `number[]` in `IAliasOutputBuilderOptions` and other places to better reflect the type requirements.
+  - [e63ace19](https://github.com/iotaledger/wallet.rs/commit/e63ace1969c7b815046eda7ae65ef3bde3ee2449) Use `Uint8Array` over `number[]` ([#1457](https://github.com/iotaledger/wallet.rs/pull/1457)) on 2022-09-23
+
 ## \[2.0.2-alpha.32]
 
 - Fix claimOutputs() with additional native tokens in the inputs.

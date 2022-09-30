@@ -125,7 +125,7 @@ pub enum AccountMethod {
         burn_amount: U256Dto,
         options: Option<TransactionOptions>,
     },
-    /// Burn an nft output. Outputs controlled by it will be sweeped before if they don't have a storage
+    /// Burn an nft output. Outputs controlled by it will be swept before if they don't have a storage
     /// deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
     /// burning, the foundry can never be destroyed anymore.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -148,7 +148,7 @@ pub enum AccountMethod {
         alias_output_options: Option<AliasOutputOptionsDto>,
         options: Option<TransactionOptions>,
     },
-    /// Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
+    /// Destroy an alias output. Outputs controlled by it will be swept before if they don't have a
     /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
     /// sent to the governor address.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -158,7 +158,7 @@ pub enum AccountMethod {
         options: Option<TransactionOptions>,
     },
     /// Function to destroy a foundry output with a circulating supply of 0.
-    /// Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+    /// Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     DestroyFoundry {
         #[serde(rename = "foundryId")]

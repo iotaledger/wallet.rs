@@ -47,8 +47,8 @@ import type {
 
 /** The Account class. */
 export class Account {
-    // TODO: make private because the data isn't updated
-    meta: AccountMeta;
+    // private because the data isn't updated
+    private meta: AccountMeta;
     private messageHandler: MessageHandler;
 
     constructor(accountMeta: AccountMeta, messageHandler: MessageHandler) {
@@ -515,7 +515,7 @@ export class Account {
      * @returns The incoming transactions with their inputs.
      */
     async incomingTransactions(): Promise<
-        [string, ITransactionPayload, IOutputResponse][]
+        [string, [ITransactionPayload, IOutputResponse[]]][]
     > {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,

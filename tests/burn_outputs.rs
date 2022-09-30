@@ -60,8 +60,11 @@ async fn mint_and_burn_nft() -> Result<()> {
 
     let nft_options = vec![NftOptions {
         address: Some(account_addresses[0].address().to_bech32()),
-        immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
+        sender: None,
         metadata: Some(b"some nft metadata".to_vec()),
+        tag: None,
+        issuer: None,
+        immutable_metadata: Some(b"some immutable nft metadata".to_vec()),
     }];
 
     let transaction = account.mint_nfts(nft_options, None).await.unwrap();
