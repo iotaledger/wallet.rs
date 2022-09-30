@@ -20,7 +20,7 @@ public class CheckBalance {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
 
         // Sync account with the registered node to make sure the correct balance is returned.
         AccountBalance balance = a.syncAccount(new SyncAccount());

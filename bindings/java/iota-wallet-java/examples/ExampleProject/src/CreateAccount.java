@@ -22,7 +22,7 @@ public class CreateAccount {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
 
         // Print the account.
         System.out.println(a);

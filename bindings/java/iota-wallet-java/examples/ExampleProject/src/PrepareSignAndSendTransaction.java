@@ -19,7 +19,7 @@ public class PrepareSignAndSendTransaction {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
         // Send a transaction with 1 RMS
         Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[]{

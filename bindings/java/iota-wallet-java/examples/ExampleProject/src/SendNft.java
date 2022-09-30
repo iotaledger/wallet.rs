@@ -20,7 +20,7 @@ public class SendNft {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
 
         // Prepare the NFT transaction
 

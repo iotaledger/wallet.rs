@@ -13,7 +13,7 @@ public class AccountTests extends TestSettings {
 
     @Test
     public void testListAddresses() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
         AccountAddress[] addresses = a.getAddresses();
         for(AccountAddress address : addresses) {
             System.out.println(address.getAddress());
@@ -22,8 +22,8 @@ public class AccountTests extends TestSettings {
 
     @Test
     public void testSetAlias() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
-        a.setAlias(new SetAlias().withAlias("Billy"));
+        AccountHandle a = wallet.createAccount("Alice");
+        a.setAlias(new SetAlias().withAlias("Bob"));
         System.out.println(wallet.getAccount(new AccountIndex(0)).getAlias());
     }
 

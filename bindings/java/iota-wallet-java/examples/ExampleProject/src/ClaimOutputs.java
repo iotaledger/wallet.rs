@@ -20,7 +20,7 @@ public class ClaimOutputs {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
         // Claim the given outputs
         Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{

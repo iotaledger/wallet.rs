@@ -21,10 +21,10 @@ public class GetTransactions {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
         // Set up a transaction for this example.
-        AccountAddress address = wallet.getAccount(new AccountAlias("Hans")).getPublicAddresses()[0];
+        AccountAddress address = wallet.getAccount(new AccountAlias("Alice")).getPublicAddresses()[0];
         a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
                 new AddressWithAmount[]{new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
         ));

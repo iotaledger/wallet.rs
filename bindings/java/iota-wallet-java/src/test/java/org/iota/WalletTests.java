@@ -15,35 +15,35 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class WalletTests extends TestSettings {
     @Test
     public void testCreateAccount() throws WalletException {
-        System.out.println(wallet.createAccount("Hans"));
+        System.out.println(wallet.createAccount("Alice"));
     }
 
     @Test
     public void testCreateAccountsWithSameAlias() throws WalletException {
-        System.out.println(wallet.createAccount("Hans"));
+        System.out.println(wallet.createAccount("Alice"));
         try {
-            System.out.println(wallet.createAccount("Hans"));
+            System.out.println(wallet.createAccount("Alice"));
         } catch (WalletException expectedException) { ; }
     }
 
     @Test
     public void testGetAccountByAlias() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
-        AccountHandle b = wallet.getAccount(new AccountAlias("Hans"));
+        AccountHandle a = wallet.createAccount("Alice");
+        AccountHandle b = wallet.getAccount(new AccountAlias("Alice"));
         assertEquals(a,b);
     }
 
     @Test
     public void testGetAccountByIndex() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
         AccountHandle b = wallet.getAccount(new AccountIndex(0));
         assertEquals(a,b);
     }
 
     @Test
     public void testGetAccounts() throws WalletException {
-        AccountHandle a = wallet.createAccount("Hans");
-        AccountHandle b = wallet.createAccount("Billy");
+        AccountHandle a = wallet.createAccount("Alice");
+        AccountHandle b = wallet.createAccount("Bob");
         assertTrue(wallet.getAccounts().length == 2);
         for (AccountHandle x : wallet.getAccounts())
             System.out.println(x);

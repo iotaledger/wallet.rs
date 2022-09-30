@@ -20,7 +20,7 @@ public class GenerateAddress {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle account = wallet.createAccount("Hans");
+        AccountHandle account = wallet.createAccount("Alice");
 
         // Generate two addresses.
         AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(2));

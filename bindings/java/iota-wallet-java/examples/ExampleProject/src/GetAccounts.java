@@ -22,7 +22,7 @@ public class GetAccounts {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example
-        wallet.createAccount("Hans");
+        wallet.createAccount("Alice");
 
         // Print the accounts.
         for (AccountHandle a : wallet.getAccounts())

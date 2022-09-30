@@ -23,7 +23,7 @@ public class GetAccountByIndex {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        wallet.createAccount("Hans");
+        wallet.createAccount("Alice");
 
         // Get the account by index.
         AccountHandle a = wallet.getAccount(new AccountIndex(0));

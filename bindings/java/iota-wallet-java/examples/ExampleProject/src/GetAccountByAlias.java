@@ -23,10 +23,10 @@ public class GetAccountByAlias {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
 
         // Get the account by alias.
-        AccountHandle b = wallet.getAccount(new AccountAlias("Hans"));
+        AccountHandle b = wallet.getAccount(new AccountAlias("Alice"));
 
         // Print the account.
         System.out.println(a);

@@ -21,7 +21,7 @@ public class GetOutputs {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Set up an account for this example.
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Hans");
+        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
         // Get outputs
         OutputData[] outputs = a.getOutputs(new Outputs());
