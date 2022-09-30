@@ -124,6 +124,17 @@ impl WalletMessageHandler {
             Message::GetAccount(account_id) => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
             }
+            Message::GetAccountIndexes => {
+                convert_async_panics(|| async {
+                    let accounts = self.account_manager.get_accounts().await?;
+                    let mut account_indexes = Vec::new();
+                    for account in accounts.iter() {
+                        account_indexes.push(*account.read().await.index());
+                    }
+                    Ok(Response::AccountIndexes(account_indexes))
+                })
+                .await
+            }
             Message::GetAccounts => convert_async_panics(|| async { self.get_accounts().await }).await,
             Message::CallAccountMethod { account_id, method } => {
                 convert_async_panics(|| async { self.call_account_method(&account_id, method).await }).await

@@ -36,6 +36,9 @@ pub enum Message {
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
     GetAccount(AccountIdentifier),
+    /// Return the account indexes.
+    /// Expected response: [`AccountIndexes`](crate::message_interface::Response::AccountIndexes)
+    GetAccountIndexes,
     /// Read accounts.
     /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     GetAccounts,
@@ -174,6 +177,7 @@ impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Message::CreateAccount(account) => write!(f, "CreateAccount({:?})", account),
+            Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
             Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
             Message::GetAccounts => write!(f, "GetAccounts"),
             Message::CallAccountMethod { account_id, method } => write!(
@@ -250,15 +254,16 @@ impl Serialize for Message {
         match self {
             Message::CreateAccount(_) => serializer.serialize_unit_variant("Message", 1, "CreateAccount"),
             Message::GetAccount(_) => serializer.serialize_unit_variant("Message", 2, "GetAccount"),
-            Message::GetAccounts => serializer.serialize_unit_variant("Message", 3, "GetAccounts"),
-            Message::CallAccountMethod { .. } => serializer.serialize_unit_variant("Message", 4, "CallAccountMethod"),
+            Message::GetAccountIndexes => serializer.serialize_unit_variant("Message", 3, "GetAccountIndexes"),
+            Message::GetAccounts => serializer.serialize_unit_variant("Message", 4, "GetAccounts"),
+            Message::CallAccountMethod { .. } => serializer.serialize_unit_variant("Message", 5, "CallAccountMethod"),
             #[cfg(feature = "stronghold")]
-            Message::Backup { .. } => serializer.serialize_unit_variant("Message", 5, "Backup"),
-            Message::RecoverAccounts { .. } => serializer.serialize_unit_variant("Message", 6, "RecoverAccounts"),
+            Message::Backup { .. } => serializer.serialize_unit_variant("Message", 6, "Backup"),
+            Message::RecoverAccounts { .. } => serializer.serialize_unit_variant("Message", 7, "RecoverAccounts"),
             #[cfg(feature = "stronghold")]
-            Message::RestoreBackup { .. } => serializer.serialize_unit_variant("Message", 7, "RestoreBackup"),
-            Message::GenerateMnemonic => serializer.serialize_unit_variant("Message", 8, "GenerateMnemonic"),
-            Message::VerifyMnemonic(_) => serializer.serialize_unit_variant("Message", 9, "VerifyMnemonic"),
+            Message::RestoreBackup { .. } => serializer.serialize_unit_variant("Message", 8, "RestoreBackup"),
+            Message::GenerateMnemonic => serializer.serialize_unit_variant("Message", 9, "GenerateMnemonic"),
+            Message::VerifyMnemonic(_) => serializer.serialize_unit_variant("Message", 10, "VerifyMnemonic"),
             Message::SetClientOptions(_) => serializer.serialize_unit_variant("Message", 11, "SetClientOptions"),
             Message::GetNodeInfo { .. } => serializer.serialize_unit_variant("Message", 12, "GetNodeInfo"),
             #[cfg(feature = "stronghold")]
