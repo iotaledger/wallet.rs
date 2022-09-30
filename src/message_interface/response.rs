@@ -36,6 +36,8 @@ pub enum Response {
     /// [`CreateAccount`](crate::message_interface::Message::CreateAccount),
     /// [`GetAccount`](crate::message_interface::Message::GetAccount)
     Account(AccountDto),
+    /// Response for [`GetAccountIndexes`](crate::message_interface::Message::GetAccountIndexes)
+    AccountIndexes(Vec<u32>),
     /// Response for [`GetAccounts`](crate::message_interface::Message::GetAccounts)
     Accounts(Vec<AccountDto>),
     /// Response for [`Addresses`](crate::message_interface::AccountMethod::Addresses)
@@ -147,6 +149,7 @@ impl Debug for Response {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Response::Account(account) => write!(f, "Account({:?})", account),
+            Response::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({:?})", account_indexes),
             Response::Accounts(accounts) => write!(f, "Accounts({:?})", accounts),
             Response::Addresses(addresses) => write!(f, "Addresses({:?})", addresses),
             Response::AddressesWithUnspentOutputs(addresses) => {

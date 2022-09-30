@@ -14,7 +14,7 @@ use tokio::sync::mpsc::unbounded_channel;
 pub use self::{
     account_method::AccountMethod,
     dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
-    message::{AccountToCreate, Message},
+    message::Message,
     message_handler::WalletMessageHandler,
     response::Response,
 };
@@ -132,7 +132,7 @@ mod tests {
 
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    use crate::message_interface::{self, AccountMethod, AccountToCreate, ManagerOptions, Message, Response};
+    use crate::message_interface::{self, AccountMethod, ManagerOptions, Message, Response};
 
     const TOKEN_SUPPLY: u64 = 1_813_620_509_061_365;
 
@@ -171,8 +171,7 @@ mod tests {
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // create an account
-        let account = AccountToCreate { alias: None };
-        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
+        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount { alias: None }).await;
         match response {
             Response::Account(account) => {
                 let id = account.index;
@@ -218,10 +217,12 @@ mod tests {
             .await;
 
         // create an account
-        let account = AccountToCreate {
-            alias: Some("alias".to_string()),
-        };
-        let _ = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
+        let _ = message_interface::send_message(
+            &wallet_handle,
+            Message::CreateAccount {
+                alias: Some("alias".to_string()),
+            },
+        );
 
         // send transaction
         let outputs = vec![OutputDto::from(
@@ -284,8 +285,7 @@ mod tests {
 
         // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
         // an address
-        let account = AccountToCreate { ..Default::default() };
-        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount(Box::new(account))).await;
+        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount { alias: None }).await;
 
         match response {
             Response::Account(account) => {

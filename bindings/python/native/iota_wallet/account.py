@@ -428,16 +428,6 @@ class Account:
             }
         )
 
-    def send_transaction(self, outputs, options=None):
-        """Send a transaction.
-        """
-        return self._call_account_method(
-            'sendTransaction', {
-                'outputs': outputs,
-                'options': options
-            }
-        )
-
     def sign_transaction_essence(self, prepared_transaction_data):
         """Sign a transaction essence.
         """

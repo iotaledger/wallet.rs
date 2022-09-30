@@ -45,6 +45,10 @@ export type __GenerateMnemonicMessage__ = {
     cmd: 'generateMnemonic';
 };
 
+export type __GetAccountIndexesMessage__ = {
+    cmd: 'getAccountIndexes';
+};
+
 export type __GetAccountsMessage__ = {
     cmd: 'getAccounts';
 };

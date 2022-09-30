@@ -15,6 +15,7 @@ The AccountManager class.
 - [emitTestEvent](AccountManager.md#emittestevent)
 - [generateMnemonic](AccountManager.md#generatemnemonic)
 - [getAccount](AccountManager.md#getaccount)
+- [getAccountIndexes](AccountManager.md#getaccountindexes)
 - [getAccounts](AccountManager.md#getaccounts)
 - [getNodeInfo](AccountManager.md#getnodeinfo)
 - [getLedgerNanoStatus](AccountManager.md#getledgernanostatus)
@@ -178,6 +179,18 @@ Get an account by its alias or index.
 #### Returns
 
 `Promise`<[`Account`](Account.md)\>
+
+___
+
+### getAccountIndexes
+
+▸ **getAccountIndexes**(): `Promise`<`number`[]\>
+
+Get all account indexes.
+
+#### Returns
+
+`Promise`<`number`[]\>
 
 ___
 
