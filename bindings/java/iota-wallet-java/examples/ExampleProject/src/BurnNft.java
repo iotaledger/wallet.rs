@@ -7,7 +7,7 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.NftId;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class SendNft {
+public class BurnNft {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -23,11 +23,9 @@ public class SendNft {
         AccountHandle a = wallet.createAccount("Alice");
 
         // Prepare the NFT transaction
-        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {
-                new AddressAndNftId()
-                        .withNftId(new NftId("0x8f83b8c88e396be189d8456a462f67c9806d3acb773fb027bce9027485f6b74d"))
-                        .withAddress("rms1zpavxyhxjskacyv2kr6x0rexttd5m3xqxwf2c4e7u6l0qag4d8ajww4x6fq")
-        }));
+        Transaction t = a.burnNft(new org.iota.types.account_methods.BurnNft()
+                .withNftId(new NftId("0x8f83b8c88e396be189d8456a462f67c9806d3acb773fb027bce9027485f6b74d"))
+        );
 
         // Print NFT transaction
         System.out.println(t);
