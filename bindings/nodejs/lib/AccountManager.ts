@@ -130,6 +130,17 @@ export class AccountManager {
     }
 
     /**
+     * Get all account indexes.
+     */
+    async getAccountIndexes(): Promise<number[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getAccountIndexes',
+        });
+
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * Get all accounts.
      */
     async getAccounts(): Promise<Account[]> {

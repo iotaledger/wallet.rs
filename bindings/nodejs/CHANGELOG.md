@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.1]
+
+- Add getAccountIndexes().
+  - [6e20b261](https://github.com/iotaledger/wallet.rs/commit/6e20b2611132e3a92f867b2d80333324485666e2) Add GetAccountIndexes, fix create account example ([#1480](https://github.com/iotaledger/wallet.rs/pull/1480)) on 2022-09-30
+- Fix incomingTransactions() return type definition.
+  - [ee17b037](https://github.com/iotaledger/wallet.rs/commit/ee17b0377f7060aa3454cfb808fa77b517a32d69) Fix incomingTransactions() return type definition ([#1476](https://github.com/iotaledger/wallet.rs/pull/1476)) on 2022-09-29
+
 ## \[2.0.3-rc.0]
 
 - Fix incomingTransactions() return type definition.

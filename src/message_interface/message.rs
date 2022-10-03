@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::node_manager::node::NodeAuth;
-use serde::{ser::Serializer, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
 #[cfg(feature = "events")]
@@ -18,24 +18,23 @@ use crate::{
     ClientOptions,
 };
 
-/// An account to create.
-#[derive(Clone, Debug, Deserialize, Default)]
-pub struct AccountToCreate {
-    /// The account alias.
-    pub alias: Option<String>,
-}
-
 /// The messages that can be sent to the actor.
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(tag = "cmd", content = "payload", rename_all = "camelCase")]
 #[allow(clippy::large_enum_variant)]
 pub enum Message {
     /// Creates an account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
-    CreateAccount(Box<AccountToCreate>),
+    CreateAccount {
+        /// The account alias.
+        alias: Option<String>,
+    },
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
     GetAccount(AccountIdentifier),
+    /// Return the account indexes.
+    /// Expected response: [`AccountIndexes`](crate::message_interface::Response::AccountIndexes)
+    GetAccountIndexes,
     /// Read accounts.
     /// Expected response: [`Accounts`](crate::message_interface::Response::Accounts)
     GetAccounts,
@@ -173,7 +172,8 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Message::CreateAccount(account) => write!(f, "CreateAccount({:?})", account),
+            Message::CreateAccount { alias } => write!(f, "CreateAccount{{ alias: {:?} }}", alias),
+            Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
             Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
             Message::GetAccounts => write!(f, "GetAccounts"),
             Message::CallAccountMethod { account_id, method } => write!(
@@ -238,65 +238,6 @@ impl Debug for Message {
             Message::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
             }
-        }
-    }
-}
-
-impl Serialize for Message {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        match self {
-            Message::CreateAccount(_) => serializer.serialize_unit_variant("Message", 1, "CreateAccount"),
-            Message::GetAccount(_) => serializer.serialize_unit_variant("Message", 2, "GetAccount"),
-            Message::GetAccounts => serializer.serialize_unit_variant("Message", 3, "GetAccounts"),
-            Message::CallAccountMethod { .. } => serializer.serialize_unit_variant("Message", 4, "CallAccountMethod"),
-            #[cfg(feature = "stronghold")]
-            Message::Backup { .. } => serializer.serialize_unit_variant("Message", 5, "Backup"),
-            Message::RecoverAccounts { .. } => serializer.serialize_unit_variant("Message", 6, "RecoverAccounts"),
-            #[cfg(feature = "stronghold")]
-            Message::RestoreBackup { .. } => serializer.serialize_unit_variant("Message", 7, "RestoreBackup"),
-            Message::GenerateMnemonic => serializer.serialize_unit_variant("Message", 8, "GenerateMnemonic"),
-            Message::VerifyMnemonic(_) => serializer.serialize_unit_variant("Message", 9, "VerifyMnemonic"),
-            Message::SetClientOptions(_) => serializer.serialize_unit_variant("Message", 11, "SetClientOptions"),
-            Message::GetNodeInfo { .. } => serializer.serialize_unit_variant("Message", 12, "GetNodeInfo"),
-            #[cfg(feature = "stronghold")]
-            Message::SetStrongholdPassword(_) => {
-                serializer.serialize_unit_variant("Message", 13, "SetStrongholdPassword")
-            }
-            #[cfg(feature = "stronghold")]
-            Message::SetStrongholdPasswordClearInterval(_) => {
-                serializer.serialize_unit_variant("Message", 14, "SetStrongholdPassword")
-            }
-            #[cfg(feature = "stronghold")]
-            Message::StoreMnemonic(_) => serializer.serialize_unit_variant("Message", 15, "StoreMnemonic"),
-            Message::StartBackgroundSync { .. } => {
-                serializer.serialize_unit_variant("Message", 16, "StartBackgroundSync")
-            }
-            Message::StopBackgroundSync => serializer.serialize_unit_variant("Message", 17, "StopBackgroundSync"),
-            #[cfg(feature = "events")]
-            #[cfg(debug_assertions)]
-            Message::EmitTestEvent(_) => serializer.serialize_unit_variant("Message", 18, "EmitTestEvent"),
-            #[cfg(feature = "stronghold")]
-            Message::ClearStrongholdPassword => {
-                serializer.serialize_unit_variant("Message", 19, "ClearStrongholdPassword")
-            }
-            #[cfg(feature = "stronghold")]
-            Message::IsStrongholdPasswordAvailable => {
-                serializer.serialize_unit_variant("Message", 20, "IsStrongholdPasswordAvailable")
-            }
-            #[cfg(feature = "stronghold")]
-            Message::ChangeStrongholdPassword { .. } => {
-                serializer.serialize_unit_variant("Message", 21, "ChangeStrongholdPassword")
-            }
-            Message::RemoveLatestAccount { .. } => {
-                serializer.serialize_unit_variant("Message", 22, "RemoveLatestAccount")
-            }
-            Message::Bech32ToHex(_) => serializer.serialize_unit_variant("Message", 23, "Bech32ToHex"),
-            Message::HexToBech32 { .. } => serializer.serialize_unit_variant("Message", 24, "HexToBech32"),
-            #[cfg(feature = "ledger_nano")]
-            Message::GetLedgerNanoStatus => serializer.serialize_unit_variant("Message", 25, "GetLedgerNanoStatus"),
         }
     }
 }

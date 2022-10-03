@@ -51,6 +51,7 @@ import type {
     __EmitTestEventMessage__,
     __GenerateMnemonicMessage__,
     __GetAccountMessage__,
+    __GetAccountIndexesMessage__,
     __GetAccountsMessage__,
     __GetLedgerNanoStatusMessage__,
     __GetNodeInfoMessage__,
@@ -129,6 +130,7 @@ export type __Message__ =
     | __EmitTestEventMessage__
     | __GenerateMnemonicMessage__
     | __GetAccountMessage__
+    | __GetAccountIndexesMessage__
     | __GetAccountsMessage__
     | __GetLedgerNanoStatusMessage__
     | __GetNodeInfoMessage__
