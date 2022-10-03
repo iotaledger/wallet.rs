@@ -3,12 +3,11 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.GetOutput;
-import org.iota.types.account_methods.Outputs;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class GetOutputs {
+public class ListTransactions {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -23,17 +22,19 @@ public class GetOutputs {
         // Set up an account for this example.
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
-        // Get outputs
-        OutputData[] outputs = a.getOutputs(new Outputs());
+        // Set up a transaction for this example.
+        AccountAddress address = wallet.getAccount(new AccountAlias("Alice")).getPublicAddresses()[0];
+        a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
+                new AddressWithAmount[]{new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
+        ));
 
-        // Print outputs
-        for (OutputData o : outputs)
-            System.out.println(o);
+        // List transactions
+        Transaction[] transactions = a.getTransactions();
 
-        // Get a specific output by id
-        OutputData o = a.getOutput(new GetOutput().withOutputId(outputs[0].getOutputId()));
-
-        // Print the output
-        System.out.println(o);
+        // Print transactions
+        for (Transaction tx : transactions)
+            System.out.println(tx.toString());
     }
+
 }
+
