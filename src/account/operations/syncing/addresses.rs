@@ -272,12 +272,12 @@ impl AccountHandle {
                     let bech32_address = bech32_address_.to_string();
                     let client = client.clone();
                     tokio::spawn(async move {
-                        let mut output_ids = Vec::new();
+                        let mut all_output_ids = Vec::new();
                         // Get nft outputs
                         let nft_output_ids = client
                             .nft_output_ids(vec![QueryParameter::Address(bech32_address.to_string())])
                             .await?;
-                        output_ids.extend(nft_output_ids.clone().into_iter());
+                        all_output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // Get outputs where the address is in the storage deposit return unlock condition
                         let nft_output_ids = client
@@ -285,7 +285,7 @@ impl AccountHandle {
                                 bech32_address.to_string(),
                             )])
                             .await?;
-                        output_ids.extend(nft_output_ids.clone().into_iter());
+                        all_output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // Get outputs where the address is in the expiration unlock condition
                         let nft_output_ids = client
@@ -293,16 +293,18 @@ impl AccountHandle {
                                 bech32_address.to_string(),
                             )])
                             .await?;
-                        output_ids.extend(nft_output_ids.clone().into_iter());
+                        all_output_ids.extend(nft_output_ids.clone().into_iter());
 
                         // get basic outputs that can be controlled by an nft output
                         let (mut nft_output_responses, loaded_output_responses) =
-                            account_handle.get_outputs(nft_output_ids, false).await?;
-                        nft_output_responses.extend(loaded_output_responses.into_iter());
+                            account_handle.get_outputs(all_output_ids.clone(), false).await?;
+                        nft_output_responses.extend(loaded_output_responses.clone().into_iter());
                         let nft_basic_output_ids =
-                            get_basic_outputs_for_nft_outputs(&client, nft_output_responses, bech32_hrp).await?;
-                        output_ids.extend(nft_basic_output_ids.into_iter());
-                        Ok(output_ids)
+                            get_basic_outputs_for_nft_outputs(&client, nft_output_responses, bech32_hrp.clone())
+                                .await?;
+                        all_output_ids.extend(nft_basic_output_ids.into_iter());
+                        // todo: what about recursive owned nfts/aliases?
+                        Ok(all_output_ids)
                     })
                     .await
                 }
@@ -327,11 +329,11 @@ impl AccountHandle {
                             .await?;
                         output_ids.extend(alias_output_ids.clone().into_iter());
 
-                        // get possible foundries and basic outputs that can be controlled by an alias outputs
+                        // get possible foundries, nfts and basic outputs that can be controlled by an alias outputs
                         let (mut alias_output_responses, loaded_output_responses) =
                             account_handle.get_outputs(alias_output_ids, false).await?;
                         alias_output_responses.extend(loaded_output_responses.into_iter());
-                        let alias_foundry_and_basic_output_ids = get_foundry_and_basic_outputs_for_alias_outputs(
+                        let alias_foundry_and_basic_output_ids = get_foundry_nft_and_basic_outputs_for_alias_outputs(
                             &client,
                             alias_output_responses,
                             bech32_hrp,
@@ -389,7 +391,7 @@ async fn get_basic_outputs_for_nft_outputs(
 }
 
 // Get basic outputs that have the [`AliasAddress`] from alias outputs in their [`AddressUnlockCondition`]
-async fn get_foundry_and_basic_outputs_for_alias_outputs(
+async fn get_foundry_nft_and_basic_outputs_for_alias_outputs(
     client: &Client,
     alias_output_responses: Vec<OutputResponse>,
     bech32_hrp: String,
@@ -416,6 +418,14 @@ async fn get_foundry_and_basic_outputs_for_alias_outputs(
             alias_basic_output_ids.extend(
                 client
                     .basic_output_ids(vec![QueryParameter::Address(
+                        alias_address.to_bech32(bech32_hrp.clone()),
+                    )])
+                    .await?
+                    .into_iter(),
+            );
+            alias_basic_output_ids.extend(
+                client
+                    .nft_output_ids(vec![QueryParameter::Address(
                         alias_address.to_bech32(bech32_hrp.clone()),
                     )])
                     .await?

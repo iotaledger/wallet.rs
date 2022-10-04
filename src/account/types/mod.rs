@@ -114,7 +114,14 @@ impl OutputData {
             if let Some(unlock_conditions) = self.output.unlock_conditions() {
                 match &self.output {
                     Output::Foundry(foundry) => Address::Alias(*foundry.alias_address()),
-                    _ => *unlock_conditions.locked_address(&self.address, current_time),
+                    // todo: where to detect if state or governor controller address is required for an alias?
+                    _ => *unlock_conditions.locked_address(
+                        unlock_conditions
+                            .address()
+                            .map(|a| a.address())
+                            .unwrap_or(&self.address),
+                        current_time,
+                    ),
                 }
             } else {
                 self.address
