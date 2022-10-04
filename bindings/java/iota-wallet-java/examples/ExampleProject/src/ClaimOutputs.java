@@ -3,13 +3,11 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.FoundryId;
-import org.iota.types.ids.TokenId;
+import org.iota.types.ids.OutputId;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class DestroyFoundry {
+public class ClaimOutputs {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -24,15 +22,12 @@ public class DestroyFoundry {
         // Set up an account for this example.
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
-        // Sync account
-        AccountBalance b = a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
+        // Claim the given outputs
+        Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{
+                new OutputId("0xcbcfbbd9b36bd9a3d6830311ed428036d13fc37050bcd1cf82fb4e4b695570fd0100")
+        }));
 
-        // Create transaction
-        Transaction t = a.destroyFoundry(new org.iota.types.account_methods.DestroyFoundry()
-                .withFoundryId(new FoundryId("0x08429fe5864378ce70699fc2d22bb144cb86a3c4833d136e3b95c5dadfd6ba0cef0500000000"))
-        );
-
-        // Print Native Token transaction
+        // Print the transaction
         System.out.println(t);
     }
 
