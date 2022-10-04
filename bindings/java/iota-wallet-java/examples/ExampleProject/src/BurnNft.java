@@ -3,6 +3,7 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.NftId;
 import org.iota.types.secret.StrongholdSecretManager;
@@ -22,9 +23,12 @@ public class BurnNft {
         // Set up an account for this example.
         AccountHandle a = wallet.createAccount("Alice");
 
+        // Sync account
+        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
+
         // Prepare the NFT transaction
         Transaction t = a.burnNft(new org.iota.types.account_methods.BurnNft()
-                .withNftId(new NftId("0x8f83b8c88e396be189d8456a462f67c9806d3acb773fb027bce9027485f6b74d"))
+                .withNftId(new NftId("0xf95f4d5344217a2ba19a6c19a47f97d267edf8c4d76a7b8c08072ad35acbebbe"))
         );
 
         // Print NFT transaction

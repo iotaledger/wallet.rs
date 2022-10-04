@@ -6,25 +6,52 @@
       "type":1,
       "networkId":"8342982141227064571",
       "inputs":[
-        "Array"
+        {
+          "type":0,
+          "transactionId":"0xd96c9cdf8c6b095f7ab44105f8298c766a7433664db651bfbd7832566d59f103",
+          "transactionOutputIndex":0
+        }
       ],
-      "inputsCommitment":"0xd549b56a017e51a4ff053171b55aba62aac59e38a167067769991ccfb663ce1b",
+      "inputsCommitment":"0xd64acb6fec68315c200484458fb0a2c1e9b7d06106aecdcb9c86403d955ad69a",
       "outputs":[
-        "Array"
+        {
+          "type":6,
+          "amount":"52000",
+          "nftId":"0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003",
+          "unlockConditions":[
+            {
+              "type":0,
+              "address":{
+                "type":0,
+                "pubKeyHash":"0x4cfde0600797ae07d19d67d78910e70950bfdaf716f0035e9a30b97828aaf6a2"
+              }
+            }
+          ],
+          "features":[
+            {
+              "type":2,
+              "data":"0x5368696d6d65722e20546f6b656e697a652045766572797468696e672e2048656c6c6f2066726f6d20746865204a6176612062696e64696e672e"
+            }
+          ]
+        }
       ]
     },
     "unlocks":[
-      [
-        "Object"
-      ]
+      {
+        "type":0,
+        "signature":{
+          "type":0,
+          "publicKey":"0xde3152ce9d67415b9c5a042ea01caccc3f73ff1c0c77036874cb8badf9798d56",
+          "signature":"0xc42fd26b652581e6b2f58ef316b9817830093ae959d716f06c97284fadad72e39838031205d89afa3f0177ae2b1780435945be6a29274a1c66ad47d622cf630b"
+        }
+      }
     ]
   },
-  "blockId":"0x40c74e3e9bc8913e3d5c75723d8e018695f3be8a78bd05479500eff4a7a10915",
+  "blockId":"0xa2dc2b45e42ef4c5f847f329faa27ee7b3e50ede0d6b46aeed996f4d74e87b95",
   "inclusionState":"Pending",
-  "timestamp":"1663000240615",
-  "transactionId":"0x03d4fe1335d0880db4163e7cb19735e016c803b015c9e65123e07de579ed41d2",
+  "timestamp":"1664876443672",
+  "transactionId":"0xb423ef2155828a4b301795a77357c70bdac76c47f6ee1a20af6a298540fd9b86",
   "networkId":"8342982141227064571",
-  "incoming":false,
-  "note":null
+  "incoming":false
 }
 ```
