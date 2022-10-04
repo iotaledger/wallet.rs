@@ -1,39 +1,42 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import com.google.gson.Gson;
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class SendAmount {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InterruptedException {
-        // Build the wallet.
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Set up an account with funds for this example
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
+        // Get account and sync it with the registered node to ensure that its balances are up-to-date.
+        AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
+        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Set up receiver address
-        AccountAddress address = wallet.getAccount(new AccountAlias("Alice")).getPublicAddresses()[0];
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
 
-        // Configure outputs
-        Transaction p = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(
-                new AddressWithAmount[]{new AddressWithAmount().withAddress(address.getAddress()).withAmount("1000000")}
-        ));
+        // TODO: replace with your own values.
+        String receiverAddress = a.getPublicAddresses()[0].getAddress();
+        String amount = "1000000";
 
-        // Print transaction
-        System.out.println(new Gson().toJson(p));
+        // Send transaction.
+        Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[]{new AddressWithAmount()
+                .withAddress(receiverAddress)
+                .withAmount(amount)
+        }));
+
+        // Print transaction.
+        System.out.println(t);
     }
 
 }
-

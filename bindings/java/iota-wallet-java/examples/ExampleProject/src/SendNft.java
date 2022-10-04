@@ -6,36 +6,35 @@ import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.NftId;
+import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class SendNft {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InterruptedException {
-        // Build the wallet.
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Set up an account for this example.
-        AccountHandle a = wallet.createAccount("Alice");
-
-        // Sync account
+        // Get account and sync it with the registered node to ensure that its balances are up-to-date.
+        AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Prepare the NFT transaction
-        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {
-                new AddressAndNftId()
-                        .withNftId(new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003"))
-                        .withAddress("rms1qpx0mcrqq7t6up73n4na0zgsuuy4p0767ut0qq67ngctj7pg4tm2ynsuynp")
+        // TODO: replace with your own values.
+        String receiverAddress = a.getPublicAddresses()[0].getAddress();
+        NftId nftId = new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003");
+
+        // Send transaction.
+        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {new AddressAndNftId()
+                .withAddress(receiverAddress)
+                .withNftId(nftId)
         }));
 
-        // Print NFT transaction
+        // Print transaction.
         System.out.println(t);
     }
 
 }
-

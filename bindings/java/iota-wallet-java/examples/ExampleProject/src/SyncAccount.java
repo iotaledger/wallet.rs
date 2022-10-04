@@ -4,26 +4,24 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class SyncAccount {
-
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InterruptedException {
-        // Build the wallet.
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Create an account.
-        AccountHandle a = wallet.createAccount("Alice");
+        // Get account.
+        AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
 
-        // Sync account with the registered node to make sure the correct balance is returned.
-        AccountBalance balance = a.syncAccount(new org.iota.types.account_methods.SyncAccount());
+        // Sync the account with the registered node to ensure that its balances are up-to-date.
+        AccountBalance balance = a.syncAccount(new org.iota.types.account_methods.SyncAccount().withOptions(new SyncOptions()));
 
         // Print the balance.
         System.out.println(balance.getBaseCoin().getTotal());

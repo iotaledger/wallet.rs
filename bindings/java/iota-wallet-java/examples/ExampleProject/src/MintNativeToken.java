@@ -3,35 +3,39 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.TokenId;
+import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class MintNativeToken {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InterruptedException {
-        // Build the wallet.
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Set up an account for this example.
-        AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
+        // Get account and sync it with the registered node to ensure that its balances are up-to-date.
+        AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
+        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Configure the Native Token
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
+
+        // TODO: replace with your own values.
         NativeTokenOptions options = new NativeTokenOptions();
         options.withCirculatingSupply("0x20"); // number 23 hex encoded
-        options.withMaximumSupply("0x64"); // number 100 hex encocded
+        options.withMaximumSupply("0x45"); // number 69 hex encoded
 
-        // Mint the Native Token
+        // Send transaction.
         MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
 
-        // Print Native Token
+        // Print transaction.
         System.out.println(t);
     }
 
 }
-
