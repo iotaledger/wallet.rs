@@ -24,7 +24,7 @@ public class ClaimOutputs {
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
         // TODO: replace with your own values.
-        OutputId outputId = new OutputId("0xcbcfbbd9b36bd9a3d6830311ed428036d13fc37050bcd1cf82fb4e4b695570fd0100");
+        OutputId outputId = new OutputId("0xeb572c09b9cdf4e29c65ecbe10c06d484c04d33da3bea6d9bb1653aa6617e8450000");
 
         // Claim the given outputs
         Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{

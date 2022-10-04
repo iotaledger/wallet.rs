@@ -58,23 +58,23 @@ public class OutputOptions extends AbstractObject {
     }
 
     public static class Unlocks extends AbstractObject {
-        private int expirationUnixTime;
-        private int timelockUnixTime;
+        private Integer expirationUnixTime;
+        private Integer timelockUnixTime;
 
-        public int getExpirationUnixTime() {
+        public Integer getExpirationUnixTime() {
             return expirationUnixTime;
         }
 
-        public Unlocks withExpirationUnixTime(int expirationUnixTime) {
+        public Unlocks withExpirationUnixTime(Integer expirationUnixTime) {
             this.expirationUnixTime = expirationUnixTime;
             return this;
         }
 
-        public int getTimelockUnixTime() {
+        public Integer getTimelockUnixTime() {
             return timelockUnixTime;
         }
 
-        public Unlocks withTimelockUnixTime(int timelockUnixTime) {
+        public Unlocks withTimelockUnixTime(Integer timelockUnixTime) {
             this.timelockUnixTime = timelockUnixTime;
             return this;
         }
