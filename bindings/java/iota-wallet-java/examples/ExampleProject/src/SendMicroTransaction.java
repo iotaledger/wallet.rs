@@ -1,12 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import com.google.gson.Gson;
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class PrepareSignAndSendTransaction {
+public class SendMicroTransaction {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -18,16 +20,21 @@ public class PrepareSignAndSendTransaction {
         );
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
-        // Set up an account for this example.
+        // Set up an account with funds for this example
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
-        // Send a transaction with 1 RMS
-        Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[]{
-                new AddressWithAmount().withAmount("1000000").withAddress("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")
-        }));
+        // Set up receiver address
+        AccountAddress address = wallet.getAccount(new AccountAlias("Alice")).getPublicAddresses()[0];
 
-        // Print the transaction
-        System.out.println(t.toString());
+        System.out.println(address);
+
+        // Configure outputs
+        Transaction p = a.sendMicroTransaction(new org.iota.types.account_methods.SendMicroTransaction().withAddressesWithMicroAmount(
+                new AddressWithMicroAmount[]{new AddressWithMicroAmount().withAddress(address.getAddress()).withAmount("1")}
+        ));
+
+        // Print transaction
+        System.out.println(new Gson().toJson(p));
     }
 
 }
