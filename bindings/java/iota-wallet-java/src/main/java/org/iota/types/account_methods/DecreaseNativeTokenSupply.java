@@ -12,7 +12,7 @@ public class DecreaseNativeTokenSupply implements AccountMethod {
 
     private TokenId tokenId;
     private String meltAmount;
-    private TransactionOptions transactionOptions;
+    private TransactionOptions options;
 
     public DecreaseNativeTokenSupply withTokenId(TokenId tokenId) {
         this.tokenId = tokenId;
@@ -24,8 +24,8 @@ public class DecreaseNativeTokenSupply implements AccountMethod {
         return this;
     }
 
-    public DecreaseNativeTokenSupply withTransactionOptions(TransactionOptions transactionOptions) {
-        this.transactionOptions = transactionOptions;
+    public DecreaseNativeTokenSupply withTransactionOptions(TransactionOptions options) {
+        this.options = options;
         return this;
     }
 }

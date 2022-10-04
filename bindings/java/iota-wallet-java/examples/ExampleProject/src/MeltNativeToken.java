@@ -3,10 +3,17 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.DecreaseNativeTokenSupply;
+import org.iota.types.account_methods.SendNativeTokens;
+import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.TokenId;
+import org.iota.types.payload.TaggedDataPayload;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class MintNativeToken {
+import java.util.HashMap;
+
+public class MeltNativeToken {
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException, InterruptedException {
@@ -21,15 +28,18 @@ public class MintNativeToken {
         // Set up an account for this example.
         AccountHandle a = ExampleUtils.setUpAccountWithFunds(wallet, "Alice");
 
-        // Configure the Native Token
-        NativeTokenOptions options = new NativeTokenOptions();
-        options.withCirculatingSupply("0x20"); // number 23 hex encoded
-        options.withMaximumSupply("0x64"); // number 100 hex encocded
+        // Sync account
+        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Mint the Native Token
-        MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
+        // Get a tokenId from your account balance
+        TokenId tokenId = new TokenId("0x08429fe5864378ce70699fc2d22bb144cb86a3c4833d136e3b95c5dadfd6ba0cef0500000000");
 
-        // Print Native Token
+        Transaction t = a.meltNativeToken(new DecreaseNativeTokenSupply()
+                .withTokenId(tokenId)
+                .withMeltAmount("0x20")
+        );
+
+        // Print Native Token transaction
         System.out.println(t);
     }
 

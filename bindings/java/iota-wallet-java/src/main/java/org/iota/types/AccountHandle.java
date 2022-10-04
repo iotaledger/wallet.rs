@@ -14,7 +14,6 @@ import org.iota.types.ids.OutputId;
 import org.iota.types.ids.TransactionId;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.outputs.Output;
-import org.iota.types.payload.TaggedDataPayload;
 import org.iota.types.payload.TransactionPayload;
 
 import java.lang.reflect.Type;
@@ -375,8 +374,8 @@ public class AccountHandle extends AbstractObject {
      *
      * @param options The options.
      */
-    public TaggedDataPayload meltNativeToken(DecreaseNativeTokenSupply options) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(options), TaggedDataPayload.class);
+    public Transaction meltNativeToken(DecreaseNativeTokenSupply options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
     /**
