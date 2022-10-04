@@ -3,15 +3,22 @@
 
 package org.iota.types;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import com.google.gson.annotations.JsonAdapter;
+import org.iota.api.CustomGson;
 import org.iota.types.ids.TokenId;
 
-import java.util.Map;
+import java.lang.reflect.Type;
+
 public class AddressNativeTokens extends AbstractObject {
 
     /// Bech32 encoded address
     private String address;
     /// Native tokens
-    private Map<TokenId, String>[] nativeTokens;
+    private NativeTokenTuple[] nativeTokens;
     /// Bech32 encoded address return address, to which the storage deposit will be returned. Default will use the
     /// first address of the account
     private String returnAddress;
@@ -28,11 +35,11 @@ public class AddressNativeTokens extends AbstractObject {
         return this;
     }
 
-    public Map<TokenId, String>[] getNativeTokens() {
+    public NativeTokenTuple[] getNativeTokens() {
         return nativeTokens;
     }
 
-    public AddressNativeTokens withNativeTokens(Map<TokenId, String>[] nativeTokens) {
+    public AddressNativeTokens withNativeTokens(NativeTokenTuple[] nativeTokens) {
         this.nativeTokens = nativeTokens;
         return this;
     }
@@ -54,5 +61,33 @@ public class AddressNativeTokens extends AbstractObject {
         this.expiration = expiration;
         return this;
     }
+
+    @JsonAdapter(NativeTokenTupleAdapter.class)
+    public static class NativeTokenTuple extends AbstractTuple {
+
+        public NativeTokenTuple(TokenId tokenId, String amount) {
+            super(tokenId, amount);
+        }
+
+        public TokenId getTokenId() {
+            return (TokenId) get(0);
+        }
+
+        public String getAmount() {
+            return (String) get(1);
+        }
+
+    }
+
+    class NativeTokenTupleAdapter implements JsonSerializer<NativeTokenTuple> {
+        @Override
+        public JsonElement serialize(NativeTokenTuple t, Type typeOfSrc, JsonSerializationContext context) {
+            JsonArray a = new JsonArray();
+            a.add(CustomGson.get().toJsonTree(t.getTokenId()));
+            a.add(t.getAmount());
+            return a;
+        }
+    }
+
 }
 
