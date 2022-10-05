@@ -15,9 +15,7 @@ import java.util.Date;
 public class ExampleUtils {
 
     public static void fundAccount(AccountHandle a) throws WalletException, InterruptedException {
-        int available = a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable();
-
-        while (available < 1000000) {
+        while (a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable() < 1000000) {
             System.out.println("Please fund following address: " + a.getPublicAddresses()[0]);
             Thread.sleep(5000);
         }

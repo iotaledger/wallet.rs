@@ -1,2 +1,50 @@
 ```json
+{
+  "payload":{
+    "type":6,
+    "essence":{
+      "type":1,
+      "networkId":"8342982141227064571",
+      "inputs":[
+        {
+          "type":0,
+          "transactionId":"0xef3c9f8e8179e133f8207f3933039eaaf601f1f260b6116d7ca7c6711baa91a8",
+          "transactionOutputIndex":0
+        }
+      ],
+      "inputsCommitment":"0xebda3754c942e47e7dd0e9177ad24c2985b4db98009a58ee2417e69695c8afc5",
+      "outputs":[
+        {
+          "type":3,
+          "amount":"103100",
+          "unlockConditions":[
+            {
+              "type":0,
+              "address":{
+                "type":0,
+                "pubKeyHash":"0xcb89e7952f758942e4e623708ebd1512e11bd5b39abc53f082ef8a9c20ac760a"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "unlocks":[
+      {
+        "type":0,
+        "signature":{
+          "type":0,
+          "publicKey":"0x8deb59df30fdd61349c20987179b5e0268e34338f37841b816f62e66820dae6c",
+          "signature":"0x0740d0b4435c25c0b57d579c90d2dd1a197b18b95a9784a1fc04ce51e63b2f93f680ec3568751a8cae09eaf3f5ee4fad2543f3a6ada14501af091d94d103a70f"
+        }
+      }
+    ]
+  },
+  "blockId":"0x3f86a22d6170b64a420562a8e31adcd515a6d2b15d0201f60e20fc037b9ec455",
+  "inclusionState":"Pending",
+  "timestamp":"1664966791558",
+  "transactionId":"0xf4f21680774c74ae44d3244aca8cc3fd0248930561de673032afb21b18b04e8e",
+  "networkId":"8342982141227064571",
+  "incoming":false
+}
 ```

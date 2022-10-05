@@ -3,13 +3,17 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.BuildAliasOutput;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.addresses.Ed25519Address;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.AliasId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
+import org.iota.types.unlock_conditions.AddressUnlockCondition;
+import org.iota.types.unlock_conditions.UnlockCondition;
 
-public class DestroyAliasOutput {
+public class CreateAliasOutput {
     public static void main(String[] args) throws WalletException, InterruptedException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
@@ -23,17 +27,11 @@ public class DestroyAliasOutput {
         AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // TODO: replace with your own values.
-        AliasId aliasId = new AliasId("0xc3dc87b11c94ae919aae950309194bd145d8bf3a80824a63c24336dced7cb22f");
-
         // Send transaction.
-        Transaction t = a.destroyAlias(new org.iota.types.account_methods.DestroyAlias().withAliasId(
-                aliasId
-        ));
+        Transaction t = a.createAliasOutput(new org.iota.types.account_methods.CreateAliasOutput());
 
         // Print transaction.
         System.out.println(t);
     }
 
 }
-

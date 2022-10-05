@@ -535,6 +535,10 @@ public class AccountHandle extends AbstractObject {
         return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
+    public Transaction createAliasOutput(CreateAliasOutput options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
+    }
+
 }
 
 class AccountHandleAdapter implements JsonSerializer<AccountHandle> {
