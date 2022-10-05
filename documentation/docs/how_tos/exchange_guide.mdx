@@ -27,9 +27,22 @@ You can easily integrate wallet.rs with your exchange, custody solution, or prod
 
 :::
 
-## Implementation Guide
 
-This guide explains how to implement the Wallet library in your exchange.
+:::warning
+
+IOTA allows for complex tokenization schemes, but they can lead to monetary losses if used improperly or integrated incorrectly.
+Transaction outputs may have multiple unlocking conditions which may require returning some or all of the amount, which could expire if not claimed in time, or which may not be unlockable for a very long time.
+Therefore, pay attention to the work with transaction outputs, understand what kind of unlock conditions exist and test your integration properly.
+
+Examples:
+- If a transaction produces an output that can be unlocked using of an "expiration unlock condition", the sender could claim the money back if the recipient did not claim it in time.
+- If the transaction produces an output that can be unlocked using "timelock unlocking condition", it might be the case that receiver can claim the funds only after a very long time.
+
+:::
+
+## Integration Guide
+
+This guide explains how to integrate the Wallet library in your exchange.
 
 Features of the Wallet Library:
 - Secure seed management.
