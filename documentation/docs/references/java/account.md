@@ -295,7 +295,14 @@ Submits and stores a transaction.
 
 ## `public Transaction claimOutputs(ClaimOutputs options) throws WalletException`
 
-This function claims all unclaimed outputs for the account
+This function claims all unclaimed outputs for the account.
+
+* **Parameters:** `options` — The options.
+* **Returns:** A transaction object.
+
+## `public Transaction createAliasOutput(CreateAliasOutput options) throws WalletException`
+
+Creates an alias output.
 
 * **Parameters:** `options` — The options.
 * **Returns:** A transaction object.

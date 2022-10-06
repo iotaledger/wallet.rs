@@ -111,7 +111,7 @@ Set the stronghold password clear interval.
 
 * **Parameters:** `password` — The password to set for the stronghold.
 
-## `public void SetStrongholdPasswordClearInterval(int interval) throws WalletException`
+## `public void setStrongholdPasswordClearInterval(int interval) throws WalletException`
 
 Set the stronghold password clear interval.
 

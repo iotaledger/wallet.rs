@@ -526,7 +526,7 @@ public class AccountHandle extends AbstractObject {
 
 
     /**
-     * This function claims all unclaimed outputs for the account
+     * This function claims all unclaimed outputs for the account.
      *
      * @param options The options.
      * @return A transaction object.
@@ -535,6 +535,12 @@ public class AccountHandle extends AbstractObject {
         return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
 
+    /**
+     * Creates an alias output.
+     *
+     * @param options The options.
+     * @return A transaction object.
+     */
     public Transaction createAliasOutput(CreateAliasOutput options) throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
     }
