@@ -71,7 +71,6 @@ impl AccountHandle {
         let token_supply = self.client.get_token_supply()?;
 
         let mut outputs = Vec::new();
-        let mut custom_inputs = Vec::new();
 
         for address_and_nft_id in addresses_nft_ids {
             let (_bech32_hrp, address) = Address::try_from_bech32(&address_and_nft_id.address)?;
@@ -89,23 +88,11 @@ impl AccountHandle {
                         .with_nft_id(address_and_nft_id.nft_id)
                         .with_unlock_conditions(vec![UnlockCondition::Address(AddressUnlockCondition::new(address))]);
                     outputs.push(nft_builder.finish_output(token_supply)?);
-                    // Add custom input
-                    custom_inputs.push(nft_output_data.output_id);
                 }
             } else {
                 return Err(crate::Error::NftNotFoundInUnspentOutputs);
             };
         }
-        let options = match options {
-            Some(mut options) => {
-                options.custom_inputs.replace(custom_inputs);
-                Some(options)
-            }
-            None => Some(TransactionOptions {
-                custom_inputs: Some(custom_inputs),
-                ..Default::default()
-            }),
-        };
 
         self.prepare_transaction(outputs, options).await
     }

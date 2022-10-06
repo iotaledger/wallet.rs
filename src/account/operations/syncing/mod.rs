@@ -14,11 +14,21 @@ use std::{
 
 use iota_client::{
     api_types::response::OutputResponse,
-    block::{output::OutputId, payload::transaction::TransactionId, Block, BlockId},
+    block::{
+        address::{Address, AliasAddress, NftAddress},
+        output::{Output, OutputId},
+        payload::transaction::TransactionId,
+        Block, BlockId,
+    },
 };
 
 pub use self::options::SyncOptions;
-use crate::account::{constants::MIN_SYNC_INTERVAL, handle::AccountHandle, AccountBalance};
+use crate::account::{
+    constants::MIN_SYNC_INTERVAL,
+    handle::AccountHandle,
+    types::{AddressWithUnspentOutputs, OutputData},
+    AccountBalance,
+};
 
 impl AccountHandle {
     /// Retries (promotes or reattaches) a block for provided block id until it's included (referenced by a
@@ -63,18 +73,17 @@ impl AccountHandle {
         let addresses_to_sync = self.get_addresses_to_sync(&options).await?;
         log::debug!("[SYNC] addresses_to_sync {}", addresses_to_sync.len());
 
-        // get outputs for addresses and add them also the the addresses_with_unspent_outputs
-        let (addresses_with_output_ids, spent_or_not_synced_output_ids) =
-            self.get_address_output_ids(&options, addresses_to_sync.clone()).await?;
-
-        // get outputs for addresses and add them also the the addresses_with_unspent_outputs
-        let (addresses_with_unspent_outputs_and_outputs, output_data) =
-            self.get_addresses_outputs(addresses_with_output_ids.clone()).await?;
+        let (spent_or_not_synced_output_ids, addresses_with_unspent_outputs, outputs_data): (
+            Vec<OutputId>,
+            Vec<AddressWithUnspentOutputs>,
+            Vec<OutputData>,
+        ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
 
         // request possible spent outputs
         // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
         // `spent_or_not_synced_outputs` directly from a new method
-        let (spent_or_not_synced_output_responses, _loaded_output_responses) =
+        log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
+        let spent_or_not_synced_output_responses =
             self.get_outputs(spent_or_not_synced_output_ids.clone(), true).await?;
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
@@ -90,7 +99,7 @@ impl AccountHandle {
         }
 
         if options.sync_incoming_transactions {
-            let transaction_ids = output_data
+            let transaction_ids = outputs_data
                 .iter()
                 .map(|output| *output.output_id.transaction_id())
                 .collect();
@@ -100,8 +109,8 @@ impl AccountHandle {
 
         // updates account with balances, output ids, outputs
         self.update_account(
-            addresses_with_unspent_outputs_and_outputs,
-            output_data,
+            addresses_with_unspent_outputs,
+            outputs_data,
             spent_or_not_synced_outputs,
             &options,
         )
@@ -121,5 +130,101 @@ impl AccountHandle {
         *last_synced = time_now;
         log::debug!("[SYNC] finished syncing in {:.2?}", syc_start_time.elapsed());
         Ok(account_balance)
+    }
+
+    // First request all outputs directly related to the ed25519 addresses, then for each nft and alias output we got,
+    // request all outputs that are related to their alias/nft addresses in a loop until no new alias or nft outputs is
+    // found
+    async fn request_outputs_recursively(
+        &self,
+        addresses_to_sync: Vec<AddressWithUnspentOutputs>,
+        options: &SyncOptions,
+    ) -> crate::Result<(Vec<OutputId>, Vec<AddressWithUnspentOutputs>, Vec<OutputData>)> {
+        // Cache the alias and nft address with the related ed2559 address, so we can update the account address with
+        // the new output ids
+        let mut new_alias_and_nft_addresses = HashMap::new();
+        let (mut spent_or_not_synced_output_ids, mut addresses_with_unspent_outputs, mut outputs_data) =
+            (Vec::new(), Vec::new(), Vec::new());
+
+        loop {
+            let new_outputs_data = if new_alias_and_nft_addresses.is_empty() {
+                // get outputs for addresses and add them also the the addresses_with_unspent_outputs
+                let (addresses_with_output_ids, spent_or_not_synced_output_ids_inner) = self
+                    .get_output_ids_for_addresses(options, addresses_to_sync.clone())
+                    .await?;
+                spent_or_not_synced_output_ids = spent_or_not_synced_output_ids_inner;
+                // get outputs for addresses and add them also the the addresses_with_unspent_outputs
+                let (addresses_with_unspent_outputs_inner, outputs_data_inner) = self
+                    .request_outputs_from_address_output_ids(addresses_with_output_ids)
+                    .await?;
+                addresses_with_unspent_outputs = addresses_with_unspent_outputs_inner;
+                outputs_data.extend(outputs_data_inner.clone().into_iter());
+                outputs_data_inner
+            } else {
+                let bech32_hrp = self.client().get_bech32_hrp()?;
+                let mut new_outputs_data = Vec::new();
+                for (alias_or_nft_address, ed25519_address) in new_alias_and_nft_addresses {
+                    let output_ids = self.get_output_ids_for_address(alias_or_nft_address, options).await?;
+
+                    // Update address with unspent outputs
+                    let address_with_unspent_outputs = addresses_with_unspent_outputs
+                        .iter_mut()
+                        .find(|a| a.address.inner == ed25519_address)
+                        .ok_or_else(|| {
+                            crate::Error::AddressNotFoundInAccount(ed25519_address.to_bech32(bech32_hrp.clone()))
+                        })?;
+                    address_with_unspent_outputs.output_ids.extend(output_ids.clone());
+
+                    let new_outputs_data_inner = self.get_outputs(output_ids, false).await?;
+
+                    let outputs_data_inner = self
+                        .output_response_to_output_data(new_outputs_data_inner, address_with_unspent_outputs)
+                        .await?;
+
+                    outputs_data.extend(outputs_data_inner.clone().into_iter());
+                    new_outputs_data.extend(outputs_data_inner);
+                }
+                new_outputs_data
+            };
+
+            // Clear, so we only get new addresses
+            new_alias_and_nft_addresses = HashMap::new();
+            // Add new alias and nft addresses
+            for output_data in new_outputs_data.iter() {
+                match &output_data.output {
+                    Output::Alias(alias_output) => {
+                        let transaction_id = TransactionId::from_str(&output_data.metadata.transaction_id)?;
+                        let output_id = OutputId::new(transaction_id, output_data.metadata.output_index)?;
+                        let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
+
+                        new_alias_and_nft_addresses.insert(Address::Alias(alias_address), output_data.address);
+                    }
+                    Output::Nft(nft_output) => {
+                        let transaction_id = TransactionId::from_str(&output_data.metadata.transaction_id)?;
+                        let output_id = OutputId::new(transaction_id, output_data.metadata.output_index)?;
+                        let nft_address = NftAddress::from(nft_output.nft_id().or_from_output_id(output_id));
+
+                        new_alias_and_nft_addresses.insert(Address::Nft(nft_address), output_data.address);
+                    }
+                    _ => {}
+                }
+            }
+
+            log::debug!("[SYNC] new_alias_and_nft_addresses: {new_alias_and_nft_addresses:?}");
+            if new_alias_and_nft_addresses.is_empty() {
+                break;
+            }
+        }
+
+        // get_output_ids_for_addresses() will return recursively owned outputs not anymore, sine they will only get
+        // synced below, so we filter these unspent outputs here Maybe the spent_or_not_synced_output_ids can be
+        // calculated more efficient here in the future, without this extra check
+        spent_or_not_synced_output_ids.retain(|o| !outputs_data.iter().any(|a| a.output_id == *o));
+
+        Ok((
+            spent_or_not_synced_output_ids,
+            addresses_with_unspent_outputs,
+            outputs_data,
+        ))
     }
 }
