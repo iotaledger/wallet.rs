@@ -27,9 +27,17 @@ You can easily integrate wallet.rs with your exchange, custody solution, or prod
 
 :::
 
-## Implementation Guide
 
-This guide explains how to implement the Wallet library in your exchange.
+:::warning
+
+Shimmer allows for complex tokenization schemes, but they can lead to monetary losses if used incorrectly.
+Transaction outputs may have multiple unlocking conditions which may require returning some or all of the amount, which could expire if not claimed in time, or which may not be unlockable for a very long time. You can lose money if you do not check the unlock conditions before accepting a deposit!
+
+:::
+
+## Integration Guide
+
+This guide explains how to integrate the Wallet library in your exchange.
 
 Features of the Wallet Library:
 - Secure seed management.
