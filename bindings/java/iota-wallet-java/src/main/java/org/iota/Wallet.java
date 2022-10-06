@@ -215,7 +215,7 @@ public class Wallet extends NativeApi {
      *
      * @param interval The number of seconds to wait before clearing the password.
      */
-    public void SetStrongholdPasswordClearInterval(int interval) throws WalletException {
+    public void setStrongholdPasswordClearInterval(int interval) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(interval);
         callBaseApi(new ClientCommand("setStrongholdPasswordClearInterval", p));
     }
