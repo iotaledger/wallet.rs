@@ -7,7 +7,7 @@ pub(crate) mod outputs;
 pub(crate) mod transactions;
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     str::FromStr,
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
@@ -217,9 +217,11 @@ impl AccountHandle {
         }
 
         // get_output_ids_for_addresses() will return recursively owned outputs not anymore, sine they will only get
-        // synced below, so we filter these unspent outputs here Maybe the spent_or_not_synced_output_ids can be
-        // calculated more efficient here in the future, without this extra check
-        spent_or_not_synced_output_ids.retain(|o| !outputs_data.iter().any(|a| a.output_id == *o));
+        // synced afterwards, so we filter these unspent outputs here. Maybe the spent_or_not_synced_output_ids can be
+        // calculated more efficient in the future, by comparing the new and old outputs only at this point. Then this
+        // retain isn't needed anymore.
+        let unspent_output_ids: HashSet<OutputId> = HashSet::from_iter(outputs_data.iter().map(|o| o.output_id));
+        spent_or_not_synced_output_ids.retain(|o| !unspent_output_ids.contains(o));
 
         Ok((
             spent_or_not_synced_output_ids,
