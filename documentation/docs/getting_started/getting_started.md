@@ -24,7 +24,7 @@ keywords:
 ## Connect to the Testnet API
 
 We recommended that you start your interactions with Shimmer on a _testnet_ network. The _testnet_ will allow you to safely
-get acquainted with the `iota.rs` library, without the risk of losing any funds if you make a mistake along the way.
+get acquainted with the `wallet.rs` library, without the risk of losing any funds if you make a mistake along the way.
 You can use this Shimmer Testnet API load balancer: 
 
 ```plaintext
