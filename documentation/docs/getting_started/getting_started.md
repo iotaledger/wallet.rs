@@ -9,6 +9,7 @@ keywords:
 - rust
 - python
 - node.js
+- java
 - account
 - multiple
 
@@ -23,10 +24,11 @@ The `wallet.rs` library is written in Rust. You can also find a bindings written
 - [Rust](rust.mdx)
 - [Node.js](nodejs.mdx)
 - [Python](python.mdx)
+- [Java](java.mdx)
 
 ## Connect to the Testnet API
 
-We recommended that you start your interactions with IOTA on a _testnet_ network. The _testnet_ will allow you to safely
+We recommended that you start your interactions with Shimmer on a _testnet_ network. The _testnet_ will allow you to safely
 get acquainted with the `wallet.rs` library, without the risk of losing any funds if you make a mistake along the way.
 You can use this Shimmer Testnet API load balancer: 
 
