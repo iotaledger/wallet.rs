@@ -19,15 +19,14 @@ getset = { version = "0.1.2", default-features = false }
 iota-client = { version = "2.0.1-rc.1", default-features = false, features = [ "message_interface", "tls" ] }
 iota-crypto = { version = "0.14.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
-packable = { version = "0.6.1", default-features = false, features = [ "serde", "primitive-types" ] }
+packable = { version = "0.6.2", default-features = false, features = [ "serde", "primitive-types" ] }
 prefix-hex = { version = "0.4.0", default-features = false, features = [ "std" ] }
 primitive-types = { version = "0.11.1", default-features = false }
 rocksdb = { version = "0.19.0", default-features = false, features = [ "lz4" ], optional = true }
-serde = { version = "1.0.144", default-features = false, features = [ "derive" ] }
-serde_json = { version = "1.0.85", default-features = false }
-thiserror = { version = "1.0.32", default-features = false }
-tokio = { version = "1.20.1", default-features = false }
-
+serde = { version = "1.0.145", default-features = false, features = [ "derive" ] }
+serde_json = { version = "1.0.86", default-features = false }
+thiserror = { version = "1.0.37", default-features = false }
+tokio = { version = "1.21.2", default-features = false }
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
 [dev-dependencies]
