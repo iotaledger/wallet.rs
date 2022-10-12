@@ -141,6 +141,7 @@ impl AccountHandle {
                         .await?
                 }
             }
+            #[cfg(feature = "stronghold")]
             SecretManager::Stronghold(stronghold) => {
                 stronghold
                     .generate_addresses(
