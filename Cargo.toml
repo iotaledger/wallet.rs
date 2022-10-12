@@ -54,6 +54,14 @@ lto = true
 strip = "symbols"
 
 [[example]]
+name = "mint_issuer_nft"
+path = "examples/nft_collection/00_mint_issuer_nft.rs"
+
+[[example]]
+name = "mint_collection_nft"
+path = "examples/nft_collection/01_mint_collection_nft.rs"
+
+[[example]]
 name = "0_generate_addresses"
 path = "examples/offline_signing/0_generate_addresses.rs"
 
