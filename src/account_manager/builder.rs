@@ -108,6 +108,20 @@ impl AccountManagerBuilder {
         #[cfg(feature = "storage")]
         let storage_options = self.storage_options.clone().unwrap_or_default();
         #[cfg(feature = "storage")]
+        // Check if the db exists and if not, return an error if one parameter is missing, because otherwise the db
+        // would be created with an empty parameter which just leads to errors later
+        if !storage_options.storage_path.is_dir() {
+            if self.client_options.is_none() {
+                return Err(crate::Error::MissingParameter("client_options"));
+            }
+            if self.coin_type.is_none() {
+                return Err(crate::Error::MissingParameter("coin_type"));
+            }
+            if self.secret_manager.is_none() {
+                return Err(crate::Error::MissingParameter("secret_manager"));
+            }
+        }
+        #[cfg(feature = "storage")]
         let storage =
             crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_path.clone())?;
         #[cfg(feature = "storage")]
