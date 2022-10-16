@@ -14,12 +14,13 @@ wallet.set_stronghold_password("some_hopefully_secure_password")
 
 outputs = [{
     "address": "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu",
-    "nativeTokens": [{
-        "tokenId": "0x08847bd287c912fadedb6bf38900bda9f2d377b75b2a0bece8738699f56ebca4130100000000",
-        "amount": "1"
-    }],
+    "nativeTokens": [(
+        "0x08a5526c4a15558b709340822edf00cb348d8606a27e2e59b00432a0afe8afb74d0100000000",
+        # 10 hex encoded
+        "0xA"
+    )],
 }];
 
-transaction = account.send_native_tokens(outputs)
+transaction = account.send_native_tokens(outputs, None)
 
 print(f'Sent transaction: {transaction}')

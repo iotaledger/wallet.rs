@@ -13,7 +13,7 @@ print(f'Synced: {response}')
 wallet.set_stronghold_password("some_hopefully_secure_password")
 
 outputs = [{
-    "immutableMetadata": "some immutable nft metadata",
+    "immutableMetadata": "0x"+"some immutable nft metadata".encode("utf-8").hex(),
 }];
 
 transaction = account.mint_nfts(outputs)

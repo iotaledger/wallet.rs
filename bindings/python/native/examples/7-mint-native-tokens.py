@@ -1,4 +1,5 @@
 from iota_wallet import IotaWallet
+import time
 
 # In this example we will mint native tokens
 
@@ -12,19 +13,20 @@ print(f'Synced: {response}')
 
 wallet.set_stronghold_password("some_hopefully_secure_password")
 
-transaction = account.create_alias_output()
+transaction = account.create_alias_output(None, None)
 
-# Get the transaction confirmed
-account.retry_until_included(transaction.block_id)
+# Wait a few seconds for the transaction to get confirmed
+time.sleep(7)
 
 account.sync_account()
 
-outputs = [{
-    "circulatingSupply": "10",
-    "maximumSupply": "10",
+native_token_options = {
+    # 1000 hex encoded
+    "circulatingSupply": "0x3e8",
+    "maximumSupply": "0x3e8",
     "foundryMetadata": "0xab",
-}];
+};
 
-transaction = account.mint_native_token(outputs)
+transaction = account.mint_native_token(native_token_options, None)
 
 print(f'Sent transaction: {transaction}')
