@@ -88,4 +88,4 @@ public class CreateAccount {
 # Documentation
 
 Please visit the [Shimmer Wiki](https://wiki.shimmer.network) for more information on using the IOTA Java Wallet Library.
-More examples on how to use the library can be found [here](examples/ExampleProject/src).
+More examples on how to use the library can be found [here](examples/src).
