@@ -1,10 +1,10 @@
-# IOTA Wallet Library - Java binding
+# IOTA Wallet - Java binding library
 
-Java binding to the wallet.rs library.
+Get started with the official IOTA Wallet Java binding library.
 
 ## Requirements
 
-* The latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/).
+* Make sure you have the latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/) installed.
 
 ## Download
 
@@ -61,5 +61,5 @@ public class CreateAccount {
 
 # Documentation
 
-Please visit the [Shimmer Wiki](https://wiki.shimmer.network) for more information on using the IOTA Java Wallet Library.
-More examples on how to use the library can be found [here](examples/src).
+Please visit the [Shimmer Wiki](https://wiki.iota.org/shimmer/wallet.rs/welcome) for more information on using the IOTA Java Wallet Library.
+More examples on how to use the library can be found [here](examples/src/main).
