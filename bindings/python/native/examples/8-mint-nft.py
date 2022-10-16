@@ -14,7 +14,7 @@ wallet.set_stronghold_password("some_hopefully_secure_password")
 
 outputs = [{
     "immutableMetadata": "0x"+"some immutable nft metadata".encode("utf-8").hex(),
-}];
+}]
 
 transaction = account.mint_nfts(outputs)
 

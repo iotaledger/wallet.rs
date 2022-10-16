@@ -25,7 +25,7 @@ native_token_options = {
     "circulatingSupply": "0x3e8",
     "maximumSupply": "0x3e8",
     "foundryMetadata": "0xab",
-};
+}
 
 transaction = account.mint_native_token(native_token_options, None)
 
