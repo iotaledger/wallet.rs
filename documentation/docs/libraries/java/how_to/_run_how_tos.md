@@ -15,7 +15,7 @@ cd wallet.rs/bindings/java/iota-wallet-java
 ## Run Code Examples
 
 The IOTA Wallet Java library has numerous [examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/iota-wallet-java/examples/src/main)
-you can run to get acquainted with the library.  After you have followed the instructions to
+you can run to get acquainted with the library. After you have followed the instructions to
 [install the library](./../getting_started/java#install-the-library), you can run any example with the following
 command from the `examples` directory:
 
