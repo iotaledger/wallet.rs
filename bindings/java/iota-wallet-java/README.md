@@ -1,61 +1,48 @@
-# IOTA Wallet Library - Java binding
+---
+description: Get started with the official IOTA Wallet Java library.
+image: /img/logo/iota_mark_light.png
+keywords:
 
-Java binding to the wallet.rs library.
+- Java
+- jar
+- Gradle
+- Maven
 
-To use the IOTA Java Wallet Library in your Java project, you must first build the library JAR for your operating
-system.
+---
+# IOTA Wallet Java Library
+
+Get started with the official IOTA Wallet Java Library.
 
 ## Requirements
 
-* The latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/).
-* [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html) to compile the binding.
-* (for Linux only) `libudev`. You can install it with `apt install libudev-dev`.
+* Make sure you have the latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/) installed.
 
-## Build the JAR for Your Operating System (Linux, macOS, Windows)
+## Install the Library
 
-To use the IOTA Java Wallet Library in your Java project, you must first build the library JAR for your operating
-system.
-
-### Clone the Repository
-
-You can clone the [wallet.rs wallet library](https://github.com/iotaledger/wallet.rs) by running the following command:
-
-```bash
-git clone git@github.com:iotaledger/wallet.rs.git
+Gradle:
+```gradle
+dependencies {
+  implementation 'org.iota:iota-wallet-java:1.0.0-rc.1'
+}
 ```
 
-### Change to the Java Binding Directory
-
-After you have cloned the repository, you should change directory to `wallet.rs/bindings/java/iota-wallet-java`. You can do so by
-running the following command:
-
-```bash
-cd wallet.rs/bindings/java/iota-wallet-java
+Maven:
+```xml
+<dependency>
+  <groupId>org.iota</groupId>
+  <artifactId>iota-wallet-java</artifactId>
+  <version>1.0.0-rc.1</version>
+</dependency>
 ```
-
-### Make `gradlew` Executable
-
-If needed, you can make the `gradlew` file executable by running the following command:
-
-```bash
-chmod +x gradlew
-```
-
-### Build Your JAR
-
-You can now build your JAR file by running the following command:
-
-```bash
-./gradlew jar
-```
-
-This will produce a `JAR` file in `build/libs/` which you can add to your Java project.
 
 ## Use the Library
 
-After you linked the library, you can create a Wallet instance and interface with it as shown in the following snippet:
+In order to use the library, you need to create a _Wallet_:
 
 ```java
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 import org.iota.Wallet;
 import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
@@ -77,7 +64,7 @@ public class CreateAccount {
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
-        AccountHandle a = wallet.createAccount("Hans");
+        AccountHandle a = wallet.createAccount("Alice");
 
         // Print the account.
         System.out.println(a);
@@ -85,7 +72,8 @@ public class CreateAccount {
 }
 ```
 
-# Documentation
+## What's Next?
 
-Please visit the [Shimmer Wiki](https://wiki.shimmer.network) for more information on using the IOTA Java Wallet Library.
-More examples on how to use the library can be found [here](examples/ExampleProject/src).
+Now that you are up and running, you can get acquainted with the library using
+its [how-to guides](../how_tos/run_how_tos.mdx) and the
+repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/iota-wallet-java/examples/src).

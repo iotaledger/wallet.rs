@@ -1,3 +1,6 @@
-build
 .gradle
-native/target
+gradle.properties
+lib/build
+src/native/target
+examples/build
+examples/walletdb

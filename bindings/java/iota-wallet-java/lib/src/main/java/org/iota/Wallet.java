@@ -160,7 +160,6 @@ public class Wallet extends NativeApi {
      * Checks if the given mnemonic is valid.
      *
      * @param mnemonic The mnemonic to verify.
-     * @return The wallet address.
      */
     public void verifyMnemonic(String mnemonic) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(mnemonic);
