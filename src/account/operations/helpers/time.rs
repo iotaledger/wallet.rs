@@ -35,6 +35,10 @@ pub(crate) fn can_output_be_unlocked_now(
             Output::Alias(alias_output) => {
                 alias_and_nft_addresses.contains(alias_output.governor_address())
                     || alias_and_nft_addresses.contains(alias_output.state_controller_address())
+                    || account_addresses.iter().any(|a| {
+                        a.address.inner == *alias_output.governor_address()
+                            || a.address.inner == *alias_output.state_controller_address()
+                    })
             }
             Output::Foundry(foundry_output) => {
                 alias_and_nft_addresses.contains(&Address::Alias(*foundry_output.alias_address()))
