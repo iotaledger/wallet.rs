@@ -1,12 +1,23 @@
-# IOTA Wallet - Java binding library
+---
+description: Get started with the official IOTA Wallet Java library.
+image: /img/logo/iota_mark_light.png
+keywords:
 
-Get started with the official IOTA Wallet Java binding library.
+- Java
+- jar
+- Gradle
+- Maven
+
+---
+# IOTA Wallet Java Library
+
+Get started with the official IOTA Wallet Java Library.
 
 ## Requirements
 
 * Make sure you have the latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/) installed.
 
-## Download
+## Install the Library
 
 Gradle:
 ```gradle
@@ -24,7 +35,9 @@ Maven:
 </dependency>
 ```
 
-## Example
+## Use the Library
+
+In order to use the library, you need to create a _Wallet_:
 
 ```java
 // Copyright 2022 IOTA Stiftung
@@ -59,7 +72,8 @@ public class CreateAccount {
 }
 ```
 
-# Documentation
+## What's Next?
 
-Please visit the [Shimmer Wiki](https://wiki.iota.org/shimmer/wallet.rs/welcome) for more information on using the IOTA Java Wallet Library.
-More examples on how to use the library can be found [here](examples/src/main).
+Now that you are up and running, you can get acquainted with the library using
+its [how-to guides](../how_tos/run_how_tos.mdx) and the
+repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/iota-wallet-java/examples/src).
