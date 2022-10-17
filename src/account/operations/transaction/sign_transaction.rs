@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    api::{PreparedTransactionData, SignedTransactionData},
+    api::{transaction::validate_transaction_payload_length, PreparedTransactionData, SignedTransactionData},
     secret::SecretManageExt,
 };
 #[cfg(all(feature = "events", feature = "ledger_nano"))]
@@ -60,6 +60,8 @@ impl AccountHandle {
         let transaction_payload = TransactionPayload::new(prepared_transaction_data.essence.clone(), unlocks)?;
 
         log::debug!("[TRANSACTION] signed transaction: {:?}", transaction_payload);
+
+        validate_transaction_payload_length(&transaction_payload)?;
 
         Ok(SignedTransactionData {
             transaction_payload,
