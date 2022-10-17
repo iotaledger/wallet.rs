@@ -1,6 +1,6 @@
 from iota_wallet import IotaWallet
 
-# This example sends a transaction.
+# In this example we will send an nft
 
 wallet = IotaWallet('./alice-database')
 
@@ -14,9 +14,9 @@ wallet.set_stronghold_password("some_hopefully_secure_password")
 
 outputs = [{
     "address": "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu",
-    "amount": "1000000",
+    "nftId": "0x17f97185f80fa56eab974de6b7bbb80fa812d4e8e37090d166a0a41da129cebc",
 }]
 
-transaction = account.send_amount(outputs)
+transaction = account.send_nft(outputs)
 
 print(f'Sent transaction: {transaction}')
