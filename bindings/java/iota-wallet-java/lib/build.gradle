@@ -7,9 +7,6 @@ plugins {
     id 'com.google.osdetector' version '1.7.1'
 }
 
-group 'org.iota'
-version '1.0.0-rc.1'
-
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
@@ -17,10 +14,10 @@ repositories {
 
 dependencies {
     // Use JUnit Jupiter for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
     // Dependencies that are used internally, and not exposed to consumers on their own compile classpath.
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.7'
+    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.9'
     implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
 }
@@ -44,9 +41,27 @@ test {
     useJUnitPlatform()
 }
 
-task buildRustRelease(type:Exec){
+task buildRustRelease(){
+    dependsOn 'buildRustReleaseDefault'
+    dependsOn 'buildRustReleaseWithCustomTarget'
+}
+
+task buildRustReleaseDefault(type:Exec){
+    onlyIf {
+        findProperty('buildTarget') == null
+    }
     workingDir 'native'
     commandLine 'cargo', 'build', '--release'
+}
+
+task buildRustReleaseWithCustomTarget(type:Exec){
+    def buildTarget = findProperty("buildTarget")
+    onlyIf {
+        buildTarget != null
+    }
+
+    workingDir 'native'
+    commandLine 'cargo', 'build', '--target=' + buildTarget, '--release'
 }
 
 jar {
@@ -58,11 +73,15 @@ jar {
         include '*.so', '*.dylib', '*.dll'
     }
 
+    from('native/target/' + findProperty('buildTarget') + '/release') {
+        include '*.so', '*.dylib', '*.dll'
+    }
+
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 
-    classifier = osdetector.classifier
+    classifier = getJarClassifier()
 }
 
 publishing {
@@ -105,19 +124,31 @@ publishing {
             }
         }
     }
-
-    repositories {
-        maven {
-            name = "OSSRH"
-            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials {
-                username = project.properties["ossrhUsername"]
-                password = project.properties["ossrhPassword"]
-            }
-        }
-    }
 }
 
 signing {
+    // The ASCII armored signing key contains important new line characters that are lost when loading the content for example like: `def signingKey = findProperty("signingKey"))`
+    // To solve this, encode the ASCII armored signing key in base64 and store it in the `ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey` environment variable.
+    // The following line will decode it correctly:
+    def signingKey = base64Decode(findProperty("base64EncodedAsciiArmoredSigningKey"))
+    def signingPassword = findProperty("signingPassword")
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.mavenJava
+}
+
+def base64Decode(encodedString){
+    if(encodedString != null) {
+        byte[] decoded = encodedString.decodeBase64()
+        String decode = new String(decoded)
+        return decode
+    }
+    return null;
+}
+
+def getJarClassifier(){
+    def buildTarget = findProperty("buildTarget")
+    if(buildTarget != null)
+        return buildTarget
+    else
+        return osdetector.classifier
 }

@@ -4,6 +4,10 @@
     "javascript": {
       "version": true,
       "publish": true
+    },
+    "java": {
+      "version": true,
+      "publish": true
     }
   },
   "packages": {
@@ -47,6 +51,14 @@
         {
           "command": "npm publish --access public --loglevel silly"
         }
+      ]
+    },
+    "java-binding": {
+      "path": "./bindings/java/iota-wallet-java",
+      "manager": "java",
+      "getPublishedVersion": "curl 'https://s01.oss.sonatype.org/service/local/lucene/search?g=io.github.samuel-rufi&a=my-test&count=1' | grep -oP '(?<=<version>).*?(?=</version>)'",
+      "prepublish": [],
+      "publish": [
       ]
     }
   }

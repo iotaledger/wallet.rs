@@ -24,6 +24,10 @@ Gradle:
 dependencies {
   implementation 'org.iota:iota-wallet-java:1.0.0-rc.1'
 }
+
+
+
+
 ```
 
 Maven:

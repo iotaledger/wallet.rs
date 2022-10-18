@@ -12,6 +12,7 @@ jobs:
       change: ${{ steps.covector.outputs.change }}
       commandRan: ${{ steps.covector.outputs.commandRan }}
       successfulPublish: ${{ steps.covector.outputs.successfulPublish }}
+      packageName: ${{ steps.covector.outputs.packagesPublished }}
 
     steps:
       - uses: actions/checkout@v3
@@ -26,7 +27,7 @@ jobs:
         run: |
           git config --global user.name "${{ github.event.pusher.name }}"
           git config --global user.email "${{ github.event.pusher.email }}"
-      
+
       - name: Install Dasel
         run: |
           curl -sSLf "$(curl -sSLf https://api.github.com/repos/tomwright/dasel/releases/latest | grep browser_download_url | grep linux_amd64 | grep -v .gz | cut -d\" -f 4)" -L -o dasel && chmod +x dasel
@@ -40,6 +41,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           command: 'version-or-publish'
+
       - name: Create Pull Request With Versions Bumped
         if: steps.covector.outputs.commandRan == 'version'
         uses: iotaledger/create-pull-request@v3.4.1
@@ -54,7 +56,8 @@ jobs:
   nodejs-binding-prebuild:
     runs-on: ${{ matrix.os }}
     needs: version-or-publish
-    if: needs.version-or-publish.outputs.successfulPublish == 'true'
+    if: needs.version-or-publish.outputs.successfulPublish == 'true' &&
+      contains(needs.version-or-publish.packageName, 'nodejs-binding')
     strategy:
       fail-fast: false
       matrix:
@@ -130,19 +133,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: bindings/nodejs
-      
+
       - name: Build Node.js prebuild
         run: npm run prebuild:node
         working-directory: bindings/nodejs
-      
+
       - name: Upload prebuild to GitHub release
         run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: bindings/nodejs
-  
+
   electron-binding-prebuild:
     runs-on: ${{ matrix.os }}
     needs: version-or-publish
-    if: needs.version-or-publish.outputs.successfulPublish == 'true'
+    if: needs.version-or-publish.outputs.successfulPublish == 'true' &&
+      contains(needs.version-or-publish.packageName, 'nodejs-binding')
     strategy:
       fail-fast: false
       matrix:
@@ -161,14 +165,14 @@ jobs:
         with:
           toolchain: stable
           override: true
-      
+
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
         if: matrix.os == 'windows-2019'
         with:
           version: "11.0"
           directory: ${{ runner.temp }}/llvm
-      
+
       - name: Set LIBCLANG_PATH (Windows)
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-2019'
@@ -211,11 +215,99 @@ jobs:
       - name: Install dependencies
         run: npm ci
         working-directory: bindings/nodejs
-      
+
       - name: Build Electron prebuilds
         run: npm run prebuild:electron
         working-directory: bindings/nodejs
-      
+
       - name: Upload prebuild to GitHub release
         run: npx prebuild --upload-all ${{ secrets.GITHUB_TOKEN }} --tag-prefix nodejs-binding-v
         working-directory: bindings/nodejs
+
+  java-binding-github-release:
+    runs-on: ${{ matrix.os }}
+    needs: version-or-publish
+    if: needs.version-or-publish.outputs.successfulPublish == 'true' &&
+      contains(needs.version-or-publish.outputs.packageName, 'java-binding')
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        java: ["11"]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+        uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
+        if: matrix.os == 'windows-2019'
+        with:
+          version: "11.0"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Set LIBCLANG_PATH (Windows)
+        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+        if: matrix.os == 'windows-2019'
+
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || ${{ startsWith(matrix.os, 'ubuntu') }}
+
+      - name: Get current date
+        if: matrix.os == 'windows-2019'
+        run: echo "CURRENT_DATE=$(Get-Date -Format "yyyy-MM-dd")" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Install required packages (Ubuntu)
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+      - name: Cache cargo registry
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+      - name: Cache cargo index
+        uses: actions/cache@v2.1.4
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+
+      - name: Set Up Java ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - name: Build JAR
+        shell: bash
+        working-directory: bindings/java/iota-wallet-java/
+        run: |
+          chmod +x gradlew
+          ./gradlew jar
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: bindings/java/iota-wallet-java/lib/build/libs/*
+          asset_name: iota-wallet-java-
+          tag: java-binding-v
+          overwrite: false
+          file_glob: true
+
+
