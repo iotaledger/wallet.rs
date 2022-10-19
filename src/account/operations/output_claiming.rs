@@ -214,7 +214,8 @@ impl AccountHandle {
         // Keep track of the outputs to return, so we only create one output per address
         let mut required_address_returns: HashMap<Address, u64> = HashMap::new();
         // Amount we get with the storage deposit return amounts already subtracted
-        let mut new_amount = 0;
+        let mut available_amount = 0;
+        let mut required_amount_for_nfts = 0;
         let mut new_native_tokens = NativeTokensBuilder::new();
         // check native tokens
         for output_data in &outputs_to_claim {
@@ -228,12 +229,12 @@ impl AccountHandle {
             }
             if let Some(sdr) = sdr_not_expired(&output_data.output, current_time) {
                 // for own output subtract the return amount
-                new_amount += output_data.output.amount() - sdr.amount();
+                available_amount += output_data.output.amount() - sdr.amount();
 
                 // Insert for return output
                 *required_address_returns.entry(*sdr.return_address()).or_default() += sdr.amount();
             } else {
-                new_amount += output_data.output.amount();
+                available_amount += output_data.output.amount();
             }
 
             if let Output::Nft(nft_output) = &output_data.output {
@@ -250,6 +251,8 @@ impl AccountHandle {
                     .with_native_tokens([])
                     .finish_output(token_supply)?;
 
+                // Add required amount for the new output
+                required_amount_for_nfts += nft_output.amount();
                 outputs_to_send.push(nft_output);
             }
         }
@@ -261,15 +264,16 @@ impl AccountHandle {
         };
 
         // Check if the new amount is enough for the storage deposit, otherwise increase it to this
-        let mut required_storage_deposit = minimum_storage_deposit_basic_output(
-            &rent_structure,
-            &first_account_address.address.inner,
-            &option_native_token,
-            token_supply,
-        )?;
+        let mut required_amount = required_amount_for_nfts
+            + minimum_storage_deposit_basic_output(
+                &rent_structure,
+                &first_account_address.address.inner,
+                &option_native_token,
+                token_supply,
+            )?;
 
         let mut additional_inputs = Vec::new();
-        if new_amount < required_storage_deposit {
+        if available_amount < required_amount {
             // Sort by amount so we use as less as possible
             possible_additional_inputs.sort_by_key(|o| o.output.amount());
 
@@ -282,13 +286,14 @@ impl AccountHandle {
                 };
                 // Recalculate every time, because new inputs can also add more native tokens, which would increase
                 // the required storage deposit
-                required_storage_deposit = minimum_storage_deposit_basic_output(
-                    &rent_structure,
-                    &first_account_address.address.inner,
-                    &option_native_token,
-                    token_supply,
-                )?;
-                if new_amount < required_storage_deposit {
+                required_amount = required_amount_for_nfts
+                    + minimum_storage_deposit_basic_output(
+                        &rent_structure,
+                        &first_account_address.address.inner,
+                        &option_native_token,
+                        token_supply,
+                    )?;
+                if available_amount < required_amount {
                     if !additional_inputs_used.contains(&output_data.output_id) {
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             // Skip input if the max native tokens count would be exceeded
@@ -302,7 +307,7 @@ impl AccountHandle {
                             }
                             new_native_tokens.add_native_tokens(native_tokens.clone())?;
                         }
-                        new_amount += output_data.output.amount();
+                        available_amount += output_data.output.amount();
                         additional_inputs.push(output_data.output_id);
                         additional_inputs_used.insert(output_data.output_id);
                     }
@@ -314,8 +319,8 @@ impl AccountHandle {
         }
 
         // If we still don't have enough amount we can't create the output
-        if new_amount < required_storage_deposit {
-            return Err(crate::Error::InsufficientFunds(new_amount, required_storage_deposit));
+        if available_amount < required_amount {
+            return Err(crate::Error::InsufficientFunds(available_amount, required_amount));
         }
 
         for (return_address, return_amount) in required_address_returns {
@@ -328,7 +333,7 @@ impl AccountHandle {
 
         // Create output with claimed values
         outputs_to_send.push(
-            BasicOutputBuilder::new_with_amount(new_amount)?
+            BasicOutputBuilder::new_with_amount(available_amount - required_amount_for_nfts)?
                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                     first_account_address.address.inner,
                 )))
