@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::{api_types::responses::OutputResponse, block::output::OutputId, Client};
+use iota_client::{api_types::response::OutputResponse, block::output::OutputId, Client};
 
 use crate::account::{
     handle::AccountHandle,

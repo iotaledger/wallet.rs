@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
 use iota_client::{
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{
         output::OutputId,
         payload::{transaction::TransactionId, TransactionPayload},

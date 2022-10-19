@@ -13,7 +13,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{output::OutputId, payload::transaction::TransactionId, Block, BlockId},
 };
 

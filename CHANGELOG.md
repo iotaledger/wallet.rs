@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated dependencies;
 - Derived `Serialize` for `Message` and `AccountMethod` instead of custom impl;
 - Removed `AccountToCreate` struct and moved its field to `Message::CreateAccount`;
 

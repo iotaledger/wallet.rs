@@ -39,7 +39,7 @@ impl AccountHandle {
             WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
 
-        let current_time = self.client.get_time_checked().await?;
+        let current_time = self.client.get_time_checked()?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)

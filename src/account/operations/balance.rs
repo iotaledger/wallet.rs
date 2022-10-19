@@ -27,7 +27,7 @@ impl AccountHandle {
         let network_id = self.client.get_network_id()?;
         let rent_structure = self.client.get_rent_structure()?;
 
-        let local_time = self.client.get_time_checked().await?;
+        let local_time = self.client.get_time_checked()?;
 
         let mut total_amount = 0;
         let mut required_storage_deposit = 0;

@@ -53,7 +53,7 @@ impl AccountHandle {
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
                         )));
                     }
-                    let current_time = self.client.get_time_checked().await?;
+                    let current_time = self.client.get_time_checked()?;
                     let bech32_hrp = self.client.get_bech32_hrp()?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();

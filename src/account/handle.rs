@@ -4,7 +4,7 @@
 use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use iota_client::{
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{
         output::{FoundryId, Output, OutputId, TokenId},
         payload::transaction::{TransactionId, TransactionPayload},

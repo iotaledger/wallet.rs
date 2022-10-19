@@ -9,7 +9,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{
         dto::U256Dto,
         output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId},

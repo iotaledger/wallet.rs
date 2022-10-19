@@ -11,7 +11,7 @@ use std::{collections::HashMap, str::FromStr};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::responses::OutputMetadataResponse,
+    api_types::response::OutputMetadataResponse,
     block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, AliasId, FoundryId, NftId, Output, OutputId, TokenId},
