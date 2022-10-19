@@ -117,7 +117,7 @@ class IotaWallet():
             'removeLatestAccount'
         )
 
-    def restore_back(self, source, password):
+    def restore_backup(self, source, password):
         """Restore a backup from a Stronghold file
            Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
            If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was

@@ -104,7 +104,7 @@ Remove latest account.
 ### restore\_back
 
 ```python
-def restore_back(source, password)
+def restore_backup(source, password)
 ```
 
 Restore a backup from a Stronghold file
