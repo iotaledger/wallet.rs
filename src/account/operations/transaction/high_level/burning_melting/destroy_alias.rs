@@ -26,7 +26,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_alias");
 
-        let current_time = self.client().get_time_checked().await?;
+        let current_time = self.client().get_time_checked()?;
 
         let mut owned_outputs = Vec::new();
 

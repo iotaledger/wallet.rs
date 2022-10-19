@@ -7,7 +7,7 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{
         output::{dto::OutputDto, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},

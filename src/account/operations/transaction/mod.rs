@@ -108,7 +108,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] submit_and_store_transaction");
 
         // Validate transaction before sending and storing it
-        let local_time = self.client.get_time_checked().await?;
+        let local_time = self.client.get_time_checked()?;
 
         let conflict = verify_semantic(
             &signed_transaction_data.inputs_data,

@@ -9,7 +9,7 @@ use std::{pin::Pin, str::FromStr};
 use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientBlockBuilder,
-    api_types::responses::OutputResponse,
+    api_types::response::OutputResponse,
     block::{
         address::Address,
         output::{
@@ -257,7 +257,7 @@ impl AccountHandle {
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply()?;
         let output = Output::try_from_dto(&output_response.output, token_supply)?;
-        let local_time = self.client.get_time_checked().await?;
+        let local_time = self.client.get_time_checked()?;
 
         let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
         // check if we know the transaction that created this output and if we created it (if we store incoming

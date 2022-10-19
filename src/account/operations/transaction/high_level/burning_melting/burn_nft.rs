@@ -20,7 +20,7 @@ impl AccountHandle {
     pub async fn burn_nft(&self, nft_id: NftId, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] burn_nft");
 
-        let current_time = self.client().get_time_checked().await?;
+        let current_time = self.client().get_time_checked()?;
 
         let mut owned_outputs = Vec::new();
 
