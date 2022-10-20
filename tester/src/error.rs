@@ -18,6 +18,12 @@ pub enum Error {
     /// Json error.
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
+    /// Missing field.
+    #[error("missing field: {0}")]
+    MissingField(&'static str),
+    // /// Types error.
+    // #[error("types error: {0}")]
+    // Types(#[from] iota_wallet::iota_client::types::Error),
     /// Wallet error.
     #[error("wallet error: {0}")]
     Wallet(#[from] iota_wallet::Error),

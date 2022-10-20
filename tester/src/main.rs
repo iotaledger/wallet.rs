@@ -9,6 +9,13 @@ use iota_wallet::{
     account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
+        block::{
+            output::{
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                BasicOutputBuilder,
+            },
+            protocol::ProtocolParameters,
+        },
         constants::SHIMMER_COIN_TYPE,
         request_funds_from_faucet,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},
@@ -23,6 +30,7 @@ use self::error::Error;
 struct Context {
     _account_manager: AccountManager,
     account: AccountHandle,
+    protocol_parameters: ProtocolParameters,
 }
 
 async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Error> {
@@ -63,7 +71,7 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
     Ok(())
 }
 
-fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), Error> {
+async fn process_transactions(context: &Context, transactions: &Value) -> Result<(), Error> {
     println!("{}", transactions);
 
     if let Some(transactions) = transactions.as_array() {
@@ -85,6 +93,42 @@ fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), 
                             println!("{}", dto);
                         } else if let Some(simple) = output.get("simple") {
                             println!("{}", simple);
+
+                            let amount = if let Some(amount) = simple.get("amount") {
+                                if let Some(amount) = amount.as_u64() {
+                                    amount
+                                } else {
+                                    return Err(Error::InvalidField("amount"));
+                                }
+                            } else {
+                                return Err(Error::MissingField("amount"));
+                            };
+
+                            let address = if let Some(address) = simple.get("address") {
+                                if let Some(address) = address.as_u64() {
+                                    address as usize
+                                } else {
+                                    return Err(Error::InvalidField("address"));
+                                }
+                            } else {
+                                return Err(Error::MissingField("address"));
+                            };
+
+                            println!("{}", amount);
+                            println!("{}", address);
+
+                            let address = if let Some(address) = context.account.addresses().await?.get(address) {
+                                address.address().as_ref().clone()
+                            } else {
+                                return Err(Error::InvalidField("address"));
+                            };
+
+                            // TODO unwrap
+                            let simple_output = BasicOutputBuilder::new_with_amount(amount)
+                                .unwrap()
+                                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
+                                .finish_output(context.protocol_parameters.token_supply())
+                                .unwrap();
                         } else {
                             return Err(Error::InvalidField("output"));
                         }
@@ -92,6 +136,8 @@ fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), 
                 } else {
                     return Err(Error::InvalidField("outputs"));
                 }
+            } else {
+                return Err(Error::MissingField("outputs"));
             }
         }
     } else {
@@ -113,7 +159,7 @@ async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
     }
 
     if let Some(transactions) = json.get("transactions") {
-        process_transactions(context, transactions)?;
+        process_transactions(context, transactions).await?;
     }
 
     if let Some(tests) = json.get("tests") {
@@ -149,9 +195,11 @@ async fn main() -> Result<(), Error> {
         .with_alias("Alice".to_string())
         .finish()
         .await?;
+    let protocol_parameters = account.client().get_protocol_parameters()?;
     let context = Context {
         _account_manager: account_manager,
         account,
+        protocol_parameters,
     };
 
     let mut dir = fs::read_dir("json").await?;
