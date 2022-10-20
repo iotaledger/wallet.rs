@@ -163,6 +163,16 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
 fn process_tests(_context: &Context, tests: &Value) -> Result<(), Error> {
     println!("{}", tests);
 
+    if let Some(tests) = tests.as_array() {
+        for test in tests {
+            if let Some(balance) = test.get("balance") {
+                println!("{}", balance);
+            } else {
+                return Err(Error::InvalidField("test"));
+            }
+        }
+    }
+
     Ok(())
 }
 

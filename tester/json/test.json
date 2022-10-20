@@ -16,8 +16,8 @@
                 },
                 {
                     "simple": {
-                        "amount": 50000,
-                        "address": 4
+                        "address": 4,
+                        "amount": 50000
                     }
                 }
             ],
@@ -25,5 +25,12 @@
             "error": "Error..."
         }
     ],
-    "tests": []
+    "tests": [
+        {
+            "balance": {
+                "address": 4,
+                "amount": 50000
+            }
+        }
+    ]
 }
