@@ -1,6 +1,6 @@
 {
     "fixtures": {
-        "addresses": [
+        "accounts": [
             0,
             50,
             100000,
@@ -16,7 +16,7 @@
                 },
                 {
                     "simple": {
-                        "address": 4,
+                        "account": 4,
                         "amount": 50000
                     }
                 }
@@ -28,7 +28,7 @@
     "tests": [
         {
             "balance": {
-                "address": 4,
+                "account": 4,
                 "amount": 50000
             }
         }

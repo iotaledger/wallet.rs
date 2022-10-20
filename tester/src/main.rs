@@ -6,7 +6,6 @@ mod error;
 use std::time::Duration;
 
 use iota_wallet::{
-    account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
         block::{
@@ -28,56 +27,61 @@ use tokio::{fs, time};
 use self::error::Error;
 
 struct Context {
-    _account_manager: AccountManager,
-    account: AccountHandle,
+    account_manager: AccountManager,
     protocol_parameters: ProtocolParameters,
 }
 
 async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Error> {
     println!("{}", fixtures);
 
-    if let Some(addresses) = fixtures.get("addresses") {
-        println!("{}", addresses);
-        if let Some(addresses) = addresses.as_array() {
+    let res = request_funds_from_faucet(
+        "https://faucet.testnet.shimmer.network/api/enqueue",
+        &context.account_manager.get_accounts().await?[0].addresses().await?[0]
+            .address()
+            .to_bech32(),
+    )
+    .await?;
+
+    println!("{:?}", res);
+
+    if let Some(accounts) = fixtures.get("accounts") {
+        println!("{}", accounts);
+        if let Some(accounts) = accounts.as_array() {
             let mut amounts = Vec::new();
 
-            for address in addresses {
-                if let Some(amount) = address.as_u64() {
+            for account in accounts {
+                if let Some(amount) = account.as_u64() {
                     amounts.push(amount);
                 } else {
-                    return Err(Error::InvalidField("address"));
+                    return Err(Error::InvalidField("account"));
                 }
             }
 
-            let addresses = context.account.generate_addresses(amounts.len() as u32, None).await?;
-
-            println!("{:?}", addresses);
-
             // TODO improve by doing one summed request and dispatching
-            for (address, _amount) in addresses.iter().zip(amounts.iter()) {
+            for _amount in amounts {
+                let account = context.account_manager.create_account().finish().await?;
+
                 let res = request_funds_from_faucet(
                     "https://faucet.testnet.shimmer.network/api/enqueue",
-                    &address.address().to_bech32(),
+                    &account.addresses().await?[0].address().to_bech32(),
                 )
                 .await?;
 
                 println!("{:?}", res);
             }
 
-            time::sleep(Duration::from_secs(5)).await;
+            time::sleep(Duration::from_secs(10)).await;
         }
     } else {
-        return Err(Error::InvalidField("addresses"));
+        return Err(Error::InvalidField("accounts"));
     }
 
     Ok(())
 }
 
 async fn process_transactions(context: &Context, transactions: &Value) -> Result<(), Error> {
-    context.account.sync(None).await?;
+    context.account_manager.sync(None).await?;
     println!("{}", transactions);
-
-    println!("{:?}", context.account.balance().await?);
 
     if let Some(transactions) = transactions.as_array() {
         for transaction in transactions {
@@ -111,24 +115,25 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                                 return Err(Error::MissingField("amount"));
                             };
 
-                            let address = if let Some(address) = simple.get("address") {
-                                if let Some(address) = address.as_u64() {
-                                    address as usize
+                            let account = if let Some(account) = simple.get("account") {
+                                if let Some(account) = account.as_u64() {
+                                    account as usize
                                 } else {
-                                    return Err(Error::InvalidField("address"));
+                                    return Err(Error::InvalidField("account"));
                                 }
                             } else {
-                                return Err(Error::MissingField("address"));
+                                return Err(Error::MissingField("account"));
                             };
 
+                            println!("{}", account);
                             println!("{}", amount);
-                            println!("{}", address);
 
-                            let address = if let Some(address) = context.account.addresses().await?.get(address) {
-                                address.address().as_ref().clone()
-                            } else {
-                                return Err(Error::InvalidField("address"));
-                            };
+                            let address =
+                                if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
+                                    account.addresses().await?[0].address().as_ref().clone()
+                                } else {
+                                    return Err(Error::InvalidField("address"));
+                                };
 
                             // TODO unwrap
                             let simple_output = BasicOutputBuilder::new_with_amount(amount)
@@ -149,7 +154,9 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                 return Err(Error::MissingField("outputs"));
             }
 
-            let transaction = context.account.send(outputs, None).await?;
+            let transaction = context.account_manager.get_accounts().await?[0]
+                .send(outputs, None)
+                .await?;
 
             println!("{:?}", transaction);
         }
@@ -185,9 +192,9 @@ async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
         process_transactions(context, transactions).await?;
     }
 
-    if let Some(tests) = json.get("tests") {
-        process_tests(context, tests)?;
-    }
+    // if let Some(tests) = json.get("tests") {
+    //     process_tests(context, tests)?;
+    // }
 
     Ok(())
 }
@@ -213,15 +220,12 @@ async fn account_manager() -> Result<AccountManager, Error> {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let account_manager = account_manager().await?;
-    let account = account_manager
-        .create_account()
-        .with_alias("Alice".to_string())
-        .finish()
-        .await?;
-    let protocol_parameters = account.client().get_protocol_parameters()?;
+    account_manager.create_account().finish().await?;
+    let protocol_parameters = account_manager.get_accounts().await?[0]
+        .client()
+        .get_protocol_parameters()?;
     let context = Context {
-        _account_manager: account_manager,
-        account,
+        account_manager: account_manager,
         protocol_parameters,
     };
 
