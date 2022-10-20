@@ -17,7 +17,12 @@ use tokio::fs;
 
 use self::error::Error;
 
-async fn process_fixtures(account: &AccountHandle, fixtures: &Value) -> Result<(), Error> {
+struct Context {
+    _account_manager: AccountManager,
+    account: AccountHandle,
+}
+
+async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Error> {
     println!("{}", fixtures);
 
     if let Some(addresses) = fixtures.get("addresses") {
@@ -33,7 +38,7 @@ async fn process_fixtures(account: &AccountHandle, fixtures: &Value) -> Result<(
                 }
             }
 
-            let addresses = account.generate_addresses(amounts.len() as u32, None).await?;
+            let addresses = context.account.generate_addresses(amounts.len() as u32, None).await?;
 
             println!("{:?}", addresses);
         }
@@ -42,29 +47,29 @@ async fn process_fixtures(account: &AccountHandle, fixtures: &Value) -> Result<(
     Ok(())
 }
 
-fn process_transactions(_account: &AccountHandle, transactions: &Value) -> Result<(), Error> {
+fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), Error> {
     println!("{}", transactions);
 
     Ok(())
 }
 
-fn process_tests(_account: &AccountHandle, tests: &Value) -> Result<(), Error> {
+fn process_tests(_context: &Context, tests: &Value) -> Result<(), Error> {
     println!("{}", tests);
 
     Ok(())
 }
 
-async fn process_json(account: &AccountHandle, json: Value) -> Result<(), Error> {
+async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
     if let Some(fixtures) = json.get("fixtures") {
-        process_fixtures(account, fixtures).await?;
+        process_fixtures(context, fixtures).await?;
     }
 
     if let Some(transactions) = json.get("transactions") {
-        process_transactions(account, transactions)?;
+        process_transactions(context, transactions)?;
     }
 
     if let Some(tests) = json.get("tests") {
-        process_tests(account, tests)?;
+        process_tests(context, tests)?;
     }
 
     Ok(())
@@ -96,6 +101,10 @@ async fn main() -> Result<(), Error> {
         .with_alias("Alice".to_string())
         .finish()
         .await?;
+    let context = Context {
+        _account_manager: account_manager,
+        account,
+    };
 
     let mut dir = fs::read_dir("json").await?;
 
@@ -105,7 +114,7 @@ async fn main() -> Result<(), Error> {
 
         println!("{:?}", entry.file_name());
         println!("{}", json);
-        process_json(&account, json).await?;
+        process_json(&context, json).await?;
     }
 
     Ok(())
