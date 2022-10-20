@@ -56,6 +56,8 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
 
             time::sleep(Duration::from_secs(5)).await;
         }
+    } else {
+        return Err(Error::InvalidField("addresses"));
     }
 
     Ok(())
@@ -63,6 +65,32 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
 
 fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), Error> {
     println!("{}", transactions);
+
+    if let Some(transactions) = transactions.as_array() {
+        for transaction in transactions {
+            if let Some(inputs) = transaction.get("inputs") {
+                if let Some(inputs) = inputs.as_array() {
+                    for input in inputs {
+                        println!("{}", input);
+                    }
+                } else {
+                    return Err(Error::InvalidField("inputs"));
+                }
+            }
+
+            if let Some(outputs) = transaction.get("outputs") {
+                if let Some(outputs) = outputs.as_array() {
+                    for output in outputs {
+                        println!("{}", output);
+                    }
+                } else {
+                    return Err(Error::InvalidField("outputs"));
+                }
+            }
+        }
+    } else {
+        return Err(Error::InvalidField("transactions"));
+    }
 
     Ok(())
 }
