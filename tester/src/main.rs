@@ -55,11 +55,13 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
 
             // TODO improve by doing one summed request and dispatching
             for (address, _amount) in addresses.iter().zip(amounts.iter()) {
-                request_funds_from_faucet(
+                let res = request_funds_from_faucet(
                     "https://faucet.testnet.shimmer.network/api/enqueue",
                     &address.address().to_bech32(),
                 )
                 .await?;
+
+                println!("{:?}", res);
             }
 
             time::sleep(Duration::from_secs(5)).await;
@@ -72,7 +74,10 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
 }
 
 async fn process_transactions(context: &Context, transactions: &Value) -> Result<(), Error> {
+    context.account.sync(None).await?;
     println!("{}", transactions);
+
+    println!("{:?}", context.account.balance().await?);
 
     if let Some(transactions) = transactions.as_array() {
         for transaction in transactions {
@@ -86,9 +91,11 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                 }
             }
 
-            if let Some(outputs) = transaction.get("outputs") {
-                if let Some(outputs) = outputs.as_array() {
-                    for output in outputs {
+            let mut outputs = Vec::new();
+
+            if let Some(json_outputs) = transaction.get("outputs") {
+                if let Some(json_outputs) = json_outputs.as_array() {
+                    for output in json_outputs {
                         if let Some(dto) = output.get("dto") {
                             println!("{}", dto);
                         } else if let Some(simple) = output.get("simple") {
@@ -129,6 +136,8 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                                 .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
                                 .finish_output(context.protocol_parameters.token_supply())
                                 .unwrap();
+
+                            outputs.push(simple_output);
                         } else {
                             return Err(Error::InvalidField("output"));
                         }
@@ -139,6 +148,10 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
             } else {
                 return Err(Error::MissingField("outputs"));
             }
+
+            let transaction = context.account.send(outputs, None).await?;
+
+            println!("{:?}", transaction);
         }
     } else {
         return Err(Error::InvalidField("transactions"));
