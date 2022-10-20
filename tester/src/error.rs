@@ -6,6 +6,9 @@ use std::fmt::Debug;
 /// The wallet-tester error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Check error.
+    #[error("{0}")]
+    Check(String),
     /// Client error.
     #[error("client error: {0}")]
     Client(#[from] iota_wallet::iota_client::Error),

@@ -11,9 +11,9 @@ pub async fn process_checks(context: &Context, checks: &Value) -> Result<(), Err
     if let Some(checks) = checks.as_array() {
         for check in checks {
             if let Some(balance) = check.get("balance") {
-                let account = if let Some(account) = balance.get("account") {
-                    if let Some(account) = account.as_u64() {
-                        account as usize
+                let account_index = if let Some(account_index) = balance.get("account") {
+                    if let Some(account_index) = account_index.as_u64() {
+                        account_index as usize
                     } else {
                         return Err(Error::InvalidField("account"));
                     }
@@ -31,10 +31,15 @@ pub async fn process_checks(context: &Context, checks: &Value) -> Result<(), Err
                     return Err(Error::MissingField("amount"));
                 };
 
-                if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
+                if let Some(account) = context.account_manager.get_accounts().await?.get(account_index) {
                     let balance = account.balance().await?;
 
-                    if balance.base_coin.available != amount {}
+                    if balance.base_coin.available != amount {
+                        return Err(Error::Check(format!(
+                            "incorrect balance for account {}: expected {}, got {}",
+                            account_index, amount, balance.base_coin.available
+                        )));
+                    }
                 } else {
                     return Err(Error::InvalidField("account"));
                 };
