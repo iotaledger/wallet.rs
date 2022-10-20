@@ -15,6 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 iota-wallet = { version = "1.0.0-rc.1", path = "../", default-features = false }
+serde_json = { version = "1.0.87", default-features = false }
 tokio = { version = "1.21.2", default-features = false, features = [ "fs" ] } 
 
 [profile.release]
