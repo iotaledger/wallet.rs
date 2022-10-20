@@ -37,7 +37,7 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
                 if let Some(amount) = address.as_u64() {
                     amounts.push(amount);
                 } else {
-                    return Err(Error::InvalidField("addresses"));
+                    return Err(Error::InvalidField("address"));
                 }
             }
 
@@ -81,7 +81,13 @@ fn process_transactions(_context: &Context, transactions: &Value) -> Result<(), 
             if let Some(outputs) = transaction.get("outputs") {
                 if let Some(outputs) = outputs.as_array() {
                     for output in outputs {
-                        println!("{}", output);
+                        if let Some(dto) = output.get("dto") {
+                            println!("{}", dto);
+                        } else if let Some(simple) = output.get("simple") {
+                            println!("{}", simple);
+                        } else {
+                            return Err(Error::InvalidField("output"));
+                        }
                     }
                 } else {
                     return Err(Error::InvalidField("outputs"));
