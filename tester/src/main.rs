@@ -4,6 +4,7 @@
 mod error;
 
 use iota_wallet::{
+    account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
         constants::SHIMMER_COIN_TYPE,
@@ -16,35 +17,54 @@ use tokio::fs;
 
 use self::error::Error;
 
-fn process_fixtures(_account_manager: &AccountManager, fixtures: &Value) -> Result<(), Error> {
+async fn process_fixtures(account: &AccountHandle, fixtures: &Value) -> Result<(), Error> {
     println!("{}", fixtures);
+
+    if let Some(addresses) = fixtures.get("addresses") {
+        println!("{}", addresses);
+        if let Some(addresses) = addresses.as_array() {
+            let mut amounts = Vec::new();
+
+            for address in addresses {
+                if let Some(amount) = address.as_u64() {
+                    amounts.push(amount);
+                } else {
+                    return Err(Error::InvalidField("addresses"));
+                }
+            }
+
+            let addresses = account.generate_addresses(amounts.len() as u32, None).await?;
+
+            println!("{:?}", addresses);
+        }
+    }
 
     Ok(())
 }
 
-fn process_transactions(_account_manager: &AccountManager, transactions: &Value) -> Result<(), Error> {
+fn process_transactions(_account: &AccountHandle, transactions: &Value) -> Result<(), Error> {
     println!("{}", transactions);
 
     Ok(())
 }
 
-fn process_tests(_account_manager: &AccountManager, tests: &Value) -> Result<(), Error> {
+fn process_tests(_account: &AccountHandle, tests: &Value) -> Result<(), Error> {
     println!("{}", tests);
 
     Ok(())
 }
 
-fn process_json(account_manager: &AccountManager, json: Value) -> Result<(), Error> {
+async fn process_json(account: &AccountHandle, json: Value) -> Result<(), Error> {
     if let Some(fixtures) = json.get("fixtures") {
-        process_fixtures(account_manager, fixtures)?;
+        process_fixtures(account, fixtures).await?;
     }
 
     if let Some(transactions) = json.get("transactions") {
-        process_transactions(account_manager, transactions)?;
+        process_transactions(account, transactions)?;
     }
 
     if let Some(tests) = json.get("tests") {
-        process_tests(account_manager, tests)?;
+        process_tests(account, tests)?;
     }
 
     Ok(())
@@ -71,6 +91,11 @@ async fn account_manager() -> Result<AccountManager, Error> {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let account_manager = account_manager().await?;
+    let account = account_manager
+        .create_account()
+        .with_alias("Alice".to_string())
+        .finish()
+        .await?;
 
     let mut dir = fs::read_dir("json").await?;
 
@@ -80,7 +105,7 @@ async fn main() -> Result<(), Error> {
 
         println!("{:?}", entry.file_name());
         println!("{}", json);
-        process_json(&account_manager, json)?;
+        process_json(&account, json).await?;
     }
 
     Ok(())

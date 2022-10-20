@@ -1,6 +1,8 @@
 {
     "fixtures": {
         "addresses": [
+            0,
+            50,
             1000
         ]
     },

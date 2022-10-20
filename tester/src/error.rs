@@ -9,6 +9,9 @@ pub enum Error {
     /// Client error.
     #[error("client error: {0}")]
     Client(#[from] iota_wallet::iota_client::Error),
+    /// Invalid field.
+    #[error("invalid field: {0}")]
+    InvalidField(&'static str),
     /// I/O error.
     #[error("i/o error: {0}")]
     Io(#[from] std::io::Error),
