@@ -91,7 +91,15 @@ async fn main() -> Result<(), Error> {
         );
         log::debug!("{}", json);
 
-        process_json(&context, json).await?;
+        if let Err(err) = process_json(&context, json).await {
+            log::error!(
+                "Executing test {}/{}: {:?} failed: {}",
+                index + 1,
+                entries.len(),
+                entry.file_name(),
+                err
+            );
+        }
     }
 
     Ok(())
