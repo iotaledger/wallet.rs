@@ -8,17 +8,35 @@ use tokio::fs;
 
 use self::error::Error;
 
+fn process_fixtures(fixtures: &Value) -> Result<(), Error> {
+    println!("{}", fixtures);
+
+    Ok(())
+}
+
+fn process_transactions(transactions: &Value) -> Result<(), Error> {
+    println!("{}", transactions);
+
+    Ok(())
+}
+
+fn process_tests(tests: &Value) -> Result<(), Error> {
+    println!("{}", tests);
+
+    Ok(())
+}
+
 fn process_json(json: Value) -> Result<(), Error> {
     if let Some(fixtures) = json.get("fixtures") {
-        println!("{}", fixtures);
+        process_fixtures(fixtures)?;
     }
 
     if let Some(transactions) = json.get("transactions") {
-        println!("{}", transactions);
+        process_transactions(transactions)?;
     }
 
     if let Some(tests) = json.get("tests") {
-        println!("{}", tests);
+        process_tests(tests)?;
     }
 
     Ok(())
