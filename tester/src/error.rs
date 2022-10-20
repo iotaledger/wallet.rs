@@ -18,6 +18,9 @@ pub enum Error {
     /// Json error.
     #[error("json error: {0}")]
     Json(#[from] serde_json::Error),
+    /// Logger error.
+    #[error("logger error: {0}")]
+    Logger(#[from] fern_logger::Error),
     /// Missing field.
     #[error("missing field: {0}")]
     MissingField(&'static str),

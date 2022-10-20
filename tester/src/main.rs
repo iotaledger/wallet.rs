@@ -5,6 +5,7 @@ mod error;
 
 use std::time::Duration;
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::{
@@ -255,6 +256,14 @@ async fn account_manager() -> Result<AccountManager, Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    let logger_output_config = LoggerOutputConfigBuilder::new()
+        .level_filter(log::LevelFilter::Info)
+        .target_exclusions(&["h2", "hyper", "rustls"])
+        .color_enabled(true);
+
+    let config = LoggerConfig::build().with_output(logger_output_config).finish();
+    logger_init(config)?;
+
     let account_manager = account_manager().await?;
     account_manager.create_account().finish().await?;
     let protocol_parameters = account_manager.get_accounts().await?[0]
@@ -265,14 +274,25 @@ async fn main() -> Result<(), Error> {
         protocol_parameters,
     };
 
+    let mut entries = Vec::new();
     let mut dir = fs::read_dir("json").await?;
 
     for entry in dir.next_entry().await? {
+        entries.push(entry);
+    }
+
+    for (index, entry) in entries.iter().enumerate() {
         let content = fs::read_to_string(entry.path()).await?;
         let json: Value = serde_json::from_str(&content)?;
 
-        println!("{:?}", entry.file_name());
-        println!("{}", json);
+        log::info!(
+            "Executing test {}/{}: {:?}",
+            index + 1,
+            entries.len(),
+            entry.file_name(),
+        );
+        log::debug!("{}", json);
+
         process_json(&context, json).await?;
     }
 

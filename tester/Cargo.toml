@@ -14,7 +14,9 @@ name = "wallet-tester"
 path = "src/main.rs"
 
 [dependencies]
+fern-logger = { version = "0.5.0", default-features = false }
 iota-wallet = { version = "1.0.0-rc.1", path = "../", default-features = false }
+log = { version = "0.4.17", default-features = false }
 serde_json = { version = "1.0.87", default-features = false }
 thiserror = { version = "1.0.37", default-features = false }
 tokio = { version = "1.21.2", default-features = false, features = [ "fs" ] } 
