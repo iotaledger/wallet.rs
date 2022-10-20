@@ -3,17 +3,20 @@
 
 mod error;
 
+use std::time::Duration;
+
 use iota_wallet::{
     account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
         constants::SHIMMER_COIN_TYPE,
+        request_funds_from_faucet,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},
     },
     ClientOptions,
 };
 use serde_json::Value;
-use tokio::fs;
+use tokio::{fs, time};
 
 use self::error::Error;
 
@@ -41,6 +44,17 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
             let addresses = context.account.generate_addresses(amounts.len() as u32, None).await?;
 
             println!("{:?}", addresses);
+
+            // TODO improve by doing one summed request and dispatching
+            for (address, _amount) in addresses.iter().zip(amounts.iter()) {
+                request_funds_from_faucet(
+                    "https://faucet.testnet.shimmer.network/api/enqueue",
+                    &address.address().to_bech32(),
+                )
+                .await?;
+            }
+
+            time::sleep(Duration::from_secs(5)).await;
         }
     }
 
