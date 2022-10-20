@@ -9,6 +9,9 @@ description = "Test engine for wallet.rs"
 license = "Apache-2.0"
 keywords = [ "iota", "wallet", "test" ]
 
+[lib]
+name = "wallet_tester"
+path = "src/lib.rs"
 [[bin]]
 name = "wallet-tester"
 path = "src/main.rs"

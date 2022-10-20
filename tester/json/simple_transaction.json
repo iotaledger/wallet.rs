@@ -19,7 +19,7 @@
             "error": "Error..."
         }
     ],
-    "tests": [
+    "checks": [
         {
             "balance": {
                 "account": 1,
