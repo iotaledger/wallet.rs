@@ -8,6 +8,22 @@ use tokio::fs;
 
 use self::error::Error;
 
+fn process_json(json: Value) -> Result<(), Error> {
+    if let Some(fixtures) = json.get("fixtures") {
+        println!("{}", fixtures);
+    }
+
+    if let Some(transactions) = json.get("transactions") {
+        println!("{}", transactions);
+    }
+
+    if let Some(tests) = json.get("tests") {
+        println!("{}", tests);
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let mut dir = fs::read_dir("json").await?;
@@ -18,6 +34,7 @@ async fn main() -> Result<(), Error> {
 
         println!("{:?}", entry.file_name());
         println!("{}", json);
+        process_json(json)?;
     }
 
     Ok(())
