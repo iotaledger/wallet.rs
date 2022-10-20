@@ -13,17 +13,13 @@ use tokio::time;
 use crate::{context::Context, error::Error};
 
 pub async fn process_transactions(context: &Context, transactions: &Value) -> Result<(), Error> {
-    println!("{}", transactions);
-
     if let Some(transactions) = transactions.as_array() {
         for transaction in transactions {
             context.account_manager.sync(None).await?;
 
             if let Some(inputs) = transaction.get("inputs") {
                 if let Some(inputs) = inputs.as_array() {
-                    for input in inputs {
-                        println!("{}", input);
-                    }
+                    for _input in inputs {}
                 } else {
                     return Err(Error::InvalidField("inputs"));
                 }
@@ -34,11 +30,8 @@ pub async fn process_transactions(context: &Context, transactions: &Value) -> Re
             if let Some(json_outputs) = transaction.get("outputs") {
                 if let Some(json_outputs) = json_outputs.as_array() {
                     for output in json_outputs {
-                        if let Some(dto) = output.get("dto") {
-                            println!("{}", dto);
+                        if let Some(_dto) = output.get("dto") {
                         } else if let Some(simple) = output.get("simple") {
-                            println!("{}", simple);
-
                             let account = if let Some(account) = simple.get("account") {
                                 if let Some(account) = account.as_u64() {
                                     account as usize
@@ -58,9 +51,6 @@ pub async fn process_transactions(context: &Context, transactions: &Value) -> Re
                             } else {
                                 return Err(Error::MissingField("amount"));
                             };
-
-                            println!("{}", account);
-                            println!("{}", amount);
 
                             let address =
                                 if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
@@ -88,11 +78,9 @@ pub async fn process_transactions(context: &Context, transactions: &Value) -> Re
                 return Err(Error::MissingField("outputs"));
             }
 
-            let transaction = context.account_manager.get_accounts().await?[0]
+            let _transaction = context.account_manager.get_accounts().await?[0]
                 .send(outputs, None)
                 .await?;
-
-            println!("{:?}", transaction);
 
             time::sleep(Duration::from_secs(10)).await;
         }

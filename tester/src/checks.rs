@@ -7,7 +7,6 @@ use crate::{context::Context, error::Error};
 
 pub async fn process_checks(context: &Context, checks: &Value) -> Result<(), Error> {
     context.account_manager.sync(None).await?;
-    println!("{}", checks);
 
     if let Some(checks) = checks.as_array() {
         for check in checks {
@@ -32,15 +31,10 @@ pub async fn process_checks(context: &Context, checks: &Value) -> Result<(), Err
                     return Err(Error::MissingField("amount"));
                 };
 
-                println!("{}", account);
-                println!("{}", amount);
-
                 if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
                     let balance = account.balance().await?;
 
-                    if balance.base_coin.available != amount {
-                        println!("TEST FAILURE");
-                    }
+                    if balance.base_coin.available != amount {}
                 } else {
                     return Err(Error::InvalidField("account"));
                 };
