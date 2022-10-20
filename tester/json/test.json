@@ -1,9 +1,6 @@
 {
     "fixtures": {
         "accounts": [
-            0,
-            50,
-            100000,
             0
         ]
     },
@@ -12,11 +9,8 @@
             "inputs": [],
             "outputs": [
                 {
-                    "dto": {}
-                },
-                {
                     "simple": {
-                        "account": 4,
+                        "account": 1,
                         "amount": 50000
                     }
                 }
@@ -28,7 +22,7 @@
     "tests": [
         {
             "balance": {
-                "account": 4,
+                "account": 1,
                 "amount": 50000
             }
         }

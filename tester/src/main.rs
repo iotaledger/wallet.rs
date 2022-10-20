@@ -16,7 +16,7 @@ use iota_wallet::{
             protocol::ProtocolParameters,
         },
         constants::SHIMMER_COIN_TYPE,
-        request_funds_from_faucet,
+        generate_mnemonic, request_funds_from_faucet,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},
     },
     ClientOptions,
@@ -58,16 +58,18 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
             }
 
             // TODO improve by doing one summed request and dispatching
-            for _amount in amounts {
+            for amount in amounts {
                 let account = context.account_manager.create_account().finish().await?;
 
-                let res = request_funds_from_faucet(
-                    "https://faucet.testnet.shimmer.network/api/enqueue",
-                    &account.addresses().await?[0].address().to_bech32(),
-                )
-                .await?;
+                if amount != 0 {
+                    let res = request_funds_from_faucet(
+                        "https://faucet.testnet.shimmer.network/api/enqueue",
+                        &account.addresses().await?[0].address().to_bech32(),
+                    )
+                    .await?;
 
-                println!("{:?}", res);
+                    println!("{:?}", res);
+                }
             }
 
             time::sleep(Duration::from_secs(10)).await;
@@ -80,11 +82,12 @@ async fn process_fixtures(context: &Context, fixtures: &Value) -> Result<(), Err
 }
 
 async fn process_transactions(context: &Context, transactions: &Value) -> Result<(), Error> {
-    context.account_manager.sync(None).await?;
     println!("{}", transactions);
 
     if let Some(transactions) = transactions.as_array() {
         for transaction in transactions {
+            context.account_manager.sync(None).await?;
+
             if let Some(inputs) = transaction.get("inputs") {
                 if let Some(inputs) = inputs.as_array() {
                     for input in inputs {
@@ -105,16 +108,6 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                         } else if let Some(simple) = output.get("simple") {
                             println!("{}", simple);
 
-                            let amount = if let Some(amount) = simple.get("amount") {
-                                if let Some(amount) = amount.as_u64() {
-                                    amount
-                                } else {
-                                    return Err(Error::InvalidField("amount"));
-                                }
-                            } else {
-                                return Err(Error::MissingField("amount"));
-                            };
-
                             let account = if let Some(account) = simple.get("account") {
                                 if let Some(account) = account.as_u64() {
                                     account as usize
@@ -125,6 +118,16 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                                 return Err(Error::MissingField("account"));
                             };
 
+                            let amount = if let Some(amount) = simple.get("amount") {
+                                if let Some(amount) = amount.as_u64() {
+                                    amount
+                                } else {
+                                    return Err(Error::InvalidField("amount"));
+                                }
+                            } else {
+                                return Err(Error::MissingField("amount"));
+                            };
+
                             println!("{}", account);
                             println!("{}", amount);
 
@@ -132,7 +135,7 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                                 if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
                                     account.addresses().await?[0].address().as_ref().clone()
                                 } else {
-                                    return Err(Error::InvalidField("address"));
+                                    return Err(Error::InvalidField("account"));
                                 };
 
                             // TODO unwrap
@@ -159,6 +162,8 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
                 .await?;
 
             println!("{:?}", transaction);
+
+            time::sleep(Duration::from_secs(10)).await;
         }
     } else {
         return Err(Error::InvalidField("transactions"));
@@ -167,13 +172,45 @@ async fn process_transactions(context: &Context, transactions: &Value) -> Result
     Ok(())
 }
 
-fn process_tests(_context: &Context, tests: &Value) -> Result<(), Error> {
+async fn process_tests(context: &Context, tests: &Value) -> Result<(), Error> {
+    context.account_manager.sync(None).await?;
     println!("{}", tests);
 
     if let Some(tests) = tests.as_array() {
         for test in tests {
             if let Some(balance) = test.get("balance") {
-                println!("{}", balance);
+                let account = if let Some(account) = balance.get("account") {
+                    if let Some(account) = account.as_u64() {
+                        account as usize
+                    } else {
+                        return Err(Error::InvalidField("account"));
+                    }
+                } else {
+                    return Err(Error::MissingField("account"));
+                };
+
+                let amount = if let Some(amount) = balance.get("amount") {
+                    if let Some(amount) = amount.as_u64() {
+                        amount
+                    } else {
+                        return Err(Error::InvalidField("amount"));
+                    }
+                } else {
+                    return Err(Error::MissingField("amount"));
+                };
+
+                println!("{}", account);
+                println!("{}", amount);
+
+                if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
+                    let balance = account.balance().await?;
+
+                    if balance.base_coin.available != amount {
+                        println!("TEST FAILURE");
+                    }
+                } else {
+                    return Err(Error::InvalidField("account"));
+                };
             } else {
                 return Err(Error::InvalidField("test"));
             }
@@ -192,16 +229,15 @@ async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
         process_transactions(context, transactions).await?;
     }
 
-    // if let Some(tests) = json.get("tests") {
-    //     process_tests(context, tests)?;
-    // }
+    if let Some(tests) = json.get("tests") {
+        process_tests(context, tests).await?;
+    }
 
     Ok(())
 }
 
 async fn account_manager() -> Result<AccountManager, Error> {
-    let mnemonic = "pumpkin actual foster argue normal dizzy sheriff action license hover fossil pink ancient company toilet silver egg chief actress month family dose orange corn";
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(mnemonic)?;
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(&generate_mnemonic()?)?;
 
     let client_options = ClientOptions::new()
         .with_node("https://api.testnet.shimmer.network")?
