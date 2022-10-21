@@ -75,11 +75,23 @@ pub async fn process_transaction(context: &Context, transaction: &Value) -> Resu
         return Err(Error::MissingField("outputs"));
     }
 
-    let _transaction = context.account_manager.get_accounts().await?[0]
-        .send(outputs, None)
-        .await?;
+    let account = &context.account_manager.get_accounts().await?[0];
+    let sent_transaction = account.send(outputs, None).await?;
 
-    time::sleep(Duration::from_secs(10)).await;
+    if let Some(confirmation) = transaction.get("confirmation") {
+        if let Some(confirmation) = confirmation.as_bool() {
+            if confirmation {
+                if let Some(block_id) = sent_transaction.block_id {
+                    account.retry_until_included(&block_id, None, None).await?;
+                } else {
+                    account.sync(None).await?;
+                    time::sleep(Duration::from_secs(10)).await;
+                }
+            }
+        } else {
+            return Err(Error::InvalidField("confirmation"));
+        }
+    }
 
     Ok(())
 }
