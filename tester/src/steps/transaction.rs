@@ -15,6 +15,24 @@ use crate::{context::Context, error::Error};
 pub async fn process_transaction(context: &Context, transaction: &Value) -> Result<(), Error> {
     context.account_manager.sync(None).await?;
 
+    let account_from_index = if let Some(from) = transaction.get("from") {
+        if let Some(from) = from.as_u64() {
+            from as usize
+        } else {
+            return Err(Error::InvalidField("from"));
+        }
+    } else {
+        0
+    };
+
+    let accounts = context.account_manager.get_accounts().await?;
+
+    let account_from = if let Some(account_from) = accounts.get(account_from_index) {
+        account_from
+    } else {
+        return Err(Error::InvalidField("from"));
+    };
+
     if let Some(inputs) = transaction.get("inputs") {
         if let Some(inputs) = inputs.as_array() {
             for _input in inputs {}
@@ -75,16 +93,15 @@ pub async fn process_transaction(context: &Context, transaction: &Value) -> Resu
         return Err(Error::MissingField("outputs"));
     }
 
-    let account = &context.account_manager.get_accounts().await?[0];
-    let sent_transaction = account.send(outputs, None).await?;
+    let sent_transaction = account_from.send(outputs, None).await?;
 
     if let Some(confirmation) = transaction.get("confirmation") {
         if let Some(confirmation) = confirmation.as_bool() {
             if confirmation {
                 if let Some(block_id) = sent_transaction.block_id {
-                    account.retry_until_included(&block_id, None, None).await?;
+                    account_from.retry_until_included(&block_id, None, None).await?;
                 } else {
-                    account.sync(None).await?;
+                    account_from.sync(None).await?;
                     time::sleep(Duration::from_secs(10)).await;
                 }
             }

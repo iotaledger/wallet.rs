@@ -11,18 +11,14 @@ use crate::{context::Context, error::Error};
 
 pub async fn process_accounts(context: &Context, accounts: &Value) -> Result<(), Error> {
     if let Some(accounts) = accounts.as_array() {
-        let mut amounts = Vec::new();
-
+        // TODO improve by doing one summed request and dispatching
         for account in accounts {
-            if let Some(amount) = account.as_u64() {
-                amounts.push(amount);
+            let amount = if let Some(amount) = account.as_u64() {
+                amount
             } else {
                 return Err(Error::InvalidField("account"));
-            }
-        }
+            };
 
-        // TODO improve by doing one summed request and dispatching
-        for amount in amounts {
             let account = context.account_manager.create_account().finish().await?;
 
             if amount != 0 {
