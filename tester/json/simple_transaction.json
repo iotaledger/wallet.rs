@@ -4,19 +4,21 @@
             0
         ]
     },
-    "transactions": [
+    "steps": [
         {
-            "inputs": [],
-            "outputs": [
-                {
-                    "simple": {
-                        "account": 1,
-                        "amount": 50000
+            "transaction": {
+                "inputs": [],
+                "outputs": [
+                    {
+                        "simple": {
+                            "account": 1,
+                            "amount": 50000
+                        }
                     }
-                }
-            ],
-            "confirmation": true,
-            "error": "Error..."
+                ],
+                "confirmation": true,
+                "error": "Error..."
+            }
         }
     ],
     "checks": [

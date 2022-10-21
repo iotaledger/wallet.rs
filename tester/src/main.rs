@@ -15,8 +15,7 @@ use serde_json::Value;
 use tokio::fs;
 
 use wallet_tester::{
-    checks::process_checks, context::Context, error::Error, fixtures::process_fixtures,
-    transactions::process_transactions,
+    checks::process_checks, context::Context, error::Error, fixtures::process_fixtures, steps::process_steps,
 };
 
 async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
@@ -24,8 +23,8 @@ async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
         process_fixtures(context, fixtures).await?;
     }
 
-    if let Some(transactions) = json.get("transactions") {
-        process_transactions(context, transactions).await?;
+    if let Some(steps) = json.get("steps") {
+        process_steps(context, steps).await?;
     }
 
     if let Some(checks) = json.get("checks") {
