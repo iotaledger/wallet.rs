@@ -60,16 +60,6 @@ async fn main() -> Result<(), Error> {
     let config = LoggerConfig::build().with_output(logger_output_config).finish();
     logger_init(config)?;
 
-    let account_manager = account_manager().await?;
-    account_manager.create_account().finish().await?;
-    let protocol_parameters = account_manager.get_accounts().await?[0]
-        .client()
-        .get_protocol_parameters()?;
-    let context = Context {
-        account_manager,
-        protocol_parameters,
-    };
-
     let mut entries = Vec::new();
     let mut dir = fs::read_dir("json").await?;
 
@@ -78,6 +68,16 @@ async fn main() -> Result<(), Error> {
     }
 
     for (index, entry) in entries.iter().enumerate() {
+        let account_manager = account_manager().await?;
+        account_manager.create_account().finish().await?;
+        let protocol_parameters = account_manager.get_accounts().await?[0]
+            .client()
+            .get_protocol_parameters()?;
+        let context = Context {
+            account_manager,
+            protocol_parameters,
+        };
+
         let content = fs::read_to_string(entry.path()).await?;
         let json: Value = serde_json::from_str(&content)?;
 
