@@ -13,7 +13,6 @@ use iota_wallet::{
 };
 use serde_json::Value;
 use tokio::fs;
-
 use wallet_tester::{
     checks::process_checks, context::Context, error::Error, fixtures::process_fixtures, steps::process_steps,
 };
@@ -67,14 +66,14 @@ async fn main() -> Result<(), Error> {
         .client()
         .get_protocol_parameters()?;
     let context = Context {
-        account_manager: account_manager,
+        account_manager,
         protocol_parameters,
     };
 
     let mut entries = Vec::new();
     let mut dir = fs::read_dir("json").await?;
 
-    for entry in dir.next_entry().await? {
+    while let Some(entry) = dir.next_entry().await? {
         entries.push(entry);
     }
 

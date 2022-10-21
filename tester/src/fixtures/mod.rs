@@ -4,7 +4,6 @@
 mod accounts;
 
 use iota_wallet::iota_client::request_funds_from_faucet;
-
 use serde_json::Value;
 
 use self::accounts::process_accounts;

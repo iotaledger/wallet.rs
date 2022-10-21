@@ -51,7 +51,7 @@ pub async fn process_transaction(context: &Context, transaction: &Value) -> Resu
                     };
 
                     let address = if let Some(account) = context.account_manager.get_accounts().await?.get(account) {
-                        account.addresses().await?[0].address().as_ref().clone()
+                        *account.addresses().await?[0].address().as_ref()
                     } else {
                         return Err(Error::InvalidField("account"));
                     };

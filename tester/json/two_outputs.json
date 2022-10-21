@@ -1,0 +1,38 @@
+{
+    "fixtures": {
+        "accounts": [
+            0
+        ]
+    },
+    "steps": [
+        {
+            "transaction": {
+                "inputs": [],
+                "outputs": [
+                    {
+                        "simple": {
+                            "account": 1,
+                            "amount": 50000
+                        }
+                    },
+                    {
+                        "simple": {
+                            "account": 1,
+                            "amount": 50000
+                        }
+                    }
+                ],
+                "confirmation": true,
+                "error": "Error..."
+            }
+        }
+    ],
+    "checks": [
+        {
+            "balance": {
+                "account": 1,
+                "amount": 100000
+            }
+        }
+    ]
+}

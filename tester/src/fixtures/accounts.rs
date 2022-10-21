@@ -4,7 +4,6 @@
 use std::time::Duration;
 
 use iota_wallet::iota_client::request_funds_from_faucet;
-
 use serde_json::Value;
 use tokio::time;
 
