@@ -14,7 +14,10 @@ use std::{
 
 use dotenv::dotenv;
 use iota_client::{
-    api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
+    api::{
+        transaction::validate_transaction_payload_length, PreparedTransactionData, PreparedTransactionDataDto,
+        SignedTransactionData, SignedTransactionDataDto,
+    },
     block::{output::RentStructureBuilder, payload::TransactionPayload, protocol::ProtocolParameters},
     secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
 };
@@ -60,6 +63,8 @@ async fn main() -> Result<()> {
         .sign_transaction_essence(&prepared_transaction_data)
         .await?;
     let signed_transaction = TransactionPayload::new(prepared_transaction_data.essence.clone(), unlocks)?;
+
+    validate_transaction_payload_length(&signed_transaction)?;
 
     let signed_transaction_data = SignedTransactionData {
         transaction_payload: signed_transaction,

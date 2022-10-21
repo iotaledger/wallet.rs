@@ -4,7 +4,10 @@
 use std::time::Instant;
 
 use iota_client::{
-    api::{input_selection::types::SelectedTransactionData, PreparedTransactionData},
+    api::{
+        input_selection::types::SelectedTransactionData, transaction::validate_regular_transaction_essence_length,
+        PreparedTransactionData,
+    },
     block::{
         input::{Input, UtxoInput},
         output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
@@ -72,6 +75,9 @@ impl AccountHandle {
         }
 
         let essence = essence_builder.finish(&protocol_parameters)?;
+
+        validate_regular_transaction_essence_length(&essence)?;
+
         let essence = TransactionEssence::Regular(essence);
 
         let prepared_transaction_data = PreparedTransactionData {
