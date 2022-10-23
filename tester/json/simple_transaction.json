@@ -1,12 +1,14 @@
 {
     "fixtures": {
         "accounts": [
+            50000,
             0
         ]
     },
     "steps": [
         {
             "transaction": {
+                "from": 0,
                 "inputs": [],
                 "outputs": [
                     {
@@ -16,12 +18,17 @@
                         }
                     }
                 ],
-                "confirmation": true,
-                "error": "Error..."
+                "confirmation": true
             }
         }
     ],
     "checks": [
+        {
+            "balance": {
+                "account": 0,
+                "amount": 0
+            }
+        },
         {
             "balance": {
                 "account": 1,

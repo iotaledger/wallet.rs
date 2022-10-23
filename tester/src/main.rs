@@ -1,23 +1,58 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
+use std::time::Duration;
+
+use fern_logger::{LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
+    account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
         constants::SHIMMER_COIN_TYPE,
-        generate_mnemonic,
+        generate_mnemonic, request_funds_from_faucet,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},
     },
     ClientOptions,
 };
 use serde_json::Value;
-use tokio::fs;
+use tokio::{fs, time};
 use wallet_tester::{
     checks::process_checks, context::Context, error::Error, fixtures::process_fixtures, steps::process_steps,
 };
 
-async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
+fn logger_init() -> Result<(), Error> {
+    let logger_output_config = LoggerOutputConfigBuilder::new()
+        .level_filter(log::LevelFilter::Info)
+        .target_exclusions(&["h2", "hyper", "rustls"])
+        .color_enabled(true);
+    let logger_config = LoggerConfig::build().with_output(logger_output_config).finish();
+
+    fern_logger::logger_init(logger_config)?;
+
+    Ok(())
+}
+
+async fn account_manager(mnemonic: Option<String>) -> Result<AccountManager, Error> {
+    let mnemonic = if let Some(mnemonic) = mnemonic {
+        mnemonic
+    } else {
+        generate_mnemonic()?
+    };
+    let secret_manager = SecretManager::Mnemonic(MnemonicSecretManager::try_from_mnemonic(&mnemonic)?);
+    let client_options = ClientOptions::new()
+        .with_node("https://api.testnet.shimmer.network")?
+        .with_node_sync_disabled();
+    let account_manager = AccountManager::builder()
+        .with_secret_manager(secret_manager)
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .finish()
+        .await?;
+
+    Ok(account_manager)
+}
+
+async fn process_json<'a>(context: &Context<'a>, json: Value) -> Result<(), Error> {
     if let Some(fixtures) = json.get("fixtures") {
         process_fixtures(context, fixtures).await?;
     }
@@ -33,32 +68,31 @@ async fn process_json(context: &Context, json: Value) -> Result<(), Error> {
     Ok(())
 }
 
-async fn account_manager() -> Result<AccountManager, Error> {
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(&generate_mnemonic()?)?;
+async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle), Error> {
+    let faucet_manager = account_manager(Some(mnemonic)).await?;
+    faucet_manager.create_account().finish().await?;
+    let faucet_account = &faucet_manager.get_accounts().await?[0];
 
-    let client_options = ClientOptions::new()
-        .with_node("https://api.testnet.shimmer.network")?
-        .with_node_sync_disabled();
+    let _res = request_funds_from_faucet(
+        "https://faucet.testnet.shimmer.network/api/enqueue",
+        &faucet_account.addresses().await?[0].address().to_bech32(),
+    )
+    .await?;
 
-    let account_manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .finish()
-        .await?;
+    time::sleep(Duration::from_secs(10)).await;
 
-    Ok(account_manager)
+    faucet_account.sync(None).await?;
+
+    Ok((faucet_manager, faucet_account.clone()))
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let logger_output_config = LoggerOutputConfigBuilder::new()
-        .level_filter(log::LevelFilter::Info)
-        .target_exclusions(&["h2", "hyper", "rustls"])
-        .color_enabled(true);
+    let mnemonic = generate_mnemonic()?;
+    let (faucet_manager, faucet_account) = faucet(mnemonic).await?;
+    let protocol_parameters = faucet_account.client().get_protocol_parameters()?;
 
-    let config = LoggerConfig::build().with_output(logger_output_config).finish();
-    logger_init(config)?;
+    logger_init()?;
 
     let mut entries = Vec::new();
     let mut dir = fs::read_dir("json").await?;
@@ -68,21 +102,20 @@ async fn main() -> Result<(), Error> {
     }
 
     for (index, entry) in entries.iter().enumerate() {
-        let account_manager = account_manager().await?;
-        account_manager.create_account().finish().await?;
-        let protocol_parameters = account_manager.get_accounts().await?[0]
-            .client()
-            .get_protocol_parameters()?;
+        let account_manager = account_manager(None).await?;
+
         let context = Context {
+            faucet_manager: &faucet_manager,
+            faucet_account: &faucet_account,
             account_manager,
-            protocol_parameters,
+            protocol_parameters: protocol_parameters.clone(),
         };
 
         let content = fs::read_to_string(entry.path()).await?;
         let json: Value = serde_json::from_str(&content)?;
 
         log::info!(
-            "Executing test {}/{}: {:?}",
+            "Executing test {}/{}: {:?}.",
             index + 1,
             entries.len(),
             entry.file_name(),
@@ -91,7 +124,7 @@ async fn main() -> Result<(), Error> {
 
         if let Err(err) = process_json(&context, json).await {
             log::error!(
-                "Executing test {}/{}: {:?} failed: {}",
+                "Executing test {}/{}: {:?} failed: {}.",
                 index + 1,
                 entries.len(),
                 entry.file_name(),

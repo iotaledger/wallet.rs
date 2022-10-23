@@ -8,10 +8,8 @@ use serde_json::Value;
 use self::transaction::process_transaction;
 use crate::{context::Context, error::Error};
 
-pub async fn process_steps(context: &Context, steps: &Value) -> Result<(), Error> {
-    // if let Some(transaction) = json.get("transaction") {
-    //     process_transaction(context, transaction).await?;
-    // }
+pub async fn process_steps<'a>(context: &Context<'a>, steps: &Value) -> Result<(), Error> {
+    log::info!("Processing steps.");
 
     if let Some(steps) = steps.as_array() {
         for step in steps {

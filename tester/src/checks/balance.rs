@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use crate::{context::Context, error::Error};
 
-pub async fn process_balance(context: &Context, balance: &Value) -> Result<(), Error> {
+pub async fn process_balance<'a>(context: &Context<'a>, balance: &Value) -> Result<(), Error> {
     let account_index = if let Some(account_index) = balance.get("account") {
         if let Some(account_index) = account_index.as_u64() {
             account_index as usize

@@ -12,7 +12,7 @@ use tokio::time;
 
 use crate::{context::Context, error::Error};
 
-pub async fn process_transaction(context: &Context, transaction: &Value) -> Result<(), Error> {
+pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value) -> Result<(), Error> {
     context.account_manager.sync(None).await?;
 
     let account_from_index = if let Some(from) = transaction.get("from") {
@@ -22,7 +22,7 @@ pub async fn process_transaction(context: &Context, transaction: &Value) -> Resu
             return Err(Error::InvalidField("from"));
         }
     } else {
-        0
+        return Err(Error::MissingField("from"));
     };
 
     let accounts = context.account_manager.get_accounts().await?;
