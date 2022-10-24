@@ -30,6 +30,9 @@ pub enum Error {
     // /// Types error.
     // #[error("types error: {0}")]
     // Types(#[from] iota_wallet::iota_client::types::Error),
+    /// Unexpected error.
+    #[error("unexpected error: expected {expected:?}, got {actual:?}")]
+    Unexpected { expected: String, actual: String },
     /// Wallet error.
     #[error("wallet error: {0}")]
     Wallet(#[from] iota_wallet::Error),

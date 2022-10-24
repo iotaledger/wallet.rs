@@ -93,20 +93,36 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
         return Err(Error::MissingField("outputs"));
     }
 
-    let sent_transaction = account_from.send(outputs, None).await?;
-
-    if let Some(confirmation) = transaction.get("confirmation") {
-        if let Some(confirmation) = confirmation.as_bool() {
-            if confirmation {
-                if let Some(block_id) = sent_transaction.block_id {
-                    account_from.retry_until_included(&block_id, Some(1), None).await?;
+    match account_from.send(outputs, None).await {
+        Ok(sent_transaction) => {
+            if let Some(confirmation) = transaction.get("confirmation") {
+                if let Some(confirmation) = confirmation.as_bool() {
+                    if confirmation {
+                        if let Some(block_id) = sent_transaction.block_id {
+                            account_from.retry_until_included(&block_id, Some(1), None).await?;
+                        } else {
+                            account_from.sync(None).await?;
+                            time::sleep(Duration::from_secs(5)).await;
+                        }
+                    }
                 } else {
-                    account_from.sync(None).await?;
-                    time::sleep(Duration::from_secs(5)).await;
+                    return Err(Error::InvalidField("confirmation"));
                 }
             }
-        } else {
-            return Err(Error::InvalidField("confirmation"));
+        }
+        Err(e) => {
+            if let Some(error) = transaction.get("error") {
+                if let Some(error) = error.as_str() {
+                    if !e.to_string().contains(error) {
+                        return Err(Error::Unexpected {
+                            expected: error.into(),
+                            actual: e.to_string(),
+                        });
+                    }
+                } else {
+                    return Err(Error::InvalidField("error"));
+                }
+            }
         }
     }
 
