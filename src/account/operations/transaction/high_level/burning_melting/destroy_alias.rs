@@ -39,7 +39,7 @@ impl AccountHandle {
                 &output_data,
                 current_time,
                 true,
-            ) {
+            )? {
                 owned_outputs.push(output_data);
             }
         }

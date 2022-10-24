@@ -65,7 +65,7 @@ impl AccountHandle {
                                     local_time,
                                     // Not relevant without alias addresses
                                     true,
-                                )
+                                )?
                             {
                                 match outputs_to_claim {
                                     OutputsToClaim::MicroTransactions => {
@@ -103,7 +103,7 @@ impl AccountHandle {
                                     local_time,
                                     // Not relevant without alias addresses
                                     true,
-                                )
+                                )?
                             {
                                 match outputs_to_claim {
                                     OutputsToClaim::MicroTransactions => {

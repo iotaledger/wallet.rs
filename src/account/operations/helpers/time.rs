@@ -14,16 +14,17 @@ pub(crate) fn can_output_be_unlocked_now(
     output_data: &OutputData,
     current_time: u32,
     alias_state_transition: bool,
-) -> bool {
-    let (required_unlock_address, _unlocked_alias_or_nft_address) = output_data
-        .output
-        .required_and_unlocked_address(current_time, output_data.output_id, alias_state_transition)
-        .expect("treasury output is not supported");
+) -> crate::Result<bool> {
+    let (required_unlock_address, _unlocked_alias_or_nft_address) = output_data.output.required_and_unlocked_address(
+        current_time,
+        output_data.output_id,
+        alias_state_transition,
+    )?;
 
-    account_addresses
+    Ok(account_addresses
         .iter()
         .any(|a| a.address.inner == required_unlock_address)
-        || alias_and_nft_addresses.iter().any(|a| *a == required_unlock_address)
+        || alias_and_nft_addresses.iter().any(|a| *a == required_unlock_address))
 }
 
 // Check if an output can be unlocked by one of the account addresses at the current time and at any
