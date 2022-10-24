@@ -99,10 +99,10 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
         if let Some(confirmation) = confirmation.as_bool() {
             if confirmation {
                 if let Some(block_id) = sent_transaction.block_id {
-                    account_from.retry_until_included(&block_id, None, None).await?;
+                    account_from.retry_until_included(&block_id, Some(1), None).await?;
                 } else {
                     account_from.sync(None).await?;
-                    time::sleep(Duration::from_secs(10)).await;
+                    time::sleep(Duration::from_secs(5)).await;
                 }
             }
         } else {

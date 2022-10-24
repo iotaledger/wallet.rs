@@ -1,11 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Duration;
-
 use iota_wallet::AddressWithAmount;
 use serde_json::Value;
-use tokio::time;
 
 use crate::{context::Context, error::Error};
 
@@ -21,7 +18,7 @@ pub async fn process_accounts<'a>(context: &Context<'a>, accounts: &Value) -> Re
             let account = context.account_manager.create_account().finish().await?;
 
             if amount != 0 {
-                context
+                let transaction = context
                     .faucet_account
                     .send_amount(
                         vec![AddressWithAmount {
@@ -31,10 +28,16 @@ pub async fn process_accounts<'a>(context: &Context<'a>, accounts: &Value) -> Re
                         None,
                     )
                     .await?;
+
+                if let Some(block_id) = transaction.block_id {
+                    context
+                        .faucet_account
+                        .retry_until_included(&block_id, Some(1), None)
+                        .await?;
+                }
             }
         }
 
-        time::sleep(Duration::from_secs(10)).await;
         context.faucet_account.sync(None).await?;
     }
 
