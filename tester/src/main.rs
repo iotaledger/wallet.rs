@@ -1,21 +1,19 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Duration;
-
 use fern_logger::{LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     account::AccountHandle,
     account_manager::AccountManager,
     iota_client::{
-        constants::SHIMMER_COIN_TYPE,
-        generate_mnemonic, request_funds_from_faucet,
+        constants::IOTA_COIN_TYPE,
+        generate_mnemonic,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},
     },
     ClientOptions,
 };
 use serde_json::Value;
-use tokio::{fs, time};
+use tokio::fs;
 use wallet_tester::{
     checks::process_checks, context::Context, error::Error, fixtures::process_fixtures, steps::process_steps,
 };
@@ -40,12 +38,12 @@ async fn account_manager(mnemonic: Option<String>) -> Result<AccountManager, Err
     };
     let secret_manager = SecretManager::Mnemonic(MnemonicSecretManager::try_from_mnemonic(&mnemonic)?);
     let client_options = ClientOptions::new()
-        .with_node("https://api.testnet.shimmer.network")?
+        .with_node("http://127.0.0.1:14265")?
         .with_node_sync_disabled();
     let account_manager = AccountManager::builder()
         .with_secret_manager(secret_manager)
         .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
+        .with_coin_type(IOTA_COIN_TYPE)
         .finish()
         .await?;
 
@@ -73,14 +71,6 @@ async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle),
     faucet_manager.create_account().finish().await?;
     let faucet_account = &faucet_manager.get_accounts().await?[0];
 
-    let _res = request_funds_from_faucet(
-        "https://faucet.testnet.shimmer.network/api/enqueue",
-        &faucet_account.addresses().await?[0].address().to_bech32(),
-    )
-    .await?;
-
-    time::sleep(Duration::from_secs(10)).await;
-
     faucet_account.sync(None).await?;
 
     Ok((faucet_manager, faucet_account.clone()))
@@ -88,7 +78,7 @@ async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle),
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    let mnemonic = generate_mnemonic()?;
+    let mnemonic = String::from("average day true meadow dawn pistol near vicious have ordinary sting fetch mobile month ladder explain tornado curious energy orange belt glue surge urban");
     let (faucet_manager, faucet_account) = faucet(mnemonic).await?;
     let protocol_parameters = faucet_account.client().get_protocol_parameters()?;
 
