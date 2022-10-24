@@ -38,6 +38,7 @@ impl AccountHandle {
                 &[Address::Alias(AliasAddress::new(alias_id))],
                 &output_data,
                 current_time,
+                true,
             ) {
                 owned_outputs.push(output_data);
             }
