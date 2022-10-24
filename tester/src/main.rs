@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::path::PathBuf;
+
 use fern_logger::{LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     account::AccountHandle,
@@ -50,6 +52,16 @@ async fn account_manager(mnemonic: Option<String>) -> Result<AccountManager, Err
     Ok(account_manager)
 }
 
+async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle), Error> {
+    let faucet_manager = account_manager(Some(mnemonic)).await?;
+    faucet_manager.create_account().finish().await?;
+    let faucet_account = &faucet_manager.get_accounts().await?[0];
+
+    faucet_account.sync(None).await?;
+
+    Ok((faucet_manager, faucet_account.clone()))
+}
+
 async fn process_json<'a>(context: &Context<'a>, json: Value) -> Result<(), Error> {
     if let Some(fixtures) = json.get("fixtures") {
         process_fixtures(context, fixtures).await?;
@@ -66,32 +78,29 @@ async fn process_json<'a>(context: &Context<'a>, json: Value) -> Result<(), Erro
     Ok(())
 }
 
-async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle), Error> {
-    let faucet_manager = account_manager(Some(mnemonic)).await?;
-    faucet_manager.create_account().finish().await?;
-    let faucet_account = &faucet_manager.get_accounts().await?[0];
-
-    faucet_account.sync(None).await?;
-
-    Ok((faucet_manager, faucet_account.clone()))
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    let args: Vec<String> = std::env::args().collect();
+
     let mnemonic = String::from("average day true meadow dawn pistol near vicious have ordinary sting fetch mobile month ladder explain tornado curious energy orange belt glue surge urban");
     let (faucet_manager, faucet_account) = faucet(mnemonic).await?;
     let protocol_parameters = faucet_account.client().get_protocol_parameters()?;
 
     logger_init()?;
 
-    let mut entries = Vec::new();
-    let mut dir = fs::read_dir("json").await?;
+    let mut paths = Vec::<PathBuf>::new();
 
-    while let Some(entry) = dir.next_entry().await? {
-        entries.push(entry);
-    }
+    if let Some(path) = args.get(1) {
+        paths.push(PathBuf::from(path));
+    } else {
+        let mut dir = fs::read_dir("json").await?;
 
-    for (index, entry) in entries.iter().enumerate() {
+        while let Some(entry) = dir.next_entry().await? {
+            paths.push(entry.path());
+        }
+    };
+
+    for (index, path) in paths.iter().enumerate() {
         let account_manager = account_manager(None).await?;
 
         let context = Context {
@@ -101,14 +110,14 @@ async fn main() -> Result<(), Error> {
             protocol_parameters: protocol_parameters.clone(),
         };
 
-        let content = fs::read_to_string(entry.path()).await?;
+        let content = fs::read_to_string(path).await?;
         let json: Value = serde_json::from_str(&content)?;
 
         log::info!(
             "Executing test {}/{}: {:?}.",
             index + 1,
-            entries.len(),
-            entry.file_name(),
+            paths.len(),
+            path.file_name().unwrap()
         );
         log::debug!("{}", json);
 
@@ -116,8 +125,8 @@ async fn main() -> Result<(), Error> {
             log::error!(
                 "Executing test {}/{}: {:?} failed: {}.",
                 index + 1,
-                entries.len(),
-                entry.file_name(),
+                paths.len(),
+                path.file_name().unwrap(),
                 err
             );
         }
