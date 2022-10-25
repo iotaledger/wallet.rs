@@ -1,0 +1,36 @@
+{
+    "accounts": [
+        200000,
+        0
+    ],
+    "steps": [
+        {
+            "transaction": {
+                "from": 0,
+                "outputs": [
+                    {
+                        "simple": {
+                            "account": 1,
+                            "amount": 50000
+                        }
+                    }
+                ],
+                "confirmation": true
+            }
+        }
+    ],
+    "checks": [
+        {
+            "balance": {
+                "account": 0,
+                "amount": 150000
+            }
+        },
+        {
+            "balance": {
+                "account": 1,
+                "amount": 50000
+            }
+        }
+    ]
+}
