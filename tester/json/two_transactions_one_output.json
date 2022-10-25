@@ -7,7 +7,6 @@
         {
             "transaction": {
                 "from": 0,
-                "inputs": [],
                 "outputs": [
                     {
                         "simple": {
@@ -22,7 +21,6 @@
         {
             "transaction": {
                 "from": 0,
-                "inputs": [],
                 "outputs": [
                     {
                         "simple": {
