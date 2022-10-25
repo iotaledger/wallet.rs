@@ -32,7 +32,8 @@ impl AccountHandle {
                 &[Address::Nft(NftAddress::new(nft_id))],
                 &output_data,
                 current_time,
-            ) {
+                true,
+            )? {
                 owned_outputs.push(output_data);
             }
         }

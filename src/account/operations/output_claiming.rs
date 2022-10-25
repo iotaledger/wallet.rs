@@ -59,10 +59,13 @@ impl AccountHandle {
                                     // We use the addresses with unspent outputs, because other addresses of the
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
+                                    // outputs controlled by an alias or nft are currently not considered
                                     &[],
                                     output,
                                     local_time,
-                                )
+                                    // Not relevant without alias addresses
+                                    true,
+                                )?
                             {
                                 match outputs_to_claim {
                                     OutputsToClaim::MicroTransactions => {
@@ -94,10 +97,13 @@ impl AccountHandle {
                                     // We use the addresses with unspent outputs, because other addresses of the
                                     // account without unspent outputs can't be related to this output
                                     &account.addresses_with_unspent_outputs,
+                                    // outputs controlled by an alias or nft are currently not considered
                                     &[],
                                     output,
                                     local_time,
-                                )
+                                    // Not relevant without alias addresses
+                                    true,
+                                )?
                             {
                                 match outputs_to_claim {
                                     OutputsToClaim::MicroTransactions => {
