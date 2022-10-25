@@ -15,6 +15,12 @@ pub(crate) fn can_output_be_unlocked_now(
     current_time: u32,
     alias_state_transition: bool,
 ) -> crate::Result<bool> {
+    if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
+        if unlock_conditions.is_time_locked(current_time) {
+            return Ok(false);
+        }
+    }
+
     let (required_unlock_address, _unlocked_alias_or_nft_address) = output_data.output.required_and_unlocked_address(
         current_time,
         output_data.output_id,
