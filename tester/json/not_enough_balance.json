@@ -1,10 +1,8 @@
 {
-    "fixtures": {
-        "accounts": [
-            50000,
-            0
-        ]
-    },
+    "accounts": [
+        50000,
+        0
+    ],
     "steps": [
         {
             "transaction": {

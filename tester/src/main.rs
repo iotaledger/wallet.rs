@@ -17,7 +17,7 @@ use iota_wallet::{
 use serde_json::Value;
 use tokio::fs;
 use wallet_tester::{
-    checks::process_checks, context::Context, error::Error, fixtures::process_fixtures, steps::process_steps,
+    accounts::process_accounts, checks::process_checks, context::Context, error::Error, steps::process_steps,
 };
 
 fn logger_init() -> Result<(), Error> {
@@ -63,8 +63,8 @@ async fn faucet<'a>(mnemonic: String) -> Result<(AccountManager, AccountHandle),
 }
 
 async fn process_json<'a>(context: &Context<'a>, json: Value) -> Result<(), Error> {
-    if let Some(fixtures) = json.get("fixtures") {
-        process_fixtures(context, fixtures).await?;
+    if let Some(accounts) = json.get("accounts") {
+        process_accounts(context, accounts).await?;
     }
 
     if let Some(steps) = json.get("steps") {
