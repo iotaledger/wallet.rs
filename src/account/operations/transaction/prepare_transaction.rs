@@ -15,7 +15,7 @@ use packable::bounded::TryIntoBoundedU16Error;
 
 use crate::account::{
     handle::AccountHandle,
-    operations::transaction::{RemainderValueStrategy, TransactionOptions},
+    operations::transaction::{input_selection::alias_state_transition, RemainderValueStrategy, TransactionOptions},
 };
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};
@@ -44,6 +44,8 @@ impl AccountHandle {
             )));
         }
 
+        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
+
         let custom_inputs: Option<Vec<InputSigningData>> = {
             if let Some(options) = &options {
                 // validate inputs amount
@@ -60,7 +62,16 @@ impl AccountHandle {
                     for output_id in inputs {
                         match account.unspent_outputs().get(output_id) {
                             Some(output) => {
-                                input_outputs.push(output.input_signing_data(&account, current_time, &bech32_hrp)?)
+                                // If alias doesn't exist in the outputs, assume the transition type that allows burning
+                                // or not
+                                let alias_state_transition =
+                                    alias_state_transition(output, &outputs)?.unwrap_or(!allow_burning);
+                                input_outputs.push(output.input_signing_data(
+                                    &account,
+                                    current_time,
+                                    &bech32_hrp,
+                                    alias_state_transition,
+                                )?)
                             }
                             None => {
                                 return Err(crate::Error::CustomInputError(format!(
@@ -107,8 +118,6 @@ impl AccountHandle {
             }
             None => None,
         };
-
-        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
 
         let selected_transaction_data = self
             .select_inputs(
