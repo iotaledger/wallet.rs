@@ -5,7 +5,7 @@ use iota_wallet::{account::AccountHandle, AddressWithAmount};
 
 use crate::{context::Context, error::Error};
 
-pub async fn process_amount<'a>(context: &Context<'a>, account: AccountHandle, amount: u64) -> Result<(), Error> {
+pub async fn process_amount<'a>(context: &Context<'a>, account: &AccountHandle, amount: u64) -> Result<(), Error> {
     if amount != 0 {
         let transaction = context
             .faucet_account

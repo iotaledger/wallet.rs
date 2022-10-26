@@ -3,6 +3,7 @@
 
 mod account;
 mod amount;
+mod outputs;
 
 use serde_json::Value;
 
