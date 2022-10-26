@@ -17,8 +17,6 @@ pub async fn process_accounts<'a>(context: &Context<'a>, accounts: &Value) -> Re
         for account in accounts {
             process_account(context, account).await?;
         }
-
-        context.faucet_account.sync(None).await?;
     } else {
         return Err(Error::InvalidField("accounts"));
     }

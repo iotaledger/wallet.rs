@@ -13,8 +13,6 @@ use tokio::time;
 use crate::{context::Context, error::Error};
 
 pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value) -> Result<(), Error> {
-    context.account_manager.sync(None).await?;
-
     let account_from_index = if let Some(from) = transaction.get("from") {
         if let Some(from) = from.as_u64() {
             from as usize
@@ -101,7 +99,6 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
                         if let Some(block_id) = sent_transaction.block_id {
                             account_from.retry_until_included(&block_id, Some(1), None).await?;
                         } else {
-                            account_from.sync(None).await?;
                             time::sleep(Duration::from_secs(5)).await;
                         }
                     }
@@ -109,6 +106,8 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
                     return Err(Error::InvalidField("confirmation"));
                 }
             }
+
+            account_from.sync(None).await?;
         }
         Err(e) => {
             if let Some(error) = transaction.get("error") {

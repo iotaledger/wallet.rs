@@ -11,6 +11,8 @@ use crate::{context::Context, error::Error};
 pub async fn process_steps<'a>(context: &Context<'a>, steps: &Value) -> Result<(), Error> {
     log::info!("Processing steps.");
 
+    context.account_manager.sync(None).await?;
+
     if let Some(steps) = steps.as_array() {
         for step in steps {
             if let Some(transaction) = step.get("transaction") {
