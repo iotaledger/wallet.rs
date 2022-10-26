@@ -24,6 +24,8 @@ pub async fn process_amount<'a>(context: &Context<'a>, account: &AccountHandle, 
                 .retry_until_included(&block_id, Some(1), None)
                 .await?;
         }
+
+        context.faucet_account.sync(None).await?;
     }
 
     Ok(())
