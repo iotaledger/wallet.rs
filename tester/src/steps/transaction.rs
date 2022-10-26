@@ -121,6 +121,8 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
                 } else {
                     return Err(Error::InvalidField("error"));
                 }
+            } else {
+                return Err(e)?;
             }
         }
     }
