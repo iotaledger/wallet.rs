@@ -70,7 +70,11 @@ async fn main() -> Result<()> {
         account.sync(None).await?;
     }
 
-    // After the NFTs are minted, the issuer nft can be burned, to prevent minting any further NFTs in the future
+    // After the NFTs are minted, the issuer nft can be sent to the so called "null address"
+    // 0x0000000000000000000000000000000000000000000000000000000000000000 (for smr:
+    // smr1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqy8f002) or burned, to
+    // prevent minting any further NFTs in the future. Sending it to the null address makes it still available to get
+    // its metadata.
 
     Ok(())
 }
