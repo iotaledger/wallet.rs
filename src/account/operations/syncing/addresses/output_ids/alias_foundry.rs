@@ -8,7 +8,6 @@ use iota_client::{
         output::{Output, OutputId},
     },
     node_api::indexer::query_parameters::QueryParameter,
-    Client,
 };
 
 use crate::account::handle::AccountHandle;
@@ -66,7 +65,12 @@ impl AccountHandle {
                 let output_id = alias_output_response.metadata.output_id()?;
                 let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
 
-                let foundry_output_ids = get_foundry_output_ids(client, alias_address, bech32_hrp.clone()).await?;
+                // let foundry_output_ids = get_foundry_output_ids(client, alias_address, bech32_hrp.clone()).await?;
+                let foundry_output_ids = client
+                    .foundry_output_ids(vec![QueryParameter::AliasAddress(
+                        Address::Alias(alias_address).to_bech32(bech32_hrp.clone()),
+                    )])
+                    .await?;
 
                 output_ids.extend(foundry_output_ids.into_iter());
             }
@@ -74,18 +78,4 @@ impl AccountHandle {
 
         Ok(output_ids)
     }
-}
-
-/// Returns output ids of foundries owned by the provided address
-pub(crate) async fn get_foundry_output_ids(
-    client: &Client,
-    alias_address: AliasAddress,
-    bech32_hrp: String,
-) -> crate::Result<Vec<OutputId>> {
-    client
-        .foundry_output_ids(vec![QueryParameter::AliasAddress(
-            Address::Alias(alias_address).to_bech32(bech32_hrp),
-        )])
-        .await
-        .map_err(From::from)
 }
