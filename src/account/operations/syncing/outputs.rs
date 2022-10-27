@@ -70,44 +70,36 @@ impl AccountHandle {
 
     /// Gets outputs by their id, already known outputs are not requested again, but loaded from the account set as
     /// unspent, because we wouldn't get them from the node if they were spent
-    pub(crate) async fn get_outputs(
-        &self,
-        output_ids: Vec<OutputId>,
-        spent_outputs: bool,
-    ) -> crate::Result<Vec<OutputResponse>> {
+    pub(crate) async fn get_outputs(&self, output_ids: Vec<OutputId>) -> crate::Result<Vec<OutputResponse>> {
         log::debug!("[SYNC] start get_outputs");
         let get_outputs_start_time = Instant::now();
         let mut outputs = Vec::new();
-        // For spent outputs we want to try to fetch all, so we can update them locally
-        if spent_outputs {
-            outputs = self.client.try_get_outputs(output_ids).await?;
-        } else {
-            let mut unknown_outputs = Vec::new();
-            let mut account = self.write().await;
-            let mut unspent_outputs = Vec::new();
-            for output_id in output_ids {
-                match account.outputs.get_mut(&output_id) {
-                    // set unspent
-                    Some(output_data) => {
-                        output_data.is_spent = false;
-                        unspent_outputs.push((output_id, output_data.clone()));
-                        outputs.push(OutputResponse {
-                            metadata: output_data.metadata.clone(),
-                            output: OutputDto::from(&output_data.output),
-                        });
-                    }
-                    None => unknown_outputs.push(output_id),
-                }
-            }
-            // known output is unspent, so insert it to the unspent outputs again, because if it was an
-            // alias/nft/foundry output it could have been removed when syncing without `sync_aliases_and_nfts`
-            for (output_id, output_data) in unspent_outputs {
-                account.unspent_outputs.insert(output_id, output_data);
-            }
 
-            if !unknown_outputs.is_empty() {
-                outputs = self.client.get_outputs(unknown_outputs).await?;
+        let mut unknown_outputs = Vec::new();
+        let mut account = self.write().await;
+        let mut unspent_outputs = Vec::new();
+        for output_id in output_ids {
+            match account.outputs.get_mut(&output_id) {
+                // set unspent
+                Some(output_data) => {
+                    output_data.is_spent = false;
+                    unspent_outputs.push((output_id, output_data.clone()));
+                    outputs.push(OutputResponse {
+                        metadata: output_data.metadata.clone(),
+                        output: OutputDto::from(&output_data.output),
+                    });
+                }
+                None => unknown_outputs.push(output_id),
             }
+        }
+        // known output is unspent, so insert it to the unspent outputs again, because if it was an
+        // alias/nft/foundry output it could have been removed when syncing without `sync_aliases_and_nfts`
+        for (output_id, output_data) in unspent_outputs {
+            account.unspent_outputs.insert(output_id, output_data);
+        }
+
+        if !unknown_outputs.is_empty() {
+            outputs.extend(self.client.get_outputs(unknown_outputs).await?);
         }
 
         log::debug!(

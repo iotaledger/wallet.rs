@@ -54,7 +54,7 @@ impl AccountHandle {
         }
 
         // Get alias outputs, so we can then get the foundry outputs with the alias addresses
-        let alias_output_responses = self.get_outputs(output_ids.clone(), false).await?;
+        let alias_output_responses = self.get_outputs(output_ids.clone()).await?;
 
         let bech32_hrp = client.get_bech32_hrp()?;
         let token_supply = client.get_token_supply()?;

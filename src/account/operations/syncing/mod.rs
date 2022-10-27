@@ -81,8 +81,10 @@ impl AccountHandle {
         // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
         // `spent_or_not_synced_outputs` directly from a new method
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
-        let spent_or_not_synced_output_responses =
-            self.get_outputs(spent_or_not_synced_output_ids.clone(), true).await?;
+        let spent_or_not_synced_output_responses = self
+            .client
+            .try_get_outputs(spent_or_not_synced_output_ids.clone())
+            .await?;
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
@@ -170,7 +172,7 @@ impl AccountHandle {
                         })?;
                     address_with_unspent_outputs.output_ids.extend(output_ids.clone());
 
-                    let new_outputs_data_inner = self.get_outputs(output_ids, false).await?;
+                    let new_outputs_data_inner = self.get_outputs(output_ids).await?;
 
                     let outputs_data_inner = self
                         .output_response_to_output_data(new_outputs_data_inner, address_with_unspent_outputs)

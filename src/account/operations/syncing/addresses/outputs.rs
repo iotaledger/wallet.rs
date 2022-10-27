@@ -29,7 +29,7 @@ impl AccountHandle {
                 let account_handle = self.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
-                        let output_responses = account_handle.get_outputs(address.output_ids.clone(), false).await?;
+                        let output_responses = account_handle.get_outputs(address.output_ids.clone()).await?;
 
                         let outputs = account_handle
                             .output_response_to_output_data(output_responses, &address)
