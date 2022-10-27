@@ -9,11 +9,11 @@ use crate::account::{
 
 impl AccountHandle {
     /// Get outputs from addresses
-    pub(crate) async fn request_outputs_from_address_output_ids(
+    pub(crate) async fn get_outputs_from_address_output_ids(
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
     ) -> crate::Result<(Vec<AddressWithUnspentOutputs>, Vec<OutputData>)> {
-        log::debug!("[SYNC] start request_outputs_from_address_output_ids");
+        log::debug!("[SYNC] start get_outputs_from_address_output_ids");
         let address_outputs_start_time = Instant::now();
 
         let mut addresses_with_outputs = Vec::new();
@@ -47,7 +47,7 @@ impl AccountHandle {
             }
         }
         log::debug!(
-            "[SYNC] finished request_outputs_from_address_output_ids in {:.2?}",
+            "[SYNC] finished get_outputs_from_address_output_ids in {:.2?}",
             address_outputs_start_time.elapsed()
         );
         Ok((addresses_with_outputs, outputs_data))

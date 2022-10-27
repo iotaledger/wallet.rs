@@ -152,7 +152,7 @@ impl AccountHandle {
                 spent_or_not_synced_output_ids = spent_or_not_synced_output_ids_inner;
                 // get outputs for addresses and add them also the the addresses_with_unspent_outputs
                 let (addresses_with_unspent_outputs_inner, outputs_data_inner) = self
-                    .request_outputs_from_address_output_ids(addresses_with_output_ids)
+                    .get_outputs_from_address_output_ids(addresses_with_output_ids)
                     .await?;
                 addresses_with_unspent_outputs = addresses_with_unspent_outputs_inner;
                 outputs_data.extend(outputs_data_inner.clone().into_iter());

@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashSet;
+
 use futures::FutureExt;
 use iota_client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter};
 
@@ -67,13 +69,13 @@ impl AccountHandle {
         ];
 
         // Get all results
-        let mut output_ids = Vec::new();
+        let mut output_ids = HashSet::new();
         let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
         for res in results {
             let found_output_ids = res?;
             output_ids.extend(found_output_ids.into_iter());
         }
 
-        Ok(output_ids)
+        Ok(output_ids.into_iter().collect())
     }
 }

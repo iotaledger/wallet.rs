@@ -5,12 +5,11 @@ mod alias_foundry;
 mod basic;
 mod nft;
 
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
 use futures::FutureExt;
 use iota_client::block::{address::Address, output::OutputId};
 
-use self::basic::get_basic_output_ids_with_address_unlock_condition_alone;
 use crate::account::{
     constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::syncing::SyncOptions,
     types::address::AddressWithUnspentOutputs,
@@ -29,9 +28,9 @@ impl AccountHandle {
         let bech32_address = &address.to_bech32(bech32_hrp);
 
         if sync_options.sync_only_most_basic_outputs {
-            let output_ids =
-                get_basic_output_ids_with_address_unlock_condition_alone(&self.client, bech32_address.to_string())
-                    .await?;
+            let output_ids = self
+                .get_basic_output_ids_with_address_unlock_condition_only(bech32_address.to_string())
+                .await?;
             return Ok(output_ids);
         }
 
@@ -78,18 +77,14 @@ impl AccountHandle {
         }
 
         // Get all results
-        let mut output_ids = Vec::new();
+        let mut output_ids = HashSet::new();
         let results = futures::future::try_join_all(tasks).await?;
         for res in results {
             let found_output_ids = res?;
             output_ids.extend(found_output_ids.into_iter());
         }
 
-        // Dedup since the same output id could be returned from different queries.
-        output_ids.sort();
-        output_ids.dedup();
-
-        Ok(output_ids)
+        Ok(output_ids.into_iter().collect())
     }
 
     /// Get the current output ids for provided addresses and only returns addresses that have unspent outputs and

@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashSet;
+
 use futures::FutureExt;
 use iota_client::{
     block::{
@@ -46,7 +48,7 @@ impl AccountHandle {
         ];
 
         // Get all results
-        let mut output_ids = Vec::new();
+        let mut output_ids = HashSet::new();
         let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
         for res in results {
             let found_output_ids = res?;
@@ -54,7 +56,7 @@ impl AccountHandle {
         }
 
         // Get alias outputs, so we can then get the foundry outputs with the alias addresses
-        let alias_output_responses = self.get_outputs(output_ids.clone()).await?;
+        let alias_output_responses = self.get_outputs(output_ids.iter().cloned().collect()).await?;
 
         let bech32_hrp = client.get_bech32_hrp()?;
         let token_supply = client.get_token_supply()?;
@@ -65,7 +67,6 @@ impl AccountHandle {
                 let output_id = alias_output_response.metadata.output_id()?;
                 let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
 
-                // let foundry_output_ids = get_foundry_output_ids(client, alias_address, bech32_hrp.clone()).await?;
                 let foundry_output_ids = client
                     .foundry_output_ids(vec![QueryParameter::AliasAddress(
                         Address::Alias(alias_address).to_bech32(bech32_hrp.clone()),
@@ -76,6 +77,6 @@ impl AccountHandle {
             }
         }
 
-        Ok(output_ids)
+        Ok(output_ids.into_iter().collect())
     }
 }
