@@ -57,6 +57,7 @@ impl AccountHandle {
         // Get alias outputs, so we can then get the foundry outputs with the alias addresses
         let alias_output_responses = self.get_outputs(output_ids.clone(), false).await?;
 
+        let bech32_hrp = client.get_bech32_hrp()?;
         let token_supply = client.get_token_supply()?;
 
         for alias_output_response in alias_output_responses {
@@ -65,7 +66,7 @@ impl AccountHandle {
                 let output_id = alias_output_response.metadata.output_id()?;
                 let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
 
-                let foundry_output_ids = get_foundry_output_ids(client, alias_address).await?;
+                let foundry_output_ids = get_foundry_output_ids(client, alias_address, bech32_hrp.clone()).await?;
 
                 output_ids.extend(foundry_output_ids.into_iter());
             }
@@ -79,12 +80,11 @@ impl AccountHandle {
 pub(crate) async fn get_foundry_output_ids(
     client: &Client,
     alias_address: AliasAddress,
+    bech32_hrp: String,
 ) -> crate::Result<Vec<OutputId>> {
-    let bech32_hrp = client.get_bech32_hrp()?;
-
     client
         .foundry_output_ids(vec![QueryParameter::AliasAddress(
-            Address::Alias(alias_address).to_bech32(bech32_hrp.clone()),
+            Address::Alias(alias_address).to_bech32(bech32_hrp),
         )])
         .await
         .map_err(From::from)
