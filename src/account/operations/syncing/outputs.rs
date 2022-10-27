@@ -70,7 +70,6 @@ impl AccountHandle {
 
     /// Gets outputs by their id, already known outputs are not requested again, but loaded from the account set as
     /// unspent, because we wouldn't get them from the node if they were spent
-    /// New requested output responses are returned and old ones separated with their accumulated balance
     pub(crate) async fn get_outputs(
         &self,
         output_ids: Vec<OutputId>,

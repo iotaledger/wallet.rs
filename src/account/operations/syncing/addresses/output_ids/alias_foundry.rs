@@ -27,7 +27,7 @@ impl AccountHandle {
                 let client = client.clone();
                 tokio::spawn(async move {
                     client
-                        .alias_output_ids(vec![QueryParameter::Governor(bech32_address_.to_string())])
+                        .alias_output_ids(vec![QueryParameter::Governor(bech32_address_)])
                         .await
                         .map_err(From::from)
                 })
@@ -40,7 +40,7 @@ impl AccountHandle {
                 let client = client.clone();
                 tokio::spawn(async move {
                     client
-                        .alias_output_ids(vec![QueryParameter::StateController(bech32_address_.to_string())])
+                        .alias_output_ids(vec![QueryParameter::StateController(bech32_address_)])
                         .await
                         .map_err(From::from)
                 })
