@@ -1069,7 +1069,7 @@ dependencies = [
  "log",
  "num_cpus",
  "packable",
- "prefix-hex",
+ "prefix-hex 0.5.0",
  "primitive-types",
  "reqwest",
  "serde",
@@ -1172,7 +1172,7 @@ dependencies = [
  "iota-crypto",
  "log",
  "packable",
- "prefix-hex",
+ "prefix-hex 0.4.0",
  "primitive-types",
  "rocksdb",
  "serde",
@@ -1648,6 +1648,15 @@ name = "ppv-lite86"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
+
+[[package]]
+name = "prefix-hex"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75e3396888185b76a6e4c8fc883b3f039e56d3c0bca279744d2df70b3662e784"
+dependencies = [
+ "hex",
+]
 
 [[package]]
 name = "prefix-hex"

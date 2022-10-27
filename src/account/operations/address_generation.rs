@@ -15,21 +15,10 @@ use crate::account::{
 use crate::events::types::{AddressData, WalletEvent};
 
 /// Options for address generation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct AddressGenerationOptions {
     pub internal: bool,
-    pub metadata: GenerateAddressOptions,
-}
-
-impl Default for AddressGenerationOptions {
-    fn default() -> Self {
-        Self {
-            internal: false,
-            metadata: GenerateAddressOptions {
-                ledger_nano_prompt: false,
-            },
-        }
-    }
+    pub options: Option<GenerateAddressOptions>,
 }
 
 impl AccountHandle {
@@ -93,10 +82,12 @@ impl AccountHandle {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first
-                if !options.metadata.ledger_nano_prompt {
-                    let mut changed_metadata = options.metadata.clone();
-                    // Change metadata so ledger will not show the prompt the first time
-                    changed_metadata.ledger_nano_prompt = true;
+                if options.options.clone().unwrap_or_default().ledger_nano_prompt {
+                    let changed_options = options.options.clone().map(|mut options| {
+                        // Change metadata so ledger will not show the prompt the first time
+                        options.ledger_nano_prompt = false;
+                        options
+                    });
                     let mut addresses = Vec::new();
 
                     for address_index in address_range {
@@ -109,7 +100,7 @@ impl AccountHandle {
                                     account.index,
                                     address_index..address_index + 1,
                                     options.internal,
-                                    Some(changed_metadata.clone()),
+                                    changed_options.clone(),
                                 )
                                 .await?;
                             self.event_emitter.lock().await.emit(
@@ -126,7 +117,7 @@ impl AccountHandle {
                                 account.index,
                                 address_index..address_index + 1,
                                 options.internal,
-                                Some(options.metadata.clone()),
+                                options.options.clone(),
                             )
                             .await?;
                         addresses.push(address[0]);
@@ -139,7 +130,7 @@ impl AccountHandle {
                             account.index,
                             address_range.clone(),
                             options.internal,
-                            Some(options.metadata),
+                            options.options,
                         )
                         .await?
                 }
@@ -152,7 +143,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        Some(options.metadata.clone()),
+                        options.options.clone(),
                     )
                     .await?
             }
@@ -163,7 +154,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        Some(options.metadata.clone()),
+                        options.options.clone(),
                     )
                     .await?
             }

@@ -18,7 +18,8 @@ import type {
     Event,
     EventId,
     Node,
-    EventStatus
+    EventStatus,
+    GenerateAddressOptions,
 } from '../types';
 
 /** The AccountManager class. */
@@ -169,6 +170,22 @@ export class AccountManager {
             accounts.push(new Account(account, this.messageHandler));
         }
         return accounts;
+    }
+
+    /**
+     * Generate an address without storing it.
+     */
+    async generateAddress(
+        accountIndex: number,
+        internal: boolean,
+        addressIndex: number,
+        options?: GenerateAddressOptions,
+    ): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'generateAddress',
+            payload: { accountIndex, internal, addressIndex, options },
+        });
+        return JSON.parse(response).payload;
     }
 
     /**

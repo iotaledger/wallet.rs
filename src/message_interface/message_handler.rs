@@ -229,6 +229,28 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::GenerateAddress {
+                account_index,
+                internal,
+                address_index,
+                options,
+            } => {
+                convert_async_panics(|| async {
+                    let address = self
+                        .account_manager
+                        .generate_address(account_index, internal, address_index, options)
+                        .await?;
+
+                    let bech32_hrp = self
+                        .account_manager
+                        .get_bech32_hrp()
+                        .await
+                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
+
+                    Ok(Response::Bech32Address(address.to_bech32(bech32_hrp)))
+                })
+                .await
+            }
             Message::GetNodeInfo { url, auth } => {
                 convert_async_panics(|| async {
                     match url {

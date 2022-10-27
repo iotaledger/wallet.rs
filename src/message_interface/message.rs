@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-use iota_client::node_manager::node::NodeAuth;
+use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
 #[cfg(feature = "participation")]
 use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
 use serde::{Deserialize, Serialize};
@@ -117,6 +117,20 @@ pub enum Message {
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetClientOptions(Box<ClientOptions>),
+    /// Generate an address without storing it
+    /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
+    GenerateAddress {
+        /// Account index
+        #[serde(rename = "accountIndex")]
+        account_index: u32,
+        /// Internal address
+        internal: bool,
+        /// Account index
+        #[serde(rename = "addressIndex")]
+        address_index: u32,
+        /// Options
+        options: Option<GenerateAddressOptions>,
+    },
     /// Get the ledger nano status
     /// Expected response: [`LedgerNanoStatus`](crate::message_interface::Response::LedgerNanoStatus)
     #[cfg(feature = "ledger_nano")]
@@ -252,6 +266,16 @@ impl Debug for Message {
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             #[cfg(feature = "ledger_nano")]
             Message::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
+            Message::GenerateAddress {
+                account_index,
+                internal,
+                address_index,
+                options,
+            } => write!(
+                f,
+                "GenerateAddress{{ account_index: {:?}, internal: {:?}, address_index: {:?}, options: {:?}, }}",
+                account_index, internal, address_index, options,
+            ),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {

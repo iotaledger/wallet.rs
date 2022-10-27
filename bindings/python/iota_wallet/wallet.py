@@ -153,6 +153,18 @@ class IotaWallet():
             client_options
         )
 
+    def generate_address(self, account_index, internal, address_index, options=None):
+        """Generate an address without storing it.
+        """
+        return self._send_cmd_routine(
+            'generateAddress', {
+                'accountIndex': account_index,
+                'internal': internal,
+                'addressIndex': address_index,
+                'options': options
+            }
+        )
+
     def get_node_info(self, url, auth):
         """Get node info.
         """

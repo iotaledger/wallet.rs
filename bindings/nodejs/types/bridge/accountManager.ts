@@ -3,6 +3,7 @@ import type {
     AccountSyncOptions,
     CreateAccountPayload,
 } from '../account';
+import type { GenerateAddressOptions } from '../address';
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions, Node } from '../network';
 import type { EventId } from '../participation';
@@ -68,6 +69,16 @@ export type __GetAccountMessage__ = {
 
 export type __GetLedgerNanoStatusMessage__ = {
     cmd: 'getLedgerNanoStatus';
+};
+
+export type __GenerateAddressMessage__ = {
+    cmd: 'generateAddress';
+    payload: {
+        accountIndex: number;
+        internal: boolean;
+        addressIndex: number;
+        options?: GenerateAddressOptions;
+    };
 };
 
 export type __GetNodeInfoMessage__ = {

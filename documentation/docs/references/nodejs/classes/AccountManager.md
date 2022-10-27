@@ -17,6 +17,7 @@ The AccountManager class.
 - [getAccount](AccountManager.md#getaccount)
 - [getAccountIndexes](AccountManager.md#getaccountindexes)
 - [getAccounts](AccountManager.md#getaccounts)
+- [generateAddress](AccountManager.md#generateaddress)
 - [getNodeInfo](AccountManager.md#getnodeinfo)
 - [getLedgerNanoStatus](AccountManager.md#getledgernanostatus)
 - [hexToBech32](AccountManager.md#hextobech32)
@@ -203,6 +204,27 @@ Get all accounts.
 #### Returns
 
 `Promise`<[`Account`](Account.md)[]\>
+
+___
+
+### generateAddress
+
+▸ **generateAddress**(`accountIndex`, `internal`, `addressIndex`, `options?`): `Promise`<`string`\>
+
+Generate an address without storing it.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `accountIndex` | `number` |
+| `internal` | `boolean` |
+| `addressIndex` | `number` |
+| `options?` | [`GenerateAddressOptions`](../interfaces/GenerateAddressOptions.md) |
+
+#### Returns
+
+`Promise`<`string`\>
 
 ___
 

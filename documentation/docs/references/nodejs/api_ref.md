@@ -41,7 +41,7 @@
 - [AddressNativeTokens](interfaces/AddressNativeTokens.md)
 - [AddressNftId](interfaces/AddressNftId.md)
 - [AddressGenerationOptions](interfaces/AddressGenerationOptions.md)
-- [GenerateAddressMetadata](interfaces/GenerateAddressMetadata.md)
+- [GenerateAddressOptions](interfaces/GenerateAddressOptions.md)
 - [BuildAliasOutputData](interfaces/BuildAliasOutputData.md)
 - [BuildBasicOutputData](interfaces/BuildBasicOutputData.md)
 - [BuildFoundryOutputData](interfaces/BuildFoundryOutputData.md)
