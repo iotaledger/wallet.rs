@@ -8,7 +8,6 @@ pub(crate) mod transactions;
 
 use std::{
     collections::{HashMap, HashSet},
-    str::FromStr,
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
@@ -17,7 +16,6 @@ use iota_client::{
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
-        payload::transaction::TransactionId,
         Block, BlockId,
     },
 };
@@ -91,10 +89,7 @@ impl AccountHandle {
         let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_response in spent_or_not_synced_output_responses {
-            let output_id = OutputId::new(
-                TransactionId::from_str(&output_response.metadata.transaction_id)?,
-                output_response.metadata.output_index,
-            )?;
+            let output_id = output_response.metadata.output_id()?;
             spent_or_not_synced_outputs.insert(output_id, Some(output_response));
         }
 
@@ -193,16 +188,14 @@ impl AccountHandle {
             for output_data in new_outputs_data.iter() {
                 match &output_data.output {
                     Output::Alias(alias_output) => {
-                        let transaction_id = TransactionId::from_str(&output_data.metadata.transaction_id)?;
-                        let output_id = OutputId::new(transaction_id, output_data.metadata.output_index)?;
-                        let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
+                        let alias_address =
+                            AliasAddress::from(alias_output.alias_id().or_from_output_id(output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Alias(alias_address), output_data.address);
                     }
                     Output::Nft(nft_output) => {
-                        let transaction_id = TransactionId::from_str(&output_data.metadata.transaction_id)?;
-                        let output_id = OutputId::new(transaction_id, output_data.metadata.output_index)?;
-                        let nft_address = NftAddress::from(nft_output.nft_id().or_from_output_id(output_id));
+                        let nft_address =
+                            NftAddress::from(nft_output.nft_id().or_from_output_id(output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Nft(nft_address), output_data.address);
                     }

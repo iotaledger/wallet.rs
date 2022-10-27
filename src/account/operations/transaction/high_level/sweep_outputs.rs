@@ -4,7 +4,7 @@
 // TODO: remove in the future: https://github.com/iotaledger/wallet.rs/issues/1453
 #![allow(dead_code)]
 
-use std::{pin::Pin, str::FromStr};
+use std::pin::Pin;
 
 use futures::{Future, FutureExt};
 use iota_client::{
@@ -20,7 +20,6 @@ use iota_client::{
             },
             AliasId, AliasOutput, AliasOutputBuilder, NftId, NftOutput, Output, OutputId,
         },
-        payload::transaction::TransactionId,
     },
 };
 
@@ -157,8 +156,7 @@ impl AccountHandle {
                     continue;
                 }
 
-                let transaction_id = TransactionId::from_str(&output_response.metadata.transaction_id)?;
-                let output_id = OutputId::new(transaction_id, output_response.metadata.output_index)?;
+                let output_id = output_response.metadata.output_id()?;
                 self.update_unspent_output(output_response.clone(), output_id, network_id)
                     .await?;
 
