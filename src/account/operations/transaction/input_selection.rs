@@ -83,6 +83,7 @@ impl AccountHandle {
             &bech32_hrp,
             &outputs,
             &account.locked_outputs,
+            allow_burning,
         )?;
 
         let selected_transaction_data = match try_select_inputs(
@@ -141,6 +142,7 @@ fn filter_inputs(
     bech32_hrp: &str,
     outputs: &[Output],
     locked_outputs: &HashSet<OutputId>,
+    allow_burning: bool,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
     for output_data in available_outputs {
@@ -193,7 +195,43 @@ fn filter_inputs(
             continue;
         }
 
-        available_outputs_signing_data.push(output_data.input_signing_data(account, current_time, bech32_hrp)?);
+        // If alias doesn't exist in the outputs, assume the transition type that allows burning or not
+        let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(!allow_burning);
+        available_outputs_signing_data.push(output_data.input_signing_data(
+            account,
+            current_time,
+            bech32_hrp,
+            alias_state_transition,
+        )?);
     }
     Ok(available_outputs_signing_data)
+}
+
+// Returns if alias transition is a state transition with the provided outputs for a given input.
+pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output]) -> crate::Result<Option<bool>> {
+    Ok(if let Output::Alias(alias_input) = &output_data.output {
+        let alias_id = alias_input.alias_id().or_from_output_id(output_data.output_id);
+        // Check if alias exists in the outputs and get the required transition type
+        outputs
+            .iter()
+            .find_map(|o| {
+                if let Output::Alias(alias_output) = o {
+                    if *alias_output.alias_id() == alias_id {
+                        if alias_output.state_index() == alias_input.state_index() {
+                            Some(Some(false))
+                        } else {
+                            Some(Some(true))
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+                // if not find in the outputs, the alias gets burned which is a governance transaction
+            })
+            .unwrap_or(None)
+    } else {
+        None
+    })
 }

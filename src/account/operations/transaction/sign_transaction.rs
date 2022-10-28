@@ -22,6 +22,7 @@ impl AccountHandle {
         prepared_transaction_data: &PreparedTransactionData,
     ) -> crate::Result<SignedTransactionData> {
         log::debug!("[TRANSACTION] sign_transaction_essence");
+        log::debug!("[TRANSACTION] prepared_transaction_data {prepared_transaction_data:?}");
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
             self.read().await.index,

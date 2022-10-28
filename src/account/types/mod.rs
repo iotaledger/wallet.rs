@@ -109,17 +109,11 @@ impl OutputData {
         account: &Account,
         current_time: u32,
         bech32_hrp: &str,
+        alias_state_transition: bool,
     ) -> crate::Result<InputSigningData> {
-        let unlock_address = {
-            if let Some(unlock_conditions) = self.output.unlock_conditions() {
-                match &self.output {
-                    Output::Foundry(foundry) => Address::Alias(*foundry.alias_address()),
-                    _ => *unlock_conditions.locked_address(&self.address, current_time),
-                }
-            } else {
-                self.address
-            }
-        };
+        let (unlock_address, _unlocked_alias_or_nft_address) =
+            self.output
+                .required_and_unlocked_address(current_time, self.output_id, alias_state_transition)?;
 
         let chain = if unlock_address == self.address {
             self.chain.clone()

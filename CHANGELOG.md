@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## Unreleased - YYYY-MM-DD
+## 1.0.0-rc.2 - YYYY-MM-DD
 
 ### Added
 
@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - NFT output claiming;
+- Alias and NFT owned outputs syncing;
+- Alias or nft addresses in address unlock condition;
 
 ## 1.0.0-rc.1 - 2022-09-28
 
