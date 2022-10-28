@@ -23,6 +23,6 @@ iota-wallet = { path = "../../", version = "1.0.0-rc.1", default-features = fals
 log = { version = "0.4.17", default-features = false }
 neon = { version = "0.10.1", default-features = false, features = [ "napi-6", "event-queue-api" ] }
 once_cell = { version = "1.15.0", default-features = false }
-serde = { version = "1.0.145", default-features = false }
-serde_json = { version = "1.0.86", default-features = false }
+serde = { version = "1.0.147", default-features = false }
+serde_json = { version = "1.0.87", default-features = false }
 tokio = { version = "1.21.2", default-features = false }
