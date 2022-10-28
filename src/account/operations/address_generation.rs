@@ -3,7 +3,7 @@
 
 use iota_client::{
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
+    secret::{GenerateAddressOptions, SecretManage, SecretManager},
 };
 use serde::{Deserialize, Serialize};
 
@@ -18,14 +18,16 @@ use crate::events::types::{AddressData, WalletEvent};
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AddressGenerationOptions {
     pub internal: bool,
-    pub metadata: GenerateAddressMetadata,
+    pub metadata: GenerateAddressOptions,
 }
 
 impl Default for AddressGenerationOptions {
     fn default() -> Self {
         Self {
             internal: false,
-            metadata: GenerateAddressMetadata { syncing: false },
+            metadata: GenerateAddressOptions {
+                ledger_nano_prompt: false,
+            },
         }
     }
 }
@@ -74,7 +76,7 @@ impl AccountHandle {
                 Some(address) => address.address.bech32_hrp.to_string(),
                 // Only when we create a new account we don't have the first address and need to get the information
                 // from the client Doesn't work for offline creating, should we use the network from the
-                // GenerateAddressMetadata instead to use `iota` or `atoi`?
+                // GenerateAddressOptions instead to use `iota` or `atoi`?
                 None => self
                     .client
                     .get_bech32_hrp()
@@ -90,10 +92,10 @@ impl AccountHandle {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first
-                if !options.metadata.syncing {
+                if !options.metadata.ledger_nano_prompt {
                     let mut changed_metadata = options.metadata.clone();
                     // Change metadata so ledger will not show the prompt the first time
-                    changed_metadata.syncing = true;
+                    changed_metadata.ledger_nano_prompt = true;
                     let mut addresses = Vec::new();
 
                     for address_index in address_range {
@@ -106,7 +108,7 @@ impl AccountHandle {
                                     account.index,
                                     address_index..address_index + 1,
                                     options.internal,
-                                    changed_metadata.clone(),
+                                    Some(changed_metadata.clone()),
                                 )
                                 .await?;
                             self.event_emitter.lock().await.emit(
@@ -123,7 +125,7 @@ impl AccountHandle {
                                 account.index,
                                 address_index..address_index + 1,
                                 options.internal,
-                                options.metadata.clone(),
+                                Some(options.metadata.clone()),
                             )
                             .await?;
                         addresses.push(address[0]);
@@ -136,7 +138,7 @@ impl AccountHandle {
                             account.index,
                             address_range.clone(),
                             options.internal,
-                            options.metadata,
+                            Some(options.metadata),
                         )
                         .await?
                 }
@@ -149,7 +151,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        options.metadata.clone(),
+                        Some(options.metadata.clone()),
                     )
                     .await?
             }
@@ -160,7 +162,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        options.metadata.clone(),
+                        Some(options.metadata.clone()),
                     )
                     .await?
             }

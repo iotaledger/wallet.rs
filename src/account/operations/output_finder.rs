@@ -3,7 +3,7 @@
 
 use std::cmp;
 
-use iota_client::secret::GenerateAddressMetadata;
+use iota_client::secret::GenerateAddressOptions;
 
 use crate::account::{
     handle::AccountHandle,
@@ -55,7 +55,9 @@ impl AccountHandle {
                     address_amount_to_generate,
                     Some(AddressGenerationOptions {
                         internal: false,
-                        metadata: GenerateAddressMetadata { syncing: true },
+                        metadata: GenerateAddressOptions {
+                            ledger_nano_prompt: true,
+                        },
                     }),
                 )
                 .await?;
@@ -77,7 +79,9 @@ impl AccountHandle {
                     address_amount_to_generate,
                     Some(AddressGenerationOptions {
                         internal: true,
-                        metadata: GenerateAddressMetadata { syncing: true },
+                        metadata: GenerateAddressOptions {
+                            ledger_nano_prompt: true,
+                        },
                     }),
                 )
                 .await?;
@@ -110,7 +114,9 @@ impl AccountHandle {
                     address_gap_limit,
                     Some(AddressGenerationOptions {
                         internal: false,
-                        metadata: GenerateAddressMetadata { syncing: true },
+                        metadata: GenerateAddressOptions {
+                            ledger_nano_prompt: true,
+                        },
                     }),
                 )
                 .await?;
@@ -119,7 +125,9 @@ impl AccountHandle {
                     address_gap_limit_internal,
                     Some(AddressGenerationOptions {
                         internal: true,
-                        metadata: GenerateAddressMetadata { syncing: true },
+                        metadata: GenerateAddressOptions {
+                            ledger_nano_prompt: true,
+                        },
                     }),
                 )
                 .await?;
