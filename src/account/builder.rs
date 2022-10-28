@@ -209,14 +209,6 @@ pub(crate) async fn get_first_public_address(
     Ok(secret_manager
         .read()
         .await
-        .generate_addresses(
-            coin_type,
-            account_index,
-            0..1,
-            false,
-            Some(GenerateAddressOptions {
-                ledger_nano_prompt: true,
-            }),
-        )
+        .generate_addresses(coin_type, account_index, 0..1, false, None)
         .await?[0])
 }
