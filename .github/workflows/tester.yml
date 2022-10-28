@@ -3,12 +3,10 @@ name: Wallet tester
 on:
   push:
     branches:
-      - test-engine-ci
       - develop
   pull_request:
     branches:
       - develop
-      - test-engine-ci
     paths-ignore:
       - 'bindings/**'
       - 'docs/**'
