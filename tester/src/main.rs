@@ -94,7 +94,7 @@ async fn main() -> Result<(), Error> {
     if let Some(path) = args.get(1) {
         paths.push(PathBuf::from(path));
     } else {
-        let mut dir = fs::read_dir("json").await?;
+        let mut dir = fs::read_dir("tester/json").await?;
 
         while let Some(entry) = dir.next_entry().await? {
             paths.push(entry.path());
