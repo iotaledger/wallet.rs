@@ -10,7 +10,7 @@ pub async fn process_balance<'a>(context: &Context<'a>, balance: &Value) -> Resu
         if let Some(account_index) = account_index.as_u64() {
             account_index as usize
         } else {
-            return Err(Error::InvalidField("account"));
+            return Err(Error::InvalidField("account_index"));
         }
     } else {
         return Err(Error::MissingField("account"));
