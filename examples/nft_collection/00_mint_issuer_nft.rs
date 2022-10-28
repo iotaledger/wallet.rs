@@ -8,6 +8,10 @@
 use std::env;
 
 use dotenv::dotenv;
+use iota_client::block::{
+    output::{NftId, Output, OutputId},
+    payload::transaction::TransactionEssence,
+};
 use iota_wallet::{account_manager::AccountManager, NftOptions, Result};
 
 #[tokio::main]
@@ -45,6 +49,18 @@ async fn main() -> Result<()> {
         &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("no block created yet")
     );
+
+    let TransactionEssence::Regular(essence) = transaction.payload.essence();
+    for (output_index, output) in essence.outputs().iter().enumerate() {
+        if let Output::Nft(nft_output) = output {
+            // New minted nft id is empty in the output
+            if nft_output.nft_id().is_null() {
+                let output_id = OutputId::new(transaction.payload.id(), output_index as u16)?;
+                let nft_id = NftId::from(output_id);
+                println!("New minted NFT id: {nft_id}");
+            }
+        }
+    }
 
     Ok(())
 }
