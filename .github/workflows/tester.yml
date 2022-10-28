@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - test-engine-ci
-      - dev
+      - develop
   pull_request:
     branches:
       - develop
