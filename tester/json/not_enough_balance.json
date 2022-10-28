@@ -1,0 +1,23 @@
+{
+    "accounts": [
+        50000,
+        0
+    ],
+    "steps": [
+        {
+            "transaction": {
+                "from": 0,
+                "outputs": [
+                    {
+                        "simple": {
+                            "account": 1,
+                            "amount": 100000
+                        }
+                    }
+                ],
+                "confirmation": true,
+                "error": "the wallet account doesn't have enough balance. It only has 50000, required is 100000"
+            }
+        }
+    ]
+}

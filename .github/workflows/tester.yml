@@ -1,0 +1,87 @@
+name: Wallet tester
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches:
+      - develop
+    paths-ignore:
+      - 'bindings/**'
+      - 'docs/**'
+      - 'documentation/**'
+      - 'examples/**'
+      - 'tests/**'
+
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  crate:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+
+    - name: Get current date
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+    - name: Cache cargo registry
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.cargo/registry
+        # Add date to the cache to keep it up to date
+        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          ${{ matrix.os }}-stable-cargo-registry-
+    - name: Cache cargo index
+      uses: actions/cache@v2.1.4
+      with:
+        path: ~/.cargo/git
+        # Add date to the cache to keep it up to date
+        key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          ${{ matrix.os }}-stable-cargo-index-
+    - name: Cache cargo target
+      uses: actions/cache@v2.1.4
+      with:
+        path: target
+        # Add date to the cache to keep it up to date
+        key: ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        # Restore from outdated cache for speed
+        restore-keys: |
+          ${{ matrix.os }}-stable-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+          ${{ matrix.os }}-stable-cargo-build-target-
+
+    - name: Start private tangle
+      uses: './.github/actions/private-tangle/setup'
+
+    - name: Run wallet tester
+      uses: actions-rs/cargo@v1
+      with:
+        command: run
+        args:  --manifest-path ./tester/Cargo.toml --all-features --release
+
+    - name: Tear down private tangle
+      uses: './.github/actions/private-tangle/tear-down'

@@ -1,0 +1,34 @@
+[package]
+name = "wallet-tester"
+version = "0.0.0"
+authors = [ "IOTA Stiftung" ]
+edition = "2021"
+homepage = "https://iota.org"
+repository = "https://github.com/iotaledger/wallet.rs"
+description = "Test engine for wallet.rs"
+license = "Apache-2.0"
+keywords = [ "iota", "wallet", "test" ]
+
+[lib]
+name = "wallet_tester"
+path = "src/lib.rs"
+[[bin]]
+name = "wallet-tester"
+path = "src/main.rs"
+
+[dependencies]
+fern-logger = { version = "0.5.0", default-features = false }
+iota-wallet = { version = "1.0.0-rc.1", path = "../", default-features = false }
+log = { version = "0.4.17", default-features = false }
+serde_json = { version = "1.0.87", default-features = false }
+thiserror = { version = "1.0.37", default-features = false }
+tokio = { version = "1.21.2", default-features = false, features = [ "fs" ] } 
+
+[profile.release]
+panic = "abort"
+
+[profile.production]
+codegen-units = 1
+inherits = "release"
+lto = true
+strip = "symbols"
