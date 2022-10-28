@@ -9,7 +9,7 @@ use std::{
 use iota_client::{
     block::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressOptions, SecretManage, SecretManager},
+    secret::{SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
