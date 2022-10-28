@@ -9,7 +9,7 @@ use std::{
 use iota_client::{
     block::address::Address,
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressMetadata, SecretManage, SecretManager},
+    secret::{GenerateAddressOptions, SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -147,7 +147,7 @@ impl AccountBuilder {
                         Some(bech32_hrp) => bech32_hrp,
                         // Only when we create a new account we don't have the first address and need to get the
                         // information from the client Doesn't work for offline creating, should
-                        // we use the network from the GenerateAddressMetadata instead to use
+                        // we use the network from the GenerateAddressOptions instead to use
                         // `iota` or `atoi`?
                         None => client
                             .get_bech32_hrp()
@@ -214,7 +214,9 @@ pub(crate) async fn get_first_public_address(
             account_index,
             0..1,
             false,
-            GenerateAddressMetadata { syncing: true },
+            Some(GenerateAddressOptions {
+                ledger_nano_prompt: true,
+            }),
         )
         .await?[0])
 }
