@@ -81,6 +81,7 @@ async fn process_json<'a>(context: &Context<'a>, json: Value) -> Result<(), Erro
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let args: Vec<String> = std::env::args().collect();
+    let mut error = false;
 
     let mnemonic = String::from("average day true meadow dawn pistol near vicious have ordinary sting fetch mobile month ladder explain tornado curious energy orange belt glue surge urban");
     let (faucet_manager, faucet_account) = faucet(mnemonic).await?;
@@ -129,7 +130,12 @@ async fn main() -> Result<(), Error> {
                 path.file_name().unwrap(),
                 err
             );
+            error = true;
         }
+    }
+
+    if error {
+        std::process::exit(1);
     }
 
     Ok(())
