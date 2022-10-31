@@ -9,7 +9,7 @@ use std::pin::Pin;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientBlockBuilder,
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::Address,
         output::{
@@ -112,7 +112,7 @@ impl AccountHandle {
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
             // TODO: get outputs from unspent outputs
-            let basic_outputs: Vec<OutputResponse> = Vec::new();
+            let basic_outputs: Vec<OutputWithMetadataResponse> = Vec::new();
             // maybe something like below
             // let mut outputs_to_sweep = Vec::new();
             // let mut other_owned_outputs = Vec::new();
@@ -248,7 +248,7 @@ impl AccountHandle {
     /// address output
     async fn update_unspent_output(
         &self,
-        output_response: OutputResponse,
+        output_response: OutputWithMetadataResponse,
         output_id: OutputId,
         network_id: u64,
     ) -> crate::Result<()> {

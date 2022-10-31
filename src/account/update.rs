@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::{api_types::response::OutputResponse, block::output::OutputId, Client};
+use iota_client::{api_types::response::OutputWithMetadataResponse, block::output::OutputId, Client};
 
 use crate::account::{
     handle::AccountHandle,
@@ -32,7 +32,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>>,
+        spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");

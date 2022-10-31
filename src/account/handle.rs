@@ -4,7 +4,7 @@
 use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{FoundryId, Output, OutputId, TokenId},
         payload::transaction::{TransactionId, TransactionPayload},
@@ -128,7 +128,7 @@ impl AccountHandle {
     pub async fn get_incoming_transaction_data(
         &self,
         transaction_id: &TransactionId,
-    ) -> Option<(TransactionPayload, Vec<OutputResponse>)> {
+    ) -> Option<(TransactionPayload, Vec<OutputWithMetadataResponse>)> {
         let account = self.read().await;
         account.incoming_transactions().get(transaction_id).cloned()
     }
@@ -200,7 +200,7 @@ impl AccountHandle {
     /// Returns all incoming transactions of the account
     pub async fn incoming_transactions(
         &self,
-    ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>> {
+    ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>> {
         let account = self.read().await;
         Ok(account.incoming_transactions.clone())
     }

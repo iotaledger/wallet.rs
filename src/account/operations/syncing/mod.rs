@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
@@ -88,7 +88,7 @@ impl AccountHandle {
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>> =
+        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_response in spent_or_not_synced_output_responses {
             let output_id = output_response.metadata.output_id()?;

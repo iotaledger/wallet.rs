@@ -7,7 +7,7 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{dto::OutputDto, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
@@ -26,7 +26,7 @@ use crate::{
     Error,
 };
 
-type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputResponse>);
+type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputWithMetadataResponse>);
 
 /// The response message.
 #[derive(Serialize)]
