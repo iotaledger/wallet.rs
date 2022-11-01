@@ -19,14 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.3 - 20XX-XX-XX
+## 2.0.3-rc.3 - 20XX-XX-XX
 
 ### Changed
 
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
+- Add `SenderFeature` and `IssuerFeature` to `prepare_output()` `options` argument;
 
-## 1.0.0-rc.2 - 2022-10-28
+## 2.0.3-rc.2 - 2022-10-28
 
 ### Added
 
@@ -47,6 +48,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Alias and NFT owned outputs syncing;
 - Alias or nft addresses in address unlock condition;
 
-## 1.0.0-rc.1 - 2022-09-28
+## 2.0.3-rc.1 - 2022-09-28
 
 First RC for the stardust implementation of the wallet.
