@@ -107,6 +107,8 @@ async fn output_preparation() -> Result<()> {
                 features: Some(Features {
                     metadata: Some("Hello world".to_string()),
                     tag: None,
+                    issuer: None,
+                    sender: None
                 }),
                 unlocks: None,
                 storage_deposit: None,
@@ -129,6 +131,8 @@ async fn output_preparation() -> Result<()> {
                 features: Some(Features {
                     metadata: Some("Hello world".to_string()),
                     tag: None,
+                    issuer: None,
+                    sender: None
                 }),
                 unlocks: None,
                 storage_deposit: None,
@@ -152,6 +156,8 @@ async fn output_preparation() -> Result<()> {
                 features: Some(Features {
                     metadata: Some("Hello world".to_string()),
                     tag: None,
+                    issuer: None,
+                    sender: None,
                 }),
                 unlocks: None,
                 storage_deposit: None,
