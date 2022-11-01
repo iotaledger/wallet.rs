@@ -114,13 +114,10 @@ async fn main() -> Result<(), Error> {
 
         let content = fs::read_to_string(path).await?;
         let json: Value = serde_json::from_str(&content)?;
+        // PANIC: `path` comes from iterating a directory so the file name is correct.
+        let file_name = path.file_name().unwrap();
 
-        log::info!(
-            "Executing test {}/{}: {:?}.",
-            index + 1,
-            paths.len(),
-            path.file_name().unwrap()
-        );
+        log::info!("Executing test {}/{}: {:?}.", index + 1, paths.len(), file_name);
         log::debug!("{}", json);
 
         if let Err(err) = process_json(&context, json).await {
@@ -128,7 +125,7 @@ async fn main() -> Result<(), Error> {
                 "Executing test {}/{}: {:?} failed: {}.",
                 index + 1,
                 paths.len(),
-                path.file_name().unwrap(),
+                file_name,
                 err
             );
             error = true;

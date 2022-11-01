@@ -13,6 +13,7 @@ pub async fn process_outputs<'a>(
 ) -> Result<(), Error> {
     for output in outputs {
         if output.is_u64() {
+            // PANIC: it has just been verified that `output` is an u64.
             process_amount(context, account, output.as_u64().unwrap()).await?;
         }
     }
