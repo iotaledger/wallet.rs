@@ -113,7 +113,7 @@ impl AccountHandle {
 
         Ok(Output::try_from_dto(
             &output_response.output,
-            self.client.get_token_supply()?,
+            self.client.get_token_supply().await?,
         )?)
     }
 

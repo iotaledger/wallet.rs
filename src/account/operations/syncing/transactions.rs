@@ -34,7 +34,7 @@ impl AccountHandle {
             return Ok(());
         }
 
-        let network_id = self.client.get_network_id()?;
+        let network_id = self.client.get_network_id().await?;
 
         let mut updated_transactions = Vec::new();
         let mut spent_output_ids = Vec::new();

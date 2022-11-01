@@ -31,7 +31,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] select_inputs");
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
@@ -75,7 +75,7 @@ impl AccountHandle {
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
-        let bech32_hrp = self.client.get_bech32_hrp()?;
+        let bech32_hrp = self.client.get_bech32_hrp().await?;
         let available_outputs_signing_data = filter_inputs(
             &account,
             account.unspent_outputs.values(),

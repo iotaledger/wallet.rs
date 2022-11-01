@@ -29,9 +29,9 @@ impl AccountHandle {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
         let account = self.read().await;
-        let network_id = self.client.get_network_id()?;
+        let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         for output_response in output_responses {
             let output = Output::try_from_dto(&output_response.output, token_supply)?;

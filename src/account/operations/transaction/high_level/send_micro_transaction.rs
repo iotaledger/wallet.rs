@@ -83,8 +83,8 @@ impl AccountHandle {
         addresses_with_micro_amount: Vec<AddressWithMicroAmount>,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
-        let rent_structure = self.client.get_rent_structure()?;
-        let token_supply = self.client.get_token_supply()?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let account_addresses = self.addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;

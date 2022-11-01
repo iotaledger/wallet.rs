@@ -58,8 +58,8 @@ impl AccountHandle {
         // Get alias outputs, so we can then get the foundry outputs with the alias addresses
         let alias_output_responses = self.get_outputs(output_ids.iter().cloned().collect()).await?;
 
-        let bech32_hrp = client.get_bech32_hrp()?;
-        let token_supply = client.get_token_supply()?;
+        let bech32_hrp = client.get_bech32_hrp().await?;
+        let token_supply = client.get_token_supply().await?;
 
         for alias_output_response in alias_output_responses {
             let output = Output::try_from_dto(&alias_output_response.output, token_supply)?;

@@ -32,7 +32,7 @@ impl AccountHandle {
         transaction_options: Option<TransactionOptions>,
     ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_output {options:?}");
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         if let Some(assets) = &options.assets {
             if let Some(nft_id) = assets.nft_id {
@@ -41,7 +41,7 @@ impl AccountHandle {
                     .await;
             }
         }
-        let rent_structure = self.client.get_rent_structure()?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         // We start building with minimum storage deposit, so we know the minimum required amount and can later replace
         // it, if needed
@@ -185,7 +185,7 @@ impl AccountHandle {
     ) -> crate::Result<Output> {
         log::debug!("[OUTPUT] prepare_nft_output {options:?}");
 
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
         let unspent_outputs = self.unspent_outputs(None).await?;
 
         // Find nft output from the inputs
@@ -212,7 +212,7 @@ impl AccountHandle {
 
         // from here basically the same as in `prepare_output()`, just with Nft outputs
 
-        let rent_structure = self.client.get_rent_structure()?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
         if let Some(assets) = options.assets {
             if let Some(native_tokens) = assets.native_tokens {

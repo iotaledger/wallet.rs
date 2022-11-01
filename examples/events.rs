@@ -70,7 +70,7 @@ async fn main() -> Result<()> {
             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                 Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
             )))
-            .finish_output(account.client().get_token_supply()?)?,
+            .finish_output(account.client().get_token_supply().await?)?,
     ];
 
     let transaction = account.send(outputs, None).await?;
