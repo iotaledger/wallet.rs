@@ -61,11 +61,19 @@ You can install _cmake_ and _openssl_ with your distro's package manager or down
 
 ## Usage
 
-To use the library, add this to your _Cargo.toml_ :
+### Dependencies
+
+To use the library, add this to the _Cargo.toml_ file of your project:
 
 ```
 [dependencies]
-iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "dev" }
+iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "production" }
+```
+
+The example below requires asynchronious functionality. You can enable it by adding the following dependency:
+
+```
+tokio = { version = "1", features = ["full"] }
 ```
 
 ### Initialisation

@@ -16,7 +16,16 @@ import event from '!!raw-loader!./../../../examples/event.rs';
 
 # Examples in Rust
 
-You can see the examples in the library's [examples directory](https://github.com/iotaledger/wallet.rs/tree/dev/examples). You can list all available examples by running the following command:
+## Running Examples
+
+The examples for wallet.rs are located in the library's repository. To get access to them, clone the `wallet.rs` repository:
+
+```bash
+git clone -b production https://github.com/iotaledger/wallet.rs.git
+cd wallet.rs
+```
+
+You can list all available examples by running the following command:
 
 ```bash
 cargo run --example # lists the available examples
@@ -28,7 +37,11 @@ To run an example, you can use the following command, replacing _transfer_ with 
 cargo run --example transfer # execute the `transfer` example
 ```
 
-## Backup and Restore Example
+You can find all examples in the `examples` subfolder of the project.
+
+## Examples
+
+### Backup and Restore
 
 1. Create an account manager and set a password:
 
@@ -37,7 +50,6 @@ let manager = AccountManager::builder().finish().await.unwrap();
 
 manager.set_stronghold_password("password").await.unwrap();
 manager.store_mnemonic(SignerType::Stronghold, None).await.unwrap();
-
 ```
 
 2. Create your account:
@@ -53,7 +65,6 @@ let account_handle = manager
     .initialise()
     .await?;
 let id = account_handle.id().await;
-
 ```
 
 3. You can secure your account in a backup file:
@@ -62,7 +73,6 @@ let id = account_handle.id().await;
 let backup_path = manager.backup("./backup").await?;
 
 ```
-
 
 4. You can import the backup later, or in another application using the following snippet:
 
@@ -73,7 +83,6 @@ let imported_account_handle = manager.get_account(&id).await?;
 
 let account = account_handle.read().await;
 let imported_account = imported_account_handle.read().await;
-
 ```
 
 That's it! You can now backup and restore your account!
@@ -81,7 +90,7 @@ That's it! You can now backup and restore your account!
 You can see the full code for the example in the [`wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
 
 
-## Transfer Example:
+### Transfer
 
 You use the following example to generate an account and transfer funds. 
 
@@ -89,7 +98,7 @@ You use the following example to generate an account and transfer funds.
   {transfer}
 </CodeBlock>
 
-## Events Example:
+### Events
 
 `wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
@@ -99,7 +108,7 @@ You can use the following example to fetch an existing _Account_ and listen to t
   {event}
 </CodeBlock>
 
-## Logger Example:
+### Logger
 
 <CodeBlock className="language-rust">
   {logger}
