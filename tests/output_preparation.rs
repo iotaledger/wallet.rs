@@ -108,7 +108,7 @@ async fn output_preparation() -> Result<()> {
                     metadata: Some("Hello world".to_string()),
                     tag: None,
                     issuer: None,
-                    sender: None
+                    sender: None,
                 }),
                 unlocks: None,
                 storage_deposit: None,
@@ -132,7 +132,7 @@ async fn output_preparation() -> Result<()> {
                     metadata: Some("Hello world".to_string()),
                     tag: None,
                     issuer: None,
-                    sender: None
+                    sender: None,
                 }),
                 unlocks: None,
                 storage_deposit: None,

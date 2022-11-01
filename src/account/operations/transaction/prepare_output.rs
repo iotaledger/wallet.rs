@@ -7,7 +7,7 @@ use iota_client::block::{
     address::Address,
     output::{
         dto::NativeTokenDto,
-        feature::{Feature, MetadataFeature, TagFeature, SenderFeature, IssuerFeature},
+        feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
@@ -67,13 +67,15 @@ impl AccountHandle {
             }
 
             if let Some(issuer) = features.issuer {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Issuer(IssuerFeature::new(Address::try_from_bech32(&issuer)?.1)));
+                first_output_builder = first_output_builder.add_feature(Feature::Issuer(IssuerFeature::new(
+                    Address::try_from_bech32(&issuer)?.1,
+                )));
             }
 
             if let Some(sender) = features.sender {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(&sender)?.1)))
+                first_output_builder = first_output_builder.add_feature(Feature::Sender(SenderFeature::new(
+                    Address::try_from_bech32(&sender)?.1,
+                )))
             }
         }
 
@@ -241,13 +243,15 @@ impl AccountHandle {
             }
 
             if let Some(issuer) = features.issuer {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Issuer(IssuerFeature::new(Address::try_from_bech32(&issuer)?.1)));
+                first_output_builder = first_output_builder.add_feature(Feature::Issuer(IssuerFeature::new(
+                    Address::try_from_bech32(&issuer)?.1,
+                )));
             }
 
             if let Some(sender) = features.sender {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(&sender)?.1)))
+                first_output_builder = first_output_builder.add_feature(Feature::Sender(SenderFeature::new(
+                    Address::try_from_bech32(&sender)?.1,
+                )))
             }
         }
 
@@ -414,7 +418,7 @@ pub struct Features {
     pub tag: Option<String>,
     pub metadata: Option<String>,
     pub issuer: Option<String>,
-    pub sender: Option<String>
+    pub sender: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
