@@ -31,9 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `GetAccountIndexes` and `AccountIndexes` to message interface;
-- Missing serde rename for the `returnAddress` field of ´AddressWithMicroAmountDto`;
+- Missing serde rename for the `returnAddress` field of `AddressWithMicroAmountDto`;
 - Check for parameters before creating the database;
 - Transaction essence and payload length validation;
+- Add `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
 
 ### Changed
 
