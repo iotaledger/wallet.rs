@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
+    api_types::response::OutputMetadataResponse,
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
@@ -83,16 +83,16 @@ impl AccountHandle {
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
         let spent_or_not_synced_output_responses = self
             .client
-            .try_get_outputs(spent_or_not_synced_output_ids.clone())
+            .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
             .await?;
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>> =
+        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputMetadataResponse>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
-        for output_response in spent_or_not_synced_output_responses {
-            let output_id = output_response.metadata.output_id()?;
-            spent_or_not_synced_outputs.insert(output_id, Some(output_response));
+        for output_metadata_response in spent_or_not_synced_output_responses {
+            let output_id = output_metadata_response.output_id()?;
+            spent_or_not_synced_outputs.insert(output_id, Some(output_metadata_response));
         }
 
         if options.sync_incoming_transactions {
