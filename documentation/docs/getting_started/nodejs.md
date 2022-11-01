@@ -34,11 +34,11 @@ The package is published in the [npmjs](https://www.npmjs.com/package/@iota/wall
 
 - To install with NPM, you can run the following command:
 ```
-npm install @iota/wallet dotenv
+npm install @iota/wallet@1 dotenv
 ```
 - To install with yarn, you can run the following command:
 ```
-yarn install @iota/wallet dotenv
+yarn add @iota/wallet@1 dotenv
 ```
 
 ## Usage
