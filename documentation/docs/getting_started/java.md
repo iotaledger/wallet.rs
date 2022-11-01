@@ -26,7 +26,7 @@ Ensure you have installed the [required dependencies for the library](https://gi
 Download or clone the `wallet.rs` repository:
 
 ```bash
-git clone https://github.com/iotaledger/iota.rs.git
+git clone -b production https://github.com/iotaledger/wallet.rs.git
 ```
 
 ## Security
