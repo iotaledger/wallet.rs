@@ -72,12 +72,9 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
                         return Err(Error::InvalidField("account"));
                     };
 
-                    // TODO unwrap
-                    let simple_output = BasicOutputBuilder::new_with_amount(amount)
-                        .unwrap()
+                    let simple_output = BasicOutputBuilder::new_with_amount(amount)?
                         .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)))
-                        .finish_output(context.protocol_parameters.token_supply())
-                        .unwrap();
+                        .finish_output(context.protocol_parameters.token_supply())?;
 
                     outputs.push(simple_output);
                 } else {

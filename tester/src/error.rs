@@ -6,6 +6,9 @@ use std::fmt::Debug;
 /// The wallet-tester error type.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    /// Block error.
+    #[error("client error: {0}")]
+    Block(#[from] iota_wallet::iota_client::block::Error),
     /// Check error.
     #[error("{0}")]
     Check(String),
@@ -27,9 +30,6 @@ pub enum Error {
     /// Missing field.
     #[error("missing field: {0}")]
     MissingField(&'static str),
-    // /// Types error.
-    // #[error("types error: {0}")]
-    // Types(#[from] iota_wallet::iota_client::types::Error),
     /// Unexpected error.
     #[error("unexpected error: expected {expected:?}, got {actual:?}")]
     Unexpected { expected: String, actual: String },
