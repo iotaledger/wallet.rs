@@ -23,7 +23,7 @@ use crate::account::{handle::AccountHandle, operations::transaction::Transaction
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
-    pub(crate) fn build_transaction_essence(
+    pub(crate) async fn build_transaction_essence(
         &self,
         selected_transaction_data: SelectedTransactionData,
         options: Option<TransactionOptions>,
@@ -31,7 +31,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] build_transaction");
 
         let build_transaction_essence_start_time = Instant::now();
-        let protocol_parameters = self.client.get_protocol_parameters()?;
+        let protocol_parameters = self.client.get_protocol_parameters().await?;
 
         let mut inputs_for_essence: Vec<Input> = Vec::new();
         let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();

@@ -68,6 +68,8 @@ async fn main() -> Result<()> {
     let addresses_with_unspent_outputs = account.addresses_with_unspent_outputs().await?;
     println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
+    let token_supply = account.client().get_token_supply().await?;
+
     // send transaction
     for chunk in addresses.chunks(100).map(|x| x.to_vec()) {
         let outputs = chunk
@@ -78,7 +80,7 @@ async fn main() -> Result<()> {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         *a.address().as_ref(),
                     )))
-                    .finish_output(account.client().get_token_supply().unwrap())
+                    .finish_output(token_supply)
                     .unwrap()
             })
             .collect();

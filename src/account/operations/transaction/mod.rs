@@ -54,7 +54,7 @@ impl AccountHandle {
     pub async fn send(&self, outputs: Vec<Output>, options: Option<TransactionOptions>) -> crate::Result<Transaction> {
         // here to check before syncing, how to prevent duplicated verification (also in prepare_transaction())?
         // Checking it also here is good to return earlier if something is invalid
-        let protocol_parameters = self.client.get_protocol_parameters()?;
+        let protocol_parameters = self.client.get_protocol_parameters().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
@@ -142,7 +142,7 @@ impl AccountHandle {
         };
 
         // store transaction payload to account (with db feature also store the account to the db)
-        let network_id = self.client.get_network_id()?;
+        let network_id = self.client.get_network_id().await?;
         let transaction_id = signed_transaction_data.transaction_payload.id();
         let transaction = Transaction {
             transaction_id: signed_transaction_data.transaction_payload.id(),

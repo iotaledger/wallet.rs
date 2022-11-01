@@ -5,7 +5,7 @@ use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         input::Input,
         output::{dto::OutputDto, Output, OutputId},
@@ -20,18 +20,18 @@ use iota_client::{
 use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
 
 impl AccountHandle {
-    /// Convert OutputResponse to OutputData with the network_id added
+    /// Convert OutputWithMetadataResponse to OutputData with the network_id added
     pub(crate) async fn output_response_to_output_data(
         &self,
-        output_responses: Vec<OutputResponse>,
+        output_responses: Vec<OutputWithMetadataResponse>,
         associated_address: &AddressWithUnspentOutputs,
     ) -> crate::Result<Vec<OutputData>> {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
         let account = self.read().await;
-        let network_id = self.client.get_network_id()?;
+        let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         for output_response in output_responses {
             let output = Output::try_from_dto(&output_response.output, token_supply)?;
@@ -70,7 +70,10 @@ impl AccountHandle {
 
     /// Gets outputs by their id, already known outputs are not requested again, but loaded from the account set as
     /// unspent, because we wouldn't get them from the node if they were spent
-    pub(crate) async fn get_outputs(&self, output_ids: Vec<OutputId>) -> crate::Result<Vec<OutputResponse>> {
+    pub(crate) async fn get_outputs(
+        &self,
+        output_ids: Vec<OutputId>,
+    ) -> crate::Result<Vec<OutputWithMetadataResponse>> {
         log::debug!("[SYNC] start get_outputs");
         let get_outputs_start_time = Instant::now();
         let mut outputs = Vec::new();
@@ -84,7 +87,7 @@ impl AccountHandle {
                 Some(output_data) => {
                     output_data.is_spent = false;
                     unspent_outputs.push((output_id, output_data.clone()));
-                    outputs.push(OutputResponse {
+                    outputs.push(OutputWithMetadataResponse {
                         metadata: output_data.metadata.clone(),
                         output: OutputDto::from(&output_data.output),
                     });
@@ -164,7 +167,7 @@ impl AccountHandle {
 pub(crate) async fn get_inputs_for_transaction_payload(
     client: &Client,
     transaction_payload: &TransactionPayload,
-) -> crate::Result<Vec<OutputResponse>> {
+) -> crate::Result<Vec<OutputWithMetadataResponse>> {
     let TransactionEssence::Regular(essence) = transaction_payload.essence();
     let mut output_ids = Vec::new();
 

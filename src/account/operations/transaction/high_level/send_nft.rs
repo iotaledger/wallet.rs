@@ -68,7 +68,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] prepare_send_nft");
 
         let unspent_outputs = self.unspent_outputs(None).await?;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let mut outputs = Vec::new();
 

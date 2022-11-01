@@ -18,7 +18,7 @@ use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         output::OutputId,
         payload::{transaction::TransactionId, TransactionPayload},
@@ -62,7 +62,7 @@ pub struct Account {
     #[serde(rename = "internalAddresses")]
     pub(crate) internal_addresses: Vec<AccountAddress>,
     /// Addresses with unspent outputs
-    // used to improve performance for syncing and getbalance because it's in most cases only a subset of all addresses
+    // used to improve performance for syncing and get balance because it's in most cases only a subset of all addresses
     #[serde(rename = "addressesWithUnspentOutputs")]
     addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
     /// Outputs
@@ -88,5 +88,5 @@ pub struct Account {
     /// Transaction payloads for received outputs with inputs when not pruned before syncing, can be used to determine
     /// the sender address/es
     #[serde(rename = "incomingTransactions")]
-    incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputResponse>)>,
+    incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>,
 }

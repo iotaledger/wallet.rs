@@ -80,6 +80,7 @@ impl AccountHandle {
                 None => self
                     .client
                     .get_bech32_hrp()
+                    .await
                     .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
             }
         };

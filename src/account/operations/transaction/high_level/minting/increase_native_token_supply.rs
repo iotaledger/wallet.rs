@@ -56,7 +56,7 @@ impl AccountHandle {
         log::debug!("[TRANSACTION] increase_native_token_supply");
 
         let account = self.read().await;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
         let existing_foundry_output = account.unspent_outputs().values().into_iter().find(|output_data| {
             if let Output::Foundry(output) = &output_data.output {
                 TokenId::new(*output.id()) == token_id

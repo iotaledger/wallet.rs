@@ -25,7 +25,8 @@ async fn main() -> Result<()> {
     // Create a new account
     let account = manager.get_account("Alice").await?;
 
-    let signed_transaction_data = read_signed_transaction_from_file(account.client(), SIGNED_TRANSACTION_FILE_NAME)?;
+    let signed_transaction_data =
+        read_signed_transaction_from_file(account.client(), SIGNED_TRANSACTION_FILE_NAME).await?;
 
     // Sends offline signed transaction online.
     let result = account.submit_and_store_transaction(signed_transaction_data).await?;
@@ -38,7 +39,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn read_signed_transaction_from_file<P: AsRef<Path>>(client: &Client, path: P) -> Result<SignedTransactionData> {
+async fn read_signed_transaction_from_file<P: AsRef<Path>>(client: &Client, path: P) -> Result<SignedTransactionData> {
     let mut file = File::open(&path)?;
     let mut json = String::new();
     file.read_to_string(&mut json)?;
@@ -47,6 +48,6 @@ fn read_signed_transaction_from_file<P: AsRef<Path>>(client: &Client, path: P) -
 
     Ok(SignedTransactionData::try_from_dto(
         &dto,
-        &client.get_protocol_parameters()?,
+        &client.get_protocol_parameters().await?,
     )?)
 }

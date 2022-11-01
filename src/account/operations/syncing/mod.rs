@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
@@ -88,7 +88,7 @@ impl AccountHandle {
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputResponse>> =
+        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_response in spent_or_not_synced_output_responses {
             let output_id = output_response.metadata.output_id()?;
@@ -158,7 +158,7 @@ impl AccountHandle {
                 outputs_data.extend(outputs_data_inner.clone().into_iter());
                 outputs_data_inner
             } else {
-                let bech32_hrp = self.client().get_bech32_hrp()?;
+                let bech32_hrp = self.client().get_bech32_hrp().await?;
                 let mut new_outputs_data = Vec::new();
                 for (alias_or_nft_address, ed25519_address) in new_alias_and_nft_addresses {
                     let output_ids = self.get_output_ids_for_address(alias_or_nft_address, options).await?;
