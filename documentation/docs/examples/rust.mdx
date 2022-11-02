@@ -16,8 +16,6 @@ import event from '!!raw-loader!./../../../examples/event.rs';
 
 # Examples in Rust
 
-## Running Examples
-
 The examples for wallet.rs are located in the library's repository. To get access to them, clone the `wallet.rs` repository:
 
 ```bash
@@ -39,9 +37,7 @@ cargo run --example transfer # execute the `transfer` example
 
 You can find all examples in the `examples` subfolder of the project.
 
-## Examples
-
-### Backup and Restore
+## Backup and Restore
 
 1. Create an account manager and set a password:
 
@@ -90,7 +86,7 @@ That's it! You can now backup and restore your account!
 You can see the full code for the example in the [`wallet.rs` repository](https://github.com/iotaledger/wallet.rs/blob/develop/examples/backup_and_restore.rs)
 
 
-### Transfer
+## Transfer
 
 You use the following example to generate an account and transfer funds. 
 
@@ -98,7 +94,7 @@ You use the following example to generate an account and transfer funds.
   {transfer}
 </CodeBlock>
 
-### Events
+## Events
 
 `wallet.rs` library is able to listen to several supported event. As soon as the event occurs, a provided callback will be triggered.
 
@@ -108,7 +104,7 @@ You can use the following example to fetch an existing _Account_ and listen to t
   {event}
 </CodeBlock>
 
-### Logger
+## Logger
 
 <CodeBlock className="language-rust">
   {logger}
