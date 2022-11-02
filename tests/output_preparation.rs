@@ -202,7 +202,7 @@ async fn output_preparation() -> Result<()> {
     }
 
     let issuer_and_sender_address = String::from("rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm");
-    if let Ok(output) = account
+    let output = account
         .prepare_output(
             OutputOptions {
                 recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
@@ -224,19 +224,17 @@ async fn output_preparation() -> Result<()> {
             },
             None,
         )
-        .await
-    {
-        assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
-        assert_eq!(output.amount(), 500000);
-        let features = output.features().unwrap();
-        // sender and issuer feature
-        assert_eq!(features.len(), 2);
-        let issuer_and_sender_address = Address::try_from_bech32(&issuer_and_sender_address)?.1;
-        let issuer_feature = features.issuer().unwrap();
-        assert_eq!(issuer_feature.address(), &issuer_and_sender_address);
-        let sender_feature = features.sender().unwrap();
-        assert_eq!(sender_feature.address(), &issuer_and_sender_address)
-    }
+        .await?;
+    assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
+    assert_eq!(output.amount(), 500000);
+    let features = output.features().unwrap();
+    // sender and issuer feature
+    assert_eq!(features.len(), 2);
+    let issuer_and_sender_address = Address::try_from_bech32(&issuer_and_sender_address)?.1;
+    let issuer_feature = features.issuer().unwrap();
+    assert_eq!(issuer_feature.address(), &issuer_and_sender_address);
+    let sender_feature = features.sender().unwrap();
+    assert_eq!(sender_feature.address(), &issuer_and_sender_address);
 
     std::fs::remove_dir_all("test-storage/output_preparation").unwrap_or(());
     Ok(())
