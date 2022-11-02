@@ -67,12 +67,6 @@ impl AccountHandle {
                     .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
             }
 
-            if let Some(issuer) = features.issuer {
-                first_output_builder = first_output_builder.add_feature(Feature::Issuer(IssuerFeature::new(
-                    Address::try_from_bech32(&issuer)?.1,
-                )));
-            }
-
             if let Some(sender) = features.sender {
                 first_output_builder = first_output_builder.add_feature(Feature::Sender(SenderFeature::new(
                     Address::try_from_bech32(&sender)?.1,
