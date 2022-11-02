@@ -61,6 +61,7 @@ impl AccountHandle {
                 first_output_builder =
                     first_output_builder.add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?));
             }
+
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder
                     .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
