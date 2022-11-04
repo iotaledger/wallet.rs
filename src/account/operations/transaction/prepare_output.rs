@@ -7,7 +7,7 @@ use iota_client::block::{
     address::Address,
     output::{
         dto::NativeTokenDto,
-        feature::{Feature, MetadataFeature, TagFeature},
+        feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
@@ -57,13 +57,24 @@ impl AccountHandle {
         }
 
         if let Some(features) = options.features {
+            if let Some(_issuer) = features.issuer {
+                return Err(crate::Error::MissingParameter("nft_id"));
+            }
+
             if let Some(tag) = features.tag {
                 first_output_builder =
                     first_output_builder.add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?));
             }
+
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder
                     .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
+            }
+
+            if let Some(sender) = features.sender {
+                first_output_builder = first_output_builder.add_feature(Feature::Sender(SenderFeature::new(
+                    Address::try_from_bech32(&sender)?.1,
+                )))
             }
         }
 
@@ -120,7 +131,7 @@ impl AccountHandle {
                     );
                 }
 
-                // Check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this
+                // Check if the remainder balance wouldn't leave dust behind, which wouldn't allow the creation of this
                 // output. If that's the case, this remaining amount will be added to the output, to still allow sending
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
@@ -228,6 +239,18 @@ impl AccountHandle {
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder
                     .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
+            }
+
+            if let Some(issuer) = features.issuer {
+                first_output_builder = first_output_builder.add_feature(Feature::Issuer(IssuerFeature::new(
+                    Address::try_from_bech32(&issuer)?.1,
+                )));
+            }
+
+            if let Some(sender) = features.sender {
+                first_output_builder = first_output_builder.add_feature(Feature::Sender(SenderFeature::new(
+                    Address::try_from_bech32(&sender)?.1,
+                )))
             }
         }
 
@@ -393,6 +416,8 @@ pub struct Assets {
 pub struct Features {
     pub tag: Option<String>,
     pub metadata: Option<String>,
+    pub issuer: Option<String>,
+    pub sender: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

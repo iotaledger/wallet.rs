@@ -25,13 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
+- Add `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
 ### Added
 
 - `GetAccountIndexes` and `AccountIndexes` to message interface;
-- Missing serde rename for the `returnAddress` field of ´AddressWithMicroAmountDto`;
+- Missing serde rename for the `returnAddress` field of `AddressWithMicroAmountDto`;
 - Check for parameters before creating the database;
 - Transaction essence and payload length validation;
 
