@@ -213,7 +213,11 @@ impl AccountHandle {
                 unreachable!("We checked before if it's an nft output")
             }
         } else {
-            NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), nft_id)?
+            if nft_id.is_null() {
+                NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), nft_id)?
+            } else {
+                return Err(crate::Error::NftNotFoundInUnspentOutputs);
+            }
         };
 
         // Set new address unlock condition
