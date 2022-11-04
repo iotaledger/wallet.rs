@@ -36,11 +36,12 @@ async fn output_preparation() -> Result<()> {
         .await?;
 
     let account = manager.create_account().finish().await?;
+    let recipient_address = String::from("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu");
 
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 500,
                 assets: None,
                 features: None,
@@ -59,7 +60,7 @@ async fn output_preparation() -> Result<()> {
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 500000,
                 assets: None,
                 features: None,
@@ -80,7 +81,7 @@ async fn output_preparation() -> Result<()> {
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 500000,
                 assets: Some(Assets {
                     native_tokens: Some(vec![native_token.clone()]),
@@ -101,7 +102,7 @@ async fn output_preparation() -> Result<()> {
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 300000,
                 assets: None,
                 features: Some(Features {
@@ -125,7 +126,7 @@ async fn output_preparation() -> Result<()> {
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 12000,
                 assets: None,
                 features: Some(Features {
@@ -150,7 +151,7 @@ async fn output_preparation() -> Result<()> {
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 1,
                 assets: None,
                 features: Some(Features {
@@ -167,7 +168,7 @@ async fn output_preparation() -> Result<()> {
         .await?;
     assert_eq!(output.amount(), 48200);
     let sdr = output.unlock_conditions().unwrap().storage_deposit_return().unwrap();
-    assert_eq!(sdr.amount(), 48200);
+    assert_eq!(sdr.amount(), 48199);
 
     // address and storage deposit unlock condition, because of the metadata feature block, 213000 is not enough for the
     // required storage deposit
@@ -179,7 +180,7 @@ async fn output_preparation() -> Result<()> {
     if let Ok(output) = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
                 amount: 500000,
                 assets: Some(Assets {
                     native_tokens: None,

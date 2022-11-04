@@ -58,7 +58,7 @@ impl AccountHandle {
 
         if let Some(features) = options.features {
             if let Some(_issuer) = features.issuer {
-                return Err(crate::Error::MissingParameter("nft_id"))
+                return Err(crate::Error::MissingParameter("nft_id"));
             }
 
             if let Some(tag) = features.tag {
