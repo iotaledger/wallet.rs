@@ -239,6 +239,29 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(features.sender().unwrap().address(), &expected_address);
 
     // error when adding issuer when building basic output
+    let error = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 500000,
+                assets: None,
+                features: Some(Features {
+                    metadata: None,
+                    tag: None,
+                    issuer: Some(issuer_and_sender_address.clone()),
+                    sender: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await
+        .unwrap_err();
+    match error {
+        iota_wallet::Error::MissingParameter(_) => {}
+        _ => panic!("should return error"),
+    }
 
     // issuer and sender address present when building nft output
     let output = account
