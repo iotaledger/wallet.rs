@@ -25,7 +25,7 @@ import event_queue from '!!raw-loader!./../../../bindings/python/examples/7_even
 
 In this section, you can find several examples that use the python binding of the `wallet.rs` library. You can also find examples of the code in the `/bindings/python/examples` folder of the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/python/examples).
 
-All the examples in this section expect you to set your custom password  in the _.env_ file:
+All the examples in this section expect you to set your custom password in the `.env` file:
 
 ```bash
 SH_PASSWORD="here is your super secure password"
@@ -42,7 +42,7 @@ The following example creates a new database and account:
 </CodeBlock>
 
 * Storage is initialized under the given path (`./alice-database`).
-* The password is set based on your password in _.env_ file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`).
+* The password is set based on your password in `.env` file (`manager.setStrongholdPassword(process.env.SH_PASSWORD)`).
 * When you initialize the new database, a Stronghold mnemonic (seed) is automatically generated and stored by default (`manager.storeMnemonic(SignerType.Stronghold)`).
 * The seed should be set only for the first time. You can open the initialized database by using your password.
 
@@ -143,7 +143,7 @@ You can use the following example to generate a new address via an instance of _
 </CodeBlock>
 
 Example output:
-```json
+```js
 [{
         'address': {
             'inner': 'atoi1qzy79ew8x4hn4dsr0t3j8ce8hdwdrh8xzx85x2gkse6k0fx2jkyaqdgd2rn'
@@ -182,7 +182,7 @@ You can use the following example to sync your accounts and retrieve their balan
 
 Example output:
 
-```json
+```js
 Total balance:
 {
     'total': 10000000,
@@ -263,7 +263,7 @@ We recommend that you sync the account information with the Tangle by running th
 
 The previous snippet should have a similar output to the following JSON object:
 
-```json
+```js
 {
     'id': '9d3c401d59b0a87f6fbaa58582bb71e1858d63336421ccbae834821d9be113d3',
     'version': 1,

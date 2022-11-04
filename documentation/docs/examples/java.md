@@ -16,7 +16,7 @@ keywords:
 This section will guide you through several examples using the Java binding of the `wallet.rs` library. You can also find the code for the examples in the `/bindings/java/examples/java-app` folder in the [official GitHub repository](https://github.com/iotaledger/wallet.rs/tree/dev/bindings/java/examples/java-app).
 
 ```bash
-git clone https://github.com/iotaledger/wallet.rs
+git clone -b production https://github.com/iotaledger/wallet.rs
 ```
 
 ```bash
