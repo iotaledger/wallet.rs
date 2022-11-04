@@ -176,8 +176,8 @@ async fn output_preparation() -> Result<()> {
     // metadata feature
     assert_eq!(output.features().unwrap().len(), 1);
 
-    // only works if the nft for this NftId is available in the account
-    if let Ok(output) = account
+    // Error if this NftId is not in the account
+    let error = account
         .prepare_output(
             OutputOptions {
                 recipient_address: recipient_address.clone(),
@@ -186,6 +186,30 @@ async fn output_preparation() -> Result<()> {
                     native_tokens: None,
                     nft_id: Some(NftId::from_str(
                         "0xa068e00a79922eaef241592a7440f131ea7f8ad9e22e580ef139415f273eff30",
+                    )?),
+                }),
+                features: None,
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await
+        .unwrap_err();
+    match error {
+        iota_wallet::Error::NftNotFoundInUnspentOutputs(_) => {}
+        _ => panic!("should return NftNotFoundInUnspentOutputs error"),
+    }
+
+    if let Ok(output) = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 500000,
+                assets: Some(Assets {
+                    native_tokens: None,
+                    nft_id: Some(NftId::from_str(
+                        "0x0000000000000000000000000000000000000000000000000000000000000000",
                     )?),
                 }),
                 features: None,
@@ -260,7 +284,7 @@ async fn output_preparation() -> Result<()> {
         .unwrap_err();
     match error {
         iota_wallet::Error::MissingParameter(_) => {}
-        _ => panic!("should return error"),
+        _ => panic!("should return MissingParameter error"),
     }
 
     // issuer and sender address present when building nft output
