@@ -203,10 +203,48 @@ async fn output_preparation() -> Result<()> {
     }
 
     let issuer_and_sender_address = String::from("rms1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat6qptyfm");
+    let expected_address = Address::try_from_bech32(&issuer_and_sender_address)?.1;
+
+    // sender address present when building basic output
     let output = account
         .prepare_output(
             OutputOptions {
-                recipient_address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
+                recipient_address: recipient_address.clone(),
+                amount: 500000,
+                assets: Some(Assets {
+                    native_tokens: Some(vec![native_token.clone()]),
+                    nft_id: None,
+                }),
+                features: Some(Features {
+                    metadata: None,
+                    tag: None,
+                    issuer: None,
+                    sender: Some(issuer_and_sender_address.clone()),
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+
+    assert_eq!(
+        output.kind(),
+        iota_wallet::iota_client::block::output::BasicOutput::KIND
+    );
+    assert_eq!(output.amount(), 500000);
+    assert_eq!(output.unlock_conditions().unwrap().len(), 1);
+    let features = output.features().unwrap();
+    assert_eq!(features.len(), 1);
+    assert_eq!(features.sender().unwrap().address(), &expected_address);
+
+    // error when adding issuer when building basic output
+
+    // issuer and sender address present when building nft output
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
                 amount: 500000,
                 assets: Some(Assets {
                     native_tokens: None,
