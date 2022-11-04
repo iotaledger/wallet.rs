@@ -25,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
+- `Error::ClientError` renamed to `Error::Client`;
+
+### Removed
+
+- `Error::IotaClientError` as it was a duplicate;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
