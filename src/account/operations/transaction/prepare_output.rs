@@ -57,6 +57,10 @@ impl AccountHandle {
         }
 
         if let Some(features) = options.features {
+            if let Some(_issuer) = features.issuer {
+                return Err(crate::Error::MissingParameter("nft_id"))
+            }
+
             if let Some(tag) = features.tag {
                 first_output_builder =
                     first_output_builder.add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?));
