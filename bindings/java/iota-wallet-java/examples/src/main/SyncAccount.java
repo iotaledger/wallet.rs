@@ -13,7 +13,7 @@ public class SyncAccount {
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION2", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
 

@@ -16,7 +16,7 @@ public class CreateAccount {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION2", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
         );
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);

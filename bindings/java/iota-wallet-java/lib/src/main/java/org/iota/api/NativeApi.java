@@ -9,8 +9,14 @@ import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.events.Event;
+import org.iota.types.events.EventListener;
+import org.iota.types.events.wallet.WalletEventType;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class NativeApi {
 
@@ -41,6 +47,55 @@ public class NativeApi {
     private static native void createMessageHandler(String config);
 
     private static native String sendMessage(String command);
+
+    private static native String listen(String[] events, long id);
+
+    private static JsonElement handleClientResponse(String jsonResponse) throws WalletException {
+        ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
+
+        switch (response.type) {
+            case "panic":
+                throw new RuntimeException(response.toString());
+            case "error":
+                throw new WalletException("listen", response.payload.getAsJsonObject().toString());
+
+            default:
+                return response.payload;
+        }
+    }
+
+    private static Map<Long, EventListener> listeners = new HashMap<>();
+
+    private static void handleCallback(long id, String response) throws WalletException {
+        try {
+            Event event = CustomGson.get().fromJson(response, Event.class);
+            EventListener cb = NativeApi.listeners.get(Long.valueOf(id));
+            if (cb == null) {
+                throw new WalletException("handleCallback", "No callback found for id " +
+                        id);
+            }
+            cb.receive(event);
+        } catch (Exception e) {
+            System.out.println("ERROR ON CALLBACK: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private static final AtomicLong uuid = new AtomicLong();
+
+    public static long callListen(EventListener listener, WalletEventType... events) throws WalletException {
+        long id = uuid.getAndIncrement();
+        String[] eventStrs = new String[events.length];
+        for (int i = 0; i < events.length; i++) {
+            eventStrs[i] = events[i].toString();
+        }
+
+        // Check for errors, no interest in result
+        handleClientResponse(listen(eventStrs, id));
+        NativeApi.listeners.put(id, listener);
+
+        return id;
+    }
 
     public static JsonElement callBaseApi(ClientCommand command) throws WalletException {
         //System.out.println("REQUEST: " + command);

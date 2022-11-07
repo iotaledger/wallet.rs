@@ -10,6 +10,8 @@ import com.google.gson.JsonPrimitive;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
+import org.iota.types.events.EventListener;
+import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
@@ -285,4 +287,7 @@ public class Wallet extends NativeApi {
         return callBaseApi(new ClientCommand("hexToBech32", p)).getAsString();
     }
 
+    public Long listen(EventListener listener, WalletEventType... types) throws WalletException {
+        return callListen(listener, types);
+    }
 }

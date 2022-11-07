@@ -1,6 +1,8 @@
 .gradle
 gradle.properties
 lib/build
+lib/bin
 src/native/target
-examples/build
+examples/build/
+examples/bin/
 examples/walletdb

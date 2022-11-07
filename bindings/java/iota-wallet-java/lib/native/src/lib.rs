@@ -2,20 +2,28 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::sync::Mutex;
+use std::convert::TryFrom;
 
-use iota_wallet::message_interface::{Message, ManagerOptions, WalletMessageHandler};
+use iota_wallet::{
+    events::types::{Event, WalletEventType},
+    message_interface::{Message, ManagerOptions, WalletMessageHandler},
+};
 use jni::{
-    objects::{JClass, JString},
-    sys::jstring,
-    JNIEnv,
+    objects::{JClass, JString, JObject, GlobalRef},
+    sys::{jstring, jlong, jobjectArray},
+    JNIEnv, JavaVM
 };
 use once_cell::sync::OnceCell;
 use tokio::{runtime::Runtime, sync::mpsc::unbounded_channel};
 
 use lazy_static::lazy_static;
 
+mod callback;
+use callback::JavaCallback;
+
 lazy_static! {
     static ref MESSAGE_HANDLER: Mutex<Option<WalletMessageHandler>> = Mutex::new(None);
+    static ref EVENT_HANDLER: Mutex<Vec<JavaCallback>> = Mutex::new(Vec::new());
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -65,7 +73,63 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
         .new_string(serde_json::to_string(&response).unwrap())
         .expect("Couldn't create java string!");
 
-    output.into_inner()
+    output.into_raw()
+}
+
+// This keeps rust from "mangling" the name and making it unique for this crate.
+#[no_mangle]
+pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
+    env: JNIEnv,
+    _class: JClass,
+    events: jobjectArray,
+    id: jlong,
+) -> jstring {
+    let r_id: i64 = id as i64;
+    let string_count = env.get_array_length(events).expect("Couldn't get array length!");
+    let mut events_list: Vec<WalletEventType> = Vec::with_capacity(string_count.try_into().unwrap());
+
+    for i in 0..string_count {
+        let java_str: String = env.get_string(env.get_object_array_element(events, i).unwrap().into()).expect("Couldn't get java string!").into();
+        events_list.push(WalletEventType::try_from(&*java_str)
+            .expect("Unknon WalletEventType"));
+    }
+
+    let stored_cb = JavaCallback::new(r_id, env);
+    let mut data = EVENT_HANDLER.lock().unwrap();
+    let v: &mut Vec<JavaCallback> = &mut *data;
+    v.push(stored_cb);
+
+    let guard = MESSAGE_HANDLER.lock().unwrap();
+    crate::block_on(guard.as_ref().unwrap().listen(events_list, move |e| {
+        let ev_ser = serde_json::to_string(&e).expect("Failed to serialise event");
+        dbg!(e);
+        
+        let data = EVENT_HANDLER.lock().unwrap();
+        for jnicb in &*data {
+            if jnicb.id == r_id {
+                let vm = JavaVM::from_raw(jnicb.java_vm)
+                    .expect("Couldn't create env");
+                let env = vm.attach_current_thread()
+                    .expect("failed to attach env");
+                let output = env
+                    .new_string(ev_ser)
+                    .expect("Couldn't create event as string!");
+                let id = jni::objects::JValue::Long(jnicb.id);
+                let class = env
+                    .find_class("org/iota/api/NativeApi")
+                    .expect("Failed to load the target class");
+                env.call_static_method(class, "handleCallback", "(JLjava/lang/String;)V", 
+                    &[id, output.into()]).expect("Failed to call handleCallback");
+                break;
+            }
+        }
+    }));
+
+    let output = env
+        .new_string("{\"type\": \"success\", \"payload\": \"success\"}")
+        .expect("Couldn't create java string!");
+
+    output.into_raw()
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
