@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import org.iota.types.AbstractObject;
+import org.iota.types.events.wallet.TransactionProgress;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
@@ -17,12 +18,12 @@ import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
 
 @JsonAdapter(TransactionProgressEventAdapter.class)
-public abstract class TransactionProgressEvent extends AbstractObject {
+public abstract class TransactionProgressEvent extends TransactionProgress {
 
-    protected TransactionProgressEventType type;
+    protected TransactionProgressEventType transactionType;
 
-    public TransactionProgressEventType getType() {
-        return type;
+    public TransactionProgressEventType getTransactionType() {
+        return transactionType;
     }
 }
 
@@ -31,7 +32,6 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
     public TransactionProgressEvent deserialize(final JsonElement json, final Type typeOfT,
             final JsonDeserializationContext context)
             throws JsonParseException {
-        System.out.println("TransactionProgressEventAdapter " + json);
         JsonElement jsonType = json.getAsJsonObject().get("TransactionProgress");
 
         String type;
@@ -78,7 +78,7 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
                 throw new JsonParseException("unknown event type: " + type);
         }
 
-        event.type = TransactionProgressEventType.valueOf(type);
+        event.transactionType = TransactionProgressEventType.valueOf(type);
         return event;
     }
 }

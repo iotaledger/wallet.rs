@@ -26,7 +26,6 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
     @Override
     public WalletEvent deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
-        System.out.println("deserialize " + json);
 
         String type;
         JsonElement value;
@@ -63,8 +62,9 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
                 break;
             }
             case "TransactionProgress": {
+                // Why doesnt it do this when fromJson on TransactionProgress??
                 TransactionProgressEvent tEvent = CustomGson.get().fromJson(json, TransactionProgressEvent.class);
-                event = new TransactionProgress(tEvent);
+                event = tEvent;
                 break;
             }
             default:

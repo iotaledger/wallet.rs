@@ -20,10 +20,6 @@ public class CallbackEvents {
         @Override
         public void receive(Event event) {
             System.out.println("ConsolidationRequired receive: ");
-            if (event.getEvent() instanceof TransactionProgress) {
-                TransactionProgress progress = (TransactionProgress) event.getEvent();
-                System.out.println("type: " + progress.getEvent().getClass().getSimpleName());
-            }
             System.out.println(event.getEvent());
         }
     }
@@ -46,7 +42,7 @@ public class CallbackEvents {
                 System.out.println("TransactionProgress receive: " + event.getEvent());
                 if (event.getEvent() instanceof TransactionProgress) {
                     TransactionProgress progress = (TransactionProgress) event.getEvent();
-                    System.out.println("type: " + progress.getEvent().getClass().getName());
+                    System.out.println("type: " + progress.getClass().getName());
                 }
             }
 
@@ -60,8 +56,7 @@ public class CallbackEvents {
         // Generate two addresses.
         AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(5));
 
-        // AccountBalance balance = account.syncAccount(new
-        // SyncAccount().withOptions(new SyncOptions()));
+        AccountBalance balance = account.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
         // Fund the account for this example.
         // ExampleUtils.fundAccount(account);
