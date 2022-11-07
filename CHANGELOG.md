@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
 - Allow null nft ids in `prepare_output()` for minting;
+- `TagFeature` & `MetadataFeature` encoded as hex strings instead of utf-8 strings;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
