@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountHandle::build_transaction_essence` made async;
 - `Error::ClientError` renamed to `Error::Client` and boxed;
 - `WalletEvent::SpentOutput` boxed;
+- Allow null nft ids in `prepare_output()` for minting;
 
 ### Removed
 
