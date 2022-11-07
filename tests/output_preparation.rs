@@ -123,6 +123,35 @@ async fn output_preparation() -> Result<()> {
     // metadata feature
     assert_eq!(output.features().unwrap().len(), 1);
 
+    // only send 1 with metadata feature
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 1,
+                assets: None,
+                features: Some(Features {
+                    metadata: Some("Hello world".to_string()),
+                    tag: None,
+                    issuer: None,
+                    sender: None,
+                }),
+                unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    assert_eq!(output.amount(), 48200);
+    let unlock_conditions = output.unlock_conditions().unwrap();
+    // address + sdr
+    assert_eq!(unlock_conditions.len(), 2);
+    let storage_deposit_return = unlock_conditions.storage_deposit_return().unwrap();
+    // output amount -1
+    assert_eq!(storage_deposit_return.amount(), 48199);
+    // metadata feature
+    assert_eq!(output.features().unwrap().len(), 1);
+
     let output = account
         .prepare_output(
             OutputOptions {
