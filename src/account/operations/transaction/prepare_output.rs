@@ -70,7 +70,7 @@ impl AccountHandle {
 
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
-                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("tag"))?,
+                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
                 )?));
             }
 
