@@ -39,9 +39,9 @@ impl AccountHandle {
 
         // validate amounts
         if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
-            return Err(crate::Error::Block(iota_client::block::Error::InvalidOutputCount(
+            return Err(iota_client::block::Error::InvalidOutputCount(
                 TryIntoBoundedU16Error::Truncated(outputs.len()),
-            )));
+            ))?;
         }
 
         let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
@@ -51,9 +51,9 @@ impl AccountHandle {
                 // validate inputs amount
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(crate::Error::Block(iota_client::block::Error::InvalidInputCount(
+                        return Err(iota_client::block::Error::InvalidInputCount(
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
-                        )));
+                        ))?;
                     }
                     let current_time = self.client.get_time_checked()?;
                     let bech32_hrp = self.client.get_bech32_hrp().await?;

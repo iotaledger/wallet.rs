@@ -134,7 +134,7 @@ impl AccountHandle {
 
         for nft_options in nfts_options {
             let address = match nft_options.address {
-                Some(address) => Address::try_from_bech32(&address)?.1,
+                Some(address) => Address::try_from_bech32(address)?.1,
                 // todo other error message
                 None => {
                     account_addresses
@@ -152,9 +152,8 @@ impl AccountHandle {
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(address)));
 
             if let Some(sender) = nft_options.sender {
-                nft_builder = nft_builder.add_feature(Feature::Sender(SenderFeature::new(
-                    Address::try_from_bech32(&sender)?.1,
-                )));
+                nft_builder =
+                    nft_builder.add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)));
             }
 
             if let Some(metadata) = nft_options.metadata {
@@ -166,9 +165,8 @@ impl AccountHandle {
             }
 
             if let Some(issuer) = nft_options.issuer {
-                nft_builder = nft_builder.add_immutable_feature(Feature::Issuer(IssuerFeature::new(
-                    Address::try_from_bech32(&issuer)?.1,
-                )));
+                nft_builder = nft_builder
+                    .add_immutable_feature(Feature::Issuer(IssuerFeature::new(Address::try_from_bech32(issuer)?.1)));
             }
 
             if let Some(immutable_metadata) = nft_options.immutable_metadata {

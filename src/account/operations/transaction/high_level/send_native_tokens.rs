@@ -121,7 +121,7 @@ impl AccountHandle {
                             .native_tokens
                             .into_iter()
                             .map(|(id, amount)| {
-                                NativeToken::new(id, amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                                NativeToken::new(id, amount).map_err(|e| crate::Error::Client(Box::new(e.into())))
                             })
                             .collect::<Result<Vec<NativeToken>>>()?,
                     )
