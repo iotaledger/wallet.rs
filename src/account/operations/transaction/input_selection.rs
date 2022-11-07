@@ -46,10 +46,10 @@ impl AccountHandle {
         if let Some(custom_inputs) = custom_inputs {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
-                if account.locked_outputs.contains(&input.output_id()?) {
+                if account.locked_outputs.contains(input.output_id()) {
                     return Err(crate::Error::CustomInputError(format!(
                         "provided custom input {} is already used in another transaction",
-                        input.output_id()?
+                        input.output_id()
                     )));
                 }
             }
@@ -67,7 +67,7 @@ impl AccountHandle {
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
-                account.locked_outputs.insert(output.output_id()?);
+                account.locked_outputs.insert(*output.output_id());
             }
 
             return Ok(selected_transaction_data);
@@ -110,8 +110,8 @@ impl AccountHandle {
 
         // lock outputs so they don't get used by another transaction
         for output in &selected_transaction_data.inputs {
-            log::debug!("[TRANSACTION] locking: {}", output.output_id()?);
-            account.locked_outputs.insert(output.output_id()?);
+            log::debug!("[TRANSACTION] locking: {}", output.output_id());
+            account.locked_outputs.insert(*output.output_id());
         }
         Ok(selected_transaction_data)
     }
