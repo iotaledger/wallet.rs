@@ -212,12 +212,10 @@ impl AccountHandle {
             } else {
                 unreachable!("We checked before if it's an nft output")
             }
+        } else if nft_id.is_null() {
+            NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), nft_id)?
         } else {
-            if nft_id.is_null() {
-                NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), nft_id)?
-            } else {
-                return Err(crate::Error::NftNotFoundInUnspentOutputs);
-            }
+            return Err(crate::Error::NftNotFoundInUnspentOutputs);
         };
 
         // Set new address unlock condition
@@ -242,7 +240,7 @@ impl AccountHandle {
             }
 
             if let Some(issuer) = features.issuer {
-                first_output_builder = first_output_builder.add_feature(Feature::Issuer(IssuerFeature::new(
+                first_output_builder = first_output_builder.add_immutable_feature(Feature::Issuer(IssuerFeature::new(
                     Address::try_from_bech32(&issuer)?.1,
                 )));
             }

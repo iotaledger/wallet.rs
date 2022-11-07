@@ -197,7 +197,7 @@ async fn output_preparation() -> Result<()> {
         .await
         .unwrap_err();
     match error {
-        iota_wallet::Error::NftNotFoundInUnspentOutputs(_) => {}
+        iota_wallet::Error::NftNotFoundInUnspentOutputs => {}
         _ => panic!("should return NftNotFoundInUnspentOutputs error"),
     }
 
@@ -314,10 +314,13 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
     assert_eq!(output.amount(), 500000);
     let features = output.features().unwrap();
-    // sender and issuer feature
-    assert_eq!(features.len(), 2);
+    // sender feature
+    assert_eq!(features.len(), 1);
+    let immutable_features = output.immutable_features().unwrap();
+    // issuer feature
+    assert_eq!(immutable_features.len(), 1);
     let issuer_and_sender_address = Address::try_from_bech32(&issuer_and_sender_address)?.1;
-    let issuer_feature = features.issuer().unwrap();
+    let issuer_feature = immutable_features.issuer().unwrap();
     assert_eq!(issuer_feature.address(), &issuer_and_sender_address);
     let sender_feature = features.sender().unwrap();
     assert_eq!(sender_feature.address(), &issuer_and_sender_address);
