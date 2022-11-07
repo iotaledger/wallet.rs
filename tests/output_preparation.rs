@@ -131,7 +131,7 @@ async fn output_preparation() -> Result<()> {
                 amount: 1,
                 assets: None,
                 features: Some(Features {
-                    metadata: Some("Hello world".to_string()),
+                    metadata: Some(prefix_hex::encode("Hello world".as_bytes())),
                     tag: None,
                     issuer: None,
                     sender: None,
