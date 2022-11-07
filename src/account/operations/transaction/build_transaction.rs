@@ -37,7 +37,7 @@ impl AccountHandle {
         let mut inputs_for_signing: Vec<InputSigningData> = Vec::new();
 
         for utxo in &selected_transaction_data.inputs {
-            let input = Input::Utxo(UtxoInput::from(utxo.output_id()?));
+            let input = Input::Utxo(UtxoInput::from(*utxo.output_id()));
             inputs_for_essence.push(input.clone());
             inputs_for_signing.push(utxo.clone());
         }
