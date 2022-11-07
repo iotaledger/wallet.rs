@@ -21,15 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0-rc.3 - 20XX-XX-XX
 
+### Added
+
+- `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
+
 ### Changed
 
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
 - Allow null nft ids in `prepare_output()` for minting;
-
-### Added
-
-- `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
