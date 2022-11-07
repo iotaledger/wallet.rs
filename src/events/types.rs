@@ -4,7 +4,7 @@
 use getset::Getters;
 use iota_client::{
     api::PreparedTransactionDataDto,
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
 };
 use serde::{Deserialize, Serialize};
@@ -25,7 +25,7 @@ pub enum WalletEvent {
     #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration(AddressData),
     NewOutput(NewOutputEvent),
-    SpentOutput(SpentOutputEvent),
+    SpentOutput(Box<SpentOutputEvent>),
     TransactionInclusion(TransactionInclusionEvent),
     TransactionProgress(TransactionProgressEvent),
 }
@@ -67,7 +67,7 @@ pub struct NewOutputEvent {
     pub transaction: Option<TransactionPayloadDto>,
     /// The inputs for the transaction that created the output. Might be pruned and not available.
     #[serde(rename = "transactionInputs")]
-    pub transaction_inputs: Option<Vec<OutputResponse>>,
+    pub transaction_inputs: Option<Vec<OutputWithMetadataResponse>>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]

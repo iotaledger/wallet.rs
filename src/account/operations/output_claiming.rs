@@ -183,8 +183,8 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
         let current_time = self.client.get_time_checked()?;
-        let rent_structure = self.client.get_rent_structure()?;
-        let token_supply = self.client.get_token_supply()?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let account = self.read().await;
 

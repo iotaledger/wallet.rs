@@ -9,7 +9,7 @@ use std::pin::Pin;
 use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientBlockBuilder,
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::Address,
         output::{
@@ -73,7 +73,7 @@ impl AccountHandle {
 
     async fn output_id_and_next_alias_output_state(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
         let account = self.read().await;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let (output_id, alias_output) = account
             .unspent_outputs()
@@ -106,13 +106,13 @@ impl AccountHandle {
         options: &'a Option<TransactionOptions>,
     ) -> Pin<Box<dyn Future<Output = crate::Result<Transaction>> + Send + 'a>> {
         async move {
-            let token_supply = self.client.get_token_supply()?;
-            let bech32_hrp = self.client().get_bech32_hrp()?;
+            let token_supply = self.client.get_token_supply().await?;
+            let bech32_hrp = self.client().get_bech32_hrp().await?;
             let address = AddressWrapper::new(address, bech32_hrp);
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
             // TODO: get outputs from unspent outputs
-            let basic_outputs: Vec<OutputResponse> = Vec::new();
+            let basic_outputs: Vec<OutputWithMetadataResponse> = Vec::new();
             // maybe something like below
             // let mut outputs_to_sweep = Vec::new();
             // let mut other_owned_outputs = Vec::new();
@@ -149,7 +149,7 @@ impl AccountHandle {
             let mut output_ids = Vec::new();
             let mut outputs = Vec::new();
 
-            let network_id = self.client.get_network_id()?;
+            let network_id = self.client.get_network_id().await?;
 
             for mut output_response in basic_outputs {
                 if output_response.metadata.is_spent {
@@ -248,12 +248,12 @@ impl AccountHandle {
     /// address output
     async fn update_unspent_output(
         &self,
-        output_response: OutputResponse,
+        output_response: OutputWithMetadataResponse,
         output_id: OutputId,
         network_id: u64,
     ) -> crate::Result<()> {
         let mut account = self.write().await;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
         let output = Output::try_from_dto(&output_response.output, token_supply)?;
         let local_time = self.client.get_time_checked()?;
 

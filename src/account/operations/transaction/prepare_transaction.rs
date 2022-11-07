@@ -29,8 +29,8 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-        let rent_structure = self.client.get_rent_structure()?;
-        let token_supply = self.client.get_token_supply()?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
@@ -39,9 +39,9 @@ impl AccountHandle {
 
         // validate amounts
         if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
-            return Err(crate::Error::Block(iota_client::block::Error::InvalidOutputCount(
+            return Err(iota_client::block::Error::InvalidOutputCount(
                 TryIntoBoundedU16Error::Truncated(outputs.len()),
-            )));
+            ))?;
         }
 
         let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
@@ -51,12 +51,12 @@ impl AccountHandle {
                 // validate inputs amount
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(crate::Error::Block(iota_client::block::Error::InvalidInputCount(
+                        return Err(iota_client::block::Error::InvalidInputCount(
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
-                        )));
+                        ))?;
                     }
                     let current_time = self.client.get_time_checked()?;
-                    let bech32_hrp = self.client.get_bech32_hrp()?;
+                    let bech32_hrp = self.client.get_bech32_hrp().await?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {
@@ -129,7 +129,9 @@ impl AccountHandle {
             )
             .await?;
 
-        let prepared_transaction_data = match self.build_transaction_essence(selected_transaction_data.clone(), options)
+        let prepared_transaction_data = match self
+            .build_transaction_essence(selected_transaction_data.clone(), options)
+            .await
         {
             Ok(res) => res,
             Err(err) => {

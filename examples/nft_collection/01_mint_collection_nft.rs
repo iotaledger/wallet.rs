@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
         .set_stronghold_password(&env::var("STRONGHOLD_PASSWORD").unwrap())
         .await?;
 
-    let bech32_hrp = account.client().get_bech32_hrp()?;
+    let bech32_hrp = account.client().get_bech32_hrp().await?;
     let mut nft_options = Vec::new();
 
     // Create the metadata with another index for each

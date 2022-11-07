@@ -9,7 +9,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::response::OutputResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         dto::U256Dto,
         output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId},
@@ -224,7 +224,7 @@ pub struct AccountDto {
     pub pending_transactions: HashSet<TransactionId>,
     /// Incoming transactions
     #[serde(rename = "incomingTransactions")]
-    pub incoming_transactions: HashMap<TransactionId, (TransactionPayloadDto, Vec<OutputResponse>)>,
+    pub incoming_transactions: HashMap<TransactionId, (TransactionPayloadDto, Vec<OutputWithMetadataResponse>)>,
 }
 
 impl From<&Account> for AccountDto {

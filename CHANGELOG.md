@@ -19,12 +19,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
+## 1.0.0-rc.3 - 20XX-XX-XX
+
+### Added
+
+- `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
+
+### Changed
+
+- Use `OutputWithMetadataResponse` instead of `OutputResponse`;
+- `AccountHandle::build_transaction_essence` made async;
+- `Error::ClientError` renamed to `Error::Client` and boxed;
+- `WalletEvent::SpentOutput` boxed;
+- Allow null nft ids in `prepare_output()` for minting;
+
+### Removed
+
+- `Error::IotaClientError` as it was a duplicate;
+
 ## 1.0.0-rc.2 - 2022-10-28
 
 ### Added
 
 - `GetAccountIndexes` and `AccountIndexes` to message interface;
-- Missing serde rename for the `returnAddress` field of ´AddressWithMicroAmountDto`;
+- Missing serde rename for the `returnAddress` field of `AddressWithMicroAmountDto`;
 - Check for parameters before creating the database;
 - Transaction essence and payload length validation;
 

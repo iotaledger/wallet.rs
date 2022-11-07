@@ -38,7 +38,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
         let account = self.read().await;
-        let token_supply = self.client.get_token_supply()?;
+        let token_supply = self.client.get_token_supply().await?;
 
         // Get outputs for the consolidation
         let mut outputs_to_consolidate = Vec::new();

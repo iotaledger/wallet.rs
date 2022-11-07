@@ -43,7 +43,7 @@ pub(crate) fn minimum_storage_deposit_basic_native_tokens(
             native_tokens
                 .iter()
                 .map(|(id, amount)| {
-                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                    NativeToken::new(*id, *amount).map_err(|e| crate::Error::Client(Box::new(e.into())))
                 })
                 .collect::<Result<Vec<NativeToken>>>()?,
         );

@@ -87,8 +87,8 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_native_tokens");
-        let rent_structure = self.client.get_rent_structure()?;
-        let token_supply = self.client.get_token_supply()?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let account_addresses = self.addresses().await?;
         let return_address = account_addresses.first().ok_or(Error::FailedToGetRemainder)?;
@@ -121,7 +121,7 @@ impl AccountHandle {
                             .native_tokens
                             .into_iter()
                             .map(|(id, amount)| {
-                                NativeToken::new(id, amount).map_err(|e| crate::Error::ClientError(Box::new(e.into())))
+                                NativeToken::new(id, amount).map_err(|e| crate::Error::Client(Box::new(e.into())))
                             })
                             .collect::<Result<Vec<NativeToken>>>()?,
                     )
