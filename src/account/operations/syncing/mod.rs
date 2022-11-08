@@ -191,13 +191,13 @@ impl AccountHandle {
                 match &output_data.output {
                     Output::Alias(alias_output) => {
                         let alias_address =
-                            AliasAddress::from(alias_output.alias_id().or_from_output_id(output_data.output_id));
+                            AliasAddress::from(alias_output.alias_id().or_from_output_id(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Alias(alias_address), output_data.address);
                     }
                     Output::Nft(nft_output) => {
                         let nft_address =
-                            NftAddress::from(nft_output.nft_id().or_from_output_id(output_data.output_id));
+                            NftAddress::from(nft_output.nft_id().or_from_output_id(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Nft(nft_address), output_data.address);
                     }

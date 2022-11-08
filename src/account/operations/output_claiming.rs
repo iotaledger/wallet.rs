@@ -249,7 +249,7 @@ impl AccountHandle {
 
                 let nft_output = NftOutputBuilder::from(nft_output)
                     .with_minimum_storage_deposit(rent_structure.clone())
-                    .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+                    .with_nft_id(nft_output.nft_id().or_from_output_id(&output_data.output_id))
                     .with_unlock_conditions([UnlockCondition::Address(AddressUnlockCondition::new(
                         first_account_address.address.inner,
                     ))])

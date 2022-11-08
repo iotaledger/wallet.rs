@@ -204,7 +204,7 @@ impl AccountHandle {
         // Find nft output from the inputs
         let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
             if let Output::Nft(nft_output) = &o.output {
-                nft_id == nft_output.nft_id().or_from_output_id(o.output_id)
+                nft_id == nft_output.nft_id().or_from_output_id(&o.output_id)
             } else {
                 false
             }
