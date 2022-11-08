@@ -310,7 +310,15 @@ impl WalletMessageHandler {
                     Ok(Response::Bech32Address(utils::hex_to_bech32(&hex, &bech32_hrp)?))
                 })
                 .await
-            }
+            },
+            #[cfg(feature = "events")]
+            Message::ClearListeners(events) => {
+                convert_async_panics(|| async {
+                    self.account_manager.clear_listeners(events).await;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            },
         };
 
         let response = match response {

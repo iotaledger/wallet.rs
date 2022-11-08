@@ -5,11 +5,11 @@ use std::sync::Mutex;
 use std::convert::TryFrom;
 
 use iota_wallet::{
-    events::types::{Event, WalletEventType},
+    events::types::WalletEventType,
     message_interface::{Message, ManagerOptions, WalletMessageHandler},
 };
 use jni::{
-    objects::{JClass, JString, JObject, GlobalRef},
+    objects::{JClass, JString},
     sys::{jstring, jlong, jobjectArray},
     JNIEnv, JavaVM
 };
@@ -23,6 +23,8 @@ use callback::JavaCallback;
 
 lazy_static! {
     static ref MESSAGE_HANDLER: Mutex<Option<WalletMessageHandler>> = Mutex::new(None);
+
+    // Holds a list of registered callbacks ith their environment
     static ref EVENT_HANDLER: Mutex<Vec<JavaCallback>> = Mutex::new(Vec::new());
 }
 
@@ -42,6 +44,16 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
         serde_json::from_str(&input).unwrap()
     };
     MESSAGE_HANDLER.lock().unwrap().replace(crate::block_on(iota_wallet::message_interface::create_message_handler(Some(manager_options))).unwrap());
+}
+
+// This keeps rust from "mangling" the name and making it unique for this crate.
+#[no_mangle]
+pub extern "system" fn Java_org_iota_api_NativeApi_destroy(
+    _env: JNIEnv,
+    _class: JClass,
+) {
+    (*MESSAGE_HANDLER.lock().unwrap()) = None;
+    
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.

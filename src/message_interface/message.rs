@@ -11,8 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
 #[cfg(feature = "events")]
-#[cfg(debug_assertions)]
-use crate::events::types::WalletEvent;
+use crate::events::types::WalletEventType;
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
     ClientOptions,
@@ -152,7 +151,6 @@ pub enum Message {
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
-    #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
     /// Transforms bech32 to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)
@@ -166,6 +164,19 @@ pub enum Message {
         #[serde(rename = "bech32Hrp")]
         bech32_hrp: Option<String>,
     },
+
+    /* Add a listener
+    #[cfg(feature = "events")]
+    #[serde(skip)]
+    Listen {
+        events: Vec<WalletEventType>,
+        callback: std::sync::Arc<Box<dyn Fn(&Event) + Send> >,
+    },*/
+
+    // Remove all listeners of this type. Empty vec clears all listeners
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "events")]
+    ClearListeners(Vec<WalletEventType>),
 }
 
 // Custom Debug implementation to not log secrets
@@ -237,7 +248,10 @@ impl Debug for Message {
             Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({:?})", bech32_address),
             Message::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
-            }
+            },
+    
+            #[cfg(feature = "events")]
+            Message::ClearListeners(events) => write!(f, "ClearListeners({:?})", events),
         }
     }
 }

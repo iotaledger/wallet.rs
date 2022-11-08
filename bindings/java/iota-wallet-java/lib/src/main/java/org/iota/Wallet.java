@@ -287,7 +287,41 @@ public class Wallet extends NativeApi {
         return callBaseApi(new ClientCommand("hexToBech32", p)).getAsString();
     }
 
+    /**
+     * Listen to wallet events, empty vec will listen to all events
+     * 
+     * @param listener The Listener object hat will handle events
+     * @param types    The types you want to listen. Empty means all events
+     * @return The listener ID, used in deregistering
+     * @throws WalletException
+     */
     public Long listen(EventListener listener, WalletEventType... types) throws WalletException {
         return callListen(listener, types);
+    }
+
+    /**
+     * Destroy the Wallet and drop its database connection.
+     * Unregisteres any existing listeners
+     */
+    public void destroy() throws WalletException {
+        clearListeners();
+        destroyHandle();
+    }
+
+    /**
+     * Clear the callbacks for provided events. An nul or empty array will clear all
+     * listeners.
+     *
+     * @param event The event types to clear. Emmpty means clear all events
+     */
+    public void clearListeners(WalletEventType... types) throws WalletException {
+        if (types == null) {
+            types = new WalletEventType[0];
+        }
+        JsonArray p = new JsonArray();
+        for (WalletEventType type : types)
+            p.add(type.toString());
+
+        callBaseApi(new ClientCommand("clearListeners", p));
     }
 }

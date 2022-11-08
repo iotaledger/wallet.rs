@@ -46,18 +46,21 @@ public class NativeApi {
 
     private static native void createMessageHandler(String config);
 
+    // Destroys account handle
+    protected static native void destroyHandle();
+
     private static native String sendMessage(String command);
 
     private static native String listen(String[] events, long id);
 
-    private static JsonElement handleClientResponse(String jsonResponse) throws WalletException {
+    private static JsonElement handleClientResponse(String methodName, String jsonResponse) throws WalletException {
         ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
 
         switch (response.type) {
             case "panic":
                 throw new RuntimeException(response.toString());
             case "error":
-                throw new WalletException("listen", response.payload.getAsJsonObject().toString());
+                throw new WalletException(methodName, response.payload.getAsJsonObject().toString());
 
             default:
                 return response.payload;
@@ -76,8 +79,7 @@ public class NativeApi {
             }
             cb.receive(event);
         } catch (Exception e) {
-            System.out.println("ERROR ON CALLBACK: " + e.getMessage());
-            e.printStackTrace();
+            throw new WalletException("handleCallback", e.getMessage());
         }
     }
 
@@ -91,7 +93,7 @@ public class NativeApi {
         }
 
         // Check for errors, no interest in result
-        handleClientResponse(listen(eventStrs, id));
+        JsonElement response = handleClientResponse("listen", listen(eventStrs, id));
         NativeApi.listeners.put(id, listener);
 
         return id;
@@ -101,17 +103,7 @@ public class NativeApi {
         //System.out.println("REQUEST: " + command);
         String jsonResponse = sendMessage(command.toString());
         //System.out.println("RESPONSE: " + jsonResponse);
-        ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
-
-        switch (response.type) {
-            case "panic":
-                throw new RuntimeException(response.toString());
-            case "error":
-                throw new WalletException(command.methodName, response.payload.getAsJsonObject().toString());
-
-            default:
-                return response.payload;
-        }
+        return handleClientResponse(command.methodName, jsonResponse);
     }
 
     private class ClientResponse {

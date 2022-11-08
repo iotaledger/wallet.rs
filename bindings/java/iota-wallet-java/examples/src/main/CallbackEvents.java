@@ -19,7 +19,7 @@ public class CallbackEvents {
     static class Callback implements EventListener {
         @Override
         public void receive(Event event) {
-            System.out.println("ConsolidationRequired receive: ");
+            System.out.println("All events receive: ");
             System.out.println(event.getEvent());
         }
     }
@@ -46,7 +46,7 @@ public class CallbackEvents {
             }
 
         }, WalletEventType.TransactionProgress);
-        long id2 = wallet.listen(new Callback(), WalletEventType.ConsolidationRequired);
+        long id2 = wallet.listen(new Callback(), WalletEventType.values());
 
         // Get account and sync it with the registered node to ensure that its balances
         // are up-to-date.
@@ -58,7 +58,7 @@ public class CallbackEvents {
         AccountBalance balance = account.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
         // Fund the account for this example.
-        // ExampleUtils.fundAccount(account);
+        ExampleUtils.fundAccount(account);
 
         // TODO: replace with your own values.
         String receiverAddress = account.getPublicAddresses()[0].getAddress();
@@ -73,7 +73,10 @@ public class CallbackEvents {
                 }));
 
         System.out.println(
-                "Transaction: " + t.getTransactionId() + " Block sent: " + Env.NODE + "/api/core/v2/blocks/" +
+                "Transaction: " + t.getTransactionId() + " Block sent: " + Env.EXPLORER + "/api/core/v2/blocks/" +
                         t.getBlockId());
+
+        wallet.clearListeners();
+        wallet.destroy();
     }
 }
