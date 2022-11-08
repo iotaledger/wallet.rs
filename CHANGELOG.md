@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Error::ClientError` renamed to `Error::Client` and boxed;
 - `WalletEvent::SpentOutput` boxed;
 - Allow null nft ids in `prepare_output()` for minting;
+- `TagFeature` & `MetadataFeature` encoded as hex strings instead of utf-8 strings;
 
 ### Removed
 
