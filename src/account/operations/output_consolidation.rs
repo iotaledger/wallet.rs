@@ -22,12 +22,40 @@ const MIN_OUTPUT_SIZE_IN_ESSENCE: usize = 46;
 
 #[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
+use crate::Result;
 use crate::account::{
     constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle,
-    operations::output_claiming::get_new_native_token_count, types::Transaction, TransactionOptions,
+    operations::{
+        helpers::time::can_output_be_unlocked_now,
+        output_claiming::get_new_native_token_count
+    },
+    types::{OutputData, Transaction},
+    AddressWithUnspentOutputs,
+    TransactionOptions,
 };
 
 impl AccountHandle {
+    fn should_consolidate_output(self: &AccountHandle, output_data: &OutputData, current_time: u32, account_addresses: &[AddressWithUnspentOutputs]) -> Result<bool> {
+        Ok(if let Output::Basic(basic_output) = &output_data.output {
+            let unlock_conditions = basic_output.unlock_conditions();
+
+            if unlock_conditions.is_time_locked(current_time) {
+                // Output is timelocked, so we cannot spend it
+                return Ok(false);
+            }
+
+            if unlock_conditions.storage_deposit_return().is_none() && unlock_conditions.expiration().is_none() {
+                // We should not consolidate outputs that require an output to be consumed in order to send the
+                // storage deposit back if there is an expired expiration unlock condition.
+                return Ok(false);
+            }
+
+            can_output_be_unlocked_now(account_addresses, &[], output_data, current_time, true)?
+        } else {
+            false
+        })
+    }
+
     /// Consolidate basic outputs with only an [AddressUnlockCondition] from an account by sending them to an own
     /// address again if the output amount is >= the output_consolidation_threshold. When `force` is set to `true`, the
     /// threshold is ignored. Only consolidates the amount of outputs that fit into a single transaction.
@@ -35,9 +63,11 @@ impl AccountHandle {
         self: &AccountHandle,
         force: bool,
         output_consolidation_threshold: Option<usize>,
-    ) -> crate::Result<Transaction> {
+    ) -> Result<Transaction> {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
         let account = self.read().await;
+        let account_addresses = &account.addresses_with_unspent_outputs[..];
+        let current_time = self.client.get_time_checked().unwrap();
         let token_supply = self.client.get_token_supply().await?;
 
         // Get outputs for the consolidation
@@ -45,13 +75,12 @@ impl AccountHandle {
         for (output_id, output_data) in account.unspent_outputs() {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
-                // Only consolidate basic outputs with the address unlock condition alone
-                if let Output::Basic(basic_output) = &output_data.output {
-                    if let [UnlockCondition::Address(_)] = &basic_output.unlock_conditions().as_ref() {
-                        outputs_to_consolidate.push(output_data.clone());
-                    }
+                if self.should_consolidate_output(&output_data, current_time, account_addresses).unwrap() {
+                    outputs_to_consolidate.push(output_data.clone());
                 }
             }
+
+            break
         }
 
         drop(account);
