@@ -40,13 +40,13 @@ impl AccountHandle {
             let unlock_conditions = basic_output.unlock_conditions();
 
             if unlock_conditions.is_time_locked(current_time) {
-                // Output is timelocked, so we cannot spend it
+                // We cannot consolidate timelocked outputs
                 return Ok(false);
             }
 
             if unlock_conditions.storage_deposit_return().is_none() && unlock_conditions.expiration().is_none() {
                 // We should not consolidate outputs that require an output to be consumed in order to send the
-                // storage deposit back if there is an expired expiration unlock condition.
+                // storage deposit back, so long as there is an expired expiration unlock condition.
                 return Ok(false);
             }
 
