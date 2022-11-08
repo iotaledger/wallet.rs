@@ -50,7 +50,9 @@
     "url": "git+https://github.com/iotaledger/wallet.rs.git"
   },
   "binary": {
-    "napi_versions": [6]
+    "napi_versions": [
+      6
+    ]
   },
   "bugs": {
     "url": "https://github.com/iotaledger/wallet.rs/issues"
