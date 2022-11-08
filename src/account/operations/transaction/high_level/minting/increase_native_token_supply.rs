@@ -83,7 +83,7 @@ impl AccountHandle {
             // Get the alias output that controls the foundry output
             let existing_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
                 if let Output::Alias(output) = &output_data.output {
-                    output.alias_id().or_from_output_id(output_data.output_id) == **foundry_output.alias_address()
+                    output.alias_id_non_null(&output_data.output_id) == **foundry_output.alias_address()
                 } else {
                     false
                 }

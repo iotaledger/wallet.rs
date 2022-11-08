@@ -104,7 +104,7 @@ impl AccountHandle {
                 Output::Alias(alias_output) => {
                     if let Some((amount, output)) = strip_native_token_if_found(token_id, output_data, token_supply)? {
                         alias_selection.insert(
-                            alias_output.alias_id().or_from_output_id(*output_id),
+                            alias_output.alias_id_non_null(output_id),
                             StrippedOutput::new(*output_id, amount, output),
                         );
                     }
@@ -293,9 +293,9 @@ impl AccountHandle {
                 for (output_id, output_data) in account.unspent_outputs().iter() {
                     match &output_data.output {
                         Output::Alias(alias_output) => {
-                            if alias_output.alias_id().or_from_output_id(*output_id) == alias_id {
+                            if alias_output.alias_id_non_null(output_id) == alias_id {
                                 let alias_output = AliasOutputBuilder::from(alias_output)
-                                    .with_alias_id(alias_output.alias_id().or_from_output_id(*output_id))
+                                    .with_alias_id(alias_output.alias_id_non_null(output_id))
                                     .with_state_index(alias_output.state_index() + 1)
                                     .finish_output(token_supply)?;
                                 aggregate.custom_inputs.push(*output_id);
@@ -399,7 +399,7 @@ fn create_output_and_replace_native_tokens(
 ) -> crate::Result<Output> {
     let output = match &output_data.output {
         Output::Alias(alias_output) => AliasOutputBuilder::from(alias_output)
-            .with_alias_id(alias_output.alias_id().or_from_output_id(output_data.output_id))
+            .with_alias_id(alias_output.alias_id_non_null(&output_data.output_id))
             .with_state_index(alias_output.state_index() + 1)
             .with_native_tokens(native_tokens)
             .finish_output(token_supply)?,
@@ -410,7 +410,7 @@ fn create_output_and_replace_native_tokens(
             .with_native_tokens(native_tokens)
             .finish_output(token_supply)?,
         Output::Nft(nft_output) => NftOutputBuilder::from(nft_output)
-            .with_nft_id(nft_output.nft_id().or_from_output_id(output_data.output_id))
+            .with_nft_id(nft_output.nft_id_non_null(&output_data.output_id))
             .with_native_tokens(native_tokens)
             .finish_output(token_supply)?,
         Output::Treasury(_) => {
