@@ -33,7 +33,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputMetadataResponse>>,
+        inconsumable_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");
@@ -92,9 +92,9 @@ impl AccountHandle {
             .extend(addresses_with_unspent_outputs);
 
         // Update spent outputs
-        for (output_id, output_response) in spent_or_not_synced_outputs {
+        for (output_id, output_metadata_response_opt) in inconsumable_output_metadata_map {
             // If we got the output response and it's still unspent, skip it
-            if let Some(output_metadata_response) = output_response {
+            if let Some(output_metadata_response) = output_metadata_response_opt {
                 if output_metadata_response.is_spent {
                     account.unspent_outputs.remove(&output_id);
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
