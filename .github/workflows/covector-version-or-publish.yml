@@ -129,7 +129,7 @@ jobs:
         working-directory: bindings/nodejs
       
       - name: Build Node.js prebuild
-        run: npm run prebuild:node
+        run: npm run prebuild
         working-directory: bindings/nodejs
       
       - name: Upload prebuild to GitHub release
