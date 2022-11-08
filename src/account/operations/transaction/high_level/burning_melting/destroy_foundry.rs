@@ -84,7 +84,7 @@ impl AccountHandle {
         for (output_id, output_data) in account.unspent_outputs().iter() {
             match &output_data.output {
                 Output::Alias(output) => {
-                    if output.alias_id().or_from_output_id(output_id) == alias_id {
+                    if output.alias_id_non_null(output_id) == alias_id {
                         existing_alias_output_data = Some(output_data);
                     }
                 }

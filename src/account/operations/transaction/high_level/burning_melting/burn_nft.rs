@@ -76,7 +76,7 @@ impl AccountHandle {
             .iter()
             .find_map(|(&output_id, output_data)| match &output_data.output {
                 Output::Nft(nft_output) => {
-                    if nft_output.nft_id().or_from_output_id(&output_id) == nft_id {
+                    if nft_output.nft_id_non_null(&output_id) == nft_id {
                         Some((output_id, nft_output))
                     } else {
                         None
