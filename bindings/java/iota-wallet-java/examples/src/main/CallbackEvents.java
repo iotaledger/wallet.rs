@@ -25,14 +25,13 @@ public class CallbackEvents {
     }
 
     public static void main(String[] args) throws WalletException, InterruptedException {
-        String node_url = "https://api.testnet.shimmer.network";
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
         // ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(node_url))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION2", null, "example-wallet"))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withSecretManager(new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer));
 
         Long id = wallet.listen(new EventListener() {
@@ -51,7 +50,7 @@ public class CallbackEvents {
 
         // Get account and sync it with the registered node to ensure that its balances
         // are up-to-date.
-        AccountHandle account = wallet.getAccount(new AccountAlias("Alice"));
+        AccountHandle account = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
 
         // Generate two addresses.
         AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(5));
@@ -74,7 +73,7 @@ public class CallbackEvents {
                 }));
 
         System.out.println(
-                "Transaction: " + t.getTransactionId() + " Block sent: " + node_url + "/api/core/v2/blocks/" +
+                "Transaction: " + t.getTransactionId() + " Block sent: " + Env.NODE + "/api/core/v2/blocks/" +
                         t.getBlockId());
     }
 }

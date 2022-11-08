@@ -1,8 +1,10 @@
+// Copyright 2022 IOTA Stiftung
+// SPDX-License-Identifier: Apache-2.0
+
 public class Env {
-    static {
-        String NODE = "https://api.testnet.shimmer.network";
-        String PASSWORD = "PASSWORD_FOR_ENCRYPTION2";
-        String ACCOUNT_NAME = "Alice";
-        String MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-    }
+    public static final String NODE = "https://api.testnet.shimmer.network";
+    public static final String PASSWORD = "ENCRYPTION_PASSWORD";
+    public static final String ACCOUNT_NAME = "Brord";
+    public static final String SNAPSHOT_PATH = "example-wallet";
+    public static final String MNEMONIC = "human any chuckle early velvet fall silly act desk dress winner kingdom power element north hurdle liar little purse goat knee love hollow drip";
 }

@@ -13,8 +13,8 @@ public class Backup {
         // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
         // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withSecretManager(new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );
 
