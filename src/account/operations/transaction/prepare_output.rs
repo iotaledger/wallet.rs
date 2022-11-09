@@ -14,6 +14,7 @@ use iota_client::block::{
         },
         BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
     },
+    DtoError,
 };
 use serde::{Deserialize, Serialize};
 
@@ -62,13 +63,15 @@ impl AccountHandle {
             }
 
             if let Some(tag) = features.tag {
-                first_output_builder =
-                    first_output_builder.add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?));
+                first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
+                    prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
+                )?));
             }
 
             if let Some(metadata) = features.metadata {
-                first_output_builder = first_output_builder
-                    .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
+                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
+                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
+                )?));
             }
 
             if let Some(sender) = features.sender {
@@ -201,7 +204,7 @@ impl AccountHandle {
         // Find nft output from the inputs
         let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
             if let Output::Nft(nft_output) = &o.output {
-                nft_id == nft_output.nft_id().or_from_output_id(o.output_id)
+                nft_id == nft_output.nft_id_non_null(&o.output_id)
             } else {
                 false
             }

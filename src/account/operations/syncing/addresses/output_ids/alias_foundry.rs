@@ -65,7 +65,7 @@ impl AccountHandle {
             let output = Output::try_from_dto(&alias_output_response.output, token_supply)?;
             if let Output::Alias(alias_output) = output {
                 let output_id = alias_output_response.metadata.output_id()?;
-                let alias_address = AliasAddress::from(alias_output.alias_id().or_from_output_id(output_id));
+                let alias_address = AliasAddress::from(alias_output.alias_id_non_null(&output_id));
 
                 let foundry_output_ids = client
                     .foundry_output_ids(vec![QueryParameter::AliasAddress(

@@ -113,7 +113,7 @@ impl OutputData {
     ) -> crate::Result<InputSigningData> {
         let (unlock_address, _unlocked_alias_or_nft_address) =
             self.output
-                .required_and_unlocked_address(current_time, self.output_id, alias_state_transition)?;
+                .required_and_unlocked_address(current_time, &self.output_id, alias_state_transition)?;
 
         let chain = if unlock_address == self.address {
             self.chain.clone()

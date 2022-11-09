@@ -1,5 +1,15 @@
 # Changelog
 
+## \[2.0.3-rc.4]
+
+- Fix release workflow to build binaries.
+  - [31a1487b](https://github.com/iotaledger/wallet.rs/commit/31a1487b0e4890565a368cbb2ff2e652eb949eec) Fix covector workflow ([#1552](https://github.com/iotaledger/wallet.rs/pull/1552)) on 2022-11-09
+
+## \[2.0.3-rc.3]
+
+- Tag and metadata are encoded as hex strings.
+  - [795b6df0](https://github.com/iotaledger/wallet.rs/commit/795b6df004b9614680a6902975a7f8e5b336bcaf) feat: add tag & metadata hex decoding ([#1545](https://github.com/iotaledger/wallet.rs/pull/1545)) on 2022-11-08
+
 ## \[2.0.3-rc.2]
 
 - Fixed NFT output claiming.

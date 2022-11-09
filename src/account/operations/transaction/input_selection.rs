@@ -210,7 +210,7 @@ fn filter_inputs(
 // Returns if alias transition is a state transition with the provided outputs for a given input.
 pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output]) -> crate::Result<Option<bool>> {
     Ok(if let Output::Alias(alias_input) = &output_data.output {
-        let alias_id = alias_input.alias_id().or_from_output_id(output_data.output_id);
+        let alias_id = alias_input.alias_id_non_null(&output_data.output_id);
         // Check if alias exists in the outputs and get the required transition type
         outputs
             .iter()
