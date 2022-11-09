@@ -7,6 +7,7 @@
     ".changes/nft-options-features.md",
     ".changes/nft-output-claiming.md",
     ".changes/nft-outputs-syncing.md",
+    ".changes/prebuild.md",
     ".changes/private-account-meta.md",
     ".changes/remove-deleteAccountsAndDatabase.md",
     ".changes/remove-list-prefix.md",
