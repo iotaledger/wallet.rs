@@ -72,7 +72,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
         let account = self.read().await;
         let account_addresses = &account.addresses_with_unspent_outputs[..];
-        let current_time = self.client.get_time_checked().unwrap();
+        let current_time = self.client.get_time_checked()?;
         let token_supply = self.client.get_token_supply().await?;
 
         // Get outputs for the consolidation
