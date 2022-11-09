@@ -12,7 +12,7 @@ jobs:
       matrix:
         # macos-latest will build for the default target
         # macos-11 will build for the aarch64-apple-darwin target
-        # since svenstaro/upload-release-action@v2 can't handle 2 uploads within the same run, 2 separate runs are needed
+        # since svenstaro/upload-release-action@v2 can't handle two uploads within the same macos run, two separate macos runs are needed
         os: [windows-latest, macos-latest, ubuntu-latest, macos-11]
         java: ["11"]
 
