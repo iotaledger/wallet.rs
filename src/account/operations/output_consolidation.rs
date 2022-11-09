@@ -39,15 +39,19 @@ impl AccountHandle {
         Ok(if let Output::Basic(basic_output) = &output_data.output {
             let unlock_conditions = basic_output.unlock_conditions();
 
-            if unlock_conditions.is_time_locked(current_time) {
+            let is_time_locked = unlock_conditions.is_time_locked(current_time);
+            if is_time_locked {
                 // We cannot consolidate timelocked outputs
                 return Ok(false);
             }
 
-            if unlock_conditions.storage_deposit_return().is_none() && unlock_conditions.expiration().is_none() {
-                // We should not consolidate outputs that require an output to be consumed in order to send the
-                // storage deposit back, so long as there is an expired expiration unlock condition.
-                return Ok(false);
+            let has_storage_deposit_return = unlock_conditions.storage_deposit_return().is_some();
+            let has_expiration = unlock_conditions.expiration().is_some();
+            let is_expired = unlock_conditions.is_expired(current_time);
+            if has_storage_deposit_return {
+                if has_expiration && !is_expired {
+                    return Ok(false);
+                }
             }
 
             can_output_be_unlocked_now(account_addresses, &[], output_data, current_time, true)?
@@ -75,7 +79,7 @@ impl AccountHandle {
         for (output_id, output_data) in account.unspent_outputs() {
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
-                if self.should_consolidate_output(&output_data, current_time, account_addresses).unwrap() {
+                if self.should_consolidate_output(&output_data, current_time, account_addresses)? {
                     outputs_to_consolidate.push(output_data.clone());
                 }
             }
