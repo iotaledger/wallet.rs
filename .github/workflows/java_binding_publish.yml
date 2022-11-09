@@ -1,17 +1,6 @@
 name: Create Java release
 
-on:
-  workflow_dispatch:
-    paths:
-      - .github/workflows/java_binding_publish.yml
-      - bindings/java/**
-      - src/**
-      - Cargo.lock
-      - Cargo.toml
-
-concurrency: 
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+on: workflow_dispatch
 
 jobs:
   create-releases:
