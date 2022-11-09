@@ -11,6 +11,10 @@ use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
 #[cfg(feature = "events")]
+#[cfg(debug_assertions)]
+use crate::events::types::WalletEvent;
+
+#[cfg(feature = "events")]
 use crate::events::types::WalletEventType;
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
@@ -151,6 +155,7 @@ pub enum Message {
     /// Emits an event for testing if the event system is working
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
+    #[cfg(debug_assertions)]
     EmitTestEvent(WalletEvent),
     /// Transforms bech32 to hex
     /// Expected response: [`HexAddress`](crate::message_interface::Response::HexAddress)

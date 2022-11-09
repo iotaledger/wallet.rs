@@ -312,7 +312,7 @@ public class Wallet extends NativeApi {
      * Clear the callbacks for provided events. An nul or empty array will clear all
      * listeners.
      *
-     * @param event The event types to clear. Emmpty means clear all events
+     * @param types The event types to clear. Emmpty means clear all events
      */
     public void clearListeners(WalletEventType... types) throws WalletException {
         if (types == null) {

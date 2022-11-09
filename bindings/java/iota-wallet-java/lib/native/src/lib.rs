@@ -10,7 +10,7 @@ use iota_wallet::{
 };
 use jni::{
     objects::{JClass, JString},
-    sys::{jstring, jlong, jobjectArray},
+    sys::{jstring, jlong, jobject, jobjectArray},
     JNIEnv, JavaVM
 };
 use once_cell::sync::OnceCell;
@@ -48,12 +48,12 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
 #[no_mangle]
-pub extern "system" fn Java_org_iota_api_NativeApi_destroy(
+pub extern "system" fn Java_org_iota_api_NativeApi_destroyHandle(
     _env: JNIEnv,
     _class: JClass,
 ) {
     (*MESSAGE_HANDLER.lock().unwrap()) = None;
-    
+    (*EVENT_HANDLER.lock().unwrap()) = Vec::new();
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -95,6 +95,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
     _class: JClass,
     events: jobjectArray,
     id: jlong,
+    callback: jobject,
 ) -> jstring {
     let r_id: i64 = id as i64;
     let string_count = env.get_array_length(events).expect("Couldn't get array length!");
@@ -106,7 +107,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
             .expect("Unknon WalletEventType"));
     }
 
-    let stored_cb = JavaCallback::new(r_id, env);
+    let stored_cb = JavaCallback::new(r_id, env, callback);
     let mut data = EVENT_HANDLER.lock().unwrap();
     let v: &mut Vec<JavaCallback> = &mut *data;
     v.push(stored_cb);
@@ -120,18 +121,22 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
         for jnicb in &*data {
             if jnicb.id == r_id {
                 let vm = JavaVM::from_raw(jnicb.java_vm)
-                    .expect("Couldn't create env");
-                let env = vm.attach_current_thread()
-                    .expect("failed to attach env");
+                    .expect("Couldn't create vm from pointer");
+                let mut env = vm.get_env();
+                if let Err(_) = env {
+                    env = vm.attach_current_thread().map(|e|*e);
+                }
+                let env = env.expect("failed to get env");
+
                 let output = env
                     .new_string(ev_ser)
                     .expect("Couldn't create event as string!");
-                let id = jni::objects::JValue::Long(jnicb.id);
                 let class = env
                     .find_class("org/iota/api/NativeApi")
                     .expect("Failed to load the target class");
-                env.call_static_method(class, "handleCallback", "(JLjava/lang/String;)V", 
-                    &[id, output.into()]).expect("Failed to call handleCallback");
+                env.call_static_method(class, "handleCallback", "(Ljava/lang/String;Lorg/iota/types/events/EventListener;)V", 
+                    &[output.into(), jnicb.callback().into()]).expect("Failed to call handleCallback");
+                
                 break;
             }
         }

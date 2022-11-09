@@ -51,7 +51,7 @@ public class NativeApi {
 
     private static native String sendMessage(String command);
 
-    private static native String listen(String[] events, long id);
+    private static native String listen(String[] events, long id, EventListener listener);
 
     private static JsonElement handleClientResponse(String methodName, String jsonResponse) throws WalletException {
         ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
@@ -67,17 +67,10 @@ public class NativeApi {
         }
     }
 
-    private static Map<Long, EventListener> listeners = new HashMap<>();
-
-    private static void handleCallback(long id, String response) throws WalletException {
+    private static void handleCallback(String response, EventListener listener) throws WalletException {
         try {
             Event event = CustomGson.get().fromJson(response, Event.class);
-            EventListener cb = NativeApi.listeners.get(Long.valueOf(id));
-            if (cb == null) {
-                throw new WalletException("handleCallback", "No callback found for id " +
-                        id);
-            }
-            cb.receive(event);
+            listener.receive(event);
         } catch (Exception e) {
             throw new WalletException("handleCallback", e.getMessage());
         }
@@ -93,9 +86,9 @@ public class NativeApi {
         }
 
         // Check for errors, no interest in result
-        JsonElement response = handleClientResponse("listen", listen(eventStrs, id));
-        NativeApi.listeners.put(id, listener);
+        JsonElement response = handleClientResponse("listen", listen(eventStrs, id, listener));
 
+        // todo generate ID in rust and get from response
         return id;
     }
 
