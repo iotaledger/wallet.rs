@@ -48,11 +48,9 @@ impl AccountHandle {
             let has_storage_deposit_return = unlock_conditions.storage_deposit_return().is_some();
             let has_expiration = unlock_conditions.expiration().is_some();
             let is_expired = unlock_conditions.is_expired(current_time);
-            if has_storage_deposit_return {
-                if has_expiration && !is_expired {
-                    // If the output has not expired and must return a storage deposit, then it cannot be consolidated.
-                    return Ok(false);
-                }
+            if has_storage_deposit_return && has_expiration && !is_expired {
+                // If the output has not expired and must return a storage deposit, then it cannot be consolidated.
+                return Ok(false);
             }
 
             can_output_be_unlocked_now(account_addresses, &[], output_data, current_time, true)?
@@ -75,17 +73,13 @@ impl AccountHandle {
         let current_time = self.client.get_time_checked()?;
         let token_supply = self.client.get_token_supply().await?;
 
-        // Get outputs for the consolidation
         let mut outputs_to_consolidate = Vec::new();
         for (output_id, output_data) in account.unspent_outputs() {
-            // Don't use outputs that are locked for other transactions
-            if !account.locked_outputs.contains(output_id) {
-                if self.should_consolidate_output(&output_data, current_time, account_addresses)? {
-                    outputs_to_consolidate.push(output_data.clone());
-                }
+            let is_locked_output = account.locked_outputs.contains(output_id);
+            let should_consolidate_output = self.should_consolidate_output(output_data, current_time, account_addresses)?;
+            if !is_locked_output && should_consolidate_output {
+                outputs_to_consolidate.push(output_data.clone());
             }
-
-            break
         }
 
         drop(account);
