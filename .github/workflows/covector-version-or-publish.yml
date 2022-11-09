@@ -125,7 +125,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install typescript && npm ci
         working-directory: bindings/nodejs
       
       - name: Build Node.js prebuild
