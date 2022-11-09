@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::{api_types::response::OutputWithMetadataResponse, block::output::OutputId, Client};
+use iota_client::{api_types::response::OutputMetadataResponse, block::output::OutputId, Client};
 
 use crate::account::{
     handle::AccountHandle,
@@ -17,6 +17,7 @@ use crate::{
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
     iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
+
 impl AccountHandle {
     // Set the alias for the account
     pub async fn set_alias(&self, alias: &str) -> crate::Result<()> {
@@ -32,7 +33,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>>,
+        spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");
@@ -91,13 +92,13 @@ impl AccountHandle {
             .extend(addresses_with_unspent_outputs);
 
         // Update spent outputs
-        for (output_id, output_response) in spent_or_not_synced_outputs {
+        for (output_id, output_metadata_response_opt) in spent_or_unsynced_output_metadata_map {
             // If we got the output response and it's still unspent, skip it
-            if let Some(output_response) = output_response {
-                if output_response.metadata.is_spent {
+            if let Some(output_metadata_response) = output_metadata_response_opt {
+                if output_metadata_response.is_spent {
                     account.unspent_outputs.remove(&output_id);
                     if let Some(output_data) = account.outputs.get_mut(&output_id) {
-                        output_data.metadata = output_response.metadata;
+                        output_data.metadata = output_metadata_response;
                     }
                 } else {
                     // not spent, just not synced, skip
