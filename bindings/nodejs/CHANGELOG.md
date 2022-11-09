@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.4]
+
+- Fix release workflow to build binaries.
+  - [31a1487b](https://github.com/iotaledger/wallet.rs/commit/31a1487b0e4890565a368cbb2ff2e652eb949eec) Fix covector workflow ([#1552](https://github.com/iotaledger/wallet.rs/pull/1552)) on 2022-11-09
+
 ## \[2.0.3-rc.3]
 
 - Tag and metadata are encoded as hex strings.
