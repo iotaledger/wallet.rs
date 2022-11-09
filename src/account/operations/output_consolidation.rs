@@ -41,7 +41,7 @@ impl AccountHandle {
 
             let is_time_locked = unlock_conditions.is_time_locked(current_time);
             if is_time_locked {
-                // We cannot consolidate timelocked outputs
+                // If the output is timelocked, then it cannot be consolidated.
                 return Ok(false);
             }
 
@@ -50,6 +50,7 @@ impl AccountHandle {
             let is_expired = unlock_conditions.is_expired(current_time);
             if has_storage_deposit_return {
                 if has_expiration && !is_expired {
+                    // If the output has not expired and must return a storage deposit, then it cannot be consolidated.
                     return Ok(false);
                 }
             }
