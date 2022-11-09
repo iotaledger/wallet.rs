@@ -26,6 +26,7 @@ import type {
     PreparedTransactionData,
     Transaction,
     TransactionOptions,
+    IncomingTransactionData,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -40,8 +41,6 @@ import type {
     IBasicOutput,
     IFoundryOutput,
     INftOutput,
-    IOutputResponse,
-    ITransactionPayload,
     OutputTypes,
 } from '@iota/types';
 
@@ -450,6 +449,25 @@ export class Account {
     }
 
     /**
+     * Get the transaction with inputs of an incoming transaction stored in the account
+     * List might not be complete, if the node pruned the data already
+     * @param transactionId The ID of the transaction to get.
+     * @returns The transaction.
+     */
+    async getIncomingTransactionData(transactionId: string): Promise<IncomingTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getIncomingTransactionData',
+                data: {
+                    transactionId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * List all the addresses of the account.
      * @returns The addresses.
      */
@@ -515,7 +533,7 @@ export class Account {
      * @returns The incoming transactions with their inputs.
      */
     async incomingTransactions(): Promise<
-        [string, [ITransactionPayload, IOutputResponse[]]][]
+        [string, IncomingTransactionData][]
     > {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,

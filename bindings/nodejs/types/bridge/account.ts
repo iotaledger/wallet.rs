@@ -122,6 +122,13 @@ export type __GetBalanceMethod__ = {
     name: 'getBalance';
 };
 
+export type __GetIncomingTransactionDataMethod__ = {
+    name: 'getIncomingTransactionData';
+    data: {
+        transactionId: string,
+    };
+};
+
 export type __GetOutputMethod__ = {
     name: 'getOutput';
     data: {
