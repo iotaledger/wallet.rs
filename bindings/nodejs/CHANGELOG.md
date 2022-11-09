@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.3]
+
+- Tag and metadata are encoded as hex strings.
+  - [795b6df0](https://github.com/iotaledger/wallet.rs/commit/795b6df004b9614680a6902975a7f8e5b336bcaf) feat: add tag & metadata hex decoding ([#1545](https://github.com/iotaledger/wallet.rs/pull/1545)) on 2022-11-08
+
 ## \[2.0.3-rc.2]
 
 - Fixed NFT output claiming.

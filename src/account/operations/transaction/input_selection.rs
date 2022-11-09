@@ -46,10 +46,10 @@ impl AccountHandle {
         if let Some(custom_inputs) = custom_inputs {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
-                if account.locked_outputs.contains(&input.output_id()?) {
+                if account.locked_outputs.contains(input.output_id()) {
                     return Err(crate::Error::CustomInputError(format!(
                         "provided custom input {} is already used in another transaction",
-                        input.output_id()?
+                        input.output_id()
                     )));
                 }
             }
@@ -67,7 +67,7 @@ impl AccountHandle {
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
-                account.locked_outputs.insert(output.output_id()?);
+                account.locked_outputs.insert(*output.output_id());
             }
 
             return Ok(selected_transaction_data);
@@ -110,8 +110,8 @@ impl AccountHandle {
 
         // lock outputs so they don't get used by another transaction
         for output in &selected_transaction_data.inputs {
-            log::debug!("[TRANSACTION] locking: {}", output.output_id()?);
-            account.locked_outputs.insert(output.output_id()?);
+            log::debug!("[TRANSACTION] locking: {}", output.output_id());
+            account.locked_outputs.insert(*output.output_id());
         }
         Ok(selected_transaction_data)
     }
@@ -210,7 +210,7 @@ fn filter_inputs(
 // Returns if alias transition is a state transition with the provided outputs for a given input.
 pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output]) -> crate::Result<Option<bool>> {
     Ok(if let Output::Alias(alias_input) = &output_data.output {
-        let alias_id = alias_input.alias_id().or_from_output_id(output_data.output_id);
+        let alias_id = alias_input.alias_id_non_null(&output_data.output_id);
         // Check if alias exists in the outputs and get the required transition type
         outputs
             .iter()

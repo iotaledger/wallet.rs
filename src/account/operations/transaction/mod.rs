@@ -175,8 +175,8 @@ impl AccountHandle {
     async fn unlock_inputs(&self, inputs: Vec<InputSigningData>) -> crate::Result<()> {
         let mut account = self.write().await;
         for input_signing_data in &inputs {
-            let output_id = input_signing_data.output_id()?;
-            account.locked_outputs.remove(&output_id);
+            let output_id = input_signing_data.output_id();
+            account.locked_outputs.remove(output_id);
             log::debug!(
                 "[TRANSACTION] Unlocked output {} because of transaction error",
                 output_id

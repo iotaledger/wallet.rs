@@ -70,7 +70,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     let transaction = account.mint_nfts(nft_options, None).await.unwrap();
 
     let output_id = OutputId::new(transaction.transaction_id, 0u16).unwrap();
-    let nft_id = NftId::from(output_id);
+    let nft_id = NftId::from(&output_id);
 
     tokio::time::sleep(Duration::new(15, 0)).await;
     let balance = account.sync(None).await.unwrap();

@@ -190,14 +190,12 @@ impl AccountHandle {
             for output_data in new_outputs_data.iter() {
                 match &output_data.output {
                     Output::Alias(alias_output) => {
-                        let alias_address =
-                            AliasAddress::from(alias_output.alias_id().or_from_output_id(output_data.output_id));
+                        let alias_address = AliasAddress::from(alias_output.alias_id_non_null(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Alias(alias_address), output_data.address);
                     }
                     Output::Nft(nft_output) => {
-                        let nft_address =
-                            NftAddress::from(nft_output.nft_id().or_from_output_id(output_data.output_id));
+                        let nft_address = NftAddress::from(nft_output.nft_id_non_null(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Nft(nft_address), output_data.address);
                     }

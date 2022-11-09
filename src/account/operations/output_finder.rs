@@ -45,9 +45,7 @@ impl AccountHandle {
                     sync_options.address_start_index.abs_diff(highest_public_address_index);
                 // -1 if it's larger than 0, to get the correct amount, because the address with the actual start index
                 // gets generated later
-                if address_amount_to_generate > 0 {
-                    address_amount_to_generate -= 1;
-                }
+                address_amount_to_generate = address_amount_to_generate.saturating_sub(1);
                 log::debug!(
                     "[search_addresses_with_outputs] generate {address_amount_to_generate} public addresses below the start index"
                 );

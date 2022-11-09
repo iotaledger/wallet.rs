@@ -85,7 +85,7 @@ impl AccountHandle {
             .unspent_outputs()
             .iter()
             .find(|(&output_id, output_data)| match &output_data.output {
-                Output::Alias(alias_output) => alias_output.alias_id().or_from_output_id(output_id) == alias_id,
+                Output::Alias(alias_output) => alias_output.alias_id_non_null(&output_id) == alias_id,
                 _ => false,
             })
             .ok_or_else(|| Error::BurningOrMeltingFailed("alias output not found".to_string()))?;

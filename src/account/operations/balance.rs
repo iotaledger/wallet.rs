@@ -55,7 +55,7 @@ impl AccountHandle {
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
-                    let alias_id = output.alias_id().or_from_output_id(output_data.output_id);
+                    let alias_id = output.alias_id_non_null(&output_data.output_id);
                     aliases.push(alias_id);
                 }
                 Output::Foundry(output) => {
@@ -80,7 +80,7 @@ impl AccountHandle {
                     {
                         // add nft_id for nft outputs
                         if let Output::Nft(output) = &output_data.output {
-                            let nft_id = output.nft_id().or_from_output_id(output_data.output_id);
+                            let nft_id = output.nft_id_non_null(&output_data.output_id);
                             nfts.push(nft_id);
                         }
 
@@ -137,7 +137,7 @@ impl AccountHandle {
 
                                 // add nft_id for nft outputs
                                 if let Output::Nft(output) = &output_data.output {
-                                    let nft_id = output.nft_id().or_from_output_id(output_data.output_id);
+                                    let nft_id = output.nft_id_non_null(&output_data.output_id);
                                     nfts.push(nft_id);
                                 }
 

@@ -7,13 +7,14 @@ use iota_client::block::{
     address::Address,
     output::{
         dto::NativeTokenDto,
-        feature::{Feature, MetadataFeature, TagFeature},
+        feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
         unlock_condition::{
             AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
             TimelockUnlockCondition, UnlockCondition,
         },
         BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
     },
+    DtoError,
 };
 use serde::{Deserialize, Serialize};
 
@@ -57,13 +58,25 @@ impl AccountHandle {
         }
 
         if let Some(features) = options.features {
-            if let Some(tag) = features.tag {
-                first_output_builder =
-                    first_output_builder.add_feature(Feature::Tag(TagFeature::new(tag.as_bytes().to_vec())?));
+            if let Some(_issuer) = features.issuer {
+                return Err(crate::Error::MissingParameter("nft_id"));
             }
+
+            if let Some(tag) = features.tag {
+                first_output_builder = first_output_builder.add_feature(Feature::Tag(TagFeature::new(
+                    prefix_hex::decode(&tag).map_err(|_| DtoError::InvalidField("tag"))?,
+                )?));
+            }
+
             if let Some(metadata) = features.metadata {
+                first_output_builder = first_output_builder.add_feature(Feature::Metadata(MetadataFeature::new(
+                    prefix_hex::decode(&metadata).map_err(|_| DtoError::InvalidField("metadata"))?,
+                )?));
+            }
+
+            if let Some(sender) = features.sender {
                 first_output_builder = first_output_builder
-                    .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
+                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
             }
         }
 
@@ -112,15 +125,14 @@ impl AccountHandle {
                     second_output_builder = second_output_builder.add_unlock_condition(
                         UnlockCondition::StorageDepositReturn(StorageDepositReturnUnlockCondition::new(
                             remainder_address,
-                            // Return minimum storage deposit + any additional required storage deposit from features
-                            // or unlock conditions
+                            // Return minimum storage deposit
                             min_storage_deposit_return_amount,
                             token_supply,
                         )?),
                     );
                 }
 
-                // Check if the remainding balance wouldn't leave dust behind, which wouldn't allow the creation of this
+                // Check if the remainder balance wouldn't leave dust behind, which wouldn't allow the creation of this
                 // output. If that's the case, this remaining amount will be added to the output, to still allow sending
                 // it.
                 if storage_deposit.use_excess_if_low.unwrap_or_default() {
@@ -186,12 +198,13 @@ impl AccountHandle {
         log::debug!("[OUTPUT] prepare_nft_output {options:?}");
 
         let token_supply = self.client.get_token_supply().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
         let unspent_outputs = self.unspent_outputs(None).await?;
 
         // Find nft output from the inputs
         let mut first_output_builder = if let Some(nft_output_data) = unspent_outputs.iter().find(|o| {
             if let Output::Nft(nft_output) = &o.output {
-                nft_id == nft_output.nft_id().or_from_output_id(o.output_id)
+                nft_id == nft_output.nft_id_non_null(&o.output_id)
             } else {
                 false
             }
@@ -201,6 +214,8 @@ impl AccountHandle {
             } else {
                 unreachable!("We checked before if it's an nft output")
             }
+        } else if nft_id.is_null() {
+            NftOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone(), nft_id)?
         } else {
             return Err(crate::Error::NftNotFoundInUnspentOutputs);
         };
@@ -209,10 +224,6 @@ impl AccountHandle {
         first_output_builder = first_output_builder.with_unlock_conditions(vec![UnlockCondition::Address(
             AddressUnlockCondition::new(Address::try_from_bech32(options.recipient_address.clone())?.1),
         )]);
-
-        // from here basically the same as in `prepare_output()`, just with Nft outputs
-
-        let rent_structure = self.client.get_rent_structure().await?;
 
         if let Some(assets) = options.assets {
             if let Some(native_tokens) = assets.native_tokens {
@@ -228,6 +239,16 @@ impl AccountHandle {
             if let Some(metadata) = features.metadata {
                 first_output_builder = first_output_builder
                     .add_feature(Feature::Metadata(MetadataFeature::new(metadata.as_bytes().to_vec())?));
+            }
+
+            if let Some(issuer) = features.issuer {
+                first_output_builder = first_output_builder
+                    .add_immutable_feature(Feature::Issuer(IssuerFeature::new(Address::try_from_bech32(issuer)?.1)));
+            }
+
+            if let Some(sender) = features.sender {
+                first_output_builder = first_output_builder
+                    .add_feature(Feature::Sender(SenderFeature::new(Address::try_from_bech32(sender)?.1)))
             }
         }
 
@@ -246,7 +267,9 @@ impl AccountHandle {
             }
         }
 
-        let first_output = first_output_builder.finish(token_supply)?;
+        let first_output = first_output_builder
+            .with_minimum_storage_deposit(rent_structure.clone())
+            .finish(token_supply)?;
 
         let mut second_output_builder = NftOutputBuilder::from(&first_output);
 
@@ -276,8 +299,7 @@ impl AccountHandle {
                     second_output_builder = second_output_builder.add_unlock_condition(
                         UnlockCondition::StorageDepositReturn(StorageDepositReturnUnlockCondition::new(
                             remainder_address,
-                            // Return minimum storage deposit + any additional required storage deposit from features
-                            // or unlock conditions
+                            // Return minimum storage deposit
                             min_storage_deposit_return_amount,
                             token_supply,
                         )?),
@@ -393,6 +415,8 @@ pub struct Assets {
 pub struct Features {
     pub tag: Option<String>,
     pub metadata: Option<String>,
+    pub issuer: Option<String>,
+    pub sender: Option<String>,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

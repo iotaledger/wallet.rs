@@ -24,7 +24,7 @@ pub enum Error {
     /// Error from block crate.
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    Block(#[from] iota_client::block::Error),
+    Block(Box<iota_client::block::Error>),
     /// Block dtos error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
@@ -32,9 +32,10 @@ pub enum Error {
     /// Burning or melting failed
     #[error("burning or melting failed: {0}")]
     BurningOrMeltingFailed(String),
-    /// iota.rs error.
+    /// Client error.
     #[error("`{0}`")]
-    ClientError(Box<iota_client::Error>),
+    #[serde(serialize_with = "display_string")]
+    Client(Box<iota_client::Error>),
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, u16),
@@ -64,10 +65,6 @@ pub enum Error {
     #[error("`{0}`")]
     #[serde(serialize_with = "display_string")]
     IoError(#[from] std::io::Error),
-    /// IOTA client error.
-    #[error("`{0}`")]
-    #[serde(serialize_with = "display_string")]
-    IotaClientError(#[from] iota_client::Error),
     /// serde_json error.
     #[error("`{0}`")]
     #[serde(serialize_with = "display_string")]
@@ -115,4 +112,16 @@ where
     S: Serializer,
 {
     value.to_string().serialize(serializer)
+}
+
+impl From<iota_client::block::Error> for Error {
+    fn from(error: iota_client::block::Error) -> Self {
+        Self::Block(Box::new(error))
+    }
+}
+
+impl From<iota_client::Error> for Error {
+    fn from(error: iota_client::Error) -> Self {
+        Self::Client(Box::new(error))
+    }
 }

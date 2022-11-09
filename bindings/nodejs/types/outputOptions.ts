@@ -1,4 +1,4 @@
-import type { INativeToken } from '@iota/types';
+import type { HexEncodedString, INativeToken } from '@iota/types';
 
 /** Options for the creation of an output */
 export interface OutputOptions {
@@ -13,13 +13,13 @@ export interface OutputOptions {
 /** Assets to include in the output */
 export interface Assets {
     nativeTokens?: INativeToken[];
-    nftId?: string;
+    nftId?: HexEncodedString;
 }
 
 /** Features to include in the output */
 export interface Features {
-    tag?: string;
-    metadata?: string;
+    tag?: HexEncodedString;
+    metadata?: HexEncodedString;
 }
 
 /** Time unlocks to include in the output */

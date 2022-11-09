@@ -23,7 +23,7 @@ pub(crate) fn can_output_be_unlocked_now(
 
     let (required_unlock_address, _unlocked_alias_or_nft_address) = output_data.output.required_and_unlocked_address(
         current_time,
-        output_data.output_id,
+        &output_data.output_id,
         alias_state_transition,
     )?;
 

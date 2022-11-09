@@ -120,9 +120,9 @@ impl AccountHandle {
                         {
                             self.event_emitter.lock().await.emit(
                                 account_index,
-                                WalletEvent::SpentOutput(SpentOutputEvent {
+                                WalletEvent::SpentOutput(Box::new(SpentOutputEvent {
                                     output: OutputDataDto::from(&*output_data),
-                                }),
+                                })),
                             );
                         }
                     }

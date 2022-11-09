@@ -25,7 +25,7 @@ pub enum WalletEvent {
     #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration(AddressData),
     NewOutput(NewOutputEvent),
-    SpentOutput(SpentOutputEvent),
+    SpentOutput(Box<SpentOutputEvent>),
     TransactionInclusion(TransactionInclusionEvent),
     TransactionProgress(TransactionProgressEvent),
 }
