@@ -39,6 +39,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Error::IotaClientError` as it was a duplicate;
 
+### Fixed
+
+- min storage deposit amount in `prepare_output()` with expiration unlock condition;
+
 ## 1.0.0-rc.2 - 2022-10-28
 
 ### Added
