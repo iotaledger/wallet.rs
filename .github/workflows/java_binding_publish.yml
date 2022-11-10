@@ -74,14 +74,14 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
-      - name: Build JAR with default target
+      - name: Build JAR for default target
         shell: bash
         working-directory: bindings/java/iota-wallet-java/
         run: |
           chmod +x gradlew
-          ./gradlew jar
+          ./gradlew build
 
-      - name: Build JAR with aarch64-apple-darwin target (macOS)
+      - name: Build JAR for aarch64-apple-darwin target
         if: matrix.os == 'macos-latest'
         shell: bash
         env:
@@ -89,9 +89,9 @@ jobs:
         working-directory: bindings/java/iota-wallet-java/
         run: |
           rustup target add aarch64-apple-darwin
-          ./gradlew jar
+          ./gradlew build
 
-      - name: Set filename for tag construction
+      - name: Get filename for tag construction
         shell: bash
         id: filename
         working-directory: bindings/java/iota-wallet-java/
@@ -128,3 +128,6 @@ jobs:
         working-directory: bindings/java/iota-wallet-java/
         run: |
           ./gradlew publishToSonatype
+          if [ "$RUNNER_OS" == "macOS" ];
+          then ORG_GRADLE_PROJECT_buildTarget=aarch64-apple-darwin ./gradlew publishToSonatype
+          fi
