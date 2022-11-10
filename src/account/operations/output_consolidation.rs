@@ -52,7 +52,7 @@ impl AccountHandle {
             let has_storage_deposit_return = unlock_conditions.storage_deposit_return().is_some();
             let has_expiration = unlock_conditions.expiration().is_some();
             let is_expired = unlock_conditions.is_expired(current_time);
-            if has_storage_deposit_return && !has_expiration || !is_expired {
+            if has_storage_deposit_return && (!has_expiration || !is_expired) {
                 // If the output has not expired and must return a storage deposit, then it cannot be consolidated.
                 return Ok(false);
             }
@@ -153,14 +153,12 @@ impl AccountHandle {
             custom_inputs.push(output_data.output_id);
         }
 
-        let consolidation_output = vec![
-            BasicOutputBuilder::new_with_amount(total_amount)?
-                .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                    outputs_to_consolidate[0].address,
-                )))
-                .with_native_tokens(total_native_tokens.finish()?)
-                .finish_output(token_supply)?,
-        ];
+        let consolidation_output = vec![BasicOutputBuilder::new_with_amount(total_amount)?
+            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+                outputs_to_consolidate[0].address,
+            )))
+            .with_native_tokens(total_native_tokens.finish()?)
+            .finish_output(token_supply)?];
 
         let consolidation_tx = self
             .finish_transaction(
