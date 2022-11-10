@@ -22,20 +22,24 @@ const MIN_OUTPUT_SIZE_IN_ESSENCE: usize = 46;
 
 #[cfg(feature = "ledger_nano")]
 use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
-use crate::Result;
-use crate::account::{
-    constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD, handle::AccountHandle,
-    operations::{
-        helpers::time::can_output_be_unlocked_now,
-        output_claiming::get_new_native_token_count
+use crate::{
+    account::{
+        constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+        handle::AccountHandle,
+        operations::{helpers::time::can_output_be_unlocked_now, output_claiming::get_new_native_token_count},
+        types::{OutputData, Transaction},
+        AddressWithUnspentOutputs, TransactionOptions,
     },
-    types::{OutputData, Transaction},
-    AddressWithUnspentOutputs,
-    TransactionOptions,
+    Result,
 };
 
 impl AccountHandle {
-    fn should_consolidate_output(self: &AccountHandle, output_data: &OutputData, current_time: u32, account_addresses: &[AddressWithUnspentOutputs]) -> Result<bool> {
+    fn should_consolidate_output(
+        self: &AccountHandle,
+        output_data: &OutputData,
+        current_time: u32,
+        account_addresses: &[AddressWithUnspentOutputs],
+    ) -> Result<bool> {
         Ok(if let Output::Basic(basic_output) = &output_data.output {
             let unlock_conditions = basic_output.unlock_conditions();
 
@@ -76,7 +80,8 @@ impl AccountHandle {
         let mut outputs_to_consolidate = Vec::new();
         for (output_id, output_data) in account.unspent_outputs() {
             let is_locked_output = account.locked_outputs.contains(output_id);
-            let should_consolidate_output = self.should_consolidate_output(output_data, current_time, account_addresses)?;
+            let should_consolidate_output =
+                self.should_consolidate_output(output_data, current_time, account_addresses)?;
             if !is_locked_output && should_consolidate_output {
                 outputs_to_consolidate.push(output_data.clone());
             }
