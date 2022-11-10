@@ -38,27 +38,14 @@ test {
 
 version = '1.0.0-rc.2'
 
-task buildRustRelease(){
-    dependsOn 'buildRustReleaseDefault'
-    dependsOn 'buildRustReleaseWithCustomTarget'
-}
-
-task buildRustReleaseDefault(type:Exec){
-    onlyIf {
-        findProperty('buildTarget') == null
-    }
+task buildRustRelease(type:Exec){
     workingDir 'native'
-    commandLine 'cargo', 'build', '--release'
-}
 
-task buildRustReleaseWithCustomTarget(type:Exec){
-    def buildTarget = findProperty("buildTarget")
-    onlyIf {
-        buildTarget != null
+    if (!project.hasProperty('buildTarget')) {
+        commandLine 'cargo', 'build', '--release'
+    } else {
+        commandLine 'cargo', 'build', '--target=' + buildTarget, '--release'
     }
-
-    workingDir 'native'
-    commandLine 'cargo', 'build', '--target=' + buildTarget, '--release'
 }
 
 archivesBaseName = 'iota-wallet-java'
@@ -68,12 +55,14 @@ jar {
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
-    from('native/target/release') {
-        include '*.so', '*.dylib', '*.dll'
-    }
-
-    from('native/target/' + findProperty('buildTarget') + '/release') {
-        include '*.so', '*.dylib', '*.dll'
+    if (!project.hasProperty('buildTarget')) {
+        from('native/target/release') {
+            include '*.so', '*.dylib', '*.dll'
+        }
+    } else {
+        from('native/target/' + findProperty('buildTarget') + '/release') {
+            include '*.so', '*.dylib', '*.dll'
+        }
     }
 
     from {

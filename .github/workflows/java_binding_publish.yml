@@ -3,17 +3,14 @@ name: Create Java release
 on: workflow_dispatch
 
 jobs:
-  create-releases:
+  release-java:
     name: Create Java release
     if: ${{ ! github.event.schedule }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        # macos-latest will build for the default target
-        # macos-11 will build for the aarch64-apple-darwin target
-        # since svenstaro/upload-release-action@v2 can't handle two uploads within the same macos run, two separate macos runs are needed
-        os: [windows-latest, macos-latest, ubuntu-latest, macos-11]
+        os: [windows-latest, macos-latest, ubuntu-latest]
         java: ["11"]
 
     steps:
@@ -78,49 +75,51 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
-      - name: Install aarch64-apple-darwin Rust target
-        if: matrix.os == 'macos-latest' || matrix.os == 'macos-11'
-        run: rustup target add aarch64-apple-darwin
-
-      - name: Set buildTarget environment variable
-        if: matrix.os == 'macos-11'
-        run: echo "ORG_GRADLE_PROJECT_buildTarget=$(echo aarch64-apple-darwin)" >> $GITHUB_ENV
-
-      - name: Build JAR
+      - name: Build JAR with default target
         shell: bash
         working-directory: bindings/java/iota-wallet-java/
         run: |
           chmod +x gradlew
           ./gradlew jar
 
-      - name: Get JAR name
+      - name: Build JAR with aarch64-apple-darwin target (macOS)
+        if: matrix.os == 'macos-latest'
         shell: bash
-        id: jar-name
+        env:
+          ORG_GRADLE_PROJECT_buildTarget: aarch64-apple-darwin
+        working-directory: bindings/java/iota-wallet-java/
+        run: |
+          rustup target add aarch64-apple-darwin
+          ./gradlew jar
+
+      - name: Set filename for tag construction
+        shell: bash
+        id: filename
         working-directory: bindings/java/iota-wallet-java/
         run: |
           cd lib/build/libs/
-          jarName=$(ls | grep jar)
-          echo "JAR_NAME=$jarName" >> $GITHUB_OUTPUT
+          fileName="$(ls | grep -m 1 jar)"
+          echo "FILE_NAME=$fileName" >> $GITHUB_OUTPUT
 
-      - name: Get release tag
+      - name: Construct tag
         uses: actions-ecosystem/action-regex-match@v2
-        id: release-tag
+        id: tag
         with:
-          text: ${{ steps.jar-name.outputs.JAR_NAME }}
+          text: ${{ steps.filename.outputs.FILE_NAME }}
           regex: '.*\d.\d.\d(-rc.\d)?'
-          flags: gm
+          flags: m
 
       - name: Upload JAR to Github
-        uses: svenstaro/upload-release-action@v2
+        uses: softprops/action-gh-release@v1
         with:
-          release_name: ${{ steps.release-tag.outputs.match }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: bindings/java/iota-wallet-java/lib/build/libs/${{ steps.jar-name.outputs.JAR_NAME }}
-          tag: ${{ steps.release-tag.outputs.match }}
-          overwrite: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: |
+            bindings/java/iota-wallet-java/lib/build/libs/*.jar
+          tag_name: ${{ steps.tag.outputs.match }}
+          append_body: true
           prerelease: true
 
-      - name: Publish JAR to Sonatype
+      - name: Publish JAR to Maven Central
         env:
           ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_USERNAME }}
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_PASSWORD }}
