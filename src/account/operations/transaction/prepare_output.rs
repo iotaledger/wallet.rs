@@ -99,7 +99,6 @@ impl AccountHandle {
 
         let mut second_output_builder = BasicOutputBuilder::from(&first_output);
 
-        let mut min_storage_deposit_return_amount = 0;
         // Update the amount
         match options.amount.cmp(&first_output.amount()) {
             Ordering::Greater | Ordering::Equal => {
@@ -114,7 +113,7 @@ impl AccountHandle {
                     let remainder_address = self.get_remainder_address(transaction_options).await?;
 
                     // Calculate the minimum storage deposit to be returned
-                    min_storage_deposit_return_amount =
+                    let min_storage_deposit_return_amount =
                         BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
@@ -168,13 +167,7 @@ impl AccountHandle {
         if second_output.amount() < required_storage_deposit {
             third_output_builder = third_output_builder.with_amount(required_storage_deposit)?;
             // add newly added amount also to the storage deposit return unlock condition, if that was added
-            let mut new_sdr_amount = required_storage_deposit - options.amount;
-            // If the new sdr amount is lower than it needs to be, set it to the minimum
-            if new_sdr_amount < min_storage_deposit_return_amount {
-                new_sdr_amount = min_storage_deposit_return_amount;
-                third_output_builder =
-                    third_output_builder.with_amount(min_storage_deposit_return_amount + options.amount)?;
-            }
+            let new_sdr_amount = required_storage_deposit - options.amount;
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(
@@ -273,7 +266,6 @@ impl AccountHandle {
 
         let mut second_output_builder = NftOutputBuilder::from(&first_output);
 
-        let mut min_storage_deposit_return_amount = 0;
         // Update the amount
         match options.amount.cmp(&first_output.amount()) {
             Ordering::Greater | Ordering::Equal => {
@@ -288,7 +280,7 @@ impl AccountHandle {
                     let remainder_address = self.get_remainder_address(transaction_options).await?;
 
                     // Calculate the amount to be returned
-                    min_storage_deposit_return_amount =
+                    let min_storage_deposit_return_amount =
                         BasicOutputBuilder::new_with_minimum_storage_deposit(rent_structure.clone())?
                             .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                                 Address::try_from_bech32(options.recipient_address.clone())?.1,
@@ -340,13 +332,8 @@ impl AccountHandle {
         // We might have added more unlock conditions, so we check the minimum storage deposit again and update the
         // amounts if needed
         if second_output.amount() < required_storage_deposit {
-            let mut new_sdr_amount = required_storage_deposit - options.amount;
-            // If the new sdr amount is lower than it needs to be, set it to the minimum
-            if new_sdr_amount < min_storage_deposit_return_amount {
-                new_sdr_amount = min_storage_deposit_return_amount;
-                third_output_builder =
-                    third_output_builder.with_amount(min_storage_deposit_return_amount + options.amount)?;
-            }
+            third_output_builder = third_output_builder.with_amount(required_storage_deposit)?;
+            let new_sdr_amount = required_storage_deposit - options.amount;
             if let Some(sdr) = second_output.unlock_conditions().storage_deposit_return() {
                 // create a new sdr unlock_condition with the updated amount and replace it
                 let new_sdr_unlock_condition = UnlockCondition::StorageDepositReturn(

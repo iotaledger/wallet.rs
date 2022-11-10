@@ -5,7 +5,7 @@ use std::str::FromStr;
 
 use iota_client::block::address::Address;
 use iota_wallet::{
-    account::{Assets, Features, OutputOptions},
+    account::{Assets, Features, OutputOptions, Unlocks},
     account_manager::AccountManager,
     iota_client::{
         block::output::{NativeToken, NftId, TokenId},
@@ -170,7 +170,7 @@ async fn output_preparation() -> Result<()> {
             None,
         )
         .await?;
-    assert_eq!(output.amount(), 54600);
+    assert_eq!(output.amount(), 48200);
     // address and storage deposit unlock condition, because of the metadata feature block, 12000 is not enough for the
     // required storage deposit
     assert_eq!(output.unlock_conditions().unwrap().len(), 2);
@@ -353,6 +353,39 @@ async fn output_preparation() -> Result<()> {
     assert_eq!(issuer_feature.address(), &issuer_and_sender_address);
     let sender_feature = features.sender().unwrap();
     assert_eq!(sender_feature.address(), &issuer_and_sender_address);
+
+    // nft with expiration
+    let output = account
+        .prepare_output(
+            OutputOptions {
+                recipient_address: recipient_address.clone(),
+                amount: 500,
+                assets: Some(Assets {
+                    native_tokens: None,
+                    nft_id: Some(NftId::from_str(
+                        "0x0000000000000000000000000000000000000000000000000000000000000000",
+                    )?),
+                }),
+                features: Some(Features {
+                    metadata: None,
+                    tag: None,
+                    issuer: None,
+                    sender: None,
+                }),
+                unlocks: Some(Unlocks {
+                    expiration_unix_time: Some(1),
+                    timelock_unix_time: None,
+                }),
+                // unlocks: None,
+                storage_deposit: None,
+            },
+            None,
+        )
+        .await?;
+    assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
+    assert_eq!(output.amount(), 53900);
+    // address, sdr, expiration
+    assert_eq!(output.unlock_conditions().unwrap().len(), 3);
 
     std::fs::remove_dir_all("test-storage/output_preparation").unwrap_or(());
     Ok(())
