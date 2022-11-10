@@ -29,25 +29,25 @@ jobs:
         override: true
 
     - name: Cache cargo registry
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/registry
         key: ubuntu-latest-nightly-cargo-registry-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Cache cargo index
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/git
         key: ubuntu-latest-nightly-cargo-index-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Cache cargo target
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: target
         key: ubuntu-latest-nightly-cargo-build-target-${{ hashFiles('**/Cargo.toml') }}
 
     - name: Cache nodejs binding cargo target
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: bindings/nodejs/target
         key: ubuntu-latest-nightly-cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}
@@ -58,7 +58,7 @@ jobs:
         sudo apt-get install libudev-dev libusb-1.0-0-dev
 
     - name: Cache python binding cargo target
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         path: bindings/python/native/target
         key: ubuntu-latest-nightly-cargo-build-python-target-${{ hashFiles('**/Cargo.toml') }}
