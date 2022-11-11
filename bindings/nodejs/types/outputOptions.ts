@@ -20,6 +20,8 @@ export interface Assets {
 export interface Features {
     tag?: HexEncodedString;
     metadata?: HexEncodedString;
+    sender?: string;
+    issuer?: string;
 }
 
 /** Time unlocks to include in the output */
