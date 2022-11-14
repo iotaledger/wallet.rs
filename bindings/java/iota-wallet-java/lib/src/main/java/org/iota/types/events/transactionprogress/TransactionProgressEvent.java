@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.iota.api.CustomGson;
 import org.iota.types.AbstractObject;
+import org.iota.types.PreparedTransactionData;
 import org.iota.types.events.wallet.WalletEvent;
 
 import com.google.gson.Gson;
@@ -17,6 +18,8 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
 import com.google.gson.annotations.JsonAdapter;
 
 @JsonAdapter(TransactionProgressEventAdapter.class)
@@ -86,5 +89,31 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
 
         event.transactionType = TransactionProgressEventType.valueOf(type);
         return event;
+    }
+
+    public JsonElement serialize(TransactionProgressEvent src, Type typeOfSrc, JsonSerializationContext context) {
+        JsonObject element = new JsonObject();
+        JsonElement value;
+        if (src instanceof SelectingInputs) {
+            value = new Gson().toJsonTree(src, SelectingInputs.class);
+        } else if (src instanceof GeneratingRemainderDepositAddress) {
+            value = new Gson().toJsonTree(src, GeneratingRemainderDepositAddress.class);
+        } else if (src instanceof PreparedTransaction) {
+            // Directy serialise the tx
+            value = new Gson().toJsonTree(((PreparedTransaction) src).getPreparedTransaction(),
+                    PreparedTransactionData.class);
+        } else if (src instanceof Broadcasting) {
+            value = new Gson().toJsonTree(src, Broadcasting.class);
+        } else if (src instanceof PerformingPow) {
+            value = new Gson().toJsonTree(src, PerformingPow.class);
+        } else if (src instanceof SigningTransaction) {
+            value = new Gson().toJsonTree(src, SigningTransaction.class);
+        } else if (src instanceof PreparedTransactionEssenceHash) {
+            value = new JsonPrimitive(((PreparedTransactionEssenceHash) src).getHash());
+        } else
+            throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
+
+        element.add(src.transactionType.toString(), value);
+        return element;
     }
 }

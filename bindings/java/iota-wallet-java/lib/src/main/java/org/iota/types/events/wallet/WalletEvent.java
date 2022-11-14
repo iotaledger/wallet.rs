@@ -56,7 +56,7 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
                 event = CustomGson.get().fromJson(value, NewOutput.class);
                 break;
             }
-            case "SpentOutput": { // SpentOutputEvent
+            case "SpentOutput": {
                 event = CustomGson.get().fromJson(value, SpentOutput.class);
                 break;
             }
@@ -75,5 +75,27 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
 
         event.type = WalletEventType.valueOf(type);
         return event;
+    }
+
+    public JsonElement serialize(WalletEvent src, Type typeOfSrc, JsonSerializationContext context) {
+        JsonObject element = new JsonObject();
+        JsonElement value;
+        if (src instanceof ConsolidationRequired) {
+            value = new Gson().toJsonTree(src, ConsolidationRequired.class);
+        } else if (src instanceof LedgerAddressGeneration) {
+            value = new Gson().toJsonTree(src, LedgerAddressGeneration.class);
+        } else if (src instanceof NewOutput) {
+            value = new Gson().toJsonTree(src, NewOutput.class);
+        } else if (src instanceof SpentOutput) {
+            value = new Gson().toJsonTree(src, SpentOutput.class);
+        } else if (src instanceof TransactionInclusion) {
+            value = new Gson().toJsonTree(src, TransactionInclusion.class);
+        } else if (src instanceof TransactionProgressEvent) {
+            value = new Gson().toJsonTree(src, TransactionProgressEvent.class);
+        } else
+            throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
+
+        element.add(src.type.toString(), value);
+        return element;
     }
 }
