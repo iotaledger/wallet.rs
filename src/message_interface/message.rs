@@ -164,14 +164,6 @@ pub enum Message {
         #[serde(rename = "bech32Hrp")]
         bech32_hrp: Option<String>,
     },
-
-    // Add a listener
-    // #[cfg(feature = "events")]
-    // #[serde(skip)]
-    // Listen {
-    // events: Vec<WalletEventType>,
-    // callback: std::sync::Arc<Box<dyn Fn(&Event) + Send> >,
-    // },
     // Remove all listeners of this type. Empty vec clears all listeners
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]

@@ -721,10 +721,9 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::SyncAccount { options } => {
-                let res = account_handle.sync(options.clone()).await;
-                Ok(Response::Balance(AccountBalanceDto::from(&res?)))
-            }
+            AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
+                &account_handle.sync(options.clone()).await?,
+            ))),
             AccountMethod::SendAmount {
                 addresses_with_amount,
                 options,
