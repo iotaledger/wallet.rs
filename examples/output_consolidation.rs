@@ -9,7 +9,10 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::constants::SHIMMER_COIN_TYPE;
+use iota_client::{
+    constants::SHIMMER_COIN_TYPE,
+    secret::{mnemonic::MnemonicSecretManager, SecretManager},
+};
 use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::main]
@@ -17,12 +20,17 @@ async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
+    let mnemonic: &str = &env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap();
+    let mnemonic_secret_manager = MnemonicSecretManager::try_from_mnemonic(mnemonic).unwrap();
+    let secret_manager = SecretManager::Mnemonic(mnemonic_secret_manager);
+
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?
         .with_node_sync_disabled();
 
     // Create the account manager
     let manager = AccountManager::builder()
+        .with_secret_manager(secret_manager)
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
         .finish()

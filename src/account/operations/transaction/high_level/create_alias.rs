@@ -165,7 +165,7 @@ impl AccountHandle {
             .values()
             .find_map(|output_data| match &output_data.output {
                 Output::Alias(alias_output) => {
-                    let output_alias_id = alias_output.alias_id().or_from_output_id(output_data.output_id);
+                    let output_alias_id = alias_output.alias_id_non_null(&output_data.output_id);
                     if let Some(alias_id) = alias_id {
                         if output_alias_id == alias_id {
                             Some((output_alias_id, output_data.clone()))

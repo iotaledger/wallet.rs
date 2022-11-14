@@ -12,7 +12,7 @@ use std::{
 };
 
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
+    api_types::response::OutputMetadataResponse,
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
@@ -81,18 +81,18 @@ impl AccountHandle {
         // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
         // `spent_or_not_synced_outputs` directly from a new method
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
-        let spent_or_not_synced_output_responses = self
+        let spent_or_unsynced_output_metadata_responses = self
             .client
-            .try_get_outputs(spent_or_not_synced_output_ids.clone())
+            .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
             .await?;
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_not_synced_outputs: HashMap<OutputId, Option<OutputWithMetadataResponse>> =
+        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
-        for output_response in spent_or_not_synced_output_responses {
-            let output_id = output_response.metadata.output_id()?;
-            spent_or_not_synced_outputs.insert(output_id, Some(output_response));
+        for output_metadata_response in spent_or_unsynced_output_metadata_responses {
+            let output_id = output_metadata_response.output_id()?;
+            spent_or_unsynced_output_metadata_map.insert(output_id, Some(output_metadata_response));
         }
 
         if options.sync_incoming_transactions {
@@ -108,7 +108,7 @@ impl AccountHandle {
         self.update_account(
             addresses_with_unspent_outputs,
             outputs_data,
-            spent_or_not_synced_outputs,
+            spent_or_unsynced_output_metadata_map,
             &options,
         )
         .await?;
@@ -190,14 +190,12 @@ impl AccountHandle {
             for output_data in new_outputs_data.iter() {
                 match &output_data.output {
                     Output::Alias(alias_output) => {
-                        let alias_address =
-                            AliasAddress::from(alias_output.alias_id().or_from_output_id(output_data.output_id));
+                        let alias_address = AliasAddress::from(alias_output.alias_id_non_null(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Alias(alias_address), output_data.address);
                     }
                     Output::Nft(nft_output) => {
-                        let nft_address =
-                            NftAddress::from(nft_output.nft_id().or_from_output_id(output_data.output_id));
+                        let nft_address = NftAddress::from(nft_output.nft_id_non_null(&output_data.output_id));
 
                         new_alias_and_nft_addresses.insert(Address::Nft(nft_address), output_data.address);
                     }

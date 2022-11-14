@@ -21,11 +21,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0-rc.3 - 20XX-XX-XX
 
+### Added
+
+- `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
+
 ### Changed
 
 - Use `OutputWithMetadataResponse` instead of `OutputResponse`;
 - `AccountHandle::build_transaction_essence` made async;
-- Add `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
+- `Error::ClientError` renamed to `Error::Client` and boxed;
+- `WalletEvent::SpentOutput` boxed;
+- Allow null nft ids in `prepare_output()` for minting;
+- `TagFeature` & `MetadataFeature` encoded as hex strings instead of utf-8 strings;
+- Call `try_get_outputs_metadata` instead of `try_get_outputs` when possible (more efficient);
+
+### Removed
+
+- `Error::IotaClientError` as it was a duplicate;
+
+### Fixed
+
+- Min storage deposit amount in `prepare_output()` with expiration unlock condition;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
