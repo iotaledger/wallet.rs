@@ -1,14 +1,13 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{convert::TryFrom, sync::Mutex, fs::File, io::Read};
+use std::{convert::TryFrom, fs::File, io::Read, sync::Mutex};
 
 use iota_wallet::{
-    events::types::{WalletEventType, WalletEvent, TransactionProgressEvent},
+    events::types::{TransactionProgressEvent, WalletEvent, WalletEventType},
+    iota_client::api::PreparedTransactionDataDto,
     message_interface::{ManagerOptions, Message, WalletMessageHandler},
-    iota_client::api::PreparedTransactionDataDto
 };
-
 use jni::{
     objects::{JClass, JObject, JStaticMethodID, JString, JValue},
     signature::ReturnType,
@@ -76,11 +75,8 @@ pub extern "system" fn Java_org_iota_api_NativeApi_emit(_env: JNIEnv, _class: JC
     let mut json = String::new();
     file.read_to_string(&mut json).unwrap();
 
-    let prep = Box::new(
-        serde_json::from_str::<PreparedTransactionDataDto>(&json).unwrap()
-    );
+    let prep = Box::new(serde_json::from_str::<PreparedTransactionDataDto>(&json).unwrap());
     let progress = TransactionProgressEvent::PreparedTransaction(prep);
-
 
     let event: WalletEvent = WalletEvent::TransactionProgress(progress);
     let message = Message::EmitTestEvent(event);
@@ -115,8 +111,10 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
 
     output.into_raw()
 }
-
-// This keeps rust from "mangling" the name and making it unique for this crate.
+/// # Safety
+///
+/// Object::from_raw(callback) makes a java object from the callback.
+/// This will crash if callback is java null
 #[no_mangle]
 pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
     env: JNIEnv,
@@ -149,7 +147,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
         let env = {
             let vm = vm_guard.as_ref().unwrap();
             let mut env = vm.get_env();
-            if let Err(_) = env {
+            if env.is_err() {
                 env = vm.attach_current_thread().map(|e| *e);
             }
             env.expect("failed to get env")

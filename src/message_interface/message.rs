@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
 #[cfg(feature = "events")]
-use crate::events::types::{WalletEventType, WalletEvent};
+use crate::events::types::{WalletEvent, WalletEventType};
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
     ClientOptions,
