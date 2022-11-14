@@ -49,9 +49,11 @@ public class NativeApi {
     // Destroys account handle
     protected static native void destroyHandle();
 
+    public static native void emit();
+
     private static native String sendMessage(String command);
 
-    private static native String listen(String[] events, long id, EventListener listener);
+    private static native String listen(String[] events, EventListener listener);
 
     private static JsonElement handleClientResponse(String methodName, String jsonResponse) throws WalletException {
         ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
@@ -76,20 +78,14 @@ public class NativeApi {
         }
     }
 
-    private static final AtomicLong uuid = new AtomicLong();
-
-    public static long callListen(EventListener listener, WalletEventType... events) throws WalletException {
-        long id = uuid.getAndIncrement();
+    public static void callListen(EventListener listener, WalletEventType... events) throws WalletException {
         String[] eventStrs = new String[events.length];
         for (int i = 0; i < events.length; i++) {
             eventStrs[i] = events[i].toString();
         }
 
         // Check for errors, no interest in result
-        JsonElement response = handleClientResponse("listen", listen(eventStrs, id, listener));
-
-        // todo generate ID in rust and get from response
-        return id;
+        handleClientResponse("listen", listen(eventStrs, listener));
     }
 
     public static JsonElement callBaseApi(ClientCommand command) throws WalletException {

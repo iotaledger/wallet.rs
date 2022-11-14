@@ -61,7 +61,7 @@ public class ClientConfig extends AbstractObject {
         }
     }
 
-    static class ApiTimeout {
+    public static class ApiTimeout {
         private int secs;
         private int nanos;
 
@@ -76,7 +76,7 @@ public class ClientConfig extends AbstractObject {
         }
     }
 
-    static class RemotePowTimeout {
+    public static class RemotePowTimeout {
         private int secs;
         private int nanos;
 

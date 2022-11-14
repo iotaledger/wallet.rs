@@ -8,14 +8,14 @@ import org.iota.types.transaction_essence.TransactionEssence;
 public class PreparedTransactionData extends AbstractObject {
 
     private TransactionEssence essence;
-    private InputSigningData inputsData;
+    private InputSigningData inputsData[];
     private RemainderData remainderData;
 
     public TransactionEssence getEssence() {
         return essence;
     }
 
-    public InputSigningData getInputsData() {
+    public InputSigningData[] getInputsData() {
         return inputsData;
     }
 

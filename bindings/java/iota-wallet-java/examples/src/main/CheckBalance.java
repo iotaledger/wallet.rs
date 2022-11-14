@@ -3,6 +3,7 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
@@ -13,7 +14,7 @@ public class CheckBalance {
         // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
         // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE).withApiTimeout(new ApiTimeout().withSecs(60)))
                 .withSecretManager(new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );

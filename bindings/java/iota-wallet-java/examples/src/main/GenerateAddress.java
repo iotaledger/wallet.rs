@@ -26,6 +26,9 @@ public class GenerateAddress {
         // Generate two addresses.
         AccountAddress[] addresses = a.generateAddresses(new GenerateAddresses().withAmount(2));
 
+        for (AccountAddress address : addresses)
+            System.out.println(address.getAddress());
+
         // Print all addresses.
         for (AccountAddress address : a.getPublicAddresses())
             System.out.println(address.getAddress());

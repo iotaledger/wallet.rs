@@ -107,12 +107,6 @@ impl WalletMessageHandler {
         self.account_manager.listen(events, handler).await;
     }
 
-    #[cfg(feature = "events")]
-    /// Remove wallet event listeners, empty vec will remove all listeners
-    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
-        self.account_manager.clear_listeners(events).await;
-    }
-
     /// Handles a message.
     pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
@@ -288,7 +282,6 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "events")]
-            #[cfg(debug_assertions)]
             Message::EmitTestEvent(event) => {
                 convert_async_panics(|| async {
                     self.account_manager.emit_test_event(event.clone()).await?;
@@ -310,7 +303,7 @@ impl WalletMessageHandler {
                     Ok(Response::Bech32Address(utils::hex_to_bech32(&hex, &bech32_hrp)?))
                 })
                 .await
-            },
+            }
             #[cfg(feature = "events")]
             Message::ClearListeners(events) => {
                 convert_async_panics(|| async {
@@ -318,7 +311,7 @@ impl WalletMessageHandler {
                     Ok(Response::Ok(()))
                 })
                 .await
-            },
+            }
         };
 
         let response = match response {
@@ -728,9 +721,10 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
-                &account_handle.sync(options.clone()).await?,
-            ))),
+            AccountMethod::SyncAccount { options } => {
+                let res = account_handle.sync(options.clone()).await;
+                Ok(Response::Balance(AccountBalanceDto::from(&res?)))
+            }
             AccountMethod::SendAmount {
                 addresses_with_amount,
                 options,

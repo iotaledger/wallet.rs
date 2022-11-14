@@ -5,4 +5,13 @@ package org.iota.types.events.transactionprogress;
 
 public class GeneratingRemainderDepositAddress extends TransactionProgressEvent {
 
+    private String address;
+
+    public GeneratingRemainderDepositAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAddress() {
+        return address;
+    }
 }

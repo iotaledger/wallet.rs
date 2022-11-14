@@ -240,7 +240,6 @@ impl AccountManager {
     }
 
     #[cfg(feature = "events")]
-    #[cfg(debug_assertions)]
     /// Helper function to test events. Emits a provided event with account index 0.
     pub async fn emit_test_event(&self, event: crate::events::types::WalletEvent) -> crate::Result<()> {
         self.event_emitter.lock().await.emit(0, event);

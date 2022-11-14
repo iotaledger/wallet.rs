@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import org.iota.Wallet;
+import org.iota.api.NativeApi;
 import org.iota.types.*;
+import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.transactionprogress.TransactionProgressEvent;
-import org.iota.types.events.wallet.TransactionProgress;
 import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
@@ -30,23 +31,27 @@ public class CallbackEvents {
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
         // ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
-                .withSecretManager(new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
+                .withClientOptions(
+                        new ClientConfig().withApiTimeout(new ApiTimeout().withSecs(60)).withNodes(Env.NODE))
+                .withSecretManager(
+                        new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer));
 
-        Long id = wallet.listen(new EventListener() {
+        wallet.listen(new EventListener() {
 
             @Override
             public void receive(Event event) {
                 System.out.println("TransactionProgress receive: " + event.getEvent());
-                if (event.getEvent() instanceof TransactionProgress) {
-                    TransactionProgress progress = (TransactionProgress) event.getEvent();
+                if (event.getEvent() instanceof TransactionProgressEvent) {
+                    TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
                     System.out.println("type: " + progress.getClass().getName());
+                    System.out.println(progress.toString());
+                } else {
+                    System.out.println(event.toString());
                 }
             }
 
-        }, WalletEventType.TransactionProgress);
-        long id2 = wallet.listen(new Callback(), WalletEventType.values());
+        }, WalletEventType.values());
 
         // Get account and sync it with the registered node to ensure that its balances
         // are up-to-date.
@@ -75,6 +80,9 @@ public class CallbackEvents {
         System.out.println(
                 "Transaction: " + t.getTransactionId() + " Block sent: " + Env.EXPLORER + "/api/core/v2/blocks/" +
                         t.getBlockId());
+
+        // Test event
+        // NativeApi.emit();
 
         wallet.clearListeners();
         wallet.destroy();

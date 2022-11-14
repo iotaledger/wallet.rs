@@ -107,12 +107,6 @@ where
     handle.listen(events, handler).await;
 }
 
-#[cfg(feature = "events")]
-/// Remove wallet event listeners, empty vec will remove all listeners
-pub async fn clear_listeners(handle: &WalletMessageHandler, events: Vec<WalletEventType>) {
-    handle.clear_listeners(events).await;
-}
-
 #[cfg(test)]
 mod tests {
     use std::fs;

@@ -292,11 +292,10 @@ public class Wallet extends NativeApi {
      * 
      * @param listener The Listener object hat will handle events
      * @param types    The types you want to listen. Empty means all events
-     * @return The listener ID, used in deregistering
      * @throws WalletException
      */
-    public Long listen(EventListener listener, WalletEventType... types) throws WalletException {
-        return callListen(listener, types);
+    public void listen(EventListener listener, WalletEventType... types) throws WalletException {
+        callListen(listener, types);
     }
 
     /**

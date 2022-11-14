@@ -3,6 +3,17 @@
 
 package org.iota.types.events.wallet;
 
+import org.iota.types.OutputData;
+
 public class SpentOutput extends WalletEvent {
 
+    private OutputData output;
+
+    public SpentOutput(OutputData output) {
+        this.output = output;
+    }
+
+    public OutputData getOutput() {
+        return output;
+    }
 }

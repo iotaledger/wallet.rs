@@ -7,6 +7,10 @@ public class LedgerAddressGeneration extends WalletEvent {
 
     private String address;
 
+    public LedgerAddressGeneration(String address) {
+        this.address = address;
+    }
+
     public String getAddress() {
         return address;
     }

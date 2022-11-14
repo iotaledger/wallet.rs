@@ -7,18 +7,20 @@ import java.lang.reflect.Type;
 import java.util.Set;
 import java.util.Map.Entry;
 
+import org.iota.api.CustomGson;
 import org.iota.types.AbstractObject;
-import org.iota.types.events.wallet.TransactionProgress;
+import org.iota.types.events.wallet.WalletEvent;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
 
 @JsonAdapter(TransactionProgressEventAdapter.class)
-public abstract class TransactionProgressEvent extends TransactionProgress {
+public abstract class TransactionProgressEvent extends WalletEvent {
 
     protected TransactionProgressEventType transactionType;
 
@@ -35,43 +37,47 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
         JsonElement jsonType = json.getAsJsonObject().get("TransactionProgress");
 
         String type;
+        JsonElement value;
         // Ennum with value
         if (jsonType.isJsonObject()) {
-            type = jsonType.getAsJsonObject().entrySet().iterator().next().getKey();
+            Entry<String, JsonElement> entry = jsonType.getAsJsonObject().entrySet().iterator().next();
+            type = entry.getKey();
+            value = entry.getValue();
         } else {
             // Enum without vaue
             type = jsonType.getAsString();
+            value = new JsonObject();
         }
 
         TransactionProgressEvent event;
 
         switch (type) {
             case "SelectingInputs": {
-                event = new Gson().fromJson("{}", SelectingInputs.class);
+                event = CustomGson.get().fromJson(value, SelectingInputs.class);
                 break;
             }
-            case "GeneratingRemainderDepositAddress": { // AddressData
-                event = new Gson().fromJson(jsonType, GeneratingRemainderDepositAddress.class);
+            case "GeneratingRemainderDepositAddress": {
+                event = CustomGson.get().fromJson(value, GeneratingRemainderDepositAddress.class);
                 break;
             }
-            case "PreparedTransaction": { // PreparedTransactionDataDto
-                event = new Gson().fromJson(jsonType, PreparedTransaction.class);
+            case "PreparedTransaction": {
+                event = CustomGson.get().fromJson(value, PreparedTransaction.class);
                 break;
             }
             case "Broadcasting": {
-                event = new Gson().fromJson("{}", Broadcasting.class);
+                event = CustomGson.get().fromJson(value, Broadcasting.class);
                 break;
             }
             case "PerformingPow": {
-                event = new Gson().fromJson("{}", PerformingPow.class);
+                event = CustomGson.get().fromJson(value, PerformingPow.class);
                 break;
             }
             case "SigningTransaction": {
-                event = new Gson().fromJson("{}", SigningTransaction.class);
+                event = CustomGson.get().fromJson(value, SigningTransaction.class);
                 break;
             }
-            case "PreparedTransactionEssenceHash": { // String hash
-                event = new Gson().fromJson(jsonType, PreparedTransactionEssenceHash.class);
+            case "PreparedTransactionEssenceHash": {
+                event = new PreparedTransactionEssenceHash(jsonType.getAsJsonObject().get(type).getAsString());
                 break;
             }
             default:
