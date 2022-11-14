@@ -41,13 +41,13 @@ public class CallbackEvents {
 
             @Override
             public void receive(Event event) {
-                System.out.println("TransactionProgress receive: " + event.getEvent());
+                System.out.println(
+                        System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
                 if (event.getEvent() instanceof TransactionProgressEvent) {
                     TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
-                    System.out.println("type: " + progress.getClass().getName());
                     System.out.println(progress.toString());
                 } else {
-                    System.out.println(event.toString());
+                    System.out.println(event.getEvent().toString());
                 }
             }
 
@@ -67,7 +67,7 @@ public class CallbackEvents {
 
         // TODO: replace with your own values.
         String receiverAddress = account.getPublicAddresses()[0].getAddress();
-        String amount = "1000000";
+        String amount = balance.getBaseCoin().getAvailable() + "";
 
         // Send transaction.
         Transaction t = account.sendAmount(
@@ -80,9 +80,6 @@ public class CallbackEvents {
         System.out.println(
                 "Transaction: " + t.getTransactionId() + " Block sent: " + Env.EXPLORER + "/api/core/v2/blocks/" +
                         t.getBlockId());
-
-        // Test event
-        // NativeApi.emit();
 
         wallet.clearListeners();
         wallet.destroy();

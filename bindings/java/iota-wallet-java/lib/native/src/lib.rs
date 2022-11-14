@@ -1,11 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::{convert::TryFrom, fs::File, io::Read, sync::Mutex};
+use std::{convert::TryFrom, sync::Mutex};
 
 use iota_wallet::{
-    events::types::{TransactionProgressEvent, WalletEvent, WalletEventType},
-    iota_client::api::PreparedTransactionDataDto,
+    events::types::WalletEventType,
     message_interface::{ManagerOptions, Message, WalletMessageHandler},
 };
 use jni::{
@@ -66,25 +65,6 @@ pub extern "system" fn Java_org_iota_api_NativeApi_destroyHandle(_env: JNIEnv, _
     (*MESSAGE_HANDLER.lock().unwrap()) = None;
     (*VM.lock().unwrap()) = None;
     (*METHOD_CACHE.lock().unwrap()) = None;
-}
-
-#[no_mangle]
-pub extern "system" fn Java_org_iota_api_NativeApi_emit(_env: JNIEnv, _class: JClass) {
-    let path = "src/main/res/prepared_transaction.json";
-    let mut file = File::open(&path).unwrap();
-    let mut json = String::new();
-    file.read_to_string(&mut json).unwrap();
-
-    let prep = Box::new(serde_json::from_str::<PreparedTransactionDataDto>(&json).unwrap());
-    let progress = TransactionProgressEvent::PreparedTransaction(prep);
-
-    let event: WalletEvent = WalletEvent::TransactionProgress(progress);
-    let message = Message::EmitTestEvent(event);
-
-    let (sender, mut receiver) = unbounded_channel();
-    let guard = MESSAGE_HANDLER.lock().unwrap();
-    crate::block_on(guard.as_ref().unwrap().handle(message, sender));
-    crate::block_on(receiver.recv()).unwrap();
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.

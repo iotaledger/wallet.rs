@@ -14,9 +14,6 @@ import org.iota.types.events.EventListener;
 import org.iota.types.events.wallet.WalletEventType;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class NativeApi {
 
@@ -48,8 +45,6 @@ public class NativeApi {
 
     // Destroys account handle
     protected static native void destroyHandle();
-
-    public static native void emit();
 
     private static native String sendMessage(String command);
 
