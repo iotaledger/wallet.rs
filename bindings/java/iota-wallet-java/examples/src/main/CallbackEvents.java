@@ -15,13 +15,17 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class CallbackEvents {
+public class CallbackEvents implements EventListener {
 
-    static class Callback implements EventListener {
-        @Override
-        public void receive(Event event) {
-            System.out.println("All events receive: ");
-            System.out.println(event.getEvent());
+    @Override
+    public void receive(Event event) {
+        System.out.println(
+                System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
+        if (event.getEvent() instanceof TransactionProgressEvent) {
+            TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
+            System.out.println(progress.toString());
+        } else {
+            System.out.println(event.getEvent().toString());
         }
     }
 
@@ -34,24 +38,11 @@ public class CallbackEvents {
                 .withClientOptions(
                         new ClientConfig().withApiTimeout(new ApiTimeout().withSecs(60)).withNodes(Env.NODE))
                 .withSecretManager(
-                        new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
+                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer));
 
-        wallet.listen(new EventListener() {
-
-            @Override
-            public void receive(Event event) {
-                System.out.println(
-                        System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
-                if (event.getEvent() instanceof TransactionProgressEvent) {
-                    TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
-                    System.out.println(progress.toString());
-                } else {
-                    System.out.println(event.getEvent().toString());
-                }
-            }
-
-        }, WalletEventType.values());
+        // Listen to all events. An empty array also indicates al events
+        wallet.listen(new CallbackEvents(), WalletEventType.values());
 
         // Get account and sync it with the registered node to ensure that its balances
         // are up-to-date.

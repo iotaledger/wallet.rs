@@ -15,7 +15,8 @@ public class GenerateAddress {
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))
-                .withSecretManager(new StrongholdSecretManager(Env.PASSWORD, null, Env.SNAPSHOT_PATH))
+                .withSecretManager(
+                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );
 
@@ -26,6 +27,7 @@ public class GenerateAddress {
         // Generate two addresses.
         AccountAddress[] addresses = a.generateAddresses(new GenerateAddresses().withAmount(2));
 
+        // Print the generated addresses.
         for (AccountAddress address : addresses)
             System.out.println(address.getAddress());
 

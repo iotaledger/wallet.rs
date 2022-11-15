@@ -300,7 +300,7 @@ public class Wallet extends NativeApi {
 
     /**
      * Destroy the Wallet and drop its database connection.
-     * Unregisteres any existing listeners
+     * Unregisteres any existing listeners.
      */
     public void destroy() throws WalletException {
         clearListeners();
@@ -308,10 +308,10 @@ public class Wallet extends NativeApi {
     }
 
     /**
-     * Clear the callbacks for provided events. An nul or empty array will clear all
-     * listeners.
+     * Clear the callbacks for provided events. An null or empty array will clear
+     * all listeners.
      *
-     * @param types The event types to clear. Emmpty means clear all events
+     * @param types The event types to clear. Empty means clear all events
      */
     public void clearListeners(WalletEventType... types) throws WalletException {
         if (types == null) {
