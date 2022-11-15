@@ -9,7 +9,6 @@ import java.nio.file.Paths;
 
 import org.iota.Wallet;
 import org.iota.api.CustomGson;
-import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
@@ -26,8 +25,6 @@ import org.iota.types.secret.StrongholdSecretManager;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
-import com.google.gson.JsonObject;
 
 public class CallbackEvents implements EventListener {
 
