@@ -61,7 +61,7 @@ jobs:
         sudo apt-get install libudev-dev libusb-1.0-0-dev
 
     - name: Cache cargo registry
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/registry
         # Add date to the cache to keep it up to date
@@ -71,7 +71,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
           ${{ matrix.os }}-stable-cargo-registry-
     - name: Cache cargo index
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/git
         # Add date to the cache to keep it up to date
@@ -81,7 +81,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
           ${{ matrix.os }}-stable-cargo-index-
     - name: Cache cargo target
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: target
         # Add date to the cache to keep it up to date
@@ -145,7 +145,7 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           # Add date to the cache to keep it up to date
@@ -156,7 +156,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/git
           # Add date to the cache to keep it up to date
@@ -167,7 +167,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
      
       - name: Cache nodejs binding cargo target
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         if: matrix.os != 'windows-latest'
         # We get a linker error on Windows when using the cache (LNK1181: cannot open input file 'node.lib')
         # https://github.com/iotaledger/wallet.rs/pull/467/checks?check_run_id=2214108362#step:11:41
@@ -239,7 +239,7 @@ jobs:
         python -m pip install tox-gh-actions
     
     - name: Cache cargo registry
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/registry
         # Add date to the cache to keep it up to date
@@ -250,7 +250,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-registry-
 
     - name: Cache cargo index
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: ~/.cargo/git
         # Add date to the cache to keep it up to date
@@ -261,7 +261,7 @@ jobs:
           ${{ matrix.os }}-stable-cargo-index-
     
     - name: Cache python binding cargo target
-      uses: actions/cache@v2.1.4
+      uses: actions/cache@v3
       with:
         path: bindings/python/native/target
         # Add date to the cache to keep it up to date
@@ -323,7 +323,7 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
       - name: Cache cargo registry
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/registry
           # Add date to the cache to keep it up to date
@@ -334,7 +334,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-registry-
 
       - name: Cache cargo index
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: ~/.cargo/git
           # Add date to the cache to keep it up to date
@@ -345,7 +345,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
      
       - name: Cache java binding cargo target
-        uses: actions/cache@v2.1.4
+        uses: actions/cache@v3
         with:
           path: bindings/java/native/target
           # Add date to the cache to keep it up to date

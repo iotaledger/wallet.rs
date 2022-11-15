@@ -65,16 +65,7 @@ impl AccountHandle {
                 let client = client.clone();
                 tokio::spawn(async move {
                     client
-                        .basic_output_ids(vec![
-                            QueryParameter::ExpirationReturnAddress(bech32_address),
-                            // Ignore outputs that aren't expired yet
-                            QueryParameter::ExpiresBefore(
-                                std::time::SystemTime::now()
-                                    .duration_since(std::time::UNIX_EPOCH)
-                                    .expect("time went backwards")
-                                    .as_secs() as u32,
-                            ),
-                        ])
+                        .basic_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address)])
                         .await
                         .map_err(From::from)
                 })

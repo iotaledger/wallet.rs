@@ -54,7 +54,7 @@ impl AccountHandle {
                     Some(AddressGenerationOptions {
                         internal: false,
                         metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: true,
+                            ledger_nano_prompt: false,
                         },
                     }),
                 )
@@ -78,7 +78,7 @@ impl AccountHandle {
                     Some(AddressGenerationOptions {
                         internal: true,
                         metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: true,
+                            ledger_nano_prompt: false,
                         },
                     }),
                 )
@@ -113,7 +113,7 @@ impl AccountHandle {
                     Some(AddressGenerationOptions {
                         internal: false,
                         metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: true,
+                            ledger_nano_prompt: false,
                         },
                     }),
                 )
@@ -124,7 +124,7 @@ impl AccountHandle {
                     Some(AddressGenerationOptions {
                         internal: true,
                         metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: true,
+                            ledger_nano_prompt: false,
                         },
                     }),
                 )

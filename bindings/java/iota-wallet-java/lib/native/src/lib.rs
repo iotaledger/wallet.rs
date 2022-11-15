@@ -91,6 +91,7 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
 
     output.into_raw()
 }
+
 /// # Safety
 ///
 /// Object::from_raw(callback) makes a java object from the callback.
