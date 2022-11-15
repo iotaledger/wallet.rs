@@ -1,5 +1,24 @@
 # Changelog
 
+## \[2.0.3-rc.5]
+
+- Don't require address approval on ledger nano during account recovery.
+  - [5cb8691d](https://github.com/iotaledger/wallet.rs/commit/5cb8691d1c68f78bb5ec63d209605c0d8d016fa2) Bump client rev and fix breaking changes ([#1460](https://github.com/iotaledger/wallet.rs/pull/1460)) on 2022-09-27
+  - [4691ae37](https://github.com/iotaledger/wallet.rs/commit/4691ae371dea3ede7cc6a5bcf28c5be10f1d6f31) Prepare rc nodejs ([#1475](https://github.com/iotaledger/wallet.rs/pull/1475)) on 2022-09-28
+  - [48db2d25](https://github.com/iotaledger/wallet.rs/commit/48db2d259d602819a37e0473ed2e75e0f7d8e9ca) Undo changes ([#1570](https://github.com/iotaledger/wallet.rs/pull/1570)) on 2022-11-15
+- Fix min storage deposit amount in prepareOutput().
+  - [7a69986a](https://github.com/iotaledger/wallet.rs/commit/7a69986a952b9d064368d9cf5d4cddd6bf36e560) Fix min storage deposit in `prepare_output()` ([#1563](https://github.com/iotaledger/wallet.rs/pull/1563)) on 2022-11-10
+- Add getIncomingTransactionData() and IncomingTransactionData type.
+  - [88688532](https://github.com/iotaledger/wallet.rs/commit/886885323e798a388a969b43ab2bb80692107b15) feat: update account methods ([#1556](https://github.com/iotaledger/wallet.rs/pull/1556)) on 2022-11-09
+- Improve output consolidation logic.
+  - [7fee87b3](https://github.com/iotaledger/wallet.rs/commit/7fee87b371a729814304180781a1e2c576ffa63f) chore: improve output consolidation logic ([#1551](https://github.com/iotaledger/wallet.rs/pull/1551)) on 2022-11-10
+- Sync outputs with expiration unlock condition, even when they can't be unlocked currently.
+  - [3b51dd95](https://github.com/iotaledger/wallet.rs/commit/3b51dd95998968867655fe2c4ec44d41aa252178) Improve syncing ([#633](https://github.com/iotaledger/wallet.rs/pull/633)) on 2021-05-27
+  - [c39362f3](https://github.com/iotaledger/wallet.rs/commit/c39362f3f2ea2975754a623884d8d7a7ae09ce6c) apply version updates ([#628](https://github.com/iotaledger/wallet.rs/pull/628)) on 2021-05-27
+  - [e09167ae](https://github.com/iotaledger/wallet.rs/commit/e09167ae97493961980d5ab9f8d448ae46c53799) improve syncing speed and add logger example ([#638](https://github.com/iotaledger/wallet.rs/pull/638)) on 2021-06-02
+  - [29ce49c5](https://github.com/iotaledger/wallet.rs/commit/29ce49c57e93498398f2403f8c25540dd0586cdf) apply version updates ([#641](https://github.com/iotaledger/wallet.rs/pull/641)) on 2021-06-04
+  - [48db2d25](https://github.com/iotaledger/wallet.rs/commit/48db2d259d602819a37e0473ed2e75e0f7d8e9ca) Undo changes ([#1570](https://github.com/iotaledger/wallet.rs/pull/1570)) on 2022-11-15
+
 ## \[2.0.3-rc.4]
 
 - Fix release workflow to build binaries.
