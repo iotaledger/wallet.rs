@@ -1,7 +1,15 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
 import org.iota.Wallet;
+import org.iota.api.CustomGson;
+import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
@@ -14,6 +22,12 @@ import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import com.google.gson.JsonObject;
 
 public class CallbackEvents implements EventListener {
 
@@ -29,7 +43,7 @@ public class CallbackEvents implements EventListener {
         }
     }
 
-    public static void main(String[] args) throws WalletException, InterruptedException {
+    public static void main(String[] args) throws WalletException, InterruptedException, IOException {
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
@@ -44,35 +58,31 @@ public class CallbackEvents implements EventListener {
         // Listen to all events. An empty array also indicates al events
         wallet.listen(new CallbackEvents(), WalletEventType.values());
 
-        // Get account and sync it with the registered node to ensure that its balances
-        // are up-to-date.
-        AccountHandle account = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
+        // Parse The prepared transaction from json
+        JsonElement prepared = JsonParser.parseReader(
+                new FileReader("src/main/res/prepared_transaction_data.json"));
 
-        // Generate two addresses.
-        AccountAddress[] addresses = account.generateAddresses(new GenerateAddresses().withAmount(5));
+        // Create the dummy transaction event
+        JsonObject transactionEvent = new JsonObject();
+        transactionEvent.add("PreparedTransaction", prepared);
 
-        AccountBalance balance = account.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
+        // Create The Wallet event with the transaction event
+        JsonObject walletEvent = new JsonObject();
+        walletEvent.add("TransactionProgress", transactionEvent);
 
-        // Fund the account for this example.
-        ExampleUtils.fundAccount(account);
+        // Emit the fake event
+        wallet.emitTestEvent(walletEvent);
 
-        // TODO: replace with your own values.
-        String receiverAddress = account.getPublicAddresses()[0].getAddress();
-        String amount = balance.getBaseCoin().getAvailable() + "";
-
-        // Send transaction.
-        Transaction t = account.sendAmount(
-                new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[] {
-                        new AddressWithAmount()
-                                .withAddress(receiverAddress)
-                                .withAmount(amount)
-                }));
-
-        System.out.println(
-                "Transaction: " + t.getTransactionId() + " Block sent: " + Env.EXPLORER + "/api/core/v2/blocks/" +
-                        t.getBlockId());
-
+        // Clear listeners
         wallet.clearListeners();
+
+        // Create another event
+        JsonObject selectingInputsEvent = new JsonObject();
+        selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
+
+        // Emit test even, this will not be received by our listener
+        wallet.emitTestEvent(selectingInputsEvent);
+
         wallet.destroy();
     }
 }
