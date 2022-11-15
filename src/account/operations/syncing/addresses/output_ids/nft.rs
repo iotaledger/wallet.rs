@@ -48,16 +48,7 @@ impl AccountHandle {
                 tokio::spawn(async move {
                     // Get outputs where the address is in the expiration unlock condition
                     client
-                        .nft_output_ids(vec![
-                            QueryParameter::ExpirationReturnAddress(bech32_address_),
-                            // Ignore outputs that aren't expired yet
-                            QueryParameter::ExpiresBefore(
-                                std::time::SystemTime::now()
-                                    .duration_since(std::time::UNIX_EPOCH)
-                                    .expect("time went backwards")
-                                    .as_secs() as u32,
-                            ),
-                        ])
+                        .nft_output_ids(vec![QueryParameter::ExpirationReturnAddress(bech32_address_)])
                         .await
                         .map_err(From::from)
                 })
