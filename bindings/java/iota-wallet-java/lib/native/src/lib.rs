@@ -65,7 +65,7 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
         .new_string(serde_json::to_string(&response).unwrap())
         .expect("Couldn't create java string!");
 
-    output.into_inner()
+    output.into_raw()
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
