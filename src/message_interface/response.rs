@@ -3,6 +3,8 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
+#[cfg(all(feature = "participation", feature = "storage"))]
+use iota_client::node_api::participation::types::Event;
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
@@ -131,6 +133,7 @@ pub enum Response {
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
+    /// [`DeregisterParticipationEvent`](crate::message_interface::Message::DeregisterParticipationEvent),
     /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
@@ -142,6 +145,13 @@ pub enum Response {
     /// [`StopBackgroundSync`](crate::message_interface::Message::StopBackgroundSync),
     /// [`EmitTestEvent`](crate::message_interface::Message::EmitTestEvent),
     Ok(()),
+    ////////////////////////////////
+    //// Participation
+    //// ////////////////////////////
+    /// Response for
+    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
+    #[cfg(all(feature = "participation", feature = "storage"))]
+    ParticipationEvent(Event),
 }
 
 // Custom Debug implementation to not log secrets
@@ -192,6 +202,8 @@ impl Debug for Response {
             Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
             Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),
             Response::Ok(()) => write!(f, "Ok(())"),
+            #[cfg(all(feature = "participation", feature = "storage"))]
+            Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({:?})", event),
         }
     }
 }

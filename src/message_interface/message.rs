@@ -7,6 +7,8 @@ use std::{
 };
 
 use iota_client::node_manager::node::NodeAuth;
+#[cfg(all(feature = "participation", feature = "storage"))]
+use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -166,6 +168,19 @@ pub enum Message {
         #[serde(rename = "bech32Hrp")]
         bech32_hrp: Option<String>,
     },
+    ////////////////////////////////
+    //// Participation
+    //// ////////////////////////////
+    /// Stores participation information locally and returns the event.
+    ///
+    /// This will NOT store the node url and auth inside the client options.
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(all(feature = "participation", feature = "storage"))]
+    RegisterParticipationEvent { event_id: EventId, nodes: Vec<Node> },
+    /// Removes a previously registered participation event from local storage.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(all(feature = "participation", feature = "storage"))]
+    DeregisterParticipationEvent(EventId),
 }
 
 // Custom Debug implementation to not log secrets
@@ -237,6 +252,18 @@ impl Debug for Message {
             Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({:?})", bech32_address),
             Message::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
+            }
+            #[cfg(all(feature = "participation", feature = "storage"))]
+            Message::RegisterParticipationEvent { event_id, nodes } => {
+                write!(
+                    f,
+                    "RegisterParticipationEvent{{ event_id: {:?}, nodes: {:?} }}",
+                    event_id, nodes
+                )
+            }
+            #[cfg(all(feature = "participation", feature = "storage"))]
+            Message::DeregisterParticipationEvent(event_id) => {
+                write!(f, "DeregisterParticipationEvent({:?})", event_id)
             }
         }
     }

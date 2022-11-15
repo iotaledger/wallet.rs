@@ -24,7 +24,7 @@ pub enum WalletEvent {
     ConsolidationRequired,
     #[cfg(feature = "ledger_nano")]
     LedgerAddressGeneration(AddressData),
-    NewOutput(NewOutputEvent),
+    NewOutput(Box<NewOutputEvent>),
     SpentOutput(Box<SpentOutputEvent>),
     TransactionInclusion(TransactionInclusionEvent),
     TransactionProgress(TransactionProgressEvent),
