@@ -1,7 +1,11 @@
 {
   "tag": "rc",
   "changes": [
+    ".changes/account-recovery.md",
+    ".changes/fixPrepareOutput.md",
+    ".changes/get-incoming-tx.md",
     ".changes/getAccountIndexes.md",
+    ".changes/improve-consolidation-logic.md",
     ".changes/incomingtransactions-type.md",
     ".changes/nft-options-features.md",
     ".changes/nft-output-claiming.md",
@@ -10,6 +14,7 @@
     ".changes/private-account-meta.md",
     ".changes/remove-deleteAccountsAndDatabase.md",
     ".changes/remove-list-prefix.md",
+    ".changes/syncing.md",
     ".changes/tagAndMetadataHex.md",
     ".changes/tx-len-validation.md",
     ".changes/uint8array-replace-number-array.md.md"
