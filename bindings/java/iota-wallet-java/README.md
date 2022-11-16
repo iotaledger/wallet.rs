@@ -5,8 +5,8 @@ keywords:
 
 - Java
 - jar
-- Gradle
 - Maven
+- Gradle
 
 ---
 # IOTA Wallet Java Library
@@ -17,21 +17,49 @@ Get started with the official IOTA Wallet Java Library.
 
 * Make sure you have the latest [Java Development Kit (JDK)](https://www.oracle.com/java/technologies/downloads/) installed.
 
-## Install the Library
+## Install the Library with Maven
 
-Gradle:
-```gradle
-dependencies {
-  implementation 'org.iota:iota-wallet-java:1.0.0-rc.1'
-}
-```
-
-Maven:
+#### linux-x86_64
 ```xml
 <dependency>
-  <groupId>org.iota</groupId>
-  <artifactId>iota-wallet-java</artifactId>
-  <version>1.0.0-rc.1</version>
+    <groupId>org.iota</groupId>
+    <artifactId>iota-wallet-java</artifactId>
+    <version>1.0.0-rc.2</version>
+    <type>jar</type>
+    <classifier>linux-x86_64</classifier>
+</dependency>
+```
+
+#### windows-x86_64
+```xml
+<dependency>
+    <groupId>org.iota</groupId>
+    <artifactId>iota-wallet-java</artifactId>
+    <version>1.0.0-rc.2</version>
+    <type>jar</type>
+    <classifier>windows-x86_64</classifier>
+</dependency>
+```
+
+#### aarch64-apple-darwin
+```xml
+<dependency>
+    <groupId>org.iota</groupId>
+    <artifactId>iota-wallet-java</artifactId>
+    <version>1.0.0-rc.2</version>
+    <type>jar</type>
+    <classifier>aarch64-apple-darwin</classifier>
+</dependency>
+```
+
+#### osx-x86_64
+```xml
+<dependency>
+    <groupId>org.iota</groupId>
+    <artifactId>iota-wallet-java</artifactId>
+    <version>1.0.0-rc.2</version>
+    <type>jar</type>
+    <classifier>osx-x86_64</classifier>
 </dependency>
 ```
 
