@@ -39,9 +39,7 @@ async fn account_manager(mnemonic: Option<String>) -> Result<AccountManager, Err
         generate_mnemonic()?
     };
     let secret_manager = SecretManager::Mnemonic(MnemonicSecretManager::try_from_mnemonic(&mnemonic)?);
-    let client_options = ClientOptions::new()
-        .with_node("http://127.0.0.1:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://127.0.0.1:14265")?;
     let account_manager = AccountManager::builder()
         .with_secret_manager(secret_manager)
         .with_client_options(client_options)

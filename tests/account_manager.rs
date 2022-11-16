@@ -55,9 +55,7 @@ async fn stored_account_manager_data() -> Result<()> {
 #[tokio::test]
 async fn different_seed() -> Result<()> {
     std::fs::remove_dir_all("test-storage/different_seed").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -108,9 +106,7 @@ async fn different_seed() -> Result<()> {
 #[tokio::test]
 async fn changed_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/changed_coin_type").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -162,9 +158,7 @@ async fn changed_coin_type() -> Result<()> {
 #[tokio::test]
 async fn shimmer_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/shimmer_coin_type").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
@@ -195,9 +189,7 @@ async fn shimmer_coin_type() -> Result<()> {
 #[tokio::test]
 async fn iota_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/iota_coin_type").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(

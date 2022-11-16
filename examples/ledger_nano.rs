@@ -22,9 +22,7 @@ async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
-    let client_options = ClientOptions::new()
-        .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node(&env::var("NODE_URL").unwrap())?;
 
     let secret_manager = LedgerSecretManager::new(true);
 
