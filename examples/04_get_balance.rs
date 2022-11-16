@@ -20,8 +20,7 @@ async fn main() -> Result<()> {
     dotenv().ok();
 
     let client_options = ClientOptions::new()
-        .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+        .with_node(&env::var("NODE_URL").unwrap())?;
 
     let secret_manager = StrongholdSecretManager::builder()
         .password(&env::var("STRONGHOLD_PASSWORD").unwrap())
