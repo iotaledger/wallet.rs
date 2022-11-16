@@ -203,7 +203,7 @@ impl AccountHandle {
             }
         }) {
             if let Output::Nft(nft_output) = &nft_output_data.output {
-                NftOutputBuilder::from(nft_output)
+                NftOutputBuilder::from(nft_output).with_nft_id(nft_output.nft_id_non_null(&nft_output_data.output_id))
             } else {
                 unreachable!("We checked before if it's an nft output")
             }

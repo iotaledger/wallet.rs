@@ -14,9 +14,7 @@ use iota_wallet::{
 #[tokio::test]
 async fn account_recovery_empty() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_recovery_empty").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
@@ -42,9 +40,7 @@ async fn account_recovery_empty() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_existing_accounts() -> Result<()> {
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
@@ -76,9 +72,7 @@ async fn account_recovery_existing_accounts() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance() -> Result<()> {
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6
@@ -114,9 +108,7 @@ async fn account_recovery_with_balance() -> Result<()> {
 #[ignore]
 #[tokio::test]
 async fn account_recovery_with_balance_and_empty_addresses() -> Result<()> {
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic with balance on account with index 2 and address key_index 2 on the public address
     // atoi1qqt9tygh7h7s3l66m242hee6zwp98x90trejt9zya4vcnf5u34yluws9af6

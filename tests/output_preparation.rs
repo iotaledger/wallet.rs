@@ -18,9 +18,7 @@ use iota_wallet::{
 #[tokio::test]
 async fn output_preparation() -> Result<()> {
     std::fs::remove_dir_all("test-storage/output_preparation").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
