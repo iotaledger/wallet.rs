@@ -62,7 +62,7 @@ Ubuntu you will also need the [_build-essential_](https://packages.debian.org/si
 
 The only thing you need to do to start using the library is to add it as dependency in your `Cargo.toml` file:
 
-```
+```toml {2}
 [dependencies]
 iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop" }
 tokio = "1.21.2"
