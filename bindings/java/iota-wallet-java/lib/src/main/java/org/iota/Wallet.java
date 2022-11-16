@@ -7,6 +7,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
@@ -32,7 +33,7 @@ public class Wallet extends NativeApi {
         JsonObject o = new JsonObject();
         o.addProperty("alias", alias);
 
-        Account a = CustomGson.get().fromJson(callBaseApi(new ClientCommand("createAccount", o)), Account.class);
+        Account a = CustomGson.get().fromJson(callBaseApi(new WalletCommand("createAccount", o)), Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
@@ -45,7 +46,7 @@ public class Wallet extends NativeApi {
      * @return An AccountHandle object.
      */
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
-        Account a =  CustomGson.get().fromJson(callBaseApi(new ClientCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
+        Account a =  CustomGson.get().fromJson(callBaseApi(new WalletCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
@@ -57,7 +58,7 @@ public class Wallet extends NativeApi {
      * @return An array of AccountHandles.
      */
     public AccountHandle[] getAccounts() throws WalletException {
-        JsonArray responsePayload = (JsonArray) callBaseApi(new ClientCommand("getAccounts"));
+        JsonArray responsePayload = (JsonArray) callBaseApi(new WalletCommand("getAccounts"));
 
         AccountHandle[] accountHandles = new AccountHandle[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
@@ -77,7 +78,7 @@ public class Wallet extends NativeApi {
         o.addProperty("destination", destination);
         o.addProperty("password", password);
 
-        callBaseApi(new ClientCommand("backup", o));
+        callBaseApi(new WalletCommand("backup", o));
     }
 
     /**
@@ -91,14 +92,14 @@ public class Wallet extends NativeApi {
         o.addProperty("currentPassword", currentPassword);
         o.addProperty("newPassword", newPassword);
 
-        callBaseApi(new ClientCommand("changeStrongholdPassword", o));
+        callBaseApi(new WalletCommand("changeStrongholdPassword", o));
     }
 
     /**
      * Clears the Stronghold password from memory.
      */
     public void clearStrongholdPassword() throws WalletException {
-        callBaseApi(new ClientCommand("clearStrongholdPassword"));
+        callBaseApi(new WalletCommand("clearStrongholdPassword"));
     }
 
     /**
@@ -107,7 +108,7 @@ public class Wallet extends NativeApi {
      * @return A boolean value.
      */
     public boolean isStrongholdPasswordAvailable() throws WalletException {
-        return callBaseApi(new ClientCommand("isStrongholdPasswordAvailable")).getAsBoolean();
+        return callBaseApi(new WalletCommand("isStrongholdPasswordAvailable")).getAsBoolean();
     }
 
     /**
@@ -120,7 +121,7 @@ public class Wallet extends NativeApi {
         o.addProperty("addressGapLimit", addressGapLimit);
         o.add("syncOptions", CustomGson.get().toJsonTree(syncOptions));
 
-        callBaseApi(new ClientCommand("recoverAccounts", o));
+        callBaseApi(new WalletCommand("recoverAccounts", o));
     }
 
     /**
@@ -137,14 +138,14 @@ public class Wallet extends NativeApi {
         o.addProperty("source", source);
         o.addProperty("password", password);
 
-        callBaseApi(new ClientCommand("restoreBackup", o));
+        callBaseApi(new WalletCommand("restoreBackup", o));
     }
 
     /**
      * Removes the latest account (account with the largest account index).
      */
     public void removeLatestAccount() throws WalletException {
-        callBaseApi(new ClientCommand("removeLatestAccount"));
+        callBaseApi(new WalletCommand("removeLatestAccount"));
     }
 
     /**
@@ -153,7 +154,7 @@ public class Wallet extends NativeApi {
      * @return A string of words.
      */
     public String generateMnemonic() throws WalletException {
-        return callBaseApi(new ClientCommand("generateMnemonic")).getAsString();
+        return callBaseApi(new WalletCommand("generateMnemonic")).getAsString();
     }
 
     /**
@@ -163,7 +164,7 @@ public class Wallet extends NativeApi {
      */
     public void verifyMnemonic(String mnemonic) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(mnemonic);
-        callBaseApi(new ClientCommand("verifyMnemonic", p));
+        callBaseApi(new WalletCommand("verifyMnemonic", p));
     }
 
     /**
@@ -172,7 +173,7 @@ public class Wallet extends NativeApi {
      * @param config A ClientConfig object that contains the options to set.
      */
     public void setClientOptions(ClientConfig config) throws WalletException {
-        callBaseApi(new ClientCommand("setClientOptions", CustomGson.get().toJsonTree(config)));
+        callBaseApi(new WalletCommand("setClientOptions", CustomGson.get().toJsonTree(config)));
     }
 
     /**
@@ -181,7 +182,7 @@ public class Wallet extends NativeApi {
      * @return The status of the Ledger Nano
      */
     public LedgerNanoStatus getLedgerNanoStatus() throws WalletException {
-        return CustomGson.get().fromJson(callBaseApi(new ClientCommand("getLedgerNanoStatus")), LedgerNanoStatus.class);
+        return CustomGson.get().fromJson(callBaseApi(new WalletCommand("getLedgerNanoStatus")), LedgerNanoStatus.class);
     }
 
     /**
@@ -196,7 +197,7 @@ public class Wallet extends NativeApi {
         p.addProperty("url", url);
         p.add("auth", CustomGson.get().toJsonTree(auth));
 
-        return (JsonObject) callBaseApi(new ClientCommand("getNodeInfo", p));
+        return (JsonObject) callBaseApi(new WalletCommand("getNodeInfo", p));
     }
 
     /**
@@ -206,7 +207,7 @@ public class Wallet extends NativeApi {
      */
     public void setStrongholdPassword(String password) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(password);
-        callBaseApi(new ClientCommand("setStrongholdPassword", p));
+        callBaseApi(new WalletCommand("setStrongholdPassword", p));
     }
 
     /**
@@ -216,7 +217,7 @@ public class Wallet extends NativeApi {
      */
     public void setStrongholdPasswordClearInterval(int interval) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(interval);
-        callBaseApi(new ClientCommand("setStrongholdPasswordClearInterval", p));
+        callBaseApi(new WalletCommand("setStrongholdPasswordClearInterval", p));
     }
 
     /**
@@ -226,7 +227,7 @@ public class Wallet extends NativeApi {
      */
     public void storeMnemonic(String mnemonic) throws WalletException {
         JsonPrimitive p = new JsonPrimitive(mnemonic);
-        callBaseApi(new ClientCommand("storeMnemonic", p));
+        callBaseApi(new WalletCommand("storeMnemonic", p));
     }
 
     /**
@@ -240,7 +241,7 @@ public class Wallet extends NativeApi {
         o.add("options", CustomGson.get().toJsonTree(options));
         o.addProperty("intervalInMilliseconds", intervalInMilliseconds);
 
-        callBaseApi(new ClientCommand("startBackgroundSync", o));
+        callBaseApi(new WalletCommand("startBackgroundSync", o));
     }
 
 
@@ -248,7 +249,7 @@ public class Wallet extends NativeApi {
      * Stop the background sync process.
      */
     public void stopBackgroundSync() throws WalletException {
-        callBaseApi(new ClientCommand("stopBackgroundSync"));
+        callBaseApi(new WalletCommand("stopBackgroundSync"));
     }
 
     /**
@@ -257,7 +258,7 @@ public class Wallet extends NativeApi {
      * @param event The event to emit.
      */
     public void emitTestEvent(JsonElement event) throws WalletException {
-        callBaseApi(new ClientCommand("emitTestEvent", event));
+        callBaseApi(new WalletCommand("emitTestEvent", event));
     }
 
     /**
@@ -267,7 +268,7 @@ public class Wallet extends NativeApi {
      * @return A hex string.
      */
     public String bech32ToHex(String bech32) throws WalletException {
-        return callBaseApi(new ClientCommand("bech32ToHex", new JsonPrimitive(bech32))).getAsString();
+        return callBaseApi(new WalletCommand("bech32ToHex", new JsonPrimitive(bech32))).getAsString();
     }
 
     /**
@@ -282,7 +283,7 @@ public class Wallet extends NativeApi {
         p.addProperty("hex", hex);
         p.addProperty("bech32Hrp", bech32Hrp);
 
-        return callBaseApi(new ClientCommand("hexToBech32", p)).getAsString();
+        return callBaseApi(new WalletCommand("hexToBech32", p)).getAsString();
     }
 
 }
