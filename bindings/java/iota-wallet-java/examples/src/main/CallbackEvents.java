@@ -26,19 +26,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class CallbackEvents implements EventListener {
+public class CallbackEvents {
 
-    @Override
-    public void receive(Event event) {
-        System.out.println(
-                System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
-        if (event.getEvent() instanceof TransactionProgressEvent) {
-            TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
-            System.out.println(progress.toString());
-        } else {
-            System.out.println(event.getEvent().toString());
-        }
-    }
 
     public static void main(String[] args) throws WalletException, InterruptedException, IOException {
         // This example assumes that a wallet has already been created using the
@@ -52,10 +41,22 @@ public class CallbackEvents implements EventListener {
                         new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer));
 
-        // Listen to all events. An empty array also indicates al events
-        wallet.listen(new CallbackEvents(), WalletEventType.values());
+        // Listen to all events. An empty array also indicates all events
+        wallet.listen(new EventListener() {
+            @Override
+            public void receive(Event event) {
+                System.out.println(
+                        System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
+                if (event.getEvent() instanceof TransactionProgressEvent) {
+                    TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
+                    System.out.println(progress.toString());
+                } else {
+                    System.out.println(event.getEvent().toString());
+                }
+            }
+        }, WalletEventType.values());
 
-        // Parse The prepared transaction from json
+        // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
                 new FileReader("src/main/res/prepared_transaction_data.json"));
 
@@ -77,7 +78,8 @@ public class CallbackEvents implements EventListener {
         JsonObject selectingInputsEvent = new JsonObject();
         selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
 
-        // Emit test even, this will not be received by our listener
+        // Emitted event is not received by our listener because the listener has
+        // already been unsubscribed from the wallet.
         wallet.emitTestEvent(selectingInputsEvent);
 
         wallet.destroy();
