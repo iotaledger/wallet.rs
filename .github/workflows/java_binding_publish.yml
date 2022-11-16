@@ -127,7 +127,7 @@ jobs:
         shell: bash
         working-directory: bindings/java/iota-wallet-java/
         run: |
-          ./gradlew publishToSonatype
+          ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
           if [ "$RUNNER_OS" == "macOS" ];
-          then ORG_GRADLE_PROJECT_buildTarget=aarch64-apple-darwin ./gradlew publishToSonatype
+          then ORG_GRADLE_PROJECT_buildTarget=aarch64-apple-darwin ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
           fi
