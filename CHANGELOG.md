@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Min storage deposit amount in `prepare_output()` with expiration unlock condition;
+- NFT id in `prepare_output()` when the NFT output still has the null id;
 
 ## 1.0.0-rc.2 - 2022-10-28
 
