@@ -31,7 +31,7 @@ async fn main() -> Result<()> {
 
     let client_options = ClientOptions::new()
         .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+        .with_ignore_node_health();
 
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
