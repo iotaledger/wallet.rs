@@ -2,6 +2,7 @@
   "tag": "rc",
   "changes": [
     ".changes/account-recovery.md",
+    ".changes/fixNftPrepareOutput.md",
     ".changes/fixPrepareOutput.md",
     ".changes/get-incoming-tx.md",
     ".changes/getAccountIndexes.md",

@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.6]
+
+- Use correct NFT id for existing NFT in prepareOutput().
+  - [a1889bc8](https://github.com/iotaledger/wallet.rs/commit/a1889bc8142ece3405e29f0a87488b7987e1d707) Fix NFT id in `prepare_output()` when the NFT output still has the null id ([#1577](https://github.com/iotaledger/wallet.rs/pull/1577)) on 2022-11-16
+
 ## \[2.0.3-rc.5]
 
 - Don't require address approval on ledger nano during account recovery.
