@@ -20,20 +20,6 @@ import SafePasswordStorage from '../_admonitions/_warning_safe_password_storage.
 * [setuptools-rust](https://pypi.org/project/setuptools-rust/) >= 0.10.2
 * Make sure you have fulfilled the [Rust Getting Started](rust.mdx) requirements to compile the binding.
 
-:::info Windows Requirements
-
-For Windows you may need to install MSYS2 and Clang if you don't already have it. Our recommended way is to use [Chocolatey](https://community.chocolatey.org/packages?q=msys).
-Install Chocolatey with 
-```
-Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-```
-and install the needed packages with
-```
- choco install msys2 llvm
-```
-
-:::
-
 ## Install the Library
 
 ### Clone the Repository
