@@ -14,7 +14,7 @@ impl AccountManager {
     ///
     /// This will NOT store the node url and auth inside the client options.
     pub async fn register_participation_event(&self, id: EventId, nodes: Vec<Node>) -> crate::Result<Event> {
-        let mut client_builder = Client::builder().with_node_sync_disabled();
+        let mut client_builder = Client::builder().with_ignore_node_health();
         for node in &nodes {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
         }
@@ -74,7 +74,7 @@ impl AccountManager {
             .get(&id)
             .ok_or_else(|| crate::Error::Storage(format!("event {id} not found")))?;
 
-        let mut client_builder = Client::builder().with_node_sync_disabled();
+        let mut client_builder = Client::builder().with_ignore_node_health();
         for node in &event.1 {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
         }
