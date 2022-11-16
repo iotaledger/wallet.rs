@@ -19,9 +19,7 @@ async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
-    let client_options = ClientOptions::new()
-        .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node(&env::var("NODE_URL").unwrap())?;
 
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;

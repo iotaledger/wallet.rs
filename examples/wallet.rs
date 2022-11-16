@@ -18,9 +18,7 @@ async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
-    let client_options = ClientOptions::new()
-        .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node(&env::var("NODE_URL").unwrap())?;
 
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
@@ -81,8 +79,7 @@ async fn main() -> Result<()> {
 
     // // switch to mainnet
     // let client_options = ClientOptions::new()
-    //     .with_node("https://chrysalis-nodes.iota.org/")?
-    //     .with_node_sync_disabled();
+    //     .with_node("https://chrysalis-nodes.iota.org/")?;
     // manager.set_client_options(client_options).await?;
     // let now = Instant::now();
     // manager.sync(None).await?;
@@ -91,8 +88,7 @@ async fn main() -> Result<()> {
 
     // // switch back to testnet
     // let client_options = ClientOptions::new()
-    //     .with_node(&env::var("NODE_URL").unwrap())?
-    //     .with_node_sync_disabled();
+    //     .with_node(&env::var("NODE_URL").unwrap())?;
     // manager.set_client_options(client_options).await?;
     // let now = Instant::now();
     // manager.sync(None).await?;

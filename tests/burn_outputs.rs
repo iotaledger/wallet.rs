@@ -19,10 +19,7 @@ use iota_wallet::{
 async fn mint_and_burn_nft() -> Result<()> {
     let storage_path = "test-storage/mint_and_burn_outputs";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")
-        .unwrap()
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265").unwrap();
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -97,8 +94,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     std::fs::remove_dir_all(storage_path).unwrap_or(());
     let client_options = ClientOptions::new()
         .with_node("https://api.testnet.shimmer.network")
-        .unwrap()
-        .with_node_sync_disabled();
+        .unwrap();
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -206,10 +202,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
 async fn destroy_foundry() -> Result<()> {
     let storage_path = "test-storage/destroy_foundry";
     std::fs::remove_dir_all(storage_path).unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")
-        .unwrap()
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265").unwrap();
 
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -264,9 +257,7 @@ async fn destroy_alias() -> Result<()> {
     )?;
 
     // Create the account manager with the secret_manager and client options
-    let client_options = iota_wallet::ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = iota_wallet::ClientOptions::new().with_node("http://localhost:14265")?;
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
         .with_client_options(client_options)

@@ -255,7 +255,7 @@ impl AccountHandle {
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply().await?;
         let output = Output::try_from_dto(&output_response.output, token_supply)?;
-        let local_time = self.client.get_time_checked()?;
+        let local_time = self.client.get_time_checked().await?;
 
         let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
         // check if we know the transaction that created this output and if we created it (if we store incoming

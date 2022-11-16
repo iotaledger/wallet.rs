@@ -16,9 +16,7 @@ use iota_wallet::{
 #[tokio::test]
 async fn account_ordering() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_ordering").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
@@ -46,9 +44,7 @@ async fn account_ordering() -> Result<()> {
 async fn remove_latest_account() -> Result<()> {
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
 
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     let recreated_account_index = {
         // Mnemonic without balance.
@@ -139,9 +135,7 @@ async fn remove_latest_account() -> Result<()> {
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
@@ -202,9 +196,7 @@ async fn account_alias_already_exists() -> Result<()> {
 #[tokio::test]
 async fn account_rename_alias() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_rename_alias").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -238,9 +230,7 @@ async fn account_rename_alias() -> Result<()> {
 #[tokio::test]
 async fn account_first_address_exists() -> Result<()> {
     std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
         "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
@@ -274,9 +264,7 @@ async fn account_first_address_exists() -> Result<()> {
 async fn account_creation_stronghold() -> Result<()> {
     let folder_path = "test-storage/account_creation_stronghold";
     std::fs::remove_dir_all(folder_path).unwrap_or(());
-    let client_options = ClientOptions::new()
-        .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
 
     let mnemonic = "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak";
 

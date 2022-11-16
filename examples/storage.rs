@@ -21,9 +21,7 @@ async fn main() -> Result<()> {
     let secret_manager =
         MnemonicSecretManager::try_from_mnemonic(&env::var("NON_SECURE_USE_OF_DEVELOPMENT_MNEMONIC").unwrap())?;
 
-    let client_options = ClientOptions::new()
-        .with_node(&env::var("NODE_URL").unwrap())?
-        .with_node_sync_disabled();
+    let client_options = ClientOptions::new().with_node(&env::var("NODE_URL").unwrap())?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
