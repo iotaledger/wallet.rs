@@ -16,6 +16,7 @@ use jni::{
 use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
 use tokio::{runtime::Runtime, sync::mpsc::unbounded_channel};
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 
 lazy_static! {
     static ref MESSAGE_HANDLER: Mutex<Option<WalletMessageHandler>> = Mutex::new(None);
@@ -24,6 +25,20 @@ lazy_static! {
     static ref VM: Mutex<Option<JavaVM>> = Mutex::new(None);
     // Cache Method for unchecked method call
     static ref METHOD_CACHE: Mutex<Option<JStaticMethodID>> = Mutex::new(None);
+}
+
+// This keeps rust from "mangling" the name and making it unique for this crate.
+#[no_mangle]
+pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(
+    env: JNIEnv,
+    _class: JClass,
+    command: JString,
+) {
+    let config_builder: String = env.get_string(command).expect("Couldn't get java string!").into();
+
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config_builder).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config).expect("failed to init logger");
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.

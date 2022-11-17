@@ -41,6 +41,7 @@ public class NativeApi {
         createMessageHandler(new Gson().toJsonTree(walletConfig).toString());
     }
 
+    protected static native void initLogger(String config);
     private static native void createMessageHandler(String config);
 
     // Destroys account handle

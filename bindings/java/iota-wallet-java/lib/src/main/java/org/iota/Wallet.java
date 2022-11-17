@@ -7,8 +7,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
+
+import java.lang.annotation.Native;
+
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
+import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.wallet.WalletEventType;
@@ -17,6 +21,15 @@ import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
 
 public class Wallet extends NativeApi {
+
+    /**
+     * Initialise the logger used
+     * 
+     * @param builder the configuration builder of the logger
+     */
+    public static void initLogger(LoggerOutputConfigBuilder builder) {
+        NativeApi.initLogger(CustomGson.get().toJsonTree(builder).toString());
+    }
 
     public Wallet(WalletConfig config) {
         super(config);

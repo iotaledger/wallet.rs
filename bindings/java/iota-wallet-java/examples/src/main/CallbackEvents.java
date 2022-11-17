@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import org.iota.Wallet;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
+import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.account_methods.GenerateAddresses;
@@ -30,6 +31,10 @@ public class CallbackEvents {
 
 
     public static void main(String[] args) throws WalletException, InterruptedException, IOException {
+
+        // Initialise the rust logger for al output on rusts' side
+        Wallet.initLogger(new LoggerOutputConfigBuilder());
+
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
@@ -41,7 +46,7 @@ public class CallbackEvents {
                         new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer));
 
-        // Listen to all events. An empty array also indicates all events
+        // Listen to all events.
         wallet.listen(new EventListener() {
             @Override
             public void receive(Event event) {
@@ -54,7 +59,7 @@ public class CallbackEvents {
                     System.out.println(event.getEvent().toString());
                 }
             }
-        }, WalletEventType.values());
+        });
 
         // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
