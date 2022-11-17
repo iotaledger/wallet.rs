@@ -40,15 +40,15 @@ impl AccountManager {
     }
 
     /// Retrieves corresponding information for a participation event from local storage.
-    pub async fn get_participation_event(&self, id: EventId) -> Option<(Event, Vec<Node>)> {
-        self.storage_manager
+    pub async fn get_participation_event(&self, id: EventId) -> crate::Result<Option<(Event, Vec<Node>)>> {
+        Ok(self
+            .storage_manager
             .lock()
             .await
             .get_participation_events()
-            .await
-            .unwrap_or_default()
+            .await?
             .get(&id)
-            .cloned()
+            .cloned())
     }
 
     /// Retrieves information for all registered participation events.
