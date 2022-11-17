@@ -90,7 +90,7 @@ jobs:
         if: matrix.os == 'windows-2019'
 
       - name: Set deployment target (macOS)
-        run: echo "MACOSX_DEPLOYMENT_TARGET=10.12" >> $GITHUB_ENV
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV # should be 10.12, but rocksDB 0.19 uses newer C++17 features. (see https://github.com/iotaledger/wallet.rs/actions/runs/3471849933/jobs/5801906316)
         if: matrix.os == 'macos-11'
 
       - name: Get current date
