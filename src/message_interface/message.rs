@@ -169,8 +169,8 @@ pub enum Message {
         bech32_hrp: Option<String>,
     },
     ////////////////////////////////
-    //// Participation
-    //// ////////////////////////////
+    // Participation
+    ////////////////////////////////
     /// Stores participation information locally and returns the event.
     ///
     /// This will NOT store the node url and auth inside the client options.

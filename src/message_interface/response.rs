@@ -146,8 +146,8 @@ pub enum Response {
     /// [`EmitTestEvent`](crate::message_interface::Message::EmitTestEvent),
     Ok(()),
     ////////////////////////////////
-    //// Participation
-    //// ////////////////////////////
+    // Participation
+    ////////////////////////////////
     /// Response for
     /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
