@@ -330,6 +330,35 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvent(event_id) => {
+                convert_async_panics(|| async {
+                    let event = self
+                        .account_manager
+                        .get_participation_event(event_id)
+                        .await?
+                        .ok_or_else(|| crate::Error::Storage(format!("event {event_id} not found")))?
+                        .0;
+                    Ok(Response::ParticipationEvent(event))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEventStatus(event_id) => {
+                convert_async_panics(|| async {
+                    let event_status = self.account_manager.get_participation_event_status(event_id).await?;
+                    Ok(Response::ParticipationEventStatus(event_status))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvents => {
+                convert_async_panics(|| async {
+                    let events = self.account_manager.get_participation_events().await?;
+                    Ok(Response::ParticipationEvents(events))
+                })
+                .await
+            }
         };
 
         let response = match response {

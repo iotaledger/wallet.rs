@@ -178,6 +178,15 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "participation")]
     DeregisterParticipationEvent(EventId),
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    GetParticipationEvent(EventId),
+    /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
+    #[cfg(feature = "participation")]
+    GetParticipationEventStatus(EventId),
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
+    #[cfg(feature = "participation")]
+    GetParticipationEvents,
 }
 
 // Custom Debug implementation to not log secrets
@@ -261,6 +270,18 @@ impl Debug for Message {
             #[cfg(feature = "participation")]
             Message::DeregisterParticipationEvent(event_id) => {
                 write!(f, "DeregisterParticipationEvent({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvent(event_id) => {
+                write!(f, "GetParticipationEvent({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEventStatus(event_id) => {
+                write!(f, "GetParticipationEventStatus({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvents => {
+                write!(f, "GetParticipationEvents")
             }
         }
     }

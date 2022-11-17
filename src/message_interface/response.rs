@@ -4,7 +4,7 @@
 use std::fmt::{Debug, Formatter, Result};
 
 #[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::Event;
+use iota_client::node_api::participation::types::{Event, EventStatus};
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
@@ -127,9 +127,18 @@ pub enum Response {
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
     /// Response for
+    /// [`GetParticipationEvent`](crate::message_interface::AccountMethod::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
     ParticipationEvent(Event),
+    /// Response for
+    /// [`GetParticipationEventStatus`](crate::message_interface::AccountMethod::GetParticipationEventStatus)
+    #[cfg(feature = "participation")]
+    ParticipationEventStatus(EventStatus),
+    /// Response for
+    /// [`GetParticipationEvents`](crate::message_interface::AccountMethod::GetParticipationEvents)
+    #[cfg(feature = "participation")]
+    ParticipationEvents(Vec<Event>),
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
@@ -201,6 +210,10 @@ impl Debug for Response {
             Response::Ok(()) => write!(f, "Ok(())"),
             #[cfg(feature = "participation")]
             Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({:?})", event),
+            #[cfg(feature = "participation")]
+            Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({:?})", event),
+            #[cfg(feature = "participation")]
+            Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({:?})", events),
         }
     }
 }
