@@ -6,8 +6,8 @@ package org.iota.types;
 import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
 import org.iota.Wallet;
+import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
-import org.iota.api.NativeApi;
 import org.iota.types.account_methods.*;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.OutputId;
@@ -101,7 +101,7 @@ public class AccountHandle extends AbstractObject {
      * @return A copy of the account.
      */
     public Account getAccountCopy() throws WalletException {
-        return CustomGson.get().fromJson(callBaseApi(new NativeApi.ClientCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
+        return CustomGson.get().fromJson(callBaseApi(new WalletCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
     }
 
     // Account Method APIs
@@ -122,7 +122,7 @@ public class AccountHandle extends AbstractObject {
         o.add("accountId", CustomGson.get().toJsonTree(accountIdentifier));
         o.add("method", method);
 
-        return callBaseApi(new NativeApi.ClientCommand("callAccountMethod", o));
+        return callBaseApi(new WalletCommand("callAccountMethod", o));
     }
 
     /**
