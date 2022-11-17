@@ -9,7 +9,6 @@ use iota_wallet::{
 };
 
 use std::{
-    str::FromStr,
     ffi::{CStr, CString},
     os::raw::{c_char, c_void},
 };
@@ -17,7 +16,6 @@ use std::{
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 
 type Callback = extern "C" fn(message: *const c_char, error: *const c_char, context: *mut c_void);
 type IotaWalletHandle = WalletMessageHandler;
