@@ -7,15 +7,15 @@ use iota_wallet::{
 };
 
 use std::{
-    str::FromStr,
     ffi::{CStr, CString},
     os::raw::{c_char, c_void},
+    str::FromStr,
 };
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 
 // use bee_common::logger::{LoggerConfig, LoggerOutputConfigBuilder};
 // use log::LevelFilter;
@@ -277,9 +277,7 @@ pub unsafe extern "C" fn iota_init_logger(file_name: *const c_char, level_filter
         level = log::LevelFilter::from_str(level_filter.to_str().unwrap()).unwrap();
     }
 
-    let output_config = LoggerOutputConfigBuilder::new()
-        .name(file_name)
-        .level_filter(level);
+    let output_config = LoggerOutputConfigBuilder::new().name(file_name).level_filter(level);
     match logger_init(LoggerConfig::build().with_output(output_config).finish()) {
         Ok(_) => 0,
         Err(_) => -1,
