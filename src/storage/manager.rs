@@ -66,7 +66,7 @@ pub(crate) async fn new_storage_manager(
 #[derive(Debug)]
 /// Storage manager
 pub struct StorageManager {
-    storage: Storage,
+    pub(crate) storage: Storage,
     // account indexes for accounts in the database
     account_indexes: Vec<u32>,
 }

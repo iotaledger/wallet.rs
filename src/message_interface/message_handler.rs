@@ -311,6 +311,25 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "participation")]
+            Message::RegisterParticipationEvent { event_id, nodes } => {
+                convert_async_panics(|| async {
+                    let event = self
+                        .account_manager
+                        .register_participation_event(event_id, nodes)
+                        .await?;
+                    Ok(Response::ParticipationEvent(event))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            Message::DeregisterParticipationEvent(event_id) => {
+                convert_async_panics(|| async {
+                    self.account_manager.deregister_participation_event(event_id).await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
         };
 
         let response = match response {

@@ -3,6 +3,8 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
+#[cfg(feature = "participation")]
+use iota_client::node_api::participation::types::Event;
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
@@ -124,6 +126,10 @@ pub enum Response {
     GeneratedMnemonic(String),
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
+    /// Response for
+    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
+    #[cfg(feature = "participation")]
+    ParticipationEvent(Event),
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
@@ -131,6 +137,7 @@ pub enum Response {
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
+    /// [`DeregisterParticipationEvent`](crate::message_interface::Message::DeregisterParticipationEvent),
     /// [`RestoreBackup`](crate::message_interface::Message::RestoreBackup),
     /// [`VerifyMnemonic`](crate::message_interface::Message::VerifyMnemonic),
     /// [`SetClientOptions`](crate::message_interface::Message::SetClientOptions),
@@ -192,6 +199,8 @@ impl Debug for Response {
             Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
             Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),
             Response::Ok(()) => write!(f, "Ok(())"),
+            #[cfg(feature = "participation")]
+            Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({:?})", event),
         }
     }
 }
