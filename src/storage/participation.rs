@@ -12,13 +12,13 @@ use super::manager::StorageManager;
 use crate::storage::constants::PARTICIPATION_EVENTS;
 
 impl StorageManager {
-    pub(crate) async fn save_participation_event(
+    pub(crate) async fn insert_participation_event(
         &mut self,
         id: EventId,
         event: Event,
         nodes: Vec<Node>,
     ) -> crate::Result<()> {
-        log::debug!("save_participation_event {id}");
+        log::debug!("insert_participation_event {id}");
 
         let mut events: HashMap<EventId, (Event, Vec<Node>)> = match self.storage.get(PARTICIPATION_EVENTS).await {
             Ok(events) => serde_json::from_str(&events)?,
@@ -33,8 +33,8 @@ impl StorageManager {
         Ok(())
     }
 
-    pub(crate) async fn deregister_participation_event(&mut self, id: EventId) -> crate::Result<()> {
-        log::debug!("deregister_participation_event {id}");
+    pub(crate) async fn remove_participation_event(&mut self, id: EventId) -> crate::Result<()> {
+        log::debug!("remove_participation_event {id}");
 
         let mut events: HashMap<EventId, (Event, Vec<Node>)> =
             serde_json::from_str(&self.storage.get(PARTICIPATION_EVENTS).await?)?;

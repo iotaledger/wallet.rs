@@ -27,7 +27,7 @@ impl AccountManager {
         self.storage_manager
             .lock()
             .await
-            .save_participation_event(id, event.clone(), nodes)
+            .insert_participation_event(id, event.clone(), nodes)
             .await?;
 
         Ok(event)
@@ -35,11 +35,7 @@ impl AccountManager {
 
     /// Removes a previously registered participation event from local storage.
     pub async fn deregister_participation_event(&self, id: EventId) -> crate::Result<()> {
-        self.storage_manager
-            .lock()
-            .await
-            .deregister_participation_event(id)
-            .await?;
+        self.storage_manager.lock().await.remove_participation_event(id).await?;
         Ok(())
     }
 
