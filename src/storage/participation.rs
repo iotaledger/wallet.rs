@@ -36,8 +36,11 @@ impl StorageManager {
     pub(crate) async fn remove_participation_event(&mut self, id: EventId) -> crate::Result<()> {
         log::debug!("remove_participation_event {id}");
 
-        let mut events: HashMap<EventId, (Event, Vec<Node>)> =
-            serde_json::from_str(&self.storage.get(PARTICIPATION_EVENTS).await?)?;
+        let mut events: HashMap<EventId, (Event, Vec<Node>)> = match self.storage.get(PARTICIPATION_EVENTS).await {
+            Ok(events) => serde_json::from_str(&events)?,
+            Err(crate::Error::RecordNotFound(_)) => return Ok(()),
+            Err(err) => return Err(err),
+        };
 
         events.remove(&id);
 
