@@ -126,6 +126,10 @@ pub enum Response {
     GeneratedMnemonic(String),
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
+    /// Response for
+    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
+    #[cfg(feature = "participation")]
+    ParticipationEvent(Event),
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
@@ -145,13 +149,6 @@ pub enum Response {
     /// [`StopBackgroundSync`](crate::message_interface::Message::StopBackgroundSync),
     /// [`EmitTestEvent`](crate::message_interface::Message::EmitTestEvent),
     Ok(()),
-    ////////////////////////////////
-    // Participation
-    ////////////////////////////////
-    /// Response for
-    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
-    #[cfg(feature = "participation")]
-    ParticipationEvent(Event),
 }
 
 // Custom Debug implementation to not log secrets

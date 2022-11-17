@@ -311,9 +311,6 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            ////////////////////////////////
-            // Participation
-            ////////////////////////////////
             #[cfg(feature = "participation")]
             Message::RegisterParticipationEvent { event_id, nodes } => {
                 convert_async_panics(|| async {
