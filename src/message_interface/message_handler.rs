@@ -314,7 +314,7 @@ impl WalletMessageHandler {
             ////////////////////////////////
             //// Participation methods
             //// ////////////////////////////
-            #[cfg(all(feature = "participation", feature = "storage"))]
+            #[cfg(feature = "participation")]
             Message::RegisterParticipationEvent { event_id, nodes } => {
                 convert_async_panics(|| async {
                     let event = self
@@ -325,7 +325,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(all(feature = "participation", feature = "storage"))]
+            #[cfg(feature = "participation")]
             Message::DeregisterParticipationEvent(event_id) => {
                 convert_async_panics(|| async {
                     self.account_manager.deregister_participation_event(event_id).await?;

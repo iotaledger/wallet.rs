@@ -3,7 +3,7 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-#[cfg(all(feature = "participation", feature = "storage"))]
+#[cfg(feature = "participation")]
 use iota_client::node_api::participation::types::Event;
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::LedgerNanoStatus;
@@ -150,7 +150,7 @@ pub enum Response {
     //// ////////////////////////////
     /// Response for
     /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
-    #[cfg(all(feature = "participation", feature = "storage"))]
+    #[cfg(feature = "participation")]
     ParticipationEvent(Event),
 }
 
@@ -202,7 +202,7 @@ impl Debug for Response {
             Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
             Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),
             Response::Ok(()) => write!(f, "Ok(())"),
-            #[cfg(all(feature = "participation", feature = "storage"))]
+            #[cfg(feature = "participation")]
             Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({:?})", event),
         }
     }

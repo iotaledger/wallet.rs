@@ -43,7 +43,7 @@ storage = [ "rocksdb" ]
 message_interface = []
 events = []
 mnemonic = []
-participation = [ "iota-client/participation" ]
+participation = [ "iota-client/participation", "storage" ]
 
 [profile.release]
 panic = "abort"
@@ -163,7 +163,7 @@ required-features = [ "ledger_nano" ]
 [[example]]
 name = "participation"
 path = "examples/participation.rs"
-required-features = [ "participation", "storage" ]
+required-features = [ "participation" ]
 
 [[example]]
 name = "logger"

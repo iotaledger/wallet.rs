@@ -7,7 +7,7 @@ use std::{
 };
 
 use iota_client::node_manager::node::NodeAuth;
-#[cfg(all(feature = "participation", feature = "storage"))]
+#[cfg(feature = "participation")]
 use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
 use serde::{Deserialize, Serialize};
 
@@ -175,11 +175,11 @@ pub enum Message {
     ///
     /// This will NOT store the node url and auth inside the client options.
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
-    #[cfg(all(feature = "participation", feature = "storage"))]
+    #[cfg(feature = "participation")]
     RegisterParticipationEvent { event_id: EventId, nodes: Vec<Node> },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
-    #[cfg(all(feature = "participation", feature = "storage"))]
+    #[cfg(feature = "participation")]
     DeregisterParticipationEvent(EventId),
 }
 
@@ -253,7 +253,7 @@ impl Debug for Message {
             Message::HexToBech32 { hex, bech32_hrp } => {
                 write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
             }
-            #[cfg(all(feature = "participation", feature = "storage"))]
+            #[cfg(feature = "participation")]
             Message::RegisterParticipationEvent { event_id, nodes } => {
                 write!(
                     f,
@@ -261,7 +261,7 @@ impl Debug for Message {
                     event_id, nodes
                 )
             }
-            #[cfg(all(feature = "participation", feature = "storage"))]
+            #[cfg(feature = "participation")]
             Message::DeregisterParticipationEvent(event_id) => {
                 write!(f, "DeregisterParticipationEvent({:?})", event_id)
             }

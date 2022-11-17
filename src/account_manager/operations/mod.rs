@@ -6,7 +6,7 @@ pub(crate) mod background_syncing;
 pub(crate) mod get_account;
 #[cfg(feature = "ledger_nano")]
 pub(crate) mod ledger_nano;
-#[cfg(all(feature = "participation", feature = "storage"))]
+#[cfg(feature = "participation")]
 pub(crate) mod participation;
 #[cfg(feature = "stronghold")]
 pub(crate) mod stronghold;
