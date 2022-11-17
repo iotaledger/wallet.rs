@@ -17,13 +17,13 @@ backtrace = { version = "0.3.66", default-features = false, features = [ "std" ]
 futures = { version = "0.3.25", default-features = false }
 getset = { version = "0.1.2", default-features = false }
 # iota-client = { version = "2.0.1-rc.3", default-features = false, features = [ "message_interface", "tls" ] }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "f3b672a767c919af9c81a33c09ef51d459678962", default-features = false, features = [ "message_interface", "tls" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "8b2396b6c639b00bebeac062bf2bd5d1b907f57a", default-features = false, features = [ "message_interface", "tls" ] }
 iota-crypto = { version = "0.15.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
 packable = { version = "0.7.0", default-features = false, features = [ "serde", "primitive-types" ] }
 prefix-hex = { version = "0.5.0", default-features = false, features = [ "std" ] }
 primitive-types = { version = "0.12.1", default-features = false }
-rocksdb = { version = "0.19.0", default-features = false, features = [ "lz4" ], optional = true }
+rocksdb = { version = "0.18.0", default-features = false, features = [ "lz4" ], optional = true }
 serde = { version = "1.0.147", default-features = false, features = [ "derive" ] }
 serde_json = { version = "1.0.87", default-features = false }
 thiserror = { version = "1.0.37", default-features = false }

@@ -142,9 +142,9 @@ dependencies = [
 
 [[package]]
 name = "bindgen"
-version = "0.60.1"
+version = "0.59.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "062dddbc1ba4aca46de6338e2bf87771414c335f7b2f2036e8f3e9befebf88e6"
+checksum = "2bd2a9a458e8f4304c52c43ebb0cfbd520289f8379a52e329a38afda99bf8eb8"
 dependencies = [
  "bitflags",
  "cexpr",
@@ -1002,11 +1002,12 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51#9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
 dependencies = [
  "async-trait",
  "backtrace",
  "derive_builder",
+ "derive_more",
  "futures",
  "gloo-timers",
  "instant",
@@ -1031,9 +1032,9 @@ dependencies = [
 
 [[package]]
 name = "iota-crypto"
-version = "0.15.2"
+version = "0.15.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4006145223dce11aed9f71c714a6008bd79ba4173e83c81553707332f372ca48"
+checksum = "4e04d492224bff6e97142f033d0a4383bcbc05918be1ff7b3abd2c1cc85205a2"
 dependencies = [
  "aead",
  "aes",
@@ -1080,7 +1081,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51#9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
 dependencies = [
  "iota-crypto",
  "thiserror",
@@ -1088,8 +1089,8 @@ dependencies = [
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51#9e1b3ea7b73f4cf0fdab7e00275d5e7d0ad05b51"
+version = "1.0.0-rc.2"
+source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
@@ -1285,9 +1286,9 @@ dependencies = [
 
 [[package]]
 name = "librocksdb-sys"
-version = "0.8.0+7.4.4"
+version = "0.6.1+6.28.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "611804e4666a25136fcc5f8cf425ab4d26c7f74ea245ffe92ea23b85b6420b5d"
+checksum = "81bc587013734dadb7cf23468e531aa120788b87243648be42e2d3a072186291"
 dependencies = [
  "bindgen",
  "bzip2-sys",
@@ -1779,9 +1780,9 @@ dependencies = [
 
 [[package]]
 name = "rocksdb"
-version = "0.19.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e9562ea1d70c0cc63a34a22d977753b50cca91cc6b6527750463bd5dd8697bc"
+checksum = "620f4129485ff1a7128d184bc687470c21c7951b64779ebc9cfdad3dcd920290"
 dependencies = [
  "libc",
  "librocksdb-sys",
