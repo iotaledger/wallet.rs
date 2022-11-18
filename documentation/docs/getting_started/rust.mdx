@@ -19,46 +19,27 @@ import SafePasswordStorage from '../_admonitions/_warning_safe_password_storage.
 
 * [Rust and Cargo](https://doc.rust-lang.org/cargo/getting-started/installation.html).
 
+:::info
+
 We recommend you update _Rust_ to the latest stable
 version [rustup update stable](https://github.com/rust-lang/rustup.rs#keeping-rust-up-to-date).
 
-## Dependencies
+:::
 
 The library uses [_cmake_](https://cmake.org/documentation/) and [_openssl_](https://www.openssl.org/docs/). You may
 need install additional build tools on your system to run the build process successfully using Cargo.
 
 ### Windows
 
-You can download _cmake_ from the [official cmake website](https://cmake.org/download/).
-You can install _openssl_ with [vcpkg](https://github.com/microsoft/vcpkg) or [chocolatey](https://chocolatey.org/).
+You can install all needed prerequisites on Windows with [Chocolatey](https://community.chocolatey.org/packages?q=msys). If you have any of the tools already installed just remove them from the command
 
-#### Install _openssl_ with _vcpkg_
-
-You can run the following command to install _openssl_ with _vcpkg_:
-
-```shell
-./vcpkg.exe install openssl:x64-windows
-./vcpkg.exe integrate install
+Install Chocolatey with 
 ```
-
-You may want to add this to the system environment variables since you'll need it to compile the crate:
-
-```shell
-set VCPKGRS_DYNAMIC=1
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
 ```
-
-#### Install _openssl_ with _chocolatey_
-
-You can run the following command to install _openssl_ with _chocolatey_:
-
-```shell
-choco install openssl
+and install the needed packages with
 ```
-
-You may need to set the `OPENSSL_ROOT_DIR` environment variable:
-
-```shell
-set OPENSSL_ROOT_DIR="C:\Program Files\OpenSSL-Win64"
+choco install visualstudio2022buildtools visualstudio2022-workload-vctools rust-ms msys2 llvm
 ```
 
 ### macOS
@@ -81,9 +62,10 @@ Ubuntu you will also need the [_build-essential_](https://packages.debian.org/si
 
 The only thing you need to do to start using the library is to add it as dependency in your `Cargo.toml` file:
 
-```
+```toml {2}
 [dependencies]
 iota-wallet = { git = "https://github.com/iotaledger/wallet.rs", branch = "develop" }
+tokio = "1.21.2"
 ```
 
 ## Use the Library
@@ -111,8 +93,7 @@ async fn main() -> Result<()> {
     // Setup Stronghold secret_manager
     let mut secret_manager = StrongholdSecretManager::builder()
         .password(&stronghold_password)
-        .snapshot_path(PathBuf::from("wallet.stronghold"))
-        .build();
+        .build(PathBuf::from("wallet.stronghold"))?;
 
     // The mnemonic only needs to be stored the first time
     secret_manager
