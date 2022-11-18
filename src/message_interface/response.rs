@@ -130,7 +130,7 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::AccountMethod::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
-    ParticipationEvent(Event),
+    ParticipationEvent(Option<Event>),
     /// Response for
     /// [`GetParticipationEventStatus`](crate::message_interface::AccountMethod::GetParticipationEventStatus)
     #[cfg(feature = "participation")]

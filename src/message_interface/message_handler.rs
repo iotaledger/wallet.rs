@@ -318,7 +318,7 @@ impl WalletMessageHandler {
                         .account_manager
                         .register_participation_event(event_id, nodes)
                         .await?;
-                    Ok(Response::ParticipationEvent(event))
+                    Ok(Response::ParticipationEvent(Some(event)))
                 })
                 .await
             }
@@ -337,8 +337,7 @@ impl WalletMessageHandler {
                         .account_manager
                         .get_participation_event(event_id)
                         .await?
-                        .ok_or_else(|| crate::Error::Storage(format!("event {event_id} not found")))?
-                        .0;
+                        .map(|(e, _)| e);
                     Ok(Response::ParticipationEvent(event))
                 })
                 .await
