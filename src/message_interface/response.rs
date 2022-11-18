@@ -3,8 +3,6 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-#[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::{Event, EventStatus};
 #[cfg(feature = "ledger_nano")]
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
@@ -17,6 +15,11 @@ use iota_client::{
     NodeInfoWrapper,
 };
 use serde::Serialize;
+#[cfg(feature = "participation")]
+use {
+    crate::account::operations::participation::AccountParticipationOverview,
+    iota_client::node_api::participation::types::{Event, EventStatus},
+};
 
 use crate::{
     account::{
@@ -111,6 +114,10 @@ pub enum Response {
     /// [`SendNft`](crate::message_interface::AccountMethod::SendNft),
     /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
+    /// [`Vote`](crate::message_interface::AccountMethod::Vote)
+    /// [`StopParticipating`](crate::message_interface::AccountMethod::StopParticipating)
+    /// [`IncreaseVotingPower`](crate::message_interface::AccountMethod::IncreaseVotingPower)
+    /// [`DecreaseVotingPower`](crate::message_interface::AccountMethod::DecreaseVotingPower)
     SentTransaction(TransactionDto),
     /// Response for
     /// [`MintNativeToken`](crate::message_interface::AccountMethod::MintNativeToken),
@@ -127,18 +134,26 @@ pub enum Response {
     /// Response for [`GetNodeInfo`](crate::message_interface::Message::GetNodeInfo)
     NodeInfo(NodeInfoWrapper),
     /// Response for
-    /// [`GetParticipationEvent`](crate::message_interface::AccountMethod::GetParticipationEvent)
-    /// [`RegisterParticipationEvent`](crate::message_interface::AccountMethod::RegisterParticipationEvent)
+    /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
+    /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
     ParticipationEvent(Option<Event>),
     /// Response for
-    /// [`GetParticipationEventStatus`](crate::message_interface::AccountMethod::GetParticipationEventStatus)
+    /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
     #[cfg(feature = "participation")]
     ParticipationEventStatus(EventStatus),
     /// Response for
-    /// [`GetParticipationEvents`](crate::message_interface::AccountMethod::GetParticipationEvents)
+    /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
     ParticipationEvents(Vec<Event>),
+    /// Response for
+    /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
+    #[cfg(feature = "participation")]
+    VotingPower(String),
+    /// Response for
+    /// [`GetParticipationOverview`](crate::message_interface::AccountMethod::GetParticipationOverview)
+    #[cfg(feature = "participation")]
+    AccountParticipationOverview(AccountParticipationOverview),
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
@@ -214,6 +229,10 @@ impl Debug for Response {
             Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({:?})", event),
             #[cfg(feature = "participation")]
             Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({:?})", events),
+            #[cfg(feature = "participation")]
+            Response::VotingPower(amount) => write!(f, "VotingPower({:?})", amount),
+            #[cfg(feature = "participation")]
+            Response::AccountParticipationOverview(overview) => write!(f, "VotingPower({:?})", overview),
         }
     }
 }

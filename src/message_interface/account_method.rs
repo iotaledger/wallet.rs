@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "participation")]
+use iota_client::node_api::participation::types::EventId;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     block::{
@@ -357,4 +359,29 @@ pub enum AccountMethod {
         #[serde(rename = "outputIdsToClaim")]
         output_ids_to_claim: Vec<OutputId>,
     },
+    /// Vote for a participation event.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    #[cfg(feature = "participation")]
+    Vote { event_id: EventId, answers: Vec<u8> },
+    /// Stop participation for an event.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    #[cfg(feature = "participation")]
+    StopParticipating(EventId),
+    /// Stop participation for an event.
+    /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
+    #[cfg(feature = "participation")]
+    GetVotingPower,
+    /// Calculates a participation overview for an account.
+    /// Expected response: [`ParticipationOverview`](crate::message_interface::Response::ParticipationOverview)
+    #[cfg(feature = "participation")]
+    GetParticipationOverview,
+    /// Designates a given amount of tokens towards an account's "voting power" by creating a
+    /// special output, which is really a basic one with some metadata.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    #[cfg(feature = "participation")]
+    IncreaseVotingPower(String),
+    /// Reduces an account's "voting power" by a given amount.
+    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    #[cfg(feature = "participation")]
+    DecreaseVotingPower(String),
 }

@@ -37,7 +37,7 @@ pub struct AccountParticipationOverview {
 
 impl AccountHandle {
     /// Calculates a voting overview for an account.
-    pub async fn get_voting_overview(&self) -> Result<AccountParticipationOverview> {
+    pub async fn get_participation_overview(&self) -> Result<AccountParticipationOverview> {
         // could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done
 
         let outputs = self.outputs(None).await?;

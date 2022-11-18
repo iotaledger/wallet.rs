@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "participation")]
+use std::str::FromStr;
 use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
@@ -887,6 +889,62 @@ impl WalletMessageHandler {
             AccountMethod::ClaimOutputs { output_ids_to_claim } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle.claim_outputs(output_ids_to_claim.to_vec()).await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::Vote { event_id, answers } => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle.vote(event_id, answers).await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::StopParticipating(event_id) => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle.stop_participating(event_id).await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetVotingPower => {
+                convert_async_panics(|| async {
+                    let voting_power = account_handle.get_voting_power().await?;
+                    Ok(Response::VotingPower(voting_power.to_string()))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetParticipationOverview => {
+                convert_async_panics(|| async {
+                    let overview = account_handle.get_participation_overview().await?;
+                    Ok(Response::AccountParticipationOverview(overview))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::IncreaseVotingPower(amount) => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle
+                        .increase_voting_power(
+                            u64::from_str(&amount).map_err(|_| iota_client::Error::InvalidAmount(amount.clone()))?,
+                        )
+                        .await?;
+                    Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::DecreaseVotingPower(amount) => {
+                convert_async_panics(|| async {
+                    let transaction = account_handle
+                        .decrease_voting_power(
+                            u64::from_str(&amount).map_err(|_| iota_client::Error::InvalidAmount(amount.clone()))?,
+                        )
+                        .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
                 .await

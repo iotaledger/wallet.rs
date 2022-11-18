@@ -159,7 +159,7 @@ async fn main() -> Result<()> {
     ////////////////////////////////
     //// get voting overview
     //// ////////////////////////////
-    let overview = account.get_voting_overview().await?;
+    let overview = account.get_participation_overview().await?;
     println!("overview: {overview:?}");
 
     ////////////////////////////////
