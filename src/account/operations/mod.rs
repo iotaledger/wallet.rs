@@ -15,6 +15,9 @@ pub(crate) mod output_claiming;
 pub(crate) mod output_consolidation;
 /// The module to find additional addresses with unspent outputs
 pub(crate) mod output_finder;
+/// The module for participation
+#[cfg(all(feature = "participation", feature = "storage"))]
+pub(crate) mod participation;
 /// The module for synchronization of an account
 pub(crate) mod syncing;
 /// The module for transactions

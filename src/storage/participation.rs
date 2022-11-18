@@ -33,7 +33,7 @@ impl StorageManager {
         Ok(())
     }
 
-    pub(crate) async fn remove_participation_event(&mut self, id: EventId) -> crate::Result<()> {
+    pub(crate) async fn remove_participation_event(&mut self, id: &EventId) -> crate::Result<()> {
         log::debug!("remove_participation_event {id}");
 
         let mut events: HashMap<EventId, (Event, Vec<Node>)> = match self.storage.get(PARTICIPATION_EVENTS).await {
@@ -42,7 +42,7 @@ impl StorageManager {
             Err(err) => return Err(err),
         };
 
-        events.remove(&id);
+        events.remove(id);
 
         self.storage.set(PARTICIPATION_EVENTS, &events).await?;
 

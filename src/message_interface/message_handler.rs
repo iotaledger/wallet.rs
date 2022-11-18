@@ -325,7 +325,7 @@ impl WalletMessageHandler {
             #[cfg(feature = "participation")]
             Message::DeregisterParticipationEvent(event_id) => {
                 convert_async_panics(|| async {
-                    self.account_manager.deregister_participation_event(event_id).await?;
+                    self.account_manager.deregister_participation_event(&event_id).await?;
                     Ok(Response::Ok(()))
                 })
                 .await
@@ -345,7 +345,7 @@ impl WalletMessageHandler {
             #[cfg(feature = "participation")]
             Message::GetParticipationEventStatus(event_id) => {
                 convert_async_panics(|| async {
-                    let event_status = self.account_manager.get_participation_event_status(event_id).await?;
+                    let event_status = self.account_manager.get_participation_event_status(&event_id).await?;
                     Ok(Response::ParticipationEventStatus(event_status))
                 })
                 .await
