@@ -28,13 +28,12 @@ pub struct AddressAndNftId {
 
 impl AccountHandle {
     /// Function to send native tokens in basic outputs with a
-    /// [`StorageDepositReturnUnlockCondition`](iota_client::block::output::unlock_condition::
-    /// StorageDepositReturnUnlockCondition) and [`ExpirationUnlockCondition`](iota_client::block::output::
-    /// unlock_condition::ExpirationUnlockCondition), so the storage deposit gets back to the sender and also that
-    /// the sender gets access to the output again after a defined time (default 1 day), Calls
-    /// [AccountHandle.send()](crate::account::handle::AccountHandle.send) internally, the options can define the
-    /// RemainderValueStrategy. Custom inputs will be replaced with the required nft inputs.
-    /// Address needs to be Bech32 encoded
+    /// [`StorageDepositReturnUnlockCondition`](iota_client::block::output::unlock_condition::StorageDepositReturnUnlockCondition) and
+    /// [`ExpirationUnlockCondition`](iota_client::block::output::unlock_condition::ExpirationUnlockCondition), so the
+    /// storage deposit gets back to the sender and also that the sender gets access to the output again after a
+    /// defined time (default 1 day), Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send)
+    /// internally, the options can define the RemainderValueStrategy. Custom inputs will be replaced with the
+    /// required nft inputs. Address needs to be Bech32 encoded
     /// ```ignore
     /// let outputs = vec![AddressAndNftId {
     ///     address: "rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu".to_string(),
