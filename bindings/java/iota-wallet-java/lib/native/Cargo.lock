@@ -64,6 +64,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ahash"
+version = "0.8.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bf6ccdb167abbf410dcb915cabd428929d7f6a04980b54a11f26a39f1c7f7107"
+dependencies = [
+ "cfg-if",
+ "once_cell",
+ "version_check",
+]
+
+[[package]]
 name = "anyhow"
 version = "1.0.66"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -554,7 +565,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7c24f403d068ad0b359e577a77f92392118be3f3c927538f2bb544a5ecd828c6"
 dependencies = [
  "curve25519-dalek",
- "hashbrown",
+ "hashbrown 0.12.3",
  "hex",
  "rand_core 0.6.4",
  "sha2 0.9.9",
@@ -807,7 +818,16 @@ version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9ee70c43aaf417c914396645a0fa852624801b24ebb7ae78fe8272889ac888"
 dependencies = [
- "ahash",
+ "ahash 0.7.6",
+]
+
+[[package]]
+name = "hashbrown"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33ff8ae62cd3a9102e5637afc8452c55acf3844001bd5374e0b0bd7b6616c038"
+dependencies = [
+ "ahash 0.8.2",
 ]
 
 [[package]]
@@ -984,7 +1004,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "10a35a97730320ffe8e2d410b5d3b69279b98d2c14bdb8b70ea89ecf7888d41e"
 dependencies = [
  "autocfg",
- "hashbrown",
+ "hashbrown 0.12.3",
 ]
 
 [[package]]
@@ -1002,7 +1022,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
+source = "git+https://github.com/iotaledger/iota.rs?rev=afee960f1d2de4852e751dbca9046211e91ff5ac#afee960f1d2de4852e751dbca9046211e91ff5ac"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1081,7 +1101,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
+source = "git+https://github.com/iotaledger/iota.rs?rev=afee960f1d2de4852e751dbca9046211e91ff5ac#afee960f1d2de4852e751dbca9046211e91ff5ac"
 dependencies = [
  "iota-crypto",
  "thiserror",
@@ -1090,13 +1110,13 @@ dependencies = [
 [[package]]
 name = "iota-types"
 version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=8b2396b6c639b00bebeac062bf2bd5d1b907f57a#8b2396b6c639b00bebeac062bf2bd5d1b907f57a"
+source = "git+https://github.com/iotaledger/iota.rs?rev=afee960f1d2de4852e751dbca9046211e91ff5ac#afee960f1d2de4852e751dbca9046211e91ff5ac"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
  "bytemuck",
  "derive_more",
- "hashbrown",
+ "hashbrown 0.13.1",
  "hex",
  "iota-crypto",
  "iota-pow",
@@ -1147,9 +1167,9 @@ dependencies = [
 
 [[package]]
 name = "iota_stronghold"
-version = "1.0.4"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aff08ce171ead0843be707f267893c0d8f1d76996e809772f4fcb6c19cc2e5f4"
+checksum = "6c5baaa2460627283f54b968db7a38c9c754dc6059157cae64550ed1b79c91aa"
 dependencies = [
  "bincode",
  "hkdf",
@@ -1726,9 +1746,9 @@ checksum = "456c603be3e8d448b072f410900c09faf164fbce2d480456f50eea6e25f9c848"
 
 [[package]]
 name = "reqwest"
-version = "0.11.12"
+version = "0.11.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "431949c384f4e2ae07605ccaa56d1d9d2ecdb5cadd4f9577ccfab29f2e5149fc"
+checksum = "68cc60575865c7831548863cc02356512e3f1dc2f3f82cb837d7fc4cc8f3c97c"
 dependencies = [
  "base64",
  "bytes",
@@ -1895,9 +1915,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.87"
+version = "1.0.88"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce777b7b150d76b9cf60d28b55f5847135a003f7d7350c6be7a773508ce7d45"
+checksum = "8e8b3801309262e8184d9687fb697586833e939767aea0dda89f5a8e650e8bd7"
 dependencies = [
  "itoa",
  "ryu",
@@ -2135,9 +2155,9 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "1.21.2"
+version = "1.22.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a9e03c497dc955702ba729190dc4aac6f2a0ce97f913e5b1b5912fc5039d9099"
+checksum = "d76ce4a75fb488c605c54bf610f221cea8b0dafb53333c1a67e8ee199dcd2ae3"
 dependencies = [
  "autocfg",
  "bytes",

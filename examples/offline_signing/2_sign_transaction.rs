@@ -48,8 +48,8 @@ async fn main() -> Result<()> {
         15,
         RentStructureBuilder::new()
             .byte_cost(100)
-            .key_factor(1)
-            .data_factor(10)
+            .byte_factor_key(1)
+            .byte_factor_data(10)
             .finish(),
         1813620509061365,
     )
