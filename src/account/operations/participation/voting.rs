@@ -36,7 +36,7 @@ impl AccountHandle {
         // Check if voting event is still running
         let event_status = self.get_participation_event_status(&event_id).await?;
         if event_status.status() == "ended" {
-            return Err(crate::Error::VotingError(format!("event {event_id} already ended")));
+            return Err(crate::Error::Voting(format!("event {event_id} already ended")));
         }
 
         let voting_output = self.get_voting_output().await?;
@@ -120,7 +120,7 @@ impl AccountHandle {
                 participations.remove(&event_id);
 
                 if length_before == participations.participations.len() {
-                    return Err(crate::Error::VotingError(format!(
+                    return Err(crate::Error::Voting(format!(
                         "currently not participating for {event_id}"
                     )));
                 }
@@ -131,7 +131,7 @@ impl AccountHandle {
                 participations
             }
             None => {
-                return Err(crate::Error::VotingError(format!(
+                return Err(crate::Error::Voting(format!(
                     "currently not participating for {event_id}"
                 )));
             }

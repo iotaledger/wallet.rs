@@ -128,7 +128,7 @@ impl AccountHandle {
             // Use output with largest amount
             .last()
             .cloned()
-            .ok_or_else(|| crate::Error::VotingError("No unspent voting output found".to_string()))
+            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))
     }
 
     /// Get client for an event, if event isn't found, the client from the account will be returned.
