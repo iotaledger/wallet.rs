@@ -367,7 +367,7 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     StopParticipating(EventId),
-    /// Stop participation for an event.
+    /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
     #[cfg(feature = "participation")]
     GetVotingPower,
