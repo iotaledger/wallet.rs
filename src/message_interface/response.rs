@@ -232,7 +232,9 @@ impl Debug for Response {
             #[cfg(feature = "participation")]
             Response::VotingPower(amount) => write!(f, "VotingPower({:?})", amount),
             #[cfg(feature = "participation")]
-            Response::AccountParticipationOverview(overview) => write!(f, "VotingPower({:?})", overview),
+            Response::AccountParticipationOverview(overview) => {
+                write!(f, "AccountParticipationOverview({:?})", overview)
+            }
         }
     }
 }
