@@ -3,17 +3,18 @@
 
 pub mod types;
 
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
-use iota_wallet::{
+use std::sync::Mutex;
+
+use ::iota_wallet::{
     events::types::WalletEventType,
     message_interface::{ManagerOptions, Message},
 };
-use types::*;
-
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use once_cell::sync::OnceCell;
 use pyo3::{prelude::*, wrap_pyfunction};
-use std::sync::Mutex;
 use tokio::runtime::Runtime;
+
+use self::types::*;
 
 /// Use one runtime.
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
@@ -27,7 +28,9 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
 pub fn init_logger(config: String) -> PyResult<()> {
     let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
     let config = LoggerConfig::build().with_output(output_config).finish();
+
     logger_init(config).expect("failed to init logger");
+
     Ok(())
 }
 
@@ -44,7 +47,7 @@ pub fn create_message_handler(options: Option<String>) -> Result<WalletMessageHa
         _ => None,
     };
     let message_handler =
-        crate::block_on(async { iota_wallet::message_interface::create_message_handler(options).await })?;
+        crate::block_on(async { ::iota_wallet::message_interface::create_message_handler(options).await })?;
 
     Ok(WalletMessageHandler {
         wallet_message_handler: message_handler,
@@ -61,8 +64,9 @@ pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<St
         }
     };
     let response = crate::block_on(async {
-        iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message).await
+        ::iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message).await
     });
+
     Ok(serde_json::to_string(&response)?)
 }
 
@@ -70,6 +74,7 @@ pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<St
 /// Listen to events.
 pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObject) {
     let mut rust_events = Vec::new();
+
     for event in events {
         let event = match serde_json::from_str::<WalletEventType>(&event) {
             Ok(event) => event,
@@ -79,11 +84,12 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
         };
         rust_events.push(event);
     }
+
     crate::block_on(async {
-        iota_wallet::message_interface::listen(&handle.wallet_message_handler, rust_events, move |_| {
-            let gil = Python::acquire_gil();
-            let py = gil.python();
-            handler.call0(py).unwrap();
+        ::iota_wallet::message_interface::listen(&handle.wallet_message_handler, rust_events, move |_| {
+            Python::with_gil(|py| {
+                handler.call0(py).unwrap();
+            });
         })
         .await;
     });
@@ -96,5 +102,6 @@ fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(create_message_handler, m)?).unwrap();
     m.add_function(wrap_pyfunction!(send_message, m)?).unwrap();
     m.add_function(wrap_pyfunction!(listen, m)?).unwrap();
+
     Ok(())
 }
