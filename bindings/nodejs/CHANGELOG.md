@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.7]
+
+- Downgrade rocksdb version.
+  - [e7d17771](https://github.com/iotaledger/wallet.rs/commit/e7d1777175a887c59d86c1d266812f0ecf32faea) Downgrade rocksdb version ([#1586](https://github.com/iotaledger/wallet.rs/pull/1586)) on 2022-11-17
+
 ## \[2.0.3-rc.6]
 
 - Use correct NFT id for existing NFT in prepareOutput().
