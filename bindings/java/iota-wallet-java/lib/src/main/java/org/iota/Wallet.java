@@ -11,13 +11,14 @@ import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.types.*;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
 
 public class Wallet extends NativeApi {
 
-    public Wallet(WalletConfig config) {
+    public Wallet(WalletConfig config) throws InitializeWalletException {
         super(config);
     }
 

@@ -7,6 +7,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import org.apache.commons.lang3.SystemUtils;
 import org.iota.types.WalletConfig;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 
 public class NativeApi {
@@ -56,11 +57,15 @@ public class NativeApi {
         NativeUtils.loadLibraryFromJar("/" + libraryName);
     }
 
-    protected NativeApi(WalletConfig walletConfig) {
-        createMessageHandler(new Gson().toJsonTree(walletConfig).toString());
+    protected NativeApi(WalletConfig walletConfig) throws InitializeWalletException {
+        try {
+            createMessageHandler(new Gson().toJsonTree(walletConfig).toString());
+        } catch (Exception e) {
+            throw new InitializeWalletException(e.getMessage());
+        }
     }
 
-    private static native void createMessageHandler(String config);
+    private static native void createMessageHandler(String config) throws Exception;
 
     private static native String sendMessage(String command);
 
