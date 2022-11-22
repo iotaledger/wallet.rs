@@ -104,10 +104,9 @@ impl AccountHandle {
     ///
     /// If multiple outputs with this tag exist, the one with the largest amount will be returned.
     pub async fn get_voting_output(&self) -> Result<OutputData> {
-        let mut participation_outputs = self
-            .unspent_outputs(None)
+        self.unspent_outputs(None)
             .await?
-            .into_iter()
+            .iter()
             .filter(|output_data| {
                 if let Output::Basic(basic_output) = &output_data.output {
                     if let Some(tag) = basic_output.features().tag() {
@@ -119,14 +118,7 @@ impl AccountHandle {
                     false
                 }
             })
-            .collect::<Vec<OutputData>>();
-
-        // Sort by amount
-        participation_outputs.sort_by(|a, b| a.output.amount().cmp(&b.output.amount()));
-
-        participation_outputs
-            // Use output with largest amount
-            .last()
+            .max_by_key(|output_data| output_data.output.amount())
             .cloned()
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))
     }
