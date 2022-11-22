@@ -20,9 +20,9 @@ iota-wallet = { path = "../../../../..", features = [ "message_interface", "even
 fern-logger = { version = "0.5.0", default-features = false }
 futures = { version = "0.3.25", default-features = false }
 jni = { version = "0.20.0", default-features = false }
-once_cell = { version = "1.15.0", default-features = false }
-serde_json = { version = "1.0.87", default-features = false }
-tokio = { version = "1.21.2", default-features = false, features = [ "macros" ] }
+once_cell = { version = "1.16.0", default-features = false }
+serde_json = { version = "1.0.88", default-features = false }
+tokio = { version = "1.22.0", default-features = false, features = [ "macros" ] }
 lazy_static = { version = "1.4.0", default-features = false }
 
 [features]

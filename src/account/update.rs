@@ -145,13 +145,13 @@ impl AccountHandle {
                         .get(output_data.output_id.transaction_id());
                     self.event_emitter.lock().await.emit(
                         account_index,
-                        WalletEvent::NewOutput(NewOutputEvent {
+                        WalletEvent::NewOutput(Box::new(NewOutputEvent {
                             output: OutputDataDto::from(&output_data),
                             transaction: transaction
                                 .as_ref()
                                 .map(|(tx, _inputs)| TransactionPayloadDto::from(tx)),
                             transaction_inputs: transaction.as_ref().map(|(_tx, inputs)| inputs).cloned(),
-                        }),
+                        })),
                     );
                 }
             };

@@ -16,3 +16,6 @@ pub(crate) const ACCOUNT_INDEXATION_KEY: &str = "iota-wallet-account-";
 
 pub(crate) const DATABASE_SCHEMA_VERSION: u8 = 1;
 pub(crate) const DATABASE_SCHEMA_VERSION_KEY: &str = "database-schema-version";
+
+#[cfg(feature = "participation")]
+pub(crate) const PARTICIPATION_EVENTS: &str = "participation-events";

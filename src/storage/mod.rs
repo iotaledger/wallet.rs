@@ -7,6 +7,9 @@ pub mod adapter;
 pub mod constants;
 /// Storage manager.
 pub mod manager;
+/// Storage functions related to participation.
+#[cfg(feature = "participation")]
+mod participation;
 
 use std::collections::HashMap;
 
@@ -16,7 +19,7 @@ use serde::Serialize;
 use self::adapter::StorageAdapter;
 
 #[derive(Debug)]
-struct Storage {
+pub(crate) struct Storage {
     inner: Box<dyn StorageAdapter + Sync + Send>,
     encryption_key: Option<[u8; 32]>,
 }

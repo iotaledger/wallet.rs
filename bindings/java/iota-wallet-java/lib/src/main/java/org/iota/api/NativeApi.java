@@ -5,7 +5,6 @@ package org.iota.api;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.apache.commons.lang3.SystemUtils;
 import org.iota.types.WalletConfig;
 import org.iota.types.exceptions.WalletException;
@@ -13,12 +12,41 @@ import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.wallet.WalletEventType;
 
-import java.io.IOException;
-
 public class NativeApi {
 
     static {
-        String libraryName = null;
+
+        Throwable loadFromJavaPathThrowable = null;
+        Throwable loadFromJarThrowable = null;
+
+        try {
+            loadFromJavaPath();
+        } catch (Throwable t) {
+            loadFromJavaPathThrowable = t;
+        }
+
+        if (loadFromJavaPathThrowable != null) {
+            try {
+                loadFromJar();
+            } catch (Throwable t) {
+                loadFromJarThrowable = t;
+            }
+        }
+
+        if (loadFromJavaPathThrowable != null && loadFromJarThrowable != null) {
+            loadFromJavaPathThrowable.printStackTrace();
+            loadFromJarThrowable.printStackTrace();
+            throw new RuntimeException("cannot load native library");
+        }
+
+    }
+
+    private static void loadFromJavaPath() {
+        System.loadLibrary("iota_wallet");
+    }
+
+    private static void loadFromJar() throws Throwable {
+        String libraryName;
 
         if (SystemUtils.IS_OS_LINUX)
             libraryName = "libiota_wallet.so";
@@ -26,15 +54,10 @@ public class NativeApi {
             libraryName = "libiota_wallet.dylib";
         else if (SystemUtils.IS_OS_WINDOWS)
             libraryName = "iota_wallet.dll";
-        else throw new RuntimeException("OS not supported");
+        else
+            throw new RuntimeException("OS not supported");
 
-        try {
-            NativeUtils.loadLibraryFromJar("/" + libraryName);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("cannot load native library");
-        }
-
+        NativeUtils.loadLibraryFromJar("/" + libraryName);
     }
 
     protected NativeApi(WalletConfig walletConfig) {
@@ -42,6 +65,7 @@ public class NativeApi {
     }
 
     protected static native void initLogger(String config);
+
     private static native void createMessageHandler(String config);
 
     // Destroys account handle
@@ -52,7 +76,7 @@ public class NativeApi {
     private static native String listen(String[] events, EventListener listener);
 
     private static JsonElement handleClientResponse(String methodName, String jsonResponse) throws WalletException {
-        ClientResponse response = CustomGson.get().fromJson(jsonResponse, ClientResponse.class);
+        WalletResponse response = CustomGson.get().fromJson(jsonResponse, WalletResponse.class);
 
         switch (response.type) {
             case "panic":
@@ -84,39 +108,16 @@ public class NativeApi {
         handleClientResponse("listen", listen(eventStrs, listener));
     }
 
-    public static JsonElement callBaseApi(ClientCommand command) throws WalletException {
-        //System.out.println("REQUEST: " + command);
+    public static JsonElement callBaseApi(WalletCommand command) throws WalletException {
+        // System.out.println("REQUEST: " + command);
         String jsonResponse = sendMessage(command.toString());
-        //System.out.println("RESPONSE: " + jsonResponse);
-        return handleClientResponse(command.methodName, jsonResponse);
+        // System.out.println("RESPONSE: " + jsonResponse);
+        return handleClientResponse(command.getMethodName(), jsonResponse);
     }
 
-    private class ClientResponse {
+    private class WalletResponse {
         String type;
         JsonElement payload;
     }
 
-    public static class ClientCommand {
-
-        private String methodName;
-        private JsonElement methodParams;
-
-        public ClientCommand(String methodName) {
-            this.methodName = methodName;
-        }
-
-        public ClientCommand(String methodName, JsonElement methodParams) {
-            this.methodName = methodName;
-            this.methodParams = methodParams;
-        }
-
-        @Override
-        public String toString() {
-            JsonObject message = new JsonObject();
-            message.addProperty("cmd", methodName);
-            message.add("payload", methodParams);
-
-            return message.toString();
-        }
-    }
 }

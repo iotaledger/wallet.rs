@@ -7,6 +7,8 @@ use std::{
 };
 
 use iota_client::node_manager::node::NodeAuth;
+#[cfg(feature = "participation")]
+use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -168,6 +170,25 @@ pub enum Message {
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "events")]
     ClearListeners(Vec<WalletEventType>),
+    /// Stores participation information locally and returns the event.
+    ///
+    /// This will NOT store the node url and auth inside the client options.
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    RegisterParticipationEvent { event_id: EventId, nodes: Vec<Node> },
+    /// Removes a previously registered participation event from local storage.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "participation")]
+    DeregisterParticipationEvent(EventId),
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    GetParticipationEvent(EventId),
+    /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
+    #[cfg(feature = "participation")]
+    GetParticipationEventStatus(EventId),
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
+    #[cfg(feature = "participation")]
+    GetParticipationEvents,
 }
 
 // Custom Debug implementation to not log secrets
@@ -242,6 +263,30 @@ impl Debug for Message {
 
             #[cfg(feature = "events")]
             Message::ClearListeners(events) => write!(f, "ClearListeners({:?})", events),
+            #[cfg(feature = "participation")]
+            Message::RegisterParticipationEvent { event_id, nodes } => {
+                write!(
+                    f,
+                    "RegisterParticipationEvent{{ event_id: {:?}, nodes: {:?} }}",
+                    event_id, nodes
+                )
+            }
+            #[cfg(feature = "participation")]
+            Message::DeregisterParticipationEvent(event_id) => {
+                write!(f, "DeregisterParticipationEvent({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvent(event_id) => {
+                write!(f, "GetParticipationEvent({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEventStatus(event_id) => {
+                write!(f, "GetParticipationEventStatus({:?})", event_id)
+            }
+            #[cfg(feature = "participation")]
+            Message::GetParticipationEvents => {
+                write!(f, "GetParticipationEvents")
+            }
         }
     }
 }
