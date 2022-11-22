@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{handle::AccountHandle, OutputData},
-    Result,
+    Error, Result,
 };
 
 /// An object containing an account's entire participation overview.
@@ -147,12 +147,16 @@ impl AccountHandle {
     /// Check if events in the participations ended and remove them.
     pub(crate) async fn remove_ended_participation_events(
         &self,
-        mut participations: Participations,
-    ) -> crate::Result<Participations> {
+        participations: &mut Participations,
+    ) -> crate::Result<()> {
         let latest_milestone_index = self.client().get_info().await?.node_info.status.latest_milestone.index;
 
-        // TODO: don't return error here if there is nothing?
-        let events = self.storage_manager.lock().await.get_participation_events().await?;
+        // TODO: get_participation_events needs to return an option
+        let events = match self.storage_manager.lock().await.get_participation_events().await {
+            Ok(events) => events,
+            Err(Error::RecordNotFound(_)) => HashMap::new(),
+            Err(e) => return Err(e),
+        };
 
         for participation in participations.participations.clone().iter() {
             if let Some((event, _nodes)) = events.get(&participation.event_id) {
@@ -168,7 +172,8 @@ impl AccountHandle {
                 }
             }
         }
-        Ok(participations)
+
+        Ok(())
     }
 
     /// Retrieves the latest status of a given participation event.

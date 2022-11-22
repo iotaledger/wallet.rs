@@ -56,7 +56,7 @@ impl AccountHandle {
                 let mut participations = Participations::from_bytes(&mut slice)?;
 
                 // Remove ended participations
-                participations = self.remove_ended_participation_events(participations).await?;
+                self.remove_ended_participation_events(&mut participations).await?;
 
                 participations.add_or_replace(Participation { event_id, answers });
 
@@ -126,7 +126,7 @@ impl AccountHandle {
                 }
 
                 // Remove ended participations
-                participations = self.remove_ended_participation_events(participations).await?;
+                self.remove_ended_participation_events(&mut participations).await?;
 
                 participations
             }

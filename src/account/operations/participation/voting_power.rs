@@ -53,7 +53,7 @@ impl AccountHandle {
                 let participation_data =
                     if let Ok(mut participations) = Participations::from_bytes(&mut participation_data) {
                         // Remove ended participations
-                        participations = self.remove_ended_participation_events(participations).await?;
+                        self.remove_ended_participation_events(&mut participations).await?;
 
                         let participation_bytes = participations.to_bytes()?;
 
@@ -119,11 +119,9 @@ impl AccountHandle {
         // If the amount to decrease is the amount of the output, then we just remove the features
         let (new_output, tagged_data_payload) = if amount == basic_output.amount() {
             (
-                vec![
-                    BasicOutputBuilder::from(&basic_output)
-                        .with_features([])
-                        .finish_output(token_supply)?,
-                ],
+                vec![BasicOutputBuilder::from(&basic_output)
+                    .with_features([])
+                    .finish_output(token_supply)?],
                 None,
             )
         } else {
@@ -135,7 +133,7 @@ impl AccountHandle {
             let participation_data = if let Ok(mut participations) = Participations::from_bytes(&mut participation_data)
             {
                 // Remove ended participations
-                participations = self.remove_ended_participation_events(participations).await?;
+                self.remove_ended_participation_events(&mut participations).await?;
 
                 let participation_bytes = participations.to_bytes()?;
 
