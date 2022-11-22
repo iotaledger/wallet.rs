@@ -3,15 +3,13 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class ListTransactions {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class SyncAccount {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -20,16 +18,13 @@ public class ListTransactions {
                 .withCoinType(CoinType.Shimmer)
         );
 
-        // Get account and sync it with the registered node to ensure that its balances are up-to-date.
+        // Get account.
         AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
-        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Get transactions.
-        Transaction[] transactions = a.getTransactions();
+        // Sync the account with the registered node to ensure that its balances are up-to-date.
+        AccountBalance balance = a.syncAccount(new org.iota.types.account_methods.SyncAccount().withOptions(new SyncOptions()));
 
-        // Print transactions.
-        for (Transaction tx : transactions)
-            System.out.println(tx.toString());
+        // Print the balance.
+        System.out.println(balance.getBaseCoin().getTotal());
     }
-
 }

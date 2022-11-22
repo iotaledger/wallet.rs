@@ -4,13 +4,13 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.NftId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class SendNft {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class MintNativeToken {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -23,15 +23,16 @@ public class SendNft {
         AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
+
         // TODO: replace with your own values.
-        String receiverAddress = a.getPublicAddresses()[0].getAddress();
-        NftId nftId = new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003");
+        NativeTokenOptions options = new NativeTokenOptions();
+        options.withCirculatingSupply("0x20"); // number 23 hex encoded
+        options.withMaximumSupply("0x45"); // number 69 hex encoded
 
         // Send transaction.
-        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {new AddressAndNftId()
-                .withAddress(receiverAddress)
-                .withNftId(nftId)
-        }));
+        MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
 
         // Print transaction.
         System.out.println(t);

@@ -5,13 +5,14 @@ import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SendNativeTokens;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.TokenId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class SendNativeToken {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
