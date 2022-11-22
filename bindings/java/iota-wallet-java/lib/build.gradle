@@ -77,6 +77,8 @@ task jarWithoutJniLibs(type: Jar) {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
 
+    exclude '*.so', '*.dylib', '*.dll'
+
     with jar
 }
 
