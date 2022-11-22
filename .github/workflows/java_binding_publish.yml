@@ -84,12 +84,10 @@ jobs:
       - name: Build JAR for aarch64-apple-darwin target
         if: matrix.os == 'macos-latest'
         shell: bash
-        env:
-          ORG_GRADLE_PROJECT_buildTarget: aarch64-apple-darwin
         working-directory: bindings/java/iota-wallet-java/
         run: |
           rustup target add aarch64-apple-darwin
-          ./gradlew build
+          ./gradlew build -PbuildTarget=aarch64-apple-darwin
 
       - name: Get filename for tag construction
         shell: bash
@@ -129,5 +127,5 @@ jobs:
         run: |
           ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
           if [ "$RUNNER_OS" == "macOS" ];
-          then ORG_GRADLE_PROJECT_buildTarget=aarch64-apple-darwin ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository
+          then ./gradlew publishToSonatype closeAndReleaseSonatypeStagingRepository -PbuildTarget=aarch64-apple-darwin
           fi
