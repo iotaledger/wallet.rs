@@ -4,12 +4,14 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.NftId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class CheckBalance {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class BurnNft {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
         // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
@@ -22,10 +24,15 @@ public class CheckBalance {
         AccountHandle a = wallet.getAccount(new AccountAlias("Alice"));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Get the balance.
-        AccountBalance balance = a.getBalance();
+        // TODO: replace with your own values.
+        NftId nftId = new NftId("0xf95f4d5344217a2ba19a6c19a47f97d267edf8c4d76a7b8c08072ad35acbebbe");
 
-        // Print the balance.
-        System.out.println(balance);
+        // Send transaction.
+        Transaction t = a.burnNft(new org.iota.types.account_methods.BurnNft()
+                .withNftId(nftId)
+        );
+
+        // Print transaction.
+        System.out.println(t);
     }
 }

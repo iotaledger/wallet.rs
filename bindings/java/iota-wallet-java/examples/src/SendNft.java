@@ -4,15 +4,16 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.OutputId;
+import org.iota.types.ids.NftId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class ClaimOutputs {
-    public static void main(String[] args) throws WalletException, InterruptedException {
-        // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
-        // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
+public class SendNft {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
@@ -24,14 +25,17 @@ public class ClaimOutputs {
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
         // TODO: replace with your own values.
-        OutputId outputId = new OutputId("0xeb572c09b9cdf4e29c65ecbe10c06d484c04d33da3bea6d9bb1653aa6617e8450000");
+        String receiverAddress = a.getPublicAddresses()[0].getAddress();
+        NftId nftId = new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003");
 
-        // Claim the given outputs
-        Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{
-                outputId
+        // Send transaction.
+        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {new AddressAndNftId()
+                .withAddress(receiverAddress)
+                .withNftId(nftId)
         }));
 
-        // Print the transaction
+        // Print transaction.
         System.out.println(t);
     }
+
 }

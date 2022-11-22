@@ -5,11 +5,12 @@ import org.iota.Wallet;
 import org.iota.types.ClientConfig;
 import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class Backup {
-    public static void main(String[] args) throws WalletException {
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
         // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
