@@ -17,6 +17,10 @@ dependencies {
     implementation group: 'commons-codec', name: 'commons-codec', version: '1.15'
 }
 
+repositories {
+    mavenCentral()
+}
+
 java {
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
@@ -31,16 +35,6 @@ javadoc {
     }
 }
 
-test {
-    dependsOn jar
-    doFirst {
-        classpath += jar.outputs.files
-    }
-    useJUnitPlatform()
-}
-
-version = '1.0.0-rc.2'
-
 task buildRustRelease(type:Exec){
     workingDir 'native'
 
@@ -52,6 +46,7 @@ task buildRustRelease(type:Exec){
 }
 
 archivesBaseName = 'iota-wallet-java'
+version = '1.0.0-rc.2'
 
 jar {
     dependsOn 'buildRustRelease'
@@ -75,13 +70,33 @@ jar {
     classifier = getJarClassifier()
 }
 
+task jarWithoutJniLibs(type: Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+
+    exclude '*.so', '*.dylib', '*.dll'
+
+    with jar
+}
+
+test {
+    dependsOn jar
+    doFirst {
+        classpath += jar.outputs.files
+    }
+    useJUnitPlatform()
+}
+
 publishing {
     publications {
-        mavenJava   (MavenPublication) {
-
+        desktopAndMobile (MavenPublication) {
             groupId = 'org.iota'
             artifactId = 'iota-wallet-java'
             version = project.version
+            artifact jarWithoutJniLibs
 
             from components.java
 
@@ -111,7 +126,6 @@ publishing {
                     developerConnection = 'scm:git:ssh://github.com/iotaledger/wallet.rs.git'
                     url = 'https://github.com/iotaledger/wallet.rs'
                 }
-
             }
         }
     }
@@ -124,11 +138,8 @@ signing {
     def signingKey = base64Decode(findProperty("base64EncodedAsciiArmoredSigningKey"))
     def signingPassword = findProperty("signingPassword")
     useInMemoryPgpKeys(signingKey, signingPassword)
-    sign publishing.publications.mavenJava
-}
 
-repositories {
-    mavenCentral()
+    sign publishing.publications.desktopAndMobile
 }
 
 def base64Decode(encodedString){
