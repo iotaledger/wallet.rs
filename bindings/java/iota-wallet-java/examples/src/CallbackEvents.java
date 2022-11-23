@@ -78,7 +78,5 @@ public class CallbackEvents {
         // Emitted event is not received by our listener because the listener has
         // already been unsubscribed from the wallet.
         wallet.emitTestEvent(selectingInputsEvent);
-
-        wallet.destroy();
     }
 }
