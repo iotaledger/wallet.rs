@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import org.iota.Wallet;
+import org.iota.external.logger.LevelFilter;
+import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
@@ -10,6 +12,9 @@ import org.iota.types.secret.StrongholdSecretManager;
 public class Setup {
 
     public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
+
+        // Initialise the logger for all debug output on rusts' side
+        Wallet.initLogger(new LoggerOutputConfigBuilder().setLevelFilter(LevelFilter.Debug).setColorEnabled(true));
 
         // Set up a wallet instance
         Wallet wallet = new Wallet(new WalletConfig()

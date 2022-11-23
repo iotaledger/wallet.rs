@@ -4,7 +4,6 @@
 import java.io.FileReader;
 import java.io.IOException;
 import org.iota.Wallet;
-import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.events.Event;
@@ -23,9 +22,6 @@ public class CallbackEvents {
 
     public static void main(String[] args)
             throws WalletException, InterruptedException, IOException, InitializeWalletException {
-
-        // Initialise the rust logger for al output on rusts' side
-        Wallet.initLogger(new LoggerOutputConfigBuilder());
 
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
