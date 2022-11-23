@@ -70,7 +70,7 @@ jar {
     classifier = getJarClassifier()
 }
 
-task jarWithoutJniLibs(type: Jar) {
+task jarWithoutNativeLibs(type: Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
     from {
@@ -92,11 +92,12 @@ test {
 
 publishing {
     publications {
-        desktopAndMobile (MavenPublication) {
+        allJars (MavenPublication) {
             groupId = 'org.iota'
             artifactId = 'iota-wallet-java'
             version = project.version
-            artifact jarWithoutJniLibs
+
+            artifact jarWithoutNativeLibs
 
             from components.java
 
@@ -139,7 +140,7 @@ signing {
     def signingPassword = findProperty("signingPassword")
     useInMemoryPgpKeys(signingKey, signingPassword)
 
-    sign publishing.publications.desktopAndMobile
+    sign publishing.publications.allJars
 }
 
 def base64Decode(encodedString){
