@@ -16,7 +16,7 @@ use iota_wallet::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Generates a wallet.log file with logs for debugging
+    // Generates a wallet.log file with logs for debugging.
     let logger_output_config = fern_logger::LoggerOutputConfigBuilder::new()
         .name("wallet.log")
         .target_exclusions(&["h2", "hyper", "rustls"])
@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
         .finish();
     fern_logger::logger_init(config).unwrap();
 
-    // This example uses dotenv, which is not safe for use in production
+    // This example uses dotenv, which is not safe for use in production.
     dotenv().ok();
 
     let client_options = ClientOptions::new()
@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
 
     println!("registered events: {registered_participation_events:?}");
 
-    // Update nodes
+    // Update nodes.
     manager
         .register_participation_event(
             event_id,
@@ -85,12 +85,12 @@ async fn main() -> Result<()> {
     // let registered_participation_events = manager.get_participation_events().await?;
     // println!("registered events: {registered_participation_events:?}");
 
-    // Get account or create a new one
+    // Get account or create a new one.
     let account_alias = "participation";
     let account = match manager.get_account(account_alias).await {
         Ok(account) => account,
         _ => {
-            // first we'll create an example account and store it
+            // First we'll create an example account and store it.
             manager
                 .create_account()
                 .with_alias(account_alias.to_string())
@@ -108,7 +108,8 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// create voting output or increase voting power
-    //// ////////////////////////////
+    ////////////////////////////////
+
     let transaction = account.increase_voting_power(1000001).await?;
     println!(
         "Increase voting power Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
@@ -127,7 +128,8 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// decrease voting power
-    //// ////////////////////////////
+    ////////////////////////////////
+
     // let transaction = account.decrease_voting_power(1).await?;
     // println!(
     //     "Decrease voting power Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
@@ -143,7 +145,8 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// vote
-    //// ////////////////////////////
+    ////////////////////////////////
+
     let transaction = account.vote(event_id, vec![0]).await?;
     println!(
         "Vote Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
@@ -158,13 +161,15 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// get voting overview
-    //// ////////////////////////////
+    ////////////////////////////////
+
     let overview = account.get_participation_overview().await?;
     println!("overview: {overview:?}");
 
     ////////////////////////////////
     //// stop vote
-    //// ////////////////////////////
+    ////////////////////////////////
+
     let transaction = account.stop_participating(event_id).await?;
     println!(
         "Vote Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
@@ -179,7 +184,8 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// destroy voting output
-    //// ////////////////////////////
+    ////////////////////////////////
+
     // let voting_output = account.get_voting_output().await?;
     // println!("Voting output: {:?}", voting_output.output);
 
