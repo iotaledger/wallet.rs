@@ -103,8 +103,9 @@ impl AccountHandle {
     /// Returns the voting output ("PARTICIPATION" tag).
     ///
     /// If multiple outputs with this tag exist, the one with the largest amount will be returned.
-    pub async fn get_voting_output(&self) -> Result<OutputData> {
-        self.unspent_outputs(None)
+    pub async fn get_voting_output(&self) -> Result<Option<OutputData>> {
+        Ok(self
+            .unspent_outputs(None)
             .await?
             .iter()
             .filter(|output_data| {
@@ -119,8 +120,7 @@ impl AccountHandle {
                 }
             })
             .max_by_key(|output_data| output_data.output.amount())
-            .cloned()
-            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))
+            .cloned())
     }
 
     /// Get client for an event, if event isn't found, the client from the account will be returned.

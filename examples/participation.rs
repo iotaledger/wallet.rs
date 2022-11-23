@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
         .await?;
     account.sync(None).await?;
 
-    let voting_output = account.get_voting_output().await?;
+    let voting_output = account.get_voting_output().await?.unwrap();
     println!("Voting output: {:?}", voting_output.output);
 
     ////////////////////////////////

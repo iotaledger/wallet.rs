@@ -19,10 +19,13 @@ use crate::{
 };
 
 impl AccountHandle {
-    // TODO Should this return Option ? Or 0 voting power in case of absence of output?
     /// Returns an account's total voting power (voting or NOT voting).
     pub async fn get_voting_power(&self) -> Result<u64> {
-        let voting_output = self.get_voting_output().await?;
+        // TODO Should this return Option ? Or 0 voting power in case of absence of output?
+        let voting_output = self
+            .get_voting_output()
+            .await?
+            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
         Ok(voting_output.output.amount())
     }
@@ -39,8 +42,8 @@ impl AccountHandle {
     pub async fn increase_voting_power(&self, amount: u64) -> Result<Transaction> {
         let token_supply = self.client().get_token_supply().await?;
 
-        let (new_voting_output, tx_options) = match self.get_voting_output().await {
-            Ok(current_voting_output_data) => {
+        let (new_voting_output, tx_options) = match self.get_voting_output().await? {
+            Some(current_voting_output_data) => {
                 let output = if let Output::Basic(output) = current_voting_output_data.output {
                     output
                 } else {
@@ -61,7 +64,7 @@ impl AccountHandle {
                     }),
                 )
             }
-            Err(_) => (
+            None => (
                 BasicOutputBuilder::new_with_amount(amount)?
                     .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
                         self.public_addresses()
@@ -92,7 +95,10 @@ impl AccountHandle {
     pub async fn decrease_voting_power(&self, amount: u64) -> Result<Transaction> {
         let token_supply = self.client().get_token_supply().await?;
 
-        let current_voting_output_data = self.get_voting_output().await?;
+        let current_voting_output_data = self
+            .get_voting_output()
+            .await?
+            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
         let output = if let Output::Basic(output) = current_voting_output_data.output {
             output

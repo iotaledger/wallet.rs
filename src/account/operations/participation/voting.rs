@@ -39,7 +39,10 @@ impl AccountHandle {
             return Err(crate::Error::Voting(format!("event {event_id} already ended")));
         }
 
-        let voting_output = self.get_voting_output().await?;
+        let voting_output = self
+            .get_voting_output()
+            .await?
+            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
         let basic_output = if let Output::Basic(basic_output) = voting_output.output {
             basic_output
@@ -99,7 +102,10 @@ impl AccountHandle {
     /// milestones in there against latest network milestone) If multiple outputs contain metadata for this event,
     /// remove all of them. If NOT already voting for event, throw error (e.g. output with this event ID not found)
     pub async fn stop_participating(&self, event_id: EventId) -> Result<Transaction> {
-        let voting_output = self.get_voting_output().await?;
+        let voting_output = self
+            .get_voting_output()
+            .await?
+            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
         let basic_output = if let Output::Basic(basic_output) = voting_output.output {
             basic_output
