@@ -25,8 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
 - Participation feature and functions;
-- Java `clearListeners`, `destroy` and `initLogger` methods
-- Java event listening (`WalletEvent` and `TransactionProgressEvent`)
 
 ### Changed
 

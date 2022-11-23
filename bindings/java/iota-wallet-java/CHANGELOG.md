@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Enable native library loading via Java path;
 - Add `InitializeWalletException`;
+- `clearListeners`, `destroy` and `initLogger` methods
+- event listening (`WalletEvent` and `TransactionProgressEvent`)
 
 ### Changed
 
