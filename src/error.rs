@@ -78,6 +78,7 @@ pub enum Error {
     /// Nft not found in unspent outputs
     #[error("nft not found in unspent outputs")]
     NftNotFoundInUnspentOutputs,
+    // TODO more precise error
     /// Voting error
     #[cfg(feature = "participation")]
     #[error("voting error {0}")]

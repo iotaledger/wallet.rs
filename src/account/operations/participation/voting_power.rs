@@ -42,23 +42,25 @@ impl AccountHandle {
     pub async fn increase_voting_power(&self, amount: u64) -> Result<Transaction> {
         let token_supply = self.client().get_token_supply().await?;
 
-        let (new_voting_output, tx_options) = match self.get_voting_output().await? {
-            Some(current_voting_output_data) => {
-                let output = if let Output::Basic(output) = current_voting_output_data.output {
+        let (new_output, tx_options) = match self.get_voting_output().await? {
+            Some(current_output_data) => {
+                let output = if let Output::Basic(output) = current_output_data.output {
                     output
                 } else {
                     unreachable!("voting output needs to be a basic output")
                 };
 
+                // TODO checked addition
+
                 let (new_output, tagged_data_payload) = self
-                    .new_voting_output(&output, output.amount() + amount, token_supply)
+                    .new_voting_output_and_tagged_data(&output, output.amount() + amount, token_supply)
                     .await?;
 
                 (
                     new_output,
                     Some(TransactionOptions {
                         // Use the previous voting output and additionally other for the additional amount.
-                        mandatory_inputs: Some(vec![current_voting_output_data.output_id]),
+                        mandatory_inputs: Some(vec![current_output_data.output_id]),
                         tagged_data_payload: Some(tagged_data_payload),
                         ..Default::default()
                     }),
@@ -80,7 +82,7 @@ impl AccountHandle {
             ),
         };
 
-        self.send(vec![new_voting_output], tx_options).await
+        self.send(vec![new_output], tx_options).await
     }
 
     /// Reduces an account's "voting power" by a given amount.
@@ -89,24 +91,22 @@ impl AccountHandle {
     /// If voting and amount is equal to voting power, removes tagged data payload and output metadata.
     /// Removes metadata for any events that have expired (uses event IDs to get cached event information, checks event
     /// milestones in there against latest network milestone).
-    /// If an output is designated for voting but doesn't contain
     /// Prioritizes consuming outputs that are designated for voting but don't have any metadata (only possible if user
     /// increases voting power then decreases immediately after).
     pub async fn decrease_voting_power(&self, amount: u64) -> Result<Transaction> {
         let token_supply = self.client().get_token_supply().await?;
-
-        let current_voting_output_data = self
+        let current_output_data = self
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
-
-        let output = if let Output::Basic(output) = current_voting_output_data.output {
+        let output = if let Output::Basic(output) = current_output_data.output {
             output
         } else {
             unreachable!("voting output needs to be a basic output")
         };
 
-        // If the amount to decrease is the amount of the output, then we just remove the features
+        // TODO what is amount > output.amount() ?
+        // If the amount to decrease is the amount of the output, then we just remove the features.
         let (new_output, tagged_data_payload) = if amount == output.amount() {
             (
                 BasicOutputBuilder::from(&output)
@@ -115,8 +115,9 @@ impl AccountHandle {
                 None,
             )
         } else {
+            // TODO checked subtraction
             let (new_output, tagged_data_payload) = self
-                .new_voting_output(&output, output.amount() - amount, token_supply)
+                .new_voting_output_and_tagged_data(&output, output.amount() - amount, token_supply)
                 .await?;
 
             (new_output, Some(tagged_data_payload))
@@ -126,8 +127,8 @@ impl AccountHandle {
             vec![new_output],
             Some(TransactionOptions {
                 // Use the previous voting output and additionally others for possible additional required amount for
-                // the remainder to reach the minimum required storage deposit
-                mandatory_inputs: Some(vec![current_voting_output_data.output_id]),
+                // the remainder to reach the minimum required storage deposit.
+                mandatory_inputs: Some(vec![current_output_data.output_id]),
                 tagged_data_payload,
                 ..Default::default()
             }),
@@ -135,17 +136,16 @@ impl AccountHandle {
         .await
     }
 
-    async fn new_voting_output(
+    async fn new_voting_output_and_tagged_data(
         &self,
         output: &BasicOutput,
         amount: u64,
         token_supply: u64,
     ) -> Result<(Output, TaggedDataPayload)> {
         let mut output_builder = BasicOutputBuilder::from(output).with_amount(amount)?;
+        let mut participation_bytes = output.features().metadata().map(|m| m.data()).unwrap_or(&[]);
 
-        let mut participation_data = output.features().metadata().map(|m| m.data()).unwrap_or(&[]);
-
-        let participation_data = if let Ok(mut participations) = Participations::from_bytes(&mut participation_data) {
+        let participation_bytes = if let Ok(mut participations) = Participations::from_bytes(&mut participation_bytes) {
             // Remove ended participations.
             self.remove_ended_participation_events(&mut participations).await?;
 
@@ -156,12 +156,13 @@ impl AccountHandle {
 
             participation_bytes
         } else {
+            // TODO participation bytes are incorrect, should we really just ignore?
             vec![]
         };
 
         Ok((
             output_builder.finish_output(token_supply)?,
-            TaggedDataPayload::new(PARTICIPATION_TAG.as_bytes().to_vec(), participation_data.to_vec())?,
+            TaggedDataPayload::new(PARTICIPATION_TAG.as_bytes().to_vec(), participation_bytes.to_vec())?,
         ))
     }
 }
