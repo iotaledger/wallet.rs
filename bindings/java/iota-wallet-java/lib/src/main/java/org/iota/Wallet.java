@@ -294,7 +294,7 @@ public class Wallet extends NativeApi {
     /**
      * Converts a hex address to a bech32 address.
      *
-     * @param hex       The hex address to convert.
+     * @param hex The hex address to convert.
      * @param bech32Hrp The bech32 human-readable part.
      * @return The bech32 address.
      */

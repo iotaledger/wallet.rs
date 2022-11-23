@@ -11,10 +11,20 @@ public class Event extends AbstractObject {
     private Integer accountIndex;
     private WalletEvent event;
 
+    /**
+     * Get the account index related to this event
+     * 
+     * @return The account index
+     */
     public Integer getAccountIndex() {
         return accountIndex;
     }
 
+    /**
+     * Get the wallet event 
+     * 
+     * @return the event
+     */
     public WalletEvent getEvent() {
         return event;
     }

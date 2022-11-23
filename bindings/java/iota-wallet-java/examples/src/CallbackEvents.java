@@ -9,7 +9,7 @@ import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
-import org.iota.types.events.transactionprogress.TransactionProgressEvent;
+import org.iota.types.events.transaction.TransactionProgressEvent;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;

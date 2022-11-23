@@ -8,7 +8,7 @@ import com.google.gson.annotations.JsonAdapter;
 
 import org.iota.api.CustomGson;
 import org.iota.types.AbstractObject;
-import org.iota.types.events.transactionprogress.TransactionProgressEvent;
+import org.iota.types.events.transaction.TransactionProgressEvent;
 
 import java.lang.reflect.Type;
 import java.util.Map.Entry;

@@ -1,4 +1,4 @@
-package org.iota.types.events.transactionprogress;
+package org.iota.types.events.transaction;
 
 public enum TransactionProgressEventType {
     /// Performing input selection.

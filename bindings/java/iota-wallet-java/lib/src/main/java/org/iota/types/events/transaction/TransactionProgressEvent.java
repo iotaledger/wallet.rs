@@ -1,14 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-package org.iota.types.events.transactionprogress;
+package org.iota.types.events.transaction;
 
 import java.lang.reflect.Type;
-import java.util.Set;
 import java.util.Map.Entry;
 
 import org.iota.api.CustomGson;
-import org.iota.types.AbstractObject;
 import org.iota.types.PreparedTransactionData;
 import org.iota.types.events.wallet.WalletEvent;
 
