@@ -4,15 +4,13 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
-import org.iota.types.ids.account.AccountIndex;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class GetAccountByIndex {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
-    public static void main(String[] args) throws WalletException {
+public class ListTransactions {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -23,10 +21,15 @@ public class GetAccountByIndex {
         );
 
         // Get account and sync it with the registered node to ensure that its balances are up-to-date.
-        AccountHandle a = wallet.getAccount(new AccountIndex(0));
+        AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Print the account.
-        System.out.println(a);
+        // Get transactions.
+        Transaction[] transactions = a.getTransactions();
+
+        // Print transactions.
+        for (Transaction tx : transactions)
+            System.out.println(tx.toString());
     }
+
 }

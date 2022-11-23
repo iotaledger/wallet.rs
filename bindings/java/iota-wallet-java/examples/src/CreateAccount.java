@@ -6,11 +6,12 @@ import org.iota.types.AccountHandle;
 import org.iota.types.ClientConfig;
 import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class CreateAccount {
-    public static void main(String[] args) throws WalletException {
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))

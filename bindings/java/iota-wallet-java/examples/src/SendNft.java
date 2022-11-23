@@ -4,16 +4,16 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.NftId;
-import org.iota.types.ids.TokenId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class BurnNft {
-    public static void main(String[] args) throws WalletException, InterruptedException {
-        // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
-        // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
+public class SendNft {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))
                 .withSecretManager(
@@ -26,14 +26,17 @@ public class BurnNft {
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
         // TODO: replace with your own values.
-        NftId nftId = new NftId("0xf95f4d5344217a2ba19a6c19a47f97d267edf8c4d76a7b8c08072ad35acbebbe");
+        String receiverAddress = a.getPublicAddresses()[0].getAddress();
+        NftId nftId = new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003");
 
         // Send transaction.
-        Transaction t = a.burnNft(new org.iota.types.account_methods.BurnNft()
+        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {new AddressAndNftId()
+                .withAddress(receiverAddress)
                 .withNftId(nftId)
-        );
+        }));
 
         // Print transaction.
         System.out.println(t);
     }
+
 }

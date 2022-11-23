@@ -3,24 +3,15 @@
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-
 import org.iota.Wallet;
-import org.iota.api.CustomGson;
-import org.iota.api.NativeApi;
 import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
-import org.iota.types.account_methods.GenerateAddresses;
-import org.iota.types.account_methods.SyncAccount;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.transactionprogress.TransactionProgressEvent;
-import org.iota.types.events.wallet.WalletEventType;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 import com.google.gson.JsonElement;
@@ -30,7 +21,8 @@ import com.google.gson.JsonParser;
 public class CallbackEvents {
 
 
-    public static void main(String[] args) throws WalletException, InterruptedException, IOException {
+    public static void main(String[] args)
+            throws WalletException, InterruptedException, IOException, InitializeWalletException {
 
         // Initialise the rust logger for al output on rusts' side
         Wallet.initLogger(new LoggerOutputConfigBuilder());
@@ -63,7 +55,7 @@ public class CallbackEvents {
 
         // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
-                new FileReader("src/main/res/prepared_transaction_data.json"));
+                new FileReader("src/res/prepared_transaction_data.json"));
 
         // Create the dummy transaction event
         JsonObject transactionEvent = new JsonObject();

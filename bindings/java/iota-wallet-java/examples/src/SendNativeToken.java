@@ -3,20 +3,23 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.SendNativeTokens;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.NftId;
+import org.iota.types.ids.TokenId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class SendNft {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class SendNativeToken {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
-                .withSecretManager(
-                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
+                        .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                        .withSecretManager(
+                                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null,
+                                                        Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );
 
@@ -26,12 +29,15 @@ public class SendNft {
 
         // TODO: replace with your own values.
         String receiverAddress = a.getPublicAddresses()[0].getAddress();
-        NftId nftId = new NftId("0xdbed22679570aecc16da90648836607981e87c1ed3e3a24daf0942aa29a66003");
+        TokenId tokenId = new TokenId("0x08429fe5864378ce70699fc2d22bb144cb86a3c4833d136e3b95c5dadfd6ba0cef0300000000");
+        String tokenAmount = "0x17"; // `100` hex encoded
 
         // Send transaction.
-        Transaction t = a.sendNft(new org.iota.types.account_methods.SendNft().withAddressesAndNftIds(new AddressAndNftId[] {new AddressAndNftId()
+        Transaction t = a.sendNativeTokens(new SendNativeTokens().withAddressesNativeTokens(new AddressNativeTokens[]{ new AddressNativeTokens()
                 .withAddress(receiverAddress)
-                .withNftId(nftId)
+                .withNativeTokens(new AddressNativeTokens.NativeTokenTuple[] {
+                        new AddressNativeTokens.NativeTokenTuple(tokenId, tokenAmount)
+                })
         }));
 
         // Print transaction.

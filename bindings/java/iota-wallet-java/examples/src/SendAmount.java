@@ -3,22 +3,20 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.SendNativeTokens;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.TokenId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class SendNativeToken {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class SendAmount {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
-                        .withClientOptions(new ClientConfig().withNodes(Env.NODE))
-                        .withSecretManager(
-                                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null,
-                                                        Env.STRONGHOLD_SNAPSHOT_PATH))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withSecretManager(
+                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );
 
@@ -26,17 +24,17 @@ public class SendNativeToken {
         AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
+
         // TODO: replace with your own values.
         String receiverAddress = a.getPublicAddresses()[0].getAddress();
-        TokenId tokenId = new TokenId("0x08429fe5864378ce70699fc2d22bb144cb86a3c4833d136e3b95c5dadfd6ba0cef0300000000");
-        String tokenAmount = "0x17"; // `100` hex encoded
+        String amount = "1000000";
 
         // Send transaction.
-        Transaction t = a.sendNativeTokens(new SendNativeTokens().withAddressesNativeTokens(new AddressNativeTokens[]{ new AddressNativeTokens()
+        Transaction t = a.sendAmount(new org.iota.types.account_methods.SendAmount().withAddressesWithAmount(new AddressWithAmount[]{new AddressWithAmount()
                 .withAddress(receiverAddress)
-                .withNativeTokens(new AddressNativeTokens.NativeTokenTuple[] {
-                        new AddressNativeTokens.NativeTokenTuple(tokenId, tokenAmount)
-                })
+                .withAmount(amount)
         }));
 
         // Print transaction.

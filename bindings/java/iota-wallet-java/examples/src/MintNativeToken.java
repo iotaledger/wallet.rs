@@ -4,15 +4,15 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.OutputId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class ClaimOutputs {
-    public static void main(String[] args) throws WalletException, InterruptedException {
-        // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
-        // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
+public class MintNativeToken {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
+        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
+        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))
                 .withSecretManager(
@@ -24,15 +24,19 @@ public class ClaimOutputs {
         AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
+
         // TODO: replace with your own values.
-        OutputId outputId = new OutputId("0xeb572c09b9cdf4e29c65ecbe10c06d484c04d33da3bea6d9bb1653aa6617e8450000");
+        NativeTokenOptions options = new NativeTokenOptions();
+        options.withCirculatingSupply("0x20"); // number 23 hex encoded
+        options.withMaximumSupply("0x45"); // number 69 hex encoded
 
-        // Claim the given outputs
-        Transaction t = a.claimOutputs(new org.iota.types.account_methods.ClaimOutputs().withOutputIdsToClaim(new OutputId[]{
-                outputId
-        }));
+        // Send transaction.
+        MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
 
-        // Print the transaction
+        // Print transaction.
         System.out.println(t);
     }
+
 }

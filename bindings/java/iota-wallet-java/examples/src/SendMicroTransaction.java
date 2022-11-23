@@ -4,13 +4,13 @@
 import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.AliasId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class DestroyAliasOutput {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class SendMicroTransaction {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -24,17 +24,21 @@ public class DestroyAliasOutput {
         AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
+        // Fund the account for this example.
+        ExampleUtils.fundAccount(a);
+
         // TODO: replace with your own values.
-        AliasId aliasId = new AliasId("0xc3dc87b11c94ae919aae950309194bd145d8bf3a80824a63c24336dced7cb22f");
+        String receiverAddress = a.getPublicAddresses()[0].getAddress();
+        String amount = "1";
 
-        // Send transaction.
-        Transaction t = a.destroyAlias(new org.iota.types.account_methods.DestroyAlias().withAliasId(
-                aliasId
-        ));
+        // Configure outputs
+        Transaction t = a.sendMicroTransaction(new org.iota.types.account_methods.SendMicroTransaction().withAddressesWithMicroAmount(new AddressWithMicroAmount[]{new AddressWithMicroAmount()
+                .withAddress(receiverAddress)
+                .withAmount(amount)
+        }));
 
-        // Print transaction.
+        // Print transaction
         System.out.println(t);
     }
 
 }
-

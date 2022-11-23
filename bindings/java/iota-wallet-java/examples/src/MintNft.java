@@ -3,14 +3,15 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
+import org.iota.types.account_methods.MintNfts;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.TokenId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class MintNativeToken {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class MintNft {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -28,14 +29,13 @@ public class MintNativeToken {
         ExampleUtils.fundAccount(a);
 
         // TODO: replace with your own values.
-        NativeTokenOptions options = new NativeTokenOptions();
-        options.withCirculatingSupply("0x20"); // number 23 hex encoded
-        options.withMaximumSupply("0x45"); // number 69 hex encoded
+        NftOptions options = new NftOptions();
+        options.withMetadata("0x5368696d6d65722e20546f6b656e697a652045766572797468696e672e2048656c6c6f2066726f6d20746865204a6176612062696e64696e672e");
 
         // Send transaction.
-        MintTokenTransaction t = a.mintNativeToken(new org.iota.types.account_methods.MintNativeToken().withNativeTokenOptions(options));
+        Transaction t = a.mintNfts(new MintNfts().withNftsOptions(new NftOptions[]{options}));
 
-        // Print transaction.
+        // Print the transaction.
         System.out.println(t);
     }
 

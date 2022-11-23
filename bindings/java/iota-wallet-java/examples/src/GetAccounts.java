@@ -3,15 +3,13 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.GetOutput;
-import org.iota.types.account_methods.Outputs;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class ListOutputs {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class GetAccounts {
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -21,15 +19,11 @@ public class ListOutputs {
                 .withCoinType(CoinType.Shimmer)
         );
 
-        // Get account and sync it with the registered node to ensure that its balances are up-to-date.
-        AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
-        a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
-
-        // Get outputs.
-        OutputData[] outputs = a.getOutputs(new Outputs());
-
-        // Print outputs.
-        for (OutputData o : outputs)
-            System.out.println(o);
+        // Print the accounts.
+        for (AccountHandle a : wallet.getAccounts()) {
+            // Sync the account with the registered node to ensure that its balances are up-to-date.
+            a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
+            System.out.println(a);
+        }
     }
 }

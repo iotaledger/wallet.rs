@@ -3,6 +3,7 @@ package org.iota;
 import org.iota.types.ClientConfig;
 import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.MnemonicSecretManager;
 import org.junit.jupiter.api.AfterEach;
@@ -22,7 +23,11 @@ public class TestSettings {
             .withCoinType(CoinType.Shimmer);
 
     static {
-        wallet = new Wallet(config);
+        try {
+            wallet = new Wallet(config);
+        } catch (InitializeWalletException e) {
+            throw new RuntimeException(e);
+        }
         try {
             while(wallet.getAccounts().length > 0)
                 wallet.removeLatestAccount();

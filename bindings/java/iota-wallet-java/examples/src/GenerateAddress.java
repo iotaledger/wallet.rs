@@ -3,18 +3,15 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.BuildAliasOutput;
+import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.account_methods.SyncAccount;
-import org.iota.types.addresses.Ed25519Address;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
-import org.iota.types.ids.AliasId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
-import org.iota.types.unlock_conditions.AddressUnlockCondition;
-import org.iota.types.unlock_conditions.UnlockCondition;
 
-public class CreateAliasOutput {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+public class GenerateAddress {
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -28,11 +25,15 @@ public class CreateAliasOutput {
         AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Send transaction.
-        Transaction t = a.createAliasOutput(new org.iota.types.account_methods.CreateAliasOutput());
+        // Generate two addresses.
+        AccountAddress[] addresses = a.generateAddresses(new GenerateAddresses().withAmount(2));
 
-        // Print transaction.
-        System.out.println(t);
+        // Print the generated addresses.
+        for (AccountAddress address : addresses)
+            System.out.println(address.getAddress());
+
+        // Print all addresses.
+        for (AccountAddress address : a.getPublicAddresses())
+            System.out.println(address.getAddress());
     }
-
 }

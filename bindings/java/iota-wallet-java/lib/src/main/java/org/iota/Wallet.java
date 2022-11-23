@@ -14,6 +14,7 @@ import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.wallet.WalletEventType;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
@@ -29,7 +30,7 @@ public class Wallet extends NativeApi {
         NativeApi.initLogger(CustomGson.get().toJsonTree(builder).toString());
     }
 
-    public Wallet(WalletConfig config) {
+    public Wallet(WalletConfig config) throws InitializeWalletException {
         super(config);
     }
 

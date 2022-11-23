@@ -3,14 +3,15 @@
 
 import org.iota.Wallet;
 import org.iota.types.*;
-import org.iota.types.account_methods.GenerateAddresses;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.AliasId;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class GenerateAddress {
-    public static void main(String[] args) throws WalletException {
+public class DestroyAliasOutput {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
         Wallet wallet = new Wallet(new WalletConfig()
@@ -24,15 +25,17 @@ public class GenerateAddress {
         AccountHandle a = wallet.getAccount(new AccountAlias(Env.ACCOUNT_NAME));
         a.syncAccount(new SyncAccount().withOptions(new SyncOptions()));
 
-        // Generate two addresses.
-        AccountAddress[] addresses = a.generateAddresses(new GenerateAddresses().withAmount(2));
+        // TODO: replace with your own values.
+        AliasId aliasId = new AliasId("0xc3dc87b11c94ae919aae950309194bd145d8bf3a80824a63c24336dced7cb22f");
 
-        // Print the generated addresses.
-        for (AccountAddress address : addresses)
-            System.out.println(address.getAddress());
+        // Send transaction.
+        Transaction t = a.destroyAlias(new org.iota.types.account_methods.DestroyAlias().withAliasId(
+                aliasId
+        ));
 
-        // Print all addresses.
-        for (AccountAddress address : a.getPublicAddresses())
-            System.out.println(address.getAddress());
+        // Print transaction.
+        System.out.println(t);
     }
+
 }
+

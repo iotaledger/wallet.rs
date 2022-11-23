@@ -5,12 +5,13 @@ import org.iota.Wallet;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.account_methods.SyncAccount;
+import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class CheckBalance {
-    public static void main(String[] args) throws WalletException, InterruptedException {
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // This example assumes that a wallet has already been created using the ´CreateAccount.java´ example.
         // If you haven't run the ´CreateAccount.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()

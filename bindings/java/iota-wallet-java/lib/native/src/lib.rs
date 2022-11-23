@@ -52,17 +52,33 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     class: JClass,
     config: JString,
 ) {
-    let manager_options: ManagerOptions = {
-        let input: String = env.get_string(config).expect("Couldn't get java string!").into();
-        serde_json::from_str(&input).unwrap()
+    let manager_options: ManagerOptions = match env.get_string(config) {
+        Ok(json_input) => match serde_json::from_str(&String::from(json_input)) {
+            Ok(manager_options) => manager_options,
+            Err(err) => {
+                env.throw_new("java/lang/Exception", err.to_string()).unwrap();
+                return;
+            }
+        }
+        Err(err) => {
+            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
+            return;
+        }
     };
-    MESSAGE_HANDLER.lock().unwrap().replace(
-        crate::block_on(iota_wallet::message_interface::create_message_handler(Some(
-            manager_options,
-        )))
-        .unwrap(),
-    );
 
+    match MESSAGE_HANDLER.lock() {
+        Ok(mut message_handler_store) => match crate::block_on(iota_wallet::message_interface::create_message_handler(Some(manager_options))) {
+            Ok(message_handler) => message_handler_store.replace(message_handler),
+            Err(err) => {
+                env.throw_new("java/lang/Exception", err.to_string()).unwrap();
+                return;
+            }
+        },
+        Err(err) => {
+            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
+            return;
+        }
+    };
     VM.lock().unwrap().replace(env.get_java_vm().expect("GetJavaVm failed"));
     METHOD_CACHE.lock().unwrap().replace(
         env.get_static_method_id(
@@ -89,7 +105,15 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
     _class: JClass,
     command: JString,
 ) -> jstring {
-    let command: String = env.get_string(command).expect("Couldn't get java string!").into();
+
+    if env.exception_check().unwrap() {
+        return std::ptr::null_mut();
+    }
+
+    let command: String = env
+        .get_string(command)
+        .expect("Couldn't get java string!")
+        .into();
 
     let message = serde_json::from_str::<Message>(&command).unwrap();
 
