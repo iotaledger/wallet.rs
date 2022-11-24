@@ -55,8 +55,6 @@ public class CallbackEvents {
                 new FileReader("src/res/prepared_transaction_data.json"));
         JsonObject transactionEvent = new JsonObject();
         transactionEvent.add("PreparedTransaction", prepared);
-
-        // Create The Wallet event with the transaction event
         JsonObject walletEvent = new JsonObject();
         walletEvent.add("TransactionProgress", transactionEvent);
 
