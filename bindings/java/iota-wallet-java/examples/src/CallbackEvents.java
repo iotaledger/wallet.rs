@@ -61,7 +61,7 @@ public class CallbackEvents {
         // Emit the dummy event.
         wallet.emitTestEvent(walletEvent);
 
-        // Clear listeners
+        // Remove listeners when they are no longer needed. Listening to events will no longer be possible as all listeners have been removed.
         wallet.clearListeners();
 
         // Create another event
