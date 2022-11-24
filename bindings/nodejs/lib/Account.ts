@@ -958,4 +958,41 @@ export class Account {
         );
         return JSON.parse(resp).payload;
     }
+
+    async vote(eventId: string, answers: number[]): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'vote',
+                data: {
+                    eventId,
+                    answers,
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async stopParticipating(eventId: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'stopParticipating',
+                data: {
+                    eventId
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async getVotingPower(): Promise<string> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getVotingPower',
+            }
+        )
+        return JSON.parse(resp).payload
+    }
 }

@@ -42,6 +42,9 @@ import type {
     __SubmitAndStoreTransactionMethod__,
     __SyncAccountMethod__,
     __GetIncomingTransactionDataMethod__,
+    __VoteMethod__,
+    __StopParticipatingMethod__,
+    __GetVotingPowerMethod__,
 } from './account';
 import type {
     __BackupMessage__,
@@ -112,7 +115,10 @@ export type __AccountMethod__ =
     | __SetAliasMethod__
     | __SignTransactionEssenceMethod__
     | __SubmitAndStoreTransactionMethod__
-    | __SyncAccountMethod__;
+    | __SyncAccountMethod__
+    | __VoteMethod__
+    | __StopParticipatingMethod__
+    | __GetVotingPowerMethod__;
 
 export type __CallAccountMethodMessage__ = {
     cmd: 'callAccountMethod';

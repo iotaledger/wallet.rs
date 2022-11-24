@@ -315,3 +315,22 @@ export type __SyncAccountMethod__ = {
         options?: AccountSyncOptions;
     };
 };
+
+export type __VoteMethod__ = {
+    name: 'vote';
+    data: {
+        eventId: string;
+        answers: number[];
+    }
+}
+
+export type __StopParticipatingMethod__ = {
+    name: 'stopParticipating';
+    data: {
+        eventId: string;
+    }
+}
+
+export type __GetVotingPowerMethod__ = {
+    name: 'getVotingPower';
+}
