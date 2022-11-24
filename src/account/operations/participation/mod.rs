@@ -1,17 +1,17 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-// We are requiring the user to manually increase/decrease the “voting power”, which requires wallet.rs to
-// designate some amount of funds as unspendable. They become spendable again when the user reduces the “voting
-// power”.
-// This is done by creating a special “voting output” that adheres to the following rules; NOT by sending to a differing
+// We are requiring the user to manually increase/decrease the “voting power”, which requires the wallet to designate
+// some amount of funds as unspendable.
+// They become spendable again when the user reduces the “voting power”.
+// This is done by creating a special “voting output” that adheres to the following rules, NOT by sending to a different
 // address.
 // If the user has designated funds to vote with, the resulting output MUST NOT be used for input selection.
 
 pub mod voting;
 pub mod voting_power;
 
-use std::collections::HashMap;
+use std::collections::{hash_map::Entry, HashMap};
 
 use iota_client::{
     block::output::{Output, OutputId},
@@ -31,42 +31,36 @@ use crate::{
 /// An object containing an account's entire participation overview.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountParticipationOverview {
-    /// Output participations for events
-    pub participations: HashMap<EventId, HashMap<OutputId, TrackedParticipation>>,
+    /// Output participations for events.
+    participations: HashMap<EventId, HashMap<OutputId, TrackedParticipation>>,
 }
 
 impl AccountHandle {
-    /// Calculates a voting overview for an account.
+    /// Calculates the voting overview of an account.
     pub async fn get_participation_overview(&self) -> Result<AccountParticipationOverview> {
-        // could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done
+        // TODO: Could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done.
 
         let outputs = self.outputs(None).await?;
-        let participation_outputs: Vec<OutputData> = outputs
-            .into_iter()
-            .filter(|o| {
-                // only basic outputs can be participation outputs
-                if let Output::Basic(basic_output) = &o.output {
-                    // output needs to have the participation tag and a metadata feature
-                    if let Some(tag_feature) = basic_output.features().tag() {
-                        tag_feature.tag() == PARTICIPATION_TAG.as_bytes()
-                            && basic_output.features().metadata().is_some()
-                    } else {
-                        false
-                    }
+        let participation_outputs = outputs.iter().filter(|output| {
+            // Only basic outputs can be participation outputs.
+            if let Output::Basic(basic_output) = &output.output {
+                // Output needs to have the participation tag and a metadata feature.
+                if let Some(tag_feature) = basic_output.features().tag() {
+                    tag_feature.tag() == PARTICIPATION_TAG.as_bytes() && basic_output.features().metadata().is_some()
                 } else {
                     false
                 }
-            })
-            .collect();
+            } else {
+                false
+            }
+        });
 
         let mut participations: HashMap<EventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
 
         for output_data in participation_outputs {
-            let metadata = match output_data.output.features().map(|f| f.metadata()) {
-                Some(Some(metadata)) => metadata,
-                // no participation in this output, skip
-                _ => continue,
-            };
+            // PANIC: the filter already checks that the metadata exists.
+            let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
+            // TODO don't really need to collect if we only need the first
             let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
                 participations
                     .participations
@@ -74,7 +68,7 @@ impl AccountHandle {
                     .map(|p| p.event_id)
                     .collect::<Vec<EventId>>()
             } else {
-                // no valid participation in this output, skip
+                // No valid participation in this output, skip it.
                 continue;
             };
 
@@ -85,14 +79,16 @@ impl AccountHandle {
                 self.client().clone()
             };
 
-            if let Ok(response) = event_client.output_status(&output_data.output_id).await {
-                for (event_id, participation) in response.participations {
-                    participations
-                        .entry(event_id)
-                        .and_modify(|output_participations| {
-                            output_participations.insert(output_data.output_id, participation.clone());
-                        })
-                        .or_insert_with(|| HashMap::from([(output_data.output_id, participation)]));
+            if let Ok(status) = event_client.output_status(&output_data.output_id).await {
+                for (event_id, participation) in status.participations {
+                    match participations.entry(event_id) {
+                        Entry::Vacant(entry) => {
+                            entry.insert(HashMap::from([(output_data.output_id, participation)]));
+                        }
+                        Entry::Occupied(mut entry) => {
+                            entry.get_mut().insert(output_data.output_id, participation);
+                        }
+                    }
                 }
             }
         }
@@ -123,11 +119,14 @@ impl AccountHandle {
             .cloned())
     }
 
-    /// Get client for an event, if event isn't found, the client from the account will be returned.
+    /// Gets client for an event.
+    /// If event isn't found, the client from the account will be returned.
     pub(crate) async fn get_client_for_event(&self, id: &EventId) -> crate::Result<Client> {
+        // TODO: get_participation_events needs to return an option
         let events = match self.storage_manager.lock().await.get_participation_events().await {
             Ok(events) => events,
-            _ => return Ok(self.client().clone()),
+            Err(Error::RecordNotFound(_)) => return Ok(self.client().clone()),
+            Err(e) => return Err(e),
         };
 
         let event = match events.get(id) {
@@ -139,12 +138,11 @@ impl AccountHandle {
         for node in &event.1 {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
         }
-        let client = client_builder.finish()?;
 
-        Ok(client)
+        Ok(client_builder.finish()?)
     }
 
-    /// Check if events in the participations ended and remove them.
+    /// Checks if events in the participations ended and removes them.
     pub(crate) async fn remove_ended_participation_events(
         &self,
         participations: &mut Participations,
@@ -158,13 +156,14 @@ impl AccountHandle {
             Err(e) => return Err(e),
         };
 
+        // TODO try to remove this clone
         for participation in participations.participations.clone().iter() {
             if let Some((event, _nodes)) = events.get(&participation.event_id) {
                 if event.data.milestone_index_end() < &latest_milestone_index {
                     participations.remove(&participation.event_id);
                 }
             } else {
-                // if not found in local events, try to get the event status from the client
+                // If not found in local events, try to get the event status from the client.
                 if let Ok(event_status) = self.get_participation_event_status(&participation.event_id).await {
                     if event_status.status() == "ended" {
                         participations.remove(&participation.event_id);
@@ -178,10 +177,6 @@ impl AccountHandle {
 
     /// Retrieves the latest status of a given participation event.
     pub(crate) async fn get_participation_event_status(&self, id: &EventId) -> crate::Result<EventStatus> {
-        let client = self.get_client_for_event(id).await?;
-
-        let events_status = client.event_status(id, None).await?;
-
-        Ok(events_status)
+        Ok(self.get_client_for_event(id).await?.event_status(id, None).await?)
     }
 }
