@@ -362,17 +362,17 @@ pub enum AccountMethod {
     /// Vote for a participation event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    Vote {
+    Vote { 
         #[serde(rename = "eventId")]
         event_id: EventId,
-        answers: Vec<u8>,
+        answers: Vec<u8>
     },
     /// Stop participation for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     StopParticipating {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: EventId
     },
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
