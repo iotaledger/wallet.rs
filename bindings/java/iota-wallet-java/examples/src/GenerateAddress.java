@@ -31,9 +31,5 @@ public class GenerateAddress {
         // Print the generated addresses.
         for (AccountAddress address : addresses)
             System.out.println(address.getAddress());
-
-        // Print all addresses.
-        for (AccountAddress address : a.getPublicAddresses())
-            System.out.println(address.getAddress());
     }
 }
