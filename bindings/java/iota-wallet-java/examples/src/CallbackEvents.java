@@ -19,7 +19,6 @@ import com.google.gson.JsonParser;
 
 public class CallbackEvents {
 
-
     public static void main(String[] args)
             throws WalletException, InterruptedException, IOException, InitializeWalletException {
 
