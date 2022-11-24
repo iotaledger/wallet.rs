@@ -47,6 +47,9 @@ public class CallbackEvents {
             }
         });
 
+// Create a dummy event and trigger it to illustrate how the listener works.
+
+// Create the dummy event from JSON.
         // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
                 new FileReader("src/res/prepared_transaction_data.json"));
