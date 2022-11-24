@@ -334,21 +334,3 @@ export type __StopParticipatingMethod__ = {
 export type __GetVotingPowerMethod__ = {
     name: 'getVotingPower';
 }
-
-export type __GetParticipationOverviewMethod__ = {
-    name: 'getParticipationOverview';
-}
-
-export type __IncreaseVotingPowerMethod__ = {
-    name: 'increaseVotingPower';
-    data: {
-        amount: string;
-    }
-}
-
-export type __DecreaseVotingPowerMethod__ = {
-    name: 'decreaseVotingPower';
-    data: {
-        amount: string;
-    }
-}
