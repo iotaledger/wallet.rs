@@ -9,7 +9,7 @@ use primitive_types::U256;
 use crate::account::{
     handle::AccountHandle,
     operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance},
+    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance, RequiredStorageDeposit},
     OutputsToClaim,
 };
 
@@ -30,7 +30,7 @@ impl AccountHandle {
         let local_time = self.client.get_time_checked().await?;
 
         let mut total_amount = 0;
-        let mut required_storage_deposit = 0;
+        let mut required_storage_deposit = RequiredStorageDeposit::new();
         let mut total_native_tokens = NativeTokensBuilder::new();
         let mut potentially_locked_outputs = HashMap::new();
         let mut aliases = Vec::new();
@@ -50,11 +50,13 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.alias += &output_data.output.rent_cost(&rent_structure);
+
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
+
                     let alias_id = output.alias_id_non_null(&output_data.output_id);
                     aliases.push(alias_id);
                 }
@@ -62,11 +64,13 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.foundry += &output_data.output.rent_cost(&rent_structure);
+
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
+
                     foundries.push(output.id())
                 }
                 _ => {
@@ -86,8 +90,14 @@ impl AccountHandle {
 
                         // Add amount
                         total_amount += output_data.output.amount();
+
                         // Add storage deposit
-                        required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                        if output_data.output.is_basic() {
+                            required_storage_deposit.basic += &output_data.output.rent_cost(&rent_structure);
+                        } else if output_data.output.is_nft() {
+                            required_storage_deposit.nft += &output_data.output.rent_cost(&rent_structure);
+                        }
+
                         // Add native tokens
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -143,8 +153,14 @@ impl AccountHandle {
 
                                 // Add amount
                                 total_amount += amount;
+
                                 // Add storage deposit
-                                required_storage_deposit += output_data.output.rent_cost(&rent_structure);
+                                if output_data.output.is_basic() {
+                                    required_storage_deposit.basic += &output_data.output.rent_cost(&rent_structure);
+                                } else if output_data.output.is_nft() {
+                                    required_storage_deposit.nft += &output_data.output.rent_cost(&rent_structure);
+                                }
+
                                 // Add native tokens
                                 if let Some(native_tokens) = output_data.output.native_tokens() {
                                     total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -247,6 +263,7 @@ pub(crate) fn add_balances(balances: Vec<AccountBalance>) -> crate::Result<Accou
         total_balance.nfts.extend(balance.nfts.into_iter());
         total_balance.aliases.extend(balance.aliases.into_iter());
         total_balance.foundries.extend(balance.foundries.into_iter());
+
         for native_token_balance in &balance.native_tokens {
             if let Some(total_native_token_balance) = total_balance
                 .native_tokens
