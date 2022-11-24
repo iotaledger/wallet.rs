@@ -64,7 +64,7 @@ public class CallbackEvents {
         // Remove listeners when they are no longer needed. Listening to events will no longer be possible as all listeners have been removed.
         wallet.clearListeners();
 
-        // Create another event
+        // Create another dummy event.
         JsonObject selectingInputsEvent = new JsonObject();
         selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
 
