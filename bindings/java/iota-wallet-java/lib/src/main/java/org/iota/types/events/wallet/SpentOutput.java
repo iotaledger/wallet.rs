@@ -10,6 +10,7 @@ public class SpentOutput extends WalletEvent {
     private OutputData output;
 
     public SpentOutput(OutputData output) {
+        super(WalletEventType.SpentOutput);
         this.output = output;
     }
 

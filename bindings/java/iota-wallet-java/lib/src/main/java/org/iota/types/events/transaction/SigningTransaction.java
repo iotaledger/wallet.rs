@@ -4,5 +4,7 @@
 package org.iota.types.events.transaction;
 
 public class SigningTransaction extends TransactionProgressEvent {
-
+    public SigningTransaction() {
+        super(TransactionProgressEventType.SigningTransaction);
+    }
 }

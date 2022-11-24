@@ -4,5 +4,7 @@
 package org.iota.types.events.transaction;
 
 public class SelectingInputs extends TransactionProgressEvent {
-
+    public SelectingInputs() {
+        super(TransactionProgressEventType.SelectingInputs);
+    }
 }

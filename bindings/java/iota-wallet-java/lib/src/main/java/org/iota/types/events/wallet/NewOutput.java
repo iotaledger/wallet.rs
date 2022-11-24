@@ -19,6 +19,10 @@ public class NewOutput extends WalletEvent {
     /// not available.
     private OutputResponse[] transactionInputs;
 
+    public NewOutput() {
+        super(WalletEventType.NewOutput);
+    }
+
     public OutputData getOutput() {
         return output;
     }

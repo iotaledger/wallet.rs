@@ -5,4 +5,7 @@ package org.iota.types.events.transaction;
 
 public class Broadcasting extends TransactionProgressEvent {
 
+    public Broadcasting() {
+        super(TransactionProgressEventType.Broadcasting);
+    }
 }

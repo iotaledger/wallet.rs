@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import org.iota.api.CustomGson;
 import org.iota.types.PreparedTransactionData;
 import org.iota.types.events.wallet.WalletEvent;
+import org.iota.types.events.wallet.WalletEventType;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonDeserializationContext;
@@ -18,19 +19,26 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.google.gson.annotations.JsonAdapter;
 
 @JsonAdapter(TransactionProgressEventAdapter.class)
 public abstract class TransactionProgressEvent extends WalletEvent {
 
-    protected TransactionProgressEventType transactionType;
+    protected transient TransactionProgressEventType transactionType;
+
+    public TransactionProgressEvent(TransactionProgressEventType transactionType) {
+        super(WalletEventType.TransactionProgress);
+        this.transactionType = transactionType;
+    }
 
     public TransactionProgressEventType getTransactionType() {
         return transactionType;
     }
 }
 
-class TransactionProgressEventAdapter implements JsonDeserializer<TransactionProgressEvent> {
+class TransactionProgressEventAdapter
+        implements JsonDeserializer<TransactionProgressEvent>, JsonSerializer<TransactionProgressEvent> {
     @Override
     public TransactionProgressEvent deserialize(final JsonElement json, final Type typeOfT,
             final JsonDeserializationContext context)
@@ -89,6 +97,7 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
         return event;
     }
 
+    @Override
     public JsonElement serialize(TransactionProgressEvent src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject element = new JsonObject();
         JsonElement value;
@@ -111,7 +120,11 @@ class TransactionProgressEventAdapter implements JsonDeserializer<TransactionPro
         } else
             throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
 
-        element.add(src.transactionType.toString(), value);
-        return element;
+        if (!value.isJsonObject() || value.getAsJsonObject().size() != 0) {
+            element.add(src.transactionType.toString(), value);
+            return element;
+        } else {
+            return new JsonPrimitive(src.transactionType.toString());
+        }
     }
 }

@@ -17,6 +17,7 @@ public class PreparedTransaction extends TransactionProgressEvent {
     PreparedTransactionData preparedTransaction;
 
     public PreparedTransaction(PreparedTransactionData preparedTransaction) {
+        super(TransactionProgressEventType.PreparedTransaction);
         this.preparedTransaction = preparedTransaction;
     }
 

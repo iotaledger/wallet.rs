@@ -11,6 +11,11 @@ public class Event extends AbstractObject {
     private Integer accountIndex;
     private WalletEvent event;
 
+    public Event(Integer accountIndex, WalletEvent event) {
+        this.accountIndex = accountIndex;
+        this.event = event;
+    }
+
     /**
      * Get the account index related to this event
      * 

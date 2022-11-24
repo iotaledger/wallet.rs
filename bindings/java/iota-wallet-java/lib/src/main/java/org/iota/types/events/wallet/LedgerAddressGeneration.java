@@ -8,6 +8,7 @@ public class LedgerAddressGeneration extends WalletEvent {
     private String address;
 
     public LedgerAddressGeneration(String address) {
+        super(WalletEventType.LedgerAddressGeneration);
         this.address = address;
     }
 

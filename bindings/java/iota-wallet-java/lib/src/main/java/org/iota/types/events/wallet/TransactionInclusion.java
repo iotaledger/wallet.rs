@@ -13,6 +13,7 @@ public class TransactionInclusion extends WalletEvent {
     InclusionState inclusionState;
 
     public TransactionInclusion(TransactionId transactionId, InclusionState inclusionState) {
+        super(WalletEventType.TransactionInclusion);
         this.transactionId = transactionId;
         this.inclusionState = inclusionState;
     }

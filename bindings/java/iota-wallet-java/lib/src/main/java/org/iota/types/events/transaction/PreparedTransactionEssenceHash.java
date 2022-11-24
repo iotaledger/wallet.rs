@@ -8,6 +8,7 @@ public class PreparedTransactionEssenceHash extends TransactionProgressEvent {
     private String hash;
 
     public PreparedTransactionEssenceHash(String hash) {
+        super(TransactionProgressEventType.PreparedTransactionEssenceHash);
         this.hash = hash;
     }
 

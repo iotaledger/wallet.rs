@@ -4,11 +4,16 @@
 import java.io.FileReader;
 import java.io.IOException;
 import org.iota.Wallet;
+import org.iota.api.CustomGson;
 import org.iota.types.*;
 import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
+import org.iota.types.events.transaction.PreparedTransaction;
+import org.iota.types.events.transaction.SelectingInputs;
 import org.iota.types.events.transaction.TransactionProgressEvent;
+import org.iota.types.events.wallet.ConsolidationRequired;
+import org.iota.types.events.wallet.WalletEvent;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
@@ -18,7 +23,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class CallbackEvents {
-
 
     public static void main(String[] args)
             throws WalletException, InterruptedException, IOException, InitializeWalletException {
@@ -52,27 +56,20 @@ public class CallbackEvents {
         // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
                 new FileReader("src/res/prepared_transaction_data.json"));
-
-        // Create the dummy transaction event
-        JsonObject transactionEvent = new JsonObject();
-        transactionEvent.add("PreparedTransaction", prepared);
-
-        // Create The Wallet event with the transaction event
-        JsonObject walletEvent = new JsonObject();
-        walletEvent.add("TransactionProgress", transactionEvent);
+        PreparedTransactionData data = CustomGson.get().fromJson(prepared, PreparedTransactionData.class);
+        WalletEvent event = new PreparedTransaction(data);
 
         // Emit the fake event
-        wallet.emitTestEvent(walletEvent);
+        wallet.emitTestEvent(event);
 
         // Clear listeners
         wallet.clearListeners();
 
         // Create another event
-        JsonObject selectingInputsEvent = new JsonObject();
-        selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
+        event = new SelectingInputs();
 
         // Emitted event is not received by our listener because the listener has
         // already been unsubscribed from the wallet.
-        wallet.emitTestEvent(selectingInputsEvent);
+        wallet.emitTestEvent(event);
     }
 }

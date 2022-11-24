@@ -12,7 +12,10 @@ import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
 import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
+import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
+import org.iota.types.events.transaction.TransactionProgressEvent;
+import org.iota.types.events.wallet.WalletEvent;
 import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
@@ -277,8 +280,8 @@ public class Wallet extends NativeApi {
      *
      * @param event The event to emit.
      */
-    public void emitTestEvent(JsonElement event) throws WalletException {
-        callBaseApi(new WalletCommand("emitTestEvent", event));
+    public void emitTestEvent(WalletEvent event) throws WalletException {
+        callBaseApi(new WalletCommand("emitTestEvent", CustomGson.get().toJsonTree(event, WalletEvent.class)));
     }
 
     /**

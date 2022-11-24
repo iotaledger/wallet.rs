@@ -16,14 +16,18 @@ import java.util.Map.Entry;
 @JsonAdapter(WalletEventAdapter.class)
 public abstract class WalletEvent extends AbstractObject {
 
-    protected WalletEventType type;
+    protected transient WalletEventType type;
+
+    public WalletEvent(WalletEventType type) {
+        this.type = type;
+    }
 
     public WalletEventType getType() {
         return type;
     }
 }
 
-class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
+class WalletEventAdapter implements JsonDeserializer<WalletEvent>, JsonSerializer<WalletEvent> {
     @Override
     public WalletEvent deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
@@ -77,6 +81,7 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
         return event;
     }
 
+    @Override
     public JsonElement serialize(WalletEvent src, Type typeOfSrc, JsonSerializationContext context) {
         JsonObject element = new JsonObject();
         JsonElement value;
@@ -95,7 +100,11 @@ class WalletEventAdapter implements JsonDeserializer<WalletEvent> {
         } else
             throw new JsonParseException("unknown class: " + src.getClass().getSimpleName());
 
-        element.add(src.type.toString(), value);
-        return element;
+        if (!value.isJsonObject() || value.getAsJsonObject().size() != 0) {
+            element.add(src.type.toString(), value);
+            return element;
+        } else {
+            return new JsonPrimitive(src.type.toString());
+        }
     }
 }

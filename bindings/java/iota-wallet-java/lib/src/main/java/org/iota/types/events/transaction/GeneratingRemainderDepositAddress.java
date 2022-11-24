@@ -8,6 +8,7 @@ public class GeneratingRemainderDepositAddress extends TransactionProgressEvent 
     private String address;
 
     public GeneratingRemainderDepositAddress(String address) {
+        super(TransactionProgressEventType.GeneratingRemainderDepositAddress);
         this.address = address;
     }
 
