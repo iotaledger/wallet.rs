@@ -69,7 +69,7 @@ public class CallbackEvents {
         selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
 
         // Emitted event is not received by our listener because the listener has
-        // already been unsubscribed from the wallet.
+        // already been removed from the wallet.
         wallet.emitTestEvent(selectingInputsEvent);
     }
 }
