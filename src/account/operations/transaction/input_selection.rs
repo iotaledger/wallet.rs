@@ -24,6 +24,7 @@ impl AccountHandle {
         &self,
         outputs: Vec<Output>,
         custom_inputs: Option<Vec<InputSigningData>>,
+        mandatory_inputs: Option<Vec<InputSigningData>>,
         remainder_address: Option<Address>,
         rent_structure: &RentStructure,
         allow_burning: bool,
@@ -40,6 +41,7 @@ impl AccountHandle {
         );
 
         let current_time = self.client.get_time_checked().await?;
+        let bech32_hrp = self.client.get_bech32_hrp().await?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
@@ -56,7 +58,47 @@ impl AccountHandle {
 
             let selected_transaction_data = try_select_inputs(
                 custom_inputs,
+                // don't add any other outputs when custom inputs are provided
                 Vec::new(),
+                outputs,
+                remainder_address,
+                rent_structure,
+                allow_burning,
+                current_time,
+                token_supply,
+            )?;
+
+            // lock outputs so they don't get used by another transaction
+            for output in &selected_transaction_data.inputs {
+                account.locked_outputs.insert(*output.output_id());
+            }
+
+            return Ok(selected_transaction_data);
+        } else if let Some(mandatory_inputs) = mandatory_inputs {
+            // Check that no input got already locked
+            for input in mandatory_inputs.iter() {
+                if account.locked_outputs.contains(input.output_id()) {
+                    return Err(crate::Error::CustomInputError(format!(
+                        "provided custom input {} is already used in another transaction",
+                        input.output_id()
+                    )));
+                }
+            }
+
+            let available_outputs_signing_data = filter_inputs(
+                &account,
+                account.unspent_outputs.values(),
+                current_time,
+                &bech32_hrp,
+                &outputs,
+                &account.locked_outputs,
+                allow_burning,
+            )?;
+
+            let selected_transaction_data = try_select_inputs(
+                mandatory_inputs,
+                // add also available outputs when mandatory inputs are provided
+                available_outputs_signing_data,
                 outputs,
                 remainder_address,
                 rent_structure,
@@ -75,7 +117,6 @@ impl AccountHandle {
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
         let available_outputs_signing_data = filter_inputs(
             &account,
             account.unspent_outputs.values(),

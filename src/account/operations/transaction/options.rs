@@ -13,8 +13,12 @@ pub struct TransactionOptions {
     pub remainder_value_strategy: RemainderValueStrategy,
     #[serde(rename = "taggedDataPayload", default)]
     pub tagged_data_payload: Option<TaggedDataPayload>,
+    // If custom inputs are provided only they are used. If also other additional inputs should be used,
+    // `mandatory_inputs` should be used instead.
     #[serde(rename = "customInputs", default)]
     pub custom_inputs: Option<Vec<OutputId>>,
+    #[serde(rename = "mandatoryInputs", default)]
+    pub mandatory_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
     pub note: Option<String>,
