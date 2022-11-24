@@ -53,8 +53,6 @@ public class CallbackEvents {
         // Read in a prepared transaction stored as JSON to be used in this example.
         JsonElement prepared = JsonParser.parseReader(
                 new FileReader("src/res/prepared_transaction_data.json"));
-
-        // Create the dummy transaction event
         JsonObject transactionEvent = new JsonObject();
         transactionEvent.add("PreparedTransaction", prepared);
 
