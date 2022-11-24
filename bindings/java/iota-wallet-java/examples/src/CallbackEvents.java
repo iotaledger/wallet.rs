@@ -21,7 +21,6 @@ public class CallbackEvents {
 
     public static void main(String[] args)
             throws WalletException, InterruptedException, IOException, InitializeWalletException {
-
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
