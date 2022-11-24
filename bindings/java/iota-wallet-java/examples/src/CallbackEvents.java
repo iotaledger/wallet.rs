@@ -70,8 +70,7 @@ public class CallbackEvents {
         // Create another event
         event = new SelectingInputs();
 
-        // Emitted event is not received by our listener because the listener has
-        // already been unsubscribed from the wallet.
+        // The second event is not received by our listener anymore because the listener has been removed from the wallet.
         wallet.emitTestEvent(event);
     }
 }
