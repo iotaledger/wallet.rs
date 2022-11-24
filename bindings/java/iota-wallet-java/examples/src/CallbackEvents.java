@@ -58,7 +58,7 @@ public class CallbackEvents {
         JsonObject walletEvent = new JsonObject();
         walletEvent.add("TransactionProgress", transactionEvent);
 
-        // Emit the fake event
+        // Emit the dummy event.
         wallet.emitTestEvent(walletEvent);
 
         // Clear listeners
