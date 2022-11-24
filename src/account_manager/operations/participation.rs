@@ -34,7 +34,7 @@ impl AccountManager {
     }
 
     /// Removes a previously registered participation event from local storage.
-    pub async fn deregister_participation_event(&self, id: EventId) -> crate::Result<()> {
+    pub async fn deregister_participation_event(&self, id: &EventId) -> crate::Result<()> {
         self.storage_manager.lock().await.remove_participation_event(id).await?;
         Ok(())
     }
@@ -63,11 +63,11 @@ impl AccountManager {
     }
 
     /// Retrieves the latest status of a given participation event.
-    pub async fn get_participation_event_status(&self, id: EventId) -> crate::Result<EventStatus> {
+    pub async fn get_participation_event_status(&self, id: &EventId) -> crate::Result<EventStatus> {
         let events = self.storage_manager.lock().await.get_participation_events().await?;
 
         let event = events
-            .get(&id)
+            .get(id)
             .ok_or_else(|| crate::Error::Storage(format!("event {id} not found")))?;
 
         let mut client_builder = Client::builder().with_ignore_node_health();
@@ -76,7 +76,7 @@ impl AccountManager {
         }
         let client = client_builder.finish()?;
 
-        let events_status = client.event_status(&id, None).await?;
+        let events_status = client.event_status(id, None).await?;
 
         Ok(events_status)
     }

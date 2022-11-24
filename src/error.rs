@@ -78,6 +78,11 @@ pub enum Error {
     /// Nft not found in unspent outputs
     #[error("nft not found in unspent outputs")]
     NftNotFoundInUnspentOutputs,
+    // TODO more precise error
+    /// Voting error
+    #[cfg(feature = "participation")]
+    #[error("voting error {0}")]
+    Voting(String),
     /// No outputs available for consolidating
     #[error(
         "nothing to consolidate: available outputs: {available_outputs}, consolidation threshold: {consolidation_threshold}"

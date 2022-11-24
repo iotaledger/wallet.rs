@@ -90,6 +90,50 @@ impl AccountHandle {
             }
         };
 
+        let mandatory_inputs: Option<Vec<InputSigningData>> = {
+            if let Some(options) = &options {
+                // validate inputs amount
+                if let Some(inputs) = &options.mandatory_inputs {
+                    if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
+                        return Err(iota_client::block::Error::InvalidInputCount(
+                            TryIntoBoundedU16Error::Truncated(inputs.len()),
+                        ))?;
+                    }
+                    let current_time = self.client.get_time_checked().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp().await?;
+                    let account = self.read().await;
+                    let mut input_outputs = Vec::new();
+                    for output_id in inputs {
+                        match account.unspent_outputs().get(output_id) {
+                            Some(output) => {
+                                // If alias doesn't exist in the outputs, assume the transition type that allows burning
+                                // or not
+                                let alias_state_transition =
+                                    alias_state_transition(output, &outputs)?.unwrap_or(!allow_burning);
+                                input_outputs.push(output.input_signing_data(
+                                    &account,
+                                    current_time,
+                                    &bech32_hrp,
+                                    alias_state_transition,
+                                )?)
+                            }
+                            None => {
+                                return Err(crate::Error::CustomInputError(format!(
+                                    "custom input {} not found in unspent outputs",
+                                    output_id
+                                )));
+                            }
+                        }
+                    }
+                    Some(input_outputs)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
+        };
+
         let remainder_address = match &options {
             Some(options) => {
                 match &options.remainder_value_strategy {
@@ -123,6 +167,7 @@ impl AccountHandle {
             .select_inputs(
                 outputs,
                 custom_inputs,
+                mandatory_inputs,
                 remainder_address,
                 &rent_structure,
                 allow_burning,
