@@ -67,7 +67,7 @@ public class CallbackEvents {
         JsonObject selectingInputsEvent = new JsonObject();
         selectingInputsEvent.addProperty("TransactionProgress", "SelectingInputs");
 
-        // The second event is not received by our listener anymore because the listener has been removed from the wallet.
+        // The second event is not received by our listener anymore because the listener has been removed.
         wallet.emitTestEvent(selectingInputsEvent);
     }
 }
