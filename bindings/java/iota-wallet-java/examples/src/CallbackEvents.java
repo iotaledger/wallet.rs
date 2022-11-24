@@ -26,7 +26,6 @@ public class CallbackEvents {
 
     public static void main(String[] args)
             throws WalletException, InterruptedException, IOException, InitializeWalletException {
-
         // This example assumes that a wallet has already been created using the
         // ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to
@@ -53,7 +52,9 @@ public class CallbackEvents {
             }
         });
 
-        // Read in a prepared transaction stored as JSON to be used in this example.
+        // Create a dummy event and trigger it to illustrate how the listener works.
+
+        // Create the dummy event from JSON.
         JsonElement prepared = JsonParser.parseReader(
                 new FileReader("src/res/prepared_transaction_data.json"));
         PreparedTransactionData data = CustomGson.get().fromJson(prepared, PreparedTransactionData.class);
@@ -62,7 +63,8 @@ public class CallbackEvents {
         // Emit the fake event
         wallet.emitTestEvent(event);
 
-        // Clear listeners
+        // Remove listeners when they are no longer needed. Listening to events will no longer be possible 
+        // as all listeners have been removed.
         wallet.clearListeners();
 
         // Create another event
