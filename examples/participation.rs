@@ -108,7 +108,7 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// create voting output or increase voting power
-    ////////////////////////////////
+    //// ////////////////////////////
 
     let transaction = account.increase_voting_power(1000001).await?;
     println!(
@@ -128,7 +128,7 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// decrease voting power
-    ////////////////////////////////
+    //// ////////////////////////////
 
     // let transaction = account.decrease_voting_power(1).await?;
     // println!(
@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// vote
-    ////////////////////////////////
+    //// ////////////////////////////
 
     let transaction = account.vote(event_id, vec![0]).await?;
     println!(
@@ -161,14 +161,14 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// get voting overview
-    ////////////////////////////////
+    //// ////////////////////////////
 
     let overview = account.get_participation_overview().await?;
     println!("overview: {overview:?}");
 
     ////////////////////////////////
     //// stop vote
-    ////////////////////////////////
+    //// ////////////////////////////
 
     let transaction = account.stop_participating(event_id).await?;
     println!(
@@ -184,7 +184,7 @@ async fn main() -> Result<()> {
 
     ////////////////////////////////
     //// destroy voting output
-    ////////////////////////////////
+    //// ////////////////////////////
 
     // let voting_output = account.get_voting_output().await?;
     // println!("Voting output: {:?}", voting_output.output);

@@ -23,42 +23,44 @@ use crate::{
 impl AccountHandle {
     /// Casts a given number of votes for a given (voting) event.
     ///
-    /// If voting for other events, continue voting for other events
-    /// Remove metadata for any events that have expired (use event IDs to get cached event information, check event
-    /// milestones in there against latest network milestone) If already voting for this event, overwrite existing
-    /// output metadata. If existing voting output(s) do NOT have enough funds (or don't exist), throw error
-    /// If exceeds output metadata limit, throw error (although better if automatically handled... but has UX
-    /// implications...) If event has expired, throw error (do NOT remove previous votes)
+    /// If voting for other events, continues voting for them.
+    /// Removes metadata for any event that has expired (uses event IDs to get cached event information, checks event
+    /// milestones in there against latest network milestone).
+    /// If already voting for this event, overwrites existing output metadata.
+    /// If existing voting output(s) do NOT have enough funds (or don't exist), throws an error.
+    /// If exceeds output metadata limit, throws an error (although better if automatically handled, but has UX
+    /// implications).
+    /// If event has expired, throws an error (do NOT remove previous votes).
     ///
-    /// This is an add OR update function; not just add
-    /// This should use regular client options; NOT specific node for the event
+    /// This is an add OR update function, not just add.
+    /// This should use regular client options, NOT specific node for the event.
     pub async fn vote(&self, event_id: EventId, answers: Vec<u8>) -> Result<Transaction> {
-        // Check if voting event is still running
         let event_status = self.get_participation_event_status(&event_id).await?;
+
+        // Checks if voting event is still running.
         if event_status.status() == "ended" {
             return Err(crate::Error::Voting(format!("event {event_id} already ended")));
         }
+
+        // TODO check if answers match the questions ?
 
         let voting_output = self
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
-        let basic_output = if let Output::Basic(basic_output) = voting_output.output {
-            basic_output
+        let output = if let Output::Basic(output) = voting_output.output {
+            output
         } else {
             unreachable!("voting output must be a basic output")
         };
 
-        let metadata = basic_output.features().metadata();
-
-        // Update or create participation
-        let participation_bytes = match metadata {
+        // Updates or creates participation.
+        let participation_bytes = match output.features().metadata() {
             Some(metadata) => {
-                let mut slice: &[u8] = metadata.data();
-                let mut participations = Participations::from_bytes(&mut slice)?;
+                let mut participations = Participations::from_bytes(&mut metadata.data())?;
 
-                // Remove ended participations
+                // Removes ended participations.
                 self.remove_ended_participation_events(&mut participations).await?;
 
                 participations.add_or_replace(Participation { event_id, answers });
@@ -71,19 +73,18 @@ impl AccountHandle {
         }
         .to_bytes()?;
 
-        let token_supply = self.client().get_token_supply().await?;
-
-        let updated_output = BasicOutputBuilder::from(&basic_output)
+        let new_output = BasicOutputBuilder::from(&output)
+            // TODO maybe replace ?
             .with_features(vec![
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),
                 Feature::Metadata(MetadataFeature::new(participation_bytes.clone())?),
             ])
-            .finish_output(token_supply)?;
+            .finish_output(self.client().get_token_supply().await?)?;
 
         self.send(
-            vec![updated_output],
+            vec![new_output],
             Some(TransactionOptions {
-                // only use previous voting output as input
+                // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
@@ -95,48 +96,50 @@ impl AccountHandle {
         .await
     }
 
-    /// Removes metadata corresponding to a given (voting) event ID from any outputs that contain it.
+    /// Removes metadata corresponding to a given (voting) event ID from any outputs that contains it.
     ///
-    /// If voting for other events, continue voting for other events
-    /// Remove metadata for any events that have expired (use event IDs to get cached event information, check event
-    /// milestones in there against latest network milestone) If multiple outputs contain metadata for this event,
-    /// remove all of them. If NOT already voting for event, throw error (e.g. output with this event ID not found)
+    /// If voting for other events, continues voting for them.
+    /// Removes metadata for any event that has expired (use event IDs to get cached event information, checks event
+    /// milestones in there against latest network milestone).
+    /// TODO: is it really doing that ?
+    /// If multiple outputs contain metadata for this event, removes all of them.
+    /// If NOT already voting for this event, throws an error (e.g. output with this event ID not found).
     pub async fn stop_participating(&self, event_id: EventId) -> Result<Transaction> {
         let voting_output = self
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
 
-        let basic_output = if let Output::Basic(basic_output) = voting_output.output {
-            basic_output
+        let output = if let Output::Basic(output) = voting_output.output {
+            output
         } else {
             unreachable!("voting output needs to be a basic output")
         };
 
-        let metadata = basic_output.features().metadata();
-
-        // Remove participation
-        let participation_bytes = match metadata {
+        // Removes participation.
+        let participation_bytes = match output.features().metadata() {
             Some(metadata) => {
-                let mut slice: &[u8] = metadata.data();
-                let mut participations = Participations::from_bytes(&mut slice)?;
+                let mut participations = Participations::from_bytes(&mut metadata.data())?;
 
                 let length_before = participations.participations.len();
 
+                // TODO use remove return when merged
                 participations.remove(&event_id);
 
                 if length_before == participations.participations.len() {
+                    // TODO should this really be an error ?
                     return Err(crate::Error::Voting(format!(
                         "currently not participating for {event_id}"
                     )));
                 }
 
-                // Remove ended participations
+                // Removes ended participations.
                 self.remove_ended_participation_events(&mut participations).await?;
 
                 participations
             }
             None => {
+                // TODO should this really be an error ?
                 return Err(crate::Error::Voting(format!(
                     "currently not participating for {event_id}"
                 )));
@@ -144,19 +147,18 @@ impl AccountHandle {
         }
         .to_bytes()?;
 
-        let token_supply = self.client().get_token_supply().await?;
-
-        let updated_output = BasicOutputBuilder::from(&basic_output)
+        let new_output = BasicOutputBuilder::from(&output)
+            // TODO maybe replace ?
             .with_features(vec![
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),
                 Feature::Metadata(MetadataFeature::new(participation_bytes.clone())?),
             ])
-            .finish_output(token_supply)?;
+            .finish_output(self.client().get_token_supply().await?)?;
 
         self.send(
-            vec![updated_output],
+            vec![new_output],
             Some(TransactionOptions {
-                // only use previous voting output as input
+                // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
