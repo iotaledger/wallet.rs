@@ -89,9 +89,9 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
         handle
             .wallet_message_handler
             .listen(rust_events, move |_| {
-                let gil = Python::acquire_gil();
-                let py = gil.python();
-                handler.call0(py).unwrap();
+                Python::with_gil(|py| {
+                    handler.call0(py).unwrap();
+                });
             })
             .await;
     });
