@@ -12,15 +12,14 @@ use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
+    account_manager::AccountManager,
     account_method::AccountMethod,
     dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     response::Response,
+    ClientOptions,
 };
-#[cfg(feature = "events")]
-use crate::events::types::{Event, WalletEventType};
-use crate::{account_manager::AccountManager, ClientOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManagerOptions {
@@ -96,15 +95,6 @@ pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Re
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
     message_rx.recv().await.unwrap()
-}
-
-#[cfg(feature = "events")]
-/// Listen to wallet events, empty vec will listen to all events
-pub async fn listen<F>(handle: &WalletMessageHandler, events: Vec<WalletEventType>, handler: F)
-where
-    F: Fn(&Event) + 'static + Clone + Send + Sync,
-{
-    handle.listen(events, handler).await;
 }
 
 #[cfg(test)]
