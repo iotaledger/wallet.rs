@@ -1,0 +1,103 @@
+{
+  "essence": {
+    "type": 1,
+    "networkId": "8342982141227064571",
+    "inputs": [
+      {
+        "type": 0,
+        "transactionId": "0x8d802168415e9f0de5f400a4fa1cc8d8574144f766b781c90044ef0653a899c4",
+        "transactionOutputIndex": 0
+      }
+    ],
+    "inputsCommitment": "0x936778fb62dd1d769d217fae2561f3ee440e7d354a8b693a31e9a9bffa6752a1",
+    "outputs": [
+      {
+        "type": 3,
+        "amount": "1000000",
+        "unlockConditions": [
+          {
+            "type": 0,
+            "address": {
+              "type": 0,
+              "pubKeyHash": "0x60200bad8137a704216e84f8f9acfe65b972d9f4155becb4815282b03cef99fe"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "inputsData": [
+    {
+      "output": {
+        "type": 3,
+        "amount": "1000000",
+        "unlockConditions": [
+          {
+            "type": 0,
+            "address": {
+              "type": 0,
+              "pubKeyHash": "0xd2b7904fa6dbc80e3894a8ff177b764ba27d67df06d24b3a4659264c50ab82d0"
+            }
+          }
+        ]
+      },
+      "outputMetadata": {
+        "blockId": "0x1c1c3085300d21e6b52306f5936b4cf9cf7a04991550f101675faa41468fca8c",
+        "transactionId": "0x8d802168415e9f0de5f400a4fa1cc8d8574144f766b781c90044ef0653a899c40000",
+        "isSpent": false,
+        "milestoneIndexBooked": 1992051,
+        "milestoneTimestampBooked": 1668096548,
+        "ledgerIndex": 2061602
+      },
+      "chain": [
+        {
+          "hardened": true,
+          "bs": [
+            128,
+            0,
+            0,
+            44
+          ]
+        },
+        {
+          "hardened": true,
+          "bs": [
+            128,
+            0,
+            16,
+            123
+          ]
+        },
+        {
+          "hardened": true,
+          "bs": [
+            128,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hardened": true,
+          "bs": [
+            128,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "hardened": true,
+          "bs": [
+            128,
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "bech32Address": "rms1qrft0yz05mdusr3cjj5079mmwe96ylt8murdyje6gevjvnzs4wpdq2n0the"
+    }
+  ],
+  "remainder": null
+}

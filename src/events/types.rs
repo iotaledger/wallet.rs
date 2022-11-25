@@ -64,9 +64,10 @@ pub struct NewOutputEvent {
     /// The new output.
     pub output: OutputDataDto,
     /// The transaction that created the output. Might be pruned and not available.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub transaction: Option<TransactionPayloadDto>,
     /// The inputs for the transaction that created the output. Might be pruned and not available.
-    #[serde(rename = "transactionInputs")]
+    #[serde(rename = "transactionInputs", skip_serializing_if = "Option::is_none")]
     pub transaction_inputs: Option<Vec<OutputWithMetadataResponse>>,
 }
 
