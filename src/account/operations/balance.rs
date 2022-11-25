@@ -47,10 +47,12 @@ impl AccountHandle {
             // or time related unlock conditions
             match &output_data.output {
                 Output::Alias(output) => {
+                    let rent = output_data.output.rent_cost(&rent_structure);
+
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit.alias += output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.alias += rent;
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -61,10 +63,12 @@ impl AccountHandle {
                     aliases.push(alias_id);
                 }
                 Output::Foundry(output) => {
+                    let rent = output_data.output.rent_cost(&rent_structure);
+
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit.foundry += output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.foundry += rent;
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -93,9 +97,13 @@ impl AccountHandle {
 
                         // Add storage deposit
                         if output_data.output.is_basic() {
-                            required_storage_deposit.basic += output_data.output.rent_cost(&rent_structure);
+                            let rent = output_data.output.rent_cost(&rent_structure);
+
+                            required_storage_deposit.basic += rent;
                         } else if output_data.output.is_nft() {
-                            required_storage_deposit.nft += output_data.output.rent_cost(&rent_structure);
+                            let rent = output_data.output.rent_cost(&rent_structure);
+
+                            required_storage_deposit.nft += rent;
                         }
 
                         // Add native tokens
@@ -126,20 +134,20 @@ impl AccountHandle {
                             if output_can_be_unlocked_now_and_in_future {
                                 // If output has a StorageDepositReturnUnlockCondition, the amount of it should be
                                 // subtracted, because this part needs to be sent back
-                                let amount = if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                                    if let Some(sdr) = unlock_conditions.storage_deposit_return() {
-                                        if account_addresses
-                                            .iter()
-                                            .any(|a| a.address.inner == *sdr.return_address())
-                                        {
-                                            // sending to ourself, we get the full amount
-                                            output_data.output.amount()
-                                        } else {
-                                            // Sending to someone else
-                                            output_data.output.amount() - sdr.amount()
-                                        }
-                                    } else {
+                                let amount = if let Some(sdr) = output_data
+                                    .output
+                                    .unlock_conditions()
+                                    .and_then(|u| u.storage_deposit_return())
+                                {
+                                    if account_addresses
+                                        .iter()
+                                        .any(|a| a.address.inner == *sdr.return_address())
+                                    {
+                                        // sending to ourself, we get the full amount
                                         output_data.output.amount()
+                                    } else {
+                                        // Sending to someone else
+                                        output_data.output.amount() - sdr.amount()
                                     }
                                 } else {
                                     output_data.output.amount()
@@ -156,9 +164,13 @@ impl AccountHandle {
 
                                 // Add storage deposit
                                 if output_data.output.is_basic() {
-                                    required_storage_deposit.basic += output_data.output.rent_cost(&rent_structure);
+                                    let rent = output_data.output.rent_cost(&rent_structure);
+
+                                    required_storage_deposit.basic += rent;
                                 } else if output_data.output.is_nft() {
-                                    required_storage_deposit.nft += output_data.output.rent_cost(&rent_structure);
+                                    let rent = output_data.output.rent_cost(&rent_structure);
+
+                                    required_storage_deposit.nft += rent;
                                 }
 
                                 // Add native tokens
