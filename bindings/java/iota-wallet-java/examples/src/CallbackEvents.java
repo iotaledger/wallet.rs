@@ -60,7 +60,7 @@ public class CallbackEvents {
         PreparedTransactionData data = CustomGson.get().fromJson(prepared, PreparedTransactionData.class);
         WalletEvent event = new PreparedTransaction(data);
 
-        // Emit the fake event
+        // Emit the dummy event.
         wallet.emitTestEvent(event);
 
         // Remove listeners when they are no longer needed. Listening to events will no longer be possible 
