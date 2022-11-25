@@ -12,14 +12,13 @@ use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
-    account_manager::AccountManager,
     account_method::AccountMethod,
     dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     response::Response,
-    ClientOptions,
 };
+use crate::{account_manager::AccountManager, ClientOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManagerOptions {
