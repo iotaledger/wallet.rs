@@ -103,6 +103,14 @@ impl AccountHandle {
                             let rent = output_data.output.rent_cost(&rent_structure);
 
                             required_storage_deposit.basic += rent;
+                            if output_data
+                                .output
+                                .native_tokens()
+                                .map(|native_tokens| !native_tokens.is_empty())
+                                .unwrap_or(false)
+                            {
+                                total_rent_amount += rent;
+                            }
                         } else if output_data.output.is_nft() {
                             let rent = output_data.output.rent_cost(&rent_structure);
 
