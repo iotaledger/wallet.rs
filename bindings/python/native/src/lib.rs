@@ -86,12 +86,14 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
     }
 
     crate::block_on(async {
-        ::iota_wallet::message_interface::listen(&handle.wallet_message_handler, rust_events, move |_| {
-            Python::with_gil(|py| {
+        handle
+            .wallet_message_handler
+            .listen(rust_events, move |_| {
+                let gil = Python::acquire_gil();
+                let py = gil.python();
                 handler.call0(py).unwrap();
-            });
-        })
-        .await;
+            })
+            .await;
     });
 }
 
