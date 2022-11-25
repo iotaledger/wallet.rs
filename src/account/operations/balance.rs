@@ -50,7 +50,7 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit.alias += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.alias += output_data.output.rent_cost(&rent_structure);
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -64,7 +64,7 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit.foundry += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.foundry += output_data.output.rent_cost(&rent_structure);
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -93,9 +93,9 @@ impl AccountHandle {
 
                         // Add storage deposit
                         if output_data.output.is_basic() {
-                            required_storage_deposit.basic += &output_data.output.rent_cost(&rent_structure);
+                            required_storage_deposit.basic += output_data.output.rent_cost(&rent_structure);
                         } else if output_data.output.is_nft() {
-                            required_storage_deposit.nft += &output_data.output.rent_cost(&rent_structure);
+                            required_storage_deposit.nft += output_data.output.rent_cost(&rent_structure);
                         }
 
                         // Add native tokens
@@ -156,9 +156,9 @@ impl AccountHandle {
 
                                 // Add storage deposit
                                 if output_data.output.is_basic() {
-                                    required_storage_deposit.basic += &output_data.output.rent_cost(&rent_structure);
+                                    required_storage_deposit.basic += output_data.output.rent_cost(&rent_structure);
                                 } else if output_data.output.is_nft() {
-                                    required_storage_deposit.nft += &output_data.output.rent_cost(&rent_structure);
+                                    required_storage_deposit.nft += output_data.output.rent_cost(&rent_structure);
                                 }
 
                                 // Add native tokens
