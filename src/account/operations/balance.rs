@@ -30,6 +30,7 @@ impl AccountHandle {
         let local_time = self.client.get_time_checked().await?;
 
         let mut total_amount = 0;
+        let mut total_rent_amount = 0;
         let mut required_storage_deposit = RequiredStorageDeposit::new();
         let mut total_native_tokens = NativeTokensBuilder::new();
         let mut potentially_locked_outputs = HashMap::new();
@@ -53,6 +54,7 @@ impl AccountHandle {
                     total_amount += output_data.output.amount();
                     // Add storage deposit
                     required_storage_deposit.alias += rent;
+                    total_rent_amount += rent;
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -69,6 +71,7 @@ impl AccountHandle {
                     total_amount += output_data.output.amount();
                     // Add storage deposit
                     required_storage_deposit.foundry += rent;
+                    total_rent_amount += rent;
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -104,6 +107,7 @@ impl AccountHandle {
                             let rent = output_data.output.rent_cost(&rent_structure);
 
                             required_storage_deposit.nft += rent;
+                            total_rent_amount += rent;
                         }
 
                         // Add native tokens
@@ -171,6 +175,7 @@ impl AccountHandle {
                                     let rent = output_data.output.rent_cost(&rent_structure);
 
                                     required_storage_deposit.nft += rent;
+                                    total_rent_amount += rent;
                                 }
 
                                 // Add native tokens
@@ -218,11 +223,15 @@ impl AccountHandle {
                 }
             }
         }
+
         log::debug!(
             "[BALANCE] total_amount: {}, locked balance: {}",
             total_amount,
             locked_amount
         );
+
+        // TODO should we add total_rent_amount to locked_amount here ?
+
         if total_amount < locked_amount {
             log::warn!("[BALANCE] total_balance is smaller than the available balance");
             // It can happen that the locked_amount is greater than the available balance if a transaction wasn't
@@ -253,7 +262,8 @@ impl AccountHandle {
         Ok(AccountBalance {
             base_coin: BaseCoinBalance {
                 total: total_amount,
-                available: total_amount - locked_amount,
+                // TODO alles gut?
+                available: total_amount - locked_amount - total_rent_amount,
             },
             native_tokens: native_tokens_balance,
             required_storage_deposit,
