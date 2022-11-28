@@ -338,3 +338,10 @@ export type __GetVotingPowerMethod__ = {
 export type __GetParticipationOverviewMethod__ = {
     name: 'getParticipationOverview';
 }
+
+export type __IncreaseVotingPowerMethod__ = {
+    name: 'increaseVotingPower';
+    data: {
+        amount: string;
+    }
+}
