@@ -18,7 +18,7 @@ exclude = [ "index.node" ]
 crate-type = [ "cdylib" ]
 
 [dependencies]
-iota-wallet = { path = "../../", version = "1.0.0-rc.1", default-features = false, features = [ "mnemonic", "events", "ledger_nano", "storage", "stronghold", "message_interface" ] }
+iota-wallet = { path = "../../", version = "1.0.0-rc.1", default-features = false, features = [ "mnemonic", "events", "ledger_nano", "storage", "stronghold", "message_interface", "participation" ] }
 
 fern-logger = { version = "0.5.0", default-features = false }
 log = { version = "0.4.17", default-features = false }
