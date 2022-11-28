@@ -222,7 +222,7 @@ async fn generate_address_shimmer_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/generate_address_shimmer_coin_type").unwrap_or(());
     let client_options = ClientOptions::new()
         .with_node("http://localhost:14265")?
-        .with_node_sync_disabled();
+        .with_ignore_node_health();
 
     // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(
