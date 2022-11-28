@@ -49,7 +49,7 @@ impl AccountHandle {
                 // TODO checked addition
 
                 let (new_output, tagged_data_payload) = self
-                    .new_voting_output_and_tagged_data(&output, output.amount() + amount, token_supply)
+                    .new_voting_output_and_tagged_data(output, output.amount() + amount, token_supply)
                     .await?;
 
                 (
@@ -109,7 +109,7 @@ impl AccountHandle {
         } else {
             // TODO checked subtraction
             let (new_output, tagged_data_payload) = self
-                .new_voting_output_and_tagged_data(&output, output.amount() - amount, token_supply)
+                .new_voting_output_and_tagged_data(output, output.amount() - amount, token_supply)
                 .await?;
 
             (new_output, Some(tagged_data_payload))
