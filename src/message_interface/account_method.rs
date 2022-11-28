@@ -379,7 +379,8 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     GetVotingPower,
     /// Calculates a participation overview for an account.
-    /// Expected response: [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
+    /// Expected response:
+    /// [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
     #[cfg(feature = "participation")]
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
