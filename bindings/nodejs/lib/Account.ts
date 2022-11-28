@@ -1019,4 +1019,17 @@ export class Account {
         )
         return JSON.parse(resp).payload
     }
+
+    async decreaseVotingPower(amount: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'decreaseVotingPower',
+                data: {
+                    amount
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
 }

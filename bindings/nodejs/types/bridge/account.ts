@@ -345,3 +345,10 @@ export type __IncreaseVotingPowerMethod__ = {
         amount: string;
     }
 }
+
+export type __DecreaseVotingPowerMethod__ = {
+    name: 'decreaseVotingPower';
+    data: {
+        amount: string;
+    }
+}
