@@ -392,5 +392,7 @@ pub enum AccountMethod {
     /// Reduces an account's "voting power" by a given amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    DecreaseVotingPower(String),
+    DecreaseVotingPower {
+        amount: String
+    },
 }
