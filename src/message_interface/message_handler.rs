@@ -926,7 +926,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::IncreaseVotingPower(amount) => {
+            AccountMethod::IncreaseVotingPower { amount } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .increase_voting_power(

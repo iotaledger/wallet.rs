@@ -386,7 +386,9 @@ pub enum AccountMethod {
     /// special output, which is really a basic one with some metadata.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    IncreaseVotingPower(String),
+    IncreaseVotingPower {
+        amount: String
+    },
     /// Reduces an account's "voting power" by a given amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
