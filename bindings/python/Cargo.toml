@@ -16,7 +16,7 @@ name = "iota_wallet"
 crate-type = [ "cdylib" ]
 
 [dependencies]
-iota-wallet = { path = "../../../", features = [ "message_interface", "events" ] }
+iota-wallet = { path = "../../", features = [ "message_interface", "events" ] }
 
 fern-logger = { version = "0.5.0", default-features = false }
 futures = { version = "0.3.25", default-features = false }
