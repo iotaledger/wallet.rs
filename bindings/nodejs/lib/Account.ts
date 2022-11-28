@@ -996,4 +996,14 @@ export class Account {
         )
         return JSON.parse(resp).payload
     }
+
+    async getParticipationOverview(): Promise<ParticipationOverview> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationOverview',
+            }
+        )
+        return JSON.parse(resp).payload
+    }
 }

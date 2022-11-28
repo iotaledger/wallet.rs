@@ -1,7 +1,7 @@
 import type { OutputId } from './output'
 
 export interface ParticipationOverview {
-    participations: [EventId, [OutputId, TrackedParticipationOverview]]
+    participations: [EventId, [OutputId, ParticipationOverview]]
 }
 
 export interface TrackedParticipationOverview {
