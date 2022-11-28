@@ -67,7 +67,7 @@ jobs:
          sudo apt-get install libudev-dev libusb-1.0-0-dev
 
      - name: Build wheels
-       working-directory: bindings/python/native
+       working-directory: bindings/python
        run: |
          ${{ matrix.python }} -m pip install -Iv maturin==0.9.4
          maturin build --release --manylinux off
@@ -75,4 +75,4 @@ jobs:
      - uses: actions/upload-artifact@v2
        with:
          name: ${{ matrix.identifier }}-iota-wallet-py${{ matrix.python-version }}-wheel
-         path: bindings/python/native/target/wheels/
+         path: bindings/python/target/wheels/
