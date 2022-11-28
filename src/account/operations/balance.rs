@@ -44,12 +44,12 @@ impl AccountHandle {
                 continue;
             }
 
+            let rent = output_data.output.rent_cost(&rent_structure);
+
             // Add alias and foundry outputs here because they can't have a [`StorageDepositReturnUnlockCondition`]
             // or time related unlock conditions
             match &output_data.output {
                 Output::Alias(output) => {
-                    let rent = output_data.output.rent_cost(&rent_structure);
-
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
@@ -65,8 +65,6 @@ impl AccountHandle {
                     aliases.push(alias_id);
                 }
                 Output::Foundry(output) => {
-                    let rent = output_data.output.rent_cost(&rent_structure);
-
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
@@ -100,8 +98,6 @@ impl AccountHandle {
 
                         // Add storage deposit
                         if output_data.output.is_basic() {
-                            let rent = output_data.output.rent_cost(&rent_structure);
-
                             required_storage_deposit.basic += rent;
                             if output_data
                                 .output
@@ -112,8 +108,6 @@ impl AccountHandle {
                                 total_rent_amount += rent;
                             }
                         } else if output_data.output.is_nft() {
-                            let rent = output_data.output.rent_cost(&rent_structure);
-
                             required_storage_deposit.nft += rent;
                             total_rent_amount += rent;
                         }
@@ -176,12 +170,9 @@ impl AccountHandle {
 
                                 // Add storage deposit
                                 if output_data.output.is_basic() {
-                                    let rent = output_data.output.rent_cost(&rent_structure);
-
                                     required_storage_deposit.basic += rent;
+                                    // Amount for basic outputs isn't added to total_rent_amount, since we can spend it without burning.
                                 } else if output_data.output.is_nft() {
-                                    let rent = output_data.output.rent_cost(&rent_structure);
-
                                     required_storage_deposit.nft += rent;
                                     total_rent_amount += rent;
                                 }
