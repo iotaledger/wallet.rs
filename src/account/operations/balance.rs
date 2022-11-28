@@ -171,7 +171,8 @@ impl AccountHandle {
                                 // Add storage deposit
                                 if output_data.output.is_basic() {
                                     required_storage_deposit.basic += rent;
-                                    // Amount for basic outputs isn't added to total_rent_amount, since we can spend it without burning.
+                                    // Amount for basic outputs isn't added to total_rent_amount, since we can spend it
+                                    // without burning.
                                 } else if output_data.output.is_nft() {
                                     required_storage_deposit.nft += rent;
                                     total_rent_amount += rent;
