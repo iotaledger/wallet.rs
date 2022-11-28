@@ -287,7 +287,6 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "events")]
-            #[cfg(debug_assertions)]
             Message::EmitTestEvent(event) => {
                 convert_async_panics(|| async {
                     self.account_manager.emit_test_event(event.clone()).await?;
@@ -307,6 +306,14 @@ impl WalletMessageHandler {
                     };
 
                     Ok(Response::Bech32Address(utils::hex_to_bech32(&hex, &bech32_hrp)?))
+                })
+                .await
+            }
+            #[cfg(feature = "events")]
+            Message::ClearListeners(events) => {
+                convert_async_panics(|| async {
+                    self.clear_listeners(events).await;
+                    Ok(Response::Ok(()))
                 })
                 .await
             }

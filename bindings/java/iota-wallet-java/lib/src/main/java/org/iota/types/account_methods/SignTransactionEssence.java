@@ -14,4 +14,8 @@ public class SignTransactionEssence implements AccountMethod {
         this.preparedTransactionData = preparedTransactionData;
         return this;
     }
+
+    public PreparedTransactionData getPreparedTransactionData() {
+        return preparedTransactionData;
+    }
 }

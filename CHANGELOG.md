@@ -33,6 +33,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move all balance related types to the `account/types/balance` module;
 - `AccountBalanceDto`, `BaseCoinBalanceDto` and `NativeTokensBalanceDto` moved from `message_interface/dtos` to `account/types/balance`;
 
+### Removed
+
+- `clear_listeners` from message interface;
+- `listen` from message interface;
+
 ## 1.0.0-rc.3 - 2022-11-24
 
 ### Added

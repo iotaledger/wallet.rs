@@ -18,8 +18,6 @@ pub use self::{
     message_handler::WalletMessageHandler,
     response::Response,
 };
-#[cfg(feature = "events")]
-use crate::events::types::{Event, WalletEventType};
 use crate::{account_manager::AccountManager, ClientOptions};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -96,21 +94,6 @@ pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Re
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
     message_rx.recv().await.unwrap()
-}
-
-#[cfg(feature = "events")]
-/// Listen to wallet events, empty vec will listen to all events
-pub async fn listen<F>(handle: &WalletMessageHandler, events: Vec<WalletEventType>, handler: F)
-where
-    F: Fn(&Event) + 'static + Clone + Send + Sync,
-{
-    handle.listen(events, handler).await;
-}
-
-#[cfg(feature = "events")]
-/// Remove wallet event listeners, empty vec will remove all listeners
-pub async fn clear_listeners(handle: &WalletMessageHandler, events: Vec<WalletEventType>) {
-    handle.clear_listeners(events).await;
 }
 
 #[cfg(test)]
