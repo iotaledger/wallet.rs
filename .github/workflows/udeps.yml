@@ -60,7 +60,7 @@ jobs:
     - name: Cache python binding cargo target
       uses: actions/cache@v3
       with:
-        path: bindings/python/native/target
+        path: bindings/python/target
         key: ubuntu-latest-nightly-cargo-build-python-target-${{ hashFiles('**/Cargo.toml') }}
 
     - uses: actions-rs/cargo@v1
@@ -84,4 +84,4 @@ jobs:
       uses: actions-rs/cargo@v1
       with:
         command: udeps
-        args: --manifest-path ./bindings/python/native/Cargo.toml --all-targets
+        args: --manifest-path ./bindings/python/Cargo.toml --all-targets

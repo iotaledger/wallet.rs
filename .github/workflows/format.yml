@@ -65,10 +65,10 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --manifest-path ./bindings/python/native/Cargo.toml --all -- --check
+          args: --manifest-path ./bindings/python/Cargo.toml --all -- --check
 
       - name: Run cargo-license-template for python bindings
         uses: actions-rs/cargo@v1
         with:
           command: license-template
-          args: --manifest-path ./bindings/python/native/Cargo.toml --template .license_template
+          args: --manifest-path ./bindings/python/Cargo.toml --template .license_template

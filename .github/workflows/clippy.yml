@@ -52,5 +52,5 @@ jobs:
       uses: actions-rs/clippy-check@v1
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
-        args: --manifest-path ./bindings/python/native/Cargo.toml --all-features --all-targets -- -D warnings
+        args: --manifest-path ./bindings/python/Cargo.toml --all-features --all-targets -- -D warnings
         name: python-binding
