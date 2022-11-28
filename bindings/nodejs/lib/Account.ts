@@ -27,6 +27,7 @@ import type {
     Transaction,
     TransactionOptions,
     IncomingTransactionData,
+    ParticipationOverview,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -991,6 +992,16 @@ export class Account {
             this.meta.index,
             {
                 name: 'getVotingPower',
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async getParticipationOverview(): Promise<ParticipationOverview> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationOverview',
             }
         )
         return JSON.parse(resp).payload

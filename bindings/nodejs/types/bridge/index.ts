@@ -45,6 +45,7 @@ import type {
     __VoteMethod__,
     __StopParticipatingMethod__,
     __GetVotingPowerMethod__,
+    __GetParticipationOverviewMethod__,
 } from './account';
 import type {
     __BackupMessage__,
@@ -118,7 +119,8 @@ export type __AccountMethod__ =
     | __SyncAccountMethod__
     | __VoteMethod__
     | __StopParticipatingMethod__
-    | __GetVotingPowerMethod__;
+    | __GetVotingPowerMethod__
+    | __GetParticipationOverviewMethod__;
 
 export type __CallAccountMethodMessage__ = {
     cmd: 'callAccountMethod';
