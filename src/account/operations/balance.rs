@@ -240,8 +240,6 @@ impl AccountHandle {
             locked_amount
         );
 
-        // TODO should we add total_rent_amount to locked_amount here ?
-
         locked_amount += total_rent_amount;
 
         if total_amount < locked_amount {
