@@ -242,6 +242,8 @@ impl AccountHandle {
 
         // TODO should we add total_rent_amount to locked_amount here ?
 
+        locked_amount += total_rent_amount;
+
         if total_amount < locked_amount {
             log::warn!("[BALANCE] total_balance is smaller than the available balance");
             // It can happen that the locked_amount is greater than the available balance if a transaction wasn't
@@ -272,7 +274,7 @@ impl AccountHandle {
         Ok(AccountBalance {
             base_coin: BaseCoinBalance {
                 total: total_amount,
-                available: total_amount - locked_amount - total_rent_amount,
+                available: total_amount - locked_amount,
             },
             native_tokens: native_tokens_balance,
             required_storage_deposit,
