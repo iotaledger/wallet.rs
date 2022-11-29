@@ -108,10 +108,9 @@ impl AccountHandle {
                                 .native_tokens()
                                 .map(|native_tokens| !native_tokens.is_empty())
                                 .unwrap_or(false)
+                                && !account.locked_outputs.contains(&output_data.output_id)
                             {
-                                if !account.locked_outputs.contains(&output_data.output_id) {
-                                    total_rent_amount += rent;
-                                }
+                                total_rent_amount += rent;
                             }
                         } else if output_data.output.is_nft() {
                             required_storage_deposit.nft += rent;
