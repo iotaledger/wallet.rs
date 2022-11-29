@@ -112,7 +112,7 @@ async fn main() -> Result<()> {
 
     let transaction = account.increase_voting_power(1000001).await?;
     println!(
-        "Increase voting power Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
+        "Increase voting power transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("no block created yet")
@@ -149,7 +149,7 @@ async fn main() -> Result<()> {
 
     let transaction = account.vote(event_id, vec![0]).await?;
     println!(
-        "Vote Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
+        "Vote transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("no block created yet")
@@ -172,7 +172,7 @@ async fn main() -> Result<()> {
 
     let transaction = account.stop_participating(event_id).await?;
     println!(
-        "Vote Transaction: {} Block sent: {}/api/core/v2/blocks/{}",
+        "Stop participating transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,
         &env::var("NODE_URL").unwrap(),
         transaction.block_id.expect("no block created yet")
