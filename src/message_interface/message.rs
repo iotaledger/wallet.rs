@@ -178,26 +178,26 @@ pub enum Message {
     RegisterParticipationEvent {
         #[serde(rename = "eventId")]
         event_id: EventId,
-        nodes: Vec<Node>
+        nodes: Vec<Node>,
     },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "participation")]
     DeregisterParticipationEvent {
         #[serde(rename = "eventId")]
-        event_id: EventId
+        event_id: EventId,
     },
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
     GetParticipationEvent {
         #[serde(rename = "eventId")]
-        event_id: EventId
+        event_id: EventId,
     },
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
     GetParticipationEventStatus {
         #[serde(rename = "eventId")]
-        event_id: EventId
+        event_id: EventId,
     },
     /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
@@ -285,15 +285,15 @@ impl Debug for Message {
                 )
             }
             #[cfg(feature = "participation")]
-            Message::DeregisterParticipationEvent(event_id) => {
+            Message::DeregisterParticipationEvent { event_id } => {
                 write!(f, "DeregisterParticipationEvent({:?})", event_id)
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEvent(event_id) => {
+            Message::GetParticipationEvent { event_id } => {
                 write!(f, "GetParticipationEvent({:?})", event_id)
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEventStatus(event_id) => {
+            Message::GetParticipationEventStatus { event_id } => {
                 write!(f, "GetParticipationEventStatus({:?})", event_id)
             }
             #[cfg(feature = "participation")]
