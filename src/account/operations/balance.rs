@@ -54,7 +54,9 @@ impl AccountHandle {
                     total_amount += output_data.output.amount();
                     // Add storage deposit
                     required_storage_deposit.alias += rent;
-                    total_rent_amount += rent;
+                    if !account.locked_outputs.contains(&output_data.output_id) {
+                        total_rent_amount += rent;
+                    }
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -69,7 +71,9 @@ impl AccountHandle {
                     total_amount += output_data.output.amount();
                     // Add storage deposit
                     required_storage_deposit.foundry += rent;
-                    total_rent_amount += rent;
+                    if !account.locked_outputs.contains(&output_data.output_id) {
+                        total_rent_amount += rent;
+                    }
 
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -105,11 +109,15 @@ impl AccountHandle {
                                 .map(|native_tokens| !native_tokens.is_empty())
                                 .unwrap_or(false)
                             {
-                                total_rent_amount += rent;
+                                if !account.locked_outputs.contains(&output_data.output_id) {
+                                    total_rent_amount += rent;
+                                }
                             }
                         } else if output_data.output.is_nft() {
                             required_storage_deposit.nft += rent;
-                            total_rent_amount += rent;
+                            if !account.locked_outputs.contains(&output_data.output_id) {
+                                total_rent_amount += rent;
+                            }
                         }
 
                         // Add native tokens
@@ -175,7 +183,9 @@ impl AccountHandle {
                                     // without burning.
                                 } else if output_data.output.is_nft() {
                                     required_storage_deposit.nft += rent;
-                                    total_rent_amount += rent;
+                                    if !account.locked_outputs.contains(&output_data.output_id) {
+                                        total_rent_amount += rent;
+                                    }
                                 }
 
                                 // Add native tokens
@@ -262,7 +272,6 @@ impl AccountHandle {
         Ok(AccountBalance {
             base_coin: BaseCoinBalance {
                 total: total_amount,
-                // TODO alles gut?
                 available: total_amount - locked_amount - total_rent_amount,
             },
             native_tokens: native_tokens_balance,
