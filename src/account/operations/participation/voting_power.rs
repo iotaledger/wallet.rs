@@ -21,13 +21,11 @@ use crate::{
 impl AccountHandle {
     /// Returns an account's total voting power (voting or NOT voting).
     pub async fn get_voting_power(&self) -> Result<u64> {
-        // TODO Should this return Option ? Or 0 voting power in case of absence of output?
-        let voting_output = self
+        Ok(self
             .get_voting_output()
             .await?
-            .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
-
-        Ok(voting_output.output.amount())
+            // If no voting output exists, return 0
+            .map_or(0, |v| v.output.amount()))
     }
 
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
