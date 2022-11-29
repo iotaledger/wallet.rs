@@ -44,16 +44,12 @@ impl AccountHandle {
 
         let (new_output, tx_options) = match self.get_voting_output().await? {
             Some(current_output_data) => {
-                let output = if let Output::Basic(output) = current_output_data.output {
-                    output
-                } else {
-                    unreachable!("voting output needs to be a basic output")
-                };
+                let output = current_output_data.output.as_basic();
 
                 // TODO checked addition
 
                 let (new_output, tagged_data_payload) = self
-                    .new_voting_output_and_tagged_data(&output, output.amount() + amount, token_supply)
+                    .new_voting_output_and_tagged_data(output, output.amount() + amount, token_supply)
                     .await?;
 
                 (
@@ -99,17 +95,13 @@ impl AccountHandle {
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
-        let output = if let Output::Basic(output) = current_output_data.output {
-            output
-        } else {
-            unreachable!("voting output needs to be a basic output")
-        };
+        let output = current_output_data.output.as_basic();
 
         // TODO what is amount > output.amount() ?
         // If the amount to decrease is the amount of the output, then we just remove the features.
         let (new_output, tagged_data_payload) = if amount == output.amount() {
             (
-                BasicOutputBuilder::from(&output)
+                BasicOutputBuilder::from(output)
                     .with_features([])
                     .finish_output(token_supply)?,
                 None,
@@ -117,7 +109,7 @@ impl AccountHandle {
         } else {
             // TODO checked subtraction
             let (new_output, tagged_data_payload) = self
-                .new_voting_output_and_tagged_data(&output, output.amount() - amount, token_supply)
+                .new_voting_output_and_tagged_data(output, output.amount() - amount, token_supply)
                 .await?;
 
             (new_output, Some(tagged_data_payload))
