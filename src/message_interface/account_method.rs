@@ -362,26 +362,34 @@ pub enum AccountMethod {
     /// Vote for a participation event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    Vote { event_id: EventId, answers: Vec<u8> },
+    Vote {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+        answers: Vec<u8>,
+    },
     /// Stop participation for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    StopParticipating(EventId),
+    StopParticipating {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+    },
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
     #[cfg(feature = "participation")]
     GetVotingPower,
     /// Calculates a participation overview for an account.
-    /// Expected response: [`ParticipationOverview`](crate::message_interface::Response::ParticipationOverview)
+    /// Expected response:
+    /// [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
     #[cfg(feature = "participation")]
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    IncreaseVotingPower(String),
+    IncreaseVotingPower { amount: String },
     /// Reduces an account's "voting power" by a given amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    DecreaseVotingPower(String),
+    DecreaseVotingPower { amount: String },
 }

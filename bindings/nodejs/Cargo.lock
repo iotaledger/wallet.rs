@@ -1058,6 +1058,7 @@ dependencies = [
  "derive_builder",
  "derive_more",
  "futures",
+ "getset",
  "gloo-timers",
  "instant",
  "iota-crypto",

@@ -909,7 +909,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::StopParticipating(event_id) => {
+            AccountMethod::StopParticipating { event_id } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle.stop_participating(event_id).await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -933,7 +933,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::IncreaseVotingPower(amount) => {
+            AccountMethod::IncreaseVotingPower { amount } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .increase_voting_power(
@@ -945,7 +945,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::DecreaseVotingPower(amount) => {
+            AccountMethod::DecreaseVotingPower { amount } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .decrease_voting_power(
