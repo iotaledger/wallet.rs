@@ -175,17 +175,30 @@ pub enum Message {
     /// This will NOT store the node url and auth inside the client options.
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
-    RegisterParticipationEvent { event_id: EventId, nodes: Vec<Node> },
+    RegisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+        nodes: Vec<Node>
+    },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "participation")]
-    DeregisterParticipationEvent(EventId),
+    DeregisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId
+    },
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
-    GetParticipationEvent(EventId),
+    GetParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId
+    },
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
-    GetParticipationEventStatus(EventId),
+    GetParticipationEventStatus {
+        #[serde(rename = "eventId")]
+        event_id: EventId
+    },
     /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
     GetParticipationEvents,
