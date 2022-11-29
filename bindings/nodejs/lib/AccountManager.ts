@@ -15,6 +15,10 @@ import type {
     AccountSyncOptions,
     WalletEvent,
     LedgerNanoStatus,
+    Event,
+    EventId,
+    Node,
+    EventStatus
 } from '../types';
 
 /** The AccountManager class. */
@@ -90,6 +94,15 @@ export class AccountManager {
      */
     destroy(): void {
         this.messageHandler.destroy();
+    }
+
+    async deregisterParticipationEvent(eventId: EventId): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'deregisterParticipationEvent',
+            payload: {
+                eventId
+            }
+        })
     }
 
     /**
@@ -179,6 +192,33 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
+    async getParticipationEvent(eventId: EventId): Promise<Event> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEvent',
+            payload: {
+                eventId
+            }
+        })
+        return JSON.parse(response).payload
+    }
+
+    async getParticipationEventS(): Promise<Event[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEvents',
+        })
+        return JSON.parse(response).payload
+    }
+
+    async getParticipationEventStatus(eventId: EventId): Promise<EventStatus> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEventStatus',
+            payload: {
+                eventId
+            }
+        })
+        return JSON.parse(response).payload
+    }
+
     /**
      * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
      * is provided, the AccountManager will attempt to retrieve it from the
@@ -253,6 +293,18 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'removeLatestAccount',
         });
+    }
+
+    async registerParticipationEvent(eventId: EventId, nodes: Node[]): Promise<Event> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'registerParticipationEvent',
+            payload: {
+                eventId,
+                nodes
+            }
+        })
+
+        return JSON.parse(response).payload
     }
 
     /**
