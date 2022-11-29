@@ -104,6 +104,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "atty"
+version = "0.2.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9b39be18770d11421cdb1b9947a45dd3f37e93092cbf377614828a319d5fee8"
+dependencies = [
+ "hermit-abi",
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -340,6 +351,17 @@ dependencies = [
  "glob",
  "libc",
  "libloading",
+]
+
+[[package]]
+name = "colored"
+version = "1.9.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f4ffc801dacf156c5854b9df4f425a626539c3a6ef7893cc0c5084a23f0b6c59"
+dependencies = [
+ "atty",
+ "lazy_static",
+ "winapi",
 ]
 
 [[package]]
@@ -599,6 +621,29 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "fern"
+version = "0.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bdd7b0849075e79ee9a1836df22c717d1eba30451796fdc631b04565dd11e2a"
+dependencies = [
+ "colored",
+ "log",
+]
+
+[[package]]
+name = "fern-logger"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d72fcbd7f804f2dcb89b295dfdfeff1a81338b1960387a45261f857ddc553a9f"
+dependencies = [
+ "fern",
+ "log",
+ "serde",
+ "thiserror",
+ "time-helper",
 ]
 
 [[package]]
@@ -1021,8 +1066,8 @@ dependencies = [
 
 [[package]]
 name = "iota-client"
-version = "2.0.1-rc.3"
-source = "git+https://github.com/iotaledger/iota.rs?rev=05a4b32dfaeb4471031c7f0d7d6cf60c8688130c#05a4b32dfaeb4471031c7f0d7d6cf60c8688130c"
+version = "2.0.1-rc.4"
+source = "git+https://github.com/iotaledger/iota.rs?rev=7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192#7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1101,7 +1146,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.1"
-source = "git+https://github.com/iotaledger/iota.rs?rev=05a4b32dfaeb4471031c7f0d7d6cf60c8688130c#05a4b32dfaeb4471031c7f0d7d6cf60c8688130c"
+source = "git+https://github.com/iotaledger/iota.rs?rev=7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192#7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192"
 dependencies = [
  "iota-crypto",
  "thiserror",
@@ -1109,8 +1154,8 @@ dependencies = [
 
 [[package]]
 name = "iota-types"
-version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=05a4b32dfaeb4471031c7f0d7d6cf60c8688130c#05a4b32dfaeb4471031c7f0d7d6cf60c8688130c"
+version = "1.0.0-rc.3"
+source = "git+https://github.com/iotaledger/iota.rs?rev=7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192#7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
@@ -1132,7 +1177,7 @@ dependencies = [
 
 [[package]]
 name = "iota-wallet"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1156,6 +1201,7 @@ dependencies = [
 name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
+ "fern-logger",
  "futures",
  "iota-wallet",
  "jni",
@@ -1348,6 +1394,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "abb12e687cfb44aa40f41fc3978ef76448f9b6038cad6aef4259d3c095a2382e"
 dependencies = [
  "cfg-if",
+ "serde",
 ]
 
 [[package]]
@@ -1442,6 +1489,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f6058e64324c71e02bc2b150e4f3bc8286db6c83092132ffa3f6b1eab0f9def5"
 dependencies = [
  "hermit-abi",
+ "libc",
+]
+
+[[package]]
+name = "num_threads"
+version = "0.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2819ce041d2ee131036f4fc9d6ae7ae125a3a40e97ba64d04fe799ad9dabbb44"
+dependencies = [
  "libc",
 ]
 
@@ -2136,6 +2192,44 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "time"
+version = "0.3.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a561bf4617eebd33bca6434b988f39ed798e527f51a1e797d0ee4f61c0a38376"
+dependencies = [
+ "itoa",
+ "libc",
+ "num_threads",
+ "serde",
+ "time-core",
+ "time-macros",
+]
+
+[[package]]
+name = "time-core"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2e153e1f1acaef8acc537e68b44906d2db6436e2b35ac2c6b42640fff91f00fd"
+
+[[package]]
+name = "time-helper"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17c30f0091717eeeff0b556d830302d5563de8b72fd49127aa5899a06a369808"
+dependencies = [
+ "time",
+]
+
+[[package]]
+name = "time-macros"
+version = "0.2.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
+dependencies = [
+ "time-core",
 ]
 
 [[package]]

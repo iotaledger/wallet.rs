@@ -10,13 +10,28 @@ import com.google.gson.JsonPrimitive;
 import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
+import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.*;
+import org.iota.types.events.Event;
+import org.iota.types.events.EventListener;
+import org.iota.types.events.transaction.TransactionProgressEvent;
+import org.iota.types.events.wallet.WalletEvent;
+import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.account.AccountIdentifier;
 import org.iota.types.ids.account.AccountIndex;
 
 public class Wallet extends NativeApi {
+
+    /**
+     * Initialise the logger used
+     * 
+     * @param builder the configuration builder of the logger
+     */
+    public static void initLogger(LoggerOutputConfigBuilder builder) {
+        NativeApi.initLogger(CustomGson.get().toJsonTree(builder).toString());
+    }
 
     public Wallet(WalletConfig config) throws InitializeWalletException {
         super(config);
@@ -47,7 +62,9 @@ public class Wallet extends NativeApi {
      * @return An AccountHandle object.
      */
     public AccountHandle getAccount(AccountIdentifier accountIdentifier) throws WalletException {
-        Account a =  CustomGson.get().fromJson(callBaseApi(new WalletCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))), Account.class);
+        Account a = CustomGson.get().fromJson(
+                callBaseApi(new WalletCommand("getAccount", CustomGson.get().toJsonTree(accountIdentifier))),
+                Account.class);
         AccountHandle handle = new AccountHandle(this, new AccountIndex(a.getIndex()));
 
         return handle;
@@ -63,16 +80,18 @@ public class Wallet extends NativeApi {
 
         AccountHandle[] accountHandles = new AccountHandle[responsePayload.size()];
         for (int i = 0; i < responsePayload.size(); i++)
-            accountHandles[i] = new AccountHandle(this, new AccountIndex(CustomGson.get().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class).getIndex()));
+            accountHandles[i] = new AccountHandle(this, new AccountIndex(
+                    CustomGson.get().fromJson(responsePayload.get(i).getAsJsonObject(), Account.class).getIndex()));
 
         return accountHandles;
     }
 
     /**
-     * Backup the wallet to the specified destination, encrypting it with the specified password.
+     * Backup the wallet to the specified destination, encrypting it with the
+     * specified password.
      *
      * @param destination The path to the file to be created.
-     * @param password The password to encrypt the backup with.
+     * @param password    The password to encrypt the backup with.
      */
     public void backup(String destination, String password) throws WalletException {
         JsonObject o = new JsonObject();
@@ -86,7 +105,7 @@ public class Wallet extends NativeApi {
      * Change the password of the Stronghold file.
      *
      * @param currentPassword The current password for the Stronghold
-     * @param newPassword The new password you want to use for your Stronghold.
+     * @param newPassword     The new password you want to use for your Stronghold.
      */
     public void changeStrongholdPassword(String currentPassword, String newPassword) throws WalletException {
         JsonObject o = new JsonObject();
@@ -115,7 +134,8 @@ public class Wallet extends NativeApi {
     /**
      * Find accounts with unspent outputs.
      */
-    public void recoverAccounts(int accountStartIndex, int accountGapLimit, int addressGapLimit, SyncOptions syncOptions) throws WalletException {
+    public void recoverAccounts(int accountStartIndex, int accountGapLimit, int addressGapLimit,
+            SyncOptions syncOptions) throws WalletException {
         JsonObject o = new JsonObject();
         o.addProperty("accountStartIndex", accountStartIndex);
         o.addProperty("accountGapLimit", accountGapLimit);
@@ -127,11 +147,13 @@ public class Wallet extends NativeApi {
 
     /**
      * Restore a backup from a Stronghold file
-     * Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already
-     * created If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a
+     * Replaces client_options, coin_type, secret_manager and accounts. Returns an
+     * error if accounts were already
+     * created If Stronghold is used as secret_manager, the existing Stronghold file
+     * will be overwritten. If a
      * mnemonic was stored, it will be gone.
      *
-     * @param source The path to the backup file.
+     * @param source   The path to the backup file.
      * @param password The password you used to encrypt the backup file.
      */
     public void restoreBackup(String source, String password) throws WalletException {
@@ -189,7 +211,7 @@ public class Wallet extends NativeApi {
     /**
      * Get node information.
      *
-     * @param url The URL of the node you want information from.
+     * @param url  The URL of the node you want information from.
      * @param auth The authentication information for the node.
      * @return A JsonObject
      */
@@ -234,8 +256,9 @@ public class Wallet extends NativeApi {
     /**
      * Start a background sync with the specified options and interval.
      *
-     * @param options The options for the sync.
-     * @param intervalInMilliseconds The interval in milliseconds at which the background sync will be performed.
+     * @param options                The options for the sync.
+     * @param intervalInMilliseconds The interval in milliseconds at which the
+     *                               background sync will be performed.
      */
     public void startBackgroundSync(SyncOptions options, int intervalInMilliseconds) throws WalletException {
         JsonObject o = new JsonObject();
@@ -244,7 +267,6 @@ public class Wallet extends NativeApi {
 
         callBaseApi(new WalletCommand("startBackgroundSync", o));
     }
-
 
     /**
      * Stop the background sync process.
@@ -258,8 +280,8 @@ public class Wallet extends NativeApi {
      *
      * @param event The event to emit.
      */
-    public void emitTestEvent(JsonElement event) throws WalletException {
-        callBaseApi(new WalletCommand("emitTestEvent", event));
+    public void emitTestEvent(WalletEvent event) throws WalletException {
+        callBaseApi(new WalletCommand("emitTestEvent", CustomGson.get().toJsonTree(event, WalletEvent.class)));
     }
 
     /**
@@ -287,4 +309,40 @@ public class Wallet extends NativeApi {
         return callBaseApi(new WalletCommand("hexToBech32", p)).getAsString();
     }
 
+    /**
+     * Listen to wallet events, empty vec will listen to all events
+     * 
+     * @param listener The Listener object hat will handle events
+     * @param types    The types you want to listen. Empty means all events
+     * @throws WalletException
+     */
+    public void listen(EventListener listener, WalletEventType... types) throws WalletException {
+        callListen(listener, types);
+    }
+
+    /**
+     * Destroy the Wallet and drop its database connection.
+     * Unregisteres any existing listeners.
+     */
+    public void destroy() throws WalletException {
+        clearListeners();
+        destroyHandle();
+    }
+
+    /**
+     * Clear the callbacks for provided events. An null or empty array will clear
+     * all listeners.
+     *
+     * @param types The event types to clear. Empty means clear all events
+     */
+    public void clearListeners(WalletEventType... types) throws WalletException {
+        if (types == null) {
+            types = new WalletEventType[0];
+        }
+        JsonArray p = new JsonArray();
+        for (WalletEventType type : types)
+            p.add(type.toString());
+
+        callBaseApi(new WalletCommand("clearListeners", p));
+    }
 }

@@ -11,19 +11,20 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class CreateAccount {
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InitializeWalletException {
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withSecretManager(
+                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
                 .withCoinType(CoinType.Shimmer)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
+
+        // Add the mnemonic secret to the secret manager.
+        wallet.storeMnemonic(Env.MNEMONIC);
 
         // Create an account.
-        AccountHandle a = wallet.createAccount("Alice");
+        AccountHandle a = wallet.createAccount(Env.ACCOUNT_NAME);
 
         // Print the account.
         System.out.println(a);

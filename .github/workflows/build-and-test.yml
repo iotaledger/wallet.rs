@@ -130,6 +130,14 @@ jobs:
         with:
           node-version: '14.x'
 
+        # Temporary fix for "ValueError: invalid mode: 'rU' while trying to load binding.gyp"
+        # See <PR link>
+        # This can be removed when "prebuild" updates "node-gyp"
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
       - name: Get current date
         run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
         if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
@@ -183,7 +191,7 @@ jobs:
             ${{ matrix.os }}-stable-cargo-build-node-target-
 
       - name: Build nodejs binding
-        run: npm ci
+        run: npm ci --build-from-source
         working-directory: bindings/nodejs
 
   python-bindings:
@@ -263,7 +271,7 @@ jobs:
     - name: Cache python binding cargo target
       uses: actions/cache@v3
       with:
-        path: bindings/python/native/target
+        path: bindings/python/target
         # Add date to the cache to keep it up to date
         key: ${{ matrix.os }}-stable-cargo-build-python-target-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
@@ -273,7 +281,7 @@ jobs:
 
     - name: Build and test python binding
       run: tox
-      working-directory: bindings/python/native
+      working-directory: bindings/python
 
   test-java:
     name: Test Java binding

@@ -5,7 +5,7 @@ use iota_client::{
     block::{
         output::{
             feature::{MetadataFeature, TagFeature},
-            BasicOutputBuilder, Feature, Output,
+            BasicOutputBuilder, Feature,
         },
         payload::TaggedDataPayload,
     },
@@ -48,12 +48,7 @@ impl AccountHandle {
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
-
-        let output = if let Output::Basic(output) = voting_output.output {
-            output
-        } else {
-            unreachable!("voting output must be a basic output")
-        };
+        let output = voting_output.output.as_basic();
 
         // Updates or creates participation.
         let participation_bytes = match output.features().metadata() {
@@ -73,7 +68,7 @@ impl AccountHandle {
         }
         .to_bytes()?;
 
-        let new_output = BasicOutputBuilder::from(&output)
+        let new_output = BasicOutputBuilder::from(output)
             // TODO maybe replace ?
             .with_features(vec![
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),
@@ -109,12 +104,7 @@ impl AccountHandle {
             .get_voting_output()
             .await?
             .ok_or_else(|| crate::Error::Voting("No unspent voting output found".to_string()))?;
-
-        let output = if let Output::Basic(output) = voting_output.output {
-            output
-        } else {
-            unreachable!("voting output needs to be a basic output")
-        };
+        let output = voting_output.output.as_basic();
 
         // Removes participation.
         let participation_bytes = match output.features().metadata() {
@@ -147,7 +137,7 @@ impl AccountHandle {
         }
         .to_bytes()?;
 
-        let new_output = BasicOutputBuilder::from(&output)
+        let new_output = BasicOutputBuilder::from(output)
             // TODO maybe replace ?
             .with_features(vec![
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),

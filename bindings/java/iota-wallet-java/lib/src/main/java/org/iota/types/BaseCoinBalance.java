@@ -11,20 +11,20 @@ import java.lang.reflect.Type;
 @JsonAdapter(BaseCoinBalanceAdapter.class)
 public class BaseCoinBalance extends AbstractObject {
     /// Total amount
-    private int total;
+    private long total;
     /// Balance that can currently be spent
-    private int available;
+    private long available;
 
-    public BaseCoinBalance(int total, int available) {
+    public BaseCoinBalance(long total, long available) {
         this.total = total;
         this.available = available;
     }
 
-    public int getTotal() {
+    public long getTotal() {
         return total;
     }
 
-    public int getAvailable() {
+    public long getAvailable() {
         return available;
     }
 }
@@ -34,8 +34,8 @@ class BaseCoinBalanceAdapter implements JsonDeserializer<BaseCoinBalance>, JsonS
     public BaseCoinBalance deserialize(final JsonElement json, final Type typeOfT, final JsonDeserializationContext context)
             throws JsonParseException {
 
-        int total = Integer.parseInt(json.getAsJsonObject().get("total").getAsString());
-        int available = Integer.parseInt(json.getAsJsonObject().get("available").getAsString());
+        long total = Long.parseLong(json.getAsJsonObject().get("total").getAsString());
+        long available = Long.parseLong(json.getAsJsonObject().get("available").getAsString());
 
         return new BaseCoinBalance(total, available);
     }

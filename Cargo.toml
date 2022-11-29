@@ -1,6 +1,6 @@
 [package]
 name = "iota-wallet"
-version = "1.0.0-rc.2"
+version = "1.0.0-rc.3"
 authors = [ "IOTA Stiftung" ]
 edition = "2021"
 description = "A stateful package for IOTA value transactions"
@@ -16,8 +16,8 @@ async-trait = { version = "0.1.58", default-features = false }
 backtrace = { version = "0.3.66", default-features = false, features = [ "std" ] }
 futures = { version = "0.3.25", default-features = false }
 getset = { version = "0.1.2", default-features = false }
-# iota-client = { version = "2.0.1-rc.3", default-features = false, features = [ "message_interface", "tls" ] }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "9fc711b380585fc5001f31e380ea322644d3d24f", default-features = false, features = [ "message_interface", "tls" ] }
+# iota-client = { version = "2.0.1-rc.4", default-features = false, features = [ "message_interface", "tls" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "7a147ac8ffaeb8dba24ea3cf579c7b7f7783a192", default-features = false, features = [ "message_interface", "tls" ] }
 iota-crypto = { version = "0.15.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
 packable = { version = "0.7.0", default-features = false, features = [ "serde", "primitive-types" ] }
