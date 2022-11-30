@@ -44,11 +44,11 @@ impl AccountManager {
                     #[cfg(feature = "events")]
                     {
                         let changed_options = options.clone().map(|mut options| {
-                            // Change metadata so ledger will not show the prompt the first time
+                            // Change options so ledger will not show the prompt the first time
                             options.ledger_nano_prompt = false;
                             options
                         });
-                        // Change metadata so ledger will not show the prompt the first time
+                        // Change options so ledger will not show the prompt the first time
                         // Generate without prompt to be able to display it
                         let address = ledger_nano
                             .generate_addresses(

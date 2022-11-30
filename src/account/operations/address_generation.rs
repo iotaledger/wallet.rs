@@ -84,7 +84,7 @@ impl AccountHandle {
                 // prompt first
                 if options.options.clone().unwrap_or_default().ledger_nano_prompt {
                     let changed_options = options.options.clone().map(|mut options| {
-                        // Change metadata so ledger will not show the prompt the first time
+                        // Change options so ledger will not show the prompt the first time
                         options.ledger_nano_prompt = false;
                         options
                     });
