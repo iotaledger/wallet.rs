@@ -30,6 +30,9 @@ impl AccountHandle {
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
+        // Voting output needs to be requested before to prevent a deadlock
+        #[cfg(feature = "participation")]
+        let voting_output = self.get_voting_output().await?;
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply().await?;
@@ -94,7 +97,7 @@ impl AccountHandle {
                 &account.locked_outputs,
                 allow_burning,
                 #[cfg(feature = "participation")]
-                None,
+                voting_output,
             )?;
 
             let selected_transaction_data = try_select_inputs(
@@ -128,7 +131,7 @@ impl AccountHandle {
             &account.locked_outputs,
             allow_burning,
             #[cfg(feature = "participation")]
-            self.get_voting_output().await?,
+            voting_output,
         )?;
 
         let selected_transaction_data = match try_select_inputs(
