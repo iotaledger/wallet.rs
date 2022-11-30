@@ -93,11 +93,7 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
             if let Some(confirmation) = transaction.get("confirmation") {
                 if let Some(confirmation) = confirmation.as_bool() {
                     if confirmation {
-                        if let Some(block_id) = sent_transaction.block_id {
-                            account_from.retry_until_included(&block_id, Some(1), None).await?;
-                        } else {
-                            time::sleep(Duration::from_secs(5)).await;
-                        }
+                        account.retry_transaction_until_included(&sent_transaction.transaction_id, Some(1), None).await?;
                     }
                 } else {
                     return Err(Error::InvalidField("confirmation"));

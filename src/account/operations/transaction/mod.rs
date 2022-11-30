@@ -192,6 +192,8 @@ impl AccountHandle {
         // spawn a task which tries to get the block confirmed
         let account = self.clone();
         tokio::spawn(async move {
+            // TODO
+            // account.retry_transaction_until_included(transaction_id, interval, max_attempts)
             if let Ok(blocks) = account.client().retry_until_included(&block_id, None, None).await {
                 if let Some(confirmed_block) = blocks.first() {
                     if confirmed_block.0 != block_id {

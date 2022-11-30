@@ -297,6 +297,19 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
+    /// Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+    /// included (referenced by a milestone). Returns the included block id.
+    /// Expected response: [`BlockId`](crate::message_interface::Response::BlockId)
+    RetryTransactionUntilIncluded {
+        /// Sync options
+        #[serde(rename = "transactionId")]
+        transaction_id: TransactionId,
+        /// Interval
+        interval: Option<u64>,
+        /// Maximum attempts
+        #[serde(rename = "maxAttempts")]
+        max_attempts: Option<u64>,
+    },
     /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)

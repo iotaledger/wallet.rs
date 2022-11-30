@@ -39,14 +39,9 @@ async fn main() -> Result<()> {
     let burn_amount = U256::from(1);
     let transaction = account.burn_native_token(token_id, burn_amount, None).await?;
 
-    let _ = match transaction.block_id {
-        Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
-        None => {
-            return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "burn native token transaction failed to submitted".to_string(),
-            ));
-        }
-    };
+    account
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
+        .await?;
 
     let balance = account.sync(None).await?;
 

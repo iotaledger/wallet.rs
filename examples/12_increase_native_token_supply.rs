@@ -40,14 +40,9 @@ async fn main() -> Result<()> {
         .increase_native_token_supply(token_id, mint_amount, None, None)
         .await?;
 
-    let _ = match mint_transaction.transaction.block_id {
-        Some(block_id) => account.retry_until_included(&block_id, None, None).await?,
-        None => {
-            return Err(iota_wallet::Error::BurningOrMeltingFailed(
-                "mint native token transaction failed to submitted".to_string(),
-            ));
-        }
-    };
+    account
+        .retry_transaction_until_included(&mint_transaction.transaction.transaction_id, None, None)
+        .await?;
 
     let balance = account.sync(None).await?;
 

@@ -3,6 +3,7 @@
 
 use std::fmt::{Debug, Display};
 
+use iota_client::block::payload::transaction::TransactionId;
 use serde::{ser::Serializer, Serialize};
 
 /// The wallet error type.
@@ -108,6 +109,9 @@ pub enum Error {
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
     TaskJoinError(#[from] tokio::task::JoinError),
+    /// Transaction not found
+    #[error("transaction {0} not found")]
+    TransactionNotFound(TransactionId),
 }
 
 /// Use this to serialize Error variants that implements Debug but not Serialize
