@@ -18,10 +18,10 @@ pub async fn process_amount<'a>(context: &Context<'a>, account: &AccountHandle, 
             )
             .await?;
 
-            context
-                .faucet_account
-                .retry_transaction_until_included(&transaction.transaction_id, Some(1), None)
-                .await?;
+        context
+            .faucet_account
+            .retry_transaction_until_included(&transaction.transaction_id, Some(1), None)
+            .await?;
 
         context.faucet_account.sync(None).await?;
     }
