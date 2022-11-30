@@ -225,7 +225,9 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Message::CreateAccount { alias, bech32_hrp } => write!(f, "CreateAccount{{ alias: {:?}, bech32_hrp: {:?} }}", alias, bech32_hrp),
+            Message::CreateAccount { alias, bech32_hrp } => {
+                write!(f, "CreateAccount{{ alias: {:?}, bech32_hrp: {:?} }}", alias, bech32_hrp)
+            }
             Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
             Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
             Message::GetAccounts => write!(f, "GetAccounts"),
