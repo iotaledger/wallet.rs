@@ -27,6 +27,7 @@ import type {
     Transaction,
     TransactionOptions,
     IncomingTransactionData,
+    ParticipationOverview,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -957,5 +958,78 @@ export class Account {
             },
         );
         return JSON.parse(resp).payload;
+    }
+
+    async vote(eventId: string, answers: number[]): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'vote',
+                data: {
+                    eventId,
+                    answers,
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async stopParticipating(eventId: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'stopParticipating',
+                data: {
+                    eventId
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async getVotingPower(): Promise<string> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getVotingPower',
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async getParticipationOverview(): Promise<ParticipationOverview> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationOverview',
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async increaseVotingPower(amount: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'increaseVotingPower',
+                data: {
+                    amount
+                }
+            }
+        )
+        return JSON.parse(resp).payload
+    }
+
+    async decreaseVotingPower(amount: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'decreaseVotingPower',
+                data: {
+                    amount
+                }
+            }
+        )
+        return JSON.parse(resp).payload
     }
 }

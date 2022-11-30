@@ -147,11 +147,20 @@ impl AccountHandle {
     /// additional inputs
     pub async fn get_basic_outputs_for_additional_inputs(&self) -> crate::Result<Vec<OutputData>> {
         log::debug!("[OUTPUT_CLAIMING] get_basic_outputs_for_additional_inputs");
+        #[cfg(feature = "participation")]
+        let voting_output = self.get_voting_output().await?;
         let account = self.read().await;
 
         // Get basic outputs only with AddressUnlockCondition and no other unlock condition
         let mut basic_outputs: Vec<OutputData> = Vec::new();
         for (output_id, output_data) in &account.unspent_outputs {
+            #[cfg(feature = "participation")]
+            if let Some(ref voting_output) = voting_output {
+                // Remove voting output from inputs, because we don't want to spent it to claim something else.
+                if output_data.output_id == voting_output.output_id {
+                    continue;
+                }
+            }
             // Don't use outputs that are locked for other transactions
             if !account.locked_outputs.contains(output_id) {
                 if let Some(output) = account.outputs.get(output_id) {
