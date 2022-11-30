@@ -83,7 +83,7 @@ impl AccountHandle {
         for (output_id, output_data) in account.unspent_outputs() {
             #[cfg(feature = "participation")]
             if let Some(ref voting_output) = voting_output {
-                // Remove voting output from inputs, so it doesn't get spent when not calling a function related to it.
+                // Remove voting output from inputs, because we want to keep it's features and not consolidate it.
                 if output_data.output_id == voting_output.output_id {
                     continue;
                 }
