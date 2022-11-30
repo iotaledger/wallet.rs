@@ -3,6 +3,7 @@
   "changes": [
     ".changes/account-recovery.md",
     ".changes/downgrade-rocksb.md",
+    ".changes/fix-not-synced-timestamp.md",
     ".changes/fixNftPrepareOutput.md",
     ".changes/fixPrepareOutput.md",
     ".changes/get-incoming-tx.md",
@@ -12,6 +13,7 @@
     ".changes/nft-options-features.md",
     ".changes/nft-output-claiming.md",
     ".changes/nft-outputs-syncing.md",
+    ".changes/participation-on-account-manager.md",
     ".changes/prebuild.md",
     ".changes/private-account-meta.md",
     ".changes/remove-deleteAccountsAndDatabase.md",
@@ -19,6 +21,7 @@
     ".changes/syncing.md",
     ".changes/tagAndMetadataHex.md",
     ".changes/tx-len-validation.md",
-    ".changes/uint8array-replace-number-array.md.md"
+    ".changes/uint8array-replace-number-array.md.md",
+    ".changes/voting-methods.md"
   ]
 }

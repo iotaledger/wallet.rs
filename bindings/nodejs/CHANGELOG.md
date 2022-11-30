@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.3-rc.8]
+
+- Fix not synced timestamp issue.
+  - [de81edaf](https://github.com/iotaledger/wallet.rs/commit/de81edaf20fcc072bd92db3159df03e98352431c) Bump client rev to fix timestamp not synced issue ([#1629](https://github.com/iotaledger/wallet.rs/pull/1629)) on 2022-11-30
+- Added participation methods to the account manager object.
+  - [4e33d669](https://github.com/iotaledger/wallet.rs/commit/4e33d669e8de0511c3433d3d11a4135c3eef7a31) feat: add participation to account manager nodejs ([#1624](https://github.com/iotaledger/wallet.rs/pull/1624)) on 2022-11-30
+- Added voting methods to the account object.
+  - [b665af96](https://github.com/iotaledger/wallet.rs/commit/b665af965053762f1ad90c3e1b990922bdc25d0d) feat: add participation to nodejs bindings ([#1616](https://github.com/iotaledger/wallet.rs/pull/1616)) on 2022-11-29
+
 ## \[2.0.3-rc.7]
 
 - Downgrade rocksdb version.
