@@ -202,7 +202,7 @@ export class AccountManager {
         return JSON.parse(response).payload
     }
 
-    async getParticipationEventS(): Promise<Event[]> {
+    async getParticipationEvents(): Promise<Event[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEvents',
         })
