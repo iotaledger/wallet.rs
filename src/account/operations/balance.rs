@@ -179,8 +179,7 @@ impl AccountHandle {
                                 if output_data.output.is_basic() {
                                     required_storage_deposit.basic += rent;
                                     // Amount for basic outputs isn't added to total_rent_amount if there aren't native
-                                    // tokens, since we can spend it
-                                    // without burning.
+                                    // tokens, since we can spend it without burning.
                                     if output_data
                                         .output
                                         .native_tokens()
