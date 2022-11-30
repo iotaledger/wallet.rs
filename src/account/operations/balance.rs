@@ -178,8 +178,18 @@ impl AccountHandle {
                                 // Add storage deposit
                                 if output_data.output.is_basic() {
                                     required_storage_deposit.basic += rent;
-                                    // Amount for basic outputs isn't added to total_rent_amount, since we can spend it
+                                    // Amount for basic outputs isn't added to total_rent_amount if there aren't native
+                                    // tokens, since we can spend it
                                     // without burning.
+                                    if output_data
+                                        .output
+                                        .native_tokens()
+                                        .map(|native_tokens| !native_tokens.is_empty())
+                                        .unwrap_or(false)
+                                        && !account.locked_outputs.contains(&output_data.output_id)
+                                    {
+                                        total_rent_amount += rent;
+                                    }
                                 } else if output_data.output.is_nft() {
                                     required_storage_deposit.nft += rent;
                                     if !account.locked_outputs.contains(&output_data.output_id) {
