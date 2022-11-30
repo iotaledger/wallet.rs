@@ -72,6 +72,8 @@ impl AccountHandle {
         output_consolidation_threshold: Option<usize>,
     ) -> Result<Transaction> {
         log::debug!("[OUTPUT_CONSOLIDATION] consolidating outputs if needed");
+        #[cfg(feature = "participation")]
+        let voting_output = self.get_voting_output().await?;
         let account = self.read().await;
         let account_addresses = &account.addresses_with_unspent_outputs[..];
         let current_time = self.client.get_time_checked().await?;
@@ -79,6 +81,13 @@ impl AccountHandle {
 
         let mut outputs_to_consolidate = Vec::new();
         for (output_id, output_data) in account.unspent_outputs() {
+            #[cfg(feature = "participation")]
+            if let Some(ref voting_output) = voting_output {
+                // Remove voting output from inputs, so it doesn't get spent when not calling a function related to it.
+                if output_data.output_id == voting_output.output_id {
+                    continue;
+                }
+            }
             let is_locked_output = account.locked_outputs.contains(output_id);
             let should_consolidate_output =
                 self.should_consolidate_output(output_data, current_time, account_addresses)?;
