@@ -32,6 +32,7 @@ import type {
     __PrepareOutputMethod__,
     __PrepareSendAmountMethod__,
     __PrepareTransactionMethod__,
+    __RetryTransactionUntilIncludedMethod__,
     __SendAmountMethod__,
     __SendMicroTransactionMethod__,
     __SendNativeTokensMethod__,
@@ -116,6 +117,7 @@ export type __AccountMethod__ =
     | __PrepareOutputMethod__
     | __PrepareSendAmountMethod__
     | __PrepareTransactionMethod__
+    | __RetryTransactionUntilIncludedMethod__
     | __SendAmountMethod__
     | __SendMicroTransactionMethod__
     | __SendNativeTokensMethod__

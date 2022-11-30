@@ -431,6 +431,16 @@ public class AccountHandle extends AbstractObject {
     }
 
     /**
+     * Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+     * included (referenced by a milestone). Returns the included block id.
+     *
+     * @param options The options.
+     */
+    public PreparedTransactionData retryTransactionUntilIncluded(PrepareTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), RetryTransactionUntilIncluded.class);
+    }
+
+    /**
      * Prepares a transaction.
      *
      * @param options The options.

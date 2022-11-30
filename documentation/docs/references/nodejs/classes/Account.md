@@ -41,6 +41,7 @@ The Account class.
 - [prepareOutput](Account.md#prepareoutput)
 - [prepareSendAmount](Account.md#preparesendamount)
 - [prepareTransaction](Account.md#preparetransaction)
+- [retryTransactionUntilIncluded](Account.md#retrytransactionuntilincluded)
 - [sendAmount](Account.md#sendamount)
 - [sendMicroTransaction](Account.md#sendmicrotransaction)
 - [sendNativeTokens](Account.md#sendnativetokens)
@@ -738,6 +739,27 @@ Prepare a transaction, useful for offline signing.
 `Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
 
 The prepared transaction data.
+
+___
+
+### retryTransactionUntilIncluded
+
+▸ **retryTransactionUntilIncluded**(`transactionId`, `interval?`, `maxAttempts?`): `Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
+
+Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+included (referenced by a milestone). Returns the included block id.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `transactionId` | `string` |
+| `interval?` | `number` |
+| `maxAttempts?` | `number` |
+
+#### Returns
+
+`Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
 
 ___
 
