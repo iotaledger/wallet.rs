@@ -30,13 +30,25 @@ interface EventData {
     milestoneIndexCommence: number
     milestoneIndexStart: number
     milestoneIndexEnd: number
-    payload: VotingEventPayload
+    payload: EventPayload
     additionalInfo: string
 }
+
+type EventPayload = VotingEventPayload | StakingEventPayload
 
 interface VotingEventPayload {
     type: number
     questions: Question[]
+}
+
+interface StakingEventPayload {
+    type: number
+    text: string
+    symbol: string
+    numerator: string
+    denominator: string
+    requiredMinimumRewards: string
+    additionalInfo: string
 }
 
 interface Question {
