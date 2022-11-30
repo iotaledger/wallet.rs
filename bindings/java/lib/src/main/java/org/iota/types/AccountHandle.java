@@ -10,6 +10,7 @@ import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.types.account_methods.*;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.BlockId;
 import org.iota.types.ids.OutputId;
 import org.iota.types.ids.TransactionId;
 import org.iota.types.ids.account.AccountIdentifier;
@@ -436,8 +437,8 @@ public class AccountHandle extends AbstractObject {
      *
      * @param options The options.
      */
-    public PreparedTransactionData retryTransactionUntilIncluded(PrepareTransaction options) throws WalletException {
-        return CustomGson.get().fromJson(callAccountMethod(options), RetryTransactionUntilIncluded.class);
+    public BlockId retryTransactionUntilIncluded(PrepareTransaction options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), BlockId.class);
     }
 
     /**
