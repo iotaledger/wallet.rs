@@ -29,6 +29,9 @@ pub enum Message {
     CreateAccount {
         /// The account alias.
         alias: Option<String>,
+        /// The bech32 HRP.
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
     },
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
@@ -222,7 +225,7 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Message::CreateAccount { alias } => write!(f, "CreateAccount{{ alias: {:?} }}", alias),
+            Message::CreateAccount { alias, bech32_hrp } => write!(f, "CreateAccount{{ alias: {:?}, bech32_hrp: {:?} }}", alias, bech32_hrp),
             Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
             Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
             Message::GetAccounts => write!(f, "GetAccounts"),

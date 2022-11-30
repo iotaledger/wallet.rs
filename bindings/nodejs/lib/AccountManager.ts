@@ -101,9 +101,9 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'deregisterParticipationEvent',
             payload: {
-                eventId
-            }
-        })
+                eventId,
+            },
+        });
     }
 
     /**
@@ -213,27 +213,27 @@ export class AccountManager {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEvent',
             payload: {
-                eventId
-            }
-        })
-        return JSON.parse(response).payload
+                eventId,
+            },
+        });
+        return JSON.parse(response).payload;
     }
 
     async getParticipationEvents(): Promise<Event[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEvents',
-        })
-        return JSON.parse(response).payload
+        });
+        return JSON.parse(response).payload;
     }
 
     async getParticipationEventStatus(eventId: EventId): Promise<EventStatus> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEventStatus',
             payload: {
-                eventId
-            }
-        })
-        return JSON.parse(response).payload
+                eventId,
+            },
+        });
+        return JSON.parse(response).payload;
     }
 
     /**
@@ -312,16 +312,19 @@ export class AccountManager {
         });
     }
 
-    async registerParticipationEvent(eventId: EventId, nodes: Node[]): Promise<Event> {
+    async registerParticipationEvent(
+        eventId: EventId,
+        nodes: Node[],
+    ): Promise<Event> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'registerParticipationEvent',
             payload: {
                 eventId,
-                nodes
-            }
-        })
+                nodes,
+            },
+        });
 
-        return JSON.parse(response).payload
+        return JSON.parse(response).payload;
     }
 
     /**

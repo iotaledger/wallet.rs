@@ -117,8 +117,8 @@ impl WalletMessageHandler {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
-            Message::CreateAccount { alias } => {
-                convert_async_panics(|| async { self.create_account(alias).await }).await
+            Message::CreateAccount { alias, bech32_hrp } => {
+                convert_async_panics(|| async { self.create_account(alias, bech32_hrp).await }).await
             }
             Message::GetAccount(account_id) => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
@@ -979,11 +979,15 @@ impl WalletMessageHandler {
     }
 
     /// The create account message handler.
-    async fn create_account(&self, alias: Option<String>) -> Result<Response> {
+    async fn create_account(&self, alias: Option<String>, bech32_hrp: Option<String>) -> Result<Response> {
         let mut builder = self.account_manager.create_account();
 
         if let Some(alias) = alias {
             builder = builder.with_alias(alias);
+        }
+
+        if let Some(bech32_hrp) = bech32_hrp {
+            builder = builder.with_bech32_hrp(bech32_hrp);
         }
 
         match builder.finish().await {

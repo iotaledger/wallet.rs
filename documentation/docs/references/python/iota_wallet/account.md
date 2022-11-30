@@ -61,7 +61,7 @@ recommended to use melting, if the foundry output is available.
 def burn_nft(nft_id, options=None)
 ```
 
-Burn an nft output. Outputs controlled by it will be sweeped before if they don&#x27;t have a storage
+Burn an nft output. Outputs controlled by it will be swept before if they don&#x27;t have a storage
 deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
 burning, the foundry can never be destroyed anymore.
 
@@ -87,7 +87,7 @@ Create an alias output.
 def destroy_alias(alias_id, options=None)
 ```
 
-Destroy an alias output. Outputs controlled by it will be sweeped before if they don&#x27;t have a
+Destroy an alias output. Outputs controlled by it will be swept before if they don&#x27;t have a
 storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
 sent to the governor address.
 
@@ -98,7 +98,7 @@ def destroy_foundry(foundry_id, options=None)
 ```
 
 Destroy a foundry output with a circulating supply of 0.
-Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
 
 ### generate\_addresses
 

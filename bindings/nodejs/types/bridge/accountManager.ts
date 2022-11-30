@@ -43,7 +43,7 @@ export type __DeregisterParticipationEvent__ = {
     payload: {
         eventId: EventId;
     };
-}
+};
 
 export type __EmitTestEventMessage__ = {
     cmd: 'emitTestEvent';
@@ -92,20 +92,20 @@ export type __GetNodeInfoMessage__ = {
 export type __GetParticipationEventMessage__ = {
     cmd: 'getParticipationEvent';
     payload: {
-        eventId: EventId
-    }
-}
+        eventId: EventId;
+    };
+};
 
 export type __GetParticipationEventsMessage__ = {
     cmd: 'getParticipationEvents';
-}
+};
 
 export type __GetParticipationEventStatusMessage__ = {
     cmd: 'getParticipationEventStatus';
     payload: {
-        eventId: EventId
-    }
-}
+        eventId: EventId;
+    };
+};
 
 export type __HexToBech32__ = {
     cmd: 'hexToBech32';
@@ -132,10 +132,10 @@ export type __RecoverAccountsMessage__ = {
 export type __RegisterParticipationEventMessage__ = {
     cmd: 'registerParticipationEvent';
     payload: {
-        eventId: EventId,
-        nodes: Node[]
-    }
-}
+        eventId: EventId;
+        nodes: Node[];
+    };
+};
 
 export type __RemoveLatestAccountMessage__ = {
     cmd: 'removeLatestAccount';

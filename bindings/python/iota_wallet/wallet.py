@@ -26,12 +26,13 @@ class IotaWallet():
     def get_handle(self):
         return self.handle
 
-    def create_account(self, alias=None):
+    def create_account(self, alias=None, bech32_hrp=None):
         """Create a new account
         """
         return self._send_cmd_routine(
             'createAccount', {
                 'alias': self.__return_str_or_none(alias),
+                'bech32_hrp': self.__return_str_or_none(bech32_hrp),
             }
         )
 

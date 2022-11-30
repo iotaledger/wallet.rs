@@ -25,6 +25,7 @@ The Account class.
 - [getFoundryOutput](Account.md#getfoundryoutput)
 - [getOutputsWithAdditionalUnlockConditions](Account.md#getoutputswithadditionalunlockconditions)
 - [getTransaction](Account.md#gettransaction)
+- [getIncomingTransactionData](Account.md#getincomingtransactiondata)
 - [addresses](Account.md#addresses)
 - [addressesWithUnspentOutputs](Account.md#addresseswithunspentoutputs)
 - [outputs](Account.md#outputs)
@@ -447,6 +448,27 @@ The transaction.
 
 ___
 
+### getIncomingTransactionData
+
+▸ **getIncomingTransactionData**(`transactionId`): `Promise`<`IncomingTransactionData`\>
+
+Get the transaction with inputs of an incoming transaction stored in the account
+List might not be complete, if the node pruned the data already
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `transactionId` | `string` | The ID of the transaction to get. |
+
+#### Returns
+
+`Promise`<`IncomingTransactionData`\>
+
+The transaction.
+
+___
+
 ### addresses
 
 ▸ **addresses**(): `Promise`<[`Address`](../interfaces/Address.md)[]\>
@@ -511,13 +533,13 @@ ___
 
 ### incomingTransactions
 
-▸ **incomingTransactions**(): `Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]]][]\>
+▸ **incomingTransactions**(): `Promise`<[`string`, `IncomingTransactionData`][]\>
 
 List all incoming transactions of the account.
 
 #### Returns
 
-`Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]]][]\>
+`Promise`<[`string`, `IncomingTransactionData`][]\>
 
 The incoming transactions with their inputs.
 

@@ -132,6 +132,7 @@ export enum CoinType {
 /** Options for account creation */
 export interface CreateAccountPayload {
     alias?: string;
+    bech32Hrp?: string;
 }
 
 /** Options to filter outputs */

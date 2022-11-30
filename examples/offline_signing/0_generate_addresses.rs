@@ -13,7 +13,7 @@ use std::{
 };
 
 use dotenv::dotenv;
-use iota_client::constants::SHIMMER_COIN_TYPE;
+use iota_client::constants::{SHIMMER_BECH32_HRP, SHIMMER_COIN_TYPE};
 use iota_wallet::{
     account::types::AccountAddress,
     account_manager::AccountManager,
@@ -53,6 +53,7 @@ async fn main() -> Result<()> {
     let account = manager
         .create_account()
         .with_alias("Alice".to_string())
+        .with_bech32_hrp(SHIMMER_BECH32_HRP.to_string())
         .finish()
         .await?;
 

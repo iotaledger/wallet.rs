@@ -8,7 +8,6 @@ use std::{
 
 use iota_client::{
     block::address::Address,
-    constants::SHIMMER_TESTNET_BECH32_HRP,
     secret::{SecretManage, SecretManager},
 };
 #[cfg(feature = "events")]
@@ -32,6 +31,7 @@ use crate::{
 pub struct AccountBuilder {
     addresses: Option<Vec<AccountAddress>>,
     alias: Option<String>,
+    bech32_hrp: Option<String>,
     client_options: Arc<RwLock<ClientOptions>>,
     coin_type: u32,
     secret_manager: Arc<RwLock<SecretManager>>,
@@ -55,6 +55,7 @@ impl AccountBuilder {
         Self {
             addresses: None,
             alias: None,
+            bech32_hrp: None,
             client_options,
             coin_type,
             secret_manager,
@@ -76,6 +77,12 @@ impl AccountBuilder {
     /// Set the alias
     pub fn with_alias(mut self, alias: String) -> Self {
         self.alias.replace(alias);
+        self
+    }
+
+    /// Set the bech32 HRP
+    pub fn with_bech32_hrp(mut self, bech32_hrp: String) -> Self {
+        self.bech32_hrp.replace(bech32_hrp);
         self
     }
 
@@ -113,7 +120,7 @@ impl AccountBuilder {
         let addresses = match &self.addresses {
             Some(addresses) => addresses.clone(),
             None => {
-                let mut bech32_hrp = None;
+                let mut bech32_hrp = self.bech32_hrp.clone();
                 if let Some(first_account) = accounts.first() {
                     let first_account_coin_type = *first_account.read().await.coin_type();
                     // Generate the first address of the first account and compare it to the stored address from the
@@ -137,7 +144,9 @@ impl AccountBuilder {
 
                     // Get bech32_hrp from address
                     if let Some(address) = first_account_addresses.first() {
-                        bech32_hrp = Some(address.address.bech32_hrp.clone());
+                        if bech32_hrp.is_none() {
+                            bech32_hrp = Some(address.address.bech32_hrp.clone());
+                        }
                     }
                 }
 
@@ -145,14 +154,7 @@ impl AccountBuilder {
                 let bech32_hrp = {
                     match bech32_hrp {
                         Some(bech32_hrp) => bech32_hrp,
-                        // Only when we create a new account we don't have the first address and need to get the
-                        // information from the client Doesn't work for offline creating, should
-                        // we use the network from the GenerateAddressOptions instead to use
-                        // `iota` or `atoi`?
-                        None => client
-                            .get_bech32_hrp()
-                            .await
-                            .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
+                        None => client.get_bech32_hrp().await?,
                     }
                 };
 

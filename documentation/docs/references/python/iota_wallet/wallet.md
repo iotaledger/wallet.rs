@@ -23,7 +23,7 @@ Initialize the IOTA Wallet.
 ### create\_account
 
 ```python
-def create_account(alias=None)
+def create_account(alias=None, bech32_hrp=None)
 ```
 
 Create a new account
