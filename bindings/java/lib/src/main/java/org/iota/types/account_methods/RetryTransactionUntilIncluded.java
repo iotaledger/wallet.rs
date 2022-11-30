@@ -9,20 +9,20 @@ import org.iota.types.ids.TransactionId;
 public class RetryTransactionUntilIncluded implements AccountMethod {
 
     private TransactionId transaction_id;
-    private Int interval;
-    private Int maxAttempts;
+    private int interval;
+    private int maxAttempts;
 
     public RetryTransactionUntilIncluded withTransactionId(TransactionId transaction_id) {
         this.transaction_id = transaction_id;
         return this;
     }
 
-    public RetryTransactionUntilIncluded withInterval(Int interval) {
+    public RetryTransactionUntilIncluded withInterval(int interval) {
         this.interval = interval;
         return this;
     }
 
-    public RetryTransactionUntilIncluded withMaxAttempts(Int maxAttempts) {
+    public RetryTransactionUntilIncluded withMaxAttempts(int maxAttempts) {
         this.maxAttempts = maxAttempts;
         return this;
     }
