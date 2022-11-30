@@ -12,17 +12,17 @@ public class RetryTransactionUntilIncluded implements AccountMethod {
     private Int interval;
     private Int maxAttempts;
 
-    public PrepareTransaction withTransactionId(TransactionId transaction_id) {
+    public RetryTransactionUntilIncluded withTransactionId(TransactionId transaction_id) {
         this.transaction_id = transaction_id;
         return this;
     }
 
-    public PrepareTransaction withInterval(Int interval) {
+    public RetryTransactionUntilIncluded withInterval(Int interval) {
         this.interval = interval;
         return this;
     }
 
-    public PrepareTransaction withMaxAttempts(Int maxAttempts) {
+    public RetryTransactionUntilIncluded withMaxAttempts(Int maxAttempts) {
         this.maxAttempts = maxAttempts;
         return this;
     }
