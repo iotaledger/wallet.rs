@@ -40,7 +40,11 @@ async function createAccountManager() {
     };
 
     const manager = new AccountManager(accountManagerOptions);
-    // await manager.storeMnemonic(process.env.MNEMONIC);
+    try {
+        await manager.storeMnemonic(process.env.MNEMONIC);
+    } catch (e) {
+        console.log(e)
+    }
     return manager;
 }
 
