@@ -9,7 +9,7 @@ use primitive_types::U256;
 use crate::account::{
     handle::AccountHandle,
     operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance},
+    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance, RequiredStorageDeposit},
     OutputsToClaim,
 };
 
@@ -30,7 +30,8 @@ impl AccountHandle {
         let local_time = self.client.get_time_checked().await?;
 
         let mut total_amount = 0;
-        let mut required_storage_deposit = 0;
+        let mut total_rent_amount = 0;
+        let mut required_storage_deposit = RequiredStorageDeposit::new();
         let mut total_native_tokens = NativeTokensBuilder::new();
         let mut potentially_locked_outputs = HashMap::new();
         let mut aliases = Vec::new();
@@ -43,6 +44,8 @@ impl AccountHandle {
                 continue;
             }
 
+            let rent = output_data.output.rent_cost(&rent_structure);
+
             // Add alias and foundry outputs here because they can't have a [`StorageDepositReturnUnlockCondition`]
             // or time related unlock conditions
             match &output_data.output {
@@ -50,11 +53,16 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.alias += rent;
+                    if !account.locked_outputs.contains(&output_data.output_id) {
+                        total_rent_amount += rent;
+                    }
+
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
+
                     let alias_id = output.alias_id_non_null(&output_data.output_id);
                     aliases.push(alias_id);
                 }
@@ -62,11 +70,16 @@ impl AccountHandle {
                     // Add amount
                     total_amount += output_data.output.amount();
                     // Add storage deposit
-                    required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                    required_storage_deposit.foundry += rent;
+                    if !account.locked_outputs.contains(&output_data.output_id) {
+                        total_rent_amount += rent;
+                    }
+
                     // Add native tokens
                     if let Some(native_tokens) = output_data.output.native_tokens() {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
+
                     foundries.push(output.id())
                 }
                 _ => {
@@ -86,8 +99,26 @@ impl AccountHandle {
 
                         // Add amount
                         total_amount += output_data.output.amount();
+
                         // Add storage deposit
-                        required_storage_deposit += &output_data.output.rent_cost(&rent_structure);
+                        if output_data.output.is_basic() {
+                            required_storage_deposit.basic += rent;
+                            if output_data
+                                .output
+                                .native_tokens()
+                                .map(|native_tokens| !native_tokens.is_empty())
+                                .unwrap_or(false)
+                                && !account.locked_outputs.contains(&output_data.output_id)
+                            {
+                                total_rent_amount += rent;
+                            }
+                        } else if output_data.output.is_nft() {
+                            required_storage_deposit.nft += rent;
+                            if !account.locked_outputs.contains(&output_data.output_id) {
+                                total_rent_amount += rent;
+                            }
+                        }
+
                         // Add native tokens
                         if let Some(native_tokens) = output_data.output.native_tokens() {
                             total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -116,20 +147,20 @@ impl AccountHandle {
                             if output_can_be_unlocked_now_and_in_future {
                                 // If output has a StorageDepositReturnUnlockCondition, the amount of it should be
                                 // subtracted, because this part needs to be sent back
-                                let amount = if let Some(unlock_conditions) = output_data.output.unlock_conditions() {
-                                    if let Some(sdr) = unlock_conditions.storage_deposit_return() {
-                                        if account_addresses
-                                            .iter()
-                                            .any(|a| a.address.inner == *sdr.return_address())
-                                        {
-                                            // sending to ourself, we get the full amount
-                                            output_data.output.amount()
-                                        } else {
-                                            // Sending to someone else
-                                            output_data.output.amount() - sdr.amount()
-                                        }
-                                    } else {
+                                let amount = if let Some(sdr) = output_data
+                                    .output
+                                    .unlock_conditions()
+                                    .and_then(|u| u.storage_deposit_return())
+                                {
+                                    if account_addresses
+                                        .iter()
+                                        .any(|a| a.address.inner == *sdr.return_address())
+                                    {
+                                        // sending to ourself, we get the full amount
                                         output_data.output.amount()
+                                    } else {
+                                        // Sending to someone else
+                                        output_data.output.amount() - sdr.amount()
                                     }
                                 } else {
                                     output_data.output.amount()
@@ -143,8 +174,28 @@ impl AccountHandle {
 
                                 // Add amount
                                 total_amount += amount;
+
                                 // Add storage deposit
-                                required_storage_deposit += output_data.output.rent_cost(&rent_structure);
+                                if output_data.output.is_basic() {
+                                    required_storage_deposit.basic += rent;
+                                    // Amount for basic outputs isn't added to total_rent_amount if there aren't native
+                                    // tokens, since we can spend it without burning.
+                                    if output_data
+                                        .output
+                                        .native_tokens()
+                                        .map(|native_tokens| !native_tokens.is_empty())
+                                        .unwrap_or(false)
+                                        && !account.locked_outputs.contains(&output_data.output_id)
+                                    {
+                                        total_rent_amount += rent;
+                                    }
+                                } else if output_data.output.is_nft() {
+                                    required_storage_deposit.nft += rent;
+                                    if !account.locked_outputs.contains(&output_data.output_id) {
+                                        total_rent_amount += rent;
+                                    }
+                                }
+
                                 // Add native tokens
                                 if let Some(native_tokens) = output_data.output.native_tokens() {
                                     total_native_tokens.add_native_tokens(native_tokens.clone())?;
@@ -190,11 +241,15 @@ impl AccountHandle {
                 }
             }
         }
+
         log::debug!(
             "[BALANCE] total_amount: {}, locked balance: {}",
             total_amount,
             locked_amount
         );
+
+        locked_amount += total_rent_amount;
+
         if total_amount < locked_amount {
             log::warn!("[BALANCE] total_balance is smaller than the available balance");
             // It can happen that the locked_amount is greater than the available balance if a transaction wasn't
@@ -247,6 +302,7 @@ pub(crate) fn add_balances(balances: Vec<AccountBalance>) -> crate::Result<Accou
         total_balance.nfts.extend(balance.nfts.into_iter());
         total_balance.aliases.extend(balance.aliases.into_iter());
         total_balance.foundries.extend(balance.foundries.into_iter());
+
         for native_token_balance in &balance.native_tokens {
             if let Some(total_native_token_balance) = total_balance
                 .native_tokens

@@ -13,7 +13,7 @@ use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
     account_method::AccountMethod,
-    dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
+    dtos::{AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     response::Response,

@@ -24,10 +24,10 @@ use {
 use crate::{
     account::{
         operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
-        types::{address::AccountAddress, TransactionDto},
+        types::{address::AccountAddress, AccountBalanceDto, TransactionDto},
         OutputDataDto,
     },
-    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
+    message_interface::dtos::{AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
 

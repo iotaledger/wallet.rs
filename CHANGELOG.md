@@ -19,22 +19,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.4 - YYYY-MM-DD
+## 1.0.0-rc.4 - 20XX-XX-XX
 
 ### Added
 
+- `RequiredStorageDeposit` and `RequiredStorageDepositDto` types;
+- `account/types/balance` module;
+
 ### Changed
 
-### Deprecated
+- `AccountBalance::required_storage_deposit` changed from `u64` to `RequiredStorageDeposit`;
+- `AccountBalanceDto::required_storage_deposit` changed from `String` to `RequiredStorageDepositDto`;
+- Move all balance related types to the `account/types/balance` module;
+- `AccountBalanceDto`, `BaseCoinBalanceDto` and `NativeTokensBalanceDto` moved from `message_interface/dtos` to `account/types/balance`;
 
 ### Removed
 
 - `clear_listeners` from message interface;
 - `listen` from message interface;
-
-### Fixed
-
-### Security
 
 ## 1.0.0-rc.3 - 2022-11-24
 
