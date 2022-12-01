@@ -37,7 +37,7 @@ impl AccountManager {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first
-                if options.clone().unwrap_or_default().ledger_nano_prompt {
+                if options.as_ref().map_or(false, |o| o.ledger_nano_prompt) {
                     #[cfg(feature = "events")]
                     {
                         let changed_options = options.clone().map(|mut options| {
@@ -45,7 +45,6 @@ impl AccountManager {
                             options.ledger_nano_prompt = false;
                             options
                         });
-                        // Change options so ledger will not show the prompt the first time
                         // Generate without prompt to be able to display it
                         let address = ledger_nano
                             .generate_addresses(
@@ -62,7 +61,7 @@ impl AccountManager {
                         self.event_emitter.lock().await.emit(
                             account_index,
                             WalletEvent::LedgerAddressGeneration(AddressData {
-                                address: address[0].to_bech32(bech32_hrp.clone()),
+                                address: address[0].to_bech32(bech32_hrp),
                             }),
                         );
                     }
