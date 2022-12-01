@@ -104,7 +104,7 @@ publishing {
             pom {
                 name = 'iota-wallet'
                 description = 'Java binding to the wallet.rs library.'
-                url = 'https://github.com/iotaledger/iota.rs'
+                url = 'https://github.com/iotaledger/wallet.rs'
                 inceptionYear = '2022'
 
                 licenses {
@@ -123,9 +123,9 @@ publishing {
                 }
 
                 scm {
-                    connection = 'scm:git:git:github.com/iotaledger/iota.rs.git'
-                    developerConnection = 'scm:git:ssh://github.com/iotaledger/iota.rs.git'
-                    url = 'https://github.com/iotaledger/iota.rs'
+                    connection = 'scm:git:git:github.com/iotaledger/wallet.rs.git'
+                    developerConnection = 'scm:git:ssh://github.com/iotaledger/wallet.rs.git'
+                    url = 'https://github.com/iotaledger/wallet.rs'
                 }
             }
         }
