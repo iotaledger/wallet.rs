@@ -5,11 +5,11 @@ use std::{convert::TryFrom, sync::Mutex};
 
 use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
-    events::types::WalletEventType,
+    events::types::{Event, WalletEventType},
     message_interface::{ManagerOptions, Message, WalletMessageHandler},
 };
 use jni::{
-    objects::{JClass, JObject, JStaticMethodID, JString, JValue},
+    objects::{GlobalRef, JClass, JObject, JStaticMethodID, JString, JValue},
     signature::ReturnType,
     sys::{jclass, jobject, jobjectArray, jstring},
     JNIEnv, JavaVM,
@@ -27,10 +27,52 @@ lazy_static! {
     static ref METHOD_CACHE: Mutex<Option<JStaticMethodID>> = Mutex::new(None);
 }
 
+// A macro that checks if the result is an error and throws an exception if it is.
+macro_rules! jni_err_assert {
+    ($env:ident, $result:expr, $ret:expr ) => {{
+        if let Err(err) = $result {
+            throw_exception(&$env, err.to_string());
+            return $ret;
+        }
+        $result.unwrap()
+    }};
+}
+
+// Getting a string from the JNIEnv and then checking if it is an error. If it is an error,
+// it throws an exception and returns the value of r.
+macro_rules! string_from_jni {
+    ($env:ident, $x:ident, $r:expr ) => {{
+        let string = $env.get_string($x);
+        String::from(jni_err_assert!($env, string, $r))
+    }};
+}
+
+// Getting a string from the JNIEnv and then checking if it is an error. If it is an error,
+// it throws an exception and returns the value of r.
+macro_rules! jni_from_json_make {
+    ($env:ident, $x:ident, $rtype:ident, $r:expr ) => {{
+        let json = string_from_jni!($env, $x, $r);
+        let jsonres: serde_json::error::Result<$rtype> = serde_json::from_str(&json);
+        jni_err_assert!($env, jsonres, $r)
+    }};
+}
+
+// This is a safety check to make sure that the JNIEnv is not in an exception state.
+macro_rules! env_assert {
+    ($env:ident, $r:expr ) => {{
+        if $env.exception_check().unwrap() {
+            return $r;
+        }
+    }};
+}
+
 // This keeps rust from "mangling" the name and making it unique for this crate.
 #[no_mangle]
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
-    let config_builder: String = env.get_string(command).expect("Couldn't get java string!").into();
+    // This is a safety check to make sure that the JNIEnv is not in an exception state.
+    env_assert!(env,());
+
+    let config_builder = string_from_jni!(env, command, ());
 
     let output_config: LoggerOutputConfigBuilder =
         serde_json::from_str(&config_builder).expect("invalid logger config");
@@ -49,44 +91,33 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     class: JClass,
     config: JString,
 ) {
-    let manager_options: ManagerOptions = match env.get_string(config) {
-        Ok(json_input) => match serde_json::from_str(&String::from(json_input)) {
-            Ok(manager_options) => manager_options,
-            Err(err) => {
-                env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-                return;
-            }
-        },
-        Err(err) => {
-            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-            return;
-        }
+    env_assert!(env, ());
+
+    if let Ok(mut message_handler_store) = MESSAGE_HANDLER.lock() {
+        message_handler_store.replace(jni_err_assert!(
+            env,
+            crate::block_on(iota_wallet::message_interface::create_message_handler(Some(
+                jni_from_json_make!(env, config, ManagerOptions, ()),
+            ))),
+            ()
+        ));
     };
 
-    match MESSAGE_HANDLER.lock() {
-        Ok(mut message_handler_store) => match crate::block_on(iota_wallet::message_interface::create_message_handler(
-            Some(manager_options),
-        )) {
-            Ok(message_handler) => message_handler_store.replace(message_handler),
-            Err(err) => {
-                env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-                return;
-            }
-        },
-        Err(err) => {
-            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-            return;
-        }
-    };
-    VM.lock().unwrap().replace(env.get_java_vm().expect("GetJavaVm failed"));
-    METHOD_CACHE.lock().unwrap().replace(
-        env.get_static_method_id(
-            class,
-            "handleCallback",
-            "(Ljava/lang/String;Lorg/iota/types/events/EventListener;)V",
-        )
-        .expect("find callback handler method"),
-    );
+    if let Ok(mut vm) = VM.lock() {
+        vm.replace(jni_err_assert!(env, env.get_java_vm(), ()));
+    }
+
+    if let Ok(mut cache) = METHOD_CACHE.lock() {
+        cache.replace(jni_err_assert!(
+            env,
+            env.get_static_method_id(
+                class,
+                "handleCallback",
+                "(Ljava/lang/String;Lorg/iota/types/events/EventListener;)V",
+            ),
+            ()
+        ));
+    }
 }
 
 // Destroy the required parts for messaging. Needs to call createMessageHandler again before resuming
@@ -104,39 +135,30 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
     _class: JClass,
     command: JString,
 ) -> jstring {
-    if env.exception_check().unwrap() {
-        return std::ptr::null_mut();
-    }
+    env_assert!(env, std::ptr::null_mut());
+
+    let message = jni_from_json_make!(env, command, Message, std::ptr::null_mut());
 
     match MESSAGE_HANDLER.lock() {
-        Ok(message_handler_store) => match message_handler_store.as_ref() {
-            Some(message_handler) => {
-                let command: String = env.get_string(command).expect("Couldn't get java string!").into();
+        Ok(message_handler_store) => {
+            match message_handler_store.as_ref() {
+                Some(message_handler) => {
+                    let (sender, mut receiver) = unbounded_channel();
 
-                let message = serde_json::from_str::<Message>(&command).unwrap();
+                    crate::block_on(message_handler.handle(message, sender));
+                    let response = crate::block_on(receiver.recv());
 
-                let (sender, mut receiver) = unbounded_channel();
-
-                crate::block_on(message_handler.handle(message, sender));
-                let response = crate::block_on(receiver.recv()).unwrap();
-
-                let output = env
-                    .new_string(serde_json::to_string(&response).unwrap())
-                    .expect("Couldn't create java string!");
-
-                output.into_raw()
+                    // We assume response is valid json from our own client
+                    return make_jni_string(&env, serde_json::to_string(&response).unwrap());
+                }
+                _ => throw_nullpointer(&env, "Wallet not initialised."),
             }
-            None => {
-                env.throw_new("java/lang/NullPointerException", "Wallet not initialised.")
-                    .unwrap();
-                std::ptr::null_mut()
-            }
-        },
-        Err(err) => {
-            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-            std::ptr::null_mut()
         }
-    }
+        Err(err) => throw_exception(&env, err.to_string()),
+    };
+
+    throw_nullpointer(&env, "Wallet not initialised.");
+    std::ptr::null_mut()
 }
 
 /// # Safety
@@ -150,77 +172,109 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
     events: jobjectArray,
     callback: jobject,
 ) -> jstring {
-    if env.exception_check().unwrap() {
-        return std::ptr::null_mut();
+    env_assert!(env, std::ptr::null_mut());
+
+    let string_count = jni_err_assert!(env, env.get_array_length(events), std::ptr::null_mut());
+
+    // Save cast as we dont have that many events
+    let mut events_list: Vec<WalletEventType> = Vec::with_capacity(string_count as usize);
+
+    for i in 0..string_count {
+        let arr_obj = jni_err_assert!(env, env.get_object_array_element(events, i), std::ptr::null_mut()).into();
+        let java_str = string_from_jni!(env, arr_obj, std::ptr::null_mut());
+
+        let event = jni_err_assert!(env, WalletEventType::try_from(&*java_str), std::ptr::null_mut());
+        events_list.push(event);
     }
+
+    // Allocate callback globaly to not lose the reference
+    let global_obj = jni_err_assert!(
+        env,
+        env.new_global_ref(JObject::from_raw(callback)),
+        std::ptr::null_mut()
+    );
 
     match MESSAGE_HANDLER.lock() {
         Ok(message_handler_store) => match message_handler_store.as_ref() {
             Some(message_handler) => {
-                let string_count = env.get_array_length(events).expect("Couldn't get array length!");
-                let mut events_list: Vec<WalletEventType> = Vec::with_capacity(string_count.try_into().unwrap());
-
-                for i in 0..string_count {
-                    let java_str: String = env
-                        .get_string(env.get_object_array_element(events, i).unwrap().into())
-                        .expect("Couldn't get java string!")
-                        .into();
-                    events_list.push(WalletEventType::try_from(&*java_str).expect("Unknon WalletEventType"));
-                }
-
-                // Allocate callback globaly to not lose the reference
-                let global_obj = env
-                    .new_global_ref(JObject::from_raw(callback))
-                    .expect("Failed to make Global ref");
-
-                crate::block_on(message_handler.listen(events_list, move |e| {
-                    let ev_ser = serde_json::to_string(&e).expect("Failed to serialise event");
-
-                    // Grab env from VM
-                    let vm_guard = VM.lock().unwrap();
-                    let env = {
-                        let vm = vm_guard.as_ref().unwrap();
-                        let mut env = vm.get_env();
-                        if env.is_err() {
-                            env = vm.attach_current_thread().map(|e| *e);
-                        }
-                        env.expect("failed to get env")
-                    };
-
-                    let event =
-                        JValue::Object(*env.new_string(ev_ser).expect("Couldn't create event as string!")).to_jni();
-                    let cb = JValue::Object(global_obj.as_obj()).to_jni();
-
-                    env.call_static_method_unchecked(
-                        "org/iota/api/NativeApi",
-                        METHOD_CACHE.lock().unwrap().unwrap(),
-                        ReturnType::Object,
-                        &[event, cb],
-                    )
-                    .expect("Failed to call handleCallback");
-                }));
-
-                let output = env
-                    .new_string("{\"type\": \"success\", \"payload\": \"success\"}")
-                    .expect("Couldn't create java string!");
-
-                output.into_raw()
+                crate::block_on(message_handler.listen(events_list, move |e| event_handle(global_obj.clone(), e)))
             }
-            None => {
-                env.throw_new("java/lang/NullPointerException", "Wallet not initialised.")
-                    .unwrap();
-                std::ptr::null_mut()
-            }
+            _ => throw_nullpointer(&env, "Wallet not initialised."),
         },
-        Err(err) => {
-            env.throw_new("java/lang/Exception", err.to_string()).unwrap();
-            std::ptr::null_mut()
+        Err(err) => throw_exception(&env, err.to_string()),
+    };
+
+    // exceptions return early, let the client now we registered successfully
+    make_jni_string(&env, "{\"type\": \"success\", \"payload\": \"success\"}".to_string())
+}
+
+fn event_handle(callback_ref: GlobalRef, e: &Event) {
+    // Grab env from VM.
+    // If we cant get a lock, we cant handle the event
+    let vm_guard = match VM.lock() {
+        Ok(guard) => guard,
+        Err(_) => return,
+    };
+
+    // Generate link back to the java env
+    let env = {
+        let vm = vm_guard
+            .as_ref()
+            .expect("Wallet not initialised, but an event was called");
+
+        let mut env = vm.get_env();
+        if env.is_err() {
+            env = vm.attach_current_thread().map(|e| *e);
         }
-    }
+        env.expect("Failed to get Java env for event callback")
+    };
+
+    // Make sure env is ok
+    env_assert!(env, ());
+    let ev_ser = jni_err_assert!(env, serde_json::to_string(&e), ());
+
+    // Make the Jni object to send back
+    let event = jni::sys::jvalue {
+        l: make_jni_string(&env, ev_ser),
+    };
+
+    // Get a ref back to the callback we call on the java side
+    let cb = JValue::Object(callback_ref.as_obj()).to_jni();
+
+    // Call NativeApi, METHOD_CACHE assumed initialised if we received a VM
+    env.call_static_method_unchecked(
+        "org/iota/api/NativeApi",
+        METHOD_CACHE.lock().unwrap().unwrap(),
+        ReturnType::Object,
+        &[event, cb],
+    )
+    .unwrap();
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
     static INSTANCE: OnceCell<Mutex<Runtime>> = OnceCell::new();
     let runtime = INSTANCE.get_or_init(|| Mutex::new(Runtime::new().unwrap()));
     runtime.lock().unwrap().block_on(cb)
+}
+
+fn make_jni_string(env: &JNIEnv, rust_str: std::string::String) -> jstring {
+    match env.new_string(rust_str) {
+        Ok(s) => s.into_raw(),
+        Err(err) => {
+            throw_exception(env, err.to_string());
+            std::ptr::null_mut()
+        }
+    }
+}
+
+fn throw_exception(env: &JNIEnv, err: std::string::String) {
+    throw("java/lang/Exception", env, &err)
+}
+
+fn throw_nullpointer(env: &JNIEnv, err: &str) {
+    throw("java/lang/NullPointerException", env, err)
+}
+
+fn throw(exception: &str, env: &JNIEnv, err: &str) {
+    env.throw_new(exception, err.to_string()).unwrap()
 }
