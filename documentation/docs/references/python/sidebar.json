@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "items": [
+        "python/iota_wallet/account",
+        "python/iota_wallet/common",
+        "python/iota_wallet/secret_manager",
+        "python/iota_wallet/wallet"
+      ],
+      "label": "iota_wallet",
+      "type": "category"
+    }
+  ],
+  "label": "Reference",
+  "type": "category"
+}

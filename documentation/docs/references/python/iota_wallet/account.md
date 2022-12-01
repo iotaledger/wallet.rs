@@ -61,7 +61,7 @@ recommended to use melting, if the foundry output is available.
 def burn_nft(nft_id, options=None)
 ```
 
-Burn an nft output. Outputs controlled by it will be sweeped before if they don&#x27;t have a storage
+Burn an nft output. Outputs controlled by it will be swept before if they don&#x27;t have a storage
 deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
 burning, the foundry can never be destroyed anymore.
 
@@ -87,7 +87,7 @@ Create an alias output.
 def destroy_alias(alias_id, options=None)
 ```
 
-Destroy an alias output. Outputs controlled by it will be sweeped before if they don&#x27;t have a
+Destroy an alias output. Outputs controlled by it will be swept before if they don&#x27;t have a
 storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
 sent to the governor address.
 
@@ -98,7 +98,7 @@ def destroy_foundry(foundry_id, options=None)
 ```
 
 Destroy a foundry output with a circulating supply of 0.
-Native tokens in the foundry (minted by other foundries) will be transactioned to the controlling alias
+Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
 
 ### generate\_addresses
 
@@ -132,7 +132,7 @@ def get_transaction(transaction_id)
 
 Get transaction.
 
-### list\_addresses
+### addresses
 
 ```python
 def addresses()
@@ -140,7 +140,7 @@ def addresses()
 
 List addresses.
 
-### list\_addresses\_with\_unspent\_outputs
+### addresses\_with\_unspent\_outputs
 
 ```python
 def addresses_with_unspent_outputs()
@@ -148,7 +148,7 @@ def addresses_with_unspent_outputs()
 
 Returns only addresses of the account with unspent outputs.
 
-### list\_outputs
+### outputs
 
 ```python
 def outputs(filter_options=None)
@@ -156,7 +156,7 @@ def outputs(filter_options=None)
 
 Returns all outputs of the account.
 
-### list\_unspent\_outputs
+### unspent\_outputs
 
 ```python
 def unspent_outputs(filter_options=None)
@@ -164,7 +164,7 @@ def unspent_outputs(filter_options=None)
 
 Returns all unspent outputs of the account.
 
-### list\_incoming\_transactions
+### incoming\_transactions
 
 ```python
 def incoming_transactions()
@@ -172,7 +172,7 @@ def incoming_transactions()
 
 Returns all incoming transactions of the account.
 
-### list\_transactions
+### transactions
 
 ```python
 def transactions()
@@ -180,7 +180,7 @@ def transactions()
 
 Returns all transaction of the account.
 
-### list\_pending\_transactions
+### pending\_transactions
 
 ```python
 def pending_transactions()
@@ -304,14 +304,6 @@ def set_alias(alias)
 ```
 
 Set alias.
-
-### send\_transaction
-
-```python
-def send_transaction(outputs, options=None)
-```
-
-Send a transaction.
 
 ### sign\_transaction\_essence
 

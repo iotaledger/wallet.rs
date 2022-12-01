@@ -3,6 +3,7 @@ import type {
     AccountSyncOptions,
     CreateAccountPayload,
 } from '../account';
+import type { GenerateAddressOptions } from '../address';
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions, Node } from '../network';
 import type { EventId } from '../participation';
@@ -42,7 +43,7 @@ export type __DeregisterParticipationEvent__ = {
     payload: {
         eventId: EventId;
     };
-}
+};
 
 export type __EmitTestEventMessage__ = {
     cmd: 'emitTestEvent';
@@ -70,6 +71,17 @@ export type __GetLedgerNanoStatusMessage__ = {
     cmd: 'getLedgerNanoStatus';
 };
 
+export type __GenerateAddressMessage__ = {
+    cmd: 'generateAddress';
+    payload: {
+        accountIndex: number;
+        internal: boolean;
+        addressIndex: number;
+        options?: GenerateAddressOptions;
+        bech32Hrp?: string;
+    };
+};
+
 export type __GetNodeInfoMessage__ = {
     cmd: 'getNodeInfo';
     payload: {
@@ -81,20 +93,20 @@ export type __GetNodeInfoMessage__ = {
 export type __GetParticipationEventMessage__ = {
     cmd: 'getParticipationEvent';
     payload: {
-        eventId: EventId
-    }
-}
+        eventId: EventId;
+    };
+};
 
 export type __GetParticipationEventsMessage__ = {
     cmd: 'getParticipationEvents';
-}
+};
 
 export type __GetParticipationEventStatusMessage__ = {
     cmd: 'getParticipationEventStatus';
     payload: {
-        eventId: EventId
-    }
-}
+        eventId: EventId;
+    };
+};
 
 export type __HexToBech32__ = {
     cmd: 'hexToBech32';
@@ -121,10 +133,10 @@ export type __RecoverAccountsMessage__ = {
 export type __RegisterParticipationEventMessage__ = {
     cmd: 'registerParticipationEvent';
     payload: {
-        eventId: EventId,
-        nodes: Node[]
-    }
-}
+        eventId: EventId;
+        nodes: Node[];
+    };
+};
 
 export type __RemoveLatestAccountMessage__ = {
     cmd: 'removeLatestAccount';

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `RequiredStorageDeposit` and `RequiredStorageDepositDto` types;
 - `account/types/balance` module;
+- `AccountBuilder::with_bech32_hrp()`;
 
 ### Changed
 
@@ -37,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `clear_listeners` from message interface;
 - `listen` from message interface;
+- default bech32 HRP in account builder;
 
 ## 1.0.0-rc.3 - 2022-11-24
 
