@@ -356,7 +356,7 @@ jobs:
 
       - name: Test
         shell: bash
-        working-directory: bindings/java/iota-wallet-java/
+        working-directory: bindings/java/
         run: |
           chmod +x gradlew
           ./gradlew test -i

@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.3 - XXXX-XX-XX
+## 1.0.0-rc.1 - 2022-MM-DD
 
 ### Added
 
@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move `WalletCommand` class from `NativeApi`;
 - Rename `ClientResponse` to `WalletResponse`;
 
+<!--
 ## 1.0.0-rc.2 - 2022-11-15
 
 ### Changed
@@ -138,3 +139,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - All glue code;
+ -->
