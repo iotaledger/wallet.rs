@@ -78,6 +78,7 @@ export type __GenerateAddressMessage__ = {
         internal: boolean;
         addressIndex: number;
         options?: GenerateAddressOptions;
+        bech32Hrp?: string;
     };
 };
 

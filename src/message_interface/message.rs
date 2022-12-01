@@ -133,6 +133,9 @@ pub enum Message {
         address_index: u32,
         /// Options
         options: Option<GenerateAddressOptions>,
+        /// Bech32 HRP
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
     },
     /// Get the ledger nano status
     /// Expected response: [`LedgerNanoStatus`](crate::message_interface::Response::LedgerNanoStatus)
@@ -276,10 +279,11 @@ impl Debug for Message {
                 internal,
                 address_index,
                 options,
+                bech32_hrp,
             } => write!(
                 f,
-                "GenerateAddress{{ account_index: {:?}, internal: {:?}, address_index: {:?}, options: {:?}, }}",
-                account_index, internal, address_index, options,
+                "GenerateAddress{{ account_index: {:?}, internal: {:?}, address_index: {:?}, options: {:?}, bech32_hrp: {:?} }}",
+                account_index, internal, address_index, options, bech32_hrp
             ),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),

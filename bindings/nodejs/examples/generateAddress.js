@@ -13,7 +13,8 @@ async function run() {
             0,
             false,
             0,
-            { ledgerNanoPrompt: false }
+            { ledgerNanoPrompt: false },
+            "tst"
         );
         console.log('Address:', address);
     } catch (error) {
@@ -39,7 +40,7 @@ async function createAccountManager() {
     };
 
     const manager = new AccountManager(accountManagerOptions);
-    await manager.storeMnemonic(process.env.MNEMONIC);
+    // await manager.storeMnemonic(process.env.MNEMONIC);
     return manager;
 }
 

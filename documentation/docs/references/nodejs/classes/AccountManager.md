@@ -209,7 +209,7 @@ ___
 
 ### generateAddress
 
-▸ **generateAddress**(`accountIndex`, `internal`, `addressIndex`, `options?`): `Promise`<`string`\>
+▸ **generateAddress**(`accountIndex`, `internal`, `addressIndex`, `options?`, `bech32Hrp?`): `Promise`<`string`\>
 
 Generate an address without storing it.
 
@@ -221,6 +221,7 @@ Generate an address without storing it.
 | `internal` | `boolean` |
 | `addressIndex` | `number` |
 | `options?` | [`GenerateAddressOptions`](../interfaces/GenerateAddressOptions.md) |
+| `bech32Hrp?` | `string` |
 
 #### Returns
 

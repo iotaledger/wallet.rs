@@ -154,7 +154,7 @@ class IotaWallet():
             client_options
         )
 
-    def generate_address(self, account_index, internal, address_index, options=None):
+    def generate_address(self, account_index, internal, address_index, options=None, bech32_hrp=None):
         """Generate an address without storing it.
         """
         return self._send_cmd_routine(
@@ -162,7 +162,8 @@ class IotaWallet():
                 'accountIndex': account_index,
                 'internal': internal,
                 'addressIndex': address_index,
-                'options': options
+                'options': options,
+                'bech32Hrp': bech32_hrp
             }
         )
 

@@ -7,13 +7,10 @@ use iota_client::{
     block::address::Address,
     secret::{GenerateAddressOptions, SecretManage, SecretManager},
 };
-#[cfg(all(feature = "events", feature = "ledger_nano"))]
-use {
-    crate::events::types::{AddressData, WalletEvent},
-    iota_client::constants::SHIMMER_TESTNET_BECH32_HRP,
-};
 
 use crate::account_manager::AccountManager;
+#[cfg(all(feature = "events", feature = "ledger_nano"))]
+use crate::events::types::{AddressData, WalletEvent};
 
 impl AccountManager {
     /// Generate an address without storing it
@@ -60,10 +57,7 @@ impl AccountManager {
                             )
                             .await?;
 
-                        let bech32_hrp = self
-                            .get_bech32_hrp()
-                            .await
-                            .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
+                        let bech32_hrp = self.get_bech32_hrp().await?;
 
                         self.event_emitter.lock().await.emit(
                             account_index,

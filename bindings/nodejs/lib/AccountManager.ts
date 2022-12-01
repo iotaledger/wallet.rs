@@ -180,10 +180,17 @@ export class AccountManager {
         internal: boolean,
         addressIndex: number,
         options?: GenerateAddressOptions,
+        bech32Hrp?: string,
     ): Promise<string> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'generateAddress',
-            payload: { accountIndex, internal, addressIndex, options },
+            payload: {
+                accountIndex,
+                internal,
+                addressIndex,
+                options,
+                bech32Hrp,
+            },
         });
         return JSON.parse(response).payload;
     }

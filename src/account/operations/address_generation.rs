@@ -1,10 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressOptions, SecretManage, SecretManager},
-};
+use iota_client::secret::{GenerateAddressOptions, SecretManage, SecretManager};
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
@@ -63,14 +60,7 @@ impl AccountHandle {
         let bech32_hrp = {
             match account.public_addresses.first() {
                 Some(address) => address.address.bech32_hrp.to_string(),
-                // Only when we create a new account we don't have the first address and need to get the information
-                // from the client Doesn't work for offline creating, should we use the network from the
-                // GenerateAddressOptions instead to use `iota` or `atoi`?
-                None => self
-                    .client
-                    .get_bech32_hrp()
-                    .await
-                    .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
+                None => self.client.get_bech32_hrp().await?,
             }
         };
 

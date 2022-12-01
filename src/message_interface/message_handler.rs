@@ -234,6 +234,7 @@ impl WalletMessageHandler {
                 internal,
                 address_index,
                 options,
+                bech32_hrp,
             } => {
                 convert_async_panics(|| async {
                     let address = self
@@ -241,11 +242,10 @@ impl WalletMessageHandler {
                         .generate_address(account_index, internal, address_index, options)
                         .await?;
 
-                    let bech32_hrp = self
-                        .account_manager
-                        .get_bech32_hrp()
-                        .await
-                        .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string());
+                    let bech32_hrp = match bech32_hrp {
+                        Some(bech32_hrp) => bech32_hrp,
+                        None => self.account_manager.get_bech32_hrp().await?,
+                    };
 
                     Ok(Response::Bech32Address(address.to_bech32(bech32_hrp)))
                 })
