@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Fix `RequiredStorageDeposit` deserialization;
 - Rename `ClientCommand` to `WalletCommand`;
 - Move `WalletCommand` class from `NativeApi`;
 - Rename `ClientResponse` to `WalletResponse`;
