@@ -9,8 +9,10 @@ use iota_wallet::{
 use std::{
     ffi::{CStr, CString},
     os::raw::{c_char, c_void},
+    str::FromStr,
 };
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use once_cell::sync::OnceCell;
 use std::sync::Arc;
 use tokio::runtime::Runtime;
@@ -102,7 +104,7 @@ pub unsafe extern "C" fn iota_destroy(handle: *mut IotaWalletHandle) {
         return;
     }
 
-    Box::from_raw(handle);
+    drop(Box::from_raw(handle));
 }
 
 /// # Safety
@@ -208,16 +210,76 @@ pub unsafe extern "C" fn iota_listen(
     0
 }
 
-// #[no_mangle]
-// pub extern "C" fn iota_init_logger(file_name: *const c_char) {
-//     let c_file_name = unsafe {
-//         assert!(!file_name.is_null());
-//         CStr::from_ptr(file_name)
-//     };
-//     let _file_name = c_file_name.to_str().unwrap();
+/// # Safety
+///
+/// `callback` will be invoked from another thread so context must be safe to `Send` across threads
+#[no_mangle]
+pub unsafe extern "C" fn iota_clear_listeners(
+    handle: *mut IotaWalletHandle,
+    event_types: *const c_char,
+    callback: Callback,
+    context: *mut c_void,
+    error_buffer: *mut c_char,
+    error_buffer_size: usize,
+) -> i8 {
+    let (handle, event_types) = {
+        if handle.is_null() || event_types.is_null() {
+            return -1;
+        }
 
-//     let output_config = LoggerOutputConfigBuilder::new()
-//         .name(file_name)
-//         .level_filter(LevelFilter::Debug);
-//     init_logger(LoggerConfig::build().with_output(output_config));
-// }
+        let handle = match handle.as_ref() {
+            Some(handle) => handle,
+            None => {
+                copy_error_message(error_buffer, Box::new(INVALID_HANDLE_ERR), error_buffer_size);
+                return -1;
+            }
+        };
+
+        let event_types = match CStr::from_ptr(event_types).to_str() {
+            Ok(event_types) => event_types,
+            Err(e) => {
+                copy_error_message(error_buffer, Box::new(e), error_buffer_size);
+                return -1;
+            }
+        };
+
+        (handle, event_types)
+    };
+
+    let event_types: Vec<WalletEventType> = match serde_json::from_str(event_types) {
+        Ok(event_types) => event_types,
+        Err(e) => {
+            copy_error_message(error_buffer, Box::new(e), error_buffer_size);
+            return -1;
+        }
+    };
+
+    let context = context as usize;
+
+    runtime().spawn(handle.listen(event_types, move |event: &Event| {
+        let message = serde_json::to_string(&event).unwrap();
+        let message = CString::new(message).unwrap();
+        let context = context as *mut c_void;
+        callback(message.as_ptr(), std::ptr::null(), context);
+    }));
+
+    0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn iota_init_logger(file_name: *const c_char, level_filter: *const c_char) -> i8 {
+    assert!(!file_name.is_null());
+    let file_name = CStr::from_ptr(file_name).to_str().unwrap();
+
+    let mut level = log::LevelFilter::Debug;
+    if !level_filter.is_null() {
+        let level_filter = CStr::from_ptr(level_filter);
+        level = log::LevelFilter::from_str(level_filter.to_str().unwrap()).unwrap();
+    }
+
+    let output_config = LoggerOutputConfigBuilder::new().name(file_name).level_filter(level);
+    match logger_init(LoggerConfig::build().with_output(output_config).finish()) {
+        Ok(_) => 0,
+        Err(_) => -1,
+    }
+}
