@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RequiredStorageDeposit` and `RequiredStorageDepositDto` types;
 - `account/types/balance` module;
 - `AccountBuilder::with_bech32_hrp()`;
+- `AccountMethod::RequestFundsFromFaucet` to message interface;
 
 ### Changed
 
