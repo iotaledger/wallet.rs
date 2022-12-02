@@ -62,8 +62,6 @@ impl AccountHandle {
         ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
 
         // request possible spent outputs
-        // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
-        // `spent_or_not_synced_outputs` directly from a new method
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
         let spent_or_unsynced_output_metadata_responses = self
             .client
