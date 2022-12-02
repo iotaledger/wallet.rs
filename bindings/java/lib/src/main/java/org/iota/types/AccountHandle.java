@@ -9,6 +9,7 @@ import org.iota.Wallet;
 import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.types.account_methods.*;
+import org.iota.types.exceptions.NoFundsReceivedFromFaucetException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.OutputId;
 import org.iota.types.ids.TransactionId;
@@ -543,6 +544,29 @@ public class AccountHandle extends AbstractObject {
      */
     public Transaction createAliasOutput(CreateAliasOutput options) throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
+    }
+
+    /**
+     * Asks the faucet for funds.
+     *
+     * @throws NoFundsReceivedFromFaucetException when the faucet didn't fund the address.
+     */
+    public void requestFundsFromFaucet(RequestFundsFromFaucet options) throws WalletException, NoFundsReceivedFromFaucetException {
+        int maxAttempts = 5;
+        for(int i = 0; i < maxAttempts; i++) {
+            if(syncAccount(new SyncAccount()).getBaseCoin().getAvailable() < 1000000) {
+                callAccountMethod(options);
+                try {
+                    Thread.sleep(1000 * 25);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else
+                return;
+        }
+
+        if(syncAccount(new SyncAccount()).getBaseCoin().getAvailable() < 1000000)
+            throw new NoFundsReceivedFromFaucetException();
     }
 
 }

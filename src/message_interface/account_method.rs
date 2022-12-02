@@ -392,4 +392,10 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     DecreaseVotingPower { amount: String },
+    /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
+    RequestFundsFromFaucet {
+        #[serde(rename = "faucetUrl")]
+        faucet_url: String,
+        address: String,
+    },
 }
