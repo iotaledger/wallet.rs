@@ -214,7 +214,7 @@ pub unsafe extern "C" fn iota_listen(
 ///
 /// `callback` will be invoked from another thread so context must be safe to `Send` across threads
 #[no_mangle]
-pub unsafe extern "C" fn clear_listeners(
+pub unsafe extern "C" fn iota_clear_listeners(
     handle: *mut IotaWalletHandle,
     event_types: *const c_char,
     callback: Callback,
