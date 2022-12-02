@@ -5,24 +5,24 @@ package org.iota.types;
 
 public class RequiredStorageDeposit extends AbstractObject {
 
-    private String alias;
-    private String basic;
-    private String foundry;
-    private String nft;
+    private long alias;
+    private long basic;
+    private long foundry;
+    private long nft;
 
-    public String getAlias() {
+    public long getAlias() {
         return alias;
     }
 
-    public String getBasic() {
+    public long getBasic() {
         return basic;
     }
 
-    public String getFoundry() {
+    public long getFoundry() {
         return foundry;
     }
 
-    public String getNft() {
+    public long getNft() {
         return nft;
     }
 }
