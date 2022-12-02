@@ -40,7 +40,11 @@ impl AccountHandle {
     ) -> crate::Result<BlockId> {
         log::debug!("[retry_transaction_until_included]");
 
-        if let Some(transaction) = self.read().await.transactions.get(transaction_id) {
+        let account = self.read().await;
+        let transaction = account.transactions.get(transaction_id).cloned();
+        drop(account);
+
+        if let Some(transaction) = transaction {
             if transaction.inclusion_state == InclusionState::Confirmed {
                 return transaction.block_id.ok_or(crate::Error::MissingParameter("block id"));
             }
