@@ -1,3 +1,0 @@
-rootProject.name = 'iota-wallet-java'
-include('lib')
-include('examples')

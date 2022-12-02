@@ -45,8 +45,7 @@ task buildRustRelease(type:Exec){
     }
 }
 
-archivesBaseName = 'iota-wallet-java'
-version = '1.0.0-rc.2'
+archivesBaseName = 'iota-wallet'
 
 jar {
     dependsOn 'buildRustRelease'
@@ -90,19 +89,20 @@ test {
     useJUnitPlatform()
 }
 
+version =  project.getRootProject().properties.version
+
 publishing {
     publications {
         allJars (MavenPublication) {
             groupId = 'org.iota'
-            artifactId = 'iota-wallet-java'
-            version = project.version
+            artifactId = 'iota-wallet'
 
             artifact jarWithoutNativeLibs
 
             from components.java
 
             pom {
-                name = 'iota-wallet-java'
+                name = 'iota-wallet'
                 description = 'Java binding to the wallet.rs library.'
                 url = 'https://github.com/iotaledger/wallet.rs'
                 inceptionYear = '2022'
