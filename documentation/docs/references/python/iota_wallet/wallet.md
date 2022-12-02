@@ -139,7 +139,11 @@ Updates the client options for all accounts.
 ### generate\_address
 
 ```python
-def generate_address(account_index, internal, address_index, options=None)
+def generate_address(account_index,
+                     internal,
+                     address_index,
+                     options=None,
+                     bech32_hrp=None)
 ```
 
 Generate an address without storing it.

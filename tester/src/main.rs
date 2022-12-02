@@ -82,7 +82,9 @@ async fn main() -> Result<(), Error> {
     let mut error = false;
 
     // private tangle faucet mnemonic: https://github.com/iotaledger/hornet/blob/develop/private_tangle/private_tangle_keys.md#faucet
-    let mnemonic = String::from("average day true meadow dawn pistol near vicious have ordinary sting fetch mobile month ladder explain tornado curious energy orange belt glue surge urban");
+    let mnemonic = String::from(
+        "average day true meadow dawn pistol near vicious have ordinary sting fetch mobile month ladder explain tornado curious energy orange belt glue surge urban",
+    );
     let (faucet_manager, faucet_account) = faucet(mnemonic).await?;
     let protocol_parameters = faucet_account.client().get_protocol_parameters().await?;
 

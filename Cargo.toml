@@ -31,6 +31,9 @@ thiserror = { version = "1.0.37", default-features = false }
 tokio = { version = "1.22.0", default-features = false, features = [ "sync", "rt", "time" ] }
 zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_derive" ] }
 
+[target.'cfg(target_family = "wasm")'.dependencies]
+gloo-timers = { version = "0.2.4", default-features = false, features = [ "futures" ] }
+
 [dev-dependencies]
 dotenv = { version =  "0.15.0", default-features = false }
 fern-logger = { version = "0.5.0", default-features = false }

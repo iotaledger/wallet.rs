@@ -368,6 +368,18 @@ class Account:
             }
         )
 
+    def retry_transaction_until_included(self, transaction_id, interval=None, max_attempts=None):
+        """Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+        included (referenced by a milestone). Returns the included block id.
+        """
+        return self._call_account_method(
+            'retryTransactionUntilIncluded', {
+                'transactionId': transaction_id,
+                'interval': interval,
+                'maxAttempts': max_attempts
+            }
+        )
+
     def sync_account(self, options=None):
         """Sync the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.

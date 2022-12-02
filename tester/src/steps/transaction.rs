@@ -1,14 +1,11 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Duration;
-
 use iota_wallet::iota_client::block::output::{
     unlock_condition::{AddressUnlockCondition, UnlockCondition},
     BasicOutputBuilder,
 };
 use serde_json::Value;
-use tokio::time;
 
 use crate::{context::Context, error::Error};
 
@@ -93,11 +90,9 @@ pub async fn process_transaction<'a>(context: &Context<'a>, transaction: &Value)
             if let Some(confirmation) = transaction.get("confirmation") {
                 if let Some(confirmation) = confirmation.as_bool() {
                     if confirmation {
-                        if let Some(block_id) = sent_transaction.block_id {
-                            account_from.retry_until_included(&block_id, Some(1), None).await?;
-                        } else {
-                            time::sleep(Duration::from_secs(5)).await;
-                        }
+                        account_from
+                            .retry_transaction_until_included(&sent_transaction.transaction_id, Some(1), None)
+                            .await?;
                     }
                 } else {
                     return Err(Error::InvalidField("confirmation"));

@@ -10,6 +10,7 @@ import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.types.account_methods.*;
 import org.iota.types.exceptions.WalletException;
+import org.iota.types.ids.BlockId;
 import org.iota.types.ids.OutputId;
 import org.iota.types.ids.TransactionId;
 import org.iota.types.ids.account.AccountIdentifier;
@@ -428,6 +429,16 @@ public class AccountHandle extends AbstractObject {
      */
     public PreparedTransactionData prepareTransaction(PrepareTransaction options) throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(options), PreparedTransactionData.class);
+    }
+
+    /**
+     * Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+     * included (referenced by a milestone). Returns the included block id.
+     *
+     * @param options The options.
+     */
+    public BlockId retryTransactionUntilIncluded(RetryTransactionUntilIncluded options) throws WalletException {
+        return CustomGson.get().fromJson(callAccountMethod(options), BlockId.class);
     }
 
     /**

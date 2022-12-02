@@ -63,9 +63,11 @@ async fn main() -> Result<()> {
                 &env::var("NODE_URL").unwrap(),
                 block_id
             );
-            // Try to get the transaction confirmed
-            account.retry_until_included(&block_id, None, None).await?;
         }
+        // Try to get the transaction confirmed
+        account
+            .retry_transaction_until_included(&transaction.transaction_id, None, None)
+            .await?;
         // Sync so the new outputs are available again for new transactions
         account.sync(None).await?;
     }

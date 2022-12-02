@@ -248,6 +248,15 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
+export type __RetryTransactionUntilIncludedMethod__ = {
+    name: 'retryTransactionUntilIncluded';
+    data: {
+        transactionId: string;
+        interval?: number;
+        maxAttempts?: number;
+    };
+};
+
 export type __SendAmountMethod__ = {
     name: 'sendAmount';
     data: {

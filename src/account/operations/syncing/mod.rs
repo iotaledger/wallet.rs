@@ -16,7 +16,6 @@ use iota_client::{
     block::{
         address::{Address, AliasAddress, NftAddress},
         output::{Output, OutputId},
-        Block, BlockId,
     },
 };
 
@@ -29,21 +28,6 @@ use crate::account::{
 };
 
 impl AccountHandle {
-    /// Retries (promotes or reattaches) a block for provided block id until it's included (referenced by a
-    /// milestone). This function is re-exported from the client library and default interval is as defined in iota.rs.
-    /// Returns the included block at first position and additional reattached blocks
-    pub async fn retry_until_included(
-        &self,
-        block_id: &BlockId,
-        interval: Option<u64>,
-        max_attempts: Option<u64>,
-    ) -> crate::Result<Vec<(BlockId, Block)>> {
-        Ok(self
-            .client
-            .retry_until_included(block_id, interval, max_attempts)
-            .await?)
-    }
-
     /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     pub async fn sync(&self, options: Option<SyncOptions>) -> crate::Result<AccountBalance> {
@@ -78,8 +62,6 @@ impl AccountHandle {
         ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
 
         // request possible spent outputs
-        // TODO: just get the output metadata (requires https://github.com/iotaledger/iota.rs/issues/1256 first), since we have the output already and then return
-        // `spent_or_not_synced_outputs` directly from a new method
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
         let spent_or_unsynced_output_metadata_responses = self
             .client
