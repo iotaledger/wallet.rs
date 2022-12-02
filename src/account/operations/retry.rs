@@ -52,9 +52,11 @@ impl AccountHandle {
             if transaction.inclusion_state == InclusionState::Conflicting
                 || transaction.inclusion_state == InclusionState::UnknownPruned
             {
-                return Err(
-                    iota_client::Error::TangleInclusionError(format!("transaction id {}", transaction_id)).into(),
-                );
+                return Err(iota_client::Error::TangleInclusionError(format!(
+                    "transaction id: {} inclusion state: {:?}",
+                    transaction_id, transaction.inclusion_state
+                ))
+                .into());
             }
 
             let block_id = match transaction.block_id {
