@@ -406,8 +406,5 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     DecreaseVotingPower { amount: String },
     /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
-    RequestFundsFromFaucet {
-        url: String,
-        address: String,
-    },
+    RequestFundsFromFaucet { url: String, address: String },
 }
