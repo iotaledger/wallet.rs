@@ -11,6 +11,7 @@ import org.iota.types.ids.account.AccountAlias;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class RequestFundsFromFaucet {
+    
     public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException, NoFundsReceivedFromFaucetException {
         // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
         // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
