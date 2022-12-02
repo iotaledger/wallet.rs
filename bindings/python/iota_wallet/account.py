@@ -368,13 +368,13 @@ class Account:
             }
         )
 
-    def retry_transaction_until_included(self, outputs, interval=None, max_attempts=None):
+    def retry_transaction_until_included(self, transaction_id, interval=None, max_attempts=None):
         """Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
         included (referenced by a milestone). Returns the included block id.
         """
         return self._call_account_method(
             'retryTransactionUntilIncluded', {
-                'transactionId': outputs,
+                'transactionId': transaction_id,
                 'interval': interval,
                 'maxAttempts': max_attempts
             }

@@ -301,7 +301,7 @@ pub enum AccountMethod {
     /// included (referenced by a milestone). Returns the included block id.
     /// Expected response: [`BlockId`](crate::message_interface::Response::BlockId)
     RetryTransactionUntilIncluded {
-        /// Sync options
+        /// Transaction id
         #[serde(rename = "transactionId")]
         transaction_id: TransactionId,
         /// Interval

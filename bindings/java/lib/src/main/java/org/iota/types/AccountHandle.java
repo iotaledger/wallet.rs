@@ -437,7 +437,7 @@ public class AccountHandle extends AbstractObject {
      *
      * @param options The options.
      */
-    public BlockId retryTransactionUntilIncluded(PrepareTransaction options) throws WalletException {
+    public BlockId retryTransactionUntilIncluded(RetryTransactionUntilIncluded options) throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(options), BlockId.class);
     }
 
