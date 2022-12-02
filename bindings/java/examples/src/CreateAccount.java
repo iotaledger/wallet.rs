@@ -21,7 +21,7 @@ public class CreateAccount {
         );
 
         // Add the mnemonic secret to the secret manager.
-        wallet.storeMnemonic(Env.MNEMONIC);
+        wallet.storeMnemonic(wallet.generateMnemonic());
 
         // Create an account.
         AccountHandle a = wallet.createAccount(Env.ACCOUNT_NAME);

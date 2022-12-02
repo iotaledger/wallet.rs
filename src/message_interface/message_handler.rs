@@ -976,7 +976,7 @@ impl WalletMessageHandler {
                 .await
             }
             AccountMethod::RequestFundsFromFaucet {
-                url: url,
+                url,
                 address,
             } => {
                 convert_async_panics(|| async {
