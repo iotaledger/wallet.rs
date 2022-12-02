@@ -259,7 +259,7 @@ Prepare transaction.
 ### retry\_transaction\_until\_included
 
 ```python
-def retry_transaction_until_included(outputs,
+def retry_transaction_until_included(transaction_id,
                                      interval=None,
                                      max_attempts=None)
 ```
