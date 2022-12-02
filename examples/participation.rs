@@ -119,7 +119,7 @@ async fn main() -> Result<()> {
     );
 
     account
-        .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
         .await?;
     account.sync(None).await?;
 
@@ -139,7 +139,7 @@ async fn main() -> Result<()> {
     // );
 
     // account
-    //     .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+    //     .retry_transaction_until_included(&transaction.transaction_id, None, None)
     //     .await?;
     // account.sync(None).await?;
 
@@ -155,7 +155,7 @@ async fn main() -> Result<()> {
         transaction.block_id.expect("no block created yet")
     );
     account
-        .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
         .await?;
     account.sync(None).await?;
 
@@ -178,7 +178,7 @@ async fn main() -> Result<()> {
         transaction.block_id.expect("no block created yet")
     );
     account
-        .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+        .retry_transaction_until_included(&transaction.transaction_id, None, None)
         .await?;
     account.sync(None).await?;
 
@@ -199,7 +199,7 @@ async fn main() -> Result<()> {
     // );
 
     // account
-    //     .retry_until_included(&transaction.block_id.expect("no block created yet"), None, None)
+    //     .retry_transaction_until_included(&transaction.transaction_id, None, None)
     //     .await?;
     // account.sync(None).await?;
 

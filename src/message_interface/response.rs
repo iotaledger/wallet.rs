@@ -11,6 +11,7 @@ use iota_client::{
     block::{
         output::{dto::OutputDto, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        BlockId,
     },
     NodeInfoWrapper,
 };
@@ -50,6 +51,9 @@ pub enum Response {
     /// Response for
     /// [`AddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::AddressesWithUnspentOutputs)
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
+    /// Response for
+    /// [`RetryTransactionUntilIncluded`](crate::message_interface::AccountMethod::RetryTransactionUntilIncluded)
+    BlockId(BlockId),
     /// Response for
     /// [`BuildAliasOutput`](crate::message_interface::AccountMethod::BuildAliasOutput)
     /// [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
@@ -189,6 +193,7 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
+            Response::BlockId(block_id) => write!(f, "BlockId({:?})", block_id),
             Response::Output(output) => write!(f, "Output({:?})", output),
             Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),

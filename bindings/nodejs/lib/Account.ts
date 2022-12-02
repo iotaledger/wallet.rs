@@ -768,6 +768,29 @@ export class Account {
     }
 
     /**
+     * Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+     * included (referenced by a milestone). Returns the included block id.
+     */
+    async retryTransactionUntilIncluded(
+        transactionId: string,
+        interval?: number,
+        maxAttempts?: number,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'retryTransactionUntilIncluded',
+                data: {
+                    transactionId,
+                    interval,
+                    maxAttempts,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * Send a transaction with amounts from input addresses.
      * @param addressesWithAmount Addresses with amounts.
      * @param transactionOptions The options to define a `RemainderValueStrategy`

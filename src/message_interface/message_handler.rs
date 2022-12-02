@@ -795,6 +795,19 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            AccountMethod::RetryTransactionUntilIncluded {
+                transaction_id,
+                interval,
+                max_attempts,
+            } => {
+                convert_async_panics(|| async {
+                    let block_id = account_handle
+                        .retry_transaction_until_included(&transaction_id, interval, max_attempts)
+                        .await?;
+                    Ok(Response::BlockId(block_id))
+                })
+                .await
+            }
             AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.sync(options.clone()).await?,
             ))),

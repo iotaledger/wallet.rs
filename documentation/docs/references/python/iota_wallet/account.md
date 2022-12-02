@@ -256,6 +256,17 @@ def prepare_transaction(outputs, options=None)
 
 Prepare transaction.
 
+### retry\_transaction\_until\_included
+
+```python
+def retry_transaction_until_included(transaction_id,
+                                     interval=None,
+                                     max_attempts=None)
+```
+
+Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it&#x27;s
+included (referenced by a milestone). Returns the included block id.
+
 ### sync\_account
 
 ```python
