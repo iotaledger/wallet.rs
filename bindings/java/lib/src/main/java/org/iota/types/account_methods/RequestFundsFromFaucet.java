@@ -5,11 +5,11 @@ package org.iota.types.account_methods;
 
 public class RequestFundsFromFaucet implements AccountMethod {
 
-    private String faucetUrl;
+    private String url;
     private String address;
 
-    public RequestFundsFromFaucet(String faucetUrl, String address) {
-        this.faucetUrl = faucetUrl;
+    public RequestFundsFromFaucet(String url, String address) {
+        this.url = url;
         this.address = address;
     }
 }

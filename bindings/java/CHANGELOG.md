@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `requestFundsFromFaucet()` function and example;
 - Enable native library loading via Java path;
 - Throw `InitializeWalletException` on failed initialization;
 - Wallet.java `clearListeners`, `destroy` and `initLogger` methods;

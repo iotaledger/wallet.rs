@@ -394,8 +394,7 @@ pub enum AccountMethod {
     DecreaseVotingPower { amount: String },
     /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
     RequestFundsFromFaucet {
-        #[serde(rename = "faucetUrl")]
-        faucet_url: String,
+        url: String,
         address: String,
     },
 }
