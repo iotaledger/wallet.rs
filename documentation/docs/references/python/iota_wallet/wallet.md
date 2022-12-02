@@ -23,7 +23,7 @@ Initialize the IOTA Wallet.
 ### create\_account
 
 ```python
-def create_account(alias=None)
+def create_account(alias=None, bech32_hrp=None)
 ```
 
 Create a new account
@@ -101,7 +101,7 @@ def remove_latest_account()
 
 Remove latest account.
 
-### restore\_back
+### restore\_backup
 
 ```python
 def restore_backup(source, password)
@@ -111,14 +111,6 @@ Restore a backup from a Stronghold file
 Replaces client_options, coin_type, secret_manager and accounts. Returns an error if accounts were already created
 If Stronghold is used as secret_manager, the existing Stronghold file will be overwritten. If a mnemonic was
 stored, it will be gone.
-
-### delete\_accounts\_and\_database
-
-```python
-def delete_accounts_and_database()
-```
-
-Deletes the accounts and database.
 
 ### generate\_mnemonic
 
@@ -143,6 +135,14 @@ def set_client_options(client_options)
 ```
 
 Updates the client options for all accounts.
+
+### generate\_address
+
+```python
+def generate_address(account_index, internal, address_index, options=None)
+```
+
+Generate an address without storing it.
 
 ### get\_node\_info
 

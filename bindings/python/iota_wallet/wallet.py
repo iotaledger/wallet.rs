@@ -26,12 +26,13 @@ class IotaWallet():
     def get_handle(self):
         return self.handle
 
-    def create_account(self, alias=None):
+    def create_account(self, alias=None, bech32_hrp=None):
         """Create a new account
         """
         return self._send_cmd_routine(
             'createAccount', {
                 'alias': self.__return_str_or_none(alias),
+                'bech32_hrp': self.__return_str_or_none(bech32_hrp),
             }
         )
 
@@ -151,6 +152,19 @@ class IotaWallet():
         return self._send_cmd_routine(
             'setClientOptions',
             client_options
+        )
+
+    def generate_address(self, account_index, internal, address_index, options=None, bech32_hrp=None):
+        """Generate an address without storing it.
+        """
+        return self._send_cmd_routine(
+            'generateAddress', {
+                'accountIndex': account_index,
+                'internal': internal,
+                'addressIndex': address_index,
+                'options': options,
+                'bech32Hrp': bech32_hrp
+            }
         )
 
     def get_node_info(self, url, auth):

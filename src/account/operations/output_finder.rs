@@ -3,8 +3,6 @@
 
 use std::cmp;
 
-use iota_client::secret::GenerateAddressOptions;
-
 use crate::account::{
     handle::AccountHandle,
     operations::{address_generation::AddressGenerationOptions, syncing::SyncOptions},
@@ -53,9 +51,7 @@ impl AccountHandle {
                     address_amount_to_generate,
                     Some(AddressGenerationOptions {
                         internal: false,
-                        metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: false,
-                        },
+                        options: None,
                     }),
                 )
                 .await?;
@@ -77,9 +73,7 @@ impl AccountHandle {
                     address_amount_to_generate,
                     Some(AddressGenerationOptions {
                         internal: true,
-                        metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: false,
-                        },
+                        options: None,
                     }),
                 )
                 .await?;
@@ -112,9 +106,7 @@ impl AccountHandle {
                     address_gap_limit,
                     Some(AddressGenerationOptions {
                         internal: false,
-                        metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: false,
-                        },
+                        options: None,
                     }),
                 )
                 .await?;
@@ -123,9 +115,7 @@ impl AccountHandle {
                     address_gap_limit_internal,
                     Some(AddressGenerationOptions {
                         internal: true,
-                        metadata: GenerateAddressOptions {
-                            ledger_nano_prompt: false,
-                        },
+                        options: None,
                     }),
                 )
                 .await?;

@@ -216,3 +216,36 @@ async fn iota_coin_type() -> Result<()> {
     std::fs::remove_dir_all("test-storage/iota_coin_type").unwrap_or(());
     Ok(())
 }
+
+#[tokio::test]
+async fn generate_address_shimmer_coin_type() -> Result<()> {
+    std::fs::remove_dir_all("test-storage/generate_address_shimmer_coin_type").unwrap_or(());
+    let client_options = ClientOptions::new()
+        .with_node("http://localhost:14265")?
+        .with_ignore_node_health();
+
+    // mnemonic without balance
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
+        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
+    )?;
+
+    let manager = AccountManager::builder()
+        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
+        .with_client_options(client_options)
+        .with_coin_type(SHIMMER_COIN_TYPE)
+        .with_storage_path("test-storage/generate_address_shimmer_coin_type")
+        .finish()
+        .await?;
+
+    let address = manager.generate_address(0, false, 0, None).await?;
+
+    // Creating a new account with providing a coin type will use the Shimmer coin type with shimmer testnet bech32 hrp
+    assert_eq!(
+        &address.to_bech32("smr"),
+        // Address generated with bip32 path: [44, 4219, 0, 0, 0]
+        "smr1qq724zgvdujt3jdcd3xzsuqq7wl9pwq3dvsa5zvx49rj9tme8cat65xq7jz"
+    );
+
+    std::fs::remove_dir_all("test-storage/generate_address_shimmer_coin_type").unwrap_or(());
+    Ok(())
+}

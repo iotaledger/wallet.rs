@@ -157,6 +157,7 @@ pub enum Response {
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
+    /// Response for [`GenerateAddress`](crate::message_interface::Message::GenerateAddress)
     Bech32Address(String),
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),

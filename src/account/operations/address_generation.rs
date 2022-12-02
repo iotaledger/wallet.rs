@@ -1,10 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    constants::SHIMMER_TESTNET_BECH32_HRP,
-    secret::{GenerateAddressOptions, SecretManage, SecretManager},
-};
+use iota_client::secret::{GenerateAddressOptions, SecretManage, SecretManager};
 use serde::{Deserialize, Serialize};
 
 use crate::account::{
@@ -15,21 +12,10 @@ use crate::account::{
 use crate::events::types::{AddressData, WalletEvent};
 
 /// Options for address generation
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct AddressGenerationOptions {
     pub internal: bool,
-    pub metadata: GenerateAddressOptions,
-}
-
-impl Default for AddressGenerationOptions {
-    fn default() -> Self {
-        Self {
-            internal: false,
-            metadata: GenerateAddressOptions {
-                ledger_nano_prompt: false,
-            },
-        }
-    }
+    pub options: Option<GenerateAddressOptions>,
 }
 
 impl AccountHandle {
@@ -74,14 +60,7 @@ impl AccountHandle {
         let bech32_hrp = {
             match account.public_addresses.first() {
                 Some(address) => address.address.bech32_hrp.to_string(),
-                // Only when we create a new account we don't have the first address and need to get the information
-                // from the client Doesn't work for offline creating, should we use the network from the
-                // GenerateAddressOptions instead to use `iota` or `atoi`?
-                None => self
-                    .client
-                    .get_bech32_hrp()
-                    .await
-                    .unwrap_or_else(|_| SHIMMER_TESTNET_BECH32_HRP.to_string()),
+                None => self.client.get_bech32_hrp().await?,
             }
         };
 
@@ -93,10 +72,12 @@ impl AccountHandle {
                 // If we don't sync, then we want to display the prompt on the ledger with the address. But the user
                 // needs to have it visible on the computer first, so we need to generate it without the
                 // prompt first
-                if !options.metadata.ledger_nano_prompt {
-                    let mut changed_metadata = options.metadata.clone();
-                    // Change metadata so ledger will not show the prompt the first time
-                    changed_metadata.ledger_nano_prompt = true;
+                if options.options.clone().unwrap_or_default().ledger_nano_prompt {
+                    let changed_options = options.options.clone().map(|mut options| {
+                        // Change options so ledger will not show the prompt the first time
+                        options.ledger_nano_prompt = false;
+                        options
+                    });
                     let mut addresses = Vec::new();
 
                     for address_index in address_range {
@@ -109,7 +90,7 @@ impl AccountHandle {
                                     account.index,
                                     address_index..address_index + 1,
                                     options.internal,
-                                    Some(changed_metadata.clone()),
+                                    changed_options.clone(),
                                 )
                                 .await?;
                             self.event_emitter.lock().await.emit(
@@ -126,7 +107,7 @@ impl AccountHandle {
                                 account.index,
                                 address_index..address_index + 1,
                                 options.internal,
-                                Some(options.metadata.clone()),
+                                options.options.clone(),
                             )
                             .await?;
                         addresses.push(address[0]);
@@ -139,7 +120,7 @@ impl AccountHandle {
                             account.index,
                             address_range.clone(),
                             options.internal,
-                            Some(options.metadata),
+                            options.options,
                         )
                         .await?
                 }
@@ -152,7 +133,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        Some(options.metadata.clone()),
+                        options.options.clone(),
                     )
                     .await?
             }
@@ -163,7 +144,7 @@ impl AccountHandle {
                         account.index,
                         address_range,
                         options.internal,
-                        Some(options.metadata.clone()),
+                        options.options.clone(),
                     )
                     .await?
             }

@@ -455,7 +455,9 @@ export class Account {
      * @param transactionId The ID of the transaction to get.
      * @returns The transaction.
      */
-    async getIncomingTransactionData(transactionId: string): Promise<IncomingTransactionData> {
+    async getIncomingTransactionData(
+        transactionId: string,
+    ): Promise<IncomingTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -533,9 +535,7 @@ export class Account {
      * List all incoming transactions of the account.
      * @returns The incoming transactions with their inputs.
      */
-    async incomingTransactions(): Promise<
-        [string, IncomingTransactionData][]
-    > {
+    async incomingTransactions(): Promise<[string, IncomingTransactionData][]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -968,10 +968,10 @@ export class Account {
                 data: {
                     eventId,
                     answers,
-                }
-            }
-        )
-        return JSON.parse(resp).payload
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async stopParticipating(eventId: string): Promise<Transaction> {
@@ -980,11 +980,11 @@ export class Account {
             {
                 name: 'stopParticipating',
                 data: {
-                    eventId
-                }
-            }
-        )
-        return JSON.parse(resp).payload
+                    eventId,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async getVotingPower(): Promise<string> {
@@ -992,9 +992,9 @@ export class Account {
             this.meta.index,
             {
                 name: 'getVotingPower',
-            }
-        )
-        return JSON.parse(resp).payload
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async getParticipationOverview(): Promise<ParticipationOverview> {
@@ -1002,9 +1002,9 @@ export class Account {
             this.meta.index,
             {
                 name: 'getParticipationOverview',
-            }
-        )
-        return JSON.parse(resp).payload
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async increaseVotingPower(amount: string): Promise<Transaction> {
@@ -1013,11 +1013,11 @@ export class Account {
             {
                 name: 'increaseVotingPower',
                 data: {
-                    amount
-                }
-            }
-        )
-        return JSON.parse(resp).payload
+                    amount,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 
     async decreaseVotingPower(amount: string): Promise<Transaction> {
@@ -1026,10 +1026,10 @@ export class Account {
             {
                 name: 'decreaseVotingPower',
                 data: {
-                    amount
-                }
-            }
-        )
-        return JSON.parse(resp).payload
+                    amount,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
     }
 }

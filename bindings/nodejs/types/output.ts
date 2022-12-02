@@ -39,4 +39,4 @@ export interface Segment {
     bs: Uint8Array;
 }
 
-export type OutputId = string
+export type OutputId = string;
