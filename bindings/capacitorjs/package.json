@@ -1,0 +1,58 @@
+{
+  "name": "@iota/wallet-mobile",
+  "version": "0.0.1",
+  "description": "Capacitor plugin binding to the wallet library",
+  "homepage": "https://github.com/iotaledger/wallet.rs#readme",
+  "main": "dist/esm/index.js",
+  "module": "dist/esm/index.js",
+  "files": [
+    "android/src/main/",
+    "android/build.gradle",
+    "dist/",
+    "ios/Plugin/",
+    "IotaWalletMobile.podspec"
+  ],
+  "types": "dist/esm/index.d.ts",
+  "scripts": {
+    "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
+    "verify:ios": "cd ios && pod install && xcodebuild -workspace Plugin.xcworkspace -scheme Plugin && cd ..",
+    "verify:android": "cd android && ./gradlew clean build test && cd ..",
+    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "clean": "rm -rf ./dist",
+    "watch": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "IOTA Stiftung",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iotaledger/wallet.rs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iotaledger/wallet.rs/issues"
+  },
+  "dependencies": {
+    "@capacitor/core": "^3.4.1",
+    "@iota/types": "^1.0.0-beta.15"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^3.4.1",
+    "@capacitor/core": "^3.4.1",
+    "@capacitor/docgen": "^0.0.10",
+    "@capacitor/ios": "^3.4.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.32.0",
+    "typescript": "~4.0.3"
+  },
+  "peerDependencies": {
+    "@capacitor/core": "^3.4.1"
+  },
+  "capacitor": {
+    "ios": {
+      "src": "ios"
+    },
+    "android": {
+      "src": "android"
+    }
+  }
+}
