@@ -23,5 +23,5 @@ futures = { version = "0.3.25", default-features = false }
 log = { version = "0.4.17", default-features = false }
 once_cell = { version = "1.16.0", default-features = false }
 pyo3 = { version = "0.17.3", default-features = false, features = [ "macros", "extension-module" ] }
-serde_json = { version = "1.0.88", default-features = false }
+serde_json = { version = "1.0.89", default-features = false }
 tokio = { version = "1.22.0", default-features = false }
