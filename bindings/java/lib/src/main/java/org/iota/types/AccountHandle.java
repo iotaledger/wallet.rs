@@ -558,14 +558,19 @@ public class AccountHandle extends AbstractObject {
     }
 
     /**
-     * Asks the faucet for funds.
+     * Syncs the account with the provided sync options and request funds from the faucet.
      *
+     * @param options The options.
+     * @param targetAddressBalance The base coin balance that the address should have after the request.
+     * @param syncOptions The options.
      * @throws NoFundsReceivedFromFaucetException when the faucet didn't fund the address.
      */
-    public void requestFundsFromFaucet(RequestFundsFromFaucet options) throws WalletException, NoFundsReceivedFromFaucetException {
+    public void requestFundsFromFaucet(RequestFundsFromFaucet options, long targetAddressBalance, SyncOptions syncOptions) throws WalletException, NoFundsReceivedFromFaucetException {
         int maxAttempts = 5;
         for(int i = 0; i < maxAttempts; i++) {
-            if(syncAccount(new SyncAccount()).getBaseCoin().getAvailable() < 1000000) {
+            long currentBalance = syncAccount(new SyncAccount().withOptions(syncOptions)).getBaseCoin().getAvailable();
+
+            if(currentBalance < targetAddressBalance) {
                 callAccountMethod(options);
                 try {
                     Thread.sleep(1000 * 25);
@@ -576,7 +581,8 @@ public class AccountHandle extends AbstractObject {
                 return;
         }
 
-        if(syncAccount(new SyncAccount()).getBaseCoin().getAvailable() < 1000000)
+        long currentBalance = syncAccount(new SyncAccount().withOptions(syncOptions)).getBaseCoin().getAvailable();
+        if(currentBalance < targetAddressBalance)
             throw new NoFundsReceivedFromFaucetException();
     }
 

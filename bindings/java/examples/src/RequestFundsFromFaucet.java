@@ -32,8 +32,8 @@ public class RequestFundsFromFaucet {
         // Get an address to fund.
         String address = a.getAddresses()[0].getAddress();
 
-        // Request funds from the faucet.
-        a.requestFundsFromFaucet(new org.iota.types.account_methods.RequestFundsFromFaucet("https://faucet.testnet.shimmer.network/api/enqueue", address));
+        // Syncs the account with the provided sync options and request funds from the faucet.
+        a.requestFundsFromFaucet(new org.iota.types.account_methods.RequestFundsFromFaucet("https://faucet.testnet.shimmer.network/api/enqueue", address), 10000000, new SyncOptions());
 
         // Print the account balance after asking the faucet for funds.
         System.out.println("available account balance after faucet request: " + a.syncAccount(new SyncAccount()).getBaseCoin().getAvailable());
