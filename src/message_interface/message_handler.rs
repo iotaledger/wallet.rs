@@ -23,7 +23,7 @@ use iota_client::{
         DtoError,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    utils, Client, NodeInfoWrapper,
+    request_funds_from_faucet, utils, Client, NodeInfoWrapper,
 };
 use primitive_types::U256;
 use tokio::sync::mpsc::UnboundedSender;
@@ -985,6 +985,12 @@ impl WalletMessageHandler {
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            AccountMethod::RequestFundsFromFaucet { url, address } => {
+                convert_async_panics(|| async {
+                    Ok(Response::Faucet(request_funds_from_faucet(&url, &address).await?))
                 })
                 .await
             }

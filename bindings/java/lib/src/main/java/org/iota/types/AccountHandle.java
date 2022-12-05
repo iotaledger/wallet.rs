@@ -9,6 +9,7 @@ import org.iota.Wallet;
 import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.types.account_methods.*;
+import org.iota.types.exceptions.NoFundsReceivedFromFaucetException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.ids.BlockId;
 import org.iota.types.ids.OutputId;
@@ -554,6 +555,35 @@ public class AccountHandle extends AbstractObject {
      */
     public Transaction createAliasOutput(CreateAliasOutput options) throws WalletException {
         return CustomGson.get().fromJson(callAccountMethod(options), Transaction.class);
+    }
+
+    /**
+     * Syncs the account with the provided sync options and request funds from the faucet.
+     *
+     * @param options The options.
+     * @param targetAddressBalance The base coin balance that the address should have after the request.
+     * @param syncOptions The options.
+     * @throws NoFundsReceivedFromFaucetException when the faucet didn't fund the address.
+     */
+    public void requestFundsFromFaucet(RequestFundsFromFaucet options, long targetAddressBalance, SyncOptions syncOptions) throws WalletException, NoFundsReceivedFromFaucetException {
+        int maxAttempts = 5;
+        for(int i = 0; i < maxAttempts; i++) {
+            long currentBalance = syncAccount(new SyncAccount().withOptions(syncOptions)).getBaseCoin().getAvailable();
+
+            if(currentBalance < targetAddressBalance) {
+                callAccountMethod(options);
+                try {
+                    Thread.sleep(1000 * 25);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } else
+                return;
+        }
+
+        long currentBalance = syncAccount(new SyncAccount().withOptions(syncOptions)).getBaseCoin().getAvailable();
+        if(currentBalance < targetAddressBalance)
+            throw new NoFundsReceivedFromFaucetException();
     }
 
 }

@@ -1183,6 +1183,7 @@ dependencies = [
  "backtrace",
  "futures",
  "getset",
+ "gloo-timers",
  "iota-client",
  "iota-crypto",
  "log",

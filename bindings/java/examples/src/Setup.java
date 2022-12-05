@@ -12,7 +12,6 @@ import org.iota.types.secret.StrongholdSecretManager;
 public class Setup {
 
     public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
-
         // Initialise the logger for all debug output on rusts' side
         Wallet.initLogger(new LoggerOutputConfigBuilder().setLevelFilter(LevelFilter.Debug).setColorEnabled(true));
 

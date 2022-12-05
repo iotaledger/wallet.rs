@@ -3,6 +3,7 @@
 
 package org.iota.types;
 
+import org.iota.types.account_methods.RequestFundsFromFaucet;
 import org.iota.types.ids.AliasId;
 import org.iota.types.ids.FoundryId;
 import org.iota.types.ids.NftId;
@@ -14,7 +15,7 @@ public class AccountBalance extends AbstractObject {
     /// Total and available amount of the base coin
     private BaseCoinBalance baseCoin;
     /// Current required storage deposit amount
-    private String requiredStorageDeposit;
+    private RequiredStorageDeposit requiredStorageDeposit;
     /// Native tokens
     private NativeTokensBalance[] nativeTokens;
     /// Nfts
@@ -31,7 +32,7 @@ public class AccountBalance extends AbstractObject {
         return baseCoin;
     }
 
-    public String getRequiredStorageDeposit() {
+    public RequiredStorageDeposit getRequiredStorageDeposit() {
         return requiredStorageDeposit;
     }
 

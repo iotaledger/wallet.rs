@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add `requestFundsFromFaucet()` function and example;
 - Enable native library loading via Java path;
 - Throw `InitializeWalletException` on failed initialization;
 - Wallet.java `clearListeners`, `destroy` and `initLogger` methods;
@@ -34,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `ClientCommand` to `WalletCommand`;
 - Move `WalletCommand` class from `NativeApi`;
 - Rename `ClientResponse` to `WalletResponse`;
+
+### Fixed
+
+- `RequiredStorageDeposit` deserialization;
 
 <!--
 ## 1.0.0-rc.2 - 2022-11-15

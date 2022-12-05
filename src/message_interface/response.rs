@@ -163,6 +163,8 @@ pub enum Response {
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
     /// Response for [`GenerateAddress`](crate::message_interface::Message::GenerateAddress)
     Bech32Address(String),
+    /// Response for [`RequestFundsFromFaucet`](crate::message_interface::AccountMethod::RequestFundsFromFaucet)
+    Faucet(String),
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
@@ -241,6 +243,7 @@ impl Debug for Response {
             Response::AccountParticipationOverview(overview) => {
                 write!(f, "AccountParticipationOverview({:?})", overview)
             }
+            Response::Faucet(response) => write!(f, "Faucet({:?})", response),
         }
     }
 }
