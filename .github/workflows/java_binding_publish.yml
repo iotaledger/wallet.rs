@@ -74,12 +74,12 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
 
-      - name: Build JAR for default target
+      - name: Build JAR for default target and an additional JAR that does not contain the native library
         shell: bash
         working-directory: bindings/java/
         run: |
           chmod +x gradlew
-          ./gradlew build
+          ./gradlew build jarWithoutNativeLibs
 
       - name: Build JAR for aarch64-apple-darwin target
         if: matrix.os == 'macos-latest'
@@ -100,10 +100,10 @@ jobs:
 
       - name: Construct tag
         uses: actions-ecosystem/action-regex-match@v2
-        id: tag
+        id: prepare-tag
         with:
           text: ${{ steps.filename.outputs.FILE_NAME }}
-          regex: '.*\d.\d.\d(-rc.\d)?'
+          regex: '(.*)(\d.\d.\d(-rc.\d)?)'
           flags: m
 
       - name: Upload JAR to Github
@@ -111,8 +111,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bindings/java/lib/build/libs/*.jar
-          tag_name: ${{ steps.tag.outputs.match }}
+            client/bindings/java/lib/build/libs/*.jar
+          tag_name: ${{ steps.prepare-tag.outputs.group1 }}java-${{ steps.prepare-tag.outputs.group2 }}-new
           append_body: true
           prerelease: true
 
