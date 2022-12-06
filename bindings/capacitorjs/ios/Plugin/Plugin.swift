@@ -8,79 +8,20 @@ import Wallet
 @objc(IotaWalletMobile)
 public class IotaWalletMobile: CAPPlugin {
     
-    // override public func load() {
-    //     let fm = FileManager.default
-    //     let documents = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-    //     let path = documents.appendingPathComponent("database", isDirectory: true).path
-    //     if !fm.fileExists(atPath: path) {
-    //         try? fm.createDirectory(atPath: path, withIntermediateDirectories: true, attributes: nil)
-    //     }
-        
-    //     let manager_options = """
-    //     {
-    //         "storagePath": "\(path)",
-    //         "clientOptions": {
-    //             "nodes": ["https://api.testnet.shimmer.network"],
-    //             "localPow": true
-    //         },
-    //         "coinType": 4219,
-    //         "secretManager": {
-    //             "Stronghold": {
-    //                 "snapshotPath": "\(path)/iota_wallet.stronghold",
-    //                 "password": "yourpasswordistooweak"
-    //             }
-    //         }
-    //     }
-    //     """
-    //     let options = manager_options.cString(using: .utf8)
-    //     let error_buffer: UnsafeMutablePointer<CChar>? = nil
-    //     let error_buffer_size = 0
-    //     let filename = "\(path)/iota_wallet.log"
-    //     let file_name = filename.cString(using: .utf8)
-    //     let level_filter = "debug"
-    //     let filter = level_filter.cString(using: .utf8)
-    //     iota_init_logger(file_name, filter)
-    //     let handler = iota_initialize(options, error_buffer, error_buffer_size)
-        
-
-    //     let genMemonic = """
-    //     {
-    //         "cmd": "generateMnemonic"
-    //     }
-    //     """
-        
-    //     func notifyLis(data: String) {
-    //         notifyListeners("walletEvent", data: ["result": data])
-    //     }
-    //     class ContextResult {
-    //         var detail = "none"
-    //         func notify(data: String) {
-    //             notifyLis(data: data)
-    //         }
-    //     }
-    //     let contextResult = ContextResult()
-    //     let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
-    //     let callback: Callback = { response, error, context  in
-    //         guard let context = context,
-    //               let response = response else { return }
-    //         let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
-    //         if let error = error {
-    //             contextResult.detail = String(cString: error)
-    //             contextResult.notify(data: contextResult.detail)
-    //         }
-    //         contextResult.detail = String(cString: response)
-    //         contextResult.notify(data: contextResult.detail)
-    //     }
-        
-    //     iota_send_message(handler, genMemonic, callback, context)
-
-    // }
-
-    // private var isInitialized: Bool = false
-
+    class ContextResult {
+        var detail = "none"
+        var call: CAPPluginCall
+        init(_call: CAPPluginCall) {
+            self.call = _call
+        }
+        func notify(data: String) {
+            self.call.resolve(["result": data])
+            self.call.keepAlive = false
+        }
+    }
+    
     @objc func messageHandlerNew(_ call: CAPPluginCall) {
         do {
-            // guard !isInitialized else { return }
             guard let options = call.getObject("options") else {
                 return call.reject("options are required")
             }
@@ -103,8 +44,6 @@ public class IotaWalletMobile: CAPPlugin {
             values.isExcludedFromBackup = true
             try urlPath.setResourceValues(values)
             
-            // call.keepAlive = true
-
             let error_buffer: UnsafeMutablePointer<CChar>? = nil
             let error_buffer_size = 0
             let filename = "\(path)/iota_wallet.log"
@@ -113,25 +52,17 @@ public class IotaWalletMobile: CAPPlugin {
             let handler: OpaquePointer? = iota_initialize(jsonString.cString(using: .utf8), error_buffer, error_buffer_size)
 
             call.resolve(["messageHandler": Int(bitPattern: handler)])
-            // isInitialized = true
         } catch {
             call.reject("failed to initialize messageHandlerNew")
         }
     }
 
     @objc func destroy(_ call: CAPPluginCall) {
-        // guard isInitialized else {
-        //     call.resolve()
-        //     return
-        // }
         guard let handler = call.getInt("handler") else {
             return call.reject("handler is required")
         }
-        // https://stackoverflow.com/questions/70799271/how-to-initialize-opaquepointer-in-swift
         iota_destroy(OpaquePointer(bitPattern: handler))
-        // isInitialized = false
         call.resolve()
-        // TODO: we need to release calls? verify if is automatically removed as are saved
     }
 
     @objc func sendMessage(_ call: CAPPluginCall) {
@@ -152,17 +83,6 @@ public class IotaWalletMobile: CAPPlugin {
         
         call.keepAlive = true
         
-        class ContextResult {
-            var detail = "none"
-            var call: CAPPluginCall
-            init(_call: CAPPluginCall) {
-                self.call = _call
-            }
-            func notify(data: String) {
-                self.call.resolve(["result": data])
-                self.call.keepAlive = false
-            }
-        }
         let contextResult = ContextResult(_call: call)
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         let callback: Callback = { response, error, context  in
@@ -195,17 +115,6 @@ public class IotaWalletMobile: CAPPlugin {
 
         call.keepAlive = true
 
-        class ContextResult {
-            var detail = "none"
-            var call: CAPPluginCall
-            init(_call: CAPPluginCall) {
-                self.call = _call
-            }
-            func notify(data: String) {
-                self.call.resolve(["result": data])
-                self.call.keepAlive = false
-            }
-        }
         let contextResult = ContextResult(_call: call)
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         let callback: Callback = { response, error, context  in
@@ -220,7 +129,7 @@ public class IotaWalletMobile: CAPPlugin {
             contextResult.notify(data: contextResult.detail)
         }
     
-        iota_listen(messageHandler, eventChar, callback, nil, error_buffer, error_buffer_size)
+        iota_listen(messageHandler, eventChar, callback, context, error_buffer, error_buffer_size)
     }
 
     @objc func cleanListeners(_ call: CAPPluginCall) {
@@ -239,17 +148,6 @@ public class IotaWalletMobile: CAPPlugin {
         
         call.keepAlive = true
         
-        class ContextResult {
-            var detail = "none"
-            var call: CAPPluginCall
-            init(_call: CAPPluginCall) {
-                self.call = _call
-            }
-            func notify(data: String) {
-                self.call.resolve(["result": data])
-                self.call.keepAlive = false
-            }
-        }
         let contextResult = ContextResult(_call: call)
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         let callback: Callback = { response, error, context  in
@@ -264,7 +162,6 @@ public class IotaWalletMobile: CAPPlugin {
             contextResult.notify(data: contextResult.detail)
         }
     
-        iota_listen(messageHandler, eventChar, callback, nil, error_buffer, error_buffer_size)
-        call.resolve()
+        iota_listen(messageHandler, eventChar, callback, context, error_buffer, error_buffer_size)
     }
 }
