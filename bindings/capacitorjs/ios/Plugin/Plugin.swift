@@ -40,8 +40,40 @@ public class IotaWalletMobile: CAPPlugin {
     //     let level_filter = "debug"
     //     let filter = level_filter.cString(using: .utf8)
     //     iota_init_logger(file_name, filter)
-    //     let handler: OpaquePointer? = iota_initialize(options, error_buffer, error_buffer_size)
-    //     print(Int(bitPattern: handler))
+    //     let handler = iota_initialize(options, error_buffer, error_buffer_size)
+        
+
+    //     let genMemonic = """
+    //     {
+    //         "cmd": "generateMnemonic"
+    //     }
+    //     """
+        
+    //     func notifyLis(data: String) {
+    //         notifyListeners("walletEvent", data: ["result": data])
+    //     }
+    //     class ContextResult {
+    //         var detail = "none"
+    //         func notify(data: String) {
+    //             notifyLis(data: data)
+    //         }
+    //     }
+    //     let contextResult = ContextResult()
+    //     let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+    //     let callback: Callback = { response, error, context  in
+    //         guard let context = context,
+    //               let response = response else { return }
+    //         let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
+    //         if let error = error {
+    //             contextResult.detail = String(cString: error)
+    //             contextResult.notify(data: contextResult.detail)
+    //         }
+    //         contextResult.detail = String(cString: response)
+    //         contextResult.notify(data: contextResult.detail)
+    //     }
+        
+    //     iota_send_message(handler, genMemonic, callback, context)
+
     // }
 
     // private var isInitialized: Bool = false
@@ -119,40 +151,33 @@ public class IotaWalletMobile: CAPPlugin {
         let jsonString = String(data: jsonData!, encoding: .utf8)!.replacingOccurrences(of: "\\", with: "")
         
         call.keepAlive = true
-        // class Result {
-        //     var detail: OpaquePointer?
-
-        //     init(messageHandler: OpaquePointer?) {
-        //         self.detail = messageHandler
-        //     }
-        // }
-        // let object = Result(messageHandler: messageHandler)
         
-        // let context = Unmanaged<Result>.passRetained(object).toOpaque()
-        // let callback: Callback = { response, error, context  in
-        //     guard let context = context else {
-        //         return
-        //     }
-        //     let object = Unmanaged<Result>.fromOpaque(context).takeRetainedValue()
-        //     self.notifyListeners("walletEvent", data: ["result": object.detail])
-        // }
-        
-//        typealias cCallback = Optional<@convention(c) (
-//            Optional<UnsafePointer<Int8>>,
-//            Optional<UnsafePointer<Int8>>,
-//            Optional<UnsafeMutableRawPointer>
-//        ) -> ()>
-        func cFunction(_ block: (@escaping @convention(block) (Optional<UnsafePointer<Int8>>, Optional<UnsafePointer<Int8>>, Optional<UnsafeMutableRawPointer>) -> ())) -> (Callback) {
-            return unsafeBitCast(imp_implementationWithBlock(block), to: (Callback).self)
+        class ContextResult {
+            var detail = "none"
+            var call: CAPPluginCall
+            init(_call: CAPPluginCall) {
+                self.call = _call
+            }
+            func notify(data: String) {
+                self.call.resolve(["result": data])
+                self.call.keepAlive = false
+            }
         }
-        let callback: Callback = cFunction { response, error, context  in
-            let data: String = String(cString: response!)
-            self.notifyListeners("walletEvent", data: ["result": data])
+        let contextResult = ContextResult(_call: call)
+        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+        let callback: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
+            if let error = error {
+                contextResult.detail = String(cString: error)
+                contextResult.notify(data: contextResult.detail)
+            }
+            contextResult.detail = String(cString: response)
+            contextResult.notify(data: contextResult.detail)
         }
-        
 
-        iota_send_message(messageHandler, jsonString, callback, nil)
-        call.resolve()
+        iota_send_message(messageHandler, jsonString, callback, context)
     }
 
     @objc func listen(_ call: CAPPluginCall) {
@@ -170,16 +195,32 @@ public class IotaWalletMobile: CAPPlugin {
 
         call.keepAlive = true
 
-        func cFunction(_ block: (@escaping @convention(block) (Optional<UnsafePointer<Int8>>, Optional<UnsafePointer<Int8>>, Optional<UnsafeMutableRawPointer>) -> ())) -> (Callback) {
-            return unsafeBitCast(imp_implementationWithBlock(block), to: (Callback).self)
+        class ContextResult {
+            var detail = "none"
+            var call: CAPPluginCall
+            init(_call: CAPPluginCall) {
+                self.call = _call
+            }
+            func notify(data: String) {
+                self.call.resolve(["result": data])
+                self.call.keepAlive = false
+            }
         }
-        let callback: Callback = cFunction { response, error, context  in
-            let data: String = String(cString: response!)
-            self.notifyListeners("listen", data: ["result": data])
+        let contextResult = ContextResult(_call: call)
+        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+        let callback: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
+            if let error = error {
+                contextResult.detail = String(cString: error)
+                contextResult.notify(data: contextResult.detail)
+            }
+            contextResult.detail = String(cString: response)
+            contextResult.notify(data: contextResult.detail)
         }
     
         iota_listen(messageHandler, eventChar, callback, nil, error_buffer, error_buffer_size)
-        call.resolve()
     }
 
     @objc func cleanListeners(_ call: CAPPluginCall) {
@@ -198,12 +239,29 @@ public class IotaWalletMobile: CAPPlugin {
         
         call.keepAlive = true
         
-        func cFunction(_ block: (@escaping @convention(block) (Optional<UnsafePointer<Int8>>, Optional<UnsafePointer<Int8>>, Optional<UnsafeMutableRawPointer>) -> ())) -> (Callback) {
-            return unsafeBitCast(imp_implementationWithBlock(block), to: (Callback).self)
+        class ContextResult {
+            var detail = "none"
+            var call: CAPPluginCall
+            init(_call: CAPPluginCall) {
+                self.call = _call
+            }
+            func notify(data: String) {
+                self.call.resolve(["result": data])
+                self.call.keepAlive = false
+            }
         }
-        let callback: Callback = cFunction { response, error, context  in
-            let data: String = String(cString: response!)
-            self.notifyListeners("cleanListeners", data: ["result": data])
+        let contextResult = ContextResult(_call: call)
+        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+        let callback: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
+            if let error = error {
+                contextResult.detail = String(cString: error)
+                contextResult.notify(data: contextResult.detail)
+            }
+            contextResult.detail = String(cString: response)
+            contextResult.notify(data: contextResult.detail)
         }
     
         iota_listen(messageHandler, eventChar, callback, nil, error_buffer, error_buffer_size)
