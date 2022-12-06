@@ -1,5 +1,18 @@
 # Changelog
 
+## \[2.0.3-rc.9]
+
+- Add an optional bech32Hrp to the CreateAccountPayload which can be used to create an account offline.
+  - [d7704b50](https://github.com/iotaledger/wallet.rs/commit/d7704b5044014cdc4937da23abacdee59cca2e02) Generate address ([#1516](https://github.com/iotaledger/wallet.rs/pull/1516)) on 2022-12-01
+- Add generateAddress().
+  - [d7704b50](https://github.com/iotaledger/wallet.rs/commit/d7704b5044014cdc4937da23abacdee59cca2e02) Generate address ([#1516](https://github.com/iotaledger/wallet.rs/pull/1516)) on 2022-12-01
+- Add `RequiredStorageDeposit`, split by output types, in `AccountBalance`.
+  - [64871ad2](https://github.com/iotaledger/wallet.rs/commit/64871ad2e91009d2dae466167d2494108584cc60) Split required storage deposit balance ([#1612](https://github.com/iotaledger/wallet.rs/pull/1612)) on 2022-12-01
+- Add `Account.retryTransactionUntilIncluded()`.
+  - [1f77cb4e](https://github.com/iotaledger/wallet.rs/commit/1f77cb4e15c9cd79f649574c53e836d097f5aa86) Add retry transaction until included ([#1632](https://github.com/iotaledger/wallet.rs/pull/1632)) on 2022-12-02
+- Bring back rocksdb 0.19.
+  - [8870f4c7](https://github.com/iotaledger/wallet.rs/commit/8870f4c78171a3a5bacc7486258a90fab8ab5985) Bring back rocksdb 0.19 ([#1645](https://github.com/iotaledger/wallet.rs/pull/1645)) on 2022-12-06
+
 ## \[2.0.3-rc.8]
 
 - Fix not synced timestamp issue.
