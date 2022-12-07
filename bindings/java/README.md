@@ -40,7 +40,7 @@ project/
            │── x86/                 <-- Intel 32bit
            │  └── libiota-wallet.so
            │  └── libc++_shared.so
-           └── x86_64/                 <-- Intel 64bit
+           └── x86_64/              <-- Intel 64bit
               └── libiota-wallet.so
               └── libc++_shared.so
 ```
