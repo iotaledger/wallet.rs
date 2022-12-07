@@ -138,7 +138,9 @@ export interface CreateAccountPayload {
 /** Options to filter outputs */
 export interface FilterOptions {
     /** Filter all outputs where the booked milestone index is below the specified timestamp */
-    lowerBoundBookedTimestamp: number;
+    lowerBoundBookedTimestamp?: number;
     /** Filter all outputs where the booked milestone index is above the specified timestamp */
-    upperBoundBookedTimestamp: number;
+    upperBoundBookedTimestamp?: number;
+    /** Filter all outputs for the provided types (Basic = 3, Alias = 4, Foundry = 5, NFT = 6) */
+    outputTypes?: Uint8Array;
 }

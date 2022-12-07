@@ -26,7 +26,7 @@ ___
 
 ### requiredStorageDeposit
 
-• **requiredStorageDeposit**: `string`
+• **requiredStorageDeposit**: [`RequiredStorageDeposit`](RequiredStorageDeposit.md)
 
 The required storage deposit for the outputs
 
