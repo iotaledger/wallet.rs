@@ -983,7 +983,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async vote(eventId: string, answers: number[]): Promise<Transaction> {
+    async vote(eventId?: string, answers?: number[]): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

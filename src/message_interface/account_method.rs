@@ -377,8 +377,8 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     Vote {
         #[serde(rename = "eventId")]
-        event_id: EventId,
-        answers: Vec<u8>,
+        event_id: Option<EventId>,
+        answers: Option<Vec<u8>>,
     },
     /// Stop participation for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -398,10 +398,13 @@ pub enum AccountMethod {
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
-    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    /// This will stop voting in most cases (if there is a remainder output), but the voting data isn't lost and
+    /// calling `Vote` without parameters will revote. Expected response:
+    /// [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     IncreaseVotingPower { amount: String },
     /// Reduces an account's "voting power" by a given amount.
+    /// This will stop voting, but the voting data isn't lost and calling `Vote` without parameters will revote.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     DecreaseVotingPower { amount: String },

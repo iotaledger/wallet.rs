@@ -328,8 +328,8 @@ export type __SyncAccountMethod__ = {
 export type __VoteMethod__ = {
     name: 'vote';
     data: {
-        eventId: string;
-        answers: number[];
+        eventId?: string;
+        answers?: number[];
     };
 };
 

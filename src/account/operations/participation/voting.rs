@@ -34,12 +34,14 @@ impl AccountHandle {
     ///
     /// This is an add OR update function, not just add.
     /// This should use regular client options, NOT specific node for the event.
-    pub async fn vote(&self, event_id: EventId, answers: Vec<u8>) -> Result<Transaction> {
-        let event_status = self.get_participation_event_status(&event_id).await?;
+    pub async fn vote(&self, event_id: Option<EventId>, answers: Option<Vec<u8>>) -> Result<Transaction> {
+        if let Some(event_id) = event_id {
+            let event_status = self.get_participation_event_status(&event_id).await?;
 
-        // Checks if voting event is still running.
-        if event_status.status() == "ended" {
-            return Err(crate::Error::Voting(format!("event {event_id} already ended")));
+            // Checks if voting event is still running.
+            if event_status.status() == "ended" {
+                return Err(crate::Error::Voting(format!("event {event_id} already ended")));
+            }
         }
 
         // TODO check if answers match the questions ?
@@ -58,13 +60,27 @@ impl AccountHandle {
                 // Removes ended participations.
                 self.remove_ended_participation_events(&mut participations).await?;
 
-                participations.add_or_replace(Participation { event_id, answers });
+                if let Some(event_id) = event_id {
+                    participations.add_or_replace(Participation {
+                        event_id,
+                        answers: answers.unwrap_or_default(),
+                    });
+                }
 
                 participations
             }
-            None => Participations {
-                participations: vec![Participation { event_id, answers }],
-            },
+            None => {
+                if let Some(event_id) = event_id {
+                    Participations {
+                        participations: vec![Participation {
+                            event_id,
+                            answers: answers.unwrap_or_default(),
+                        }],
+                    }
+                } else {
+                    return Err(crate::Error::Voting("No event to vote for".to_string()));
+                }
+            }
         }
         .to_bytes()?;
 

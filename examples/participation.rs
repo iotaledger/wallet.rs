@@ -147,7 +147,7 @@ async fn main() -> Result<()> {
     //// vote
     //// ////////////////////////////
 
-    let transaction = account.vote(event_id, vec![0]).await?;
+    let transaction = account.vote(Some(event_id), Some(vec![0])).await?;
     println!(
         "Vote transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,

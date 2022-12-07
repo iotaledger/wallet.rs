@@ -33,8 +33,9 @@ impl AccountHandle {
     ///
     /// If not enough funds, throws an error.
     /// If voting, use voting output (should only ever have one unless more space for more votes is needed).
-    /// Removes metadata for any events that have expired (uses event IDs to get cached event information, checks event
-    /// milestones in there against latest network milestone).
+    /// This will stop voting in most cases (if there is a remainder), but the voting data isn't lost and calling `Vote`
+    /// without parameters will revote. Removes metadata for any events that have expired (uses event IDs to get
+    /// cached event information, checks event milestones in there against latest network milestone).
     /// Prioritizes consuming outputs that are designated for voting but don't have any metadata (only possible if user
     /// increases voting power then increases again immediately after).
     pub async fn increase_voting_power(&self, amount: u64) -> Result<Transaction> {
@@ -80,6 +81,7 @@ impl AccountHandle {
     }
 
     /// Reduces an account's "voting power" by a given amount.
+    /// This will stop voting, but the voting data isn't lost and calling `Vote` without parameters will revote.
     ///
     /// If amount is higher than actual voting power, throws an error.
     /// If voting and amount is equal to voting power, removes tagged data payload and output metadata.
