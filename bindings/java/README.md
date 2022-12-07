@@ -19,13 +19,8 @@ Minimum Java version: Java 8
 
 ## Use in your Android project (Android Studio)
 
-1. Add following dependency to your `build.gradle` file:
-```
-implementation 'org.iota:iota-wallet:1.0.0-rc.1'
-```
-
-2. Download the `iota-wallet-1.0.0-rc.1-android.zip` file from the GitHub release and unzip it.
-3. Add the `jniLibs` folder with its contents to your Android Studio project as shown below:
+1. Download the `iota-wallet-1.0.0-rc.1.jar` file from the [GitHub release](https://github.com/iotaledger/wallet.rs/releases/tag/iota-wallet-java-1.0.0-rc.1-new) and add it as a library to your project.
+2. Download the `iota-wallet-1.0.0-rc.1-android.zip` file from the [GitHub release](https://github.com/iotaledger/wallet.rs/releases/tag/iota-wallet-java-1.0.0-rc.1-new), unzip it and add the `jniLibs` folder with its contents to your Android Studio project as shown below:
 
 ```
 project/
@@ -42,7 +37,10 @@ project/
            ├── armeabi-v7a/         <-- ARM 32bit
            │   └── libiota-wallet.so
            │   └── libc++_shared.so
-           └── x86/                 <-- Intel 32bit
+           │── x86/                 <-- Intel 32bit
+           │  └── libiota-wallet.so
+           │  └── libc++_shared.so
+           └── x86_64/              <-- Intel 64bit
               └── libiota-wallet.so
               └── libc++_shared.so
 ```
@@ -73,7 +71,8 @@ implementation 'org.iota:iota-wallet:1.0.0-rc.1:osx-x86_64'
 
 ## Use the Library
 
-In order to use the library, you need to create a _Wallet_:
+In order to use the library, you need to create a `Wallet` instance.
+**Note**: Android applications must necessarily configure a suitable storage path for the wallet to avoid problems with file system permissions. You can specify a suitable storage path using the `withStoragePath()` as illustrated below:
 
 ```java
 // Copyright 2022 IOTA Stiftung
@@ -96,6 +95,8 @@ public class CreateAccount {
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
+                // Set a suitable storage path for the wallet.
+                //.withStoragePath("/data/data/com.example.myapplication/")
         );
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
