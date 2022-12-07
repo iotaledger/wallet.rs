@@ -112,5 +112,5 @@ public class CreateAccount {
 ## What's Next?
 
 Now that you are up and running, you can get acquainted with the library using
-its [how-to guides](../how_tos/run_how_tos.mdx) and the
-repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/iota-wallet-java/examples/src).
+its [how-to guides](../../documentation/docs/how_tos/run_how_tos.mdx) and the
+repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/examples/src).
