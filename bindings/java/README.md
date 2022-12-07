@@ -95,7 +95,7 @@ public class CreateAccount {
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
                 .withCoinType(CoinType.Shimmer)
-                // Set a suitable wallet storage path.
+                // Set a suitable storage path for the wallet.
                 //.withStoragePath("/data/data/com.example.myapplication/")
         );
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
