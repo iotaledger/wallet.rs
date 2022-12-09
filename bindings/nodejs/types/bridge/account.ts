@@ -125,7 +125,7 @@ export type __GetBalanceMethod__ = {
 export type __GetIncomingTransactionDataMethod__ = {
     name: 'getIncomingTransactionData';
     data: {
-        transactionId: string,
+        transactionId: string;
     };
 };
 
@@ -248,6 +248,15 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
+export type __RetryTransactionUntilIncludedMethod__ = {
+    name: 'retryTransactionUntilIncluded';
+    data: {
+        transactionId: string;
+        interval?: number;
+        maxAttempts?: number;
+    };
+};
+
 export type __SendAmountMethod__ = {
     name: 'sendAmount';
     data: {
@@ -313,5 +322,42 @@ export type __SyncAccountMethod__ = {
     name: 'syncAccount';
     data: {
         options?: AccountSyncOptions;
+    };
+};
+
+export type __VoteMethod__ = {
+    name: 'vote';
+    data: {
+        eventId: string;
+        answers: number[];
+    };
+};
+
+export type __StopParticipatingMethod__ = {
+    name: 'stopParticipating';
+    data: {
+        eventId: string;
+    };
+};
+
+export type __GetVotingPowerMethod__ = {
+    name: 'getVotingPower';
+};
+
+export type __GetParticipationOverviewMethod__ = {
+    name: 'getParticipationOverview';
+};
+
+export type __IncreaseVotingPowerMethod__ = {
+    name: 'increaseVotingPower';
+    data: {
+        amount: string;
+    };
+};
+
+export type __DecreaseVotingPowerMethod__ = {
+    name: 'decreaseVotingPower';
+    data: {
+        amount: string;
     };
 };

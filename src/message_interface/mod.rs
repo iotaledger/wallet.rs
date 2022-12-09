@@ -13,7 +13,7 @@ use tokio::sync::mpsc::unbounded_channel;
 
 pub use self::{
     account_method::AccountMethod,
-    dtos::{AccountBalanceDto, AddressWithAmountDto, AddressWithUnspentOutputsDto},
+    dtos::{AddressWithAmountDto, AddressWithUnspentOutputsDto},
     message::Message,
     message_handler::WalletMessageHandler,
     response::Response,
@@ -154,7 +154,14 @@ mod tests {
         let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
 
         // create an account
-        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount { alias: None }).await;
+        let response = message_interface::send_message(
+            &wallet_handle,
+            Message::CreateAccount {
+                alias: None,
+                bech32_hrp: None,
+            },
+        )
+        .await;
         match response {
             Response::Account(account) => {
                 let id = account.index;
@@ -204,6 +211,7 @@ mod tests {
             &wallet_handle,
             Message::CreateAccount {
                 alias: Some("alias".to_string()),
+                bech32_hrp: None,
             },
         );
 
@@ -268,7 +276,14 @@ mod tests {
 
         // create an account, if password or storing mnemonic failed, it would fail here, because it couldn't generate
         // an address
-        let response = message_interface::send_message(&wallet_handle, Message::CreateAccount { alias: None }).await;
+        let response = message_interface::send_message(
+            &wallet_handle,
+            Message::CreateAccount {
+                alias: None,
+                bech32_hrp: None,
+            },
+        )
+        .await;
 
         match response {
             Response::Account(account) => {

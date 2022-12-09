@@ -9,6 +9,7 @@ export * from './loggerConfig';
 export * from './network';
 export * from './output';
 export * from './outputOptions';
+export * from './participation';
 export * from './preparedTransactionData';
 export * from './secretManager';
 export * from './signedTransactionEssence';

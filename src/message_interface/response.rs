@@ -11,6 +11,7 @@ use iota_client::{
     block::{
         output::{dto::OutputDto, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        BlockId,
     },
     NodeInfoWrapper,
 };
@@ -24,10 +25,10 @@ use {
 use crate::{
     account::{
         operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
-        types::{address::AccountAddress, TransactionDto},
+        types::{address::AccountAddress, AccountBalanceDto, TransactionDto},
         OutputDataDto,
     },
-    message_interface::dtos::{AccountBalanceDto, AccountDto, AddressWithUnspentOutputsDto},
+    message_interface::dtos::{AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
 
@@ -50,6 +51,9 @@ pub enum Response {
     /// Response for
     /// [`AddressesWithUnspentOutputs`](crate::message_interface::AccountMethod::AddressesWithUnspentOutputs)
     AddressesWithUnspentOutputs(Vec<AddressWithUnspentOutputsDto>),
+    /// Response for
+    /// [`RetryTransactionUntilIncluded`](crate::message_interface::AccountMethod::RetryTransactionUntilIncluded)
+    BlockId(BlockId),
     /// Response for
     /// [`BuildAliasOutput`](crate::message_interface::AccountMethod::BuildAliasOutput)
     /// [`BuildBasicOutput`](crate::message_interface::AccountMethod::BuildBasicOutput)
@@ -157,7 +161,10 @@ pub enum Response {
     /// Response for [`Bech32ToHex`](crate::message_interface::Message::Bech32ToHex)
     HexAddress(String),
     /// Response for [`HexToBech32`](crate::message_interface::Message::HexToBech32)
+    /// Response for [`GenerateAddress`](crate::message_interface::Message::GenerateAddress)
     Bech32Address(String),
+    /// Response for [`RequestFundsFromFaucet`](crate::message_interface::AccountMethod::RequestFundsFromFaucet)
+    Faucet(String),
     /// Response for
     /// [`Backup`](crate::message_interface::Message::Backup),
     /// [`ClearStrongholdPassword`](crate::message_interface::Message::ClearStrongholdPassword),
@@ -186,6 +193,7 @@ impl Debug for Response {
             Response::AddressesWithUnspentOutputs(addresses) => {
                 write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
             }
+            Response::BlockId(block_id) => write!(f, "BlockId({:?})", block_id),
             Response::Output(output) => write!(f, "Output({:?})", output),
             Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
             Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
@@ -235,6 +243,7 @@ impl Debug for Response {
             Response::AccountParticipationOverview(overview) => {
                 write!(f, "AccountParticipationOverview({:?})", overview)
             }
+            Response::Faucet(response) => write!(f, "Faucet({:?})", response),
         }
     }
 }

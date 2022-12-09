@@ -14,7 +14,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    block::{output::Output, payload::transaction::TransactionPayload, semantic::ConflictReason, BlockId},
+    block::{
+        output::Output,
+        payload::transaction::{TransactionId, TransactionPayload},
+        semantic::ConflictReason,
+    },
     secret::types::InputSigningData,
 };
 
@@ -126,24 +130,24 @@ impl AccountHandle {
             return Err(Error::TransactionSemantic(conflict).into());
         }
 
-        // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`]
+        // Ignore errors from sending, we will try to send it again during [`sync_pending_transactions`] and in
+        // [`monitor_tx_confirmation`]
         let block_id = match self
             .submit_transaction_payload(signed_transaction_data.transaction_payload.clone())
             .await
         {
-            Ok(block_id) => {
-                self.monitor_tx_confirmation(block_id);
-                Some(block_id)
-            }
+            Ok(block_id) => Some(block_id),
             Err(err) => {
                 log::error!("Failed to submit_transaction_payload {}", err);
                 None
             }
         };
 
+        let transaction_id = signed_transaction_data.transaction_payload.id();
+        self.monitor_tx_confirmation(transaction_id);
+
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
-        let transaction_id = signed_transaction_data.transaction_payload.id();
         let transaction = Transaction {
             transaction_id: signed_transaction_data.transaction_payload.id(),
             payload: signed_transaction_data.transaction_payload,
@@ -185,23 +189,16 @@ impl AccountHandle {
         Ok(())
     }
 
-    // Try to get a transaction confirmed and sync related account addresses when confirmed, so the outputs get
-    // available for new transactions without manually syncing (which would sync all addresses and be more heavy without
-    // extra logic)
-    fn monitor_tx_confirmation(&self, block_id: BlockId) {
+    // Try to get a transaction confirmed
+    fn monitor_tx_confirmation(&self, transaction_id: TransactionId) {
         // spawn a task which tries to get the block confirmed
         let account = self.clone();
         tokio::spawn(async move {
-            if let Ok(blocks) = account.client().retry_until_included(&block_id, None, None).await {
-                if let Some(confirmed_block) = blocks.first() {
-                    if confirmed_block.0 != block_id {
-                        log::debug!(
-                            "[TRANSACTION] reattached {}, new block id {}",
-                            block_id,
-                            confirmed_block.0
-                        );
-                    }
-                }
+            if let Ok(block_id) = account
+                .retry_transaction_until_included(&transaction_id, None, None)
+                .await
+            {
+                log::debug!("[TRANSACTION] {} confirmed in block {}", transaction_id, block_id,);
             }
         });
     }

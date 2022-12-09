@@ -30,6 +30,9 @@ impl AccountHandle {
         allow_burning: bool,
     ) -> crate::Result<SelectedTransactionData> {
         log::debug!("[TRANSACTION] select_inputs");
+        // Voting output needs to be requested before to prevent a deadlock
+        #[cfg(feature = "participation")]
+        let voting_output = self.get_voting_output().await?;
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
         let token_supply = self.client.get_token_supply().await?;
@@ -93,6 +96,8 @@ impl AccountHandle {
                 &outputs,
                 &account.locked_outputs,
                 allow_burning,
+                #[cfg(feature = "participation")]
+                voting_output,
             )?;
 
             let selected_transaction_data = try_select_inputs(
@@ -125,6 +130,8 @@ impl AccountHandle {
             &outputs,
             &account.locked_outputs,
             allow_burning,
+            #[cfg(feature = "participation")]
+            voting_output,
         )?;
 
         let selected_transaction_data = match try_select_inputs(
@@ -176,6 +183,7 @@ impl AccountHandle {
 /// | [Address, not expired Expiration, ...]              | no                |
 /// | [Address, StorageDepositReturn, ...]                | no                |
 /// | [Address, StorageDepositReturn, expired Expiration] | yes               |
+#[allow(clippy::too_many_arguments)]
 fn filter_inputs(
     account: &Account,
     available_outputs: Values<OutputId, OutputData>,
@@ -184,12 +192,20 @@ fn filter_inputs(
     outputs: &[Output],
     locked_outputs: &HashSet<OutputId>,
     allow_burning: bool,
+    #[cfg(feature = "participation")] voting_output: Option<OutputData>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
     for output_data in available_outputs {
         // Don't use outputs that are already used in other transactions
         if locked_outputs.contains(&output_data.output_id) {
             continue;
+        }
+        #[cfg(feature = "participation")]
+        if let Some(ref voting_output) = voting_output {
+            // Remove voting output from inputs, so it doesn't get spent when not calling a function related to it.
+            if output_data.output_id == voting_output.output_id {
+                continue;
+            }
         }
 
         if let Output::Foundry(foundry_input) = &output_data.output {

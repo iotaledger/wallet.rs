@@ -297,6 +297,19 @@ pub enum AccountMethod {
         addresses_with_amount: Vec<AddressWithAmountDto>,
         options: Option<TransactionOptions>,
     },
+    /// Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+    /// included (referenced by a milestone). Returns the included block id.
+    /// Expected response: [`BlockId`](crate::message_interface::Response::BlockId)
+    RetryTransactionUntilIncluded {
+        /// Transaction id
+        #[serde(rename = "transactionId")]
+        transaction_id: TransactionId,
+        /// Interval
+        interval: Option<u64>,
+        /// Maximum attempts
+        #[serde(rename = "maxAttempts")]
+        max_attempts: Option<u64>,
+    },
     /// Sync the account by fetching new information from the nodes. Will also retry pending transactions
     /// if necessary.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
@@ -362,26 +375,36 @@ pub enum AccountMethod {
     /// Vote for a participation event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    Vote { event_id: EventId, answers: Vec<u8> },
+    Vote {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+        answers: Vec<u8>,
+    },
     /// Stop participation for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    StopParticipating(EventId),
+    StopParticipating {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+    },
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
     #[cfg(feature = "participation")]
     GetVotingPower,
     /// Calculates a participation overview for an account.
-    /// Expected response: [`ParticipationOverview`](crate::message_interface::Response::ParticipationOverview)
+    /// Expected response:
+    /// [`AccountParticipationOverview`](crate::message_interface::Response::AccountParticipationOverview)
     #[cfg(feature = "participation")]
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    IncreaseVotingPower(String),
+    IncreaseVotingPower { amount: String },
     /// Reduces an account's "voting power" by a given amount.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    DecreaseVotingPower(String),
+    DecreaseVotingPower { amount: String },
+    /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
+    RequestFundsFromFaucet { url: String, address: String },
 }

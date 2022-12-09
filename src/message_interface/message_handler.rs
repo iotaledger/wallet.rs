@@ -23,7 +23,7 @@ use iota_client::{
         DtoError,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
-    utils, Client, NodeInfoWrapper,
+    request_funds_from_faucet, utils, Client, NodeInfoWrapper,
 };
 use primitive_types::U256;
 use tokio::sync::mpsc::UnboundedSender;
@@ -37,15 +37,12 @@ use crate::{
             high_level::{create_alias::AliasOutputOptions, minting::mint_native_token::MintTokenTransactionDto},
             prepare_output::OutputOptions,
         },
-        types::{AccountIdentifier, TransactionDto},
+        types::{AccountBalanceDto, AccountIdentifier, TransactionDto},
         OutputDataDto,
     },
     account_manager::AccountManager,
     message_interface::{
-        account_method::AccountMethod,
-        dtos::{AccountBalanceDto, AccountDto},
-        message::Message,
-        response::Response,
+        account_method::AccountMethod, dtos::AccountDto, message::Message, response::Response,
         AddressWithUnspentOutputsDto,
     },
     AddressWithAmount, AddressWithMicroAmount, IncreaseNativeTokenSupplyOptions, NativeTokenOptions, NftOptions,
@@ -120,8 +117,8 @@ impl WalletMessageHandler {
         log::debug!("Message: {:?}", message);
 
         let response: Result<Response> = match message {
-            Message::CreateAccount { alias } => {
-                convert_async_panics(|| async { self.create_account(alias).await }).await
+            Message::CreateAccount { alias, bech32_hrp } => {
+                convert_async_panics(|| async { self.create_account(alias, bech32_hrp).await }).await
             }
             Message::GetAccount(account_id) => {
                 convert_async_panics(|| async { self.get_account(&account_id).await }).await
@@ -232,6 +229,28 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            Message::GenerateAddress {
+                account_index,
+                internal,
+                address_index,
+                options,
+                bech32_hrp,
+            } => {
+                convert_async_panics(|| async {
+                    let address = self
+                        .account_manager
+                        .generate_address(account_index, internal, address_index, options)
+                        .await?;
+
+                    let bech32_hrp = match bech32_hrp {
+                        Some(bech32_hrp) => bech32_hrp,
+                        None => self.account_manager.get_bech32_hrp().await?,
+                    };
+
+                    Ok(Response::Bech32Address(address.to_bech32(bech32_hrp)))
+                })
+                .await
+            }
             Message::GetNodeInfo { url, auth } => {
                 convert_async_panics(|| async {
                     match url {
@@ -332,7 +351,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            Message::DeregisterParticipationEvent(event_id) => {
+            Message::DeregisterParticipationEvent { event_id } => {
                 convert_async_panics(|| async {
                     self.account_manager.deregister_participation_event(&event_id).await?;
                     Ok(Response::Ok(()))
@@ -340,7 +359,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEvent(event_id) => {
+            Message::GetParticipationEvent { event_id } => {
                 convert_async_panics(|| async {
                     let event = self
                         .account_manager
@@ -352,7 +371,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEventStatus(event_id) => {
+            Message::GetParticipationEventStatus { event_id } => {
                 convert_async_panics(|| async {
                     let event_status = self.account_manager.get_participation_event_status(&event_id).await?;
                     Ok(Response::ParticipationEventStatus(event_status))
@@ -776,6 +795,19 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            AccountMethod::RetryTransactionUntilIncluded {
+                transaction_id,
+                interval,
+                max_attempts,
+            } => {
+                convert_async_panics(|| async {
+                    let block_id = account_handle
+                        .retry_transaction_until_included(&transaction_id, interval, max_attempts)
+                        .await?;
+                    Ok(Response::BlockId(block_id))
+                })
+                .await
+            }
             AccountMethod::SyncAccount { options } => Ok(Response::Balance(AccountBalanceDto::from(
                 &account_handle.sync(options.clone()).await?,
             ))),
@@ -909,7 +941,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::StopParticipating(event_id) => {
+            AccountMethod::StopParticipating { event_id } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle.stop_participating(event_id).await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -933,7 +965,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::IncreaseVotingPower(amount) => {
+            AccountMethod::IncreaseVotingPower { amount } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .increase_voting_power(
@@ -945,7 +977,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::DecreaseVotingPower(amount) => {
+            AccountMethod::DecreaseVotingPower { amount } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .decrease_voting_power(
@@ -956,15 +988,25 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            AccountMethod::RequestFundsFromFaucet { url, address } => {
+                convert_async_panics(|| async {
+                    Ok(Response::Faucet(request_funds_from_faucet(&url, &address).await?))
+                })
+                .await
+            }
         }
     }
 
     /// The create account message handler.
-    async fn create_account(&self, alias: Option<String>) -> Result<Response> {
+    async fn create_account(&self, alias: Option<String>, bech32_hrp: Option<String>) -> Result<Response> {
         let mut builder = self.account_manager.create_account();
 
         if let Some(alias) = alias {
             builder = builder.with_alias(alias);
+        }
+
+        if let Some(bech32_hrp) = bech32_hrp {
+            builder = builder.with_bech32_hrp(bech32_hrp);
         }
 
         match builder.finish().await {

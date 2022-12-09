@@ -11,8 +11,7 @@ use std::{
 use iota_client::{
     api_types::response::OutputWithMetadataResponse,
     block::{
-        dto::U256Dto,
-        output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId},
+        output::OutputId,
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
     },
 };
@@ -20,10 +19,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
-        types::{
-            address::AddressWrapper, AccountAddress, AccountBalance, AddressWithUnspentOutputs, BaseCoinBalance,
-            NativeTokensBalance, TransactionDto,
-        },
+        types::{address::AddressWrapper, AccountAddress, AddressWithUnspentOutputs, TransactionDto},
         Account, OutputDataDto,
     },
     AddressWithAmount, AddressWithMicroAmount,
@@ -103,89 +99,6 @@ impl From<&AddressWithUnspentOutputs> for AddressWithUnspentOutputsDto {
             key_index: value.key_index,
             internal: value.internal,
             output_ids: value.output_ids.clone(),
-        }
-    }
-}
-
-/// Base coin fields for [`AccountBalance`]
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct BaseCoinBalanceDto {
-    /// Total amount
-    pub total: String,
-    /// Balance that can currently be spent
-    pub available: String,
-}
-
-impl From<&BaseCoinBalance> for BaseCoinBalanceDto {
-    fn from(value: &BaseCoinBalance) -> Self {
-        Self {
-            total: value.total.to_string(),
-            available: value.available.to_string(),
-        }
-    }
-}
-
-/// Base coin fields for [`AccountBalanceDto`]
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct NativeTokensBalanceDto {
-    /// Token id
-    #[serde(rename = "tokenId")]
-    pub token_id: TokenIdDto,
-    /// Total amount
-    pub total: U256Dto,
-    /// Balance that can currently be spent
-    pub available: U256Dto,
-}
-
-impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
-    fn from(value: &NativeTokensBalance) -> Self {
-        Self {
-            token_id: TokenIdDto::from(&value.token_id),
-            total: U256Dto::from(&value.total),
-            available: U256Dto::from(&value.available),
-        }
-    }
-}
-
-/// Dto for the balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
-/// [`crate::account::handle::AccountHandle::balance()`].
-#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
-pub struct AccountBalanceDto {
-    /// Total and available amount of the base coin
-    #[serde(rename = "baseCoin")]
-    pub base_coin: BaseCoinBalanceDto,
-    /// Current required storage deposit amount
-    #[serde(rename = "requiredStorageDeposit")]
-    pub required_storage_deposit: String,
-    /// Native tokens
-    #[serde(rename = "nativeTokens")]
-    pub native_tokens: Vec<NativeTokensBalanceDto>,
-    /// Nfts
-    pub nfts: Vec<NftId>,
-    /// Aliases
-    pub aliases: Vec<AliasId>,
-    /// Foundries
-    pub foundries: Vec<FoundryId>,
-    /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
-    /// [`TimelockUnlockCondition`] or [`ExpirationUnlockCondition`] this can change at any time
-    #[serde(rename = "potentiallyLockedOutputs")]
-    pub potentially_locked_outputs: HashMap<OutputId, bool>,
-}
-
-impl From<&AccountBalance> for AccountBalanceDto {
-    fn from(value: &AccountBalance) -> Self {
-        Self {
-            base_coin: BaseCoinBalanceDto::from(&value.base_coin),
-            required_storage_deposit: value.required_storage_deposit.to_string(),
-            native_tokens: value
-                .native_tokens
-                .iter()
-                .map(NativeTokensBalanceDto::from)
-                .collect::<_>(),
-            nfts: value.nfts.clone(),
-            aliases: value.aliases.clone(),
-            foundries: value.foundries.clone(),
-            potentially_locked_outputs: value.potentially_locked_outputs.clone(),
         }
     }
 }

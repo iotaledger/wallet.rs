@@ -18,6 +18,8 @@ pub(crate) mod output_finder;
 /// The module for participation
 #[cfg(feature = "participation")]
 pub(crate) mod participation;
+/// The module for retrying blocks or transactions
+pub(crate) mod retry;
 /// The module for synchronization of an account
 pub(crate) mod syncing;
 /// The module for transactions

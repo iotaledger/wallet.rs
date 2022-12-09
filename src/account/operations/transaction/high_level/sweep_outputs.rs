@@ -229,17 +229,11 @@ impl AccountHandle {
         });
 
         let transaction = self.send(custom_outputs, transaction_options).await?;
-        match &transaction.block_id {
-            Some(block_id) => {
-                let _ = self.client.retry_until_included(block_id, None, None).await?;
-                let _ = self.sync(None).await?;
-            }
-            None => {
-                return Err(Error::BurningOrMeltingFailed(
-                    "could not sweep address outputs".to_string(),
-                ));
-            }
-        }
+
+        let _ = self
+            .retry_transaction_until_included(&transaction.transaction_id, None, None)
+            .await?;
+        let _ = self.sync(None).await?;
 
         Ok(transaction)
     }

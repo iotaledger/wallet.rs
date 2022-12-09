@@ -25,6 +25,7 @@ The Account class.
 - [getFoundryOutput](Account.md#getfoundryoutput)
 - [getOutputsWithAdditionalUnlockConditions](Account.md#getoutputswithadditionalunlockconditions)
 - [getTransaction](Account.md#gettransaction)
+- [getIncomingTransactionData](Account.md#getincomingtransactiondata)
 - [addresses](Account.md#addresses)
 - [addressesWithUnspentOutputs](Account.md#addresseswithunspentoutputs)
 - [outputs](Account.md#outputs)
@@ -40,6 +41,7 @@ The Account class.
 - [prepareOutput](Account.md#prepareoutput)
 - [prepareSendAmount](Account.md#preparesendamount)
 - [prepareTransaction](Account.md#preparetransaction)
+- [retryTransactionUntilIncluded](Account.md#retrytransactionuntilincluded)
 - [sendAmount](Account.md#sendamount)
 - [sendMicroTransaction](Account.md#sendmicrotransaction)
 - [sendNativeTokens](Account.md#sendnativetokens)
@@ -447,6 +449,27 @@ The transaction.
 
 ___
 
+### getIncomingTransactionData
+
+▸ **getIncomingTransactionData**(`transactionId`): `Promise`<`IncomingTransactionData`\>
+
+Get the transaction with inputs of an incoming transaction stored in the account
+List might not be complete, if the node pruned the data already
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `transactionId` | `string` | The ID of the transaction to get. |
+
+#### Returns
+
+`Promise`<`IncomingTransactionData`\>
+
+The transaction.
+
+___
+
 ### addresses
 
 ▸ **addresses**(): `Promise`<[`Address`](../interfaces/Address.md)[]\>
@@ -511,13 +534,13 @@ ___
 
 ### incomingTransactions
 
-▸ **incomingTransactions**(): `Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]]][]\>
+▸ **incomingTransactions**(): `Promise`<[`string`, `IncomingTransactionData`][]\>
 
 List all incoming transactions of the account.
 
 #### Returns
 
-`Promise`<[`string`, [`ITransactionPayload`, `IOutputResponse`[]]][]\>
+`Promise`<[`string`, `IncomingTransactionData`][]\>
 
 The incoming transactions with their inputs.
 
@@ -666,7 +689,7 @@ Prepare an output for sending, useful for offline signing.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options` | [`OutputOptions`](../interfaces/OutputOptions.md) | The options for preparing an output. If the amount is below the minimum required storage deposit, by default the remaining amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`, when setting the `ReturnStrategy` to `gift`, the full minimum required storage deposit will be sent  to the recipient. When the assets contain an nft id, the data from the existing `NftOutput` will be used, just with the address unlock conditions replaced. |
+| `options` | [`OutputOptions`](../interfaces/OutputOptions.md) | The options for preparing an output. If the amount is below the minimum required storage deposit, by default the remaining amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`, when setting the `ReturnStrategy` to `gift`, the full minimum required storage deposit will be sent to the recipient. When the assets contain an nft id, the data from the existing `NftOutput` will be used, just with the address unlock conditions replaced. |
 | `transactionOptions?` | [`TransactionOptions`](../interfaces/TransactionOptions.md) | The options to define a `RemainderValueStrategy` or custom inputs. |
 
 #### Returns
@@ -716,6 +739,27 @@ Prepare a transaction, useful for offline signing.
 `Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
 
 The prepared transaction data.
+
+___
+
+### retryTransactionUntilIncluded
+
+▸ **retryTransactionUntilIncluded**(`transactionId`, `interval?`, `maxAttempts?`): `Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
+
+Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+included (referenced by a milestone). Returns the included block id.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `transactionId` | `string` |
+| `interval?` | `number` |
+| `maxAttempts?` | `number` |
+
+#### Returns
+
+`Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
 
 ___
 

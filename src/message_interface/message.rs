@@ -6,9 +6,9 @@ use std::{
     path::PathBuf,
 };
 
-use iota_client::node_manager::node::NodeAuth;
 #[cfg(feature = "participation")]
 use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
+use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -29,6 +29,9 @@ pub enum Message {
     CreateAccount {
         /// The account alias.
         alias: Option<String>,
+        /// The bech32 HRP.
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
     },
     /// Read account.
     /// Expected response: [`Account`](crate::message_interface::Response::Account)
@@ -117,6 +120,23 @@ pub enum Message {
     /// Updates the client options for all accounts.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     SetClientOptions(Box<ClientOptions>),
+    /// Generate an address without storing it
+    /// Expected response: [`Bech32Address`](crate::message_interface::Response::Bech32Address)
+    GenerateAddress {
+        /// Account index
+        #[serde(rename = "accountIndex")]
+        account_index: u32,
+        /// Internal address
+        internal: bool,
+        /// Account index
+        #[serde(rename = "addressIndex")]
+        address_index: u32,
+        /// Options
+        options: Option<GenerateAddressOptions>,
+        /// Bech32 HRP
+        #[serde(rename = "bech32Hrp")]
+        bech32_hrp: Option<String>,
+    },
     /// Get the ledger nano status
     /// Expected response: [`LedgerNanoStatus`](crate::message_interface::Response::LedgerNanoStatus)
     #[cfg(feature = "ledger_nano")]
@@ -175,17 +195,30 @@ pub enum Message {
     /// This will NOT store the node url and auth inside the client options.
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
-    RegisterParticipationEvent { event_id: EventId, nodes: Vec<Node> },
+    RegisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+        nodes: Vec<Node>,
+    },
     /// Removes a previously registered participation event from local storage.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
     #[cfg(feature = "participation")]
-    DeregisterParticipationEvent(EventId),
+    DeregisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+    },
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
-    GetParticipationEvent(EventId),
+    GetParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+    },
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
-    GetParticipationEventStatus(EventId),
+    GetParticipationEventStatus {
+        #[serde(rename = "eventId")]
+        event_id: EventId,
+    },
     /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]
     GetParticipationEvents,
@@ -195,7 +228,9 @@ pub enum Message {
 impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Message::CreateAccount { alias } => write!(f, "CreateAccount{{ alias: {:?} }}", alias),
+            Message::CreateAccount { alias, bech32_hrp } => {
+                write!(f, "CreateAccount{{ alias: {:?}, bech32_hrp: {:?} }}", alias, bech32_hrp)
+            }
             Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
             Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
             Message::GetAccounts => write!(f, "GetAccounts"),
@@ -239,6 +274,17 @@ impl Debug for Message {
             Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
             #[cfg(feature = "ledger_nano")]
             Message::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
+            Message::GenerateAddress {
+                account_index,
+                internal,
+                address_index,
+                options,
+                bech32_hrp,
+            } => write!(
+                f,
+                "GenerateAddress{{ account_index: {:?}, internal: {:?}, address_index: {:?}, options: {:?}, bech32_hrp: {:?} }}",
+                account_index, internal, address_index, options, bech32_hrp
+            ),
             Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
@@ -272,15 +318,15 @@ impl Debug for Message {
                 )
             }
             #[cfg(feature = "participation")]
-            Message::DeregisterParticipationEvent(event_id) => {
+            Message::DeregisterParticipationEvent { event_id } => {
                 write!(f, "DeregisterParticipationEvent({:?})", event_id)
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEvent(event_id) => {
+            Message::GetParticipationEvent { event_id } => {
                 write!(f, "GetParticipationEvent({:?})", event_id)
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEventStatus(event_id) => {
+            Message::GetParticipationEventStatus { event_id } => {
                 write!(f, "GetParticipationEventStatus({:?})", event_id)
             }
             #[cfg(feature = "participation")]

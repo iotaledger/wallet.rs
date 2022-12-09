@@ -1,5 +1,27 @@
 # Changelog
 
+## \[2.0.3-rc.9]
+
+- Add an optional bech32Hrp to the CreateAccountPayload which can be used to create an account offline.
+  - [d7704b50](https://github.com/iotaledger/wallet.rs/commit/d7704b5044014cdc4937da23abacdee59cca2e02) Generate address ([#1516](https://github.com/iotaledger/wallet.rs/pull/1516)) on 2022-12-01
+- Add generateAddress().
+  - [d7704b50](https://github.com/iotaledger/wallet.rs/commit/d7704b5044014cdc4937da23abacdee59cca2e02) Generate address ([#1516](https://github.com/iotaledger/wallet.rs/pull/1516)) on 2022-12-01
+- Add `RequiredStorageDeposit`, split by output types, in `AccountBalance`.
+  - [64871ad2](https://github.com/iotaledger/wallet.rs/commit/64871ad2e91009d2dae466167d2494108584cc60) Split required storage deposit balance ([#1612](https://github.com/iotaledger/wallet.rs/pull/1612)) on 2022-12-01
+- Add `Account.retryTransactionUntilIncluded()`.
+  - [1f77cb4e](https://github.com/iotaledger/wallet.rs/commit/1f77cb4e15c9cd79f649574c53e836d097f5aa86) Add retry transaction until included ([#1632](https://github.com/iotaledger/wallet.rs/pull/1632)) on 2022-12-02
+- Bring back rocksdb 0.19.
+  - [8870f4c7](https://github.com/iotaledger/wallet.rs/commit/8870f4c78171a3a5bacc7486258a90fab8ab5985) Bring back rocksdb 0.19 ([#1645](https://github.com/iotaledger/wallet.rs/pull/1645)) on 2022-12-06
+
+## \[2.0.3-rc.8]
+
+- Fix not synced timestamp issue.
+  - [de81edaf](https://github.com/iotaledger/wallet.rs/commit/de81edaf20fcc072bd92db3159df03e98352431c) Bump client rev to fix timestamp not synced issue ([#1629](https://github.com/iotaledger/wallet.rs/pull/1629)) on 2022-11-30
+- Added participation methods to the account manager object.
+  - [4e33d669](https://github.com/iotaledger/wallet.rs/commit/4e33d669e8de0511c3433d3d11a4135c3eef7a31) feat: add participation to account manager nodejs ([#1624](https://github.com/iotaledger/wallet.rs/pull/1624)) on 2022-11-30
+- Added voting methods to the account object.
+  - [b665af96](https://github.com/iotaledger/wallet.rs/commit/b665af965053762f1ad90c3e1b990922bdc25d0d) feat: add participation to nodejs bindings ([#1616](https://github.com/iotaledger/wallet.rs/pull/1616)) on 2022-11-29
+
 ## \[2.0.3-rc.7]
 
 - Downgrade rocksdb version.

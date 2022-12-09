@@ -15,6 +15,11 @@ import type {
     AccountSyncOptions,
     WalletEvent,
     LedgerNanoStatus,
+    Event,
+    EventId,
+    Node,
+    EventStatus,
+    GenerateAddressOptions,
 } from '../types';
 
 /** The AccountManager class. */
@@ -92,6 +97,15 @@ export class AccountManager {
         this.messageHandler.destroy();
     }
 
+    async deregisterParticipationEvent(eventId: EventId): Promise<void> {
+        await this.messageHandler.sendMessage({
+            cmd: 'deregisterParticipationEvent',
+            payload: {
+                eventId,
+            },
+        });
+    }
+
     /**
      * Emit a provided event for testing of the event system.
      */
@@ -159,6 +173,29 @@ export class AccountManager {
     }
 
     /**
+     * Generate an address without storing it.
+     */
+    async generateAddress(
+        accountIndex: number,
+        internal: boolean,
+        addressIndex: number,
+        options?: GenerateAddressOptions,
+        bech32Hrp?: string,
+    ): Promise<string> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'generateAddress',
+            payload: {
+                accountIndex,
+                internal,
+                addressIndex,
+                options,
+                bech32Hrp,
+            },
+        });
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * Get the node info.
      */
     async getNodeInfo(url?: string, auth?: Auth): Promise<NodeInfoWrapper> {
@@ -175,6 +212,33 @@ export class AccountManager {
     async getLedgerNanoStatus(): Promise<LedgerNanoStatus> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getLedgerNanoStatus',
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEvent(eventId: EventId): Promise<Event> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEvent',
+            payload: {
+                eventId,
+            },
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEvents(): Promise<Event[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEvents',
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEventStatus(eventId: EventId): Promise<EventStatus> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEventStatus',
+            payload: {
+                eventId,
+            },
         });
         return JSON.parse(response).payload;
     }
@@ -253,6 +317,21 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'removeLatestAccount',
         });
+    }
+
+    async registerParticipationEvent(
+        eventId: EventId,
+        nodes: Node[],
+    ): Promise<Event> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'registerParticipationEvent',
+            payload: {
+                eventId,
+                nodes,
+            },
+        });
+
+        return JSON.parse(response).payload;
     }
 
     /**
