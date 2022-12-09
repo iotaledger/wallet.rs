@@ -34,12 +34,13 @@ macro_rules! jni_err_assert {
             throw_exception(&$env, err.to_string());
             return $ret;
         }
+        // Can unwrap as we just checked and returned if its an error
         $result.unwrap()
     }};
 }
 
 // Getting a string from the JNIEnv and then checking if it is an error. If it is an error,
-// it throws an exception and returns the value of r.
+// it throws an exception and returns the value of r. Otherwise returns a String.
 macro_rules! string_from_jni {
     ($env:ident, $x:ident, $r:expr ) => {{
         let string = $env.get_string($x);
@@ -47,8 +48,10 @@ macro_rules! string_from_jni {
     }};
 }
 
-// Getting a string from the JNIEnv and then checking if it is an error. If it is an error,
-// it throws an exception and returns the value of r.
+
+/// A macro that takes in a JNIEnv, a JString, a type, and a return value. It then gets the string from
+/// the JNIEnv, and checks if it is an error. If it is an error, it throws an exception and returns
+/// the value of r. Otherwise returns the unwrapped result.
 macro_rules! jni_from_json_make {
     ($env:ident, $x:ident, $rtype:ident, $r:expr ) => {{
         let json = string_from_jni!($env, $x, $r);
@@ -60,6 +63,7 @@ macro_rules! jni_from_json_make {
 // This is a safety check to make sure that the JNIEnv is not in an exception state.
 macro_rules! env_assert {
     ($env:ident, $r:expr ) => {{
+        // Unwrap is not save, but nothing we can do if we are already in an error
         if $env.exception_check().unwrap() {
             return $r;
         }
@@ -122,10 +126,12 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
 
 // Destroy the required parts for messaging. Needs to call createMessageHandler again before resuming
 #[no_mangle]
-pub extern "system" fn Java_org_iota_api_NativeApi_destroyHandle(_env: JNIEnv, _class: JClass) {
-    (*MESSAGE_HANDLER.lock().unwrap()) = None;
-    (*VM.lock().unwrap()) = None;
-    (*METHOD_CACHE.lock().unwrap()) = None;
+pub extern "system" fn Java_org_iota_api_NativeApi_destroyHandle(env: JNIEnv, _class: JClass) {
+    env_assert!(env, ());
+
+    *jni_err_assert!(env, MESSAGE_HANDLER.lock(), ()) = None;
+    *jni_err_assert!(env, VM.lock(), ()) = None;
+    *jni_err_assert!(env, METHOD_CACHE.lock(), ()) = None;
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -242,13 +248,12 @@ fn event_handle(callback_ref: GlobalRef, e: &Event) {
     let cb = JValue::Object(callback_ref.as_obj()).to_jni();
 
     // Call NativeApi, METHOD_CACHE assumed initialised if we received a VM
-    env.call_static_method_unchecked(
+    jni_err_assert!(env, env.call_static_method_unchecked(
         "org/iota/api/NativeApi",
         METHOD_CACHE.lock().unwrap().unwrap(),
         ReturnType::Object,
         &[event, cb],
-    )
-    .unwrap();
+    ), ());
 }
 
 pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
