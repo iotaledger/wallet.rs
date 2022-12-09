@@ -25,7 +25,7 @@ export interface EventStatus {
     checksum: string;
 }
 
-interface EventData {
+export interface EventData {
     name: string;
     milestoneIndexCommence: number;
     milestoneIndexStart: number;
@@ -34,14 +34,14 @@ interface EventData {
     additionalInfo: string;
 }
 
-type EventPayload = VotingEventPayload | StakingEventPayload;
+export type EventPayload = VotingEventPayload | StakingEventPayload;
 
-interface VotingEventPayload {
+export interface VotingEventPayload {
     type: number;
     questions: Question[];
 }
 
-interface StakingEventPayload {
+export interface StakingEventPayload {
     type: number;
     text: string;
     symbol: string;
@@ -51,13 +51,13 @@ interface StakingEventPayload {
     additionalInfo: string;
 }
 
-interface Question {
+export interface Question {
     text: string;
     answers: Answer[];
     additionalInfo: string;
 }
 
-interface Answer {
+export interface Answer {
     value: number;
     text: string;
     additionalInfo: string;
