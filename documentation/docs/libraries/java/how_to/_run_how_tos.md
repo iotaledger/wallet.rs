@@ -6,7 +6,7 @@ To run the examples, you will first need to clone the repository. You can do so 
 git clone git@github.com:iotaledger/wallet.rs.git
 ```
 
-Then, move into the Java code by running the following command:
+Then, move into the Java examples folder by running the following command:
 
 ```bash
 cd wallet.rs/bindings/java/examples
@@ -19,7 +19,7 @@ you can run to get acquainted with the library. You can run any example with the
 command from the `examples` directory:
 
 ```bash
-.././gradlew run -Pmain=CreateAccount
+.././gradlew run -Pexample=CreateAccount
 ```
 
-You can replace the `CreateAccount` by any other example from the [Java examples directory](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/examples/src).
+To run another example of your choice, replace `CreateAccount` with the name of any other example from the [Java examples directory](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/examples/src).
