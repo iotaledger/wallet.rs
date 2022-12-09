@@ -37,12 +37,12 @@ export interface EventData {
 export type EventPayload = VotingEventPayload | StakingEventPayload;
 
 export interface VotingEventPayload {
-    type: number;
+    type: ParticipationEventType.Voting;
     questions: Question[];
 }
 
 export interface StakingEventPayload {
-    type: number;
+    type: ParticipationEventType.Staking;
     text: string;
     symbol: string;
     numerator: string;
@@ -61,4 +61,9 @@ export interface Answer {
     value: number;
     text: string;
     additionalInfo: string;
+}
+
+export enum ParticipationEventType {
+    Voting = 0,
+    Staking = 1,
 }
