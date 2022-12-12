@@ -210,7 +210,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
         Err(err) => throw_exception(&env, err.to_string()),
     };
 
-    // exceptions return early, let the client now we registered successfully
+    // exceptions return early, now we let the client know that we registered successfully
     make_jni_string(&env, "{\"type\": \"success\", \"payload\": \"success\"}".to_string())
 }
 
