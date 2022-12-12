@@ -1,5 +1,14 @@
 # Changelog
 
+## \[2.0.3-rc.10]
+
+- Add `outputTypes` to `FilterOptions` and make `lowerBoundBookedTimestamp` and `lowerBoundBookedTimestamp` optional.
+  - [98924e21](https://github.com/iotaledger/wallet.rs/commit/98924e21ac552a04e1234a31a0c3eef5f50a946c) Add output_types to FilterOptions ([#1653](https://github.com/iotaledger/wallet.rs/pull/1653)) on 2022-12-07
+- Export participation types
+  - [40f062f0](https://github.com/iotaledger/wallet.rs/commit/40f062f0b1b008625e67d416daa930eaef622c86) fix: export participation types ([#1659](https://github.com/iotaledger/wallet.rs/pull/1659)) on 2022-12-09
+- `Account::vote()` parameters are optional to support revoting.
+  - [fbf607d9](https://github.com/iotaledger/wallet.rs/commit/fbf607d9e9fe0ddb6575993265882a8f77c6c8a5) Revote when no event id is provided ([#1658](https://github.com/iotaledger/wallet.rs/pull/1658)) on 2022-12-12
+
 ## \[2.0.3-rc.9]
 
 - Add an optional bech32Hrp to the CreateAccountPayload which can be used to create an account offline.
