@@ -14,7 +14,7 @@ keywords:
 
 # Getting Started
 
-## Choose Your Programming Language
+Choose your programming language:
 
 * [Rust](./rust.mdx)
 * [Node.js](./nodejs.mdx)
@@ -34,7 +34,7 @@ https://api.testnet.shimmer.network
 ## Explore the Network
 
 You can use the [Shimmer Tangle Explorer](https://explorer.shimmer.network/testnet) to view transactions and data stored in
-the IOTA Tangle.
+the Tangle.
 
 ## Get Test Tokens
 
