@@ -6,6 +6,7 @@ on:
       - main
       - dev
       - develop
+      - ci/**
   pull_request:
     branches:
       - dev
@@ -193,6 +194,79 @@ jobs:
       - name: Build nodejs binding
         run: npm ci --build-from-source
         working-directory: bindings/nodejs
+
+  swift-bindings:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      # Temporary fix for "ValueError: invalid mode: 'rU' while trying to load binding.gyp"
+      # See <PR link>
+      # This can be removed when "prebuild" updates "node-gyp"
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Get current date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        if: matrix.os == 'macos-latest' || matrix.os == 'ubuntu-latest'
+
+      - name: Install required packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libudev-dev libusb-1.0-0-dev
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          # Add date to the cache to keep it up to date
+          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          # Restore from outdated cache for speed
+          restore-keys: |
+            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+            ${{ matrix.os }}-stable-cargo-index-
+
+      - name: Build library
+        timeout-minutes: 60
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --all-features --release --manifest-path bindings/swift/Cargo.toml
+
+      - name: Move build library to xcode folder
+        run: mv "$GITHUB_WORKSPACE/bindings/swift/target/release/libiota_wallet.dylib" "$GITHUB_WORKSPACE/bindings/swift/xcode/IotaWallet/iota_wallet"
+
+      - name: Select Xcode
+        run: sudo xcode-select -switch /Applications/Xcode_13.0.app && /usr/bin/xcodebuild -version
+      
+      - name: Build project
+        run: xcodebuild build -scheme IotaWallet -project IotaWallet.xcodeproj -destination 'platform=macOS' | xcpretty && exit ${PIPESTATUS[0]}
+        working-directory: bindings/swift/xcode/IotaWallet
 
   python-bindings:
     runs-on: ${{ matrix.os }}
