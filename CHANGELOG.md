@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountBalanceDto::required_storage_deposit` changed from `String` to `RequiredStorageDepositDto`;
 - Move all balance related types to the `account/types/balance` module;
 - `AccountBalanceDto`, `BaseCoinBalanceDto` and `NativeTokensBalanceDto` moved from `message_interface/dtos` to `account/types/balance`;
+- `Account::vote(), AccountMethod::Vote()` parameters are now optional to support revoting;
 
 ### Removed
 
