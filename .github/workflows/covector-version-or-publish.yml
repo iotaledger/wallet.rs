@@ -98,7 +98,7 @@ jobs:
         if: matrix.os == 'windows-2019'
 
       - name: Set deployment target (macOS)
-        run: echo "MACOSX_DEPLOYMENT_TARGET=10.12" >> $GITHUB_ENV
+        run: echo "MACOSX_DEPLOYMENT_TARGET=10.14" >> $GITHUB_ENV #  10.12 should be supported, but waiting for new rocksDB to test this
         if: matrix.os == 'macos-11'
 
       - name: Get current date
