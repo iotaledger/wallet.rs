@@ -7,6 +7,7 @@ mod message;
 mod message_handler;
 mod response;
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
@@ -57,6 +58,12 @@ where
     }
 }
 
+pub fn init_logger(config: String) -> Result<(), fern_logger::Error> {
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config)
+}
+
 pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::Result<WalletMessageHandler> {
     log::debug!(
         "create_message_handler with options: {}",
@@ -90,10 +97,10 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     Ok(WalletMessageHandler::with_manager(manager))
 }
 
-pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Response {
+pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Option<Response> {
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
-    message_rx.recv().await.unwrap()
+    message_rx.recv().await
 }
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ import type {
     CreateAccountPayload,
 } from '../account';
 import type { GenerateAddressOptions } from '../address';
-import type { WalletEvent } from '../event';
+import type { EventType, WalletEvent } from '../event';
 import type { Auth, ClientOptions, Node } from '../network';
 import type { EventId } from '../participation';
 
@@ -31,6 +31,11 @@ export type __ChangeStrongholdPasswordMessage__ = {
 
 export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'clearStrongholdPassword';
+};
+
+export type __ClearListeners__ = {
+    cmd: 'clearListeners';
+    payload: EventType[];
 };
 
 export type __CreateAccountMessage__ = {

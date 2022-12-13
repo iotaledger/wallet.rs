@@ -7,9 +7,8 @@ use std::sync::Mutex;
 
 use ::iota_wallet::{
     events::types::WalletEventType,
-    message_interface::{ManagerOptions, Message},
+    message_interface::{init_logger as init_logger_rust, ManagerOptions, Message},
 };
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use once_cell::sync::OnceCell;
 use pyo3::{prelude::*, wrap_pyfunction};
 use tokio::runtime::Runtime;
@@ -26,11 +25,14 @@ pub(crate) fn block_on<C: futures::Future>(cb: C) -> C::Output {
 #[pyfunction]
 /// Init the logger of wallet library.
 pub fn init_logger(config: String) -> PyResult<()> {
-    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
-    let config = LoggerConfig::build().with_output(output_config).finish();
+    init_logger_rust(config).expect("failed to init logger");
+    Ok(())
+}
 
-    logger_init(config).expect("failed to init logger");
-
+#[pyfunction]
+/// Destroys the wallet instance
+pub fn destroy() -> PyResult<()> {
+    // Nothing to do here, but added for consistency across bindings
     Ok(())
 }
 
@@ -67,7 +69,12 @@ pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<St
         ::iota_wallet::message_interface::send_message(&handle.wallet_message_handler, message).await
     });
 
-    Ok(serde_json::to_string(&response)?)
+    match response {
+        Some(message) => Ok(serde_json::to_string(&message)?),
+        None => {
+            panic!("No send message response");
+        }
+    }
 }
 
 #[pyfunction]
@@ -100,10 +107,11 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
 /// IOTA Wallet implemented in Rust for Python binding.
 #[pymodule]
 fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
     m.add_function(wrap_pyfunction!(create_message_handler, m)?).unwrap();
-    m.add_function(wrap_pyfunction!(send_message, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(destroy, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
     m.add_function(wrap_pyfunction!(listen, m)?).unwrap();
+    m.add_function(wrap_pyfunction!(send_message, m)?).unwrap();
 
     Ok(())
 }

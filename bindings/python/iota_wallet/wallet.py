@@ -219,6 +219,23 @@ class IotaWallet():
             'stopBackgroundSync',
         )
 
+    def listen(self, events=None, handler):
+        """Listen to wallet events, empty array or None will listen to all events
+           The default value for events is None
+        """
+        events_array = [] if events is None else events
+        iota_wallet.listen(self.handle, events_array, handler)
+
+    def clear_listeners(self, events=None):
+        """Remove wallet event listeners, empty array or None will remove all listeners
+           The default value for events is None
+        """
+        events_array = [] if events is None else events
+        return self._send_cmd_routine(
+            'clearListeners',
+            events_array
+        )
+
     @staticmethod
     def __return_str_or_none(str):
         if str:

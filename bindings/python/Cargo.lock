@@ -1087,6 +1087,7 @@ version = "1.0.0-rc.3"
 dependencies = [
  "async-trait",
  "backtrace",
+ "fern-logger",
  "futures",
  "getset",
  "gloo-timers",
@@ -1108,7 +1109,6 @@ dependencies = [
 name = "iota-wallet-python"
 version = "0.2.0"
 dependencies = [
- "fern-logger",
  "futures",
  "iota-wallet",
  "log",

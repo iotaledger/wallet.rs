@@ -2,22 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #![allow(clippy::needless_borrow)]
+#![recursion_limit = "130"]
 
 pub mod message_handler;
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 pub use message_handler::*;
 use neon::prelude::*;
 use once_cell::sync::Lazy;
 use tokio::runtime::Runtime;
 pub static RUNTIME: Lazy<Runtime> = Lazy::new(|| Runtime::new().unwrap());
-
-pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let config = cx.argument::<JsString>(0)?.value(&mut cx);
-    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
-    let config = LoggerConfig::build().with_output(output_config).finish();
-    logger_init(config).expect("failed to init logger");
-    Ok(cx.undefined())
-}
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
@@ -27,8 +19,6 @@ fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("destroy", message_handler::destroy)?;
 
     cx.export_function("listen", message_handler::listen)?;
-    cx.export_function("clearListeners", message_handler::clear_listeners)?;
-
-    cx.export_function("initLogger", init_logger)?;
+    cx.export_function("initLogger", message_handler::init_logger)?;
     Ok(())
 }

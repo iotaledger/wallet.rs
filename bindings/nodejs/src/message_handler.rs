@@ -5,7 +5,10 @@ use std::sync::Arc;
 
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{create_message_handler, ManagerOptions, Message, Response, WalletMessageHandler},
+    message_interface::{
+        create_message_handler, init_logger as init_logger_rust, ManagerOptions, Message, Response,
+        WalletMessageHandler,
+    },
 };
 use neon::prelude::*;
 use tokio::sync::{mpsc::unbounded_channel, RwLock};
@@ -46,10 +49,8 @@ impl MessageHandler {
     async fn send_message(&self, serialized_message: String) -> (String, bool) {
         match serde_json::from_str::<Message>(&serialized_message) {
             Ok(message) => {
-                let (response_tx, mut response_rx) = unbounded_channel();
-
-                self.wallet_message_handler.handle(message, response_tx).await;
-                let response = response_rx.recv().await;
+                let response =
+                    iota_wallet::message_interface::send_message(&self.wallet_message_handler, message).await;
                 if let Some(res) = response {
                     let mut is_err = matches!(res, Response::Error(_) | Response::Panic(_));
 
@@ -64,7 +65,7 @@ impl MessageHandler {
 
                     (msg, is_err)
                 } else {
-                    ("No response".to_string(), true)
+                    ("No send message response".to_string(), true)
                 }
             }
             Err(e) => {
@@ -95,6 +96,11 @@ fn call_event_callback(channel: &neon::event::Channel, event_data: Event, callba
 
         Ok(())
     });
+}
+pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+    let config = cx.argument::<JsString>(0)?.value(&mut cx);
+    init_logger_rust(config).expect("failed to init logger");
+    Ok(cx.undefined())
 }
 
 pub fn message_handler_new(mut cx: FunctionContext) -> JsResult<JsBox<MessageHandlerWrapper>> {
@@ -162,33 +168,6 @@ pub fn listen(mut cx: FunctionContext) -> JsResult<JsUndefined> {
                 .listen(event_types, move |event_data| {
                     call_event_callback(&channel, event_data.clone(), callback.clone())
                 })
-                .await;
-        } else {
-            panic!("Message handler got destroyed")
-        }
-    });
-
-    Ok(cx.undefined())
-}
-
-pub fn clear_listeners(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let js_arr_handle: Handle<JsArray> = cx.argument(0)?;
-    let vec: Vec<Handle<JsValue>> = js_arr_handle.to_vec(&mut cx)?;
-    let mut event_types = vec![];
-    for event_string in vec {
-        let event_type = event_string.downcast_or_throw::<JsString, FunctionContext>(&mut cx)?;
-        let wallet_event_type =
-            WalletEventType::try_from(event_type.value(&mut cx).as_str()).or_else(|e| cx.throw_error(e))?;
-        event_types.push(wallet_event_type);
-    }
-
-    let message_handler = Arc::clone(&&cx.argument::<JsBox<MessageHandlerWrapper>>(1)?.0);
-
-    crate::RUNTIME.spawn(async move {
-        if let Some(message_handler) = &*message_handler.read().await {
-            message_handler
-                .wallet_message_handler
-                .clear_listeners(event_types)
                 .await;
         } else {
             panic!("Message handler got destroyed")
