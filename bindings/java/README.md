@@ -4,7 +4,7 @@ Get started with the official IOTA Wallet Java library.
 
 ## Requirements
 
-Minimum Java version: Java 8
+minimum Java version >= 8
 
 ## Use in your Android project (Android Studio)
 
@@ -110,7 +110,7 @@ If you don't want to use the provided libraries and instead want to build everyt
 
 Requirements:
 
-- minimal Java version >= 8
+- minimum Java version >= 8
 - Android Studio with NDK
 - latest stable version of Rust
 - cargo-ndk (https://github.com/bbqsrc/cargo-ndk)
@@ -200,7 +200,7 @@ Please note, following instructions build the library for your host OS/architect
 
 Requirements:
 
-- minimal Java version >= 8
+- minimum Java version >= 8
 - latest stable version of Rust
 
 1. Generate the JAR:
