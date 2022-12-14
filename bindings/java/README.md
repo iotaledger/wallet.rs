@@ -154,7 +154,6 @@ find $ANDROID_NDK_HOME -name "libc++_shared.so"
 ```
 
 7. Copy the found `libc++_shared.so` files to their respective folder inside the `jniLibs` directory:
-
 ```
 ── jniLibs/ 
     ├── arm64-v8a/           <-- ARM 64bit
@@ -172,7 +171,6 @@ find $ANDROID_NDK_HOME -name "libc++_shared.so"
 ```
 
 8. Add the `jniLibs` folder with its contents to your Android Studio project as shown below:
-
 ```
 project/
 ├──src/
