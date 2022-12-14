@@ -118,28 +118,24 @@ Requirements:
 1. Generate the JAR:
 ```
 git clone https://github.com/iotaledger/wallet.rs
-cd wallet.rs/bindings/java/lib
-.././gradlew jarWithoutNativeLibs
+cd wallet.rs/bindings/java
+./gradlew jarWithoutNativeLibs
 ```
 
 2. You will find the built JAR in the `lib/build/libs` directory. Add it as a library to your Android project.
 
 3. Install the Android targets you want to support:
 ```
- rustup target add \
-   aarch64-linux-android \
-   armv7-linux-androideabi \
-   x86_64-linux-android \
-   i686-linux-android
+ rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 ```
 
 4. Build the native library for your Android targets:
 ```
-cd native
+cd lib/native
 cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./jniLibs build --release
 ```
 
-5. On success, you will find the built native libraries in the `jniLibs` directory like:
+5. On success, you will find the built native libraries in the `jniLibs/` directory like:
 ```
 ── jniLibs/ 
     ├── arm64-v8a/           <-- ARM 64bit
@@ -210,8 +206,8 @@ Requirements:
 1. Generate the JAR:
 ```
 git clone https://github.com/iotaledger/wallet.rs
-cd wallet.rs/bindings/java/lib
-.././gradlew jar
+cd wallet.rs/bindings/java
+./gradlew jar
 ```
 
 2. You will find the built JAR in the `lib/build/libs` directory. Add it as a library to your Java project.
