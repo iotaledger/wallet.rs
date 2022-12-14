@@ -30,7 +30,8 @@ pub fn init_logger(config: String) -> PyResult<()> {
 }
 
 #[pyfunction]
-/// Destroys the wallet instance
+/// Destroys the wallet instance.
+/// Currently has no actual effect
 pub fn destroy() -> PyResult<()> {
     // Nothing to do here, but added for consistency across bindings
     Ok(())

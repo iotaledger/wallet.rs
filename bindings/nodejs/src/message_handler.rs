@@ -97,6 +97,7 @@ fn call_event_callback(channel: &neon::event::Channel, event_data: Event, callba
         Ok(())
     });
 }
+
 pub fn init_logger(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let config = cx.argument::<JsString>(0)?.value(&mut cx);
     init_logger_rust(config).expect("failed to init logger");

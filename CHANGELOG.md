@@ -63,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow null nft ids in `prepare_output()` for minting;
 - `TagFeature` & `MetadataFeature` encoded as hex strings instead of utf-8 strings;
 - Call `try_get_outputs_metadata` instead of `try_get_outputs` when possible (more efficient);
-- `send_message` rto return Option which is None when no message response is received;
+- `send_message` to return Option which is None when no message response is received;
 
 ### Removed
 
