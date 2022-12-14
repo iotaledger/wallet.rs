@@ -235,7 +235,7 @@ impl AccountManager {
     pub fn verify_mnemonic(&self, mnemonic: &str) -> crate::Result<()> {
         // first we check if the mnemonic is valid to give meaningful errors
         crypto::keys::bip39::wordlist::verify(mnemonic, &crypto::keys::bip39::wordlist::ENGLISH)
-            .map_err(|e| crate::Error::InvalidMnemonic(format!("{:?}", e)))?;
+            .map_err(|e| crate::Error::InvalidMnemonic(format!("{e:?}")))?;
         Ok(())
     }
 

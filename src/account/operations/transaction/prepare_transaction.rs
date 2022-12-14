@@ -75,8 +75,7 @@ impl AccountHandle {
                             }
                             None => {
                                 return Err(crate::Error::CustomInputError(format!(
-                                    "custom input {} not found in unspent outputs",
-                                    output_id
+                                    "custom input {output_id} not found in unspent outputs"
                                 )));
                             }
                         }
@@ -119,8 +118,7 @@ impl AccountHandle {
                             }
                             None => {
                                 return Err(crate::Error::CustomInputError(format!(
-                                    "custom input {} not found in unspent outputs",
-                                    output_id
+                                    "custom input {output_id} not found in unspent outputs"
                                 )));
                             }
                         }

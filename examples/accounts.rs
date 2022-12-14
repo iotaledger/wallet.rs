@@ -63,7 +63,7 @@ async fn main() -> Result<()> {
     let accounts = manager.get_accounts().await?;
     for account in accounts {
         let a = account.read().await;
-        println!("Accounts: {:#?}", a);
+        println!("Accounts: {a:#?}");
     }
 
     let addresses = account.generate_addresses(5, None).await?;
@@ -80,7 +80,7 @@ async fn main() -> Result<()> {
     let now = Instant::now();
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     Ok(())
 }

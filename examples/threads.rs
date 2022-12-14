@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
     println!("{}", address.to_bech32());
 
     let balance = account.sync(None).await?;
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     if balance.base_coin.available == 0 {
         panic!("Account has no available balance");

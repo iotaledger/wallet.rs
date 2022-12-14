@@ -64,7 +64,7 @@ async fn main() -> Result<()> {
 
     let prepared_transaction = account.prepare_send_amount(outputs.clone(), None).await?;
 
-    println!("Prepared transaction sending {:?}", outputs);
+    println!("Prepared transaction sending {outputs:?}");
 
     write_transaction_to_file(PREPARED_TRANSACTION_FILE_NAME, prepared_transaction)
 }
@@ -81,7 +81,7 @@ fn write_transaction_to_file<P: AsRef<Path>>(path: P, prepared_transaction: Prep
     let json = serde_json::to_string_pretty(&PreparedTransactionDataDto::from(&prepared_transaction))?;
     let mut file = BufWriter::new(File::create(path)?);
 
-    println!("{}", json);
+    println!("{json}");
 
     file.write_all(json.as_bytes())?;
 
