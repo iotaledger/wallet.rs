@@ -168,7 +168,9 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
+
         match response {
             Response::Account(account) => {
                 let id = account.index;
@@ -290,7 +292,8 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Account(account) => {
@@ -323,8 +326,9 @@ mod tests {
         let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
         let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
 
-        let response =
-            message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into())).await;
+        let response = message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into()))
+            .await
+            .expect("No send message response");
 
         match response {
             Response::HexAddress(hex) => {
@@ -340,7 +344,8 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Bech32Address(bech32) => {

@@ -219,7 +219,7 @@ class IotaWallet():
             'stopBackgroundSync',
         )
 
-    def listen(self, events=None, handler):
+    def listen(self, handler, events=None):
         """Listen to wallet events, empty array or None will listen to all events
            The default value for events is None
         """

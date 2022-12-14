@@ -145,7 +145,7 @@ pub unsafe extern "C" fn iota_send_message(
         let response = message_interface::send_message(handle, message).await;
         if let None = response {
             let error = CString::new("No send message response").unwrap();
-            return callback(std::ptr::null(), error.as_ptr(), context);
+            return callback(std::ptr::null(), error.as_ptr(), callback_context.data);
         }
 
         let response = serde_json::to_string(&response.unwrap()).unwrap();

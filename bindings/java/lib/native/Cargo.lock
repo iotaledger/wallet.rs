@@ -1181,6 +1181,7 @@ version = "1.0.0-rc.3"
 dependencies = [
  "async-trait",
  "backtrace",
+ "fern-logger",
  "futures",
  "getset",
  "gloo-timers",
@@ -1202,7 +1203,6 @@ dependencies = [
 name = "iota-wallet-java"
 version = "0.1.0"
 dependencies = [
- "fern-logger",
  "futures",
  "iota-wallet",
  "jni",

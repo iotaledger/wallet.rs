@@ -73,9 +73,7 @@ macro_rules! env_assert {
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
     // This is a safety check to make sure that the JNIEnv is not in an exception state.
     env_assert!(env,());
-
-    let config_builder = string_from_jni!(env, command, ());
-    jni_err_assert!(env, init_logger(config_builder), ());
+    jni_err_assert!(env, init_logger(string_from_jni!(env, command, ())), ());
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -143,12 +141,11 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
         Ok(message_handler_store) => {
             match message_handler_store.as_ref() {
                 Some(message_handler) => {
-                    match send_message(message_handler, message) {
+                    match crate::block_on(send_message(message_handler, message)) {
+                        // We assume response is valid json from our own client
                         Some(res) => return make_jni_string(&env, serde_json::to_string(&res).unwrap()),
                         None => throw_nullpointer(&env, "No send message response"),
                     }
-                    // We assume response is valid json from our own client
-                    
                 }
                 _ => throw_nullpointer(&env, "Wallet not initialised."),
             }
