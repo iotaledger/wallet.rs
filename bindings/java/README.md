@@ -104,7 +104,7 @@ repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develo
 
 ## Instead, build everything from scratch yourself:
 
-If you don't want to use the provided libraries and instead want to build everything yourself from scratch:
+If you don't like to use the provided libraries and instead want to build everything yourself from scratch:
 
 ### Build for Android:
 
