@@ -1,3 +1,5 @@
+# IOTA Wallet Java Library
+
 Get started with the official IOTA Wallet Java library.
 
 ## Requirements
@@ -100,9 +102,9 @@ Now that you are up and running, you can get acquainted with the library using
 its [how-to guides](https://wiki.iota.org/shimmer/wallet.rs/how_tos/run_how_tos/) and the
 repository's [code examples](https://github.com/iotaledger/wallet.rs/tree/develop/bindings/java/examples/src).
 
-## Build instead everything yourself from source
+## Instead, build everything from scratch yourself:
 
-If you don't like to use the provided libraries and instead want to build everything from source yourself:
+If you don't want to use the provided libraries and instead want to build everything yourself from scratch:
 
 ### Build for Android:
 
@@ -150,12 +152,12 @@ cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./jniLibs build --rele
         └── libiota-wallet.so
 ```
 
-6. Find the needed `libc++_shared.so` for each native library in the configured Android NDK folder:
+6. Each folder is missing its `libc++_shared.so`. You can find them in the configured Android NDK folder like:
 ```
 find $ANDROID_NDK_HOME -name "libc++_shared.so"
 ```
 
-7. Copy the `libc++_shared.so` files accordingly to the `jniLibs` folder like:
+7. Copy the found `libc++_shared.so` files to their respective folder inside the `jniLibs` directory:
 
 ```
 ── jniLibs/ 
@@ -198,7 +200,7 @@ project/
 
 ### Build for Linux, macOS, Windows
 
-Please note, following instructions build the library for your host OS only.
+Please note, following instructions build the library for your host OS/architecture only.
 
 Requirements:
 
