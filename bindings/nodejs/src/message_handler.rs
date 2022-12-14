@@ -11,7 +11,7 @@ use iota_wallet::{
     },
 };
 use neon::prelude::*;
-use tokio::sync::{mpsc::unbounded_channel, RwLock};
+use tokio::sync::RwLock;
 
 // Wrapper so we can destroy the MessageHandler
 pub type MessageHandlerWrapperInner = Arc<RwLock<Option<MessageHandler>>>;
