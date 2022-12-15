@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     // If already synced, just get the balance
     let account_balance = account.balance().await?;
 
-    println!("{:?}", account_balance);
+    println!("{account_balance:?}");
 
     Ok(())
 }

@@ -53,7 +53,7 @@ async fn mint_and_burn_nft() -> Result<()> {
     )
     .await?;
 
-    println!("{}", faucet_response);
+    println!("{faucet_response}");
 
     let nft_options = vec![NftOptions {
         address: Some(account_addresses[0].address().to_bech32()),
@@ -128,7 +128,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     )
     .await?;
 
-    println!("{}", faucet_response);
+    println!("{faucet_response}");
 
     // Wait for faucet transaction
     tokio::time::sleep(Duration::new(20, 0)).await;

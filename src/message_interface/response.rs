@@ -186,64 +186,64 @@ pub enum Response {
 impl Debug for Response {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
-            Response::Account(account) => write!(f, "Account({:?})", account),
-            Response::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({:?})", account_indexes),
-            Response::Accounts(accounts) => write!(f, "Accounts({:?})", accounts),
-            Response::Addresses(addresses) => write!(f, "Addresses({:?})", addresses),
+            Response::Account(account) => write!(f, "Account({account:?})"),
+            Response::AccountIndexes(account_indexes) => write!(f, "AccountIndexes({account_indexes:?})"),
+            Response::Accounts(accounts) => write!(f, "Accounts({accounts:?})"),
+            Response::Addresses(addresses) => write!(f, "Addresses({addresses:?})"),
             Response::AddressesWithUnspentOutputs(addresses) => {
-                write!(f, "AddressesWithUnspentOutputs({:?})", addresses)
+                write!(f, "AddressesWithUnspentOutputs({addresses:?})")
             }
-            Response::BlockId(block_id) => write!(f, "BlockId({:?})", block_id),
-            Response::Output(output) => write!(f, "Output({:?})", output),
-            Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({:?})", amount),
-            Response::OutputIds(output_ids) => write!(f, "OutputIds({:?})", output_ids),
-            Response::OutputData(output) => write!(f, "OutputData({:?})", output),
-            Response::OutputsData(outputs) => write!(f, "OutputsData{:?}", outputs),
+            Response::BlockId(block_id) => write!(f, "BlockId({block_id:?})"),
+            Response::Output(output) => write!(f, "Output({output:?})"),
+            Response::MinimumRequiredStorageDeposit(amount) => write!(f, "MinimumRequiredStorageDeposit({amount:?})"),
+            Response::OutputIds(output_ids) => write!(f, "OutputIds({output_ids:?})"),
+            Response::OutputData(output) => write!(f, "OutputData({output:?})"),
+            Response::OutputsData(outputs) => write!(f, "OutputsData{outputs:?}"),
             Response::PreparedTransaction(transaction_data) => {
-                write!(f, "PreparedTransaction({:?})", transaction_data)
+                write!(f, "PreparedTransaction({transaction_data:?})")
             }
-            Response::Transaction(transaction) => write!(f, "Transaction({:?})", transaction),
-            Response::Transactions(transactions) => write!(f, "Transactions({:?})", transactions),
+            Response::Transaction(transaction) => write!(f, "Transaction({transaction:?})"),
+            Response::Transactions(transactions) => write!(f, "Transactions({transactions:?})"),
             Response::SignedTransactionData(signed_transaction_data) => {
-                write!(f, "SignedTransactionData({:?})", signed_transaction_data)
+                write!(f, "SignedTransactionData({signed_transaction_data:?})")
             }
-            Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({:?})", addresses),
-            Response::Balance(balance) => write!(f, "Balance({:?})", balance),
+            Response::GeneratedAddress(addresses) => write!(f, "GeneratedAddress({addresses:?})"),
+            Response::Balance(balance) => write!(f, "Balance({balance:?})"),
             Response::IncomingTransactionData(transaction_data) => {
-                write!(f, "IncomingTransactionData({:?})", transaction_data)
+                write!(f, "IncomingTransactionData({transaction_data:?})")
             }
             Response::IncomingTransactionsData(transactions_data) => {
-                write!(f, "IncomingTransactionsData({:?})", transactions_data)
+                write!(f, "IncomingTransactionsData({transactions_data:?})")
             }
-            Response::SentTransaction(transaction) => write!(f, "SentTransaction({:?})", transaction),
+            Response::SentTransaction(transaction) => write!(f, "SentTransaction({transaction:?})"),
             Response::MintTokenTransaction(mint_transaction) => {
-                write!(f, "MintTokenTransaction({:?})", mint_transaction)
+                write!(f, "MintTokenTransaction({mint_transaction:?})")
             }
             Response::StrongholdPasswordIsAvailable(is_available) => {
-                write!(f, "StrongholdPasswordIsAvailable({:?})", is_available)
+                write!(f, "StrongholdPasswordIsAvailable({is_available:?})")
             }
-            Response::Error(error) => write!(f, "Error({:?})", error),
-            Response::Panic(panic_msg) => write!(f, "Panic({:?})", panic_msg),
+            Response::Error(error) => write!(f, "Error({error:?})"),
+            Response::Panic(panic_msg) => write!(f, "Panic({panic_msg:?})"),
             Response::GeneratedMnemonic(_) => write!(f, "GeneratedMnemonic(<omitted>)"),
             #[cfg(feature = "ledger_nano")]
-            Response::LedgerNanoStatus(ledger_nano_status) => write!(f, "LedgerNanoStatus({:?})", ledger_nano_status),
-            Response::NodeInfo(info) => write!(f, "NodeInfo({:?})", info),
-            Response::HexAddress(hex_address) => write!(f, "Hex encoded address({:?})", hex_address),
-            Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({:?})", bech32_address),
+            Response::LedgerNanoStatus(ledger_nano_status) => write!(f, "LedgerNanoStatus({ledger_nano_status:?})"),
+            Response::NodeInfo(info) => write!(f, "NodeInfo({info:?})"),
+            Response::HexAddress(hex_address) => write!(f, "Hex encoded address({hex_address:?})"),
+            Response::Bech32Address(bech32_address) => write!(f, "Bech32 encoded address({bech32_address:?})"),
             Response::Ok(()) => write!(f, "Ok(())"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({:?})", event),
+            Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({event:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({:?})", event),
+            Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({event:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({:?})", events),
+            Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({events:?})"),
             #[cfg(feature = "participation")]
-            Response::VotingPower(amount) => write!(f, "VotingPower({:?})", amount),
+            Response::VotingPower(amount) => write!(f, "VotingPower({amount:?})"),
             #[cfg(feature = "participation")]
             Response::AccountParticipationOverview(overview) => {
-                write!(f, "AccountParticipationOverview({:?})", overview)
+                write!(f, "AccountParticipationOverview({overview:?})")
             }
-            Response::Faucet(response) => write!(f, "Faucet({:?})", response),
+            Response::Faucet(response) => write!(f, "Faucet({response:?})"),
         }
     }
 }
