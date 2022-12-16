@@ -1,5 +1,5 @@
 /**
- * This example will burn native tokens
+ * This example will destroy a foundry
  */
 const getUnlockedManager = require('./account-manager');
 
