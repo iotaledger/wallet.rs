@@ -30,6 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RetryTransactionUntilIncluded` to message interface account methods;
 - `AccountMethod::RequestFundsFromFaucet` to message interface;
 - `FilterOptions::output_types` field;
+- `NativeTokensBalance::metadata` field;
+- `SyncOptions::sync_native_token_foundries` field;
+- `Account::native_token_foundries` field;
+- `AccountDto::native_token_foundries` field;
 
 ### Changed
 

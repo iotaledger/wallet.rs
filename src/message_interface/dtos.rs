@@ -11,7 +11,7 @@ use std::{
 use iota_client::{
     api_types::response::OutputWithMetadataResponse,
     block::{
-        output::OutputId,
+        output::{FoundryId, OutputId},
         payload::transaction::{dto::TransactionPayloadDto, TransactionId},
     },
 };
@@ -138,6 +138,9 @@ pub struct AccountDto {
     /// Incoming transactions
     #[serde(rename = "incomingTransactions")]
     pub incoming_transactions: HashMap<TransactionId, (TransactionPayloadDto, Vec<OutputWithMetadataResponse>)>,
+    /// Foundries for native tokens in outputs
+    #[serde(rename = "nativeTokenFoundries", default)]
+    pub native_token_foundries: HashMap<FoundryId, OutputWithMetadataResponse>,
 }
 
 impl From<&Account> for AccountDto {
@@ -178,6 +181,7 @@ impl From<&Account> for AccountDto {
                 .iter()
                 .map(|(tx_id, (tx, inputs))| (*tx_id, (TransactionPayloadDto::from(tx), inputs.clone())))
                 .collect(),
+            native_token_foundries: value.native_token_foundries().clone(),
         }
     }
 }

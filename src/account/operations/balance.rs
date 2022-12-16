@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::block::output::{unlock_condition::UnlockCondition, NativeTokensBuilder, Output, Rent};
+use iota_client::block::output::{unlock_condition::UnlockCondition, FoundryId, NativeTokensBuilder, Output, Rent};
 use primitive_types::U256;
 
 use crate::account::{
@@ -25,6 +25,7 @@ impl AccountHandle {
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
+        let token_supply = self.client.get_token_supply().await?;
         let rent_structure = self.client.get_rent_structure().await?;
 
         let local_time = self.client.get_time_checked().await?;
@@ -37,6 +38,15 @@ impl AccountHandle {
         let mut aliases = Vec::new();
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
+
+        let mut foundries_immutable_metadata = HashMap::new();
+        for (foundry_id, output) in &account.native_token_foundries {
+            let output = Output::try_from_dto(&output.output, token_supply)?;
+            if let Output::Foundry(foundry_output) = output {
+                foundries_immutable_metadata
+                    .insert(*foundry_id, foundry_output.immutable_features().metadata().cloned());
+            }
+        }
 
         for output_data in account.unspent_outputs.values() {
             // Check if output is from the network we're currently connected to
@@ -80,7 +90,7 @@ impl AccountHandle {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
 
-                    foundries.push(output.id())
+                    foundries.push(output.id());
                 }
                 _ => {
                     // If there is only an [AddressUnlockCondition], then we can spend the output at any time without
@@ -272,6 +282,10 @@ impl AccountHandle {
 
             native_tokens_balance.push(NativeTokensBalance {
                 token_id: *native_token.token_id(),
+                metadata: foundries_immutable_metadata
+                    .get(&FoundryId::from(*native_token.token_id()))
+                    .cloned()
+                    .flatten(),
                 total: native_token.amount(),
                 available: native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
             })
@@ -314,6 +328,7 @@ pub(crate) fn add_balances(balances: Vec<AccountBalance>) -> crate::Result<Accou
             } else {
                 total_balance.native_tokens.push(NativeTokensBalance {
                     token_id: native_token_balance.token_id,
+                    metadata: native_token_balance.metadata.clone(),
                     total: native_token_balance.total,
                     available: native_token_balance.available,
                 })

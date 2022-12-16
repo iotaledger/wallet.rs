@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub(crate) mod addresses;
+pub(crate) mod foundries;
 pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
@@ -15,7 +16,7 @@ use iota_client::{
     api_types::response::OutputMetadataResponse,
     block::{
         address::{Address, AliasAddress, NftAddress},
-        output::{Output, OutputId},
+        output::{FoundryId, Output, OutputId},
     },
 };
 
@@ -84,6 +85,20 @@ impl AccountHandle {
                 .collect();
             // Request and store transaction payload for newly received unspent outputs
             self.request_incoming_transaction_data(transaction_ids).await?;
+        }
+
+        if options.sync_native_token_foundries {
+            let native_token_foundry_ids = outputs_data
+                .iter()
+                .flat_map(|output| output.output.native_tokens())
+                .flat_map(|n| {
+                    n.iter()
+                        .map(|t| FoundryId::from(*t.token_id()))
+                        .collect::<Vec<FoundryId>>()
+                })
+                .collect::<Vec<FoundryId>>();
+            // Request and store foundry outputs
+            self.request_and_store_foundry_outputs(native_token_foundry_ids).await?;
         }
 
         // updates account with balances, output ids, outputs
