@@ -12,6 +12,8 @@ public class NativeTokensBalance extends AbstractObject {
     private String total;
     /// Balance that can currently be spent
     private String available;
+    /// Token foundry immutable metadata
+    private String metadata;
 
     public TokenId getTokenId() {
         return tokenId;
@@ -23,6 +25,10 @@ public class NativeTokensBalance extends AbstractObject {
 
     public String getAvailable() {
         return available;
+    }
+
+    public String getMetadata() {
+        return metadata;
     }
 
 }

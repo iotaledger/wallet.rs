@@ -1,7 +1,11 @@
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
-    participations: {[eventId: EventId]: { [outputId: OutputId]: TrackedParticipationOverview }};
+    participations: {
+        [eventId: EventId]: {
+            [outputId: OutputId]: TrackedParticipationOverview;
+        };
+    };
 }
 
 export interface TrackedParticipationOverview {
