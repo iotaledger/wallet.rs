@@ -12,6 +12,7 @@ use crate::account::handle::AccountHandle;
 
 impl AccountHandle {
     pub(crate) async fn request_and_store_foundry_outputs(&self, foundry_ids: Vec<FoundryId>) -> crate::Result<()> {
+        log::debug!("[SYNC] request_and_store_foundry_outputs");
         let mut foundries: HashMap<FoundryId, OutputWithMetadataResponse> =
             self.read().await.native_token_foundries().clone();
 

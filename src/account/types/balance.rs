@@ -5,11 +5,7 @@ use std::collections::HashMap;
 
 use iota_client::block::{
     dto::U256Dto,
-    output::{
-        dto::TokenIdDto,
-        feature::{dto::MetadataFeatureDto, MetadataFeature},
-        AliasId, FoundryId, NftId, OutputId, TokenId,
-    },
+    output::{dto::TokenIdDto, feature::MetadataFeature, AliasId, FoundryId, NftId, OutputId, TokenId},
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -186,7 +182,7 @@ pub struct NativeTokensBalanceDto {
     #[serde(rename = "tokenId")]
     pub token_id: TokenIdDto,
     /// Token foundry immutable metadata
-    pub metadata: Option<MetadataFeatureDto>,
+    pub metadata: Option<String>,
     /// Total amount
     pub total: U256Dto,
     /// Balance that can currently be spent
@@ -197,7 +193,7 @@ impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
     fn from(value: &NativeTokensBalance) -> Self {
         Self {
             token_id: TokenIdDto::from(&value.token_id),
-            metadata: None,
+            metadata: value.metadata.as_ref().map(|m| prefix_hex::encode(m.data())),
             total: U256Dto::from(&value.total),
             available: U256Dto::from(&value.available),
         }
