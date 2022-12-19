@@ -62,7 +62,10 @@ impl AccountManager {
             .collect())
     }
 
-    pub async fn get_participation_events_from_client(&self, event_type: Option<ParticipationEventType>) -> crate::Result<Vec<EventId>> {
+    pub async fn get_participation_events_from_client(
+        &self,
+        event_type: Option<ParticipationEventType>,
+    ) -> crate::Result<Vec<EventId>> {
         let accounts = self.accounts.read().await;
         Ok(if let Some(account) = accounts.first() {
             let events = account.client.events(event_type).await?;
