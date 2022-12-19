@@ -25,7 +25,7 @@ export type EventId = string;
 export interface EventStatus {
     milestoneIndex: number;
     status: string;
-    questions?: Answer[];
+    questions?: QuestionStatus[];
     checksum: string;
 }
 
@@ -65,6 +65,16 @@ export interface Answer {
     value: number;
     text: string;
     additionalInfo: string;
+}
+
+export interface QuestionStatus {
+    answers: AnswerStatus[]
+}
+
+export interface AnswerStatus {
+    value: number;
+    current: number;
+    accumulated: number;
 }
 
 export enum ParticipationEventType {
