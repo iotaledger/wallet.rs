@@ -52,6 +52,10 @@ impl StorageManager {
     pub(crate) async fn get_participation_events(&self) -> crate::Result<HashMap<EventId, (Event, Vec<Node>)>> {
         log::debug!("get_participation_events");
 
-        Ok(serde_json::from_str(&self.storage.get(PARTICIPATION_EVENTS).await?)?)
+        match self.storage.get(PARTICIPATION_EVENTS).await {
+            Ok(events) => Ok(serde_json::from_str(&events)?),
+            Err(crate::Error::RecordNotFound(_)) => Ok(HashMap::new()),
+            Err(err) => Err(err),
+        }
     }
 }
