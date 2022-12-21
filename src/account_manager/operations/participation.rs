@@ -67,12 +67,12 @@ impl AccountManager {
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<EventId>> {
         let accounts = self.accounts.read().await;
-        Ok(if let Some(account) = accounts.first() {
-            let events = account.client.events(event_type).await?;
-            events.event_ids
-        } else {
-            vec![]
-        })
+        let client = match accounts.first() {
+            Some(account) => account.client.clone(),
+            None => self.client_options.read().await.clone().finish()?,
+        };
+        let events = client.events(event_type).await?;
+        Ok(events.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.
