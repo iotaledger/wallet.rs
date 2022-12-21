@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{handle::AccountHandle, OutputData},
-    Error, Result,
+    Result,
 };
 
 /// An object containing an account's entire participation overview.
@@ -122,12 +122,7 @@ impl AccountHandle {
     /// Gets client for an event.
     /// If event isn't found, the client from the account will be returned.
     pub(crate) async fn get_client_for_event(&self, id: &EventId) -> crate::Result<Client> {
-        // TODO: get_participation_events needs to return an option
-        let events = match self.storage_manager.lock().await.get_participation_events().await {
-            Ok(events) => events,
-            Err(Error::RecordNotFound(_)) => return Ok(self.client().clone()),
-            Err(e) => return Err(e),
-        };
+        let events = self.storage_manager.lock().await.get_participation_events().await?;
 
         let event = match events.get(id) {
             Some(event) => event,
@@ -149,12 +144,7 @@ impl AccountHandle {
     ) -> crate::Result<()> {
         let latest_milestone_index = self.client().get_info().await?.node_info.status.latest_milestone.index;
 
-        // TODO: get_participation_events needs to return an option
-        let events = match self.storage_manager.lock().await.get_participation_events().await {
-            Ok(events) => events,
-            Err(Error::RecordNotFound(_)) => HashMap::new(),
-            Err(e) => return Err(e),
-        };
+        let events = self.storage_manager.lock().await.get_participation_events().await?;
 
         // TODO try to remove this clone
         for participation in participations.participations.clone().iter() {
