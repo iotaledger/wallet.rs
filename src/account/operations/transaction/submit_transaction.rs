@@ -1,10 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::finish_pow,
-    block::{payload::Payload, BlockId},
-};
+use iota_client::block::{payload::Payload, BlockId};
 
 use crate::account::{handle::AccountHandle, operations::transaction::TransactionPayload};
 #[cfg(feature = "events")]
@@ -32,7 +29,10 @@ impl AccountHandle {
                 WalletEvent::TransactionProgress(TransactionProgressEvent::PerformingPow),
             );
         }
-        let block = finish_pow(&self.client, Some(Payload::from(transaction_payload))).await?;
+        let block = self
+            .client
+            .finish_block_builder(None, Some(Payload::from(transaction_payload)))
+            .await?;
 
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(

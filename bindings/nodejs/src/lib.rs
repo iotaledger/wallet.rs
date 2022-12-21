@@ -1,6 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![recursion_limit = "256"]
 #![allow(clippy::needless_borrow)]
 
 pub mod message_handler;
