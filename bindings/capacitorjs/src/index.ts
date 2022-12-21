@@ -1,17 +1,12 @@
-// Copyright 2021 IOTA Stiftung
-// SPDX-License-Identifier: Apache-2.0
+import { registerPlugin } from '@capacitor/core'
 
-import { internalInitLogger } from './lib/bindings'
-import type { LoggerConfig } from './types'
+import { IotaWalletMobileTypes } from './definitions'
 
-export * from './lib/AccountManager'
-export * from './lib/MessageHandler'
-export * from './lib/Account'
-// Moved to definitions.ts, TODO modify tsconfig to adapt it
-// export * from './types'
+const IotaWalletMobile = registerPlugin<IotaWalletMobileTypes>('IotaWalletMobile')
 
-/** Function to create wallet logs */
-const initLogger = (config: LoggerConfig) =>
-    internalInitLogger(JSON.stringify(config))
+// import * as WalletApi from './lib/index.js'
 
-export { initLogger }
+// IotaWalletMobile.WalletApi = WalletApi
+
+export * from './definitions'
+export { IotaWalletMobile }
