@@ -72,6 +72,7 @@ impl AccountManager {
             None => self.client_options.read().await.clone().finish()?,
         };
         let events = client.events(event_type).await?;
+
         Ok(events.event_ids)
     }
 
