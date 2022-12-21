@@ -12,19 +12,6 @@ use std::{
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
-use iota_client::{
-    api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
-    block::{
-        output::{
-            dto::{OutputBuilderAmountDto, OutputDto},
-            AliasId, AliasOutput, BasicOutput, FoundryOutput, NftId, NftOutput, Output, Rent, TokenId,
-        },
-        payload::transaction::dto::TransactionPayloadDto,
-        DtoError,
-    },
-    constants::SHIMMER_TESTNET_BECH32_HRP,
-    request_funds_from_faucet, utils, Client, NodeInfoWrapper,
-};
 use primitive_types::U256;
 use tokio::sync::mpsc::UnboundedSender;
 use zeroize::Zeroize;
@@ -41,6 +28,19 @@ use crate::{
         OutputDataDto,
     },
     account_manager::AccountManager,
+    client::{
+        api::{PreparedTransactionData, PreparedTransactionDataDto, SignedTransactionData, SignedTransactionDataDto},
+        block::{
+            output::{
+                dto::{OutputBuilderAmountDto, OutputDto},
+                AliasId, AliasOutput, BasicOutput, FoundryOutput, NftId, NftOutput, Output, Rent, TokenId,
+            },
+            payload::transaction::dto::TransactionPayloadDto,
+            DtoError,
+        },
+        constants::SHIMMER_TESTNET_BECH32_HRP,
+        request_funds_from_faucet, utils, Client, NodeInfoWrapper,
+    },
     message_interface::{
         account_method::AccountMethod, dtos::AccountDto, message::Message, response::Response,
         AddressWithUnspentOutputsDto,
@@ -969,7 +969,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .increase_voting_power(
-                            u64::from_str(&amount).map_err(|_| iota_client::Error::InvalidAmount(amount.clone()))?,
+                            u64::from_str(&amount).map_err(|_| crate::client::Error::InvalidAmount(amount.clone()))?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -981,7 +981,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let transaction = account_handle
                         .decrease_voting_power(
-                            u64::from_str(&amount).map_err(|_| iota_client::Error::InvalidAmount(amount.clone()))?,
+                            u64::from_str(&amount).map_err(|_| crate::client::Error::InvalidAmount(amount.clone()))?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))

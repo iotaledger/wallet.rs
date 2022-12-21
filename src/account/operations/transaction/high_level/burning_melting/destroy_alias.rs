@@ -1,18 +1,17 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    address::{Address, AliasAddress},
-    output::{
-        unlock_condition::AddressUnlockCondition, AliasId, BasicOutputBuilder, Output, OutputId, UnlockCondition,
-    },
-};
-
 use crate::{
     account::{
         handle::AccountHandle,
         operations::{helpers::time::can_output_be_unlocked_now, transaction::Transaction},
         TransactionOptions,
+    },
+    client::block::{
+        address::{Address, AliasAddress},
+        output::{
+            unlock_condition::AddressUnlockCondition, AliasId, BasicOutputBuilder, Output, OutputId, UnlockCondition,
+        },
     },
     Error,
 };

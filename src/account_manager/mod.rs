@@ -9,7 +9,6 @@ use std::sync::{
     Arc,
 };
 
-use iota_client::{secret::SecretManager, Client, NodeInfoWrapper};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -31,6 +30,7 @@ use crate::{
         operations::{balance::add_balances, syncing::SyncOptions},
         types::AccountBalance,
     },
+    client::{secret::SecretManager, Client, NodeInfoWrapper},
     ClientOptions,
 };
 

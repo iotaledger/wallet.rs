@@ -1,24 +1,27 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    address::AliasAddress,
-    dto::U256Dto,
-    output::{
-        dto::AliasIdDto,
-        feature::{Feature, MetadataFeature},
-        unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
-        AliasId, AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
-    },
-    DtoError,
-};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
-use crate::account::{
-    handle::AccountHandle,
-    types::{Transaction, TransactionDto},
-    TransactionOptions,
+use crate::{
+    account::{
+        handle::AccountHandle,
+        types::{Transaction, TransactionDto},
+        TransactionOptions,
+    },
+    client::block::{
+        address::AliasAddress,
+        dto::U256Dto,
+        output::{
+            dto::AliasIdDto,
+            feature::{Feature, MetadataFeature},
+            unlock_condition::{ImmutableAliasAddressUnlockCondition, UnlockCondition},
+            AliasId, AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId,
+            TokenScheme,
+        },
+        DtoError,
+    },
 };
 
 /// Address and foundry data for `mint_native_token()`

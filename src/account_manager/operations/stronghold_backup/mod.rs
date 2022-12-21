@@ -5,13 +5,15 @@ mod stronghold_snapshot;
 
 use std::{fs, path::PathBuf, sync::atomic::Ordering};
 
-use iota_client::secret::{stronghold::StrongholdSecretManager, SecretManager, SecretManagerDto};
 use zeroize::Zeroize;
 
 use self::stronghold_snapshot::{read_data_from_stronghold_snapshot, store_data_to_stronghold};
 #[cfg(feature = "storage")]
 use crate::account_manager::AccountManagerBuilder;
-use crate::account_manager::{AccountHandle, AccountManager};
+use crate::{
+    account_manager::{AccountHandle, AccountManager},
+    client::secret::{stronghold::StrongholdSecretManager, SecretManager, SecretManagerDto},
+};
 
 impl AccountManager {
     /// Backup the account manager data in a Stronghold file

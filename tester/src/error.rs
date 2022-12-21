@@ -8,13 +8,13 @@ use std::fmt::Debug;
 pub enum Error {
     /// Block error.
     #[error("client error: {0}")]
-    Block(#[from] iota_wallet::iota_client::block::Error),
+    Block(#[from] iota_wallet::client::block::Error),
     /// Check error.
     #[error("{0}")]
     Check(String),
     /// Client error.
     #[error("client error: {0}")]
-    Client(#[from] iota_wallet::iota_client::Error),
+    Client(#[from] iota_wallet::client::Error),
     /// Invalid field.
     #[error("invalid field: {0}")]
     InvalidField(&'static str),

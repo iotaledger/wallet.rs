@@ -4,13 +4,13 @@
 use std::{str::FromStr, sync::Arc};
 
 use crypto::ciphers::chacha;
-use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
 use crate::{
     account::Account,
     account_manager::builder::AccountManagerBuilder,
+    client::secret::{SecretManager, SecretManagerDto},
     storage::{constants::*, Storage, StorageAdapter},
 };
 

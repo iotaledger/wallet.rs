@@ -3,9 +3,12 @@
 
 use std::sync::atomic::Ordering;
 
-use iota_client::{db::DatabaseProvider, secret::SecretManagerDto, stronghold::StrongholdAdapter};
-
-use crate::{account::Account, account_manager::AccountManager, ClientOptions};
+use crate::{
+    account::Account,
+    account_manager::AccountManager,
+    client::{db::DatabaseProvider, secret::SecretManagerDto, stronghold::StrongholdAdapter},
+    ClientOptions,
+};
 
 pub(crate) const CLIENT_OPTIONS_KEY: &str = "client_options";
 pub(crate) const COIN_TYPE_KEY: &str = "coin_type";

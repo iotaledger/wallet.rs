@@ -8,19 +8,19 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        output::OutputId,
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-    },
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{
         types::{address::AddressWrapper, AccountAddress, AddressWithUnspentOutputs, TransactionDto},
         Account, OutputDataDto,
+    },
+    client::{
+        api_types::response::OutputWithMetadataResponse,
+        block::{
+            output::OutputId,
+            payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        },
     },
     AddressWithAmount, AddressWithMicroAmount,
 };
@@ -41,7 +41,7 @@ impl TryFrom<&AddressWithAmountDto> for AddressWithAmount {
         Ok(Self {
             address: value.address.clone(),
             amount: u64::from_str(&value.amount)
-                .map_err(|_| iota_client::Error::InvalidAmount(value.amount.clone()))?,
+                .map_err(|_| crate::client::Error::InvalidAmount(value.amount.clone()))?,
         })
     }
 }

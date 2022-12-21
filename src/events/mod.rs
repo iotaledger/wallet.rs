@@ -111,13 +111,11 @@ mod tests {
         },
     };
 
-    use iota_client::block::payload::transaction::TransactionId;
-
     use super::{
         types::{TransactionInclusionEvent, TransactionProgressEvent, WalletEvent, WalletEventType},
         EventEmitter,
     };
-    use crate::account::types::InclusionState;
+    use crate::{account::types::InclusionState, client::block::payload::transaction::TransactionId};
 
     #[test]
     fn events() {

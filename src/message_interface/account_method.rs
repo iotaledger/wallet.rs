@@ -1,23 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::EventId;
-use iota_client::{
-    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    block::{
-        dto::U256Dto,
-        output::{
-            dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
-            feature::dto::FeatureDto,
-            unlock_condition::dto::UnlockConditionDto,
-            FoundryId, OutputId,
-        },
-        payload::transaction::TransactionId,
-    },
-};
 use serde::{Deserialize, Serialize};
 
+#[cfg(feature = "participation")]
+use crate::client::node_api::participation::types::EventId;
 use crate::{
     account::{
         handle::FilterOptions,
@@ -36,6 +23,19 @@ use crate::{
                 prepare_output::OutputOptionsDto,
                 TransactionOptions,
             },
+        },
+    },
+    client::{
+        api::{PreparedTransactionDataDto, SignedTransactionDataDto},
+        block::{
+            dto::U256Dto,
+            output::{
+                dto::{AliasIdDto, NativeTokenDto, NftIdDto, OutputDto, TokenIdDto, TokenSchemeDto},
+                feature::dto::FeatureDto,
+                unlock_condition::dto::UnlockConditionDto,
+                FoundryId, OutputId,
+            },
+            payload::transaction::TransactionId,
         },
     },
     message_interface::dtos::{AddressWithAmountDto, AddressWithMicroAmountDto},

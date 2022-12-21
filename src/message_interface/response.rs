@@ -3,30 +3,30 @@
 
 use std::fmt::{Debug, Formatter, Result};
 
-#[cfg(feature = "ledger_nano")]
-use iota_client::secret::LedgerNanoStatus;
-use iota_client::{
-    api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        output::{dto::OutputDto, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-        BlockId,
-    },
-    NodeInfoWrapper,
-};
 use serde::Serialize;
-#[cfg(feature = "participation")]
-use {
-    crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{Event, EventStatus},
-};
 
+#[cfg(feature = "ledger_nano")]
+use crate::client::secret::LedgerNanoStatus;
+#[cfg(feature = "participation")]
+use crate::{
+    account::operations::participation::AccountParticipationOverview,
+    client::node_api::participation::types::{Event, EventStatus},
+};
 use crate::{
     account::{
         operations::transaction::high_level::minting::mint_native_token::MintTokenTransactionDto,
         types::{address::AccountAddress, AccountBalanceDto, TransactionDto},
         OutputDataDto,
+    },
+    client::{
+        api::{PreparedTransactionDataDto, SignedTransactionDataDto},
+        api_types::response::OutputWithMetadataResponse,
+        block::{
+            output::{dto::OutputDto, OutputId},
+            payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+            BlockId,
+        },
+        NodeInfoWrapper,
     },
     message_interface::dtos::{AccountDto, AddressWithUnspentOutputsDto},
     Error,

@@ -1,9 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::output::{
-    AliasOutputBuilder, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
-};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
@@ -11,6 +8,9 @@ use crate::{
     account::{
         handle::AccountHandle, operations::transaction::high_level::minting::mint_native_token::MintTokenTransaction,
         TransactionOptions,
+    },
+    client::block::output::{
+        AliasOutputBuilder, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
     },
     Error,
 };

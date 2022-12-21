@@ -1,12 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::output::{
-    AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
-};
 use primitive_types::U256;
 
-use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    client::block::output::{
+        AliasOutputBuilder, FoundryId, FoundryOutputBuilder, Output, SimpleTokenScheme, TokenId, TokenScheme,
+    },
+};
 
 impl AccountHandle {
     /// Function to melt native tokens. This happens with the foundry output which minted them, by increasing it's

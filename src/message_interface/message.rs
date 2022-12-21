@@ -6,16 +6,16 @@ use std::{
     path::PathBuf,
 };
 
-#[cfg(feature = "participation")]
-use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
-use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
+#[cfg(feature = "participation")]
+use crate::client::{node_api::participation::types::EventId, node_manager::node::Node};
 #[cfg(feature = "events")]
 use crate::events::types::{WalletEvent, WalletEventType};
 use crate::{
     account::{operations::syncing::SyncOptions, types::AccountIdentifier},
+    client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions},
     ClientOptions,
 };
 

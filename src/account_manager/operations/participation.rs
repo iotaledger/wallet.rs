@@ -1,13 +1,14 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    node_api::participation::types::{Event, EventId, EventStatus},
-    node_manager::node::Node,
-    Client,
+use crate::{
+    account_manager::AccountManager,
+    client::{
+        node_api::participation::types::{Event, EventId, EventStatus},
+        node_manager::node::Node,
+        Client,
+    },
 };
-
-use crate::account_manager::AccountManager;
 
 impl AccountManager {
     /// Stores participation information locally and returns the event.

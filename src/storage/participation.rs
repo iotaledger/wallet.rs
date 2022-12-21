@@ -3,13 +3,14 @@
 
 use std::collections::HashMap;
 
-use iota_client::{
-    node_api::participation::types::{Event, EventId},
-    node_manager::node::Node,
-};
-
 use super::manager::StorageManager;
-use crate::storage::constants::PARTICIPATION_EVENTS;
+use crate::{
+    client::{
+        node_api::participation::types::{Event, EventId},
+        node_manager::node::Node,
+    },
+    storage::constants::PARTICIPATION_EVENTS,
+};
 
 impl StorageManager {
     pub(crate) async fn insert_participation_event(

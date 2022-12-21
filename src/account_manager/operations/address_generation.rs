@@ -3,14 +3,15 @@
 
 use std::sync::atomic::Ordering;
 
-use iota_client::{
-    block::address::Address,
-    secret::{GenerateAddressOptions, SecretManage, SecretManager},
-};
-
-use crate::account_manager::AccountManager;
 #[cfg(all(feature = "events", feature = "ledger_nano"))]
 use crate::events::types::{AddressData, WalletEvent};
+use crate::{
+    account_manager::AccountManager,
+    client::{
+        block::address::Address,
+        secret::{GenerateAddressOptions, SecretManage, SecretManager},
+    },
+};
 
 impl AccountManager {
     /// Generate an address without storing it

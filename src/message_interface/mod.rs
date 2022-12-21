@@ -7,7 +7,6 @@ mod message;
 mod message_handler;
 mod response;
 
-use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
 
@@ -18,7 +17,11 @@ pub use self::{
     message_handler::WalletMessageHandler,
     response::Response,
 };
-use crate::{account_manager::AccountManager, ClientOptions};
+use crate::{
+    account_manager::AccountManager,
+    client::secret::{SecretManager, SecretManagerDto},
+    ClientOptions,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ManagerOptions {
@@ -100,22 +103,23 @@ pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Re
 mod tests {
     use std::fs;
 
-    use iota_client::{
-        block::{
-            address::Address,
-            output::{
-                dto::OutputDto,
-                unlock_condition::{AddressUnlockCondition, UnlockCondition},
-                BasicOutputBuilder,
-            },
-        },
-        constants::SHIMMER_COIN_TYPE,
-        ClientBuilder,
-    };
-
     #[cfg(feature = "events")]
     use crate::events::types::WalletEvent;
-    use crate::message_interface::{self, AccountMethod, ManagerOptions, Message, Response};
+    use crate::{
+        client::{
+            block::{
+                address::Address,
+                output::{
+                    dto::OutputDto,
+                    unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                    BasicOutputBuilder,
+                },
+            },
+            constants::SHIMMER_COIN_TYPE,
+            ClientBuilder,
+        },
+        message_interface::{self, AccountMethod, ManagerOptions, Message, Response},
+    };
 
     const TOKEN_SUPPLY: u64 = 1_813_620_509_061_365;
 

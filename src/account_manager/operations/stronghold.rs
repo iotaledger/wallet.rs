@@ -47,7 +47,7 @@ impl AccountManager {
         let mut secret_manager = self.secret_manager.write().await;
         match &mut *secret_manager {
             SecretManager::Stronghold(stronghold) => stronghold.clear_key().await,
-            _ => return Err(iota_client::Error::SecretManagerMismatch.into()),
+            _ => return Err(crate::client::Error::SecretManagerMismatch.into()),
         }
         Ok(())
     }
@@ -58,7 +58,7 @@ impl AccountManager {
         let mut secret_manager = self.secret_manager.write().await;
         match &mut *secret_manager {
             SecretManager::Stronghold(stronghold) => Ok(stronghold.is_key_available().await),
-            _ => Err(iota_client::Error::SecretManagerMismatch.into()),
+            _ => Err(crate::client::Error::SecretManagerMismatch.into()),
         }
     }
 }

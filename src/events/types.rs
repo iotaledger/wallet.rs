@@ -2,14 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use getset::Getters;
-use iota_client::{
-    api::PreparedTransactionDataDto,
-    api_types::response::OutputWithMetadataResponse,
-    block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-};
 use serde::{Deserialize, Serialize};
 
-use crate::account::types::{address::AddressWrapper, InclusionState, OutputDataDto};
+use crate::{
+    account::types::{address::AddressWrapper, InclusionState, OutputDataDto},
+    client::{
+        api::PreparedTransactionDataDto,
+        api_types::response::OutputWithMetadataResponse,
+        block::payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+    },
+};
+
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct Event {
     /// Associated account index.

@@ -7,7 +7,7 @@ use fern_logger::{LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     account::AccountHandle,
     account_manager::AccountManager,
-    iota_client::{
+    client::{
         constants::IOTA_COIN_TYPE,
         generate_mnemonic,
         secret::{mnemonic::MnemonicSecretManager, SecretManager},

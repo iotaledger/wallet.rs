@@ -1,10 +1,9 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme};
-
 use crate::{
     account::{handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions},
+    client::block::output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme},
     Error,
 };
 
