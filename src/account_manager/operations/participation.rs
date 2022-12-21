@@ -63,7 +63,7 @@ impl AccountManager {
     }
 
     /// Retrieves all available event IDs from the client options node.
-    pub async fn get_participation_event_ids_from_client(
+    pub async fn get_participation_event_ids(
         &self,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<EventId>> {
