@@ -1,25 +1,21 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::output::{FoundryId, Output},
-};
+use iota_client::block::output::{FoundryId, Output};
 
 use crate::account::handle::AccountHandle;
 
 impl AccountHandle {
     pub(crate) async fn request_and_store_foundry_outputs(&self, foundry_ids: HashSet<FoundryId>) -> crate::Result<()> {
         log::debug!("[SYNC] request_and_store_foundry_outputs");
-        let mut foundries: HashMap<FoundryId, OutputWithMetadataResponse> =
-            self.read().await.native_token_foundries().clone();
 
+        let mut foundries = self.read().await.native_token_foundries().clone();
         let mut tasks = Vec::new();
 
         for foundry_id in foundry_ids {
-            // Don't request known foundries again
+            // Don't request known foundries again.
             if foundries.contains_key(&foundry_id) {
                 continue;
             }
@@ -37,11 +33,12 @@ impl AccountHandle {
             });
         }
 
-        let results = futures::future::try_join_all(tasks).await?;
-        // Update account with new foundries
         let token_supply = self.client.get_token_supply().await?;
-        for res in results {
-            if let Some(foundry_output_with_metadata) = res? {
+        let results = futures::future::try_join_all(tasks).await?;
+
+        // Update account with new foundries.
+        for result in results {
+            if let Some(foundry_output_with_metadata) = result? {
                 let output = Output::try_from_dto(&foundry_output_with_metadata.output, token_supply)?;
                 if let Output::Foundry(foundry) = output {
                     foundries.insert(foundry.id(), foundry_output_with_metadata);
