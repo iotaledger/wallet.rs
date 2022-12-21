@@ -5,9 +5,10 @@
 #import <Capacitor/Capacitor.h>
 
 CAP_PLUGIN(IotaWalletMobile, "IotaWalletMobile",
+    CAP_PLUGIN_METHOD(initLogger, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(messageHandlerNew, CAPPluginReturnPromise);
     CAP_PLUGIN_METHOD(sendMessage, CAPPluginReturnPromise);
+    CAP_PLUGIN_METHOD(listen, CAPPluginReturnCallback);
+    CAP_PLUGIN_METHOD(clearListeners, CAPPluginReturnCallback);
     CAP_PLUGIN_METHOD(destroy, CAPPluginReturnPromise);
-    CAP_PLUGIN_METHOD(initialize, CAPPluginReturnPromise);
-    CAP_PLUGIN_METHOD(listen, CAPPluginReturnPromise);
-    CAP_PLUGIN_METHOD(cleanListeners, CAPPluginReturnPromise);
 )
