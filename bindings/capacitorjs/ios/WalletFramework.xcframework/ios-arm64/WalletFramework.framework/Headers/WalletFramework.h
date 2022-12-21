@@ -13,7 +13,6 @@ typedef struct iota_wallet_handle iota_wallet_handle_t;
 
 typedef void (*Callback)(const char* response, const char* error, void* context);
 
-// Initialise the fern logger. Level filter defaults to Debug if omitted
 extern int8_t iota_init_logger(const char* file_name, const char* level_filter);
 extern iota_wallet_handle_t* iota_initialize(const char* manager_options, char* error_buffer, size_t error_buffer_size);
 extern void iota_destroy(iota_wallet_handle_t*);
