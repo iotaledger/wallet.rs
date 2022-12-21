@@ -62,17 +62,16 @@ impl AccountManager {
             .collect())
     }
 
-    pub async fn get_participation_events_from_client(
+    /// Retrieves all available event IDs from the client options node.
+    pub async fn get_participation_event_ids_from_client(
         &self,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<EventId>> {
         let accounts = self.accounts.read().await;
-        let client = match accounts.first() {
-            Some(account) => account.client.clone(),
-            None => self.client_options.read().await.clone().finish()?,
+        let events = match accounts.first() {
+            Some(account) => account.client.events(event_type).await?,
+            None => self.client_options.read().await.clone().finish()?.events(event_type).await?,
         };
-        let events = client.events(event_type).await?;
-
         Ok(events.event_ids)
     }
 
