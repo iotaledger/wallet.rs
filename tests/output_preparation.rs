@@ -7,7 +7,7 @@ use iota_client::block::address::Address;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions, Unlocks},
     account_manager::AccountManager,
-    iota_client::{
+    client::{
         block::output::{NativeToken, NftId, TokenId},
         constants::SHIMMER_COIN_TYPE,
     },
@@ -247,7 +247,7 @@ async fn output_preparation() -> Result<()> {
         )
         .await
     {
-        assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
+        assert_eq!(output.kind(), iota_wallet::client::block::output::NftOutput::KIND);
         assert_eq!(output.amount(), 500000);
         // only address condition
         assert_eq!(output.unlock_conditions().unwrap().len(), 1);
@@ -279,10 +279,7 @@ async fn output_preparation() -> Result<()> {
         )
         .await?;
 
-    assert_eq!(
-        output.kind(),
-        iota_wallet::iota_client::block::output::BasicOutput::KIND
-    );
+    assert_eq!(output.kind(), iota_wallet::client::block::output::BasicOutput::KIND);
     assert_eq!(output.amount(), 500000);
     assert_eq!(output.unlock_conditions().unwrap().len(), 1);
     let features = output.features().unwrap();
@@ -338,7 +335,7 @@ async fn output_preparation() -> Result<()> {
             None,
         )
         .await?;
-    assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
+    assert_eq!(output.kind(), iota_wallet::client::block::output::NftOutput::KIND);
     assert_eq!(output.amount(), 500000);
     let features = output.features().unwrap();
     // sender feature
@@ -380,7 +377,7 @@ async fn output_preparation() -> Result<()> {
             None,
         )
         .await?;
-    assert_eq!(output.kind(), iota_wallet::iota_client::block::output::NftOutput::KIND);
+    assert_eq!(output.kind(), iota_wallet::client::block::output::NftOutput::KIND);
     assert_eq!(output.amount(), 53900);
     // address, sdr, expiration
     assert_eq!(output.unlock_conditions().unwrap().len(), 3);

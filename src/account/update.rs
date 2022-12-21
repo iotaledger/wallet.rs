@@ -14,8 +14,8 @@ use crate::account::{
 #[cfg(feature = "events")]
 use crate::{
     account::types::OutputDataDto,
+    client::block::payload::transaction::dto::TransactionPayloadDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
-    iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
 
 impl AccountHandle {

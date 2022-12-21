@@ -6,16 +6,18 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::block::{
-    address::Address,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder,
-    },
-};
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
+    client::{
+        block::{
+            address::Address,
+            output::{
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                BasicOutputBuilder,
+            },
+        },
+        constants::SHIMMER_COIN_TYPE,
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
@@ -63,13 +65,11 @@ async fn main() -> Result<()> {
     println!("Balance: {balance:?}");
 
     // send transaction
-    let outputs = vec![
-        BasicOutputBuilder::new_with_amount(1_000_000)?
-            .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
-                Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
-            )))
-            .finish_output(account.client().get_token_supply().await?)?,
-    ];
+    let outputs = vec![BasicOutputBuilder::new_with_amount(1_000_000)?
+        .add_unlock_condition(UnlockCondition::Address(AddressUnlockCondition::new(
+            Address::try_from_bech32("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu")?.1,
+        )))
+        .finish_output(account.client().get_token_supply().await?)?];
 
     let transaction = account.send(outputs, None).await?;
 

@@ -10,7 +10,7 @@ use std::env;
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::block::output::{
+    client::block::output::{
         feature::{IssuerFeature, SenderFeature},
         unlock_condition::AddressUnlockCondition,
         Feature, NftId, NftOutputBuilder, UnlockCondition,

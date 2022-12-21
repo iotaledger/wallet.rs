@@ -13,15 +13,17 @@ use std::{
 };
 
 use dotenv::dotenv;
-use iota_client::{
-    api::{
-        transaction::validate_transaction_payload_length, PreparedTransactionData, PreparedTransactionDataDto,
-        SignedTransactionData, SignedTransactionDataDto,
+use iota_wallet::{
+    client::{
+        api::{
+            transaction::validate_transaction_payload_length, PreparedTransactionData, PreparedTransactionDataDto,
+            SignedTransactionData, SignedTransactionDataDto,
+        },
+        block::{output::RentStructureBuilder, payload::TransactionPayload, protocol::ProtocolParameters},
+        secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
     },
-    block::{output::RentStructureBuilder, payload::TransactionPayload, protocol::ProtocolParameters},
-    secret::{stronghold::StrongholdSecretManager, SecretManageExt, SecretManager},
+    Result,
 };
-use iota_wallet::Result;
 
 const PREPARED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/prepared_transaction.json";
 const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_transaction.json";

@@ -8,8 +8,7 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::request_funds_from_faucet;
-use iota_wallet::{account_manager::AccountManager, Result};
+use iota_wallet::{account_manager::AccountManager, client::request_funds_from_faucet, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {

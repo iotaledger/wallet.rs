@@ -28,7 +28,7 @@ use crate::{
         handle::AccountHandle,
         types::{InclusionState, Transaction},
     },
-    iota_client::Error,
+    client::Error,
 };
 
 impl AccountHandle {

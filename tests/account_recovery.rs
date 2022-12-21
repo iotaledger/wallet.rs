@@ -5,7 +5,7 @@
 
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
+    client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };

@@ -6,10 +6,9 @@
 use std::{env, time::Instant};
 
 use dotenv::dotenv;
-use iota_client::utils::request_funds_from_faucet;
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
+    client::{constants::SHIMMER_COIN_TYPE, utils::request_funds_from_faucet},
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };

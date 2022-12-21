@@ -8,11 +8,14 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_client::block::{
-    output::{NftId, Output, OutputId},
-    payload::transaction::TransactionEssence,
+use iota_wallet::{
+    account_manager::AccountManager,
+    client::block::{
+        output::{NftId, Output, OutputId},
+        payload::transaction::TransactionEssence,
+    },
+    NftOptions, Result,
 };
-use iota_wallet::{account_manager::AccountManager, NftOptions, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {

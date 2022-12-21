@@ -6,11 +6,14 @@
 
 use std::{fs::File, io::prelude::*, path::Path};
 
-use iota_client::{
-    api::{SignedTransactionData, SignedTransactionDataDto},
-    Client,
+use iota_wallet::{
+    account_manager::AccountManager,
+    client::{
+        api::{SignedTransactionData, SignedTransactionDataDto},
+        Client,
+    },
+    Result,
 };
-use iota_wallet::{account_manager::AccountManager, Result};
 
 const SIGNED_TRANSACTION_FILE_NAME: &str = "examples/offline_signing/signed_transaction.json";
 

@@ -6,10 +6,12 @@
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::{node_api::participation::types::EventId, node_manager::node::Node, request_funds_from_faucet, Url};
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
+    client::{
+        constants::SHIMMER_COIN_TYPE, node_api::participation::types::EventId, node_manager::node::Node,
+        request_funds_from_faucet, Url,
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };

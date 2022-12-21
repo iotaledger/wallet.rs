@@ -13,10 +13,10 @@ use std::{
 };
 
 use dotenv::dotenv;
-use iota_client::constants::{SHIMMER_BECH32_HRP, SHIMMER_COIN_TYPE};
 use iota_wallet::{
     account::types::AccountAddress,
     account_manager::AccountManager,
+    client::constants::{SHIMMER_BECH32_HRP, SHIMMER_COIN_TYPE},
     secret::{stronghold::StrongholdSecretManager, SecretManager},
     ClientOptions, Result,
 };

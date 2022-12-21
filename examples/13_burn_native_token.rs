@@ -10,8 +10,7 @@
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::block::output::TokenId;
-use iota_wallet::{account_manager::AccountManager, Result, U256};
+use iota_wallet::{account_manager::AccountManager, client::block::output::TokenId, Result, U256};
 
 #[tokio::main]
 async fn main() -> Result<()> {

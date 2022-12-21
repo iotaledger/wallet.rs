@@ -27,7 +27,7 @@ pub mod events;
 pub mod storage;
 
 // Expose for high level functions
-pub use iota_client::{self, secret};
+pub use iota_client::{self as client, secret};
 pub use primitive_types::U256;
 
 pub use self::{

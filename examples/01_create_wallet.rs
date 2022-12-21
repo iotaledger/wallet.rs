@@ -10,7 +10,7 @@ use std::{env, path::PathBuf};
 use dotenv::dotenv;
 use iota_wallet::{
     account_manager::AccountManager,
-    iota_client::constants::SHIMMER_COIN_TYPE,
+    client::constants::SHIMMER_COIN_TYPE,
     secret::{stronghold::StrongholdSecretManager, SecretManager},
     ClientOptions, Result,
 };
