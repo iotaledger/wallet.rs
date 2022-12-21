@@ -41,6 +41,7 @@ The Account class.
 - [prepareOutput](Account.md#prepareoutput)
 - [prepareSendAmount](Account.md#preparesendamount)
 - [prepareTransaction](Account.md#preparetransaction)
+- [requestFundsFromFaucet](Account.md#requestfundsfromfaucet)
 - [retryTransactionUntilIncluded](Account.md#retrytransactionuntilincluded)
 - [sendAmount](Account.md#sendamount)
 - [sendMicroTransaction](Account.md#sendmicrotransaction)
@@ -739,6 +740,25 @@ Prepare a transaction, useful for offline signing.
 `Promise`<[`PreparedTransactionData`](../interfaces/PreparedTransactionData.md)\>
 
 The prepared transaction data.
+
+___
+
+### requestFundsFromFaucet
+
+▸ **requestFundsFromFaucet**(`url`, `address`): `Promise`<`string`\>
+
+Request funds from a faucet.
+
+#### Parameters
+
+| Name | Type |
+| :------ | :------ |
+| `url` | `string` |
+| `address` | `string` |
+
+#### Returns
+
+`Promise`<`string`\>
 
 ___
 
