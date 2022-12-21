@@ -3,21 +3,23 @@
 
 use std::collections::{HashMap, HashSet};
 
-use iota_client::{
-    api::input_selection::minimum_storage_deposit_basic_output,
-    block::{
-        address::Address,
-        output::{
-            unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
-            BasicOutputBuilder, NativeTokens, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
-        },
-    },
-};
 use serde::{Deserialize, Serialize};
 
-use crate::account::{
-    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_now, types::Transaction, OutputData,
-    TransactionOptions,
+use crate::{
+    account::{
+        handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_now, types::Transaction, OutputData,
+        TransactionOptions,
+    },
+    client::{
+        api::input_selection::minimum_storage_deposit_basic_output,
+        block::{
+            address::Address,
+            output::{
+                unlock_condition::{AddressUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition},
+                BasicOutputBuilder, NativeTokens, NativeTokensBuilder, NftOutputBuilder, Output, OutputId,
+            },
+        },
+    },
 };
 
 /// Enum to specify which outputs should be claimed

@@ -17,13 +17,6 @@ pub(crate) mod update;
 use std::collections::{HashMap, HashSet};
 
 use getset::{Getters, Setters};
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        output::OutputId,
-        payload::{transaction::TransactionId, TransactionPayload},
-    },
-};
 use serde::{Deserialize, Serialize};
 
 use self::types::{
@@ -42,6 +35,13 @@ pub use self::{
         },
     },
     types::OutputDataDto,
+};
+use crate::client::{
+    api_types::response::OutputWithMetadataResponse,
+    block::{
+        output::OutputId,
+        payload::{transaction::TransactionId, TransactionPayload},
+    },
 };
 
 /// An Account.

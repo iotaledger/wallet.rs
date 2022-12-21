@@ -3,8 +3,9 @@
 
 use std::fmt::{Debug, Display};
 
-use iota_client::block::payload::transaction::TransactionId;
 use serde::{ser::Serializer, Serialize};
+
+use crate::client::block::payload::transaction::TransactionId;
 
 /// The wallet error type.
 #[derive(Debug, thiserror::Error, Serialize)]
@@ -25,18 +26,18 @@ pub enum Error {
     /// Error from block crate.
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    Block(Box<iota_client::block::Error>),
+    Block(Box<crate::client::block::Error>),
     /// Block dtos error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    BlockDtoError(#[from] iota_client::block::DtoError),
+    BlockDtoError(#[from] crate::client::block::DtoError),
     /// Burning or melting failed
     #[error("burning or melting failed: {0}")]
     BurningOrMeltingFailed(String),
     /// Client error.
     #[error("`{0}`")]
     #[serde(serialize_with = "display_string")]
-    Client(Box<iota_client::Error>),
+    Client(Box<crate::client::Error>),
     /// Funds are spread over too many outputs
     #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
     ConsolidationRequired(usize, u16),
@@ -123,14 +124,14 @@ where
     value.to_string().serialize(serializer)
 }
 
-impl From<iota_client::block::Error> for Error {
-    fn from(error: iota_client::block::Error) -> Self {
+impl From<crate::client::block::Error> for Error {
+    fn from(error: crate::client::block::Error) -> Self {
         Self::Block(Box::new(error))
     }
 }
 
-impl From<iota_client::Error> for Error {
-    fn from(error: iota_client::Error) -> Self {
+impl From<crate::client::Error> for Error {
+    fn from(error: crate::client::Error) -> Self {
         Self::Client(Box::new(error))
     }
 }

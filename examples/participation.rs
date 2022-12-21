@@ -47,7 +47,7 @@ async fn main() -> Result<()> {
 
     let event_id = EventId::from_str("0x80f57f6368933b61af9b3d8e1b152cf5d23bf4537f6362778b0a7302a7000d48")?;
     let event_nodes = vec![Node {
-        url: Url::parse("http://localhost:14265").map_err(iota_client::Error::UrlError)?,
+        url: Url::parse("http://localhost:14265").map_err(iota_wallet::client::Error::UrlError)?,
         auth: None,
         disabled: false,
     }];
@@ -64,12 +64,12 @@ async fn main() -> Result<()> {
             event_id,
             vec![
                 Node {
-                    url: Url::parse("http://localhost:14265").map_err(iota_client::Error::UrlError)?,
+                    url: Url::parse("http://localhost:14265").map_err(iota_wallet::client::Error::UrlError)?,
                     auth: None,
                     disabled: false,
                 },
                 Node {
-                    url: Url::parse("http://localhost:14265").map_err(iota_client::Error::UrlError)?,
+                    url: Url::parse("http://localhost:14265").map_err(iota_wallet::client::Error::UrlError)?,
                     auth: None,
                     disabled: false,
                 },

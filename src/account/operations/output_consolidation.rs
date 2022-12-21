@@ -1,15 +1,25 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    input::INPUT_COUNT_MAX,
-    output::{
-        unlock_condition::{AddressUnlockCondition, UnlockCondition},
-        BasicOutputBuilder, NativeTokens, NativeTokensBuilder, Output,
-    },
-};
 #[cfg(feature = "ledger_nano")]
-use iota_client::secret::SecretManager;
+use crate::{account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD, client::secret::SecretManager};
+use crate::{
+    account::{
+        constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
+        handle::AccountHandle,
+        operations::{helpers::time::can_output_be_unlocked_now, output_claiming::get_new_native_token_count},
+        types::{OutputData, Transaction},
+        AddressWithUnspentOutputs, TransactionOptions,
+    },
+    client::block::{
+        input::INPUT_COUNT_MAX,
+        output::{
+            unlock_condition::{AddressUnlockCondition, UnlockCondition},
+            BasicOutputBuilder, NativeTokens, NativeTokensBuilder, Output,
+        },
+    },
+    Result,
+};
 
 // Constants for the calculation of the amount of inputs we can use with a ledger nano
 #[cfg(feature = "ledger_nano")]
@@ -19,19 +29,6 @@ const ESSENCE_SIZE_WITHOUT_IN_AND_OUTPUTS: usize = 49;
 const INPUT_SIZE: usize = 43;
 #[cfg(feature = "ledger_nano")]
 const MIN_OUTPUT_SIZE_IN_ESSENCE: usize = 46;
-
-#[cfg(feature = "ledger_nano")]
-use crate::account::constants::DEFAULT_LEDGER_OUTPUT_CONSOLIDATION_THRESHOLD;
-use crate::{
-    account::{
-        constants::DEFAULT_OUTPUT_CONSOLIDATION_THRESHOLD,
-        handle::AccountHandle,
-        operations::{helpers::time::can_output_be_unlocked_now, output_claiming::get_new_native_token_count},
-        types::{OutputData, Transaction},
-        AddressWithUnspentOutputs, TransactionOptions,
-    },
-    Result,
-};
 
 impl AccountHandle {
     fn should_consolidate_output(

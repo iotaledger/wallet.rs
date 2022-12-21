@@ -6,10 +6,6 @@ use std::{
     sync::Arc,
 };
 
-use iota_client::{
-    block::address::Address,
-    secret::{SecretManage, SecretManager},
-};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
@@ -23,6 +19,10 @@ use crate::{
         handle::AccountHandle,
         types::{address::AddressWrapper, AccountAddress},
         Account,
+    },
+    client::{
+        block::address::Address,
+        secret::{SecretManage, SecretManager},
     },
     ClientOptions, Error,
 };

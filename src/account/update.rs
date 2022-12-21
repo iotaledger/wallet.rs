@@ -3,19 +3,20 @@
 
 use std::collections::HashMap;
 
-use iota_client::{api_types::response::OutputMetadataResponse, block::output::OutputId, Client};
-
-use crate::account::{
-    handle::AccountHandle,
-    operations::syncing::options::SyncOptions,
-    types::{address::AddressWithUnspentOutputs, InclusionState, OutputData, Transaction},
-    AccountAddress,
-};
 #[cfg(feature = "events")]
 use crate::{
     account::types::OutputDataDto,
     client::block::payload::transaction::dto::TransactionPayloadDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
+};
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::syncing::options::SyncOptions,
+        types::{address::AddressWithUnspentOutputs, InclusionState, OutputData, Transaction},
+        AccountAddress,
+    },
+    client::{api_types::response::OutputMetadataResponse, block::output::OutputId, Client},
 };
 
 impl AccountHandle {

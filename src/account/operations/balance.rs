@@ -3,14 +3,16 @@
 
 use std::collections::HashMap;
 
-use iota_client::block::output::{unlock_condition::UnlockCondition, NativeTokensBuilder, Output, Rent};
 use primitive_types::U256;
 
-use crate::account::{
-    handle::AccountHandle,
-    operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
-    types::{AccountBalance, BaseCoinBalance, NativeTokensBalance, RequiredStorageDeposit},
-    OutputsToClaim,
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::helpers::time::can_output_be_unlocked_forever_from_now_on,
+        types::{AccountBalance, BaseCoinBalance, NativeTokensBalance, RequiredStorageDeposit},
+        OutputsToClaim,
+    },
+    client::block::output::{unlock_condition::UnlockCondition, NativeTokensBuilder, Output, Rent},
 };
 
 impl AccountHandle {

@@ -3,15 +3,6 @@
 
 use std::{collections::HashMap, ops::Deref, sync::Arc};
 
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        output::{FoundryId, Output, OutputId, TokenId},
-        payload::transaction::{TransactionId, TransactionPayload},
-    },
-    secret::SecretManager,
-    Client,
-};
 use serde::{Deserialize, Serialize};
 use tokio::sync::{Mutex, RwLock};
 
@@ -26,6 +17,15 @@ use crate::{
             OutputData, Transaction,
         },
         Account,
+    },
+    client::{
+        api_types::response::OutputWithMetadataResponse,
+        block::{
+            output::{FoundryId, Output, OutputId, TokenId},
+            payload::transaction::{TransactionId, TransactionPayload},
+        },
+        secret::SecretManager,
+        Client,
     },
     Result,
 };

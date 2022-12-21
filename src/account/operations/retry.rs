@@ -1,15 +1,16 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api_types::dto::LedgerInclusionStateDto,
-    block::{
-        payload::{transaction::TransactionId, Payload},
-        Block, BlockId,
+use crate::{
+    account::{handle::AccountHandle, types::InclusionState},
+    client::{
+        api_types::dto::LedgerInclusionStateDto,
+        block::{
+            payload::{transaction::TransactionId, Payload},
+            Block, BlockId,
+        },
     },
 };
-
-use crate::account::{handle::AccountHandle, types::InclusionState};
 
 const DEFAULT_RETRY_UNTIL_INCLUDED_INTERVAL: u64 = 1;
 const DEFAULT_RETRY_UNTIL_INCLUDED_MAX_AMOUNT: u64 = 40;
