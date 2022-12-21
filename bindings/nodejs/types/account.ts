@@ -53,9 +53,9 @@ export interface RequiredStorageDeposit {
 /** The balance of a native token */
 export interface NativeTokenBalance {
     tokenId: string;
+    metadata?: string;
     total: HexEncodedAmount;
     available: HexEncodedAmount;
-    metadata?: string;
 }
 
 /** Sync options for an account */

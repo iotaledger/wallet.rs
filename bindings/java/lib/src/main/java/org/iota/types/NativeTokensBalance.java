@@ -8,15 +8,19 @@ import org.iota.types.ids.TokenId;
 public class NativeTokensBalance extends AbstractObject {
     /// Token id
     private TokenId tokenId;
+    /// Token foundry immutable metadata
+    private String metadata;
     /// Total amount
     private String total;
     /// Balance that can currently be spent
     private String available;
-    /// Token foundry immutable metadata
-    private String metadata;
 
     public TokenId getTokenId() {
         return tokenId;
+    }
+
+    public String getMetadata() {
+        return metadata;
     }
 
     public String getTotal() {
@@ -25,10 +29,6 @@ public class NativeTokensBalance extends AbstractObject {
 
     public String getAvailable() {
         return available;
-    }
-
-    public String getMetadata() {
-        return metadata;
     }
 
 }

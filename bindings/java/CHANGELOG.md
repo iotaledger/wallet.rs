@@ -24,8 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `FilterOptions::outputTypes`;
-- `SyncOptions::syncNativeTokenFoundries` field;
 - `NativeTokensBalance::metadata` field;
+- `SyncOptions::syncNativeTokenFoundries` field;
 
 ## 1.0.0-rc.1 - 2022-12-06
 
