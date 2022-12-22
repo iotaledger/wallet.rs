@@ -287,7 +287,10 @@ impl AccountHandle {
         Ok(AccountBalance {
             base_coin: BaseCoinBalance {
                 total: total_amount,
+                #[cfg(not(feature = "participation"))]
                 available: total_amount - locked_amount,
+                #[cfg(feature = "participation")]
+                available: total_amount - locked_amount - self.get_voting_power().await?,
             },
             native_tokens: native_tokens_balance,
             required_storage_deposit,
