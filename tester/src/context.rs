@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_wallet::{
-    account::AccountHandle, account_manager::AccountManager, iota_client::block::protocol::ProtocolParameters,
+    account::AccountHandle, account_manager::AccountManager, client::block::protocol::ProtocolParameters,
 };
 
 pub struct Context<'a> {

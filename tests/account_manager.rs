@@ -1,12 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
-    node_manager::node::{Node, NodeDto, Url},
-};
 use iota_wallet::{
     account_manager::AccountManager,
+    client::{
+        constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
+        node_manager::node::{Node, NodeDto, Url},
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };

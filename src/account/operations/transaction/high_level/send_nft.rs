@@ -1,20 +1,21 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        address::Address,
-        output::{
-            unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            NftId, NftOutputBuilder, Output,
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            address::Address,
+            output::{
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                NftId, NftOutputBuilder, Output,
+            },
         },
     },
 };
-// use primitive_types::U256;
-use serde::{Deserialize, Serialize};
-
-use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
 
 /// Address and nft for `send_nft()`
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -28,8 +29,8 @@ pub struct AddressAndNftId {
 
 impl AccountHandle {
     /// Function to send native tokens in basic outputs with a
-    /// [`StorageDepositReturnUnlockCondition`](iota_client::block::output::unlock_condition::StorageDepositReturnUnlockCondition) and
-    /// [`ExpirationUnlockCondition`](iota_client::block::output::unlock_condition::ExpirationUnlockCondition), so the
+    /// [`StorageDepositReturnUnlockCondition`](crate::client::block::output::unlock_condition::StorageDepositReturnUnlockCondition) and
+    /// [`ExpirationUnlockCondition`](crate::client::block::output::unlock_condition::ExpirationUnlockCondition), so the
     /// storage deposit gets back to the sender and also that the sender gets access to the output again after a
     /// defined time (default 1 day), Calls [AccountHandle.send()](crate::account::handle::AccountHandle.send)
     /// internally, the options can define the RemainderValueStrategy. Custom inputs will be replaced with the

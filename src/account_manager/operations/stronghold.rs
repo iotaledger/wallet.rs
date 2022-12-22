@@ -3,9 +3,7 @@
 
 use std::time::Duration;
 
-use iota_client::secret::SecretManager;
-
-use crate::account_manager::AccountManager;
+use crate::{account_manager::AccountManager, client::secret::SecretManager};
 
 impl AccountManager {
     /// Sets the Stronghold password

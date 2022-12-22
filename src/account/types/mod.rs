@@ -10,16 +10,6 @@ pub(crate) mod balance;
 use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;
-use iota_client::{
-    api_types::response::OutputMetadataResponse,
-    block::{
-        address::{dto::AddressDto, Address},
-        output::{dto::OutputDto, Output, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
-        BlockId,
-    },
-    secret::types::{InputSigningData, OutputMetadata},
-};
 use serde::{Deserialize, Deserializer, Serialize};
 
 pub use self::{
@@ -29,7 +19,19 @@ pub use self::{
         NativeTokensBalanceDto, RequiredStorageDeposit,
     },
 };
-use crate::account::Account;
+use crate::{
+    account::Account,
+    client::{
+        api_types::response::OutputMetadataResponse,
+        block::{
+            address::{dto::AddressDto, Address},
+            output::{dto::OutputDto, Output, OutputId},
+            payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
+            BlockId,
+        },
+        secret::types::{InputSigningData, OutputMetadata},
+    },
+};
 
 /// An output with metadata
 #[derive(Clone, Debug, Serialize, Deserialize)]

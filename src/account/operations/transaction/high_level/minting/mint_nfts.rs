@@ -1,22 +1,22 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        address::Address,
-        output::{
-            feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
-            unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            NftId, NftOutputBuilder,
-        },
-        DtoError,
-    },
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            address::Address,
+            output::{
+                feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                NftId, NftOutputBuilder,
+            },
+            DtoError,
+        },
+    },
     Error,
 };
 

@@ -4,11 +4,11 @@
 #[cfg(feature = "stronghold")]
 use std::path::PathBuf;
 
-use iota_client::constants::SHIMMER_COIN_TYPE;
 #[cfg(feature = "stronghold")]
-use iota_client::secret::stronghold::StrongholdSecretManager;
+use iota_wallet::client::secret::stronghold::StrongholdSecretManager;
 use iota_wallet::{
     account_manager::AccountManager,
+    client::constants::SHIMMER_COIN_TYPE,
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };

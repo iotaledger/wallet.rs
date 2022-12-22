@@ -6,17 +6,17 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use iota_client::block::{
-    input::INPUT_COUNT_MAX,
-    output::{
-        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NativeTokensBuilder,
-        NftOutputBuilder, Output, OutputId, TokenId, OUTPUT_COUNT_MAX,
-    },
-};
 use primitive_types::U256;
 
-use crate::account::{
-    handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions,
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions},
+    client::block::{
+        input::INPUT_COUNT_MAX,
+        output::{
+            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NativeTokensBuilder,
+            NftOutputBuilder, Output, OutputId, TokenId, OUTPUT_COUNT_MAX,
+        },
+    },
 };
 
 const NATIVE_TOKEN_OVERFLOW: &str = "NativeTokensOverflow";

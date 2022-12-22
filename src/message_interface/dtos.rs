@@ -69,7 +69,7 @@ impl TryFrom<&AddressWithMicroAmountDto> for AddressWithMicroAmount {
         Ok(Self {
             address: value.address.clone(),
             amount: u64::from_str(&value.amount)
-                .map_err(|_| iota_client::Error::InvalidAmount(value.amount.clone()))?,
+                .map_err(|_| crate::client::Error::InvalidAmount(value.amount.clone()))?,
             return_address: value.return_address.clone(),
             expiration: value.expiration,
         })

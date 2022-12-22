@@ -1,18 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        address::Address,
-        output::{
-            unlock_condition::{
-                AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
-            },
-            BasicOutputBuilder, NativeToken, TokenId,
-        },
-    },
-};
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
 
@@ -24,6 +12,19 @@ use crate::{
             high_level::minimum_storage_deposit::minimum_storage_deposit_basic_native_tokens, Transaction,
         },
         TransactionOptions,
+    },
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            address::Address,
+            output::{
+                unlock_condition::{
+                    AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
+                    UnlockCondition,
+                },
+                BasicOutputBuilder, NativeToken, TokenId,
+            },
+        },
     },
     Error, Result,
 };

@@ -3,12 +3,13 @@
 
 use std::collections::HashMap;
 
-use iota_client::block::{
+use primitive_types::U256;
+use serde::{Deserialize, Serialize};
+
+use crate::client::block::{
     dto::U256Dto,
     output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId, TokenId},
 };
-use primitive_types::U256;
-use serde::{Deserialize, Serialize};
 
 /// The balance of an account, returned from [`crate::account::handle::AccountHandle::sync()`] and
 /// [`crate::account::handle::AccountHandle::balance()`].
@@ -30,9 +31,9 @@ pub struct AccountBalance {
     /// Foundries
     pub foundries: Vec<FoundryId>,
     /// Outputs with multiple unlock conditions and if they can currently be spent or not. If there is a
-    /// [`TimelockUnlockCondition`](iota_client::block::output::unlock_condition::TimelockUnlockCondition) or
-    /// [`ExpirationUnlockCondition`](iota_client::block::output::unlock_condition::ExpirationUnlockCondition) this can
-    /// change at any time
+    /// [`TimelockUnlockCondition`](crate::client::block::output::unlock_condition::TimelockUnlockCondition) or
+    /// [`ExpirationUnlockCondition`](crate::client::block::output::unlock_condition::ExpirationUnlockCondition) this
+    /// can change at any time
     #[serde(rename = "potentiallyLockedOutputs")]
     pub potentially_locked_outputs: HashMap<OutputId, bool>,
 }
