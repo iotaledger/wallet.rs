@@ -3,23 +3,24 @@
 
 use std::time::Instant;
 
-use iota_client::{
-    api::{
-        input_selection::types::SelectedTransactionData, transaction::validate_regular_transaction_essence_length,
-        PreparedTransactionData,
-    },
-    block::{
-        input::{Input, UtxoInput},
-        output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
-        payload::{
-            transaction::{RegularTransactionEssence, TransactionEssence},
-            Payload,
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::TransactionOptions},
+    client::{
+        api::{
+            input_selection::types::SelectedTransactionData, transaction::validate_regular_transaction_essence_length,
+            PreparedTransactionData,
         },
+        block::{
+            input::{Input, UtxoInput},
+            output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
+            payload::{
+                transaction::{RegularTransactionEssence, TransactionEssence},
+                Payload,
+            },
+        },
+        secret::types::InputSigningData,
     },
-    secret::types::InputSigningData,
 };
-
-use crate::account::{handle::AccountHandle, operations::transaction::TransactionOptions};
 
 impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs

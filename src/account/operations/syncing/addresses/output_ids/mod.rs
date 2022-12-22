@@ -8,11 +8,13 @@ mod nft;
 use std::{collections::HashSet, time::Instant};
 
 use futures::FutureExt;
-use iota_client::block::{address::Address, output::OutputId};
 
-use crate::account::{
-    constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::syncing::SyncOptions,
-    types::address::AddressWithUnspentOutputs,
+use crate::{
+    account::{
+        constants::PARALLEL_REQUESTS_AMOUNT, handle::AccountHandle, operations::syncing::SyncOptions,
+        types::address::AddressWithUnspentOutputs,
+    },
+    client::block::{address::Address, output::OutputId},
 };
 
 impl AccountHandle {

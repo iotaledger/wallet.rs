@@ -3,22 +3,24 @@
 
 use std::{cmp::Ordering, str::FromStr};
 
-use iota_client::block::{
-    address::Address,
-    output::{
-        dto::NativeTokenDto,
-        feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
-            TimelockUnlockCondition, UnlockCondition,
-        },
-        BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
-    },
-    DtoError,
-};
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, operations::transaction::RemainderValueStrategy, TransactionOptions};
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::RemainderValueStrategy, TransactionOptions},
+    client::block::{
+        address::Address,
+        output::{
+            dto::NativeTokenDto,
+            feature::{Feature, IssuerFeature, MetadataFeature, SenderFeature, TagFeature},
+            unlock_condition::{
+                AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition,
+                TimelockUnlockCondition, UnlockCondition,
+            },
+            BasicOutputBuilder, NativeToken, NftId, NftOutputBuilder, Output, Rent,
+        },
+        DtoError,
+    },
+};
 
 impl AccountHandle {
     /// Prepare an output for sending
@@ -460,7 +462,7 @@ impl TryFrom<&OutputOptionsDto> for OutputOptions {
         Ok(Self {
             recipient_address: value.recipient_address.clone(),
             amount: u64::from_str(&value.amount)
-                .map_err(|_| iota_client::Error::InvalidAmount(value.amount.clone()))?,
+                .map_err(|_| crate::client::Error::InvalidAmount(value.amount.clone()))?,
             assets: match &value.assets {
                 Some(r) => Some(Assets::try_from(r)?),
                 None => None,

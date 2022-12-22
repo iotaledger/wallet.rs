@@ -53,7 +53,7 @@ impl AccountHandle {
             if transaction.inclusion_state == InclusionState::Conflicting
                 || transaction.inclusion_state == InclusionState::UnknownPruned
             {
-                return Err(iota_client::Error::TangleInclusionError(format!(
+                return Err(crate::client::Error::TangleInclusionError(format!(
                     "transaction id: {} inclusion state: {:?}",
                     transaction_id, transaction.inclusion_state
                 ))
@@ -124,7 +124,7 @@ impl AccountHandle {
                     return Ok(included_block.id());
                 }
             }
-            Err(iota_client::Error::TangleInclusionError(block_id.to_string()).into())
+            Err(crate::client::Error::TangleInclusionError(block_id.to_string()).into())
         } else {
             Err(crate::Error::TransactionNotFound(*transaction_id))
         }

@@ -1,19 +1,20 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::{transaction::validate_transaction_payload_length, PreparedTransactionData, SignedTransactionData},
-    secret::SecretManageExt,
-};
 #[cfg(all(feature = "events", feature = "ledger_nano"))]
-use {
-    iota_client::api::PreparedTransactionDataDto, iota_client::secret::ledger_nano::needs_blind_signing,
-    iota_client::secret::SecretManager,
+use crate::client::{
+    api::PreparedTransactionDataDto,
+    secret::{ledger_nano::needs_blind_signing, SecretManager},
 };
-
-use crate::account::{handle::AccountHandle, operations::transaction::TransactionPayload};
 #[cfg(feature = "events")]
 use crate::events::types::{TransactionProgressEvent, WalletEvent};
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::TransactionPayload},
+    client::{
+        api::{transaction::validate_transaction_payload_length, PreparedTransactionData, SignedTransactionData},
+        secret::SecretManageExt,
+    },
+};
 
 impl AccountHandle {
     /// Function to sign a transaction essence

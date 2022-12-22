@@ -6,10 +6,9 @@ mod outputs;
 
 use std::collections::HashSet;
 
-use iota_client::block::address::Address;
-
-use crate::account::{
-    handle::AccountHandle, operations::syncing::SyncOptions, types::address::AddressWithUnspentOutputs,
+use crate::{
+    account::{handle::AccountHandle, operations::syncing::SyncOptions, types::address::AddressWithUnspentOutputs},
+    client::block::address::Address,
 };
 
 impl AccountHandle {

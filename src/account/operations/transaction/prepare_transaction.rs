@@ -3,22 +3,26 @@
 
 use std::time::Instant;
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        input::INPUT_COUNT_RANGE,
-        output::{Output, OUTPUT_COUNT_RANGE},
-    },
-    secret::types::InputSigningData,
-};
 use packable::bounded::TryIntoBoundedU16Error;
 
-use crate::account::{
-    handle::AccountHandle,
-    operations::transaction::{input_selection::alias_state_transition, RemainderValueStrategy, TransactionOptions},
-};
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};
+use crate::{
+    account::{
+        handle::AccountHandle,
+        operations::transaction::{
+            input_selection::alias_state_transition, RemainderValueStrategy, TransactionOptions,
+        },
+    },
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            input::INPUT_COUNT_RANGE,
+            output::{Output, OUTPUT_COUNT_RANGE},
+        },
+        secret::types::InputSigningData,
+    },
+};
 
 impl AccountHandle {
     /// Get inputs and build the transaction essence
@@ -39,7 +43,7 @@ impl AccountHandle {
 
         // validate amounts
         if !OUTPUT_COUNT_RANGE.contains(&(outputs.len() as u16)) {
-            return Err(iota_client::block::Error::InvalidOutputCount(
+            return Err(crate::client::block::Error::InvalidOutputCount(
                 TryIntoBoundedU16Error::Truncated(outputs.len()),
             ))?;
         }
@@ -51,7 +55,7 @@ impl AccountHandle {
                 // validate inputs amount
                 if let Some(inputs) = &options.custom_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(iota_client::block::Error::InvalidInputCount(
+                        return Err(crate::client::block::Error::InvalidInputCount(
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
                         ))?;
                     }
@@ -94,7 +98,7 @@ impl AccountHandle {
                 // validate inputs amount
                 if let Some(inputs) = &options.mandatory_inputs {
                     if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(iota_client::block::Error::InvalidInputCount(
+                        return Err(crate::client::block::Error::InvalidInputCount(
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
                         ))?;
                     }

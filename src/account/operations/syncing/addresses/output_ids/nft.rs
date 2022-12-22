@@ -4,9 +4,11 @@
 use std::collections::HashSet;
 
 use futures::FutureExt;
-use iota_client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter};
 
-use crate::account::handle::AccountHandle;
+use crate::{
+    account::handle::AccountHandle,
+    client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter},
+};
 
 impl AccountHandle {
     /// Returns output ids of nft outputs that have the address in any unlock condition

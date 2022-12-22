@@ -11,20 +11,21 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-use iota_client::{
-    api_types::response::OutputMetadataResponse,
-    block::{
-        address::{Address, AliasAddress, NftAddress},
-        output::{Output, OutputId},
-    },
-};
-
 pub use self::options::SyncOptions;
-use crate::account::{
-    constants::MIN_SYNC_INTERVAL,
-    handle::AccountHandle,
-    types::{AddressWithUnspentOutputs, OutputData},
-    AccountBalance,
+use crate::{
+    account::{
+        constants::MIN_SYNC_INTERVAL,
+        handle::AccountHandle,
+        types::{AddressWithUnspentOutputs, OutputData},
+        AccountBalance,
+    },
+    client::{
+        api_types::response::OutputMetadataResponse,
+        block::{
+            address::{Address, AliasAddress, NftAddress},
+            output::{Output, OutputId},
+        },
+    },
 };
 
 impl AccountHandle {

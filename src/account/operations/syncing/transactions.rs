@@ -6,16 +6,17 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use iota_client::{
-    api_types::dto::LedgerInclusionStateDto,
-    block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
-    Error as ClientError,
-};
-
-use crate::account::{
-    handle::AccountHandle,
-    types::{InclusionState, Transaction},
-    Account,
+use crate::{
+    account::{
+        handle::AccountHandle,
+        types::{InclusionState, Transaction},
+        Account,
+    },
+    client::{
+        api_types::dto::LedgerInclusionStateDto,
+        block::{input::Input, output::OutputId, payload::transaction::TransactionEssence, BlockId},
+        Error as ClientError,
+    },
 };
 
 // ignore outputs and transactions from other networks

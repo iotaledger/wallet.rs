@@ -3,21 +3,23 @@
 
 use std::collections::{hash_map::Values, HashSet};
 
-use iota_client::{
-    api::input_selection::{try_select_inputs, types::SelectedTransactionData},
-    block::{
-        address::Address,
-        input::INPUT_COUNT_MAX,
-        output::{Output, OutputId, RentStructure},
-    },
-    secret::types::InputSigningData,
-};
-
-use crate::account::{
-    handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on, Account, OutputData,
-};
 #[cfg(feature = "events")]
 use crate::events::types::{TransactionProgressEvent, WalletEvent};
+use crate::{
+    account::{
+        handle::AccountHandle, operations::helpers::time::can_output_be_unlocked_forever_from_now_on, Account,
+        OutputData,
+    },
+    client::{
+        api::input_selection::{try_select_inputs, types::SelectedTransactionData},
+        block::{
+            address::Address,
+            input::INPUT_COUNT_MAX,
+            output::{Output, OutputId, RentStructure},
+        },
+        secret::types::InputSigningData,
+    },
+};
 impl AccountHandle {
     /// Selects inputs for a transaction and locks them in the account, so they don't get used again
     pub(crate) async fn select_inputs(
@@ -145,7 +147,7 @@ impl AccountHandle {
             token_supply,
         ) {
             Ok(r) => r,
-            Err(iota_client::Error::ConsolidationRequired(output_count)) => {
+            Err(crate::client::Error::ConsolidationRequired(output_count)) => {
                 #[cfg(feature = "events")]
                 self.event_emitter
                     .lock()

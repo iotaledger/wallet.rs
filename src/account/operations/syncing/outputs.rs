@@ -4,20 +4,22 @@
 use std::{str::FromStr, time::Instant};
 
 use crypto::keys::slip10::Chain;
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        input::Input,
-        output::{dto::OutputDto, Output, OutputId},
-        payload::{
-            transaction::{TransactionEssence, TransactionId},
-            Payload, TransactionPayload,
-        },
-    },
-    Client,
-};
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
+use crate::{
+    account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs},
+    client::{
+        api_types::response::OutputWithMetadataResponse,
+        block::{
+            input::Input,
+            output::{dto::OutputDto, Output, OutputId},
+            payload::{
+                transaction::{TransactionEssence, TransactionId},
+                Payload, TransactionPayload,
+            },
+        },
+        Client,
+    },
+};
 
 impl AccountHandle {
     /// Convert OutputWithMetadataResponse to OutputData with the network_id added

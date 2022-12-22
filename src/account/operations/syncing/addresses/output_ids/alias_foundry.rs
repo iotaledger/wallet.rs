@@ -4,15 +4,17 @@
 use std::collections::HashSet;
 
 use futures::FutureExt;
-use iota_client::{
-    block::{
-        address::{Address, AliasAddress},
-        output::{Output, OutputId},
-    },
-    node_api::indexer::query_parameters::QueryParameter,
-};
 
-use crate::account::handle::AccountHandle;
+use crate::{
+    account::handle::AccountHandle,
+    client::{
+        block::{
+            address::{Address, AliasAddress},
+            output::{Output, OutputId},
+        },
+        node_api::indexer::query_parameters::QueryParameter,
+    },
+};
 
 impl AccountHandle {
     /// Returns output ids of alias outputs and foundries owned by them

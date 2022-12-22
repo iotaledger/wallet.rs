@@ -4,16 +4,18 @@
 use std::collections::HashSet;
 
 use futures::FutureExt;
-use iota_client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter};
 
-use crate::account::handle::AccountHandle;
+use crate::{
+    account::handle::AccountHandle,
+    client::{block::output::OutputId, node_api::indexer::query_parameters::QueryParameter},
+};
 
 impl AccountHandle {
     /// Returns output ids of basic outputs that have only the address unlock condition
     pub(crate) async fn get_basic_output_ids_with_address_unlock_condition_only(
         &self,
         bech32_address: String,
-    ) -> iota_client::Result<Vec<OutputId>> {
+    ) -> crate::client::Result<Vec<OutputId>> {
         // Only request basic outputs with `AddressUnlockCondition` only
         self.client
             .basic_output_ids(vec![

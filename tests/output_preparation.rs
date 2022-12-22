@@ -3,12 +3,14 @@
 
 use std::str::FromStr;
 
-use iota_client::block::address::Address;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions, Unlocks},
     account_manager::AccountManager,
     client::{
-        block::output::{NativeToken, NftId, TokenId},
+        block::{
+            address::Address,
+            output::{NativeToken, NftId, TokenId},
+        },
         constants::SHIMMER_COIN_TYPE,
     },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},

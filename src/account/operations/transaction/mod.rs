@@ -12,23 +12,22 @@ pub(crate) mod submit_transaction;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use iota_client::{
-    api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    block::{
-        output::Output,
-        payload::transaction::{TransactionId, TransactionPayload},
-        semantic::ConflictReason,
-    },
-    secret::types::InputSigningData,
-};
-
 pub use self::options::{RemainderValueStrategy, TransactionOptions};
 use crate::{
     account::{
         handle::AccountHandle,
         types::{InclusionState, Transaction},
     },
-    client::Error,
+    client::{
+        api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
+        block::{
+            output::Output,
+            payload::transaction::{TransactionId, TransactionPayload},
+            semantic::ConflictReason,
+        },
+        secret::types::InputSigningData,
+        Error,
+    },
 };
 
 impl AccountHandle {
