@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `{NativeTokensBalance, NativeTokensBalanceDto}::metadata` field;
 - `{Account, AccountDto}::native_token_foundries` field;
 - `SyncOptions::sync_native_token_foundries` field;
+- `AccountManager::get_participation_event_ids` method;
 
 ### Changed
 

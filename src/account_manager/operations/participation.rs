@@ -73,7 +73,15 @@ impl AccountManager {
         let accounts = self.accounts.read().await;
         let events = match accounts.first() {
             Some(account) => account.client.events(event_type).await?,
-            None => self.client_options.read().await.clone().finish()?.events(event_type).await?,
+            None => {
+                self.client_options
+                    .read()
+                    .await
+                    .clone()
+                    .finish()?
+                    .events(event_type)
+                    .await?
+            }
         };
         Ok(events.event_ids)
     }
