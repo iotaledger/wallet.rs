@@ -41,7 +41,7 @@ impl AccountHandle {
             if let Some(foundry_output_with_metadata) = result? {
                 let output = Output::try_from_dto(&foundry_output_with_metadata.output, token_supply)?;
                 if let Output::Foundry(foundry) = output {
-                    foundries.insert(foundry.id(), foundry_output_with_metadata);
+                    foundries.insert(foundry.id(), foundry);
                 }
             }
         }

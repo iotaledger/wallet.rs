@@ -25,7 +25,6 @@ impl AccountHandle {
         let account = self.read().await;
 
         let network_id = self.client.get_network_id().await?;
-        let token_supply = self.client.get_token_supply().await?;
         let rent_structure = self.client.get_rent_structure().await?;
 
         let local_time = self.client.get_time_checked().await?;
@@ -40,12 +39,8 @@ impl AccountHandle {
         let mut nfts = Vec::new();
 
         let mut foundries_immutable_metadata = HashMap::new();
-        for (foundry_id, output) in &account.native_token_foundries {
-            let output = Output::try_from_dto(&output.output, token_supply)?;
-            if let Output::Foundry(foundry_output) = output {
-                foundries_immutable_metadata
-                    .insert(*foundry_id, foundry_output.immutable_features().metadata().cloned());
-            }
+        for (foundry_id, foundry) in &account.native_token_foundries {
+            foundries_immutable_metadata.insert(*foundry_id, foundry.immutable_features().metadata().cloned());
         }
 
         for output_data in account.unspent_outputs.values() {
