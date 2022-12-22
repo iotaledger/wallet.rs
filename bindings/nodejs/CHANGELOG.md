@@ -1,5 +1,18 @@
 # Changelog
 
+## \[2.0.3-rc.11]
+
+- Add account.requestFundsFromFaucet() command.
+  - [0a752258](https://github.com/iotaledger/wallet.rs/commit/0a7522583a0994889bbf070c90a52f62be1be537) Add requestFundsFromFaucet and more examples ([#1675](https://github.com/iotaledger/wallet.rs/pull/1675)) on 2022-12-16
+- Fix faulty types for getParticipationEventStatus return value
+  - [6b3cdfed](https://github.com/iotaledger/wallet.rs/commit/6b3cdfed7bf4960b2c682a4b10353df58711f294) fix: update EventStatus type ([#1679](https://github.com/iotaledger/wallet.rs/pull/1679)) on 2022-12-19
+- Add optional `NativeTokensBalance::metadata` and `SyncOptions::syncNativeTokenFoundries` fields.
+  - [1dc3879a](https://github.com/iotaledger/wallet.rs/commit/1dc3879a90185107cae0c04b0dad3e95a9b34bcf) Add foundry metadata to native tokens balance ([#1677](https://github.com/iotaledger/wallet.rs/pull/1677)) on 2022-12-22
+- Return an empty array if no participation events were registered.
+  - [a79fce8b](https://github.com/iotaledger/wallet.rs/commit/a79fce8b68a7aeb818129ee8f6deb38588837709) Return an empty array if no participation events were registered ([#1684](https://github.com/iotaledger/wallet.rs/pull/1684)) on 2022-12-21
+- Subtract voting power from available balance.
+  - [335db542](https://github.com/iotaledger/wallet.rs/commit/335db54237237957925cc0407257285941f5c267) Subtract voting power from available balance ([#1694](https://github.com/iotaledger/wallet.rs/pull/1694)) on 2022-12-22
+
 ## \[2.0.3-rc.10]
 
 - Add `outputTypes` to `FilterOptions` and make `lowerBoundBookedTimestamp` and `lowerBoundBookedTimestamp` optional.
