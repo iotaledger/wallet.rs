@@ -38,11 +38,6 @@ impl AccountHandle {
         let mut foundries = Vec::new();
         let mut nfts = Vec::new();
 
-        let mut foundries_immutable_metadata = HashMap::new();
-        for (foundry_id, foundry) in &account.native_token_foundries {
-            foundries_immutable_metadata.insert(*foundry_id, foundry.immutable_features().metadata().cloned());
-        }
-
         for output_data in account.unspent_outputs.values() {
             // Check if output is from the network we're currently connected to
             if output_data.network_id != network_id {
@@ -275,12 +270,15 @@ impl AccountHandle {
                 }
             });
 
+            let metadata = account
+                .native_token_foundries
+                .get(&FoundryId::from(*native_token.token_id()))
+                .and_then(|foundry| foundry.immutable_features().metadata())
+                .cloned();
+
             native_tokens_balance.push(NativeTokensBalance {
                 token_id: *native_token.token_id(),
-                metadata: foundries_immutable_metadata
-                    .get(&FoundryId::from(*native_token.token_id()))
-                    .cloned()
-                    .flatten(),
+                metadata,
                 total: native_token.amount(),
                 available: native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
             })
