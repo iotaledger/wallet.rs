@@ -158,34 +158,30 @@ impl From<&Account> for AccountDto {
                 .collect(),
             outputs: value
                 .outputs()
-                .clone()
-                .into_iter()
-                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .iter()
+                .map(|(id, output)| (*id, OutputDataDto::from(output)))
                 .collect(),
             locked_outputs: value.locked_outputs().clone(),
             unspent_outputs: value
                 .unspent_outputs()
-                .clone()
-                .into_iter()
-                .map(|(k, o)| (k, OutputDataDto::from(&o)))
+                .iter()
+                .map(|(id, output)| (*id, OutputDataDto::from(output)))
                 .collect(),
             transactions: value
                 .transactions()
-                .clone()
-                .into_iter()
-                .map(|(k, o)| (k, TransactionDto::from(&o)))
+                .iter()
+                .map(|(id, transaction)| (*id, TransactionDto::from(transaction)))
                 .collect(),
             pending_transactions: value.pending_transactions().clone(),
             incoming_transactions: value
                 .incoming_transactions()
                 .iter()
-                .map(|(tx_id, (tx, inputs))| (*tx_id, (TransactionPayloadDto::from(tx), inputs.clone())))
+                .map(|(id, (transaction, inputs))| (*id, (TransactionPayloadDto::from(transaction), inputs.clone())))
                 .collect(),
             native_token_foundries: value
                 .native_token_foundries()
-                .clone()
-                .into_iter()
-                .map(|(k, o)| (k, FoundryOutputDto::from(&o)))
+                .iter()
+                .map(|(id, foundry)| (*id, FoundryOutputDto::from(foundry)))
                 .collect(),
         }
     }
