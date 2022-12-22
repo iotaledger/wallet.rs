@@ -13,6 +13,7 @@ Sync options for an account
 - [syncPendingTransactions](AccountSyncOptions.md#syncpendingtransactions)
 - [syncAliasesAndNfts](AccountSyncOptions.md#syncaliasesandnfts)
 - [syncOnlyMostBasicOutputs](AccountSyncOptions.md#synconlymostbasicoutputs)
+- [syncNativeTokenFoundries](AccountSyncOptions.md#syncnativetokenfoundries)
 
 ## Properties
 
@@ -75,3 +76,11 @@ ___
 
 Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
 `syncAliasesAndNfts`. Default: false.
+
+___
+
+### syncNativeTokenFoundries
+
+• `Optional` **syncNativeTokenFoundries**: `boolean`
+
+Sync native token foundries, so their metadata can be returned in the balance. Default: false.

@@ -185,6 +185,7 @@ impl AccountBuilder {
             transactions: HashMap::new(),
             pending_transactions: HashSet::new(),
             incoming_transactions: HashMap::new(),
+            native_token_foundries: HashMap::new(),
         };
 
         let account_handle = AccountHandle::new(

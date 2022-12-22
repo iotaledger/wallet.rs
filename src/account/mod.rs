@@ -20,7 +20,7 @@ use getset::{Getters, Setters};
 use iota_client::{
     api_types::response::OutputWithMetadataResponse,
     block::{
-        output::OutputId,
+        output::{FoundryId, FoundryOutput, OutputId},
         payload::{transaction::TransactionId, TransactionPayload},
     },
 };
@@ -89,4 +89,7 @@ pub struct Account {
     /// the sender address/es
     #[serde(rename = "incomingTransactions")]
     incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>,
+    /// Foundries for native tokens in outputs
+    #[serde(rename = "nativeTokenFoundries", default)]
+    native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }
