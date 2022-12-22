@@ -53,9 +53,12 @@ impl AccountManager {
 
     /// Retrieves information for all registered participation events.
     pub async fn get_participation_events(&self) -> crate::Result<Vec<Event>> {
-        let events = self.storage_manager.lock().await.get_participation_events().await?;
-
-        Ok(events
+        Ok(self
+            .storage_manager
+            .lock()
+            .await
+            .get_participation_events()
+            .await?
             .values()
             .into_iter()
             .map(|(event, _nodes)| event.clone())

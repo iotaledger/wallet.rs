@@ -29,6 +29,8 @@ public class SyncOptions extends AbstractObject {
     private boolean syncAliasesAndNfts = true;
     /// Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
     private boolean syncOnlyMostBasicOutputs = false;
+    /// Sync native token foundries, so their metadata can be returned in the balance.
+    private boolean syncNativeTokenFoundries = false;
 
     public List<String> getAddresses() {
         return addresses;
@@ -99,6 +101,15 @@ public class SyncOptions extends AbstractObject {
 
     public SyncOptions withSyncOnlyMostBasicOutputs(boolean syncOnlyMostBasicOutputs) {
         this.syncOnlyMostBasicOutputs = syncOnlyMostBasicOutputs;
+        return this;
+    }
+
+    public boolean isSyncNativeTokenFoundries() {
+        return syncNativeTokenFoundries;
+    }
+
+    public SyncOptions withSyncNativeTokenFoundries(boolean syncNativeTokenFoundries) {
+        this.syncNativeTokenFoundries = syncNativeTokenFoundries;
         return this;
     }
 }
