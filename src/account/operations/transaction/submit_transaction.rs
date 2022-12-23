@@ -29,7 +29,6 @@ impl AccountHandle {
                 WalletEvent::TransactionProgress(TransactionProgressEvent::PerformingPow),
             );
         }
-
         let block = self
             .client
             .finish_block_builder(None, Some(Payload::from(transaction_payload)))
