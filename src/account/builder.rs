@@ -106,7 +106,10 @@ impl AccountBuilder {
             let account = account_handle.read().await;
             let existing_coin_type = account.coin_type;
             if existing_coin_type != self.coin_type {
-                return Err(Error::InvalidCoinType(self.coin_type, existing_coin_type));
+                return Err(Error::InvalidCoinType {
+                    new_coin_type: self.coin_type,
+                    existing_coin_type,
+                });
             }
             if account.alias().to_lowercase() == account_alias.to_lowercase() {
                 return Err(Error::AccountAliasAlreadyExists(account_alias));
