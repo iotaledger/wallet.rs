@@ -4,6 +4,7 @@
     ".changes/account-bech32-hrp.md",
     ".changes/account-recovery.md",
     ".changes/downgrade-rocksb.md",
+    ".changes/expose-participation-type.md",
     ".changes/faucet.md",
     ".changes/fix-not-synced-timestamp.md",
     ".changes/fixNftPrepareOutput.md",

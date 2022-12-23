@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.12]
+
+- Expose extra participation type and add answers field to TrackedParticipationOverview
+  - [db5e1365](https://github.com/iotaledger/wallet.rs/commit/db5e1365e05371c2cd051a318cb63b4fc21550d2) feat: update participations type ([#1696](https://github.com/iotaledger/wallet.rs/pull/1696)) on 2022-12-23
+
 ## \[2.0.3-rc.11]
 
 - Add account.requestFundsFromFaucet() command.
