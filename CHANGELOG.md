@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move all balance related types to the `account/types/balance` module;
 - `AccountBalanceDto`, `BaseCoinBalanceDto` and `NativeTokensBalanceDto` moved from `message_interface/dtos` to `account/types/balance`;
 - `Account::vote(), AccountMethod::Vote()` parameters are now optional to support revoting;
+- Fields of `Error::{ConsolidationRequired, InsufficientFunds, InvalidCoinType}` are now named;
 
 ### Removed
 
