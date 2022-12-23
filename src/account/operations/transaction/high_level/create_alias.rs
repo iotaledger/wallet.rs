@@ -1,23 +1,25 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        address::Address,
-        output::{
-            feature::{Feature, MetadataFeature},
-            unlock_condition::{
-                GovernorAddressUnlockCondition, StateControllerAddressUnlockCondition, UnlockCondition,
-            },
-            AliasId, AliasOutputBuilder, Output,
-        },
-        DtoError,
-    },
-};
 use serde::{Deserialize, Serialize};
 
-use crate::account::{handle::AccountHandle, types::Transaction, OutputData, TransactionOptions};
+use crate::{
+    account::{handle::AccountHandle, types::Transaction, OutputData, TransactionOptions},
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            address::Address,
+            output::{
+                feature::{Feature, MetadataFeature},
+                unlock_condition::{
+                    GovernorAddressUnlockCondition, StateControllerAddressUnlockCondition, UnlockCondition,
+                },
+                AliasId, AliasOutputBuilder, Output,
+            },
+            DtoError,
+        },
+    },
+};
 
 /// Alias output options for `create_alias_output()`
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -112,7 +112,7 @@ impl AccountManager {
                     )
                     .await?
             }
-            SecretManager::Placeholder(_) => return Err(iota_client::Error::PlaceholderSecretManager.into()),
+            SecretManager::Placeholder(_) => return Err(crate::client::Error::PlaceholderSecretManager.into()),
         };
 
         Ok(*address.first().ok_or(crate::Error::MissingParameter("address"))?)

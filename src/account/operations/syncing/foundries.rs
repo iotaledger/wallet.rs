@@ -3,9 +3,10 @@
 
 use std::collections::HashSet;
 
-use iota_client::block::output::{FoundryId, Output};
-
-use crate::account::handle::AccountHandle;
+use crate::{
+    account::handle::AccountHandle,
+    client::block::output::{FoundryId, Output},
+};
 
 impl AccountHandle {
     pub(crate) async fn request_and_store_foundry_outputs(&self, foundry_ids: HashSet<FoundryId>) -> crate::Result<()> {
@@ -25,7 +26,7 @@ impl AccountHandle {
                 tokio::spawn(async move {
                     match client.foundry_output_id(foundry_id).await {
                         Ok(output_id) => Ok(Some(client.get_output(&output_id).await?)),
-                        Err(iota_client::Error::NotFound(_)) => Ok(None),
+                        Err(crate::client::Error::NotFound(_)) => Ok(None),
                         Err(e) => Err(crate::Error::Client(e.into())),
                     }
                 })

@@ -13,18 +13,18 @@ pub mod voting_power;
 
 use std::collections::{hash_map::Entry, HashMap};
 
-use iota_client::{
-    block::output::{Output, OutputId},
-    node_api::participation::{
-        responses::TrackedParticipation,
-        types::{participation::Participations, EventId, EventStatus, PARTICIPATION_TAG},
-    },
-    Client,
-};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     account::{handle::AccountHandle, OutputData},
+    client::{
+        block::output::{Output, OutputId},
+        node_api::participation::{
+            responses::TrackedParticipation,
+            types::{participation::Participations, EventId, EventStatus, PARTICIPATION_TAG},
+        },
+        Client,
+    },
     Result,
 };
 

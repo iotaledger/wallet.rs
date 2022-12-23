@@ -1,19 +1,21 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    api::PreparedTransactionData,
-    block::{
-        address::Address,
-        output::{
-            unlock_condition::{AddressUnlockCondition, UnlockCondition},
-            BasicOutputBuilder,
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions},
+    client::{
+        api::PreparedTransactionData,
+        block::{
+            address::Address,
+            output::{
+                unlock_condition::{AddressUnlockCondition, UnlockCondition},
+                BasicOutputBuilder,
+            },
         },
     },
 };
-use serde::{Deserialize, Serialize};
-
-use crate::account::{handle::AccountHandle, operations::transaction::Transaction, TransactionOptions};
 
 /// address with amount for `send_amount()`
 #[derive(Debug, Clone, Serialize, Deserialize)]

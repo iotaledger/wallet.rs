@@ -1,22 +1,21 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::{
-    block::{
-        output::{
-            feature::{MetadataFeature, TagFeature},
-            BasicOutputBuilder, Feature,
-        },
-        payload::TaggedDataPayload,
-    },
-    node_api::participation::types::{
-        participation::{Participation, Participations},
-        EventId, PARTICIPATION_TAG,
-    },
-};
-
 use crate::{
     account::{types::Transaction, AccountHandle, TransactionOptions},
+    client::{
+        block::{
+            output::{
+                feature::{MetadataFeature, TagFeature},
+                BasicOutputBuilder, Feature,
+            },
+            payload::TaggedDataPayload,
+        },
+        node_api::participation::types::{
+            participation::{Participation, Participations},
+            EventId, PARTICIPATION_TAG,
+        },
+    },
     Result,
 };
 

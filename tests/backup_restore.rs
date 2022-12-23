@@ -3,12 +3,15 @@
 
 use std::path::PathBuf;
 
-use iota_client::{
-    constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
-    node_manager::node::{Node, NodeDto, Url},
-    secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
+use iota_wallet::{
+    account_manager::AccountManager,
+    client::{
+        constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
+        node_manager::node::{Node, NodeDto, Url},
+        secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
+    },
+    ClientOptions, Result,
 };
-use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
 
 #[tokio::test]
 #[cfg(all(feature = "stronghold", feature = "storage"))]

@@ -3,13 +3,13 @@
 
 use std::time::Duration;
 
-use iota_client::{
-    block::output::{NftId, OutputId},
-    request_funds_from_faucet,
-};
 use iota_wallet::{
     account_manager::AccountManager,
-    client::constants::SHIMMER_COIN_TYPE,
+    client::{
+        block::output::{NftId, OutputId},
+        constants::SHIMMER_COIN_TYPE,
+        request_funds_from_faucet,
+    },
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Error, NativeTokenOptions, NftOptions, Result, U256,
 };

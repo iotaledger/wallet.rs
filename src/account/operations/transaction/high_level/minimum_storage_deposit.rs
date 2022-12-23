@@ -1,18 +1,20 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    address::Address,
-    output::{
-        unlock_condition::{
-            AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
-        },
-        BasicOutputBuilder, NativeToken, Output, Rent, RentStructure, TokenId,
-    },
-};
 use primitive_types::U256;
 
-use crate::Result;
+use crate::{
+    client::block::{
+        address::Address,
+        output::{
+            unlock_condition::{
+                AddressUnlockCondition, ExpirationUnlockCondition, StorageDepositReturnUnlockCondition, UnlockCondition,
+            },
+            BasicOutputBuilder, NativeToken, Output, Rent, RentStructure, TokenId,
+        },
+    },
+    Result,
+};
 
 // todo: move to bee-block/iota.rs
 

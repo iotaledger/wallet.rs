@@ -8,21 +8,19 @@ use std::sync::{
 #[cfg(feature = "storage")]
 use std::{path::PathBuf, sync::atomic::Ordering};
 
-use iota_client::secret::SecretManager;
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-#[cfg(feature = "storage")]
-use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(feature = "storage")]
-use crate::storage::constants::ROCKSDB_FOLDERNAME;
-#[cfg(feature = "storage")]
-use crate::storage::manager::ManagerStorage;
-use crate::{account_manager::AccountManager, ClientOptions};
+use crate::{
+    account::handle::AccountHandle,
+    storage::{constants::ROCKSDB_FOLDERNAME, manager::ManagerStorage},
+};
+use crate::{account_manager::AccountManager, client::secret::SecretManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.

@@ -7,27 +7,27 @@
 use std::pin::Pin;
 
 use futures::{Future, FutureExt};
-use iota_client::{
-    api::ClientBlockBuilder,
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        address::Address,
-        output::{
-            dto::OutputDto,
-            unlock_condition::{
-                dto::{AddressUnlockConditionDto, UnlockConditionDto},
-                AddressUnlockCondition,
-            },
-            AliasId, AliasOutput, AliasOutputBuilder, NftId, NftOutput, Output, OutputId,
-        },
-    },
-};
 
 use crate::{
     account::{
         handle::AccountHandle,
         types::{address::AddressWrapper, OutputData, Transaction},
         RemainderValueStrategy, TransactionOptions,
+    },
+    client::{
+        api::ClientBlockBuilder,
+        api_types::response::OutputWithMetadataResponse,
+        block::{
+            address::Address,
+            output::{
+                dto::OutputDto,
+                unlock_condition::{
+                    dto::{AddressUnlockConditionDto, UnlockConditionDto},
+                    AddressUnlockCondition,
+                },
+                AliasId, AliasOutput, AliasOutputBuilder, NftId, NftOutput, Output, OutputId,
+            },
+        },
     },
     Error,
 };

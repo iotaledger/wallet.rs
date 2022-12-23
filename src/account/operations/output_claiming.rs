@@ -34,9 +34,9 @@ pub enum OutputsToClaim {
 
 impl AccountHandle {
     /// Get basic and nft outputs that have
-    /// [`ExpirationUnlockCondition`](iota_client::block::output::unlock_condition::ExpirationUnlockCondition),
+    /// [`ExpirationUnlockCondition`](crate::client::block::output::unlock_condition::ExpirationUnlockCondition),
     /// [`StorageDepositReturnUnlockCondition`] or
-    /// [`TimelockUnlockCondition`](iota_client::block::output::unlock_condition::TimelockUnlockCondition) and can be
+    /// [`TimelockUnlockCondition`](crate::client::block::output::unlock_condition::TimelockUnlockCondition) and can be
     /// unlocked now and also get basic outputs with only an [`AddressUnlockCondition`] unlock condition, for
     /// additional inputs
     pub async fn get_unlockable_outputs_with_additional_unlock_conditions(

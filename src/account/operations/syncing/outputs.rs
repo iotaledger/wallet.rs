@@ -144,7 +144,7 @@ impl AccountHandle {
                                 Ok(None)
                             }
                         }
-                        Err(iota_client::Error::NotFound(_)) => Ok(None),
+                        Err(crate::client::Error::NotFound(_)) => Ok(None),
                         Err(e) => Err(crate::Error::Client(e.into())),
                     }
                 })
