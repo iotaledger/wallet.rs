@@ -53,6 +53,7 @@ export interface RequiredStorageDeposit {
 /** The balance of a native token */
 export interface NativeTokenBalance {
     tokenId: string;
+    metadata?: string;
     total: HexEncodedAmount;
     available: HexEncodedAmount;
 }
@@ -90,6 +91,8 @@ export interface AccountSyncOptions {
     /** Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
      * `syncAliasesAndNfts`. Default: false. */
     syncOnlyMostBasicOutputs?: boolean;
+    /** Sync native token foundries, so their metadata can be returned in the balance. Default: false. */
+    syncNativeTokenFoundries?: boolean;
 }
 
 /** The account object */

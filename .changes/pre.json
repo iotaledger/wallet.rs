@@ -4,6 +4,7 @@
     ".changes/account-bech32-hrp.md",
     ".changes/account-recovery.md",
     ".changes/downgrade-rocksb.md",
+    ".changes/faucet.md",
     ".changes/fix-not-synced-timestamp.md",
     ".changes/fixNftPrepareOutput.md",
     ".changes/fixPrepareOutput.md",
@@ -11,11 +12,14 @@
     ".changes/get-incoming-tx.md",
     ".changes/getAccountIndexes.md",
     ".changes/improve-consolidation-logic.md",
+    ".changes/improve-output-type.md",
     ".changes/incomingtransactions-type.md",
     ".changes/nft-options-features.md",
     ".changes/nft-output-claiming.md",
     ".changes/nft-outputs-syncing.md",
+    ".changes/nt-foundry-metadata.md",
     ".changes/outputTypesFilter.md",
+    ".changes/participation-events-empty-array.md",
     ".changes/participation-on-account-manager.md",
     ".changes/participation-types.md",
     ".changes/prebuild.md",
@@ -30,6 +34,7 @@
     ".changes/tagAndMetadataHex.md",
     ".changes/tx-len-validation.md",
     ".changes/uint8array-replace-number-array.md.md",
-    ".changes/voting-methods.md"
+    ".changes/voting-methods.md",
+    ".changes/voting-power-not-available.md"
   ]
 }

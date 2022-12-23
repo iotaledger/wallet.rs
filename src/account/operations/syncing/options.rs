@@ -9,6 +9,7 @@ const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = true;
 const DEFAULT_SYNC_INCOMING_TRANSACTIONS: bool = false;
 const DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS: bool = false;
 const DEFAULT_SYNC_PENDING_TRANSACTIONS: bool = true;
+const DEFAULT_SYNC_NATIVE_TOKEN_FOUNDRIES: bool = false;
 
 /// The synchronization options
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -47,6 +48,9 @@ pub struct SyncOptions {
         default = "default_sync_only_most_basic_outputs"
     )]
     pub sync_only_most_basic_outputs: bool,
+    /// Sync native token foundries, so their metadata can be returned in the balance.
+    #[serde(rename = "syncNativeTokenFoundries", default = "default_sync_native_token_foundries")]
+    pub sync_native_token_foundries: bool,
 }
 
 fn default_address_start_index() -> u32 {
@@ -73,6 +77,10 @@ fn default_sync_pending_transactions() -> bool {
     DEFAULT_SYNC_PENDING_TRANSACTIONS
 }
 
+fn default_sync_native_token_foundries() -> bool {
+    DEFAULT_SYNC_NATIVE_TOKEN_FOUNDRIES
+}
+
 impl Default for SyncOptions {
     fn default() -> Self {
         Self {
@@ -83,6 +91,7 @@ impl Default for SyncOptions {
             sync_pending_transactions: default_sync_pending_transactions(),
             sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
             sync_only_most_basic_outputs: default_sync_only_most_basic_outputs(),
+            sync_native_token_foundries: default_sync_native_token_foundries(),
             force_syncing: default_force_syncing(),
         }
     }
