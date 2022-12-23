@@ -153,7 +153,10 @@ impl AccountHandle {
                     .lock()
                     .await
                     .emit(account.index, WalletEvent::ConsolidationRequired);
-                return Err(crate::Error::ConsolidationRequired(output_count, INPUT_COUNT_MAX));
+                return Err(crate::Error::ConsolidationRequired {
+                    output_count,
+                    output_count_max: INPUT_COUNT_MAX,
+                });
             }
             Err(e) => return Err(e.into()),
         };

@@ -39,8 +39,8 @@ pub enum Error {
     #[serde(serialize_with = "display_string")]
     Client(Box<crate::client::Error>),
     /// Funds are spread over too many outputs
-    #[error("funds are spread over too many outputs {0}/{1}, consolidation required")]
-    ConsolidationRequired(usize, u16),
+    #[error("funds are spread over too many outputs {output_count}/{output_count_max}, consolidation required")]
+    ConsolidationRequired { output_count: usize, output_count_max: u16 },
     /// Crypto.rs error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
@@ -52,11 +52,14 @@ pub enum Error {
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
     /// Insufficient funds to send transaction.
-    #[error("insufficient funds {0}/{1} available")]
-    InsufficientFunds(u64, u64),
+    #[error("insufficient funds {available}/{required} available")]
+    InsufficientFunds { available: u64, required: u64 },
     /// Invalid coin type, all accounts need to have the same coin type
-    #[error("invalid coin type for new account: {0}, existing coin type is: {1}")]
-    InvalidCoinType(u32, u32),
+    #[error("invalid coin type for new account: {new_coin_type}, existing coin type is: {existing_coin_type}")]
+    InvalidCoinType {
+        new_coin_type: u32,
+        existing_coin_type: u32,
+    },
     /// Invalid mnemonic error
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),

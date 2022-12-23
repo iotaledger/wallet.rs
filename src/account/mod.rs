@@ -21,7 +21,7 @@ use serde::{Deserialize, Serialize};
 
 use self::types::{
     address::{AccountAddress, AddressWithUnspentOutputs},
-    AccountBalance, OutputData,
+    OutputData,
 };
 pub use self::{
     handle::AccountHandle,
@@ -39,7 +39,7 @@ pub use self::{
 use crate::client::{
     api_types::response::OutputWithMetadataResponse,
     block::{
-        output::OutputId,
+        output::{FoundryId, FoundryOutput, OutputId},
         payload::{transaction::TransactionId, TransactionPayload},
     },
 };
@@ -89,4 +89,7 @@ pub struct Account {
     /// the sender address/es
     #[serde(rename = "incomingTransactions")]
     incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>,
+    /// Foundries for native tokens in outputs
+    #[serde(rename = "nativeTokenFoundries", default)]
+    native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }

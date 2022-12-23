@@ -340,7 +340,10 @@ impl AccountHandle {
 
         // If we still don't have enough amount we can't create the output
         if available_amount < required_amount {
-            return Err(crate::Error::InsufficientFunds(available_amount, required_amount));
+            return Err(crate::Error::InsufficientFunds {
+                available: available_amount,
+                required: required_amount,
+            });
         }
 
         for (return_address, return_amount) in required_address_returns {
