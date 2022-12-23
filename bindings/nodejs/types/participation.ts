@@ -1,18 +1,21 @@
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
-    participations: {
-        [eventId: EventId]: {
-            [outputId: OutputId]: TrackedParticipationOverview;
-        };
-    };
+    participations: Participations
 }
 
+export interface Participations {
+    [eventId: EventId]: {
+        [outputId: OutputId]: TrackedParticipationOverview;
+    };
+};
+
 export interface TrackedParticipationOverview {
-    blockId: string;
     amount: string;
-    startMilestoneIndex: number;
+    answers: number[];
+    blockId: string;
     endMilestoneIndex: number;
+    startMilestoneIndex: number;
 }
 
 export interface Event {
