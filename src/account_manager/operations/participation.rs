@@ -65,7 +65,7 @@ impl AccountManager {
             .collect())
     }
 
-    /// Retrieves all available event IDs from the client options node.
+    /// Retrieves IDs of all events tracked by the client options node.
     pub async fn get_participation_event_ids(
         &self,
         event_type: Option<ParticipationEventType>,
