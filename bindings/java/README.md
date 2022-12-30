@@ -74,6 +74,7 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class CreateAccount {
+    
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
     public static void main(String[] args) throws WalletException {
@@ -81,14 +82,15 @@ public class CreateAccount {
         // Android applications must necessarily configure this: make sure you replace the ´com.example.myapplication´ with your own app naming.
         String storagePath = "/data/data/com.example.myapplication/";
         String strongholdPath = storagePath + "/stronghold/vault.stronghold";
-        
-        // Build the wallet.
+
+        // Set up and store the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                 .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, strongholdPath))
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(storagePath)
         );
+        // Store the mnemonic in the Stronghold vault.
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.
