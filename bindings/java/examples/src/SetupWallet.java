@@ -13,8 +13,6 @@ import org.iota.types.secret.StrongholdSecretManager;
 
 public class SetupWallet {
 
-    private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
-
     public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
         // Initialise the logger for all debug output on Rusts' side.
         Wallet.initLogger(new LoggerOutputConfigBuilder().setLevelFilter(LevelFilter.Debug).setColorEnabled(true));
@@ -22,10 +20,12 @@ public class SetupWallet {
         // Setup and store the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STORAGE_PATH + Env.STRONGHOLD_SNAPSHOT_NAME))
+                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(Env.STORAGE_PATH)
         );
-        wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
+
+        // Store the mnemonic in the Stronghold vault.
+        wallet.storeMnemonic(Env.MNEMONIC);
     }
 }

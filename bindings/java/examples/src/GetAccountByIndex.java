@@ -15,7 +15,7 @@ public class GetAccountByIndex {
         // If you haven't run the ´SetupWallet.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STORAGE_PATH + Env.STRONGHOLD_SNAPSHOT_NAME))
+                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(Env.STORAGE_PATH)
         );

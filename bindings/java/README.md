@@ -80,11 +80,12 @@ public class CreateAccount {
         // Set a suitable storage path for the wallet to avoid problems with file system permissions.
         // Android applications must necessarily configure this: make sure you replace the ´com.example.myapplication´ with your own app naming.
         String storagePath = "/data/data/com.example.myapplication/";
+        String strongholdPath = storagePath + "/stronghold/vault.stronghold";
         
         // Build the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, storagePath + "data.stronghold"))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, strongholdPath))
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(storagePath)
         );
