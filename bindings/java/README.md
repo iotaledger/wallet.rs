@@ -89,6 +89,7 @@ public class CreateAccount {
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(storagePath)
         );
+        
         // Store the mnemonic in the Stronghold vault.
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
