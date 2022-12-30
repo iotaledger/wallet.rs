@@ -77,7 +77,7 @@ public class CreateAccount {
     
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
-    public static void main(String[] args) throws WalletException {
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
         // Set a suitable storage path for the wallet to avoid problems with file system permissions.
         // Android applications must necessarily configure this: make sure you replace the ´com.example.myapplication´ with your own app naming.
         String storagePath = "/data/data/com.example.myapplication/";
