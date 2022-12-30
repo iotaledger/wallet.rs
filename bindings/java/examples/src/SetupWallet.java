@@ -19,7 +19,7 @@ public class SetupWallet {
 
         // Set up and store the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
                 .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
                 .withCoinType(CoinType.Shimmer)
                 .withStoragePath(Env.STORAGE_PATH)
