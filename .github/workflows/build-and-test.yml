@@ -61,26 +61,20 @@ jobs:
         sudo apt-get update
         sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-    - name: Cache cargo registry
+    - name: Cache CARGO_HOME
       uses: actions/cache@v3
       with:
-        path: ~/.cargo/registry
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
         # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        key: ${{ matrix.os }}-stable-cargo-home-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-registry-
-    - name: Cache cargo index
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/git
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-index-
+          ${{ matrix.os }}-stable-cargo-home-
+
     - name: Cache cargo target
       uses: actions/cache@v3
       with:
@@ -153,27 +147,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-      - name: Cache cargo registry
+      - name: Cache CARGO_HOME
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/registry
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
           # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          key: ${{ matrix.os }}-stable-cargo-home-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
           restore-keys: |
-            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-          # Restore from outdated cache for speed
-          restore-keys: |
-            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-index-
+            ${{ matrix.os }}-stable-cargo-home-
      
       - name: Cache nodejs binding cargo target
         uses: actions/cache@v3
@@ -221,27 +207,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-      - name: Cache cargo registry
+      - name: Cache CARGO_HOME
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/registry
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
           # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          key: ${{ matrix.os }}-stable-cargo-home-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
           restore-keys: |
-            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-          # Restore from outdated cache for speed
-          restore-keys: |
-            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-index-
+            ${{ matrix.os }}-stable-cargo-home-
 
       - name: Build library
         timeout-minutes: 60
@@ -316,27 +294,19 @@ jobs:
         python -m pip install --upgrade setuptools pip wheel
         python -m pip install tox-gh-actions
     
-    - name: Cache cargo registry
+    - name: Cache CARGO_HOME
       uses: actions/cache@v3
       with:
-        path: ~/.cargo/registry
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
         # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+        key: ${{ matrix.os }}-stable-cargo-home-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-registry-
-
-    - name: Cache cargo index
-      uses: actions/cache@v3
-      with:
-        path: ~/.cargo/git
-        # Add date to the cache to keep it up to date
-        key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-        # Restore from outdated cache for speed
-        restore-keys: |
-          ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          ${{ matrix.os }}-stable-cargo-index-
+          ${{ matrix.os }}-stable-cargo-home-
     
     - name: Cache python binding cargo target
       uses: actions/cache@v3
@@ -396,27 +366,19 @@ jobs:
           sudo apt-get update
           sudo apt-get install libudev-dev libusb-1.0-0-dev
 
-      - name: Cache cargo registry
+      - name: Cache CARGO_HOME
         uses: actions/cache@v3
         with:
-          path: ~/.cargo/registry
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
           # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
+          key: ${{ matrix.os }}-stable-cargo-home-${{ env.CURRENT_DATE }}
           # Restore from outdated cache for speed
           restore-keys: |
-            ${{ matrix.os }}-stable-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo/git
-          # Add date to the cache to keep it up to date
-          key: ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}-${{ env.CURRENT_DATE }}
-          # Restore from outdated cache for speed
-          restore-keys: |
-            ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-            ${{ matrix.os }}-stable-cargo-index-
+            ${{ matrix.os }}-stable-cargo-home-
 
       - name: Set Up Java ${{ matrix.java }}
         uses: actions/setup-java@v3
