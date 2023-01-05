@@ -6,7 +6,6 @@ on:
       - main
       - dev
       - develop
-      - ci/**
   pull_request:
     branches:
       - dev
