@@ -43,7 +43,7 @@ impl AccountHandle {
             .as_millis();
         let mut last_synced = self.last_synced.lock().await;
         log::debug!("[SYNC] last time synced before {}ms", time_now - *last_synced);
-        if !options.force_syncing && time_now - *last_synced < MIN_SYNC_INTERVAL   {
+        if !options.force_syncing && time_now - *last_synced < MIN_SYNC_INTERVAL {
             log::debug!(
                 "[SYNC] synced within the latest {} ms, only calculating balance",
                 MIN_SYNC_INTERVAL
