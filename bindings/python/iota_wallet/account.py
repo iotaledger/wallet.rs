@@ -480,3 +480,13 @@ class Account:
                 'options': options,
             }
         )
+
+    def request_funds_from_faucet(self, url=None, address=None):
+        """Requests funds from the faucet
+        """
+        return self._call_account_method(
+            'requestFundsFromFaucet', {
+                'url': url,
+                'address': address,
+            }
+        )
