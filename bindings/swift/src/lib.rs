@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#![recursion_limit = "256"]
+
 use iota_wallet::{
     events::types::{Event, WalletEventType},
     message_interface::{self, init_logger, ManagerOptions, Message, WalletMessageHandler},

@@ -229,15 +229,14 @@ impl Debug for Message {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         match self {
             Message::CreateAccount { alias, bech32_hrp } => {
-                write!(f, "CreateAccount{{ alias: {:?}, bech32_hrp: {:?} }}", alias, bech32_hrp)
+                write!(f, "CreateAccount{{ alias: {alias:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
             Message::GetAccountIndexes => write!(f, "GetAccountIndexes"),
-            Message::GetAccount(identifier) => write!(f, "GetAccount({:?})", identifier),
+            Message::GetAccount(identifier) => write!(f, "GetAccount({identifier:?})"),
             Message::GetAccounts => write!(f, "GetAccounts"),
             Message::CallAccountMethod { account_id, method } => write!(
                 f,
-                "CallAccountMethod{{ account_id: {:?}, method: {:?} }}",
-                account_id, method
+                "CallAccountMethod{{ account_id: {account_id:?}, method: {method:?} }}"
             ),
             #[cfg(feature = "stronghold")]
             Message::ChangeStrongholdPassword {
@@ -245,7 +244,7 @@ impl Debug for Message {
                 new_password: _,
             } => write!(
                 f,
-                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted> }}",
+                "ChangeStrongholdPassword{{ current_password: <omitted>, new_password: <omitted> }}"
             ),
             #[cfg(feature = "stronghold")]
             Message::ClearStrongholdPassword => write!(f, "ClearStrongholdPassword"),
@@ -255,7 +254,7 @@ impl Debug for Message {
             Message::Backup {
                 destination,
                 password: _,
-            } => write!(f, "Backup{{ destination: {:?} }}", destination),
+            } => write!(f, "Backup{{ destination: {destination:?} }}"),
             Message::RecoverAccounts {
                 account_start_index,
                 account_gap_limit,
@@ -263,15 +262,14 @@ impl Debug for Message {
                 sync_options,
             } => write!(
                 f,
-                "RecoverAccounts{{ account_start_index: {:?}, account_gap_limit: {:?}, address_gap_limit: {:?}, sync_options: {:?} }}",
-                account_start_index, account_gap_limit, address_gap_limit, sync_options
+                "RecoverAccounts{{ account_start_index: {account_start_index:?}, account_gap_limit: {account_gap_limit:?}, address_gap_limit: {address_gap_limit:?}, sync_options: {sync_options:?} }}"
             ),
             Message::RemoveLatestAccount => write!(f, "RemoveLatestAccount"),
             #[cfg(feature = "stronghold")]
-            Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {:?} }}", source),
+            Message::RestoreBackup { source, password: _ } => write!(f, "RestoreBackup{{ source: {source:?} }}"),
             Message::GenerateMnemonic => write!(f, "GenerateMnemonic"),
             Message::VerifyMnemonic(_) => write!(f, "VerifyMnemonic(<omitted>)"),
-            Message::SetClientOptions(options) => write!(f, "SetClientOptions({:?})", options),
+            Message::SetClientOptions(options) => write!(f, "SetClientOptions({options:?})"),
             #[cfg(feature = "ledger_nano")]
             Message::GetLedgerNanoStatus => write!(f, "GetLedgerNanoStatus"),
             Message::GenerateAddress {
@@ -282,13 +280,12 @@ impl Debug for Message {
                 bech32_hrp,
             } => write!(
                 f,
-                "GenerateAddress{{ account_index: {:?}, internal: {:?}, address_index: {:?}, options: {:?}, bech32_hrp: {:?} }}",
-                account_index, internal, address_index, options, bech32_hrp
+                "GenerateAddress{{ account_index: {account_index:?}, internal: {internal:?}, address_index: {address_index:?}, options: {options:?}, bech32_hrp: {bech32_hrp:?} }}"
             ),
-            Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {:?} }}", url),
+            Message::GetNodeInfo { url, auth: _ } => write!(f, "GetNodeInfo{{ url: {url:?} }}"),
             Message::SetStrongholdPassword(_) => write!(f, "SetStrongholdPassword(<omitted>)"),
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
-                write!(f, "SetStrongholdPassword({:?})", interval_in_milliseconds)
+                write!(f, "SetStrongholdPassword({interval_in_milliseconds:?})")
             }
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
             Message::StartBackgroundSync {
@@ -296,38 +293,36 @@ impl Debug for Message {
                 interval_in_milliseconds,
             } => write!(
                 f,
-                "StartBackgroundSync{{ options: {:?}, interval: {:?} }}",
-                options, interval_in_milliseconds
+                "StartBackgroundSync{{ options: {options:?}, interval: {interval_in_milliseconds:?} }}"
             ),
             Message::StopBackgroundSync => write!(f, "StopBackgroundSync"),
             #[cfg(feature = "events")]
-            Message::EmitTestEvent(event) => write!(f, "EmitTestEvent({:?})", event),
-            Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({:?})", bech32_address),
+            Message::EmitTestEvent(event) => write!(f, "EmitTestEvent({event:?})"),
+            Message::Bech32ToHex(bech32_address) => write!(f, "Bech32ToHex({bech32_address:?})"),
             Message::HexToBech32 { hex, bech32_hrp } => {
-                write!(f, "HexToBech32{{ hex: {:?}, bech32_hrp: {:?} }}", hex, bech32_hrp)
+                write!(f, "HexToBech32{{ hex: {hex:?}, bech32_hrp: {bech32_hrp:?} }}")
             }
 
             #[cfg(feature = "events")]
-            Message::ClearListeners(events) => write!(f, "ClearListeners({:?})", events),
+            Message::ClearListeners(events) => write!(f, "ClearListeners({events:?})"),
             #[cfg(feature = "participation")]
             Message::RegisterParticipationEvent { event_id, nodes } => {
                 write!(
                     f,
-                    "RegisterParticipationEvent{{ event_id: {:?}, nodes: {:?} }}",
-                    event_id, nodes
+                    "RegisterParticipationEvent{{ event_id: {event_id:?}, nodes: {nodes:?} }}"
                 )
             }
             #[cfg(feature = "participation")]
             Message::DeregisterParticipationEvent { event_id } => {
-                write!(f, "DeregisterParticipationEvent({:?})", event_id)
+                write!(f, "DeregisterParticipationEvent({event_id:?})")
             }
             #[cfg(feature = "participation")]
             Message::GetParticipationEvent { event_id } => {
-                write!(f, "GetParticipationEvent({:?})", event_id)
+                write!(f, "GetParticipationEvent({event_id:?})")
             }
             #[cfg(feature = "participation")]
             Message::GetParticipationEventStatus { event_id } => {
-                write!(f, "GetParticipationEventStatus({:?})", event_id)
+                write!(f, "GetParticipationEventStatus({event_id:?})")
             }
             #[cfg(feature = "participation")]
             Message::GetParticipationEvents => {

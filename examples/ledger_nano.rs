@@ -52,12 +52,12 @@ async fn main() -> Result<()> {
 
     let address = account.generate_addresses(1, None).await?;
 
-    println!("{:?}", address);
+    println!("{address:?}");
 
     let now = Instant::now();
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     // send transaction
     let outputs = vec![AddressWithAmount {

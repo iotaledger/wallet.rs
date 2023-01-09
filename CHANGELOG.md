@@ -19,7 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.4 - 20XX-XX-XX
+## 1.0.0-rc.5 - YYYY-MM-DD
+
+### Changed
+
+- Updated dependencies;
+
+## 1.0.0-rc.4 - 2022-12-23
 
 ### Added
 
@@ -30,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RetryTransactionUntilIncluded` to message interface account methods;
 - `AccountMethod::RequestFundsFromFaucet` to message interface;
 - `FilterOptions::output_types` field;
+- `{NativeTokensBalance, NativeTokensBalanceDto}::metadata` field;
+- `{Account, AccountDto}::native_token_foundries` field;
+- `SyncOptions::sync_native_token_foundries` field;
 
 ### Changed
 
@@ -38,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Move all balance related types to the `account/types/balance` module;
 - `AccountBalanceDto`, `BaseCoinBalanceDto` and `NativeTokensBalanceDto` moved from `message_interface/dtos` to `account/types/balance`;
 - `Account::vote(), AccountMethod::Vote()` parameters are now optional to support revoting;
+- Fields of `Error::{ConsolidationRequired, InsufficientFunds, InvalidCoinType}` are now named;
 
 ### Removed
 

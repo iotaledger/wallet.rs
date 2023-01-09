@@ -39,7 +39,7 @@ async fn main() -> Result<()> {
 
     manager
         .listen(vec![], move |event| {
-            println!("Received an event {:?}", event);
+            println!("Received an event {event:?}");
         })
         .await;
 
@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
     let _address = account.generate_addresses(5, None).await?;
 
     let balance = account.sync(None).await?;
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     // send transaction
     let outputs = vec![

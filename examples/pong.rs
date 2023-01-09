@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
             .await?;
     }
     let balance = ping_account.sync(None).await?;
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
     // generate addresses from the second account to which we will send funds
     let ping_addresses = {
         let mut addresses = ping_account.addresses().await?;
@@ -123,7 +123,7 @@ async fn main() -> Result<()> {
         let results = futures::future::try_join_all(threads).await?;
         for thread in results {
             if let Err(e) = thread {
-                println!("{}", e);
+                println!("{e}");
             }
         }
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;

@@ -51,5 +51,6 @@ async fn main() -> Result<()> {
     sleep(Duration::from_secs(10)).await;
     manager.stop_background_syncing()?;
     manager.start_background_syncing(None, None).await?;
+
     Ok(())
 }

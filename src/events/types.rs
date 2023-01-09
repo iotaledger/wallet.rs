@@ -53,7 +53,7 @@ impl TryFrom<&str> for WalletEventType {
             "SpentOutput" => WalletEventType::SpentOutput,
             "TransactionInclusion" => WalletEventType::TransactionInclusion,
             "TransactionProgress" => WalletEventType::TransactionProgress,
-            _ => return Err(format!("invalid event type {}", value)),
+            _ => return Err(format!("invalid event type {value}")),
         };
         Ok(event_type)
     }

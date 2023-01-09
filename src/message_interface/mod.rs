@@ -50,7 +50,7 @@ where
                 let mut stronghold_dto = stronghold.clone();
                 // Remove password
                 stronghold_dto.password = None;
-                s.serialize_str(&format!("{:?}", stronghold_dto))
+                s.serialize_str(&format!("{stronghold_dto:?}"))
             }
         }
     } else {
@@ -176,7 +176,7 @@ mod tests {
                 let id = account.index;
                 println!("Created account index: {id}")
             }
-            _ => panic!("unexpected response {:?}", response),
+            _ => panic!("unexpected response {response:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
@@ -210,7 +210,7 @@ mod tests {
         wallet_handle
             .listen(vec![], |event| {
                 if let WalletEvent::TransactionProgress(event) = &event.event {
-                    println!("Received event....: {:?}", event);
+                    println!("Received event....: {event:?}");
                 }
             })
             .await;
@@ -222,7 +222,8 @@ mod tests {
                 alias: Some("alias".to_string()),
                 bech32_hrp: None,
             },
-        );
+        )
+        .await;
 
         // send transaction
         let outputs = vec![OutputDto::from(
@@ -252,7 +253,7 @@ mod tests {
     async fn message_interface_stronghold() {
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
         let snapshot_path = "message_interface.stronghold";
-        let secret_manager = format!("{{\"Stronghold\": {{\"snapshotPath\": \"{}\"}}}}", snapshot_path);
+        let secret_manager = format!("{{\"Stronghold\": {{\"snapshotPath\": \"{snapshot_path}\"}}}}");
 
         let client_options = r#"{
             "nodes":[
@@ -300,7 +301,7 @@ mod tests {
                 let id = account.index;
                 println!("Created account index: {id}")
             }
-            _ => panic!("unexpected response {:?}", response),
+            _ => panic!("unexpected response {response:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
@@ -334,7 +335,7 @@ mod tests {
             Response::HexAddress(hex) => {
                 assert_eq!(hex, hex_address);
             }
-            response_type => panic!("Unexpected response type: {:?}", response_type),
+            response_type => panic!("Unexpected response type: {response_type:?}"),
         }
 
         let response = message_interface::send_message(
@@ -351,7 +352,7 @@ mod tests {
             Response::Bech32Address(bech32) => {
                 assert_eq!(bech32, bech32_address);
             }
-            response_type => panic!("Unexpected response type: {:?}", response_type),
+            response_type => panic!("Unexpected response type: {response_type:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());

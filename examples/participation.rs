@@ -102,7 +102,7 @@ async fn main() -> Result<()> {
     let address = account.addresses().await?;
     let faucet_response =
         request_funds_from_faucet(&env::var("FAUCET_URL").unwrap(), &address[0].address().to_bech32()).await?;
-    println!("{}", faucet_response);
+    println!("{faucet_response}");
 
     account.sync(None).await?;
 

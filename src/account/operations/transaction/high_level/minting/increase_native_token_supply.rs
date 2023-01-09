@@ -66,7 +66,7 @@ impl AccountHandle {
         });
 
         let existing_foundry_output = existing_foundry_output
-            .ok_or_else(|| Error::MintingFailed(format!("foundry output {} is not available", token_id)))?
+            .ok_or_else(|| Error::MintingFailed(format!("foundry output {token_id} is not available")))?
             .clone();
 
         let existing_alias_output = if let Output::Foundry(foundry_output) = &existing_foundry_output.output {
@@ -74,8 +74,7 @@ impl AccountHandle {
             // Check if we can mint the provided amount without exceeding the maximum_supply
             if token_scheme.maximum_supply() - token_scheme.circulating_supply() < mint_amount {
                 return Err(Error::MintingFailed(format!(
-                    "minting additional {} tokens would exceed the maximum supply: {}",
-                    mint_amount,
+                    "minting additional {mint_amount} tokens would exceed the maximum supply: {}",
                     token_scheme.maximum_supply()
                 )));
             }

@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use iota_client::block::output::{unlock_condition::UnlockCondition, NativeTokensBuilder, Output, Rent};
+use iota_client::block::output::{unlock_condition::UnlockCondition, FoundryId, NativeTokensBuilder, Output, Rent};
 use primitive_types::U256;
 
 use crate::account::{
@@ -80,7 +80,7 @@ impl AccountHandle {
                         total_native_tokens.add_native_tokens(native_tokens.clone())?;
                     }
 
-                    foundries.push(output.id())
+                    foundries.push(output.id());
                 }
                 _ => {
                     // If there is only an [AddressUnlockCondition], then we can spend the output at any time without
@@ -270,8 +270,15 @@ impl AccountHandle {
                 }
             });
 
+            let metadata = account
+                .native_token_foundries
+                .get(&FoundryId::from(*native_token.token_id()))
+                .and_then(|foundry| foundry.immutable_features().metadata())
+                .cloned();
+
             native_tokens_balance.push(NativeTokensBalance {
                 token_id: *native_token.token_id(),
+                metadata,
                 total: native_token.amount(),
                 available: native_token.amount() - *locked_amount.unwrap_or(&U256::from(0u8)),
             })
@@ -280,7 +287,10 @@ impl AccountHandle {
         Ok(AccountBalance {
             base_coin: BaseCoinBalance {
                 total: total_amount,
+                #[cfg(not(feature = "participation"))]
                 available: total_amount - locked_amount,
+                #[cfg(feature = "participation")]
+                available: total_amount - locked_amount - self.get_voting_power().await?,
             },
             native_tokens: native_tokens_balance,
             required_storage_deposit,
@@ -314,6 +324,7 @@ pub(crate) fn add_balances(balances: Vec<AccountBalance>) -> crate::Result<Accou
             } else {
                 total_balance.native_tokens.push(NativeTokensBalance {
                     token_id: native_token_balance.token_id,
+                    metadata: native_token_balance.metadata.clone(),
                     total: native_token_balance.total,
                     available: native_token_balance.available,
                 })
