@@ -32,7 +32,7 @@ runs:
         # Start Tangle
         sudo ./cleanup.sh
         sudo ./bootstrap.sh
-        sudo ./run.sh -d
+        sudo ./run.sh -d --quiet-pull
       working-directory: hornet/private_tangle
 
     - name: Wait for tangle to start
