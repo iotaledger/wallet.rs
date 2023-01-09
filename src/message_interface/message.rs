@@ -9,6 +9,7 @@ use std::{
 #[cfg(feature = "participation")]
 use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
 use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
+use iota_client::node_api::participation::types::ParticipationEventType;
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
@@ -215,7 +216,7 @@ pub enum Message {
     },
     /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
     #[cfg(feature = "participation")]
-    GetParticipationEventIds(Vec<EventId>),
+    GetParticipationEventIds(Option<ParticipationEventType>),
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
     GetParticipationEventStatus {
