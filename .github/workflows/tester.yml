@@ -79,9 +79,11 @@ jobs:
 
     - name: Run wallet tester
       uses: actions-rs/cargo@v1
+      timeout-minutes: 15
       with:
         command: run
         args:  --manifest-path ./tester/Cargo.toml --all-features --release
 
     - name: Tear down private tangle
+      if: always()
       uses: './.github/actions/private-tangle/tear-down'
