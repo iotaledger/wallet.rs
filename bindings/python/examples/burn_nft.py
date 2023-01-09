@@ -1,5 +1,4 @@
 from iota_wallet import IotaWallet
-import time
 
 # In this example we will burn native tokens
 
