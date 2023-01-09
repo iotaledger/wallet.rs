@@ -1,0 +1,50 @@
+```json
+{
+  "payload":{
+    "type":6,
+    "essence":{
+      "type":1,
+      "networkId":"8342982141227064571",
+      "inputs":[
+        {
+          "type":0,
+          "transactionId":"0xf5e022f199d90f2020ab941de947368e9d02a4f05139fcb44f66feade216f150",
+          "transactionOutputIndex":0
+        }
+      ],
+      "inputsCommitment":"0xd64acb6fec68315c200484458fb0a2c1e9b7d06106aecdcb9c86403d955ad69a",
+      "outputs":[
+        {
+          "type":3,
+          "amount":"52000",
+          "unlockConditions":[
+            {
+              "type":0,
+              "address":{
+                "type":0,
+                "pubKeyHash":"0x4cfde0600797ae07d19d67d78910e70950bfdaf716f0035e9a30b97828aaf6a2"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "unlocks":[
+      {
+        "type":0,
+        "signature":{
+          "type":0,
+          "publicKey":"0xde3152ce9d67415b9c5a042ea01caccc3f73ff1c0c77036874cb8badf9798d56",
+          "signature":"0xd602074065070b6dada7ce8f5a3c0181a2662443e6e71d7599dcf1464ac04938bdb9b2a39e1f36152cd3226840ab8d63c77d4035a30407ab029b607a7ff4d108"
+        }
+      }
+    ]
+  },
+  "blockId":"0x6bc73ef16d51924154fecf4cc2da1b14297b1aa75ff5261800ab88411185d7c2",
+  "inclusionState":"Pending",
+  "timestamp":"1664876190299",
+  "transactionId":"0x9c26110d611ea78fc0542dca45834abb35497c5ec6045448713f5a588e7f4292",
+  "networkId":"8342982141227064571",
+  "incoming":false
+}
+```

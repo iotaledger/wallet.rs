@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `AccountManager::get_participation_event_ids` method;
+- `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
+
+### Changed
+
+- Updated dependencies;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
