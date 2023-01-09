@@ -119,15 +119,19 @@ impl RequiredStorageDeposit {
     pub fn new() -> RequiredStorageDeposit {
         RequiredStorageDeposit::default()
     }
+
     pub fn alias(&self) -> u64 {
         self.alias
     }
+
     pub fn basic(&self) -> u64 {
         self.basic
     }
+
     pub fn foundry(&self) -> u64 {
         self.foundry
     }
+
     pub fn nft(&self) -> u64 {
         self.nft
     }
