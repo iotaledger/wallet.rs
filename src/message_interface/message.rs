@@ -213,6 +213,9 @@ pub enum Message {
         #[serde(rename = "eventId")]
         event_id: EventId,
     },
+    /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
+    #[cfg(feature = "participation")]
+    GetParticipationEventIds(Vec<EventId>),
     /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
     #[cfg(feature = "participation")]
     GetParticipationEventStatus {

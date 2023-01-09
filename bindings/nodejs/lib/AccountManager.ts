@@ -6,20 +6,21 @@ import { Account } from './Account';
 
 import type {
     AccountId,
-    Auth,
-    EventType,
     AccountManagerOptions,
-    CreateAccountPayload,
-    NodeInfoWrapper,
-    ClientOptions,
     AccountSyncOptions,
-    WalletEvent,
-    LedgerNanoStatus,
+    Auth,
+    ClientOptions,
+    CreateAccountPayload,
     Event,
     EventId,
-    Node,
     EventStatus,
+    EventType,
     GenerateAddressOptions,
+    LedgerNanoStatus,
+    Node,
+    NodeInfoWrapper,
+    ParticipationEventType,
+    WalletEvent,
 } from '../types';
 
 /** The AccountManager class. */
@@ -221,6 +222,16 @@ export class AccountManager {
             cmd: 'getParticipationEvent',
             payload: {
                 eventId,
+            },
+        });
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEventIds(eventType?: ParticipationEventType): Promise<EventId[]> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'getParticipationEventIds',
+            payload: {
+                eventType,
             },
         });
         return JSON.parse(response).payload;
