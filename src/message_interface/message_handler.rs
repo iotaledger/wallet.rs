@@ -525,12 +525,7 @@ impl WalletMessageHandler {
                         .burn_native_token(
                             TokenId::try_from(&token_id)?,
                             U256::try_from(&burn_amount).map_err(|_| DtoError::InvalidField("burn_amount"))?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -542,12 +537,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .burn_nft(
                             NftId::try_from(&nft_id)?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -578,12 +568,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .create_alias_output(
                             alias_output_options,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -595,12 +580,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .destroy_alias(
                             AliasId::try_from(&alias_id)?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -612,12 +592,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .destroy_foundry(
                             foundry_id,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -710,12 +685,7 @@ impl WalletMessageHandler {
                         .decrease_native_token_supply(
                             TokenId::try_from(&token_id)?,
                             U256::try_from(&melt_amount).map_err(|_| DtoError::InvalidField("melt_amount"))?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -740,12 +710,7 @@ impl WalletMessageHandler {
                             TokenId::try_from(&token_id)?,
                             U256::try_from(&mint_amount).map_err(|_| DtoError::InvalidField("mint_amount"))?,
                             increase_native_token_supply_options,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::MintTokenTransaction(MintTokenTransactionDto::from(
@@ -762,12 +727,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .mint_native_token(
                             NativeTokenOptions::try_from(&native_token_options)?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::MintTokenTransaction(MintTokenTransactionDto::from(
@@ -797,12 +757,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(NftOptions::try_from)
                                 .collect::<Result<Vec<NftOptions>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -820,12 +775,10 @@ impl WalletMessageHandler {
                     let output = account_handle
                         .prepare_output(
                             OutputOptions::try_from(&options)?,
-                            match transaction_options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            transaction_options
+                                .as_ref()
+                                .map(TransactionOptions::try_from_dto)
+                                .transpose()?,
                         )
                         .await?;
                     Ok(Response::Output(OutputDto::from(&output)))
@@ -843,12 +796,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(AddressWithAmount::try_from)
                                 .collect::<Result<Vec<AddressWithAmount>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
@@ -864,12 +812,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(|o| Ok(Output::try_from_dto(o, token_supply)?))
                                 .collect::<Result<Vec<Output>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::PreparedTransaction(PreparedTransactionDataDto::from(&data)))
@@ -903,12 +846,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(AddressWithAmount::try_from)
                                 .collect::<Result<Vec<AddressWithAmount>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -926,12 +864,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(AddressWithMicroAmount::try_from)
                                 .collect::<Result<Vec<AddressWithMicroAmount>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -946,12 +879,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .send_native_tokens(
                             addresses_native_tokens.clone(),
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -966,12 +894,7 @@ impl WalletMessageHandler {
                     let transaction = account_handle
                         .send_nft(
                             addresses_nft_ids.clone(),
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
@@ -994,12 +917,7 @@ impl WalletMessageHandler {
                                 .iter()
                                 .map(|o| Ok(Output::try_from_dto(o, token_supply)?))
                                 .collect::<crate::Result<Vec<Output>>>()?,
-                            match options {
-                                Some(transaction_options) => {
-                                    Some(TransactionOptions::try_from_dto(&transaction_options)?)
-                                }
-                                None => None,
-                            },
+                            options.as_ref().map(TransactionOptions::try_from_dto).transpose()?,
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))

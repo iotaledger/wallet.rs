@@ -33,10 +33,11 @@ impl TransactionOptions {
     pub fn try_from_dto(value: &TransactionOptionsDto) -> Result<Self, DtoError> {
         Ok(TransactionOptions {
             remainder_value_strategy: value.remainder_value_strategy.clone(),
-            tagged_data_payload: match &value.tagged_data_payload {
-                Some(tagged_data_payload_dto) => Some(TaggedDataPayload::try_from(tagged_data_payload_dto)?),
-                None => None,
-            },
+            tagged_data_payload: value
+                .tagged_data_payload
+                .as_ref()
+                .map(TaggedDataPayload::try_from)
+                .transpose()?,
             custom_inputs: value.custom_inputs.clone(),
             mandatory_inputs: value.mandatory_inputs.clone(),
             allow_burning: value.allow_burning,
