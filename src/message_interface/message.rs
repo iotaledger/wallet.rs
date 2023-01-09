@@ -325,8 +325,8 @@ impl Debug for Message {
                 write!(f, "GetParticipationEvent({event_id:?})")
             }
             #[cfg(feature = "participation")]
-            Message::GetParticipationEventIds(event_ids) => {
-                write!(f, "GetParticipationEventIds({event_ids:?})")
+            Message::GetParticipationEventIds(event_type) => {
+                write!(f, "GetParticipationEventIds({event_type:?})")
             }
             #[cfg(feature = "participation")]
             Message::GetParticipationEventStatus { event_id } => {
