@@ -19,10 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 1.0.0-rc.5 - 2022-XX-XX
+## 1.0.0-rc.5 - YYYY-MM-DD
 
-### Added
+### Changed
 
+- Updated dependencies;
 - `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
 
 ## 1.0.0-rc.4 - 2022-12-23
