@@ -17,17 +17,11 @@ public class IotaWalletMobile: CAPPlugin {
         init(_call: CAPPluginCall) {
             self.call = _call
         }
-        deinit {
-            print("Context result object \(detail) deinit")
-        }
+        
         func resolve(data: String) {
             self.call.resolve(["result": data])
-//            self.call.keepAlive = false
         }
-        func listen(data: String) {
-            self.call.resolve(["result": data])
-//            self.call.keepAlive = false
-        }
+        
         let callback: Callback = { response, error, context  in
             guard let context = context,
             let response = response else { return }
@@ -51,10 +45,23 @@ public class IotaWalletMobile: CAPPlugin {
     @objc func messageHandlerNew(_ call: CAPPluginCall) {
         do {
             print("Capacitor call messageHandlerNew received", call.jsObjectRepresentation)
-            guard let storagePath = call.getString("storagePath") else {
-                return call.reject("storagePath are required")
+            guard let storagePath = call.getString("storagePath"),
+                  let clientOptions = call.getObject("clientOptions"),
+                  let coinType = call.getInt("coinType"),
+                  let secretManager = call.getObject("secretManager") else {
+                return call.reject("storagePath, clientOptions, coinType, and secretManager are required")
             }
+            guard JSONSerialization.isValidJSONObject(clientOptions),
+                  JSONSerialization.isValidJSONObject(secretManager) else {
+                return call.reject("clientOptions or secretManager is an invalid JSON object")
+            }
+            let ClientOptions = try? JSONSerialization.data(withJSONObject: clientOptions)
+            // TODO: replacing for urls slashes temporaly, make better using Codable structs with URL type?
+            let stringfiedClientOptions = String(data: ClientOptions!, encoding: .utf8)!.replacingOccurrences(of: "\\", with: "")
             
+            let SecretManager = try? JSONSerialization.data(withJSONObject: secretManager)
+            let stringfiedSecretManager = String(data: SecretManager!, encoding: .utf8)!
+            print(stringfiedSecretManager)
             // prepare the internal app directory path
             let fm = FileManager.default
             guard let documents = fm.urls(
@@ -86,13 +93,8 @@ public class IotaWalletMobile: CAPPlugin {
             let options = """
             {
                 "storagePath":"\(path)",
-                "clientOptions":{
-                    "nodes":[{
-                        "url":"https://api.testnet.shimmer.network",
-                        "auth":{"username":"","password":""},"disabled":false
-                    }]
-                },
-                "coinType":4219,
+                "clientOptions":\(String(describing: stringfiedClientOptions)),
+                "coinType":\(coinType),
                 "secretManager":{
                     "stronghold":{
                         "snapshotPath":"\(path)/wallet.stronghold"
@@ -126,7 +128,6 @@ public class IotaWalletMobile: CAPPlugin {
     }
 
     @objc func sendMessage(_ call: CAPPluginCall) {
-//        print("Capacitor call sendMessage received", call.jsObjectRepresentation)
         guard let handler = call.getInt("handler") else {
             return call.reject("handler is required")
         }
@@ -137,11 +138,6 @@ public class IotaWalletMobile: CAPPlugin {
                 .replacingOccurrences(of: "\\", with: "") else {
             return call.reject("message is required")
         }
-//        print(message)
-        
-        // Keep the call awaiting the result, later inside the callback
-        // the passed call will send the result and disable keep alive
-        call.keepAlive = true
         
         // the object to be passed as a context data on their callback
         let contextResult = ContextResult(_call: call)
@@ -161,31 +157,19 @@ public class IotaWalletMobile: CAPPlugin {
         guard let eventTypes = call.getArray("eventTypes") else {
             return call.reject("eventTypes is required")
         }
-        let eventChar = eventTypes.description.cString(using: .utf8)
 
-        call.keepAlive = true
-
-        let contextResult = ContextResult(_call: call)
-        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
-//        let callback: Callback = { response, error, context  in
-//            guard let context = context,
-//            let response = response else { return }
-//            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
-//            if let error = error {
-//                contextResult.detail = String(cString: error)
-//                contextResult.listen(data: contextResult.detail)
-//                return
-//            }
-//            print(type(of: response), response)
-//            contextResult.detail = String(cString: response)
-//            contextResult.listen(data: contextResult.detail)
-//        }
-        
-        let ret = iota_listen(
-            messageHandler, eventChar, contextResult.callback, context,
-            error_buffer, error_buffer_size
-        )
-        print("ret", ret)
+        for event in eventTypes {
+            let eventString = event as? String
+            let eventChar = eventString?.cString(using: .utf8)
+            let contextResult = ContextResult(_call: call)
+            let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+            let error_buffer: UnsafeMutablePointer<CChar>? = nil
+            let error_buffer_size = 0
+            iota_listen(
+                messageHandler, eventChar, contextResult.callback, context,
+                error_buffer, error_buffer_size
+            )
+        }
     }
 
     @objc func clearListeners(_ call: CAPPluginCall) {
@@ -200,14 +184,12 @@ public class IotaWalletMobile: CAPPlugin {
         }
         let eventChar = eventTypes.description.cString(using: .utf8)
         
-        call.keepAlive = true
-        
         let contextResult = ContextResult(_call: call)
         let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
         
-//        iota_clear_listeners(
-//            messageHandler, eventChar, contextResult.callback, context,
-//            error_buffer, error_buffer_size
-//        )
+        iota_clear_listeners(
+            messageHandler, eventChar, contextResult.callback, context,
+            error_buffer, error_buffer_size
+        )
     }
 }
