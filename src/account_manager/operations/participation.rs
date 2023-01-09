@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    node_api::participation::types::{Event, EventId, EventStatus},
+    node_api::participation::types::{Event, EventId, EventStatus, ParticipationEventType},
     node_manager::node::Node,
     Client,
 };
@@ -63,6 +63,27 @@ impl AccountManager {
             .into_iter()
             .map(|(event, _nodes)| event.clone())
             .collect())
+    }
+
+    /// Retrieves IDs of all events tracked by the client options node.
+    pub async fn get_participation_event_ids(
+        &self,
+        event_type: Option<ParticipationEventType>,
+    ) -> crate::Result<Vec<EventId>> {
+        let accounts = self.accounts.read().await;
+        let events = match accounts.first() {
+            Some(account) => account.client.events(event_type).await?,
+            None => {
+                self.client_options
+                    .read()
+                    .await
+                    .clone()
+                    .finish()?
+                    .events(event_type)
+                    .await?
+            }
+        };
+        Ok(events.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.
