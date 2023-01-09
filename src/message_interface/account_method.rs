@@ -34,7 +34,7 @@ use crate::{
                     },
                 },
                 prepare_output::OutputOptionsDto,
-                TransactionOptions,
+                TransactionOptionsDto,
             },
         },
     },
@@ -125,7 +125,7 @@ pub enum AccountMethod {
         /// To be burned amount
         #[serde(rename = "burnAmount")]
         burn_amount: U256Dto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Burn an nft output. Outputs controlled by it will be swept before if they don't have a storage
     /// deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
@@ -134,7 +134,7 @@ pub enum AccountMethod {
     BurnNft {
         #[serde(rename = "nftId")]
         nft_id: NftIdDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Consolidate outputs.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -148,7 +148,7 @@ pub enum AccountMethod {
     CreateAliasOutput {
         #[serde(rename = "aliasOutputOptions")]
         alias_output_options: Option<AliasOutputOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Destroy an alias output. Outputs controlled by it will be swept before if they don't have a
     /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
@@ -157,7 +157,7 @@ pub enum AccountMethod {
     DestroyAlias {
         #[serde(rename = "aliasId")]
         alias_id: AliasIdDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Function to destroy a foundry output with a circulating supply of 0.
     /// Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
@@ -165,7 +165,7 @@ pub enum AccountMethod {
     DestroyFoundry {
         #[serde(rename = "foundryId")]
         foundry_id: FoundryId,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Generate new unused addresses.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
@@ -242,7 +242,7 @@ pub enum AccountMethod {
         /// To be melted amount
         #[serde(rename = "meltAmount")]
         melt_amount: U256Dto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Calculate the minimum required storage deposit for an output.
     /// Expected response:
@@ -259,21 +259,21 @@ pub enum AccountMethod {
         mint_amount: U256Dto,
         #[serde(rename = "increaseNativeTokenSupplyOptions")]
         increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Mint native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
         #[serde(rename = "nativeTokenOptions")]
         native_token_options: NativeTokenOptionsDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Mint nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     MintNfts {
         #[serde(rename = "nftsOptions")]
         nfts_options: Vec<NftOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
@@ -282,20 +282,20 @@ pub enum AccountMethod {
     /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     PrepareOutput {
         options: OutputOptionsDto,
-        transaction_options: Option<TransactionOptions>,
+        transaction_options: Option<TransactionOptionsDto>,
     },
     /// Prepare transaction.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareTransaction {
         outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Prepare send amount.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareSendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
     /// included (referenced by a milestone). Returns the included block id.
@@ -322,28 +322,28 @@ pub enum AccountMethod {
     SendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send amount below minimum storage deposit.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendMicroTransaction {
         #[serde(rename = "addressesWithMicroAmount")]
         addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send native tokens.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNativeTokens {
         #[serde(rename = "addressesNativeTokens")]
         addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNft {
         #[serde(rename = "addressesAndNftIds")]
         addresses_nft_ids: Vec<AddressAndNftId>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Set the alias of the account.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -352,7 +352,7 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendOutputs {
         outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Sign a prepared transaction.
     /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
