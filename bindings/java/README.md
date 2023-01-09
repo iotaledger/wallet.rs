@@ -59,7 +59,7 @@ implementation 'org.iota:iota-wallet:1.0.0-rc.1:osx-x86_64'
 ## Use the Library
 
 In order to use the library, you need to create a `Wallet` instance.
-**Note**: Android applications must necessarily configure a suitable storage path for the wallet to avoid problems with file system permissions. You can specify a suitable storage path using the `withStoragePath()` as illustrated below:
+**Note**: Android applications must necessarily configure a suitable storage path for the wallet to avoid problems with file system permissions. Specify a suitable storage path as illustrated below:
 
 ```java
 // Copyright 2022 IOTA Stiftung
@@ -74,17 +74,23 @@ import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 public class CreateAccount {
+    
     private static final String DEFAULT_DEVELOPMENT_MNEMONIC = "hidden enroll proud copper decide negative orient asset speed work dolphin atom unhappy game cannon scheme glow kid ring core name still twist actor";
 
-    public static void main(String[] args) throws WalletException {
-        // Build the wallet.
+    public static void main(String[] args) throws WalletException, InitializeWalletException {
+        // Set a suitable storage path for the wallet to avoid problems with file system permissions.
+        // Android applications must necessarily configure this: make sure you replace the ´com.example.myapplication´ with your own app naming.
+        String storagePath = "/data/data/com.example.myapplication/";
+
+        // Set up and store the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
-                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, "example-wallet"))
+                .withSecretManager(new StrongholdSecretManager("PASSWORD_FOR_ENCRYPTION", null, storagePath + "stronghold/vault.stronghold"))
                 .withCoinType(CoinType.Shimmer)
-                // Set a suitable storage path for the wallet.
-                //.withStoragePath("/data/data/com.example.myapplication/")
+                .withStoragePath(storagePath)
         );
+        
+        // Store the mnemonic in the Stronghold vault.
         wallet.storeMnemonic(DEFAULT_DEVELOPMENT_MNEMONIC);
 
         // Create an account.

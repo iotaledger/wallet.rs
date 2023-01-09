@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import org.iota.Wallet;
+import org.iota.external.logger.LevelFilter;
+import org.iota.external.logger.LoggerOutputConfigBuilder;
 import org.iota.types.ClientConfig;
 import org.iota.types.CoinType;
 import org.iota.types.WalletConfig;
@@ -9,10 +11,13 @@ import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
-public class Backup {
-    public static void main(String[] args) throws WalletException, InitializeWalletException {
-        // This example assumes that a wallet has already been created using the ´SetupWallet.java´ example.
-        // If you haven't run the ´SetupWallet.java´ example yet, you must run it first to be able to load the wallet as shown below:
+public class SetupWallet {
+
+    public static void main(String[] args) throws WalletException, InterruptedException, InitializeWalletException {
+        // Initialise the logger for all debug output on Rusts' side.
+        Wallet.initLogger(new LoggerOutputConfigBuilder().setLevelFilter(LevelFilter.Debug).setColorEnabled(true));
+
+        // Set up and store the wallet.
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))
                 .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
@@ -20,10 +25,7 @@ public class Backup {
                 .withStoragePath(Env.STORAGE_PATH)
         );
 
-        // Backup the wallet.
-        wallet.backup("./backup-example-wallet", "PASSWORD_FOR_ENCRYPTION");
-
-        // In case you are done and don't need the wallet instance anymore you can destroy the instance to clean up memory.
-        // For this, check out the ´DestroyWallet.java´ example.
+        // Store the mnemonic in the Stronghold vault.
+        wallet.storeMnemonic(Env.MNEMONIC);
     }
 }

@@ -6,36 +6,30 @@ import java.io.IOException;
 import org.iota.Wallet;
 import org.iota.api.CustomGson;
 import org.iota.types.*;
-import org.iota.types.ClientConfig.ApiTimeout;
 import org.iota.types.events.Event;
 import org.iota.types.events.EventListener;
 import org.iota.types.events.transaction.PreparedTransaction;
 import org.iota.types.events.transaction.SelectingInputs;
 import org.iota.types.events.transaction.TransactionProgressEvent;
-import org.iota.types.events.wallet.ConsolidationRequired;
 import org.iota.types.events.wallet.WalletEvent;
 import org.iota.types.exceptions.InitializeWalletException;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 public class CallbackEvents {
 
-    public static void main(String[] args)
-            throws WalletException, InterruptedException, IOException, InitializeWalletException {
-        // This example assumes that a wallet has already been created using the
-        // ´CreateWallet.java´ example.
-        // If you have not run the ´CreateAccount.java´ example yet, run it first to
-        // ensure that the wallet can be loaded correctly.
+    public static void main(String[] args) throws WalletException, InterruptedException, IOException, InitializeWalletException {
+        // This example assumes that a wallet has already been created using the ´SetupWallet.java´ example.
+        // If you haven't run the ´SetupWallet.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
-                .withClientOptions(
-                        new ClientConfig().withApiTimeout(new ApiTimeout().withSecs(60)).withNodes(Env.NODE))
-                .withSecretManager(
-                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
-                .withCoinType(CoinType.Shimmer));
+                .withClientOptions(new ClientConfig().withNodes(Env.NODE))
+                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
+                .withCoinType(CoinType.Shimmer)
+                .withStoragePath(Env.STORAGE_PATH)
+        );
 
         // Listen to all events.
         wallet.listen(new EventListener() {
@@ -72,5 +66,8 @@ public class CallbackEvents {
 
         // The second event is not received by our listener anymore because the listener has been removed from the wallet.
         wallet.emitTestEvent(event);
+
+        // In case you are done and don't need the wallet instance anymore you can destroy the instance to clean up memory.
+        // For this, check out the ´DestroyWallet.java´ example.
     }
 }
