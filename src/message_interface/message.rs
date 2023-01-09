@@ -8,8 +8,10 @@ use std::{
 
 #[cfg(feature = "participation")]
 use iota_client::{node_api::participation::types::EventId, node_manager::node::Node};
-use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
-use iota_client::node_api::participation::types::ParticipationEventType;
+use iota_client::{
+    node_api::participation::types::ParticipationEventType, node_manager::node::NodeAuth,
+    secret::GenerateAddressOptions,
+};
 use serde::{Deserialize, Serialize};
 
 use super::account_method::AccountMethod;
