@@ -1,6 +1,6 @@
 from iota_wallet import IotaWallet
 
-# In this example we will burn native tokens
+# In this example we will burn an NFT
 
 wallet = IotaWallet('./alice-database')
 
