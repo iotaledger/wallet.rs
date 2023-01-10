@@ -1,5 +1,12 @@
 # Changelog
 
+## \[2.0.3-rc.13]
+
+- Add method to retrieve IDs of all participation events being tracked by a node.
+  - [ec38acfd](https://github.com/iotaledger/wallet.rs/commit/ec38acfdbbcfad2ddc2b3147930178e4d75e8b52) feat: query all node's events ([#1681](https://github.com/iotaledger/wallet.rs/pull/1681)) on 2023-01-09
+- Fix tagged data payload type.
+  - [5587a0bf](https://github.com/iotaledger/wallet.rs/commit/5587a0bf4b9a037b3526d5d87335f5a7e0df04d3) Add and use TransactionOptionsDto ([#1715](https://github.com/iotaledger/wallet.rs/pull/1715)) on 2023-01-09
+
 ## \[2.0.3-rc.12]
 
 - Expose extra participation type and add answers field to TrackedParticipationOverview
