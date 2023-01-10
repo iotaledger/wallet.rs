@@ -19,7 +19,7 @@ use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
     crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{Event, EventStatus},
+    iota_client::node_api::participation::types::{Event, EventId, EventStatus},
 };
 
 use crate::{
@@ -143,6 +143,10 @@ pub enum Response {
     #[cfg(feature = "participation")]
     ParticipationEvent(Option<Event>),
     /// Response for
+    /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
+    #[cfg(feature = "participation")]
+    ParticipationEventIds(Vec<EventId>),
+    /// Response for
     /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
     #[cfg(feature = "participation")]
     ParticipationEventStatus(EventStatus),
@@ -237,6 +241,8 @@ impl Debug for Response {
             Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({event:?})"),
             #[cfg(feature = "participation")]
             Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({events:?})"),
+            #[cfg(feature = "participation")]
+            Response::ParticipationEventIds(event_ids) => write!(f, "ParticipationEventIds({event_ids:?})"),
             #[cfg(feature = "participation")]
             Response::VotingPower(amount) => write!(f, "VotingPower({amount:?})"),
             #[cfg(feature = "participation")]
