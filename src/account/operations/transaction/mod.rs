@@ -22,7 +22,7 @@ use iota_client::{
     secret::types::InputSigningData,
 };
 
-pub use self::options::{RemainderValueStrategy, TransactionOptions};
+pub use self::options::{RemainderValueStrategy, TransactionOptions, TransactionOptionsDto};
 use crate::{
     account::{
         handle::AccountHandle,
