@@ -8,40 +8,43 @@ import Wallet
 @objc(IotaWalletMobile)
 public class IotaWalletMobile: CAPPlugin {
     
-    // Handle the cross-lang pointers with a context object and Unmanaged
+    // Handles the Swift / C pointers with a context object using Unmanaged types
     class ContextResult {
-        // the call is used to send back the context response
-        var call: CAPPluginCall
+        // the `call` will send the context response back to Javascript
+        var call: CAPPluginCall?
+        
         init(_call: CAPPluginCall) {
             self.call = _call
         }
         
-        func resolve(data: String) {
-            self.call.resolve(["result": data])
+        func resolve(type: String, data: String) {
+            self.call?.resolve([type: data])
         }
-        
+        // the needed `callback` to call C header functions
         let callback: Callback = { response, error, context  in
             guard let context = context,
                   let response = response else { return }
+            // Convert back into `ContextResult` Swift object type
             let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
             if let error = error {
-                contextResult.resolve(data: String(cString: error))
+                contextResult.resolve(type: "error", data: String(cString: error))
                 return
             }
-            contextResult.resolve(data: String(cString: response))
+            contextResult.resolve(type: "result", data: String(cString: response))
         }
         
         let callbackListen: Callback = { response, error, context  in
             guard let context = context,
                   let response = response else { return }
-            // retain of the object for future messages. TODO: verify it's released later
+            // retain of the object awaiting for the next message.
+            // TODO: verify it's released later
             let contextResult = Unmanaged<ContextResult>.fromOpaque(context).retain().takeRetainedValue()
             
             if let error = error {
-                contextResult.resolve(data: String(cString: error))
+                contextResult.resolve(type: "error", data: String(cString: error))
                 return
             }
-            contextResult.resolve(data: String(cString: response))
+            contextResult.resolve(type: "result", data: String(cString: response))
         }
     }
 
