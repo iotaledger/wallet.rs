@@ -8,10 +8,8 @@ import Wallet
 @objc(IotaWalletMobile)
 public class IotaWalletMobile: CAPPlugin {
     
-    // Handle the cross-lang pointers with a context object
+    // Handle the cross-lang pointers with a context object and Unmanaged
     class ContextResult {
-        // details will hold the result string value from C++
-        var detail = ""
         // the call is used to send back the context response
         var call: CAPPluginCall
         init(_call: CAPPluginCall) {
@@ -24,20 +22,29 @@ public class IotaWalletMobile: CAPPlugin {
         
         let callback: Callback = { response, error, context  in
             guard let context = context,
-            let response = response else { return }
+                  let response = response else { return }
             let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
             if let error = error {
-                contextResult.detail = String(cString: error)
-                contextResult.resolve(data: contextResult.detail)
+                contextResult.resolve(data: String(cString: error))
                 return
             }
-            print(type(of: response), response)
-            contextResult.detail = String(cString: response)
-            contextResult.resolve(data: contextResult.detail)
-            return
+            contextResult.resolve(data: String(cString: response))
+        }
+        
+        let callbackListen: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            // retain of the object for future messages. TODO: verify it's released later
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).retain().takeRetainedValue()
+            
+            if let error = error {
+                contextResult.resolve(data: String(cString: error))
+                return
+            }
+            contextResult.resolve(data: String(cString: response))
         }
     }
-    
+
     // TODO: we really need pass this params from swift?
     private let error_buffer: UnsafeMutablePointer<CChar>? = nil
     private let error_buffer_size = 0
@@ -157,19 +164,21 @@ public class IotaWalletMobile: CAPPlugin {
         guard let eventTypes = call.getArray("eventTypes") else {
             return call.reject("eventTypes is required")
         }
-
-        for event in eventTypes {
-            let eventString = event as? String
-            let eventChar = eventString?.cString(using: .utf8)
-            let contextResult = ContextResult(_call: call)
-            let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
-            let error_buffer: UnsafeMutablePointer<CChar>? = nil
-            let error_buffer_size = 0
-            iota_listen(
-                messageHandler, eventChar, contextResult.callback, context,
-                error_buffer, error_buffer_size
-            )
-        }
+        
+        let contextResult = ContextResult(_call: call)
+        let context = Unmanaged<ContextResult>.passRetained(contextResult).toOpaque()
+        
+        let error_buffer: UnsafeMutablePointer<CChar>? = nil
+        let error_buffer_size = 0
+        
+        iota_listen(
+            messageHandler, eventTypes.description,
+            contextResult.callbackListen, context,
+            error_buffer, error_buffer_size
+        )
+        
+        call.keepAlive = true
+        call.resolve()
     }
 
     @objc func clearListeners(_ call: CAPPluginCall) {
