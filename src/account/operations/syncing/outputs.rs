@@ -17,7 +17,9 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
+use crate::account::{
+    build_transaction_from_payload_and_inputs, handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs,
+};
 
 impl AccountHandle {
     /// Convert OutputWithMetadataResponse to OutputData with the network_id added
@@ -137,10 +139,16 @@ impl AccountHandle {
                     tokio::spawn(async move {
                         match client.get_included_block(&transaction_id).await {
                             Ok(block) => {
-                                if let Some(Payload::Transaction(transaction_payload)) = block.payload().as_ref() {
-                                    let inputs =
-                                        get_inputs_for_transaction_payload(&client, transaction_payload).await?;
-                                    Ok(Some((transaction_id, (*transaction_payload.clone(), inputs))))
+                                if let Some(Payload::Transaction(transaction_payload)) = block.payload() {
+                                    let inputs = get_inputs_for_transaction_payload(&client, transaction_payload).await?;
+    
+                                    let transaction = build_transaction_from_payload_and_inputs(
+                                        transaction_id,
+                                        *transaction_payload.clone(),
+                                        inputs,
+                                    )?;
+    
+                                    Ok(Some((transaction_id, transaction)))
                                 } else {
                                     Ok(None)
                                 }

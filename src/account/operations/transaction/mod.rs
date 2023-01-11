@@ -14,8 +14,9 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
+    api_types::response::{OutputMetadataResponse, OutputWithMetadataResponse},
     block::{
-        output::Output,
+        output::{dto::OutputDto, Output},
         payload::transaction::{TransactionId, TransactionPayload},
         semantic::ConflictReason,
     },
@@ -148,6 +149,16 @@ impl AccountHandle {
 
         // store transaction payload to account (with db feature also store the account to the db)
         let network_id = self.client.get_network_id().await?;
+
+        let inputs = signed_transaction_data
+            .inputs_data
+            .into_iter()
+            .map(|input| OutputWithMetadataResponse {
+                metadata: OutputMetadataResponse::from(&input.output_metadata),
+                output: OutputDto::from(&input.output),
+            })
+            .collect();
+
         let transaction = Transaction {
             transaction_id: signed_transaction_data.transaction_payload.id(),
             payload: signed_transaction_data.transaction_payload,
@@ -160,6 +171,7 @@ impl AccountHandle {
             inclusion_state: InclusionState::Pending,
             incoming: false,
             note: None,
+            inputs,
         };
 
         let mut account = self.write().await;

@@ -15,6 +15,7 @@ use crate::account::{
 use crate::{
     account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
+    iota_client::api_types::response::OutputWithMetadataResponse,
     iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
 
@@ -147,10 +148,17 @@ impl AccountHandle {
                         account_index,
                         WalletEvent::NewOutput(Box::new(NewOutputEvent {
                             output: OutputDataDto::from(&output_data),
-                            transaction: transaction
+                            transaction: transaction.as_ref().map(|tx| TransactionPayloadDto::from(&tx.payload)),
+                            transaction_inputs: transaction
                                 .as_ref()
-                                .map(|(tx, _inputs)| TransactionPayloadDto::from(tx)),
-                            transaction_inputs: transaction.as_ref().map(|(_tx, inputs)| inputs).cloned(),
+                                .map(|tx| {
+                                    tx.inputs
+                                        .clone()
+                                        .into_iter()
+                                        .map(OutputWithMetadataResponse::from)
+                                        .collect()
+                                })
+                                .clone(),
                         })),
                     );
                 }

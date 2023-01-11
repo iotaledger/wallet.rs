@@ -11,7 +11,7 @@ use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::OutputMetadataResponse,
+    api_types::response::{OutputMetadataResponse, OutputWithMetadataResponse},
     block::{
         address::{dto::AddressDto, Address},
         output::{dto::OutputDto, Output, OutputId},
@@ -156,6 +156,11 @@ pub struct Transaction {
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
     pub note: Option<String>,
+    /// Outputs that are used as input in the transaction. May not be all, because some may have already been deleted
+    /// from the node.
+    // serde(default) is needed so it doesn't break with old dbs
+    #[serde(default)]
+    pub inputs: Vec<OutputWithMetadataResponse>,
 }
 
 /// Dto for a transaction with metadata
@@ -179,6 +184,7 @@ pub struct TransactionDto {
     /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
     pub note: Option<String>,
+    pub inputs: Vec<OutputWithMetadataResponse>,
 }
 
 impl From<&Transaction> for TransactionDto {
@@ -192,6 +198,7 @@ impl From<&Transaction> for TransactionDto {
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
             note: value.note.clone(),
+            inputs: value.inputs.clone(),
         }
     }
 }

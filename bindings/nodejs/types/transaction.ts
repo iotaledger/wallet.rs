@@ -1,4 +1,4 @@
-import type { ITransactionPayload } from '@iota/types';
+import type { IOutputResponse, ITransactionPayload } from '@iota/types';
 
 /** Possible InclusionStates of transactions sent with the wallet */
 export enum InclusionState {
@@ -28,7 +28,9 @@ export interface Transaction {
     networkId: string;
     /** If the transaction was created by the wallet or someone else */
     incoming: boolean;
+    /** Note that can be set when sending a transaction and is only stored locally */
     note?: string;
+    inputs: IOutputResponse[];
 }
 
 /** The result of a minting operation */

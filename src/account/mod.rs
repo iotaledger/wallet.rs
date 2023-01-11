@@ -14,21 +14,29 @@ pub mod types;
 /// Methods to update the account state.
 pub(crate) mod update;
 
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use getset::{Getters, Setters};
 use iota_client::{
     api_types::response::OutputWithMetadataResponse,
     block::{
         output::{FoundryId, FoundryOutput, OutputId},
-        payload::{transaction::TransactionId, TransactionPayload},
+        payload::{
+            transaction::{TransactionEssence, TransactionId},
+            TransactionPayload,
+        },
+        BlockId,
     },
 };
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize};
 
 use self::types::{
     address::{AccountAddress, AddressWithUnspentOutputs},
-    AccountBalance, OutputData,
+    AccountBalance, OutputData, Transaction,
 };
 pub use self::{
     handle::AccountHandle,
@@ -43,6 +51,7 @@ pub use self::{
     },
     types::OutputDataDto,
 };
+use crate::account::types::InclusionState;
 
 /// An Account.
 #[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
@@ -88,8 +97,65 @@ pub struct Account {
     /// Transaction payloads for received outputs with inputs when not pruned before syncing, can be used to determine
     /// the sender address/es
     #[serde(rename = "incomingTransactions")]
-    incoming_transactions: HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>,
+    #[serde(deserialize_with = "deserialize_or_convert")]
+    incoming_transactions: HashMap<TransactionId, Transaction>,
     /// Foundries for native tokens in outputs
     #[serde(rename = "nativeTokenFoundries", default)]
     native_token_foundries: HashMap<FoundryId, FoundryOutput>,
+}
+
+// Custom deserialization to stay backwards compatible
+fn deserialize_or_convert<'de, D>(deserializer: D) -> Result<HashMap<TransactionId, Transaction>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum OldOrNew {
+        Old(HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>),
+        New(HashMap<TransactionId, Transaction>),
+    }
+
+    Ok(match OldOrNew::deserialize(deserializer)? {
+        OldOrNew::Old(v) => {
+            let mut new = HashMap::new();
+            for (tx_id, (tx_payload, inputs)) in v {
+                new.insert(
+                    tx_id,
+                    build_transaction_from_payload_and_inputs(tx_id, tx_payload, inputs).map_err(de::Error::custom)?,
+                );
+            }
+            new
+        }
+        OldOrNew::New(v) => v,
+    })
+}
+
+pub(crate) fn build_transaction_from_payload_and_inputs(
+    tx_id: TransactionId,
+    tx_payload: TransactionPayload,
+    inputs: Vec<OutputWithMetadataResponse>,
+) -> crate::Result<Transaction> {
+    let TransactionEssence::Regular(tx_essence) = &tx_payload.essence();
+    Ok(Transaction {
+        payload: tx_payload.clone(),
+        block_id: inputs
+            .first()
+            .and_then(|i| BlockId::from_str(&i.metadata.block_id).ok()),
+        inclusion_state: InclusionState::Confirmed,
+        timestamp: inputs
+            .first()
+            .and_then(|i| i.metadata.milestone_timestamp_spent.map(|t| t as u128 * 1000))
+            .unwrap_or_else(|| {
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("time went backwards")
+                    .as_millis()
+            }),
+        transaction_id: tx_id,
+        network_id: tx_essence.network_id(),
+        incoming: true,
+        note: None,
+        inputs,
+    })
 }
