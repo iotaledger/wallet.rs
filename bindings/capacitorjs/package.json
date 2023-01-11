@@ -5,6 +5,7 @@
   "homepage": "https://github.com/iotaledger/wallet.rs#readme",
   "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "files": [
     "android/src/main/",
     "android/build.gradle",
@@ -12,12 +13,11 @@
     "ios/Plugin/",
     "IotaWalletMobile.podspec"
   ],
-  "types": "dist/esm/index.d.ts",
   "scripts": {
     "verify": "npm run verify:ios && npm run verify:android && npm run verify:web",
     "verify:ios": "cd ios && pod install && xcodebuild -workspace Plugin.xcworkspace -scheme Plugin && cd ..",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
-    "build": "npm run clean && tsc && rollup -c rollup.config.js",
+    "build": "npm run clean && tsc && npx rollup -c rollup.config.js",
     "clean": "rm -rf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build"
