@@ -33,6 +33,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import static org.iota.api.NativeApi.callBaseApi;
+import static org.iota.api.NativeApi.callListen;
 
 
 @CapacitorPlugin(name = "IotaWalletMobile")
@@ -49,11 +50,11 @@ public class IotaWalletMobile extends Plugin {
                 || !call.getData().has("secretManager")) {
             call.reject("clientOptions, storagePath, coinType and secretManager are required");
         }
-        JSObject clientOptions = call.getObject("clientOptions");
-        String storagePath = call.getString("storagePath");
-        Integer coinType = call.getInt("coinType");
-        JSObject secretManager = call.getObject("secretManager");
-        String path = getContext().getFilesDir() + storagePath;
+        JSObject _clientOptions = call.getObject("clientOptions");
+        String _storagePath = call.getString("storagePath");
+        Integer _coinType = call.getInt("coinType");
+        JSObject _secretManager = call.getObject("secretManager");
+        String path = getContext().getFilesDir() + _storagePath;
 
         try {
             wallet = new Wallet(new WalletConfig()
@@ -113,36 +114,25 @@ public class IotaWalletMobile extends Plugin {
         }
     }
 
-    @PluginMethod()
+    @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
     public void listen(final PluginCall call) throws WalletException, JSONException {
         if (!call.getData().has("eventTypes")) {
             call.reject("eventTypes and event are required");
         }
         JSArray eventTypes = call.getArray("eventTypes");
-            try {
-                wallet.listen(new EventListener() {
-                    @Override
-                    public void receive(Event event) {
-                        JSObject walletResponse = new JSObject();
-                        System.out.println(
-                                System.lineSeparator() + "Event receive: " + event.getEvent().getClass().getSimpleName());
-                        if (event.getEvent() instanceof TransactionProgressEvent) {
-                            TransactionProgressEvent progress = (TransactionProgressEvent) event.getEvent();
-                            System.out.println(progress.toString());
-                            walletResponse.put("result", progress.toString());
-                            call.resolve(walletResponse);
-                        } else {
-                            System.out.println(event.getEvent().toString());
-                            walletResponse.put("result", event.getEvent().toString());
-                            call.resolve(walletResponse);
-                        }
-                    }
-                });
-            } catch (WalletException e) {
-                e.printStackTrace();
-            }
+        try {
+            wallet.listen(new EventListener() {
+                @Override
+                public void receive(Event event) {
+                    JSObject walletResponse = new JSObject();
+                    walletResponse.put("result", event.getEvent().toString());
+                    call.resolve(walletResponse);
+                }
+            }, WalletEventType.valueOf(eventTypes.getString(0)));
+        } catch (WalletException e) {
+            e.printStackTrace();
+        }
         call.setKeepAlive(true);
-        call.resolve();
     }
 
 
@@ -150,6 +140,16 @@ public class IotaWalletMobile extends Plugin {
     public void destroy(final PluginCall call) {
         try {
             wallet.destroy();
+            call.release(bridge);
+        } catch (Exception ex) {
+            call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
+        }
+    }
+
+    @PluginMethod()
+    public void clearListeners(final PluginCall call) {
+        try {
+            wallet.clearListeners();
             call.release(bridge);
         } catch (Exception ex) {
             call.reject(ex.getMessage() + Arrays.toString(ex.getStackTrace()));
