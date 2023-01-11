@@ -1,14 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type {
-  EventType,
-  __Message__,
-  __AccountMethod__,
-  AccountManagerOptions,
-} from './types'
-
-
+import type { EventType, AccountManagerOptions } from './types';
 export interface IotaWalletMobileTypes {
     initLogger(path: string): Promise<void>;
     messageHandlerNew(messageOptions: AccountManagerOptions): Promise<{
@@ -28,7 +21,7 @@ export interface IotaWalletMobileTypes {
             cause: unknown;
         };
         result: string;
-    }) => void): Promise<string>;
+    }) => void): Promise<void>;
     clearListeners(options: {
         eventTypes: EventType[];
         messageHandler: number;
@@ -37,7 +30,7 @@ export interface IotaWalletMobileTypes {
             cause: unknown;
         };
         result: string;
-    }) => void): Promise<string>;
+    }) => void): Promise<void>;
     destroy(options: {
         messageHandler: number;
     }): Promise<void>;
