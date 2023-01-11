@@ -45,7 +45,7 @@ pub use self::{
         output_claiming::OutputsToClaim,
         syncing::SyncOptions,
         transaction::{
-            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
+            prepare_output::{Assets, Features, OutputOptions, StorageDeposit},
             RemainderValueStrategy, TransactionOptions,
         },
     },
@@ -104,6 +104,105 @@ pub struct Account {
     native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }
 
+#[test]
+fn serialize() {
+    use iota_client::block::{
+        address::{Address, Ed25519Address},
+        input::{Input, UtxoInput},
+        output::{unlock_condition::AddressUnlockCondition, BasicOutput, InputsCommitment, Output},
+        payload::{
+            transaction::{RegularTransactionEssence, TransactionEssence, TransactionId},
+            TransactionPayload,
+        },
+        protocol::ProtocolParameters,
+        signature::{Ed25519Signature, Signature},
+        unlock::{ReferenceUnlock, SignatureUnlock, Unlock, Unlocks},
+    };
+
+    const TRANSACTION_ID: &str = "0x24a1f46bdb6b2bf38f1c59f73cdd4ae5b418804bb231d76d06fbf246498d5883";
+    const ED25519_ADDRESS: &str = "0xe594f9a895c0e0a6760dd12cffc2c3d1e1cbf7269b328091f96ce3d0dd550b75";
+    const ED25519_PUBLIC_KEY: &str = "0x1da5ddd11ba3f961acab68fafee3177d039875eaa94ac5fdbff8b53f0c50bfb9";
+    const ED25519_SIGNATURE: &str = "0xc6a40edf9a089f42c18f4ebccb35fe4b578d93b879e99b87f63573324a710d3456b03fb6d1fcc027e6401cbd9581f790ee3ed7a3f68e9c225fcb9f1cd7b7110d";
+
+    let protocol_parameters = ProtocolParameters::new(
+        2,
+        String::from("testnet"),
+        String::from("rms"),
+        1500,
+        15,
+        iota_client::block::output::RentStructure::new(500, 10, 1),
+        1_813_620_509_061_365,
+    )
+    .unwrap();
+
+    let transaction_id = TransactionId::new(prefix_hex::decode(TRANSACTION_ID).unwrap());
+    let input1 = Input::Utxo(UtxoInput::new(transaction_id, 0).unwrap());
+    let input2 = Input::Utxo(UtxoInput::new(transaction_id, 1).unwrap());
+    let bytes: [u8; 32] = prefix_hex::decode(ED25519_ADDRESS).unwrap();
+    let address = Address::from(Ed25519Address::new(bytes));
+    let amount = 1_000_000;
+    let output = Output::Basic(
+        BasicOutput::build_with_amount(amount)
+            .unwrap()
+            .add_unlock_condition(AddressUnlockCondition::new(address).into())
+            .finish(protocol_parameters.token_supply())
+            .unwrap(),
+    );
+    let essence = TransactionEssence::Regular(
+        RegularTransactionEssence::builder(protocol_parameters.network_id(), InputsCommitment::from([0u8; 32]))
+            .with_inputs(vec![input1, input2])
+            .add_output(output)
+            .finish(&protocol_parameters)
+            .unwrap(),
+    );
+
+    let pub_key_bytes: [u8; 32] = prefix_hex::decode(ED25519_PUBLIC_KEY).unwrap();
+    let sig_bytes: [u8; 64] = prefix_hex::decode(ED25519_SIGNATURE).unwrap();
+    let signature = Ed25519Signature::new(pub_key_bytes, sig_bytes);
+    let sig_unlock = Unlock::Signature(SignatureUnlock::from(Signature::Ed25519(signature)));
+    let ref_unlock = Unlock::Reference(ReferenceUnlock::new(0).unwrap());
+    let unlocks = Unlocks::new(vec![sig_unlock, ref_unlock]).unwrap();
+
+    let tx_payload = TransactionPayload::new(essence, unlocks).unwrap();
+
+    let incoming_transaction = Transaction {
+        transaction_id: TransactionId::from_str("0x131fc4cb8f315ae36ae3bf6a4e4b3486d5f17581288f1217410da3e0700d195a")
+            .unwrap(),
+        payload: tx_payload,
+        block_id: None,
+        network_id: 0,
+        timestamp: 0,
+        inclusion_state: InclusionState::Pending,
+        incoming: false,
+        note: None,
+        inputs: Vec::new(),
+    };
+
+    let mut incoming_transactions = HashMap::new();
+    incoming_transactions.insert(
+        TransactionId::from_str("0x131fc4cb8f315ae36ae3bf6a4e4b3486d5f17581288f1217410da3e0700d195a").unwrap(),
+        incoming_transaction,
+    );
+
+    let account = Account {
+        index: 0,
+        coin_type: 4218,
+        alias: "0".to_string(),
+        public_addresses: Vec::new(),
+        internal_addresses: Vec::new(),
+        addresses_with_unspent_outputs: Vec::new(),
+        outputs: HashMap::new(),
+        locked_outputs: HashSet::new(),
+        unspent_outputs: HashMap::new(),
+        transactions: HashMap::new(),
+        pending_transactions: HashSet::new(),
+        incoming_transactions,
+        native_token_foundries: HashMap::new(),
+    };
+
+    serde_json::from_str::<Account>(&serde_json::to_string(&account).unwrap()).unwrap();
+}
+
 // Custom deserialization to stay backwards compatible
 fn deserialize_or_convert<'de, D>(deserializer: D) -> Result<HashMap<TransactionId, Transaction>, D::Error>
 where
@@ -112,11 +211,16 @@ where
     #[derive(Deserialize)]
     #[serde(untagged)]
     enum OldOrNew {
-        Old(HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>),
         New(HashMap<TransactionId, Transaction>),
+        Old(HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>),
     }
 
+    // This works
+    // type TestType = HashMap<TransactionId, Transaction>;
+    // return Ok(TestType::deserialize(deserializer)?);
+
     Ok(match OldOrNew::deserialize(deserializer)? {
+        OldOrNew::New(v) => v,
         OldOrNew::Old(v) => {
             let mut new = HashMap::new();
             for (tx_id, (tx_payload, inputs)) in v {
@@ -127,7 +231,6 @@ where
             }
             new
         }
-        OldOrNew::New(v) => v,
     })
 }
 
