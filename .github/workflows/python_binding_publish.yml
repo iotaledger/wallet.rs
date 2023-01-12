@@ -1,6 +1,7 @@
 name: Build python binding wheels
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - production
