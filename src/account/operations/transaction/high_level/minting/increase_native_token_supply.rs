@@ -57,7 +57,7 @@ impl AccountHandle {
 
         let account = self.read().await;
         let token_supply = self.client.get_token_supply().await?;
-        let existing_foundry_output = account.unspent_outputs().values().into_iter().find(|output_data| {
+        let existing_foundry_output = account.unspent_outputs().values().find(|output_data| {
             if let Output::Foundry(output) = &output_data.output {
                 TokenId::new(*output.id()) == token_id
             } else {
@@ -80,7 +80,7 @@ impl AccountHandle {
             }
 
             // Get the alias output that controls the foundry output
-            let existing_alias_output = account.unspent_outputs().values().into_iter().find(|output_data| {
+            let existing_alias_output = account.unspent_outputs().values().find(|output_data| {
                 if let Output::Alias(output) = &output_data.output {
                     output.alias_id_non_null(&output_data.output_id) == **foundry_output.alias_address()
                 } else {
