@@ -166,7 +166,10 @@ impl AccountHandle {
     }
 
     /// Retrieves the latest status of a given participation event.
-    pub(crate) async fn get_participation_event_status(&self, id: &ParticipationEventId) -> crate::Result<ParticipationEventStatus> {
+    pub(crate) async fn get_participation_event_status(
+        &self,
+        id: &ParticipationEventId,
+    ) -> crate::Result<ParticipationEventStatus> {
         Ok(self.get_client_for_event(id).await?.event_status(id, None).await?)
     }
 }
