@@ -19,7 +19,7 @@ use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
     crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{Event, EventId, EventStatus},
+    iota_client::node_api::participation::types::{Event, ParticipationEventId, EventStatus},
 };
 
 use crate::{
@@ -145,7 +145,7 @@ pub enum Response {
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]
-    ParticipationEventIds(Vec<EventId>),
+    ParticipationEventIds(Vec<ParticipationEventId>),
     /// Response for
     /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
     #[cfg(feature = "participation")]

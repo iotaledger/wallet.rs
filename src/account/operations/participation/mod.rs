@@ -17,7 +17,7 @@ use iota_client::{
     block::output::{Output, OutputId},
     node_api::participation::{
         responses::TrackedParticipation,
-        types::{participation::Participations, EventId, EventStatus, PARTICIPATION_TAG},
+        types::{participation::Participations, ParticipationEventId, ParticipationEventStatus, PARTICIPATION_TAG},
     },
     Client,
 };
@@ -32,7 +32,7 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountParticipationOverview {
     /// Output participations for events.
-    participations: HashMap<EventId, HashMap<OutputId, TrackedParticipation>>,
+    participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>>,
 }
 
 impl AccountHandle {
@@ -55,7 +55,7 @@ impl AccountHandle {
             }
         });
 
-        let mut participations: HashMap<EventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
+        let mut participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
 
         for output_data in participation_outputs {
             // PANIC: the filter already checks that the metadata exists.
@@ -66,7 +66,7 @@ impl AccountHandle {
                     .participations
                     .into_iter()
                     .map(|p| p.event_id)
-                    .collect::<Vec<EventId>>()
+                    .collect::<Vec<ParticipationEventId>>()
             } else {
                 // No valid participation in this output, skip it.
                 continue;
@@ -121,7 +121,7 @@ impl AccountHandle {
 
     /// Gets client for an event.
     /// If event isn't found, the client from the account will be returned.
-    pub(crate) async fn get_client_for_event(&self, id: &EventId) -> crate::Result<Client> {
+    pub(crate) async fn get_client_for_event(&self, id: &ParticipationEventId) -> crate::Result<Client> {
         let events = self.storage_manager.lock().await.get_participation_events().await?;
 
         let event = match events.get(id) {
@@ -166,7 +166,7 @@ impl AccountHandle {
     }
 
     /// Retrieves the latest status of a given participation event.
-    pub(crate) async fn get_participation_event_status(&self, id: &EventId) -> crate::Result<EventStatus> {
+    pub(crate) async fn get_participation_event_status(&self, id: &ParticipationEventId) -> crate::Result<ParticipationEventStatus> {
         Ok(self.get_client_for_event(id).await?.event_status(id, None).await?)
     }
 }
