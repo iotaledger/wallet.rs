@@ -60,7 +60,6 @@ impl AccountManager {
             .get_participation_events()
             .await?
             .values()
-            .into_iter()
             .map(|(event, _nodes)| event.clone())
             .collect())
     }
