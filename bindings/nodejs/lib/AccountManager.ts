@@ -11,9 +11,9 @@ import type {
     Auth,
     ClientOptions,
     CreateAccountPayload,
-    Event,
-    EventId,
-    EventStatus,
+    ParticipationEvent,
+    ParticipationEventId,
+    ParticipationEventStatus,
     EventType,
     GenerateAddressOptions,
     LedgerNanoStatus,
@@ -98,7 +98,7 @@ export class AccountManager {
         this.messageHandler.destroy();
     }
 
-    async deregisterParticipationEvent(eventId: EventId): Promise<void> {
+    async deregisterParticipationEvent(eventId: ParticipationEventId): Promise<void> {
         await this.messageHandler.sendMessage({
             cmd: 'deregisterParticipationEvent',
             payload: {
@@ -217,7 +217,7 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvent(eventId: EventId): Promise<Event> {
+    async getParticipationEvent(eventId: ParticipationEventId): Promise<ParticipationEvent> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEvent',
             payload: {
@@ -227,7 +227,7 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEventIds(eventType?: ParticipationEventType): Promise<EventId[]> {
+    async getParticipationEventIds(eventType?: ParticipationEventType): Promise<ParticipationEventId[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEventIds',
             payload: {
@@ -237,14 +237,14 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvents(): Promise<Event[]> {
+    async getParticipationEvents(): Promise<ParticipationEvent[]> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEvents',
         });
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEventStatus(eventId: EventId): Promise<EventStatus> {
+    async getParticipationEventStatus(eventId: ParticipationEventId): Promise<ParticipationEventStatus> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'getParticipationEventStatus',
             payload: {
@@ -331,9 +331,9 @@ export class AccountManager {
     }
 
     async registerParticipationEvent(
-        eventId: EventId,
+        eventId: ParticipationEventId,
         nodes: Node[],
-    ): Promise<Event> {
+    ): Promise<ParticipationEvent> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'registerParticipationEvent',
             payload: {

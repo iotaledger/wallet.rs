@@ -53,7 +53,7 @@ async function run() {
         console.log('Participation Overview:', JSON.stringify(participationOverview));
         
         // Stop voting for a given event
-        transaction = await account.stopParticipating(EVENT_ID);
+        transaction = await account.stopVoting(EVENT_ID);
         console.log('Stop Participation Transaction', transaction)
         await waitAndSync(account)
 

@@ -6,7 +6,7 @@
 use std::{env, str::FromStr};
 
 use dotenv::dotenv;
-use iota_client::{node_api::participation::types::EventId, node_manager::node::Node, request_funds_from_faucet, Url};
+use iota_client::{node_api::participation::types::ParticipationEventId, node_manager::node::Node, request_funds_from_faucet, Url};
 use iota_wallet::{
     account_manager::AccountManager,
     iota_client::constants::SHIMMER_COIN_TYPE,
@@ -43,7 +43,7 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
-    let event_id = EventId::from_str("0x80f57f6368933b61af9b3d8e1b152cf5d23bf4537f6362778b0a7302a7000d48")?;
+    let event_id = ParticipationEventId::from_str("0x80f57f6368933b61af9b3d8e1b152cf5d23bf4537f6362778b0a7302a7000d48")?;
     let event_nodes = vec![Node {
         url: Url::parse("http://localhost:14265").map_err(iota_client::Error::UrlError)?,
         auth: None,
@@ -170,7 +170,7 @@ async fn main() -> Result<()> {
     //// stop vote
     //// ////////////////////////////
 
-    let transaction = account.stop_participating(event_id).await?;
+    let transaction = account.stop_voting(event_id).await?;
     println!(
         "Stop participating transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,

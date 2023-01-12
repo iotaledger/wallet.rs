@@ -45,11 +45,11 @@ import type {
     __SyncAccountMethod__,
     __GetIncomingTransactionDataMethod__,
     __VoteMethod__,
-    __StopParticipatingMethod__,
     __GetVotingPowerMethod__,
     __GetParticipationOverviewMethod__,
     __IncreaseVotingPowerMethod__,
     __DecreaseVotingPowerMethod__,
+    __StopVotingMethod__,
 } from './account';
 import type {
     __BackupMessage__,
@@ -131,7 +131,7 @@ export type __AccountMethod__ =
     | __SubmitAndStoreTransactionMethod__
     | __SyncAccountMethod__
     | __VoteMethod__
-    | __StopParticipatingMethod__
+    | __StopVotingMethod__
     | __GetVotingPowerMethod__
     | __GetParticipationOverviewMethod__
     | __IncreaseVotingPowerMethod__

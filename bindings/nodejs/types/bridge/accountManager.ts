@@ -6,7 +6,7 @@ import type {
 import type { GenerateAddressOptions } from '../address';
 import type { WalletEvent } from '../event';
 import type { Auth, ClientOptions, Node } from '../network';
-import type { EventId, ParticipationEventType } from '../participation';
+import type { ParticipationEventId, ParticipationEventType } from '../participation';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
@@ -41,7 +41,7 @@ export type __CreateAccountMessage__ = {
 export type __DeregisterParticipationEvent__ = {
     cmd: 'deregisterParticipationEvent';
     payload: {
-        eventId: EventId;
+        eventId: ParticipationEventId;
     };
 };
 
@@ -93,7 +93,7 @@ export type __GetNodeInfoMessage__ = {
 export type __GetParticipationEventMessage__ = {
     cmd: 'getParticipationEvent';
     payload: {
-        eventId: EventId;
+        eventId: ParticipationEventId;
     };
 };
 
@@ -111,7 +111,7 @@ export type __GetParticipationEventsMessage__ = {
 export type __GetParticipationEventStatusMessage__ = {
     cmd: 'getParticipationEventStatus';
     payload: {
-        eventId: EventId;
+        eventId: ParticipationEventId;
     };
 };
 
@@ -140,7 +140,7 @@ export type __RecoverAccountsMessage__ = {
 export type __RegisterParticipationEventMessage__ = {
     cmd: 'registerParticipationEvent';
     payload: {
-        eventId: EventId;
+        eventId: ParticipationEventId;
         nodes: Node[];
     };
 };
