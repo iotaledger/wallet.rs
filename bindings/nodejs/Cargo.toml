@@ -20,7 +20,6 @@ crate-type = [ "cdylib" ]
 [dependencies]
 iota-wallet = { path = "../../", default-features = false, features = [ "mnemonic", "events", "ledger_nano", "storage", "stronghold", "message_interface", "participation" ] }
 
-fern-logger = { version = "0.5.0", default-features = false }
 log = { version = "0.4.17", default-features = false }
 neon = { version = "0.10.1", default-features = false, features = [ "napi-6", "event-queue-api" ] }
 once_cell = { version = "1.17.0", default-features = false }

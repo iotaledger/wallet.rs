@@ -56,20 +56,6 @@
     return ret == 0 ? YES : NO;
 }
 
-- (BOOL) clear_listeners:(NSArray<NSString*>*) event_types handler: (WalletHandler) handler error:(NSError**) error {
-    NSData* data = [NSJSONSerialization dataWithJSONObject:event_types options:NSJSONWritingPrettyPrinted error:nil];
-    NSString* message = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    char errorMessage[1024] = { 0 };
-    
-    int8_t ret = iota_clear_listeners(wallet_handle, message.UTF8String, callback, (void*)CFBridgingRetain(handler), errorMessage, sizeof(errorMessage));
-    
-    if (ret && error) {
-        NSDictionary *userInfo = @{ NSLocalizedDescriptionKey : [NSString stringWithUTF8String:errorMessage] };
-        *error = [NSError errorWithDomain:@"org.iota" code:-1 userInfo:userInfo];;
-    }
-    return ret == 0 ? YES : NO;
-}
-
 static void callback(const char* response, const char* error, void* context)
 {
     WalletHandler handler = CFBridgingRelease(context);

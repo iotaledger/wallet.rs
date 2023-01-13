@@ -290,8 +290,12 @@ export class AccountManager {
     /**
      * Clear the callbacks for provided events. An empty array will clear all listeners.
      */
-    clearListeners(eventTypes: EventType[]): void {
-        return this.messageHandler.clearListeners(eventTypes);
+    async clearListeners(eventTypes: EventType[]): Promise<void> {
+        const response = await this.messageHandler.sendMessage({
+            cmd: 'clearListeners',
+            payload: eventTypes
+        });
+        return JSON.parse(response).payload;
     }
 
     /**

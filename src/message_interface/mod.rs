@@ -7,6 +7,7 @@ mod message;
 mod message_handler;
 mod response;
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
@@ -57,6 +58,12 @@ where
     }
 }
 
+pub fn init_logger(config: String) -> Result<(), fern_logger::Error> {
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config)
+}
+
 pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::Result<WalletMessageHandler> {
     log::debug!(
         "create_message_handler with options: {}",
@@ -90,10 +97,10 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     Ok(WalletMessageHandler::with_manager(manager))
 }
 
-pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Response {
+pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Option<Response> {
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
-    message_rx.recv().await.unwrap()
+    message_rx.recv().await
 }
 
 #[cfg(test)]
@@ -161,7 +168,9 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
+
         match response {
             Response::Account(account) => {
                 let id = account.index;
@@ -284,7 +293,8 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Account(account) => {
@@ -317,8 +327,9 @@ mod tests {
         let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
         let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
 
-        let response =
-            message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into())).await;
+        let response = message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into()))
+            .await
+            .expect("No send message response");
 
         match response {
             Response::HexAddress(hex) => {
@@ -334,7 +345,8 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Bech32Address(bech32) => {

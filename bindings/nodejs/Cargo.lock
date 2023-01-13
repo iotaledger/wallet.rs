@@ -1174,6 +1174,7 @@ version = "1.0.0-rc.4"
 dependencies = [
  "async-trait",
  "backtrace",
+ "fern-logger",
  "futures",
  "getset",
  "gloo-timers",
@@ -2496,7 +2497,6 @@ dependencies = [
 name = "wallet"
 version = "0.2.0"
 dependencies = [
- "fern-logger",
  "iota-wallet",
  "log",
  "neon",

@@ -1090,10 +1090,8 @@ dependencies = [
 name = "iota-wallet"
 version = "0.1.0"
 dependencies = [
- "fern-logger",
  "futures",
  "iota-wallet 1.0.0-rc.4",
- "log",
  "once_cell",
  "serde",
  "serde_json",
@@ -1106,6 +1104,7 @@ version = "1.0.0-rc.4"
 dependencies = [
  "async-trait",
  "backtrace",
+ "fern-logger",
  "futures",
  "getset",
  "gloo-timers",
