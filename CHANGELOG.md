@@ -34,7 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `send_message` to return Option which is None when no message response is received;
 
 ### Removed
+
 - `clear_listeners` from the `WalletMessageHandler`;
+- `listen` from message interface;
+
+### Moved
+
+- `init_logger` to message interface mod;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
@@ -62,8 +68,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- `clear_listeners` from message interface;
-- `listen` from message interface;
 - default bech32 HRP in account builder;
 - `Copy` from `FilterOptions`;
 
@@ -73,7 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `IssuerFeature` and `SenderFeature` to `prepare_output()` options argument;
 - Participation feature and functions;
-- `init_logger` to message interface mod;
 
 ### Changed
 
