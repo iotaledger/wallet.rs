@@ -1014,11 +1014,11 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async stopVoting(eventId: ParticipationEventId): Promise<Transaction> {
+    async stopParticipating(eventId: ParticipationEventId): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
-                name: 'stopVoting',
+                name: 'stopParticipating',
                 data: {
                     eventId,
                 },

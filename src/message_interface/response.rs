@@ -119,7 +119,7 @@ pub enum Response {
     /// [`SendOutputs`](crate::message_interface::AccountMethod::SendOutputs)
     /// [`SubmitAndStoreTransaction`](crate::message_interface::AccountMethod::SubmitAndStoreTransaction)
     /// [`Vote`](crate::message_interface::AccountMethod::Vote)
-    /// [`StopVoting`](crate::message_interface::AccountMethod::StopVoting)
+    /// [`StopParticipating`](crate::message_interface::AccountMethod::StopParticipating)
     /// [`IncreaseVotingPower`](crate::message_interface::AccountMethod::IncreaseVotingPower)
     /// [`DecreaseVotingPower`](crate::message_interface::AccountMethod::DecreaseVotingPower)
     SentTransaction(TransactionDto),

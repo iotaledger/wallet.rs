@@ -8,4 +8,3 @@ Rename:
 - `EventData` to `ParticipationEventData`;
 - `EventStatus` to `ParticipationEventStatus`;
 - `EventPayload` to `ParticipationEventPayload`;
-- `stopParticipating` to `stopVoting`;

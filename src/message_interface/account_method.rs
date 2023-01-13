@@ -380,10 +380,10 @@ pub enum AccountMethod {
         event_id: Option<ParticipationEventId>,
         answers: Option<Vec<u8>>,
     },
-    /// Stop voting for an event.
+    /// Stop participating for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
-    StopVoting {
+    StopParticipating {
         #[serde(rename = "eventId")]
         event_id: ParticipationEventId,
     },

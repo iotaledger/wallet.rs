@@ -973,9 +973,9 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::StopVoting { event_id } => {
+            AccountMethod::StopParticipating { event_id } => {
                 convert_async_panics(|| async {
-                    let transaction = account_handle.stop_voting(event_id).await?;
+                    let transaction = account_handle.stop_participating(event_id).await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
                 })
                 .await

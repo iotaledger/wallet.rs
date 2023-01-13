@@ -342,8 +342,8 @@ export type __VoteMethod__ = {
     };
 };
 
-export type __StopVotingMethod__ = {
-    name: 'stopVoting';
+export type __StopParticipatingMethod__ = {
+    name: 'stopParticipating';
     data: {
         eventId: ParticipationEventId;
     };

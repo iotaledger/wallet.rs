@@ -173,7 +173,7 @@ async fn main() -> Result<()> {
     //// stop vote
     //// ////////////////////////////
 
-    let transaction = account.stop_voting(event_id).await?;
+    let transaction = account.stop_participating(event_id).await?;
     println!(
         "Stop participating transaction: {} Block sent: {}/api/core/v2/blocks/{}",
         transaction.transaction_id,

@@ -115,7 +115,7 @@ impl AccountHandle {
     /// TODO: is it really doing that ?
     /// If multiple outputs contain metadata for this event, removes all of them.
     /// If NOT already voting for this event, throws an error (e.g. output with this event ID not found).
-    pub async fn stop_voting(&self, event_id: ParticipationEventId) -> Result<Transaction> {
+    pub async fn stop_participating(&self, event_id: ParticipationEventId) -> Result<Transaction> {
         let voting_output = self
             .get_voting_output()
             .await?
