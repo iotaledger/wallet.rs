@@ -104,6 +104,61 @@ pub struct Account {
     native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }
 
+// Custom deserialization to stay backwards compatible
+fn deserialize_or_convert<'de, D>(deserializer: D) -> Result<HashMap<TransactionId, Transaction>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value = serde_json::Value::deserialize(deserializer)?;
+    // This works
+    type NewType = HashMap<TransactionId, Transaction>;
+    type OldType = HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>;
+
+    Ok(match serde_json::from_value::<NewType>(value.clone()) {
+        Ok(r) => r,
+        Err(_) => {
+            let v = serde_json::from_value::<OldType>(value).map_err(de::Error::custom)?;
+            let mut new = HashMap::new();
+            for (tx_id, (tx_payload, inputs)) in v {
+                new.insert(
+                    tx_id,
+                    build_transaction_from_payload_and_inputs(tx_id, tx_payload, inputs).map_err(de::Error::custom)?,
+                );
+            }
+            new
+        }
+    })
+}
+
+pub(crate) fn build_transaction_from_payload_and_inputs(
+    tx_id: TransactionId,
+    tx_payload: TransactionPayload,
+    inputs: Vec<OutputWithMetadataResponse>,
+) -> crate::Result<Transaction> {
+    let TransactionEssence::Regular(tx_essence) = &tx_payload.essence();
+    Ok(Transaction {
+        payload: tx_payload.clone(),
+        block_id: inputs
+            .first()
+            .and_then(|i| BlockId::from_str(&i.metadata.block_id).ok()),
+        inclusion_state: InclusionState::Confirmed,
+        timestamp: inputs
+            .first()
+            .and_then(|i| i.metadata.milestone_timestamp_spent.map(|t| t as u128 * 1000))
+            .unwrap_or_else(|| {
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .expect("time went backwards")
+                    .as_millis()
+            }),
+        transaction_id: tx_id,
+        network_id: tx_essence.network_id(),
+        incoming: true,
+        note: None,
+        inputs,
+    })
+}
+
 #[test]
 fn serialize() {
     use iota_client::block::{
@@ -201,59 +256,4 @@ fn serialize() {
     };
 
     serde_json::from_str::<Account>(&serde_json::to_string(&account).unwrap()).unwrap();
-}
-
-// Custom deserialization to stay backwards compatible
-fn deserialize_or_convert<'de, D>(deserializer: D) -> Result<HashMap<TransactionId, Transaction>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let value = serde_json::Value::deserialize(deserializer)?;
-    // This works
-    type NewType = HashMap<TransactionId, Transaction>;
-    type OldType = HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>;
-
-    Ok(match serde_json::from_value::<NewType>(value.clone()) {
-        Ok(r) => r,
-        Err(_) => {
-            let v = serde_json::from_value::<OldType>(value).map_err(de::Error::custom)?;
-            let mut new = HashMap::new();
-            for (tx_id, (tx_payload, inputs)) in v {
-                new.insert(
-                    tx_id,
-                    build_transaction_from_payload_and_inputs(tx_id, tx_payload, inputs).map_err(de::Error::custom)?,
-                );
-            }
-            new
-        }
-    })
-}
-
-pub(crate) fn build_transaction_from_payload_and_inputs(
-    tx_id: TransactionId,
-    tx_payload: TransactionPayload,
-    inputs: Vec<OutputWithMetadataResponse>,
-) -> crate::Result<Transaction> {
-    let TransactionEssence::Regular(tx_essence) = &tx_payload.essence();
-    Ok(Transaction {
-        payload: tx_payload.clone(),
-        block_id: inputs
-            .first()
-            .and_then(|i| BlockId::from_str(&i.metadata.block_id).ok()),
-        inclusion_state: InclusionState::Confirmed,
-        timestamp: inputs
-            .first()
-            .and_then(|i| i.metadata.milestone_timestamp_spent.map(|t| t as u128 * 1000))
-            .unwrap_or_else(|| {
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .expect("time went backwards")
-                    .as_millis()
-            }),
-        transaction_id: tx_id,
-        network_id: tx_essence.network_id(),
-        incoming: true,
-        note: None,
-        inputs,
-    })
 }
