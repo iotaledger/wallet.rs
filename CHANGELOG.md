@@ -31,9 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Updated dependencies;
 - Message interface methods to accept `TransactionOptionsDto` instead of `TransactionOptions`;
+- `send_message` to return Option which is None when no message response is received;
 
 ### Removed
-- `clear_listeners` from the `WalletMessageHandler`
+- `clear_listeners` from the `WalletMessageHandler`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
@@ -83,7 +84,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Allow null nft ids in `prepare_output()` for minting;
 - `TagFeature` & `MetadataFeature` encoded as hex strings instead of utf-8 strings;
 - Call `try_get_outputs_metadata` instead of `try_get_outputs` when possible (more efficient);
-- `send_message` to return Option which is None when no message response is received;
 
 ### Removed
 
