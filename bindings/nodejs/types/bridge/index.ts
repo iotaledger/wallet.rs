@@ -56,6 +56,7 @@ import type {
     __Bech32ToHex__,
     __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
+    __ClearListenersMessage__,
     __CreateAccountMessage__,
     __EmitTestEventMessage__,
     __GenerateMnemonicMessage__,
@@ -150,6 +151,7 @@ export type __Message__ =
     | __Bech32ToHex__
     | __CallAccountMethodMessage__
     | __ChangeStrongholdPasswordMessage__
+    | __ClearListenersMessage__
     | __ClearStrongholdPasswordMessage__
     | __CreateAccountMessage__
     | __DeregisterParticipationEvent__

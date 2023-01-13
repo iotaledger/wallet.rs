@@ -107,12 +107,6 @@ impl WalletMessageHandler {
         self.account_manager.listen(events, handler).await;
     }
 
-    #[cfg(feature = "events")]
-    /// Remove wallet event listeners, empty vec will remove all listeners
-    pub async fn clear_listeners(&self, events: Vec<WalletEventType>) {
-        self.account_manager.clear_listeners(events).await;
-    }
-
     /// Handles a message.
     pub async fn handle(&self, message: Message, response_tx: UnboundedSender<Response>) {
         log::debug!("Message: {:?}", message);
@@ -333,7 +327,7 @@ impl WalletMessageHandler {
             #[cfg(feature = "events")]
             Message::ClearListeners(events) => {
                 convert_async_panics(|| async {
-                    self.clear_listeners(events).await;
+                    self.account_manager.clear_listeners(events).await;
                     Ok(Response::Ok(()))
                 })
                 .await

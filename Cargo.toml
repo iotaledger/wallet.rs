@@ -14,6 +14,7 @@ categories = [ "cryptography::cryptocurrencies" ]
 [dependencies]
 async-trait = { version = "0.1.61", default-features = false }
 backtrace = { version = "0.3.67", default-features = false, features = [ "std" ] }
+fern-logger = { version = "0.5.0", default-features = false }
 futures = { version = "0.3.25", default-features = false }
 getset = { version = "0.1.2", default-features = false }
 # iota-client = { version = "2.0.1-rc.5", default-features = false, features = [ "message_interface", "tls" ] }
@@ -35,7 +36,6 @@ gloo-timers = { version = "0.2.5", default-features = false, features = [ "futur
 
 [dev-dependencies]
 dotenv = { version =  "0.15.0", default-features = false }
-fern-logger = { version = "0.5.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
