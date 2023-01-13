@@ -35,7 +35,7 @@ pub struct Memory(HashMap<String, String>);
 #[async_trait::async_trait]
 impl StorageAdapter for Memory {
     async fn get(&self, key: &str) -> crate::Result<String> {
-        self.0.get(key).ok_or(storage_err(key)).cloned()
+        self.0.get(key).ok_or_else(|| storage_err(key)).cloned()
     }
 
     /// Saves or updates a record on the storage.
