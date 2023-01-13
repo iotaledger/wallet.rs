@@ -45,7 +45,7 @@ pub use self::{
         output_claiming::OutputsToClaim,
         syncing::SyncOptions,
         transaction::{
-            prepare_output::{Assets, Features, OutputOptions, StorageDeposit},
+            prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
             RemainderValueStrategy, TransactionOptions,
         },
     },
@@ -208,20 +208,15 @@ fn deserialize_or_convert<'de, D>(deserializer: D) -> Result<HashMap<Transaction
 where
     D: Deserializer<'de>,
 {
-    #[derive(Deserialize)]
-    #[serde(untagged)]
-    enum OldOrNew {
-        New(HashMap<TransactionId, Transaction>),
-        Old(HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>),
-    }
-
+    let value = serde_json::Value::deserialize(deserializer)?;
     // This works
-    // type TestType = HashMap<TransactionId, Transaction>;
-    // return Ok(TestType::deserialize(deserializer)?);
+    type NewType = HashMap<TransactionId, Transaction>;
+    type OldType = HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>;
 
-    Ok(match OldOrNew::deserialize(deserializer)? {
-        OldOrNew::New(v) => v,
-        OldOrNew::Old(v) => {
+    Ok(match serde_json::from_value::<NewType>(value.clone()) {
+        Ok(r) => r,
+        Err(_) => {
+            let v = serde_json::from_value::<OldType>(value).map_err(de::Error::custom)?;
             let mut new = HashMap::new();
             for (tx_id, (tx_payload, inputs)) in v {
                 new.insert(
