@@ -21,9 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.0-rc.5 - YYYY-MM-DD
 
+### Added
+
+- `AccountManager::get_participation_event_ids` method;
+- `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
+- `TransactionOptionsDto`;
+
 ### Changed
 
 - Updated dependencies;
+- Message interface methods to accept `TransactionOptionsDto` instead of `TransactionOptions`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 

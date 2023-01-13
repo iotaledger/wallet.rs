@@ -83,6 +83,7 @@ import type {
     __GetParticipationEventMessage__,
     __GetParticipationEventsMessage__,
     __GetParticipationEventStatusMessage__,
+    __GetParticipationEventIdsMessage__,
 } from './accountManager';
 
 export type __AccountMethod__ =
@@ -163,6 +164,7 @@ export type __Message__ =
     | __GenerateAddressMessage__
     | __GetNodeInfoMessage__
     | __GetParticipationEventMessage__
+    | __GetParticipationEventIdsMessage__
     | __GetParticipationEventsMessage__
     | __GetParticipationEventStatusMessage__
     | __HexToBech32__

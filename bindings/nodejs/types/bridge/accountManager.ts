@@ -6,7 +6,7 @@ import type {
 import type { GenerateAddressOptions } from '../address';
 import type { EventType, WalletEvent } from '../event';
 import type { Auth, ClientOptions, Node } from '../network';
-import type { EventId } from '../participation';
+import type { EventId, ParticipationEventType } from '../participation';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
@@ -99,6 +99,13 @@ export type __GetParticipationEventMessage__ = {
     cmd: 'getParticipationEvent';
     payload: {
         eventId: EventId;
+    };
+};
+
+export type __GetParticipationEventIdsMessage__ = {
+    cmd: 'getParticipationEventIds';
+    payload: {
+        eventType?: ParticipationEventType;
     };
 };
 
