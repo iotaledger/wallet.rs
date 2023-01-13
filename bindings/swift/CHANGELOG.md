@@ -19,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 0.1.1 - 20XX-XX-XX
+## 1.0.0-rc.1 - 20XX-XX-XX
 
-### Removed
-- iota_clear_listeners in favour of sendMessage("ClearListeners");
+First RC for the Swift bindings of the wallet.

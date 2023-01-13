@@ -19,9 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security -->
 
-## 0.2.1 - 20XX-XX-XX
+## 1.0.0-rc.1 - 20XX-XX-XX
 
-### Added
-- Listen for events on IotaWallet;
-- clear event listeners on IotaWallet;
-- Destroy method for consistency across bindings;
+First RC for the Python bindings of the wallet.

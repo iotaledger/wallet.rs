@@ -33,7 +33,7 @@ export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'clearStrongholdPassword';
 };
 
-export type __ClearListeners__ = {
+export type __ClearListenersMessage__ = {
     cmd: 'clearListeners';
     payload: EventType[];
 };
