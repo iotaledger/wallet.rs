@@ -4,8 +4,16 @@
 /// The default storage path.
 pub const DEFAULT_STORAGE_PATH: &str = "./storage";
 
+#[cfg(feature = "rocksdb")]
 /// The default RocksDB storage path.
 pub(crate) const ROCKSDB_FOLDERNAME: &str = "walletdb";
+
+pub const fn default_storage_path() -> &'static str {
+    #[cfg(feature = "rocksdb")]
+    return ROCKSDB_FOLDERNAME;
+    #[cfg(not(feature = "rocksdb"))]
+    DEFAULT_STORAGE_PATH
+}
 
 pub(crate) const ACCOUNT_MANAGER_INDEXATION_KEY: &str = "iota-wallet-account-manager";
 

@@ -20,8 +20,18 @@ pub(crate) enum ManagerStorage {
     #[cfg(feature = "stronghold")]
     /// Stronghold storage.
     Stronghold,
+    #[cfg(feature = "rocksdb")]
     /// RocksDB storage.
     Rocksdb,
+    /// Storage backed by a Map in memory, for testing
+    Memory,
+}
+
+pub(crate) const fn default_storage() -> ManagerStorage {
+    #[cfg(feature = "rocksdb")]
+    return ManagerStorage::Rocksdb;
+    #[cfg(not(feature = "rocksdb"))]
+    ManagerStorage::Memory
 }
 
 pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;

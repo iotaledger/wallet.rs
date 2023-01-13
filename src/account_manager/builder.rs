@@ -14,14 +14,18 @@ use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use tokio::sync::RwLock;
 
-#[cfg(feature = "storage")]
-use crate::account::handle::AccountHandle;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
+#[cfg(all(feature = "storage", not(feature = "rocksdb")))]
+use crate::storage::adapter::Memory;
 #[cfg(feature = "storage")]
-use crate::storage::constants::ROCKSDB_FOLDERNAME;
-#[cfg(feature = "storage")]
-use crate::storage::manager::ManagerStorage;
+use crate::{
+    account::handle::AccountHandle,
+    storage::{
+        constants::default_storage_path,
+        manager::{default_storage, ManagerStorage},
+    },
+};
 use crate::{account_manager::AccountManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -48,10 +52,10 @@ pub struct StorageOptions {
 impl Default for StorageOptions {
     fn default() -> Self {
         StorageOptions {
-            storage_path: ROCKSDB_FOLDERNAME.into(),
+            storage_path: default_storage_path().into(),
             storage_file_name: None,
             storage_encryption_key: None,
-            manager_store: ManagerStorage::Rocksdb,
+            manager_store: default_storage(),
         }
     }
 }
@@ -121,9 +125,12 @@ impl AccountManagerBuilder {
                 return Err(crate::Error::MissingParameter("secret_manager"));
             }
         }
-        #[cfg(feature = "storage")]
+        #[cfg(all(feature = "rocksdb", feature = "storage"))]
         let storage =
             crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_path.clone())?;
+        #[cfg(all(not(feature = "rocksdb"), feature = "storage"))]
+        let storage = Memory::default();
+
         #[cfg(feature = "storage")]
         let storage_manager = crate::storage::manager::new_storage_manager(
             None,
