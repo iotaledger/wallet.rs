@@ -37,7 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `clear_listeners` from the `WalletMessageHandler`;
-- `listen` from message interface;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
@@ -65,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `listen` from message interface;
 - default bech32 HRP in account builder;
 - `Copy` from `FilterOptions`;
 
