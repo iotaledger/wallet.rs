@@ -667,7 +667,7 @@ impl WalletMessageHandler {
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1 .0), d.1 .1)))
                         .collect(),
                 ))
             }
@@ -979,7 +979,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::StopParticipating { event_id } => {
+            AccountMethod::StopVoting { event_id } => {
                 convert_async_panics(|| async {
                     let transaction = account_handle.stop_voting(event_id).await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
