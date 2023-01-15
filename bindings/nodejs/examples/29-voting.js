@@ -38,7 +38,7 @@ async function run() {
         transaction = await account.vote(EVENT_ID, [0])
         console.log('Voting Transaction:', transaction)
         await waitAndSync(account)
-        
+
         // Check the votes you have participated in
         participationOverview = await account.getParticipationOverview();
         console.log('Participation Overview:', JSON.stringify(participationOverview));
@@ -51,9 +51,9 @@ async function run() {
         // Check the votes you have participated in
         participationOverview = await account.getParticipationOverview();
         console.log('Participation Overview:', JSON.stringify(participationOverview));
-        
+
         // Stop voting for a given event
-        transaction = await account.stopVoting(EVENT_ID);
+        transaction = await account.stopParticipating(EVENT_ID);
         console.log('Stop Participation Transaction', transaction)
         await waitAndSync(account)
 
@@ -64,4 +64,3 @@ async function run() {
 }
 
 run();
- 
