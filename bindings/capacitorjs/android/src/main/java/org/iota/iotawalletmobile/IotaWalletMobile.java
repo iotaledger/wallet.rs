@@ -27,6 +27,7 @@ import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,7 +43,7 @@ public class IotaWalletMobile extends Plugin {
     Wallet wallet = null;
 
     @PluginMethod()
-    public void messageHandlerNew(final PluginCall call) {
+    public void messageHandlerNew(final PluginCall call) throws JSONException {
 
         if (!call.getData().has("clientOptions")
                 || !call.getData().has("storagePath")
@@ -55,14 +56,32 @@ public class IotaWalletMobile extends Plugin {
         Integer _coinType = call.getInt("coinType");
         JSObject _secretManager = call.getObject("secretManager");
         String path = getContext().getFilesDir() + _storagePath;
+        Log.d("_clientOptions", _clientOptions.get("nodes").toString());
+
+
+        JSONObject secretManager = _secretManager.getJSONObject("stronghold");
+        Log.d("_storagePath", path + secretManager.get("snapshotPath"));
+        if (_coinType == null) {
+            return;
+        }
+        CoinType coinType = CoinType.Shimmer;
+        if (CoinType.Iota.getCoinTypeValue() == _coinType) {
+            coinType = CoinType.Iota;
+        }
 
         try {
             wallet = new Wallet(new WalletConfig()
                     .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
                     .withStoragePath(path)
                     .withSecretManager(
-                            new StrongholdSecretManager("", null, path + "/wallet.stronghold"))
-                    .withCoinType(CoinType.Shimmer)
+                            new StrongholdSecretManager(
+                                    null,
+                                    null,
+//                                    path + secretManager.get("snapshotPath")
+                                    path + "/wallet.stronghold"
+                            )
+                    )
+                    .withCoinType(coinType)
             );
             JSObject ret = new JSObject();
             ret.put("messageHandler", 1);
@@ -116,23 +135,24 @@ public class IotaWalletMobile extends Plugin {
 
     @PluginMethod(returnType = PluginMethod.RETURN_CALLBACK)
     public void listen(final PluginCall call) throws WalletException, JSONException {
-        if (!call.getData().has("eventTypes")) {
-            call.reject("eventTypes and event are required");
-        }
-        JSArray eventTypes = call.getArray("eventTypes");
-        try {
-            wallet.listen(new EventListener() {
-                @Override
-                public void receive(Event event) {
-                    JSObject walletResponse = new JSObject();
-                    walletResponse.put("result", event.getEvent().toString());
-                    call.resolve(walletResponse);
-                }
-            }, WalletEventType.valueOf(eventTypes.getString(0)));
-        } catch (WalletException e) {
-            e.printStackTrace();
-        }
-        call.setKeepAlive(true);
+        // if (!call.getData().has("eventTypes")) {
+        //     call.reject("eventTypes and event are required");
+        // }
+        // JSArray eventTypes = call.getArray("eventTypes");
+        // try {
+        //     wallet.listen(new EventListener() {
+        //         @Override
+        //         public void receive(Event event) {
+        //             JSObject walletResponse = new JSObject();
+        //             walletResponse.put("result", event.getEvent().toString());
+        //             call.resolve(walletResponse);
+        //         }
+        //     }, WalletEventType.valueOf(eventTypes.getString(0)));
+        // } catch (WalletException e) {
+        //     e.printStackTrace();
+        // }
+        // call.setKeepAlive(true);
+        call.resolve();
     }
 
 
