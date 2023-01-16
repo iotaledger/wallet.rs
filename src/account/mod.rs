@@ -110,7 +110,7 @@ where
     D: Deserializer<'de>,
 {
     let value = serde_json::Value::deserialize(deserializer)?;
-    // This works
+
     type NewType = HashMap<TransactionId, Transaction>;
     type OldType = HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>;
 

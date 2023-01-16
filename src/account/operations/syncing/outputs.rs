@@ -140,14 +140,15 @@ impl AccountHandle {
                         match client.get_included_block(&transaction_id).await {
                             Ok(block) => {
                                 if let Some(Payload::Transaction(transaction_payload)) = block.payload() {
-                                    let inputs = get_inputs_for_transaction_payload(&client, transaction_payload).await?;
-    
+                                    let inputs =
+                                        get_inputs_for_transaction_payload(&client, transaction_payload).await?;
+
                                     let transaction = build_transaction_from_payload_and_inputs(
                                         transaction_id,
                                         *transaction_payload.clone(),
                                         inputs,
                                     )?;
-    
+
                                     Ok(Some((transaction_id, transaction)))
                                 } else {
                                     Ok(None)
