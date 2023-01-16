@@ -3,8 +3,10 @@ import type {
     AccountSyncOptions,
     CreateAccountPayload,
 } from '../account';
+import type { GenerateAddressOptions } from '../address';
 import type { WalletEvent } from '../event';
-import type { Auth, ClientOptions } from '../network';
+import type { Auth, ClientOptions, Node } from '../network';
+import type { EventId } from '../participation';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
@@ -36,6 +38,13 @@ export type __CreateAccountMessage__ = {
     payload: CreateAccountPayload;
 };
 
+export type __DeregisterParticipationEvent__ = {
+    cmd: 'deregisterParticipationEvent';
+    payload: {
+        eventId: EventId;
+    };
+};
+
 export type __EmitTestEventMessage__ = {
     cmd: 'emitTestEvent';
     payload: WalletEvent;
@@ -62,11 +71,40 @@ export type __GetLedgerNanoStatusMessage__ = {
     cmd: 'getLedgerNanoStatus';
 };
 
+export type __GenerateAddressMessage__ = {
+    cmd: 'generateAddress';
+    payload: {
+        accountIndex: number;
+        internal: boolean;
+        addressIndex: number;
+        options?: GenerateAddressOptions;
+        bech32Hrp?: string;
+    };
+};
+
 export type __GetNodeInfoMessage__ = {
     cmd: 'getNodeInfo';
     payload: {
         url?: string;
         auth?: Auth;
+    };
+};
+
+export type __GetParticipationEventMessage__ = {
+    cmd: 'getParticipationEvent';
+    payload: {
+        eventId: EventId;
+    };
+};
+
+export type __GetParticipationEventsMessage__ = {
+    cmd: 'getParticipationEvents';
+};
+
+export type __GetParticipationEventStatusMessage__ = {
+    cmd: 'getParticipationEventStatus';
+    payload: {
+        eventId: EventId;
     };
 };
 
@@ -89,6 +127,14 @@ export type __RecoverAccountsMessage__ = {
         accountGapLimit: number;
         addressGapLimit: number;
         syncOptions?: AccountSyncOptions;
+    };
+};
+
+export type __RegisterParticipationEventMessage__ = {
+    cmd: 'registerParticipationEvent';
+    payload: {
+        eventId: EventId;
+        nodes: Node[];
     };
 };
 

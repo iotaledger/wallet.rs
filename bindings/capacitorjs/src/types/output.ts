@@ -16,7 +16,7 @@ export enum OutputsToClaim {
 /** An output with metadata */
 export interface OutputData {
     /** The identifier of an Output */
-    outputId: string;
+    outputId: OutputId;
     /** The metadata of the output */
     metadata: IOutputMetadataResponse;
     /** The actual Output */
@@ -38,3 +38,5 @@ export interface Segment {
     hardened: boolean;
     bs: Uint8Array;
 }
+
+export type OutputId = string;

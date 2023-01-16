@@ -1,11 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { MessageHandler } from './MessageHandler'
-import { IotaWalletMobileTypes } from '../definitions'
-import { registerPlugin } from '@capacitor/core'
+// import type { MessageHandler } from './MessageHandler'
+// import { IotaWalletMobileTypes } from "@iota/wallet-mobile"
+// import { registerPlugin } from '@capacitor/core'
 
-const IotaWalletMobile = registerPlugin<IotaWalletMobileTypes>('IotaWalletMobile')
+// const IotaWalletMobile = registerPlugin<IotaWalletMobileTypes>('IotaWalletMobile')
+import { IotaWalletMobile } from '../index'
+// const IotaWalletMobile: IotaWalletMobileTypes
 
 const {
     initLogger,
@@ -16,21 +18,13 @@ const {
     destroy,
 } = IotaWalletMobile
 
-const sendMessageAsync = (
-    message: string,
-    handler: MessageHandler,
-): Promise<string> =>
-    new Promise((resolve, reject) => {
-        sendMessage(message, handler, (error: Error, result: string) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(result);
-            }
-        });
-    })
+const sendMessageAsync = async (message: string, handler: number): Promise<string> => {
+    const { result } = await sendMessage({ message, handler })
+    return result
+}
 
 export {
+    IotaWalletMobile,
     initLogger as internalInitLogger,
     sendMessageAsync,
     messageHandlerNew,

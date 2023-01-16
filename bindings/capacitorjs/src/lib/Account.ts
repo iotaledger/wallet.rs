@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import type { MessageHandler } from './MessageHandler';
+// import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     AccountMetadata,
@@ -27,6 +27,7 @@ import type {
     Transaction,
     TransactionOptions,
     IncomingTransactionData,
+    ParticipationOverview,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -48,9 +49,9 @@ import type {
 export class Account {
     // private because the data isn't updated
     private meta: AccountMeta;
-    private messageHandler: MessageHandler;
+    private messageHandler: any;
 
-    constructor(accountMeta: AccountMeta, messageHandler: MessageHandler) {
+    constructor(accountMeta: AccountMeta, messageHandler: any) {
         this.meta = accountMeta;
         this.messageHandler = messageHandler;
     }
@@ -454,7 +455,9 @@ export class Account {
      * @param transactionId The ID of the transaction to get.
      * @returns The transaction.
      */
-    async getIncomingTransactionData(transactionId: string): Promise<IncomingTransactionData> {
+    async getIncomingTransactionData(
+        transactionId: string,
+    ): Promise<IncomingTransactionData> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -532,9 +535,7 @@ export class Account {
      * List all incoming transactions of the account.
      * @returns The incoming transactions with their inputs.
      */
-    async incomingTransactions(): Promise<
-        [string, IncomingTransactionData][]
-    > {
+    async incomingTransactions(): Promise<[string, IncomingTransactionData][]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -767,6 +768,29 @@ export class Account {
     }
 
     /**
+     * Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
+     * included (referenced by a milestone). Returns the included block id.
+     */
+    async retryTransactionUntilIncluded(
+        transactionId: string,
+        interval?: number,
+        maxAttempts?: number,
+    ): Promise<PreparedTransactionData> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'retryTransactionUntilIncluded',
+                data: {
+                    transactionId,
+                    interval,
+                    maxAttempts,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    /**
      * Send a transaction with amounts from input addresses.
      * @param addressesWithAmount Addresses with amounts.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
@@ -953,6 +977,79 @@ export class Account {
                 name: 'syncAccount',
                 data: {
                     options,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async vote(eventId?: string, answers?: number[]): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'vote',
+                data: {
+                    eventId,
+                    answers,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async stopParticipating(eventId: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'stopParticipating',
+                data: {
+                    eventId,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async getVotingPower(): Promise<string> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getVotingPower',
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async getParticipationOverview(): Promise<ParticipationOverview> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationOverview',
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async increaseVotingPower(amount: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'increaseVotingPower',
+                data: {
+                    amount,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
+    async decreaseVotingPower(amount: string): Promise<Transaction> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'decreaseVotingPower',
+                data: {
+                    amount,
                 },
             },
         );

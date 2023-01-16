@@ -18,7 +18,7 @@ export interface AccountBalance {
     /**  The balance of the base coin */
     baseCoin: BaseCoinBalance;
     /** The required storage deposit for the outputs */
-    requiredStorageDeposit: string;
+    requiredStorageDeposit: RequiredStorageDeposit;
     /** The balance of the native tokens */
     nativeTokens: NativeTokenBalance[];
     /** Nft outputs */
@@ -32,6 +32,29 @@ export interface AccountBalance {
      * TimelockUnlockCondition or ExpirationUnlockCondition this can change at any time
      */
     potentiallyLockedOutputs: { [outputId: string]: boolean };
+}
+
+/** The balance of the base coin */
+export interface BaseCoinBalance {
+    /** The total amount of the outputs */
+    total: string;
+    /** The amount of the outputs that aren't used in a transaction */
+    available: string;
+}
+
+/** The required storage deposit per output type */
+export interface RequiredStorageDeposit {
+    alias: string;
+    basic: string;
+    foundry: string;
+    nft: string;
+}
+
+/** The balance of a native token */
+export interface NativeTokenBalance {
+    tokenId: string;
+    total: HexEncodedAmount;
+    available: HexEncodedAmount;
 }
 
 /** Sync options for an account */
@@ -100,21 +123,6 @@ export interface AccountMetadata {
     index: number;
 }
 
-/** The balance of the base coin */
-export interface BaseCoinBalance {
-    /** The total amount of the outputs */
-    total: string;
-    /** The amount of the outputs that aren't used in a transaction */
-    available: string;
-}
-
-/** The balance of a native token */
-export interface NativeTokenBalance {
-    tokenId: string;
-    total: HexEncodedAmount;
-    available: HexEncodedAmount;
-}
-
 /** IOTA and Shimmer coin types */
 export enum CoinType {
     IOTA = 4218,
@@ -124,12 +132,15 @@ export enum CoinType {
 /** Options for account creation */
 export interface CreateAccountPayload {
     alias?: string;
+    bech32Hrp?: string;
 }
 
 /** Options to filter outputs */
 export interface FilterOptions {
     /** Filter all outputs where the booked milestone index is below the specified timestamp */
-    lowerBoundBookedTimestamp: number;
+    lowerBoundBookedTimestamp?: number;
     /** Filter all outputs where the booked milestone index is above the specified timestamp */
-    upperBoundBookedTimestamp: number;
+    upperBoundBookedTimestamp?: number;
+    /** Filter all outputs for the provided types (Basic = 3, Alias = 4, Foundry = 5, NFT = 6) */
+    outputTypes?: Uint8Array;
 }
