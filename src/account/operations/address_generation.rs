@@ -60,7 +60,7 @@ impl AccountHandle {
         let bech32_hrp = {
             match account.public_addresses.first() {
                 Some(address) => address.address.bech32_hrp.to_string(),
-                None => self.client.get_bech32_hrp().await?,
+                None => self.client.read().await.get_bech32_hrp().await?,
             }
         };
 

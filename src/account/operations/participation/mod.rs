@@ -77,7 +77,7 @@ impl AccountHandle {
             let event_client = if let Some(event_id) = event_ids.first() {
                 self.get_client_for_event(event_id).await?
             } else {
-                self.client().clone()
+                self.client.read().await.clone()
             };
 
             if let Ok(status) = event_client.output_status(&output_data.output_id).await {
@@ -132,7 +132,7 @@ impl AccountHandle {
 
         let event = match events.get(id) {
             Some(event) => event,
-            None => return Ok(self.client().clone()),
+            None => return Ok(self.client.read().await.clone()),
         };
 
         let mut client_builder = Client::builder().with_ignore_node_health();
@@ -148,7 +148,16 @@ impl AccountHandle {
         &self,
         participations: &mut Participations,
     ) -> crate::Result<()> {
-        let latest_milestone_index = self.client().get_info().await?.node_info.status.latest_milestone.index;
+        let latest_milestone_index = self
+            .client
+            .read()
+            .await
+            .get_info()
+            .await?
+            .node_info
+            .status
+            .latest_milestone
+            .index;
 
         let events = self
             .storage_manager

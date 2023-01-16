@@ -44,7 +44,7 @@ impl AccountHandle {
         log::debug!("[OUTPUT_CLAIMING] get_unlockable_outputs_with_additional_unlock_conditions");
         let account = self.read().await;
 
-        let local_time = self.client.get_time_checked().await?;
+        let local_time = self.client.read().await.get_time_checked().await?;
 
         // Get outputs for the claim
         let mut output_ids_to_claim: HashSet<OutputId> = HashSet::new();
@@ -194,9 +194,9 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[OUTPUT_CLAIMING] claim_outputs_internal");
 
-        let current_time = self.client.get_time_checked().await?;
-        let rent_structure = self.client.get_rent_structure().await?;
-        let token_supply = self.client.get_token_supply().await?;
+        let current_time = self.client.read().await.get_time_checked().await?;
+        let rent_structure = self.client.read().await.get_rent_structure().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
 
         let account = self.read().await;
 

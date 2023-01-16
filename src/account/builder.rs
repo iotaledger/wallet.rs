@@ -9,6 +9,7 @@ use std::{
 use iota_client::{
     block::address::Address,
     secret::{SecretManage, SecretManager},
+    Client,
 };
 #[cfg(feature = "events")]
 use tokio::sync::Mutex;
@@ -24,7 +25,7 @@ use crate::{
         types::{address::AddressWrapper, AccountAddress},
         Account,
     },
-    ClientOptions, Error,
+    Error,
 };
 
 /// The AccountBuilder
@@ -32,7 +33,7 @@ pub struct AccountBuilder {
     addresses: Option<Vec<AccountAddress>>,
     alias: Option<String>,
     bech32_hrp: Option<String>,
-    client_options: Arc<RwLock<ClientOptions>>,
+    client: Arc<RwLock<Client>>,
     coin_type: u32,
     secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
@@ -46,7 +47,7 @@ impl AccountBuilder {
     /// Create an IOTA client builder
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
-        client_options: Arc<RwLock<ClientOptions>>,
+        client: Arc<RwLock<Client>>,
         coin_type: u32,
         secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
@@ -56,7 +57,7 @@ impl AccountBuilder {
             addresses: None,
             alias: None,
             bech32_hrp: None,
-            client_options,
+            client,
             coin_type,
             secret_manager,
             accounts,
@@ -116,8 +117,6 @@ impl AccountBuilder {
             }
         }
 
-        let client = self.client_options.read().await.clone().finish()?;
-
         // If addresses are provided we will use them directly without the additional checks, because then we assume
         // that it's for offline signing and the secretManager can't be used
         let addresses = match &self.addresses {
@@ -157,7 +156,7 @@ impl AccountBuilder {
                 let bech32_hrp = {
                     match bech32_hrp {
                         Some(bech32_hrp) => bech32_hrp,
-                        None => client.get_bech32_hrp().await?,
+                        None => self.client.read().await.get_bech32_hrp().await?,
                     }
                 };
 
@@ -193,7 +192,7 @@ impl AccountBuilder {
 
         let account_handle = AccountHandle::new(
             account,
-            client,
+            self.client.clone(),
             self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),

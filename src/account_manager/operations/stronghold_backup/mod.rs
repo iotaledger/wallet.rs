@@ -88,7 +88,8 @@ impl AccountManager {
 
         // Update AccountManager with read data
         if let Some(read_client_options) = read_client_options {
-            *self.client_options.write().await = read_client_options;
+            *self.client_options.write().await = read_client_options.clone();
+            *self.client.write().await = read_client_options.finish()?;
         }
 
         if let Some(read_coin_type) = read_coin_type {
@@ -117,13 +118,11 @@ impl AccountManager {
         stronghold_password.zeroize();
 
         if let Some(read_accounts) = read_accounts {
-            let client = self.client_options.read().await.clone().finish()?;
-
             let mut restored_account_handles = Vec::new();
             for account in read_accounts {
                 restored_account_handles.push(AccountHandle::new(
                     account,
-                    client.clone(),
+                    self.client.clone(),
                     self.secret_manager.clone(),
                     #[cfg(feature = "events")]
                     self.event_emitter.clone(),

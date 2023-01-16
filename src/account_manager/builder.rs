@@ -171,7 +171,7 @@ impl AccountManagerBuilder {
                 }
             };
 
-            let client = client_options.clone().finish()?;
+            let client = Arc::new(RwLock::new(client_options.clone().finish()?));
 
             let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
 
@@ -202,6 +202,7 @@ impl AccountManagerBuilder {
                         .collect(),
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
+                client,
                 client_options: Arc::new(RwLock::new(client_options)),
                 coin_type: Arc::new(AtomicU32::new(coin_type)),
                 secret_manager,
@@ -212,13 +213,15 @@ impl AccountManagerBuilder {
             });
         }
 
+        let client_options = self
+            .client_options
+            .ok_or(crate::Error::MissingParameter("client_options"))?;
+
         Ok(AccountManager {
             accounts: Arc::new(RwLock::new(Vec::new())),
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
-            client_options: Arc::new(RwLock::new(
-                self.client_options
-                    .ok_or(crate::Error::MissingParameter("client_options"))?,
-            )),
+            client: Arc::new(RwLock::new(client_options.clone().finish()?)),
+            client_options: Arc::new(RwLock::new(client_options)),
             coin_type: Arc::new(AtomicU32::new(
                 self.coin_type
                     .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,

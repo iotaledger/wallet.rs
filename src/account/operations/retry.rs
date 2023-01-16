@@ -26,6 +26,8 @@ impl AccountHandle {
     ) -> crate::Result<Vec<(BlockId, Block)>> {
         Ok(self
             .client
+            .read()
+            .await
             .retry_until_included(block_id, interval, max_attempts)
             .await?)
     }
@@ -63,6 +65,8 @@ impl AccountHandle {
                 Some(block_id) => block_id,
                 None => self
                     .client
+                    .read()
+                    .await
                     .block()
                     .finish_block(Some(Payload::Transaction(Box::new(transaction.payload.clone()))))
                     .await?
@@ -90,7 +94,7 @@ impl AccountHandle {
                 let block_ids_len = block_ids.len();
                 let mut conflicting = false;
                 for (index, block_id_) in block_ids.clone().iter().enumerate() {
-                    let block_metadata = self.client.get_block_metadata(block_id_).await?;
+                    let block_metadata = self.client.read().await.get_block_metadata(block_id_).await?;
                     if let Some(inclusion_state) = block_metadata.ledger_inclusion_state {
                         match inclusion_state {
                             LedgerInclusionStateDto::Included | LedgerInclusionStateDto::NoTransaction => {
@@ -105,10 +109,16 @@ impl AccountHandle {
                     if index == block_ids_len - 1 {
                         if block_metadata.should_promote.unwrap_or(false) {
                             // Safe to unwrap since we iterate over it
-                            self.client.promote_unchecked(block_ids.last().unwrap()).await?;
+                            self.client
+                                .read()
+                                .await
+                                .promote_unchecked(block_ids.last().unwrap())
+                                .await?;
                         } else if block_metadata.should_reattach.unwrap_or(false) {
                             let reattached_block = self
                                 .client
+                                .read()
+                                .await
                                 .block()
                                 .finish_block(Some(Payload::Transaction(Box::new(transaction.payload.clone()))))
                                 .await?;
@@ -119,7 +129,7 @@ impl AccountHandle {
                 // After we checked all our reattached blocks, check if the transaction got reattached in another block
                 // and confirmed
                 if conflicting {
-                    let included_block = self.client.get_included_block(transaction_id).await?;
+                    let included_block = self.client.read().await.get_included_block(transaction_id).await?;
                     return Ok(included_block.id());
                 }
             }

@@ -26,7 +26,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_alias");
 
-        let current_time = self.client().get_time_checked().await?;
+        let current_time = self.client.read().await.get_time_checked().await?;
 
         let mut owned_outputs = Vec::new();
 
@@ -79,7 +79,7 @@ impl AccountHandle {
     // governor address from the alias output.
     async fn output_id_and_basic_output_for_alias(&self, alias_id: AliasId) -> crate::Result<(OutputId, Output)> {
         let account = self.read().await;
-        let token_supply = self.client.get_token_supply().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
 
         let (output_id, output_data) = account
             .unspent_outputs()
