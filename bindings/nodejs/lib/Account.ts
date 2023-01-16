@@ -27,7 +27,8 @@ import type {
     Transaction,
     TransactionOptions,
     IncomingTransactionData,
-    ParticipationOverview, ParticipationEventId,
+    ParticipationOverview,
+    ParticipationEventId,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
