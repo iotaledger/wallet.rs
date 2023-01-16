@@ -39,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Account::get_participation_overview` sends requests now in parallel;
 - `Account::{get_incoming_transaction_data(), incoming_transactions()}` return now `Transaction` instead of `(TransactionPayload, Vec<OutputWithMetadataResponse>)`;
 - `AccountDto::incoming_transactions` from `(TransactionPayloadDto, Vec<OutputWithMetadataResponse>)` to `TransactionDto`;
-- `Response::{IncomingTransactionData, IncomingTransactionsData}` contains `TransactionDto` instead of `IncomingTransactionDataDto`;
+- `Response::{IncomingTransactionData, IncomingTransactionsData}` contain `TransactionDto` instead of `IncomingTransactionDataDto`;
 
 ### Removed
 
