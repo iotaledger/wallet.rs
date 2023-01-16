@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use iota_client::{
-    node_api::participation::types::{Event, EventId},
+    node_api::participation::types::{ParticipationEvent, ParticipationEventId},
     node_manager::node::Node,
 };
 
@@ -14,17 +14,18 @@ use crate::storage::constants::PARTICIPATION_EVENTS;
 impl StorageManager {
     pub(crate) async fn insert_participation_event(
         &mut self,
-        id: EventId,
-        event: Event,
+        id: ParticipationEventId,
+        event: ParticipationEvent,
         nodes: Vec<Node>,
     ) -> crate::Result<()> {
         log::debug!("insert_participation_event {id}");
 
-        let mut events: HashMap<EventId, (Event, Vec<Node>)> = match self.storage.get(PARTICIPATION_EVENTS).await {
-            Ok(events) => serde_json::from_str(&events)?,
-            Err(crate::Error::RecordNotFound(_)) => HashMap::new(),
-            Err(err) => return Err(err),
-        };
+        let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> =
+            match self.storage.get(PARTICIPATION_EVENTS).await {
+                Ok(events) => serde_json::from_str(&events)?,
+                Err(crate::Error::RecordNotFound(_)) => HashMap::new(),
+                Err(err) => return Err(err),
+            };
 
         events.insert(id, (event, nodes));
 
@@ -33,14 +34,15 @@ impl StorageManager {
         Ok(())
     }
 
-    pub(crate) async fn remove_participation_event(&mut self, id: &EventId) -> crate::Result<()> {
+    pub(crate) async fn remove_participation_event(&mut self, id: &ParticipationEventId) -> crate::Result<()> {
         log::debug!("remove_participation_event {id}");
 
-        let mut events: HashMap<EventId, (Event, Vec<Node>)> = match self.storage.get(PARTICIPATION_EVENTS).await {
-            Ok(events) => serde_json::from_str(&events)?,
-            Err(crate::Error::RecordNotFound(_)) => return Ok(()),
-            Err(err) => return Err(err),
-        };
+        let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> =
+            match self.storage.get(PARTICIPATION_EVENTS).await {
+                Ok(events) => serde_json::from_str(&events)?,
+                Err(crate::Error::RecordNotFound(_)) => return Ok(()),
+                Err(err) => return Err(err),
+            };
 
         events.remove(id);
 
@@ -49,7 +51,9 @@ impl StorageManager {
         Ok(())
     }
 
-    pub(crate) async fn get_participation_events(&self) -> crate::Result<HashMap<EventId, (Event, Vec<Node>)>> {
+    pub(crate) async fn get_participation_events(
+        &self,
+    ) -> crate::Result<HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)>> {
         log::debug!("get_participation_events");
 
         match self.storage.get(PARTICIPATION_EVENTS).await {

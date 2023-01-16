@@ -8,7 +8,7 @@ use std::{
 
 #[cfg(feature = "participation")]
 use iota_client::{
-    node_api::participation::types::{EventId, ParticipationEventType},
+    node_api::participation::types::{ParticipationEventId, ParticipationEventType},
     node_manager::node::Node,
 };
 use iota_client::{node_manager::node::NodeAuth, secret::GenerateAddressOptions};
@@ -200,7 +200,7 @@ pub enum Message {
     #[cfg(feature = "participation")]
     RegisterParticipationEvent {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
         nodes: Vec<Node>,
     },
     /// Removes a previously registered participation event from local storage.
@@ -208,13 +208,13 @@ pub enum Message {
     #[cfg(feature = "participation")]
     DeregisterParticipationEvent {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
     #[cfg(feature = "participation")]
     GetParticipationEvent {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
     #[cfg(feature = "participation")]
@@ -223,7 +223,7 @@ pub enum Message {
     #[cfg(feature = "participation")]
     GetParticipationEventStatus {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
     },
     /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
     #[cfg(feature = "participation")]

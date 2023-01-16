@@ -28,6 +28,7 @@ import type {
     TransactionOptions,
     IncomingTransactionData,
     ParticipationOverview,
+    ParticipationEventId,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -1000,7 +1001,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async vote(eventId?: string, answers?: number[]): Promise<Transaction> {
+    async vote(eventId?: ParticipationEventId, answers?: number[]): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -1014,7 +1015,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async stopParticipating(eventId: string): Promise<Transaction> {
+    async stopParticipating(eventId: ParticipationEventId): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
