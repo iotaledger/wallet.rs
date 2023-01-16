@@ -3,7 +3,7 @@
 
 {
   "compilerOptions": {
-    "allowUnreachableCode": false,
+    "allowUnreachableCode": true,
     "declaration": true,
     "esModuleInterop": true,
     "lib": ["dom", "es2017"],
@@ -14,11 +14,19 @@
     "noUnusedParameters": true,
     "outDir": "dist/esm",
     "pretty": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "target": "es2017"
   },
   "files": [
     "src/index.ts",
-    "src/definitions.ts"
-  ]
+    "src/definitions.ts",
+    // "src/lib/index.ts",
+    // "src/lib/bindings.ts",
+    // "src/lib/AccountManager.ts",
+    // "src/lib/Account.ts",
+    // "src/lib/MessageHandler.ts",
+    // "src/types/index.ts"
+  ],
+  "include": ["src/*", "src/lib/**/*", "src/types/**/*"],
+  // "include": ["src/types"],
 }

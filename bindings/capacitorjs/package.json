@@ -1,11 +1,9 @@
 {
   "name": "@iota/wallet-mobile",
-  "version": "0.0.1",
+  "version": "2.0.0-alpha.0",
   "description": "Capacitor plugin binding to the wallet library",
   "homepage": "https://github.com/iotaledger/wallet.rs#readme",
-  "main": "dist/esm/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
+  "main": "dist/api.js",
   "files": [
     "android/src/main/",
     "android/build.gradle",
