@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::EventId;
+use iota_client::node_api::participation::types::ParticipationEventId;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     block::{
@@ -377,15 +377,15 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     Vote {
         #[serde(rename = "eventId")]
-        event_id: Option<EventId>,
+        event_id: Option<ParticipationEventId>,
         answers: Option<Vec<u8>>,
     },
-    /// Stop participation for an event.
+    /// Stop participating for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     StopParticipating {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
     },
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)

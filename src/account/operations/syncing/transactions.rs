@@ -59,11 +59,7 @@ impl AccountHandle {
 
             // check if we have an output (remainder, if not sending to an own address) that got created by this
             // transaction, if that's the case, then the transaction got confirmed
-            let transaction_output = account
-                .outputs
-                .keys()
-                .into_iter()
-                .find(|o| o.transaction_id() == transaction_id);
+            let transaction_output = account.outputs.keys().find(|o| o.transaction_id() == transaction_id);
 
             if let Some(transaction_output) = transaction_output {
                 // Save to unwrap, we just got the output

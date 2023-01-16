@@ -24,6 +24,7 @@ import type {
     TransactionOptions,
     NftOptions,
 } from '../transactionOptions';
+import type {ParticipationEventId} from "../participation";
 
 export type __BuildAliasOutputMethod__ = {
     name: 'buildAliasOutput';
@@ -336,7 +337,7 @@ export type __SyncAccountMethod__ = {
 export type __VoteMethod__ = {
     name: 'vote';
     data: {
-        eventId?: string;
+        eventId?: ParticipationEventId;
         answers?: number[];
     };
 };
@@ -344,7 +345,7 @@ export type __VoteMethod__ = {
 export type __StopParticipatingMethod__ = {
     name: 'stopParticipating';
     data: {
-        eventId: string;
+        eventId: ParticipationEventId;
     };
 };
 
