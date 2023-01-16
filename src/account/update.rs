@@ -149,16 +149,13 @@ impl AccountHandle {
                         WalletEvent::NewOutput(Box::new(NewOutputEvent {
                             output: OutputDataDto::from(&output_data),
                             transaction: transaction.as_ref().map(|tx| TransactionPayloadDto::from(&tx.payload)),
-                            transaction_inputs: transaction
-                                .as_ref()
-                                .map(|tx| {
-                                    tx.inputs
-                                        .clone()
-                                        .into_iter()
-                                        .map(OutputWithMetadataResponse::from)
-                                        .collect()
-                                })
-                                .clone(),
+                            transaction_inputs: transaction.as_ref().map(|tx| {
+                                tx.inputs
+                                    .clone()
+                                    .into_iter()
+                                    .map(OutputWithMetadataResponse::from)
+                                    .collect()
+                            }),
                         })),
                     );
                 }
