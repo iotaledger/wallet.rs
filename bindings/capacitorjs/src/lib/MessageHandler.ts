@@ -4,9 +4,9 @@
 import {
     sendMessageAsync,
     messageHandlerNew,
-    listen,
-    clearListeners,
-    destroy,
+    listen as _listen,
+    clearListeners as _clearListeners,
+    destroy as _destroy,
 } from './bindings';
 import type {
     EventType,
@@ -17,24 +17,22 @@ import type {
 } from '../types';
 
 // The MessageHandler class interacts with messages with the rust bindings.
-export class MessageHandler {
-    messageHandler: any;
-
-    constructor(options?: AccountManagerOptions) {
-        const messageOptions = {
+export async function MessageHandler(options?: AccountManagerOptions) {
+    
+    const messageOptions = {
             storagePath: options?.storagePath,
             clientOptions: options?.clientOptions,
             coinType: options?.coinType,
-            secretManager: options?.secretManager,
-        };
-
-        this.messageHandler = messageHandlerNew(JSON.stringify(messageOptions));
-    }
-
-    async sendMessage(message: __Message__): Promise<string> {
-        return sendMessageAsync(
+            secretManager: options?.secretManager
+    };
+    const { messageHandler } = await messageHandlerNew(messageOptions);
+    // messageHandler = messageHandler.messageHandler;
+    // console.error(messageHandler.messageHandler, 'received')
+    
+    async function sendMessage(message: __Message__): Promise<string> {
+        return await sendMessageAsync(
             JSON.stringify(message),
-            this.messageHandler,
+            messageHandler,
         ).catch((error) => {
             try {
                 error = JSON.parse(error).payload;
@@ -43,11 +41,11 @@ export class MessageHandler {
         });
     }
 
-    async callAccountMethod(
+    async function callAccountMethod(
         accountIndex: AccountId,
         method: __AccountMethod__,
     ): Promise<string> {
-        return this.sendMessage({
+        return sendMessage({
             cmd: 'callAccountMethod',
             payload: {
                 accountId: accountIndex,
@@ -56,18 +54,44 @@ export class MessageHandler {
         });
     }
 
-    listen(
+    async function listen(
         eventTypes: EventType[],
-        callback: (error: Error, result: string) => void,
-    ): void {
-        return listen(eventTypes, callback, this.messageHandler);
+        callback: (error: Error | undefined, result: string) => void,
+    ): Promise<void> {
+        await _listen({ eventTypes, messageHandler }, ({ error, result }) => {
+            const Error = error ? {
+                name: error.toString(), 
+                message: error.cause?.toString() || ''
+            } : undefined
+            callback(
+                Error,
+                result
+            )
+        });
     }
 
-    clearListeners(eventTypes: EventType[]): void {
-        return clearListeners(eventTypes, this.messageHandler);
+    async function clearListeners(
+        eventTypes: EventType[]
+    ): Promise<void> {
+        await _clearListeners({ eventTypes, messageHandler }, ({ error, result }) => {
+            const Error = error ? {
+                name: error.toString(), 
+                message: error?.cause?.toString()
+            } : undefined
+            return Error || result
+        });
     }
 
-    destroy(): void {
-        return destroy(this.messageHandler);
+    function destroy(): void {
+        _destroy({ messageHandler });
+    }
+
+    return {
+        messageHandler,
+        sendMessage,
+        callAccountMethod,
+        listen,
+        clearListeners,
+        destroy
     }
 }
