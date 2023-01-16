@@ -1,8 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-export default {
-  input: 'dist/esm/index.js',
+export default [{
+  input: ['dist/esm/index.js'],
   output: [
     {
     file: 'dist/plugin.js',
@@ -16,4 +16,17 @@ export default {
     },
   ],
   external: ['@capacitor/core'],
-};
+},
+{
+  input: ['dist/esm/lib/index.js'],
+  output: [
+    {
+    file: 'dist/api.js',
+    // format: 'iife',
+    // globals: {
+    //   '@capacitor/core': 'capacitorExports',
+    // },
+    },
+  ],
+  external: ['@capacitor/core'],
+}];
