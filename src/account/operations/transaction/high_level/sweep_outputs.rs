@@ -73,7 +73,7 @@ impl AccountHandle {
 
     async fn output_id_and_next_alias_output_state(&self, alias_id: AliasId) -> crate::Result<(OutputId, AliasOutput)> {
         let account = self.read().await;
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let (output_id, alias_output) = account
             .unspent_outputs()
@@ -106,8 +106,8 @@ impl AccountHandle {
         options: &'a Option<TransactionOptions>,
     ) -> Pin<Box<dyn Future<Output = crate::Result<Transaction>> + Send + 'a>> {
         async move {
-            let token_supply = self.client.read().await.get_token_supply().await?;
-            let bech32_hrp = self.client.read().await.get_bech32_hrp().await?;
+            let token_supply = self.client.get_token_supply().await?;
+            let bech32_hrp = self.client.get_bech32_hrp().await?;
             let address = AddressWrapper::new(address, bech32_hrp);
             let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
@@ -149,7 +149,7 @@ impl AccountHandle {
             let mut output_ids = Vec::new();
             let mut outputs = Vec::new();
 
-            let network_id = self.client.read().await.get_network_id().await?;
+            let network_id = self.client.get_network_id().await?;
 
             for mut output_response in basic_outputs {
                 if output_response.metadata.is_spent {
@@ -247,9 +247,9 @@ impl AccountHandle {
         network_id: u64,
     ) -> crate::Result<()> {
         let mut account = self.write().await;
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let token_supply = self.client.get_token_supply().await?;
         let output = Output::try_from_dto(&output_response.output, token_supply)?;
-        let local_time = self.client.read().await.get_time_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         let (_amount, address) = ClientBlockBuilder::get_output_amount_and_address(&output, None, local_time)?;
         // check if we know the transaction that created this output and if we created it (if we store incoming

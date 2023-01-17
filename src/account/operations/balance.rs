@@ -24,10 +24,10 @@ impl AccountHandle {
         let account_addresses = self.addresses().await?;
         let account = self.read().await;
 
-        let network_id = self.client.read().await.get_network_id().await?;
-        let rent_structure = self.client.read().await.get_rent_structure().await?;
+        let network_id = self.client.get_network_id().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
 
-        let local_time = self.client.read().await.get_time_checked().await?;
+        let local_time = self.client.get_time_checked().await?;
 
         let mut total_amount = 0;
         let mut total_rent_amount = 0;

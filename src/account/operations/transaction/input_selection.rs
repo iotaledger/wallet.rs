@@ -35,7 +35,7 @@ impl AccountHandle {
         let voting_output = self.get_voting_output().await?;
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
@@ -43,8 +43,8 @@ impl AccountHandle {
             WalletEvent::TransactionProgress(TransactionProgressEvent::SelectingInputs),
         );
 
-        let current_time = self.client.read().await.get_time_checked().await?;
-        let bech32_hrp = self.client.read().await.get_bech32_hrp().await?;
+        let current_time = self.client.get_time_checked().await?;
+        let bech32_hrp = self.client.get_bech32_hrp().await?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)

@@ -3,7 +3,11 @@
 
 mod stronghold_snapshot;
 
-use std::{fs, path::PathBuf, sync::atomic::Ordering};
+use std::{
+    fs,
+    path::PathBuf,
+    sync::{atomic::Ordering, Arc},
+};
 
 use iota_client::secret::{stronghold::StrongholdSecretManager, SecretManager, SecretManagerDto};
 use zeroize::Zeroize;
@@ -89,7 +93,7 @@ impl AccountManager {
         // Update AccountManager with read data
         if let Some(read_client_options) = read_client_options {
             *self.client_options.write().await = read_client_options.clone();
-            *self.client.write().await = read_client_options.finish()?;
+            *self.client.write().await = Arc::new(read_client_options.finish()?);
         }
 
         if let Some(read_coin_type) = read_coin_type {
@@ -122,7 +126,7 @@ impl AccountManager {
             for account in read_accounts {
                 restored_account_handles.push(AccountHandle::new(
                     account,
-                    self.client.clone(),
+                    self.client.read().await.clone(),
                     self.secret_manager.clone(),
                     #[cfg(feature = "events")]
                     self.event_emitter.clone(),

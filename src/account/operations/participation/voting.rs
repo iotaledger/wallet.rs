@@ -90,7 +90,7 @@ impl AccountHandle {
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),
                 Feature::Metadata(MetadataFeature::new(participation_bytes.clone())?),
             ])
-            .finish_output(self.client.read().await.get_token_supply().await?)?;
+            .finish_output(self.client.get_token_supply().await?)?;
 
         self.send(
             vec![new_output],
@@ -159,7 +159,7 @@ impl AccountHandle {
                 Feature::Tag(TagFeature::new(PARTICIPATION_TAG.as_bytes().to_vec())?),
                 Feature::Metadata(MetadataFeature::new(participation_bytes.clone())?),
             ])
-            .finish_output(self.client.read().await.get_token_supply().await?)?;
+            .finish_output(self.client.get_token_supply().await?)?;
 
         self.send(
             vec![new_output],

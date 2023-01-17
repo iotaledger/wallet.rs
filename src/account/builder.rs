@@ -33,7 +33,7 @@ pub struct AccountBuilder {
     addresses: Option<Vec<AccountAddress>>,
     alias: Option<String>,
     bech32_hrp: Option<String>,
-    client: Arc<RwLock<Client>>,
+    client: Arc<RwLock<Arc<Client>>>,
     coin_type: u32,
     secret_manager: Arc<RwLock<SecretManager>>,
     accounts: Arc<RwLock<Vec<AccountHandle>>>,
@@ -47,7 +47,7 @@ impl AccountBuilder {
     /// Create an IOTA client builder
     pub fn new(
         accounts: Arc<RwLock<Vec<AccountHandle>>>,
-        client: Arc<RwLock<Client>>,
+        client: Arc<RwLock<Arc<Client>>>,
         coin_type: u32,
         secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
@@ -192,7 +192,7 @@ impl AccountBuilder {
 
         let account_handle = AccountHandle::new(
             account,
-            self.client.clone(),
+            self.client.read().await.clone(),
             self.secret_manager.clone(),
             #[cfg(feature = "events")]
             self.event_emitter.clone(),

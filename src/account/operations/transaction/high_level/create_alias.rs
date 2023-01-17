@@ -109,8 +109,8 @@ impl AccountHandle {
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_create_alias_output");
-        let rent_structure = self.client.read().await.get_rent_structure().await?;
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         let controller_address = match alias_output_options
             .as_ref()

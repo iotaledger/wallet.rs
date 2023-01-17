@@ -59,7 +59,7 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_send_amount");
         let mut outputs = Vec::new();
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         for address_with_amount in addresses_with_amount {
             outputs.push(

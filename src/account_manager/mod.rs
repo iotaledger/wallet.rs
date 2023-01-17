@@ -42,7 +42,7 @@ pub struct AccountManager {
     pub(crate) accounts: Arc<RwLock<Vec<AccountHandle>>>,
     // 0 = not running, 1 = running, 2 = stopping
     pub(crate) background_syncing_status: Arc<AtomicUsize>,
-    pub(crate) client: Arc<RwLock<Client>>,
+    pub(crate) client: Arc<RwLock<Arc<Client>>>,
     pub(crate) client_options: Arc<RwLock<ClientOptions>>,
     pub(crate) coin_type: Arc<AtomicU32>,
     pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
@@ -131,9 +131,12 @@ impl AccountManager {
         *client_options = options.clone();
         drop(client_options);
 
+        let new_client = Arc::new(options.clone().finish()?);
+        *self.client.write().await = new_client.clone();
+
         let mut accounts = self.accounts.write().await;
         for account in accounts.iter_mut() {
-            account.update_account_with_new_client().await?;
+            account.update_account_with_new_client(new_client.clone()).await?;
         }
 
         #[cfg(feature = "storage")]
@@ -163,7 +166,7 @@ impl AccountManager {
 
         // Try to get the Client from the first account and only build the Client if we have no account
         let node_info_wrapper = match &accounts.first() {
-            Some(account) => account.client.read().await.get_info().await?,
+            Some(account) => account.client.get_info().await?,
             None => self.client.read().await.get_info().await?,
         };
 

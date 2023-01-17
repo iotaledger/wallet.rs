@@ -17,7 +17,7 @@ use crate::account::handle::AccountHandle;
 impl AccountHandle {
     /// Returns output ids of alias outputs and foundries owned by them
     pub(crate) async fn get_alias_and_foundry_output_ids(self, bech32_address: &str) -> crate::Result<Vec<OutputId>> {
-        let client = &self.client.read().await.clone();
+        let client = &self.client.clone();
         let tasks = vec![
             // Get outputs where the address is in the governor address unlock condition
             async move {

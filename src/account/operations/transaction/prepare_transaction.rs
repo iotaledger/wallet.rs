@@ -29,8 +29,8 @@ impl AccountHandle {
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] prepare_transaction");
         let prepare_transaction_start_time = Instant::now();
-        let rent_structure = self.client.read().await.get_rent_structure().await?;
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let rent_structure = self.client.get_rent_structure().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         // Check if the outputs have enough amount to cover the storage deposit
         for output in &outputs {
@@ -55,8 +55,8 @@ impl AccountHandle {
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
                         ))?;
                     }
-                    let current_time = self.client.read().await.get_time_checked().await?;
-                    let bech32_hrp = self.client.read().await.get_bech32_hrp().await?;
+                    let current_time = self.client.get_time_checked().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp().await?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {
@@ -98,8 +98,8 @@ impl AccountHandle {
                             TryIntoBoundedU16Error::Truncated(inputs.len()),
                         ))?;
                     }
-                    let current_time = self.client.read().await.get_time_checked().await?;
-                    let bech32_hrp = self.client.read().await.get_bech32_hrp().await?;
+                    let current_time = self.client.get_time_checked().await?;
+                    let bech32_hrp = self.client.get_bech32_hrp().await?;
                     let account = self.read().await;
                     let mut input_outputs = Vec::new();
                     for output_id in inputs {

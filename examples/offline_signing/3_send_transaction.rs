@@ -26,7 +26,7 @@ async fn main() -> Result<()> {
     let account = manager.get_account("Alice").await?;
 
     let signed_transaction_data =
-        read_signed_transaction_from_file(&account.client().read().await.clone(), SIGNED_TRANSACTION_FILE_NAME).await?;
+        read_signed_transaction_from_file(&account.client().clone(), SIGNED_TRANSACTION_FILE_NAME).await?;
 
     // Sends offline signed transaction online.
     let result = account.submit_and_store_transaction(signed_transaction_data).await?;

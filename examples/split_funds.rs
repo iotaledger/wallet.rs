@@ -66,7 +66,7 @@ async fn main() -> Result<()> {
     let addresses_with_unspent_outputs = account.addresses_with_unspent_outputs().await?;
     println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
 
-    let token_supply = account.client().read().await.get_token_supply().await?;
+    let token_supply = account.client().get_token_supply().await?;
 
     // send transaction
     for chunk in addresses.chunks(100).map(|x| x.to_vec()) {

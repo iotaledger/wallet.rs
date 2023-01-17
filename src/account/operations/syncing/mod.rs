@@ -66,8 +66,6 @@ impl AccountHandle {
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
         let spent_or_unsynced_output_metadata_responses = self
             .client
-            .read()
-            .await
             .try_get_outputs_metadata(spent_or_not_synced_output_ids.clone())
             .await?;
 
@@ -158,7 +156,7 @@ impl AccountHandle {
                 outputs_data.extend(outputs_data_inner.clone().into_iter());
                 outputs_data_inner
             } else {
-                let bech32_hrp = self.client.read().await.get_bech32_hrp().await?;
+                let bech32_hrp = self.client.get_bech32_hrp().await?;
                 let mut new_outputs_data = Vec::new();
                 for (alias_or_nft_address, ed25519_address) in new_alias_and_nft_addresses {
                     let output_ids = self.get_output_ids_for_address(alias_or_nft_address, options).await?;

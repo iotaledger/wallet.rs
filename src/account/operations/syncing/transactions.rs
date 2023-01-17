@@ -34,7 +34,7 @@ impl AccountHandle {
             return Ok(());
         }
 
-        let network_id = self.client.read().await.get_network_id().await?;
+        let network_id = self.client.get_network_id().await?;
 
         let mut updated_transactions = Vec::new();
         let mut spent_output_ids = Vec::new();
@@ -93,7 +93,7 @@ impl AccountHandle {
             }
 
             if let Some(block_id) = transaction.block_id {
-                match self.client.read().await.get_block_metadata(&block_id).await {
+                match self.client.get_block_metadata(&block_id).await {
                     Ok(metadata) => {
                         if let Some(inclusion_state) = metadata.ledger_inclusion_state {
                             match inclusion_state {
@@ -115,12 +115,8 @@ impl AccountHandle {
                                     log::debug!("[SYNC] conflicting transaction {}", transaction_id);
                                     // try to get the included block, because maybe only this attachment is
                                     // conflicting because it got confirmed in another block
-                                    if let Ok(included_block) = self
-                                        .client
-                                        .read()
-                                        .await
-                                        .get_included_block(&transaction.payload.id())
-                                        .await
+                                    if let Ok(included_block) =
+                                        self.client.get_included_block(&transaction.payload.id()).await
                                     {
                                         updated_transaction_and_outputs(
                                             transaction,

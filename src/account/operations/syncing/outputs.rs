@@ -29,9 +29,9 @@ impl AccountHandle {
         log::debug!("[SYNC] convert output_responses");
         // store outputs with network_id
         let account = self.read().await;
-        let network_id = self.client.read().await.get_network_id().await?;
+        let network_id = self.client.get_network_id().await?;
         let mut outputs = Vec::new();
-        let token_supply = self.client.read().await.get_token_supply().await?;
+        let token_supply = self.client.get_token_supply().await?;
 
         for output_response in output_responses {
             let output = Output::try_from_dto(&output_response.output, token_supply)?;
@@ -102,7 +102,7 @@ impl AccountHandle {
         }
 
         if !unknown_outputs.is_empty() {
-            outputs.extend(self.client.read().await.get_outputs(unknown_outputs).await?);
+            outputs.extend(self.client.get_outputs(unknown_outputs).await?);
         }
 
         log::debug!(
@@ -132,7 +132,7 @@ impl AccountHandle {
                     continue;
                 }
 
-                let client = self.client.read().await.clone();
+                let client = self.client.clone();
                 tasks.push(async move {
                     tokio::spawn(async move {
                         match client.get_included_block(&transaction_id).await {
