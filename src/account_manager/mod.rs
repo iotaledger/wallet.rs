@@ -131,6 +131,8 @@ impl AccountManager {
         *client_options = options.clone();
         drop(client_options);
 
+        *self.client.write().await = options.clone().finish()?;
+
         let mut accounts = self.accounts.write().await;
         for account in accounts.iter_mut() {
             account.update_account_with_new_client().await?;
