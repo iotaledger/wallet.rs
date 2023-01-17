@@ -377,7 +377,9 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(
+                            account_handle.client.read().await.get_rent_structure().await?,
+                        )
                     },
                     native_tokens,
                     &alias_id,
@@ -387,7 +389,7 @@ impl WalletMessageHandler {
                     unlock_conditions,
                     features,
                     immutable_features,
-                    account_handle.client.get_token_supply().await?,
+                    account_handle.client.read().await.get_token_supply().await?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -402,12 +404,14 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(
+                            account_handle.client.read().await.get_rent_structure().await?,
+                        )
                     },
                     native_tokens,
                     unlock_conditions,
                     features,
-                    account_handle.client.get_token_supply().await?,
+                    account_handle.client.read().await.get_token_supply().await?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -425,7 +429,9 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(
+                            account_handle.client.read().await.get_rent_structure().await?,
+                        )
                     },
                     native_tokens,
                     serial_number,
@@ -433,7 +439,7 @@ impl WalletMessageHandler {
                     unlock_conditions,
                     features,
                     immutable_features,
-                    account_handle.client.get_token_supply().await?,
+                    account_handle.client.read().await.get_token_supply().await?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -450,14 +456,16 @@ impl WalletMessageHandler {
                     if let Some(amount) = amount {
                         OutputBuilderAmountDto::Amount(amount)
                     } else {
-                        OutputBuilderAmountDto::MinimumStorageDeposit(account_handle.client.get_rent_structure().await?)
+                        OutputBuilderAmountDto::MinimumStorageDeposit(
+                            account_handle.client.read().await.get_rent_structure().await?,
+                        )
                     },
                     native_tokens,
                     &nft_id,
                     unlock_conditions,
                     features,
                     immutable_features,
-                    account_handle.client.get_token_supply().await?,
+                    account_handle.client.read().await.get_token_supply().await?,
                 )?);
 
                 Ok(Response::Output(OutputDto::from(&output)))
@@ -685,8 +693,9 @@ impl WalletMessageHandler {
             }
             AccountMethod::MinimumRequiredStorageDeposit { output } => {
                 convert_async_panics(|| async {
-                    let output = Output::try_from_dto(&output, account_handle.client.get_token_supply().await?)?;
-                    let rent_structure = account_handle.client.get_rent_structure().await?;
+                    let output =
+                        Output::try_from_dto(&output, account_handle.client.read().await.get_token_supply().await?)?;
+                    let rent_structure = account_handle.client.read().await.get_rent_structure().await?;
 
                     let minimum_storage_deposit = output.rent_cost(&rent_structure);
 
@@ -752,7 +761,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::PrepareTransaction { outputs, options } => {
                 convert_async_panics(|| async {
-                    let token_supply = account_handle.client.get_token_supply().await?;
+                    let token_supply = account_handle.client.read().await.get_token_supply().await?;
                     let data = account_handle
                         .prepare_transaction(
                             outputs
@@ -857,7 +866,7 @@ impl WalletMessageHandler {
             }
             AccountMethod::SendOutputs { outputs, options } => {
                 convert_async_panics(|| async {
-                    let token_supply = account_handle.client.get_token_supply().await?;
+                    let token_supply = account_handle.client.read().await.get_token_supply().await?;
                     let transaction = account_handle
                         .send(
                             outputs
@@ -878,7 +887,7 @@ impl WalletMessageHandler {
                     let signed_transaction_data = account_handle
                         .sign_transaction_essence(&PreparedTransactionData::try_from_dto(
                             &prepared_transaction_data,
-                            &account_handle.client.get_protocol_parameters().await?,
+                            &account_handle.client.read().await.get_protocol_parameters().await?,
                         )?)
                         .await?;
                     Ok(Response::SignedTransactionData(SignedTransactionDataDto::from(
@@ -893,7 +902,7 @@ impl WalletMessageHandler {
                 convert_async_panics(|| async {
                     let signed_transaction_data = SignedTransactionData::try_from_dto(
                         &signed_transaction_data,
-                        &account_handle.client.get_protocol_parameters().await?,
+                        &account_handle.client.read().await.get_protocol_parameters().await?,
                     )?;
                     let transaction = account_handle
                         .submit_and_store_transaction(signed_transaction_data)

@@ -20,7 +20,7 @@ impl AccountHandle {
                 continue;
             }
 
-            let client = self.client.clone();
+            let client = self.client.read().await.clone();
             tasks.push(async move {
                 tokio::spawn(async move {
                     match client.foundry_output_id(foundry_id).await {
@@ -33,7 +33,7 @@ impl AccountHandle {
             });
         }
 
-        let token_supply = self.client.get_token_supply().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
         let results = futures::future::try_join_all(tasks).await?;
 
         // Update account with new foundries.

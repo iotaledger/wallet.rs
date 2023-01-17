@@ -18,7 +18,7 @@ impl AccountHandle {
     ) -> crate::Result<Transaction> {
         log::debug!("[TRANSACTION] destroy_foundry");
 
-        let token_supply = self.client.get_token_supply().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
         let alias_id = *foundry_id.alias_address().alias_id();
         let (existing_alias_output_data, existing_foundry_output_data) =
             self.find_alias_and_foundry_output_data(alias_id, foundry_id).await?;

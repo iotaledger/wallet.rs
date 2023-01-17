@@ -76,8 +76,8 @@ impl AccountHandle {
         let voting_output = self.get_voting_output().await?;
         let account = self.read().await;
         let account_addresses = &account.addresses_with_unspent_outputs[..];
-        let current_time = self.client.get_time_checked().await?;
-        let token_supply = self.client.get_token_supply().await?;
+        let current_time = self.client.read().await.get_time_checked().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
 
         let mut outputs_to_consolidate = Vec::new();
         for (output_id, output_data) in account.unspent_outputs() {

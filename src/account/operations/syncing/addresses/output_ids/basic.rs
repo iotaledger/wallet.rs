@@ -16,6 +16,8 @@ impl AccountHandle {
     ) -> iota_client::Result<Vec<OutputId>> {
         // Only request basic outputs with `AddressUnlockCondition` only
         self.client
+            .read()
+            .await
             .basic_output_ids(vec![
                 QueryParameter::Address(bech32_address),
                 QueryParameter::HasExpiration(false),
@@ -31,7 +33,7 @@ impl AccountHandle {
         self,
         bech32_address: &str,
     ) -> crate::Result<Vec<OutputId>> {
-        let client = &self.client;
+        let client = &self.client.read().await.clone();
         let tasks = vec![
             // Get basic outputs
             async move {

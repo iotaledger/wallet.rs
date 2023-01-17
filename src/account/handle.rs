@@ -48,7 +48,7 @@ pub struct FilterOptions {
 #[derive(Debug, Clone)]
 pub struct AccountHandle {
     account: Arc<RwLock<Account>>,
-    pub(crate) client: Arc<Client>,
+    pub(crate) client: Arc<RwLock<Client>>,
     pub(crate) secret_manager: Arc<RwLock<SecretManager>>,
     // mutex to prevent multiple sync calls at the same or almost the same time, the u128 is a timestamp
     // if the last synced time was < `MIN_SYNC_INTERVAL` second ago, we don't sync, but only calculate the balance
@@ -64,7 +64,7 @@ impl AccountHandle {
     /// Create a new AccountHandle with an Account
     pub(crate) fn new(
         account: Account,
-        client: Arc<Client>,
+        client: Arc<RwLock<Client>>,
         secret_manager: Arc<RwLock<SecretManager>>,
         #[cfg(feature = "events")] event_emitter: Arc<Mutex<EventEmitter>>,
         #[cfg(feature = "storage")] storage_manager: StorageManagerHandle,
@@ -86,7 +86,7 @@ impl AccountHandle {
     }
 
     // Get the Client
-    pub fn client(&self) -> Arc<Client> {
+    pub fn client(&self) -> Arc<RwLock<Client>> {
         self.client.clone()
     }
 
@@ -111,12 +111,12 @@ impl AccountHandle {
         drop(account);
 
         // Foundry was not found in the account, try to get it from the node
-        let foundry_output_id = self.client.foundry_output_id(foundry_id).await?;
-        let output_response = self.client.get_output(&foundry_output_id).await?;
+        let foundry_output_id = self.client.read().await.foundry_output_id(foundry_id).await?;
+        let output_response = self.client.read().await.get_output(&foundry_output_id).await?;
 
         Ok(Output::try_from_dto(
             &output_response.output,
-            self.client.get_token_supply().await?,
+            self.client.read().await.get_token_supply().await?,
         )?)
     }
 

@@ -39,7 +39,7 @@ impl AccountHandle {
     /// Prioritizes consuming outputs that are designated for voting but don't have any metadata (only possible if user
     /// increases voting power then increases again immediately after).
     pub async fn increase_voting_power(&self, amount: u64) -> Result<Transaction> {
-        let token_supply = self.client.get_token_supply().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
 
         let (new_output, tx_options) = match self.get_voting_output().await? {
             Some(current_output_data) => {
@@ -90,7 +90,7 @@ impl AccountHandle {
     /// Prioritizes consuming outputs that are designated for voting but don't have any metadata (only possible if user
     /// increases voting power then decreases immediately after).
     pub async fn decrease_voting_power(&self, amount: u64) -> Result<Transaction> {
-        let token_supply = self.client.get_token_supply().await?;
+        let token_supply = self.client.read().await.get_token_supply().await?;
         let current_output_data = self
             .get_voting_output()
             .await?

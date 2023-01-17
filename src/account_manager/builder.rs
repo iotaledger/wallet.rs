@@ -171,7 +171,7 @@ impl AccountManagerBuilder {
                 }
             };
 
-            let client_arc = Arc::new(client_options.clone().finish()?);
+            let client = Arc::new(RwLock::new(client_options.clone().finish()?));
 
             let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
 
@@ -183,9 +183,7 @@ impl AccountManagerBuilder {
                 accounts: Arc::new(RwLock::new(
                     accounts
                         .into_iter()
-                        .map(|a| {
-                            AccountHandle::new(a, client_arc.clone(), secret_manager.clone(), storage_manager.clone())
-                        })
+                        .map(|a| AccountHandle::new(a, client.clone(), secret_manager.clone(), storage_manager.clone()))
                         .collect(),
                 )),
                 #[cfg(feature = "events")]
@@ -195,7 +193,7 @@ impl AccountManagerBuilder {
                         .map(|a| {
                             AccountHandle::new(
                                 a,
-                                client_arc.clone(),
+                                client.clone(),
                                 secret_manager.clone(),
                                 event_emitter.clone(),
                                 storage_manager.clone(),
@@ -204,7 +202,7 @@ impl AccountManagerBuilder {
                         .collect(),
                 )),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
-                client: Arc::new(RwLock::new(client_arc)),
+                client,
                 client_options: Arc::new(RwLock::new(client_options)),
                 coin_type: Arc::new(AtomicU32::new(coin_type)),
                 secret_manager,
@@ -222,7 +220,7 @@ impl AccountManagerBuilder {
         Ok(AccountManager {
             accounts: Arc::new(RwLock::new(Vec::new())),
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
-            client: Arc::new(RwLock::new(Arc::new(client_options.clone().finish()?))),
+            client: Arc::new(RwLock::new(client_options.clone().finish()?)),
             client_options: Arc::new(RwLock::new(client_options)),
             coin_type: Arc::new(AtomicU32::new(
                 self.coin_type

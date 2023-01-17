@@ -20,7 +20,7 @@ impl AccountHandle {
         // Drop account so it's not locked during PoW
         drop(account);
 
-        let local_pow = self.client.get_local_pow();
+        let local_pow = self.client.read().await.get_local_pow();
         if local_pow {
             log::debug!("[TRANSACTION] doing local pow");
             #[cfg(feature = "events")]
@@ -31,6 +31,8 @@ impl AccountHandle {
         }
         let block = self
             .client
+            .read()
+            .await
             .finish_block_builder(None, Some(Payload::from(transaction_payload)))
             .await?;
 
@@ -39,7 +41,7 @@ impl AccountHandle {
             account_index,
             WalletEvent::TransactionProgress(TransactionProgressEvent::Broadcasting),
         );
-        let block_id = self.client.post_block(&block).await?;
+        let block_id = self.client.read().await.post_block(&block).await?;
         log::debug!("[TRANSACTION] submitted block {}", block_id);
         Ok(block_id)
     }

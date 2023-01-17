@@ -14,7 +14,7 @@ impl AccountHandle {
         self,
         bech32_address: &str,
     ) -> crate::Result<Vec<OutputId>> {
-        let client = &self.client.clone();
+        let client = &self.client.read().await.clone();
         let tasks = vec![
             async move {
                 let bech32_address_ = bech32_address.to_string();
