@@ -26,9 +26,11 @@ import org.iota.types.events.transaction.TransactionProgressEvent;
 import org.iota.types.events.wallet.WalletEventType;
 import org.iota.types.exceptions.WalletException;
 import org.iota.types.secret.StrongholdSecretManager;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -59,6 +61,13 @@ public class IotaWalletMobile extends Plugin {
         Log.d("_clientOptions", _clientOptions.get("nodes").toString());
 
 
+        JSONArray _nodes = _clientOptions.getJSONArray("nodes");
+        String[] nodes = new String[_nodes.length()];
+        for (int i = 0; i < _nodes.length(); i++) {
+            JSONObject _node = (JSONObject) _nodes.get(i);
+            nodes[i] = _node.get("url").toString();
+        }
+        
         JSONObject secretManager = _secretManager.getJSONObject("stronghold");
         Log.d("_storagePath", path + secretManager.get("snapshotPath"));
         if (_coinType == null) {
@@ -71,13 +80,12 @@ public class IotaWalletMobile extends Plugin {
 
         try {
             wallet = new Wallet(new WalletConfig()
-                    .withClientOptions(new ClientConfig().withNodes("https://api.testnet.shimmer.network"))
+                    .withClientOptions(new ClientConfig().withNodes(nodes))
                     .withStoragePath(path)
                     .withSecretManager(
                             new StrongholdSecretManager(
                                     null,
                                     null,
-//                                    path + secretManager.get("snapshotPath")
                                     path + "/wallet.stronghold"
                             )
                     )
