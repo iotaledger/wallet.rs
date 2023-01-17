@@ -332,61 +332,6 @@ impl WalletMessageHandler {
                 })
                 .await
             }
-            #[cfg(feature = "participation")]
-            Message::RegisterParticipationEvent { event_id, nodes } => {
-                convert_async_panics(|| async {
-                    let event = self
-                        .account_manager
-                        .register_participation_event(event_id, nodes)
-                        .await?;
-                    Ok(Response::ParticipationEvent(Some(event)))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
-            Message::DeregisterParticipationEvent { event_id } => {
-                convert_async_panics(|| async {
-                    self.account_manager.deregister_participation_event(&event_id).await?;
-                    Ok(Response::Ok(()))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
-            Message::GetParticipationEvent { event_id } => {
-                convert_async_panics(|| async {
-                    let event = self
-                        .account_manager
-                        .get_participation_event(event_id)
-                        .await?
-                        .map(|(e, _)| e);
-                    Ok(Response::ParticipationEvent(event))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
-            Message::GetParticipationEventIds(event_type) => {
-                convert_async_panics(|| async {
-                    let event_ids = self.account_manager.get_participation_event_ids(event_type).await?;
-                    Ok(Response::ParticipationEventIds(event_ids))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
-            Message::GetParticipationEventStatus { event_id } => {
-                convert_async_panics(|| async {
-                    let event_status = self.account_manager.get_participation_event_status(&event_id).await?;
-                    Ok(Response::ParticipationEventStatus(event_status))
-                })
-                .await
-            }
-            #[cfg(feature = "participation")]
-            Message::GetParticipationEvents => {
-                convert_async_panics(|| async {
-                    let events = self.account_manager.get_participation_events().await?;
-                    Ok(Response::ParticipationEvents(events))
-                })
-                .await
-            }
         };
 
         let response = match response {
@@ -1017,6 +962,54 @@ impl WalletMessageHandler {
                         )
                         .await?;
                     Ok(Response::SentTransaction(TransactionDto::from(&transaction)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::RegisterParticipationEvent { event_id, nodes } => {
+                convert_async_panics(|| async {
+                    let event = account_handle.register_participation_event(event_id, nodes).await?;
+                    Ok(Response::ParticipationEvent(Some(event)))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::DeregisterParticipationEvent { event_id } => {
+                convert_async_panics(|| async {
+                    account_handle.deregister_participation_event(&event_id).await?;
+                    Ok(Response::Ok(()))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetParticipationEvent { event_id } => {
+                convert_async_panics(|| async {
+                    let event = account_handle.get_participation_event(event_id).await?.map(|(e, _)| e);
+                    Ok(Response::ParticipationEvent(event))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetParticipationEventIds(event_type) => {
+                convert_async_panics(|| async {
+                    let event_ids = account_handle.get_participation_event_ids(event_type).await?;
+                    Ok(Response::ParticipationEventIds(event_ids))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetParticipationEventStatus { event_id } => {
+                convert_async_panics(|| async {
+                    let event_status = account_handle.get_participation_event_status(&event_id).await?;
+                    Ok(Response::ParticipationEventStatus(event_status))
+                })
+                .await
+            }
+            #[cfg(feature = "participation")]
+            AccountMethod::GetParticipationEvents => {
+                convert_async_panics(|| async {
+                    let events = account_handle.get_participation_events().await?;
+                    Ok(Response::ParticipationEvents(events))
                 })
                 .await
             }

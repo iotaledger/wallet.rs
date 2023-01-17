@@ -7,10 +7,6 @@
 - [Account](classes/Account.md)
 - [AccountManager](classes/AccountManager.md)
 
-### Functions
-
-- [initLogger](api_ref.md#initlogger)
-
 ### Type Aliases
 
 - [AccountId](api_ref.md#accountid)
@@ -86,24 +82,6 @@
 - [ReturnStrategy](enums/ReturnStrategy.md)
 - [LedgerDeviceType](enums/LedgerDeviceType.md)
 - [InclusionState](enums/InclusionState.md)
-
-## Functions
-
-### initLogger
-
-▸ **initLogger**(`config`): `any`
-
-Function to create wallet logs
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `config` | [`LoggerConfig`](interfaces/LoggerConfig.md) |
-
-#### Returns
-
-`any`
 
 ## Type Aliases
 

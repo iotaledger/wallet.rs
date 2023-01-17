@@ -1,4 +1,4 @@
-// Copyright 2022 IOTA Stiftung
+// Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
@@ -9,9 +9,9 @@ use iota_client::{
     Client,
 };
 
-use crate::account_manager::AccountManager;
+use crate::account::AccountHandle;
 
-impl AccountManager {
+impl AccountHandle {
     /// Stores participation information locally and returns the event.
     ///
     /// This will NOT store the node url and auth inside the client options.
@@ -33,7 +33,7 @@ impl AccountManager {
         self.storage_manager
             .lock()
             .await
-            .insert_participation_event(id, event.clone(), nodes)
+            .insert_participation_event(self.read().await.index, id, event.clone(), nodes)
             .await?;
 
         Ok(event)
@@ -41,7 +41,11 @@ impl AccountManager {
 
     /// Removes a previously registered participation event from local storage.
     pub async fn deregister_participation_event(&self, id: &ParticipationEventId) -> crate::Result<()> {
-        self.storage_manager.lock().await.remove_participation_event(id).await?;
+        self.storage_manager
+            .lock()
+            .await
+            .remove_participation_event(self.read().await.index, id)
+            .await?;
         Ok(())
     }
 
@@ -54,7 +58,7 @@ impl AccountManager {
             .storage_manager
             .lock()
             .await
-            .get_participation_events()
+            .get_participation_events(self.read().await.index)
             .await?
             .get(&id)
             .cloned())
@@ -66,7 +70,7 @@ impl AccountManager {
             .storage_manager
             .lock()
             .await
-            .get_participation_events()
+            .get_participation_events(self.read().await.index)
             .await?
             .values()
             .map(|(event, _nodes)| event.clone())
@@ -78,20 +82,7 @@ impl AccountManager {
         &self,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<ParticipationEventId>> {
-        let accounts = self.accounts.read().await;
-        let events = match accounts.first() {
-            Some(account) => account.client.events(event_type).await?,
-            None => {
-                self.client_options
-                    .read()
-                    .await
-                    .clone()
-                    .finish()?
-                    .events(event_type)
-                    .await?
-            }
-        };
-        Ok(events.event_ids)
+        Ok(self.client.events(event_type).await?.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.
@@ -99,20 +90,6 @@ impl AccountManager {
         &self,
         id: &ParticipationEventId,
     ) -> crate::Result<ParticipationEventStatus> {
-        let events = self.storage_manager.lock().await.get_participation_events().await?;
-
-        let event = events
-            .get(id)
-            .ok_or_else(|| crate::Error::Storage(format!("event {id} not found")))?;
-
-        let mut client_builder = Client::builder().with_ignore_node_health();
-        for node in &event.1 {
-            client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
-        }
-        let client = client_builder.finish()?;
-
-        let events_status = client.event_status(id, None).await?;
-
-        Ok(events_status)
+        Ok(self.get_client_for_event(id).await?.event_status(id, None).await?)
     }
 }
