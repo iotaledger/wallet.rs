@@ -23,7 +23,7 @@ impl StorageManager {
 
         let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> = match self
             .storage
-            .get(&format!("{account_index}{PARTICIPATION_EVENTS}"))
+            .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await
         {
             Ok(events) => serde_json::from_str(&events)?,
@@ -34,7 +34,7 @@ impl StorageManager {
         events.insert(id, (event, nodes));
 
         self.storage
-            .set(&format!("{account_index}{PARTICIPATION_EVENTS}"), &events)
+            .set(&format!("{PARTICIPATION_EVENTS}{account_index}"), &events)
             .await?;
 
         Ok(())
@@ -49,7 +49,7 @@ impl StorageManager {
 
         let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> = match self
             .storage
-            .get(&format!("{account_index}{PARTICIPATION_EVENTS}"))
+            .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await
         {
             Ok(events) => serde_json::from_str(&events)?,
@@ -60,7 +60,7 @@ impl StorageManager {
         events.remove(id);
 
         self.storage
-            .set(&format!("{account_index}{PARTICIPATION_EVENTS}"), &events)
+            .set(&format!("{PARTICIPATION_EVENTS}{account_index}"), &events)
             .await?;
 
         Ok(())
@@ -74,7 +74,7 @@ impl StorageManager {
 
         match self
             .storage
-            .get(&format!("{account_index}{PARTICIPATION_EVENTS}"))
+            .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await
         {
             Ok(events) => Ok(serde_json::from_str(&events)?),
