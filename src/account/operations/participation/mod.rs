@@ -8,6 +8,7 @@
 // address.
 // If the user has designated funds to vote with, the resulting output MUST NOT be used for input selection.
 
+pub mod event;
 pub mod voting;
 pub mod voting_power;
 
@@ -17,7 +18,7 @@ use iota_client::{
     block::output::{Output, OutputId},
     node_api::participation::{
         responses::TrackedParticipation,
-        types::{participation::Participations, ParticipationEventId, ParticipationEventStatus, PARTICIPATION_TAG},
+        types::{participation::Participations, ParticipationEventId, PARTICIPATION_TAG},
     },
     Client,
 };
@@ -122,7 +123,12 @@ impl AccountHandle {
     /// Gets client for an event.
     /// If event isn't found, the client from the account will be returned.
     pub(crate) async fn get_client_for_event(&self, id: &ParticipationEventId) -> crate::Result<Client> {
-        let events = self.storage_manager.lock().await.get_participation_events().await?;
+        let events = self
+            .storage_manager
+            .lock()
+            .await
+            .get_participation_events(self.read().await.index)
+            .await?;
 
         let event = match events.get(id) {
             Some(event) => event,
@@ -144,7 +150,12 @@ impl AccountHandle {
     ) -> crate::Result<()> {
         let latest_milestone_index = self.client().get_info().await?.node_info.status.latest_milestone.index;
 
-        let events = self.storage_manager.lock().await.get_participation_events().await?;
+        let events = self
+            .storage_manager
+            .lock()
+            .await
+            .get_participation_events(self.read().await.index)
+            .await?;
 
         // TODO try to remove this clone
         for participation in participations.participations.clone().iter() {
@@ -163,13 +174,5 @@ impl AccountHandle {
         }
 
         Ok(())
-    }
-
-    /// Retrieves the latest status of a given participation event.
-    pub(crate) async fn get_participation_event_status(
-        &self,
-        id: &ParticipationEventId,
-    ) -> crate::Result<ParticipationEventStatus> {
-        Ok(self.get_client_for_event(id).await?.event_status(id, None).await?)
     }
 }

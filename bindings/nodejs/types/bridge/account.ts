@@ -13,6 +13,7 @@ import type {
     BuildFoundryOutputData,
     BuildNftOutputData,
 } from '../buildOutputData';
+import type { Node } from '../network';
 import type { OutputOptions } from '../outputOptions';
 import type { OutputsToClaim } from '../output';
 import type { SignedTransactionEssence } from '../signedTransactionEssence';
@@ -24,7 +25,10 @@ import type {
     TransactionOptions,
     NftOptions,
 } from '../transactionOptions';
-import type {ParticipationEventId} from "../participation";
+import type {
+    ParticipationEventId,
+    ParticipationEventType,
+} from '../participation';
 
 export type __BuildAliasOutputMethod__ = {
     name: 'buildAliasOutput';
@@ -92,6 +96,13 @@ export type __DecreaseNativeTokenSupplyMethod__ = {
         tokenId: string;
         meltAmount: HexEncodedAmount;
         options?: TransactionOptions;
+    };
+};
+
+export type __DeregisterParticipationEventMethod__ = {
+    name: 'deregisterParticipationEvent';
+    data: {
+        eventId: ParticipationEventId;
     };
 };
 
@@ -249,6 +260,14 @@ export type __PrepareTransactionMethod__ = {
     };
 };
 
+export type __RegisterParticipationEventMethod__ = {
+    name: 'registerParticipationEvent';
+    data: {
+        eventId: ParticipationEventId;
+        nodes: Node[];
+    };
+};
+
 export type __RequestFundsFromFaucetMethod__ = {
     name: 'requestFundsFromFaucet';
     data: {
@@ -361,6 +380,31 @@ export type __IncreaseVotingPowerMethod__ = {
     name: 'increaseVotingPower';
     data: {
         amount: string;
+    };
+};
+
+export type __GetParticipationEventMethod__ = {
+    name: 'getParticipationEvent';
+    data: {
+        eventId: ParticipationEventId;
+    };
+};
+
+export type __GetParticipationEventIdsMethod__ = {
+    name: 'getParticipationEventIds';
+    data: {
+        eventType?: ParticipationEventType;
+    };
+};
+
+export type __GetParticipationEventsMethod__ = {
+    name: 'getParticipationEvents';
+};
+
+export type __GetParticipationEventStatusMethod__ = {
+    name: 'getParticipationEventStatus';
+    data: {
+        eventId: ParticipationEventId;
     };
 };
 

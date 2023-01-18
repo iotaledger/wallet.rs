@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `AccountManager::get_participation_event_ids` method;
+- `Account::get_participation_event_ids` method;
 - `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
 - `TransactionOptionsDto`;
 
@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `send_message` to return Option which is None when no message response is received;
 - Moved `init_logger` to message interface mod;
 - Limit max parallel requests for incoming transactions;
+- Move all participation methods from the AccountManager to the Account;
 
 ### Removed
 

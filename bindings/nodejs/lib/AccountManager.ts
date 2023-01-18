@@ -11,15 +11,10 @@ import type {
     Auth,
     ClientOptions,
     CreateAccountPayload,
-    ParticipationEvent,
-    ParticipationEventId,
-    ParticipationEventStatus,
     EventType,
     GenerateAddressOptions,
     LedgerNanoStatus,
-    Node,
     NodeInfoWrapper,
-    ParticipationEventType,
     WalletEvent,
 } from '../types';
 
@@ -96,15 +91,6 @@ export class AccountManager {
      */
     destroy(): void {
         this.messageHandler.destroy();
-    }
-
-    async deregisterParticipationEvent(eventId: ParticipationEventId): Promise<void> {
-        await this.messageHandler.sendMessage({
-            cmd: 'deregisterParticipationEvent',
-            payload: {
-                eventId,
-            },
-        });
     }
 
     /**
@@ -217,43 +203,6 @@ export class AccountManager {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvent(eventId: ParticipationEventId): Promise<ParticipationEvent> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'getParticipationEvent',
-            payload: {
-                eventId,
-            },
-        });
-        return JSON.parse(response).payload;
-    }
-
-    async getParticipationEventIds(eventType?: ParticipationEventType): Promise<ParticipationEventId[]> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'getParticipationEventIds',
-            payload: {
-                eventType,
-            },
-        });
-        return JSON.parse(response).payload;
-    }
-
-    async getParticipationEvents(): Promise<ParticipationEvent[]> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'getParticipationEvents',
-        });
-        return JSON.parse(response).payload;
-    }
-
-    async getParticipationEventStatus(eventId: ParticipationEventId): Promise<ParticipationEventStatus> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'getParticipationEventStatus',
-            payload: {
-                eventId,
-            },
-        });
-        return JSON.parse(response).payload;
-    }
-
     /**
      * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
      * is provided, the AccountManager will attempt to retrieve it from the
@@ -293,7 +242,7 @@ export class AccountManager {
     async clearListeners(eventTypes: EventType[]): Promise<void> {
         const response = await this.messageHandler.sendMessage({
             cmd: 'clearListeners',
-            payload: eventTypes
+            payload: eventTypes,
         });
         return JSON.parse(response).payload;
     }
@@ -332,21 +281,6 @@ export class AccountManager {
         await this.messageHandler.sendMessage({
             cmd: 'removeLatestAccount',
         });
-    }
-
-    async registerParticipationEvent(
-        eventId: ParticipationEventId,
-        nodes: Node[],
-    ): Promise<ParticipationEvent> {
-        const response = await this.messageHandler.sendMessage({
-            cmd: 'registerParticipationEvent',
-            payload: {
-                eventId,
-                nodes,
-            },
-        });
-
-        return JSON.parse(response).payload;
     }
 
     /**
