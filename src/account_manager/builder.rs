@@ -134,73 +134,90 @@ impl AccountManagerBuilder {
         {
             let manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
             let (client_options, secret_manager, coin_type) = match manager_builder {
-                Some(data) => {
+                Some(ref data) => {
                     // prioritise provided client_options and secret_manager over stored ones
                     let client_options = match self.client_options {
-                        Some(options) => options,
+                        Some(ref options) => options.clone(),
                         None => data
                             .client_options
+                            .clone()
                             .ok_or(crate::Error::MissingParameter("client_options"))?,
                     };
                     let secret_manager = match self.secret_manager {
-                        Some(secret_manager) => secret_manager,
+                        Some(ref secret_manager) => secret_manager.clone(),
                         None => data
                             .secret_manager
+                            .clone()
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     };
                     let coin_type = match self.coin_type {
-                        Some(coin_type) => coin_type,
+                        Some(coin_type) => coin_type.clone(),
                         None => data
                             .coin_type
+                            .clone()
                             .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                     };
+
                     (client_options, secret_manager, coin_type)
                 }
                 // If no account manager data exist, we will set it
-                None => {
-                    // Store account manager data in storage
-                    storage_manager.lock().await.save_account_manager_data(&self).await?;
-                    (
-                        self.client_options
-                            .ok_or(crate::Error::MissingParameter("client_options"))?,
-                        self.secret_manager
-                            .ok_or(crate::Error::MissingParameter("secret_manager"))?,
-                        self.coin_type
-                            .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
-                    )
-                }
+                None => (
+                    self.client_options
+                        .clone()
+                        .ok_or(crate::Error::MissingParameter("client_options"))?,
+                    self.secret_manager
+                        .clone()
+                        .ok_or(crate::Error::MissingParameter("secret_manager"))?,
+                    self.coin_type
+                        .clone()
+                        .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
+                ),
             };
 
-            let client = client_options.clone().finish()?;
+            self.client_options.replace(client_options.clone());
+            self.secret_manager.replace(secret_manager.clone());
+            self.coin_type.replace(coin_type.clone());
 
-            let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
+            // Store account manager data in storage
+            storage_manager.lock().await.save_account_manager_data(&self).await?;
+
+            let client = client_options.clone().finish()?;
 
             #[cfg(feature = "events")]
             let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
 
+            let mut accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
+
+            let mut account_handles: Vec<AccountHandle> = accounts
+                .into_iter()
+                .map(|a| {
+                    AccountHandle::new(
+                        a,
+                        client.clone(),
+                        secret_manager.clone(),
+                        #[cfg(feature = "events")]
+                        event_emitter.clone(),
+                        storage_manager.clone(),
+                    )
+                })
+                .collect::<_>();
+
+            // If the manager builder is not set, it means the user provided it and we need to update the addresses.
+            // In the other case it was loaded from the database and addresses are up to date.
+            if manager_builder.is_none() {
+                println!("Not skipped");
+                for account in account_handles.iter_mut() {
+                    account.update_account_with_new_client(client.clone()).await?;
+                }
+            } else {
+                println!("Skipped");
+            }
+
             return Ok(AccountManager {
                 #[cfg(not(feature = "events"))]
-                accounts: Arc::new(RwLock::new(
-                    accounts
-                        .into_iter()
-                        .map(|a| AccountHandle::new(a, client.clone(), secret_manager.clone(), storage_manager.clone()))
-                        .collect(),
-                )),
+                accounts: Arc::new(RwLock::new(account_handles)),
                 #[cfg(feature = "events")]
-                accounts: Arc::new(RwLock::new(
-                    accounts
-                        .into_iter()
-                        .map(|a| {
-                            AccountHandle::new(
-                                a,
-                                client.clone(),
-                                secret_manager.clone(),
-                                event_emitter.clone(),
-                                storage_manager.clone(),
-                            )
-                        })
-                        .collect(),
-                )),
+                accounts: Arc::new(RwLock::new(account_handles)),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
                 coin_type: Arc::new(AtomicU32::new(coin_type)),

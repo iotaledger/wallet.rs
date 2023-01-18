@@ -5,8 +5,8 @@ package org.iota.types;
 public class ClientConfig extends AbstractObject {
     private String primaryNode;
     private String primaryPowNode;
-    private String[] nodes;
-    private String[] permanodes;
+    private Node[] nodes;
+    private Node[] permanodes;
     private Boolean nodeSyncEnabled;
     private NodeSyncInterval nodeSyncInterval;
     private Boolean quorum;
@@ -24,6 +24,18 @@ public class ClientConfig extends AbstractObject {
     private RemotePowTimeout remotePowTimeout;
     private Boolean offline;
     private Integer powWorkerCount;
+
+    static class Node {
+        String url;
+        NodeAuth auth;
+        boolean disabled;
+    }
+
+    static class NodeAuth {
+        String jwt;
+        String basicAuthUsername;
+        String basicAuthPsername;
+    }
 
     static class NodeSyncInterval {
         private int secs;
@@ -102,12 +114,23 @@ public class ClientConfig extends AbstractObject {
         return this;
     }
 
-    public ClientConfig withNodes(String... nodes) {
+    public ClientConfig withNodes(String... nodeUrls) {
+        Node[] nodes = new Node[nodeUrls.length];
+        for(int i = 0; i < nodeUrls.length; i++) {
+            Node node = new Node();
+            node.url = nodeUrls[i];
+            nodes[i] = node;
+        }
         this.nodes = nodes;
         return this;
     }
 
-    public ClientConfig withPermanodes(String... permanodes) {
+    public ClientConfig withNodes(Node... nodes) {
+        this.nodes = nodes;
+        return this;
+    }
+
+    public ClientConfig withPermanodes(Node... permanodes) {
         this.permanodes = permanodes;
         return this;
     }
