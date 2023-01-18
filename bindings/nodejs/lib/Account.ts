@@ -5,7 +5,7 @@ import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     AccountMetadata,
-    AccountSyncOptions,
+    SyncOptions,
     AccountMeta,
     Address,
     AddressWithAmount,
@@ -1078,7 +1078,7 @@ export class Account {
      * @param options Optional synchronization options.
      * @returns The account balance.
      */
-    async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+    async sync(options?: SyncOptions): Promise<AccountBalance> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

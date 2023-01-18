@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `TransactionOptionsDto`;
 - `Transaction::inputs` and `TransactionDto::inputs` fields;
 - Derive `Eq, PartialEq` for `Account` and `OutputData`;
+- `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
+- `SyncOptions::{account, alias, nft}` fields;
 
 ### Changed
 
@@ -41,11 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Account::{get_incoming_transaction_data(), incoming_transactions()}` return now `Transaction` instead of `(TransactionPayload, Vec<OutputWithMetadataResponse>)`;
 - `AccountDto::incoming_transactions` from `(TransactionPayloadDto, Vec<OutputWithMetadataResponse>)` to `TransactionDto`;
 - `Response::{IncomingTransactionData, IncomingTransactionsData}` contain `TransactionDto` instead of `IncomingTransactionDataDto`;
+- Default `SyncOptions` don't sync alias and nft outputs anymore;
 
 ### Removed
 
 - `clear_listeners` from the `WalletMessageHandler`;
 - `IncomingTransactionDataDto` type;
+- `SyncOptions::sync_aliases_and_nfts`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 

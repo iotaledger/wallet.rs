@@ -43,7 +43,10 @@ pub use self::{
     operations::{
         address_generation::AddressGenerationOptions,
         output_claiming::OutputsToClaim,
-        syncing::SyncOptions,
+        syncing::{
+            options::{AccountSyncOptions, AliasSyncOptions, NftSyncOptions},
+            SyncOptions,
+        },
         transaction::{
             prepare_output::{Assets, Features, OutputOptions, StorageDeposit, Unlocks},
             RemainderValueStrategy, TransactionOptions,

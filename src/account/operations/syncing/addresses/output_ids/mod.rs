@@ -34,21 +34,32 @@ impl AccountHandle {
             return Ok(output_ids);
         }
 
-        let mut tasks = vec![
-            async move {
-                let account_handle = self.clone();
-                let bech32_address_ = bech32_address.clone();
-                tokio::spawn(async move {
-                    account_handle
-                        .get_basic_output_ids_with_any_unlock_condition(&bech32_address_)
-                        .await
-                })
-                .await
-            }
-            .boxed(),
-        ];
+        let mut tasks = vec![];
 
-        if sync_options.sync_aliases_and_nfts {
+        if (address.is_ed25519() && sync_options.account.basic_outputs)
+            || (address.is_nft() && sync_options.nft.basic_outputs)
+            || (address.is_alias() && sync_options.alias.basic_outputs)
+        {
+            // basic outputs
+            tasks.push(
+                async move {
+                    let account_handle = self.clone();
+                    let bech32_address_ = bech32_address.clone();
+                    tokio::spawn(async move {
+                        account_handle
+                            .get_basic_output_ids_with_any_unlock_condition(&bech32_address_)
+                            .await
+                    })
+                    .await
+                }
+                .boxed(),
+            );
+        }
+
+        if (address.is_ed25519() && sync_options.account.nft_outputs)
+            || (address.is_nft() && sync_options.nft.nft_outputs)
+            || (address.is_alias() && sync_options.alias.nft_outputs)
+        {
             // nfts
             tasks.push(
                 async move {
@@ -63,14 +74,24 @@ impl AccountHandle {
                 }
                 .boxed(),
             );
+        }
 
+        if (address.is_ed25519() && sync_options.account.alias_outputs)
+            || (address.is_nft() && sync_options.nft.alias_outputs)
+            || (address.is_alias() && sync_options.alias.alias_outputs)
+        {
             // aliases and foundries
             tasks.push(
                 async move {
                     let bech32_address = bech32_address.clone();
+                    let sync_options = sync_options.clone();
                     let account_handle = self.clone();
-                    tokio::spawn(async move { account_handle.get_alias_and_foundry_output_ids(&bech32_address).await })
-                        .await
+                    tokio::spawn(async move {
+                        account_handle
+                            .get_alias_and_foundry_output_ids(&bech32_address, sync_options.clone())
+                            .await
+                    })
+                    .await
                 }
                 .boxed(),
             );
@@ -140,18 +161,11 @@ impl AccountHandle {
                 }
             }
         }
-        if options.sync_aliases_and_nfts {
-            // Recursively owned outputs will be in this vec
-            log::debug!(
-                "[SYNC] spent or not synced outputs: {:?}",
-                spent_or_not_anymore_synced_outputs
-            );
-        } else {
-            log::debug!(
-                "[SYNC] spent or not anymore synced alias/nft/foundries outputs: {:?}",
-                spent_or_not_anymore_synced_outputs
-            );
-        }
+
+        log::debug!(
+            "[SYNC] spent or not anymore synced alias/nft/foundries outputs: {:?}",
+            spent_or_not_anymore_synced_outputs
+        );
         log::debug!(
             "[SYNC] finished get_output_ids_for_addresses in {:.2?}",
             address_output_ids_start_time.elapsed()
