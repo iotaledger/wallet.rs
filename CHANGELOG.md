@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved `init_logger` to message interface mod;
 - Limit max parallel requests for incoming transactions;
 - Move all participation methods from the AccountManager to the Account;
+- `Account::get_participation_overview` sends requests now in parallel;
 
 ### Removed
 

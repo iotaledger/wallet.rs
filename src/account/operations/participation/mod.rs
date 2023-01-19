@@ -15,7 +15,7 @@ pub mod voting_power;
 use std::collections::{hash_map::Entry, HashMap};
 
 use iota_client::{
-    block::output::{Output, OutputId},
+    block::output::{unlock_condition::UnlockCondition, Output, OutputId},
     node_api::participation::{
         responses::TrackedParticipation,
         types::{participation::Participations, ParticipationEventId, PARTICIPATION_TAG},
@@ -42,52 +42,58 @@ impl AccountHandle {
         // TODO: Could use the address endpoint in the future when https://github.com/iotaledger/inx-participation/issues/50 is done.
 
         let outputs = self.outputs(None).await?;
-        let participation_outputs = outputs.iter().filter(|output| {
-            // Only basic outputs can be participation outputs.
-            if let Output::Basic(basic_output) = &output.output {
-                // Output needs to have the participation tag and a metadata feature.
-                if let Some(tag_feature) = basic_output.features().tag() {
-                    tag_feature.tag() == PARTICIPATION_TAG.as_bytes() && basic_output.features().metadata().is_some()
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        });
+        let participation_outputs = outputs
+            .into_iter()
+            .filter(|output_data| {
+                is_valid_participation_output(&output_data.output)
+                // Check that the metadata exists, because otherwise we aren't participating for anything
+                    && output_data.output.features().and_then(|f| f.metadata()).is_some()
+            })
+            .collect::<Vec<OutputData>>();
 
         let mut participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
 
-        for output_data in participation_outputs {
-            // PANIC: the filter already checks that the metadata exists.
-            let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
-            // TODO don't really need to collect if we only need the first
-            let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
-                participations
-                    .participations
-                    .into_iter()
-                    .map(|p| p.event_id)
-                    .collect::<Vec<ParticipationEventId>>()
-            } else {
-                // No valid participation in this output, skip it.
-                continue;
-            };
+        for output_data_chunk in participation_outputs.chunks(100).map(|x| x.to_vec()) {
+            let mut tasks = Vec::new();
+            for output_data in output_data_chunk {
+                // PANIC: the filter already checks that the metadata exists.
+                let metadata = output_data.output.features().and_then(|f| f.metadata()).unwrap();
+                // TODO don't really need to collect if we only need the first
+                let event_ids = if let Ok(participations) = Participations::from_bytes(&mut metadata.data()) {
+                    participations
+                        .participations
+                        .into_iter()
+                        .map(|p| p.event_id)
+                        .collect::<Vec<ParticipationEventId>>()
+                } else {
+                    // No valid participation in this output, skip it.
+                    continue;
+                };
 
-            // TODO: which client to use if there are multiple events and one node isn't tracking all of them?
-            let event_client = if let Some(event_id) = event_ids.first() {
-                self.get_client_for_event(event_id).await?
-            } else {
-                self.client().clone()
-            };
+                // TODO: which client to use if there are multiple events and one node isn't tracking all of them?
+                let event_client = if let Some(event_id) = event_ids.first() {
+                    self.get_client_for_event(event_id).await?
+                } else {
+                    self.client().clone()
+                };
 
-            if let Ok(status) = event_client.output_status(&output_data.output_id).await {
-                for (event_id, participation) in status.participations {
-                    match participations.entry(event_id) {
-                        Entry::Vacant(entry) => {
-                            entry.insert(HashMap::from([(output_data.output_id, participation)]));
-                        }
-                        Entry::Occupied(mut entry) => {
-                            entry.get_mut().insert(output_data.output_id, participation);
+                tasks.push(async move {
+                    tokio::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
+                        .await
+                });
+            }
+
+            let results = futures::future::try_join_all(tasks).await?;
+            for (result, output_data) in results {
+                if let Ok(status) = result {
+                    for (event_id, participation) in status.participations {
+                        match participations.entry(event_id) {
+                            Entry::Vacant(entry) => {
+                                entry.insert(HashMap::from([(output_data.output_id, participation)]));
+                            }
+                            Entry::Occupied(mut entry) => {
+                                entry.get_mut().insert(output_data.output_id, participation);
+                            }
                         }
                     }
                 }
@@ -105,17 +111,7 @@ impl AccountHandle {
             .unspent_outputs(None)
             .await?
             .iter()
-            .filter(|output_data| {
-                if let Output::Basic(basic_output) = &output_data.output {
-                    if let Some(tag) = basic_output.features().tag() {
-                        tag.tag() == PARTICIPATION_TAG.as_bytes()
-                    } else {
-                        false
-                    }
-                } else {
-                    false
-                }
-            })
+            .filter(|output_data| is_valid_participation_output(&output_data.output))
             .max_by_key(|output_data| output_data.output.amount())
             .cloned())
     }
@@ -174,5 +170,22 @@ impl AccountHandle {
         }
 
         Ok(())
+    }
+}
+
+fn is_valid_participation_output(output: &Output) -> bool {
+    // Only basic outputs can be participation outputs.
+    if let Output::Basic(basic_output) = &output {
+        // Valid participation outputs can only have the AddressUnlockCondition.
+        let [UnlockCondition::Address(_)] = basic_output.unlock_conditions().as_ref() else {
+            return false;
+        };
+        if let Some(tag) = basic_output.features().tag() {
+            tag.tag() == PARTICIPATION_TAG.as_bytes()
+        } else {
+            false
+        }
+    } else {
+        false
     }
 }
