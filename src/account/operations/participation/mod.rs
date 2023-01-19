@@ -179,7 +179,7 @@ impl AccountHandle {
 fn is_valid_participation_output(output: &Output) -> bool {
     // Only basic outputs can be participation outputs.
     if let Output::Basic(basic_output) = &output {
-        // Valid participation outputs can only have the AddressUnlockCondition
+        // Valid participation outputs can only have the AddressUnlockCondition.
         let [UnlockCondition::Address(_)] = basic_output.unlock_conditions().as_ref() else{
             return false;
         };
