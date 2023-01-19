@@ -205,12 +205,9 @@ impl AccountManagerBuilder {
             // If the manager builder is not set, it means the user provided it and we need to update the addresses.
             // In the other case it was loaded from the database and addresses are up to date.
             if manager_builder.is_none() {
-                println!("Not skipped");
                 for account in account_handles.iter_mut() {
                     account.update_account_with_new_client(client.clone()).await?;
                 }
-            } else {
-                println!("Skipped");
             }
 
             return Ok(AccountManager {
