@@ -82,7 +82,7 @@ impl AccountHandle {
         &self,
         event_type: Option<ParticipationEventType>,
     ) -> crate::Result<Vec<ParticipationEventId>> {
-        Ok(self.client.events(event_type).await?.event_ids)
+        Ok(self.client.read().await.events(event_type).await?.event_ids)
     }
 
     /// Retrieves the latest status of a given participation event.
