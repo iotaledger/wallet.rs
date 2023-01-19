@@ -157,6 +157,10 @@ impl AccountManagerBuilder {
                             .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                     };
 
+                    self.client_options.replace(client_options.clone());
+                    self.secret_manager.replace(secret_manager.clone());
+                    self.coin_type.replace(coin_type);
+
                     (client_options, secret_manager, coin_type)
                 }
                 // If no account manager data exist, we will set it
@@ -171,10 +175,6 @@ impl AccountManagerBuilder {
                         .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                 ),
             };
-
-            self.client_options.replace(client_options.clone());
-            self.secret_manager.replace(secret_manager.clone());
-            self.coin_type.replace(coin_type);
 
             // Store account manager data in storage
             storage_manager.lock().await.save_account_manager_data(&self).await?;
@@ -209,9 +209,6 @@ impl AccountManagerBuilder {
             }
 
             return Ok(AccountManager {
-                #[cfg(not(feature = "events"))]
-                accounts: Arc::new(RwLock::new(account_handles)),
-                #[cfg(feature = "events")]
                 accounts: Arc::new(RwLock::new(account_handles)),
                 background_syncing_status: Arc::new(AtomicUsize::new(0)),
                 client_options: Arc::new(RwLock::new(client_options)),
