@@ -77,17 +77,14 @@ impl AccountHandle {
                     self.client().clone()
                 };
 
-                let output_data_ = output_data.clone();
                 tasks.push(async move {
-                    tokio::spawn(
-                        async move { (output_data_, event_client.output_status(&output_data.output_id).await) },
-                    )
-                    .await
+                    tokio::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
+                        .await
                 });
             }
 
             let results = futures::future::try_join_all(tasks).await?;
-            for (output_data, result) in results {
+            for (result, output_data) in results {
                 if let Ok(status) = result {
                     for (event_id, participation) in status.participations {
                         match participations.entry(event_id) {
@@ -179,8 +176,8 @@ impl AccountHandle {
 fn is_valid_participation_output(output: &Output) -> bool {
     // Only basic outputs can be participation outputs.
     if let Output::Basic(basic_output) = &output {
-        // Valid participation outputs can only have the AddressUnlockCondition.
-        let [UnlockCondition::Address(_)] = basic_output.unlock_conditions().as_ref() else{
+        // Valid participation outputs can only have the AddressUnlockCondition
+        let [UnlockCondition::Address(_)] = basic_output.unlock_conditions().as_ref() else {
             return false;
         };
         if let Some(tag) = basic_output.features().tag() {
