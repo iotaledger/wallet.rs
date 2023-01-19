@@ -44,7 +44,11 @@ impl AccountHandle {
         let outputs = self.outputs(None).await?;
         let participation_outputs = outputs
             .into_iter()
-            .filter(|output_data| is_valid_participation_output(&output_data.output))
+            .filter(|output_data| {
+                is_valid_participation_output(&output_data.output)
+                // Check that the metadata exists, because otherwise we aren't participating for anything
+                    && output_data.output.features().and_then(|f| f.metadata()).is_some()
+            })
             .collect::<Vec<OutputData>>();
 
         let mut participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>> = HashMap::new();
