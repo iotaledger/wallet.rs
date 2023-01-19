@@ -151,10 +151,9 @@ impl AccountManagerBuilder {
                             .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     };
                     let coin_type = match self.coin_type {
-                        Some(coin_type) => coin_type.clone(),
+                        Some(coin_type) => coin_type,
                         None => data
                             .coin_type
-                            .clone()
                             .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                     };
 
@@ -169,14 +168,13 @@ impl AccountManagerBuilder {
                         .clone()
                         .ok_or(crate::Error::MissingParameter("secret_manager"))?,
                     self.coin_type
-                        .clone()
                         .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?,
                 ),
             };
 
             self.client_options.replace(client_options.clone());
             self.secret_manager.replace(secret_manager.clone());
-            self.coin_type.replace(coin_type.clone());
+            self.coin_type.replace(coin_type);
 
             // Store account manager data in storage
             storage_manager.lock().await.save_account_manager_data(&self).await?;
