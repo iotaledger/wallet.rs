@@ -32,7 +32,7 @@ pub use self::{
 use crate::account::Account;
 
 /// An output with metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]

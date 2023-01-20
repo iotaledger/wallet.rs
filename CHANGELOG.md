@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
 - `TransactionOptionsDto`;
 - `Transaction::inputs` and `TransactionDto::inputs` fields;
+- Derive `Eq, PartialEq` for `Account` and `OutputData`;
 
 ### Changed
 

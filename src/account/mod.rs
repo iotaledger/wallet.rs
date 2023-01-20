@@ -54,7 +54,7 @@ pub use self::{
 use crate::account::types::InclusionState;
 
 /// An Account.
-#[derive(Clone, Debug, Getters, Setters, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub")]
 pub struct Account {
     /// The account index
