@@ -8,6 +8,46 @@ import Wallet
 @objc(IotaWalletMobile)
 public class IotaWalletMobile: CAPPlugin {
     
+    // Handles the Swift / C pointers with a context object using Unmanaged types
+    class ContextResult {
+        // the `call` will send the context response back to Javascript
+        let call: CAPPluginCall?
+        
+        init(_call: CAPPluginCall) {
+            self.call = _call
+        }
+        
+        func resolve(type: String, data: String) {
+            self.call?.resolve([type: data])
+        }
+        // the needed `callback` to call C header functions
+        let callback: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            // Convert back into `ContextResult` Swift object type
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
+            if let error = error {
+                contextResult.resolve(type: "error", data: String(cString: error))
+                return
+            }
+            contextResult.resolve(type: "result", data: String(cString: response))
+        }
+        
+        let callbackListen: Callback = { response, error, context  in
+            guard let context = context,
+                  let response = response else { return }
+            // retain of the object awaiting for the next message.
+            // TODO: verify it's released later
+            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).retain().takeRetainedValue()
+            
+            if let error = error {
+                contextResult.resolve(type: "error", data: String(cString: error))
+                return
+            }
+            contextResult.resolve(type: "result", data: String(cString: response))
+        }
+    }
+
     // TODO: we really need pass this params from swift?
     private let error_buffer: UnsafeMutablePointer<CChar>? = nil
     private let error_buffer_size = 0
@@ -26,6 +66,7 @@ public class IotaWalletMobile: CAPPlugin {
                 return call.reject("clientOptions or secretManager is an invalid JSON object")
             }
             let ClientOptions = try? JSONSerialization.data(withJSONObject: clientOptions)
+            // TODO: replacing for urls slashes temporaly, make better using Codable structs with URL type?
             let stringfiedClientOptions = String(data: ClientOptions!, encoding: .utf8)!.replacingOccurrences(of: "\\", with: "")
             
             let SecretManager = try? JSONSerialization.data(withJSONObject: secretManager)
@@ -94,46 +135,6 @@ public class IotaWalletMobile: CAPPlugin {
         }
         iota_destroy(OpaquePointer(bitPattern: handler))
         call.resolve()
-    }
-
-    // Handles the Swift / C interop pointers with a context object using Unmanaged types
-    class ContextResult {
-        // the `call` will send the context response back to Javascript
-        let call: CAPPluginCall?
-        
-        init(_call: CAPPluginCall) {
-            self.call = _call
-        }
-        
-        func resolve(type: String, data: String) {
-            self.call?.resolve([type: data])
-        }
-        // the needed `callback` to call C header functions
-        let callback: Callback = { response, error, context  in
-            guard let context = context,
-                  let response = response else { return }
-            // Convert back into `ContextResult` Swift object type
-            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).takeRetainedValue()
-            if let error = error {
-                contextResult.resolve(type: "error", data: String(cString: error))
-                return
-            }
-            contextResult.resolve(type: "result", data: String(cString: response))
-        }
-        
-        let callbackListen: Callback = { response, error, context  in
-            guard let context = context,
-                  let response = response else { return }
-            // retain of the object awaiting for the next message.
-            // TODO: verify it's released later
-            let contextResult = Unmanaged<ContextResult>.fromOpaque(context).retain().takeRetainedValue()
-            
-            if let error = error {
-                contextResult.resolve(type: "error", data: String(cString: error))
-                return
-            }
-            contextResult.resolve(type: "result", data: String(cString: response))
-        }
     }
 
     @objc func sendMessage(_ call: CAPPluginCall) {
