@@ -4,11 +4,11 @@
 use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
-    api::input_selection::{try_select_inputs, Selected},
+    api::input_selection::{InputSelection, Selected},
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{Output, OutputId, RentStructure},
+        output::{Output, OutputId},
     },
     secret::types::InputSigningData,
 };
@@ -23,10 +23,9 @@ impl AccountHandle {
     pub(crate) async fn select_inputs(
         &self,
         outputs: Vec<Output>,
-        custom_inputs: Option<Vec<InputSigningData>>,
-        mandatory_inputs: Option<Vec<InputSigningData>>,
+        custom_inputs: Option<HashSet<OutputId>>,
+        mandatory_inputs: Option<HashSet<OutputId>>,
         remainder_address: Option<Address>,
-        rent_structure: &RentStructure,
         allow_burning: bool,
     ) -> crate::Result<Selected> {
         log::debug!("[TRANSACTION] select_inputs");
@@ -35,7 +34,7 @@ impl AccountHandle {
         let voting_output = self.get_voting_output().await?;
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
-        let token_supply = self.client.get_token_supply().await?;
+        let protocol_parameters = self.client.get_protocol_parameters().await?;
 
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
@@ -44,32 +43,43 @@ impl AccountHandle {
         );
 
         let current_time = self.client.get_time_checked().await?;
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
+
+        // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
+        // still locked TODO should maybe be done in ISA directly ?
+        let available_outputs_signing_data = filter_inputs(
+            &account,
+            account.unspent_outputs.values(),
+            current_time,
+            protocol_parameters.bech32_hrp(),
+            &outputs,
+            &account.locked_outputs,
+            allow_burning,
+            #[cfg(feature = "participation")]
+            voting_output,
+        )?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
-                if account.locked_outputs.contains(input.output_id()) {
+                if account.locked_outputs.contains(input) {
                     return Err(crate::Error::CustomInputError(format!(
-                        "provided custom input {} is already used in another transaction",
-                        input.output_id()
+                        "provided custom input {input} is already used in another transaction",
                     )));
                 }
             }
 
-            let selected_transaction_data = try_select_inputs(
-                custom_inputs,
-                // don't add any other outputs when custom inputs are provided
-                Vec::new(),
-                outputs,
-                remainder_address,
-                rent_structure,
-                allow_burning,
-                current_time,
-                token_supply,
-            )?;
+            // TODO BURN
+            let mut input_selection =
+                InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone())
+                    .required_inputs(custom_inputs);
+
+            if let Some(address) = remainder_address {
+                input_selection = input_selection.remainder_address(address);
+            }
+
+            let selected_transaction_data = input_selection.select()?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -80,37 +90,28 @@ impl AccountHandle {
         } else if let Some(mandatory_inputs) = mandatory_inputs {
             // Check that no input got already locked
             for input in mandatory_inputs.iter() {
-                if account.locked_outputs.contains(input.output_id()) {
+                if account.locked_outputs.contains(input) {
                     return Err(crate::Error::CustomInputError(format!(
-                        "provided custom input {} is already used in another transaction",
-                        input.output_id()
+                        "provided custom input {input} is already used in another transaction",
                     )));
                 }
             }
 
-            let available_outputs_signing_data = filter_inputs(
-                &account,
-                account.unspent_outputs.values(),
-                current_time,
-                &bech32_hrp,
-                &outputs,
-                &account.locked_outputs,
-                allow_burning,
-                #[cfg(feature = "participation")]
-                voting_output,
-            )?;
+            // TODO BURN
+            let mut input_selection =
+                InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone())
+                    .required_inputs(mandatory_inputs);
 
-            let selected_transaction_data = try_select_inputs(
-                mandatory_inputs,
-                // add also available outputs when mandatory inputs are provided
-                available_outputs_signing_data,
-                outputs,
-                remainder_address,
-                rent_structure,
-                allow_burning,
-                current_time,
-                token_supply,
-            )?;
+            if let Some(address) = remainder_address {
+                input_selection = input_selection.remainder_address(address);
+            }
+
+            let selected_transaction_data = input_selection.select()?;
+
+            // lock outputs so they don't get used by another transaction
+            for output in &selected_transaction_data.inputs {
+                account.locked_outputs.insert(*output.output_id());
+            }
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -120,31 +121,17 @@ impl AccountHandle {
             return Ok(selected_transaction_data);
         }
 
-        // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
-        // still locked
-        let available_outputs_signing_data = filter_inputs(
-            &account,
-            account.unspent_outputs.values(),
-            current_time,
-            &bech32_hrp,
-            &outputs,
-            &account.locked_outputs,
-            allow_burning,
-            #[cfg(feature = "participation")]
-            voting_output,
-        )?;
+        // TODO BURN
+        let mut input_selection =
+            InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone());
 
-        let selected_transaction_data = match try_select_inputs(
-            Vec::new(),
-            available_outputs_signing_data,
-            outputs,
-            remainder_address,
-            rent_structure,
-            allow_burning,
-            current_time,
-            token_supply,
-        ) {
+        if let Some(address) = remainder_address {
+            input_selection = input_selection.remainder_address(address);
+        }
+
+        let selected_transaction_data = match input_selection.select() {
             Ok(r) => r,
+            // TODO this error doesn't exist with the new ISA
             Err(iota_client::Error::ConsolidationRequired(output_count)) => {
                 #[cfg(feature = "events")]
                 self.event_emitter
