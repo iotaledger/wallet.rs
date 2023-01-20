@@ -4,7 +4,7 @@
 use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
-    api::input_selection::{try_select_inputs, types::SelectedTransactionData},
+    api::input_selection::{try_select_inputs, Selected},
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
@@ -28,7 +28,7 @@ impl AccountHandle {
         remainder_address: Option<Address>,
         rent_structure: &RentStructure,
         allow_burning: bool,
-    ) -> crate::Result<SelectedTransactionData> {
+    ) -> crate::Result<Selected> {
         log::debug!("[TRANSACTION] select_inputs");
         // Voting output needs to be requested before to prevent a deadlock
         #[cfg(feature = "participation")]
