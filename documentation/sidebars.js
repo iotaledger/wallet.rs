@@ -90,7 +90,6 @@ module.exports = {
                   }
               ]
           },
-
           {
               type: "category",
               label: 'NFTs',
@@ -102,7 +101,8 @@ module.exports = {
               ]
           },
           'how_tos/more_examples',
-          'how_tos/exchange_guide'
+          'how_tos/exchange_guide',
+          'how_tos/use-python-with-IOTA'
       ]
     },
     {
