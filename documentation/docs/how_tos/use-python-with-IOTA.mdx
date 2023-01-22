@@ -34,41 +34,29 @@ In this guide we will rename the `iota-wallet` to `iota-wallet-production`, but 
 In `bindings/python/native/Cargo.toml` change both names:
 
  ```diff
-  [package]
+[package]
 - name = "iota-wallet-python"
 + name = "iota-wallet-production"
-  version = "0.2.0"
-  authors = ["IOTA Stiftung"]
-  edition = "2021"
-  description = "Python bindings for the IOTA wallet library"
-  documentation = "https://wiki.iota.org/wallet.rs/welcome"
-  homepage = "https://www.iota.org/"
-  repository = "https://github.com/iotaledger/wallet.rs"
-  license = "Apache-2.0"
-  keywords = ["iota", "wallet", "transaction", "python"]
-  categories = ["cryptography::cryptocurrencies"]
+   version = "0.2.0"
+   authors = ["IOTA Stiftung"]
+   edition = "2021"
+   description = "Python bindings for the IOTA wallet library"
+   documentation = "https://wiki.iota.org/wallet.rs/welcome"
+   homepage = "https://www.iota.org/"
+   repository = "https://github.com/iotaledger/wallet.rs"
+   license = "Apache-2.0"
+   keywords = ["iota", "wallet", "transaction", "python"]
+   categories = ["cryptography::cryptocurrencies"]
 
-  [lib]
+[lib]
 - name = "iota_wallet"
 + name = "iota_wallet_production"
-  crate-type = ["cdylib"]
+   crate-type = ["cdylib"]
 
-  [dependencies]
-  chrono = { version = "0.4.19", default-features = false }
-  dict_derive = "0.3.0"
-  futures = { version = "0.3.17", default-features = false }
-  hex = { version = "0.4.3", default-features = false }
-  iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "47e5f6684e2c59237c5fac88be85950a6e5eec4f", default-features = false, features = ["async", "mqtt", "tls"] }
-  iota-wallet = { path = "../../../", version = "0.2.0", features = ["stronghold", "ledger-nano", "ledger-nano-simulator"] }
-  once_cell = { version = "1.8.0", default-features = false }
-  serde = { version = "1.0.130", default-features = false, features = ["derive"] }
-  serde_json = { version = "1.0.68", default-features = false }
-  tokio = { version = "1.12.0", default-features = false }
-  url = { version = "2.2.2", default-features = false }
-
-  [dependencies.pyo3]
-  version = "0.13"
-  features = ["extension-module", "abi3-py36"]
+[dependencies]
+   .
+   .
+   .
  ```
 
 In `bindings/python/native/setup.py`:
@@ -77,26 +65,9 @@ setup(
 -   name="iota_wallet",
 +   name="iota_wallet_production",
     version="0.2.0",
-    classifiers=[
-        "License :: SPDX-License-Identifier ::  Apache-2.0",
-        "Development Status :: 0.1.0 - Alpha",
-        "Intended Audience :: Developers",
-        "Programming Language :: Python",
-        "Programming Language :: Rust",
-        "Operating System :: POSIX",
-        "Operating System :: MacOS :: MacOS X",
-    ],
-    packages=["iota_wallet"],
-    rust_extensions=[
-        RustExtension(
-            "iota_wallet.iota_wallet",
-            rustc_flags=get_py_version_cfgs(),
-            debug=False,
-        ),
-    ],
-    include_package_data=True,
-    zip_safe=False,
-)
+    .
+    .
+    .
 ```
 
 And in `bindings/python/native/src/lib.rs`:
@@ -108,40 +79,9 @@ And in `bindings/python/native/src/lib.rs`:
       m.add_class::<AccountInitialiser>()?;
       m.add_class::<AccountHandle>()?;
       m.add_class::<SyncedAccount>()?;
-      m.add_class::<AccountSynchronizer>()?;
-      m.add_class::<Transfer>()?;
-      m.add_class::<TransferWithOutputs>()?;
-      m.add_class::<AccountManager>()?;
-      m.add_function(wrap_pyfunction!(on_balance_change, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_balance_change_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_new_transaction, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_new_transaction_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_confirmation_state_change, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(remove_confirmation_state_change_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_reattachment, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_reattachment_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_broadcast, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_broadcast_listener, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(on_error, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_error_listener, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(on_stronghold_status_change, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(remove_stronghold_status_change_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_transfer_progress, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_transfer_progress_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(on_migration_progress, m)?).unwrap();
-      m.add_function(wrap_pyfunction!(remove_migration_progress_listener, m)?)
-          .unwrap();
-      m.add_function(wrap_pyfunction!(init_logger, m)?).unwrap();
-      Ok(())
-}
+      .
+      .
+      .
 ```
 
  Now you can continue the installation from [here](https://wiki.iota.org/wallet.rs/getting_started/python#change-to-the-python-binding-directory).
