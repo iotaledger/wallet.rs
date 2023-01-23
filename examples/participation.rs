@@ -45,6 +45,20 @@ async fn main() -> Result<()> {
         .finish()
         .await?;
 
+    // Get account or create a new one.
+    let account_alias = "participation";
+    let account = match manager.get_account(account_alias).await {
+        Ok(account) => account,
+        _ => {
+            // First we'll create an example account and store it.
+            manager
+                .create_account()
+                .with_alias(account_alias.to_string())
+                .finish()
+                .await?
+        }
+    };
+
     let event_id =
         ParticipationEventId::from_str("0x80f57f6368933b61af9b3d8e1b152cf5d23bf4537f6362778b0a7302a7000d48")?;
     let event_nodes = vec![Node {
@@ -53,14 +67,14 @@ async fn main() -> Result<()> {
         disabled: false,
     }];
 
-    manager.register_participation_event(event_id, event_nodes).await?;
+    account.register_participation_event(event_id, event_nodes).await?;
 
-    let registered_participation_events = manager.get_participation_events().await?;
+    let registered_participation_events = account.get_participation_events().await?;
 
     println!("registered events: {registered_participation_events:?}");
 
     // Update nodes.
-    manager
+    account
         .register_participation_event(
             event_id,
             vec![
@@ -78,29 +92,15 @@ async fn main() -> Result<()> {
         )
         .await?;
 
-    let event = manager.get_participation_event(event_id).await;
+    let event = account.get_participation_event(event_id).await;
     println!("event: {event:?}");
 
-    let event_status = manager.get_participation_event_status(&event_id).await?;
+    let event_status = account.get_participation_event_status(&event_id).await?;
     println!("event status: {event_status:?}");
 
-    // manager.deregister_participation_event(event_id).await?;
-    // let registered_participation_events = manager.get_participation_events().await?;
+    // account.deregister_participation_event(event_id).await?;
+    // let registered_participation_events = account.get_participation_events().await?;
     // println!("registered events: {registered_participation_events:?}");
-
-    // Get account or create a new one.
-    let account_alias = "participation";
-    let account = match manager.get_account(account_alias).await {
-        Ok(account) => account,
-        _ => {
-            // First we'll create an example account and store it.
-            manager
-                .create_account()
-                .with_alias(account_alias.to_string())
-                .finish()
-                .await?
-        }
-    };
 
     let address = account.addresses().await?;
     let faucet_response =

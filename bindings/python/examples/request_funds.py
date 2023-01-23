@@ -9,7 +9,7 @@ wallet = IotaWallet('./alice-database')
 account = wallet.get_account('Alice')
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 print(f'Synced: {response}')
 
 # Balance before funding
@@ -21,7 +21,7 @@ response = account.request_funds_from_faucet("https://faucet.testnet.shimmer.net
 time.sleep(20)
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 
 # Balance after funding
 balance = account.get_balance()

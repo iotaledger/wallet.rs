@@ -380,7 +380,7 @@ class Account:
             }
         )
 
-    def sync_account(self, options=None):
+    def sync(self, options=None):
         """Sync the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """

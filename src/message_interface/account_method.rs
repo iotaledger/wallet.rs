@@ -1,8 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::ParticipationEventId;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     block::{
@@ -15,6 +13,11 @@ use iota_client::{
         },
         payload::transaction::TransactionId,
     },
+};
+#[cfg(feature = "participation")]
+use iota_client::{
+    node_api::participation::types::{ParticipationEventId, ParticipationEventType},
+    node_manager::node::Node,
 };
 use serde::{Deserialize, Serialize};
 
@@ -408,6 +411,41 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     DecreaseVotingPower { amount: String },
+    /// Stores participation information locally and returns the event.
+    ///
+    /// This will NOT store the node url and auth inside the client options.
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    RegisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+        nodes: Vec<Node>,
+    },
+    /// Removes a previously registered participation event from local storage.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "participation")]
+    DeregisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    GetParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
+    #[cfg(feature = "participation")]
+    GetParticipationEventIds(Option<ParticipationEventType>),
+    /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
+    #[cfg(feature = "participation")]
+    GetParticipationEventStatus {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
+    #[cfg(feature = "participation")]
+    GetParticipationEvents,
     /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
     RequestFundsFromFaucet { url: String, address: String },
 }

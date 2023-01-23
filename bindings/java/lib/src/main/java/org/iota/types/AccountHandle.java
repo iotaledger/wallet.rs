@@ -93,7 +93,7 @@ public class AccountHandle extends AbstractObject {
      *
      * @return All incoming transactions for the account.
      */
-    public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() throws WalletException {
+    public Map<TransactionId, Transaction> getIncomingTransactions() throws WalletException {
         return getAccountCopy().getIncomingTransactions();
     }
 
