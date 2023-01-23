@@ -88,7 +88,7 @@ impl AccountHandle {
                     let account_handle = self.clone();
                     tokio::spawn(async move {
                         account_handle
-                            .get_alias_and_foundry_output_ids(&bech32_address, sync_options.clone())
+                            .get_alias_and_foundry_output_ids(&bech32_address, sync_options)
                             .await
                     })
                     .await
