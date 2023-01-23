@@ -7,7 +7,7 @@ wallet = IotaWallet('./alice-database')
 account = wallet.get_account('Alice')
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 print(f'Synced: {response}')
 
 # Just calculate the balance with the known state

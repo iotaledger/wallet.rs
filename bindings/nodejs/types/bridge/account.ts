@@ -1,5 +1,5 @@
 import type { OutputTypes, HexEncodedAmount } from '@iota/types';
-import type { AccountSyncOptions, FilterOptions } from '../account';
+import type { SyncOptions, FilterOptions } from '../account';
 import type {
     AddressWithAmount,
     AddressWithMicroAmount,
@@ -349,7 +349,7 @@ export type __SubmitAndStoreTransactionMethod__ = {
 export type __SyncAccountMethod__ = {
     name: 'syncAccount';
     data: {
-        options?: AccountSyncOptions;
+        options?: SyncOptions;
     };
 };
 

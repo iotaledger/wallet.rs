@@ -452,7 +452,7 @@ ___
 
 ### getIncomingTransactionData
 
-▸ **getIncomingTransactionData**(`transactionId`): `Promise`<`IncomingTransactionData`\>
+▸ **getIncomingTransactionData**(`transactionId`): `Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 Get the transaction with inputs of an incoming transaction stored in the account
 List might not be complete, if the node pruned the data already
@@ -465,7 +465,7 @@ List might not be complete, if the node pruned the data already
 
 #### Returns
 
-`Promise`<`IncomingTransactionData`\>
+`Promise`<[`Transaction`](../interfaces/Transaction.md)\>
 
 The transaction.
 
@@ -535,13 +535,13 @@ ___
 
 ### incomingTransactions
 
-▸ **incomingTransactions**(): `Promise`<[`string`, `IncomingTransactionData`][]\>
+▸ **incomingTransactions**(): `Promise`<[`string`, [`Transaction`](../interfaces/Transaction.md)][]\>
 
 List all incoming transactions of the account.
 
 #### Returns
 
-`Promise`<[`string`, `IncomingTransactionData`][]\>
+`Promise`<[`string`, [`Transaction`](../interfaces/Transaction.md)][]\>
 
 The incoming transactions with their inputs.
 
@@ -939,7 +939,7 @@ Will also retry pending transactions if necessary.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options?` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) | Optional synchronization options. |
+| `options?` | [`SyncOptions`](../interfaces/SyncOptions.md) | Optional synchronization options. |
 
 #### Returns
 

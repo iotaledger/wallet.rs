@@ -19,7 +19,6 @@ use iota_client::{
             dto::{OutputBuilderAmountDto, OutputDto},
             AliasId, AliasOutput, BasicOutput, FoundryOutput, NftId, NftOutput, Output, Rent, TokenId,
         },
-        payload::transaction::dto::TransactionPayloadDto,
         DtoError,
     },
     constants::SHIMMER_TESTNET_BECH32_HRP,
@@ -574,11 +573,11 @@ impl WalletMessageHandler {
                 ))
             }
             AccountMethod::GetIncomingTransactionData { transaction_id } => {
-                let transaction_data = account_handle.get_incoming_transaction_data(&transaction_id).await;
-                match transaction_data {
-                    Some((transaction_payload, inputs)) => Ok(Response::IncomingTransactionData(Some(Box::new((
+                let transaction = account_handle.get_incoming_transaction_data(&transaction_id).await;
+                match transaction {
+                    Some(transaction) => Ok(Response::IncomingTransactionData(Some(Box::new((
                         transaction_id,
-                        (TransactionPayloadDto::from(&transaction_payload), inputs),
+                        TransactionDto::from(&transaction),
                     ))))),
                     None => Ok(Response::IncomingTransactionData(None)),
                 }
@@ -606,7 +605,7 @@ impl WalletMessageHandler {
                 Ok(Response::IncomingTransactionsData(
                     transactions
                         .into_iter()
-                        .map(|d| (d.0, (TransactionPayloadDto::from(&d.1.0), d.1.1)))
+                        .map(|d| (d.0, TransactionDto::from(&d.1)))
                         .collect(),
                 ))
             }

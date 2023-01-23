@@ -5,7 +5,7 @@ import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     AccountMetadata,
-    AccountSyncOptions,
+    SyncOptions,
     AccountMeta,
     Address,
     AddressWithAmount,
@@ -27,7 +27,6 @@ import type {
     PreparedTransactionData,
     Transaction,
     TransactionOptions,
-    IncomingTransactionData,
     ParticipationOverview,
     ParticipationEvent,
     ParticipationEventId,
@@ -532,7 +531,7 @@ export class Account {
      */
     async getIncomingTransactionData(
         transactionId: string,
-    ): Promise<IncomingTransactionData> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -610,7 +609,7 @@ export class Account {
      * List all incoming transactions of the account.
      * @returns The incoming transactions with their inputs.
      */
-    async incomingTransactions(): Promise<[string, IncomingTransactionData][]> {
+    async incomingTransactions(): Promise<[string, Transaction][]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -1079,7 +1078,7 @@ export class Account {
      * @param options Optional synchronization options.
      * @returns The account balance.
      */
-    async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+    async sync(options?: SyncOptions): Promise<AccountBalance> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
