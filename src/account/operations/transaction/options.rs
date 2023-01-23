@@ -28,7 +28,7 @@ pub struct TransactionOptions {
     pub mandatory_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
-    pub burn: Burn,
+    pub burn: Option<Burn>,
     pub note: Option<String>,
 }
 
@@ -45,7 +45,7 @@ impl TransactionOptions {
             custom_inputs: value.custom_inputs.clone(),
             mandatory_inputs: value.mandatory_inputs.clone(),
             allow_burning: value.allow_burning,
-            burn: Burn::try_from(&value.burn)?,
+            burn: value.burn.as_ref().map(Burn::try_from).transpose()?,
             note: value.note.clone(),
         })
     }
@@ -66,7 +66,7 @@ pub struct TransactionOptionsDto {
     pub mandatory_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
-    pub burn: BurnDto,
+    pub burn: Option<BurnDto>,
     pub note: Option<String>,
 }
 

@@ -4,7 +4,7 @@
 use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
-    api::input_selection::{InputSelection, Selected},
+    api::input_selection::{Burn, InputSelection, Selected},
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
@@ -27,6 +27,7 @@ impl AccountHandle {
         mandatory_inputs: Option<HashSet<OutputId>>,
         remainder_address: Option<Address>,
         allow_burning: bool,
+        burn: Option<&Burn>,
     ) -> crate::Result<Selected> {
         log::debug!("[TRANSACTION] select_inputs");
         // Voting output needs to be requested before to prevent a deadlock
@@ -70,7 +71,6 @@ impl AccountHandle {
                 }
             }
 
-            // TODO BURN
             let mut input_selection = InputSelection::new(
                 available_outputs_signing_data,
                 outputs,
@@ -81,6 +81,10 @@ impl AccountHandle {
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
+            }
+
+            if let Some(burn) = burn {
+                input_selection = input_selection.burn(burn.clone());
             }
 
             let selected_transaction_data = input_selection.select()?;
@@ -101,7 +105,6 @@ impl AccountHandle {
                 }
             }
 
-            // TODO BURN
             let mut input_selection = InputSelection::new(
                 available_outputs_signing_data,
                 outputs,
@@ -112,6 +115,10 @@ impl AccountHandle {
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
+            }
+
+            if let Some(burn) = burn {
+                input_selection = input_selection.burn(burn.clone());
             }
 
             let selected_transaction_data = input_selection.select()?;
@@ -129,7 +136,6 @@ impl AccountHandle {
             return Ok(selected_transaction_data);
         }
 
-        // TODO BURN
         let mut input_selection = InputSelection::new(
             available_outputs_signing_data,
             outputs,
@@ -139,6 +145,10 @@ impl AccountHandle {
 
         if let Some(address) = remainder_address {
             input_selection = input_selection.remainder_address(address);
+        }
+
+        if let Some(burn) = burn {
+            input_selection = input_selection.burn(burn.clone());
         }
 
         let selected_transaction_data = match input_selection.select() {

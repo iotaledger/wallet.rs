@@ -105,6 +105,7 @@ impl AccountHandle {
                     .map(|inputs| HashSet::from_iter(inputs.clone())),
                 remainder_address,
                 allow_burning,
+                options.as_ref().and_then(|options| options.burn.as_ref()),
             )
             .await?;
 
