@@ -43,7 +43,8 @@ impl AccountHandle {
             ))?;
         }
 
-        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
+        // let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
+        let allow_burning = false;
 
         if let Some(custom_inputs) = options.as_ref().and_then(|options| options.custom_inputs.as_ref()) {
             // validate inputs amount
