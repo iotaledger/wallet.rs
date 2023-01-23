@@ -26,7 +26,6 @@ impl AccountHandle {
         custom_inputs: Option<HashSet<OutputId>>,
         mandatory_inputs: Option<HashSet<OutputId>>,
         remainder_address: Option<Address>,
-        allow_burning: bool,
         burn: Option<&Burn>,
     ) -> crate::Result<Selected> {
         log::debug!("[TRANSACTION] select_inputs");
@@ -54,7 +53,6 @@ impl AccountHandle {
             protocol_parameters.bech32_hrp(),
             &outputs,
             &account.locked_outputs,
-            allow_burning,
             #[cfg(feature = "participation")]
             voting_output,
         )?;
@@ -203,7 +201,6 @@ fn filter_inputs(
     bech32_hrp: &str,
     outputs: &[Output],
     locked_outputs: &HashSet<OutputId>,
-    allow_burning: bool,
     #[cfg(feature = "participation")] voting_output: Option<OutputData>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
@@ -265,7 +262,9 @@ fn filter_inputs(
         }
 
         // If alias doesn't exist in the outputs, assume the transition type that allows burning or not
-        let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(!allow_burning);
+        // let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(!allow_burning);
+        // TODO !!!!!!!!!!!!!!
+        let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(false);
         available_outputs_signing_data.push(output_data.input_signing_data(
             account,
             current_time,

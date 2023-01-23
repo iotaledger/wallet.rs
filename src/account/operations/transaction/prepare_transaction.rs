@@ -43,9 +43,6 @@ impl AccountHandle {
             ))?;
         }
 
-        // let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
-        let allow_burning = false;
-
         if let Some(custom_inputs) = options.as_ref().and_then(|options| options.custom_inputs.as_ref()) {
             // validate inputs amount
             if !INPUT_COUNT_RANGE.contains(&(custom_inputs.len() as u16)) {
@@ -105,7 +102,6 @@ impl AccountHandle {
                     .and_then(|options| options.mandatory_inputs.as_ref())
                     .map(|inputs| HashSet::from_iter(inputs.clone())),
                 remainder_address,
-                allow_burning,
                 options.as_ref().and_then(|options| options.burn.as_ref()),
             )
             .await?;
