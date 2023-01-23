@@ -46,6 +46,13 @@ impl AccountHandle {
         #[allow(unused_mut)]
         let mut forbidden_inputs = account.locked_outputs.clone();
 
+        let addresses = account
+            .public_addresses()
+            .iter()
+            .chain(account.internal_addresses().iter())
+            .map(|address| *address.address.as_ref())
+            .collect();
+
         #[cfg(feature = "participation")]
         if let Some(voting_output) = &voting_output {
             forbidden_inputs.insert(voting_output.output_id);
@@ -77,7 +84,7 @@ impl AccountHandle {
             let mut input_selection = InputSelection::new(
                 available_outputs_signing_data,
                 outputs,
-                vec![],
+                addresses,
                 protocol_parameters.clone(),
             )
             .required_inputs(custom_inputs)
@@ -112,7 +119,7 @@ impl AccountHandle {
             let mut input_selection = InputSelection::new(
                 available_outputs_signing_data,
                 outputs,
-                vec![],
+                addresses,
                 protocol_parameters.clone(),
             )
             .required_inputs(mandatory_inputs)
@@ -144,7 +151,7 @@ impl AccountHandle {
         let mut input_selection = InputSelection::new(
             available_outputs_signing_data,
             outputs,
-            vec![],
+            addresses,
             protocol_parameters.clone(),
         )
         .forbidden_inputs(forbidden_inputs);
@@ -179,6 +186,7 @@ impl AccountHandle {
             log::debug!("[TRANSACTION] locking: {}", output.output_id());
             account.locked_outputs.insert(*output.output_id());
         }
+
         Ok(selected_transaction_data)
     }
 }
