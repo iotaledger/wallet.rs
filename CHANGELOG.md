@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Use new Input Selection Algorithm;
 - Updated dependencies;
 - Message interface methods to accept `TransactionOptionsDto` instead of `TransactionOptions`;
 - `send_message` to return Option which is None when no message response is received;
