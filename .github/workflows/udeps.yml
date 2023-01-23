@@ -22,11 +22,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - uses: actions-rs/toolchain@v1
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
       with:
-        profile: minimal
-        toolchain: nightly
+        toolchain: stable
         override: true
+
+    - name: Get current date
+      run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
     - name: Cache CARGO_HOME
       uses: actions/cache@v3
@@ -37,10 +40,28 @@ jobs:
           ~/.cargo/registry/cache/
           ~/.cargo/git/db/
         # Add date to the cache to keep it up to date
-        key: ubuntu-latest-nightly-cargo-home
+        key: ubuntu-latest-stable-cargo-home-${{ env.CURRENT_DATE }}
         # Restore from outdated cache for speed
         restore-keys: |
-          ubuntu-latest-nightly-cargo-home
+          ubuntu-latest-stable-cargo-home-
+
+    - uses: actions-rs/cargo@v1
+      with:
+        command: install
+        args: cargo-udeps --locked
+
+    # Udeps needs to run with the nightly toolchain
+    - name: Install nightly toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: nightly
+        override: true
+
+    - name: Install required packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install libudev-dev libusb-1.0-0-dev
 
     - name: Cache cargo target
       uses: actions/cache@v3
@@ -54,21 +75,11 @@ jobs:
         path: bindings/nodejs/target
         key: ubuntu-latest-nightly-cargo-build-node-target-${{ hashFiles('**/Cargo.toml') }}
 
-    - name: Install required packages (Ubuntu)
-      run: |
-        sudo apt-get update
-        sudo apt-get install libudev-dev libusb-1.0-0-dev
-
     - name: Cache python binding cargo target
       uses: actions/cache@v3
       with:
         path: bindings/python/target
         key: ubuntu-latest-nightly-cargo-build-python-target-${{ hashFiles('**/Cargo.toml') }}
-
-    - uses: actions-rs/cargo@v1
-      with:
-        command: install
-        args: cargo-udeps --locked
 
     - name: Run udeps
       uses: actions-rs/cargo@v1
