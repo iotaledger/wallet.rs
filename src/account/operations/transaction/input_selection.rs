@@ -71,9 +71,13 @@ impl AccountHandle {
             }
 
             // TODO BURN
-            let mut input_selection =
-                InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone())
-                    .required_inputs(custom_inputs);
+            let mut input_selection = InputSelection::new(
+                available_outputs_signing_data,
+                outputs,
+                vec![],
+                protocol_parameters.clone(),
+            )
+            .required_inputs(custom_inputs);
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
@@ -98,9 +102,13 @@ impl AccountHandle {
             }
 
             // TODO BURN
-            let mut input_selection =
-                InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone())
-                    .required_inputs(mandatory_inputs);
+            let mut input_selection = InputSelection::new(
+                available_outputs_signing_data,
+                outputs,
+                vec![],
+                protocol_parameters.clone(),
+            )
+            .required_inputs(mandatory_inputs);
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
@@ -122,8 +130,12 @@ impl AccountHandle {
         }
 
         // TODO BURN
-        let mut input_selection =
-            InputSelection::new(available_outputs_signing_data, outputs, protocol_parameters.clone());
+        let mut input_selection = InputSelection::new(
+            available_outputs_signing_data,
+            outputs,
+            vec![],
+            protocol_parameters.clone(),
+        );
 
         if let Some(address) = remainder_address {
             input_selection = input_selection.remainder_address(address);
