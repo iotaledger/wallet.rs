@@ -1,10 +1,13 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    output::OutputId,
-    payload::{dto::TaggedDataPayloadDto, tagged_data::TaggedDataPayload},
-    DtoError,
+use iota_client::{
+    api::input_selection::{Burn, BurnDto},
+    block::{
+        output::OutputId,
+        payload::{dto::TaggedDataPayloadDto, tagged_data::TaggedDataPayload},
+        DtoError,
+    },
 };
 use serde::{Deserialize, Serialize};
 
@@ -25,6 +28,7 @@ pub struct TransactionOptions {
     pub mandatory_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
+    pub burn: Burn,
     pub note: Option<String>,
 }
 
@@ -41,6 +45,7 @@ impl TransactionOptions {
             custom_inputs: value.custom_inputs.clone(),
             mandatory_inputs: value.mandatory_inputs.clone(),
             allow_burning: value.allow_burning,
+            burn: Burn::try_from(&value.burn)?,
             note: value.note.clone(),
         })
     }
@@ -61,6 +66,7 @@ pub struct TransactionOptionsDto {
     pub mandatory_inputs: Option<Vec<OutputId>>,
     #[serde(rename = "allowBurning", default)]
     pub allow_burning: bool,
+    pub burn: BurnDto,
     pub note: Option<String>,
 }
 
