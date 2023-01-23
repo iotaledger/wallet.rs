@@ -267,7 +267,7 @@ pub(crate) fn alias_state_transition(
                 }
                 // if not find in the outputs, the alias gets burned which is a governance transaction
             })
-            .unwrap_or(burn.map(|burn| !burn.aliases().contains(&alias_id)))
+            .unwrap_or_else(|| burn.map(|burn| !burn.aliases().contains(&alias_id)))
     } else {
         None
     })
