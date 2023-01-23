@@ -43,19 +43,23 @@ impl AccountHandle {
         );
 
         let current_time = self.client.get_time_checked().await?;
+        #[allow(unused_mut)]
+        let mut forbidden_inputs = account.locked_outputs.clone();
+
+        #[cfg(feature = "participation")]
+        if let Some(voting_output) = &voting_output {
+            forbidden_inputs.insert(voting_output.output_id);
+        }
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
         // still locked.
-        // TODO should maybe be done in ISA directly ?
         let available_outputs_signing_data = filter_inputs(
             &account,
             account.unspent_outputs.values(),
             current_time,
             protocol_parameters.bech32_hrp(),
             &outputs,
-            &account.locked_outputs,
-            #[cfg(feature = "participation")]
-            voting_output,
+            burn,
         )?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
@@ -76,7 +80,8 @@ impl AccountHandle {
                 vec![],
                 protocol_parameters.clone(),
             )
-            .required_inputs(custom_inputs);
+            .required_inputs(custom_inputs)
+            .forbidden_inputs(forbidden_inputs);
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
@@ -110,7 +115,8 @@ impl AccountHandle {
                 vec![],
                 protocol_parameters.clone(),
             )
-            .required_inputs(mandatory_inputs);
+            .required_inputs(mandatory_inputs)
+            .forbidden_inputs(forbidden_inputs);
 
             if let Some(address) = remainder_address {
                 input_selection = input_selection.remainder_address(address);
@@ -140,7 +146,8 @@ impl AccountHandle {
             outputs,
             vec![],
             protocol_parameters.clone(),
-        );
+        )
+        .forbidden_inputs(forbidden_inputs);
 
         if let Some(address) = remainder_address {
             input_selection = input_selection.remainder_address(address);
@@ -201,47 +208,11 @@ fn filter_inputs(
     current_time: u32,
     bech32_hrp: &str,
     outputs: &[Output],
-    locked_outputs: &HashSet<OutputId>,
-    #[cfg(feature = "participation")] voting_output: Option<OutputData>,
+    burn: Option<&Burn>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
+
     for output_data in available_outputs {
-        // Don't use outputs that are already used in other transactions
-        if locked_outputs.contains(&output_data.output_id) {
-            continue;
-        }
-        #[cfg(feature = "participation")]
-        if let Some(ref voting_output) = voting_output {
-            // Remove voting output from inputs, so it doesn't get spent when not calling a function related to it.
-            if output_data.output_id == voting_output.output_id {
-                continue;
-            }
-        }
-
-        if let Output::Foundry(foundry_input) = &output_data.output {
-            // Don't add if output has not the same FoundryId, because it's the not needed unless for burning, but
-            // then it should be provided in the mandatory inputs
-            if !outputs.iter().any(|output| {
-                if let Output::Foundry(foundry_output) = output {
-                    foundry_input.id() == foundry_output.id()
-                } else {
-                    false
-                }
-            }) {
-                continue;
-            }
-        }
-
-        let unlock_conditions = output_data
-            .output
-            .unlock_conditions()
-            .expect("output needs to have unlock_conditions");
-
-        // If still time locked, don't include it
-        if unlock_conditions.is_time_locked(current_time) {
-            continue;
-        }
-
         let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
             // We use the addresses with unspent outputs, because other addresses of the
             // account without unspent outputs can't be related to this output
@@ -255,17 +226,9 @@ fn filter_inputs(
             continue;
         }
 
-        // If there is a StorageDepositReturnUnlockCondition and it's not expired, then don't include it
-        // If the expiration is some and not expired, we would have continued already before when we check
-        // output_can_be_unlocked_now_and_in_future
-        if unlock_conditions.expiration().is_none() && unlock_conditions.storage_deposit_return().is_some() {
-            continue;
-        }
+        // Defaults to state transition if it is not explicitly a governance transition or a burn.
+        let alias_state_transition = alias_state_transition(output_data, outputs, burn)?.unwrap_or(true);
 
-        // If alias doesn't exist in the outputs, assume the transition type that allows burning or not
-        // let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(!allow_burning);
-        // TODO !!!!!!!!!!!!!!
-        let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(false);
         available_outputs_signing_data.push(output_data.input_signing_data(
             account,
             current_time,
@@ -278,7 +241,11 @@ fn filter_inputs(
 }
 
 // Returns if alias transition is a state transition with the provided outputs for a given input.
-pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output]) -> crate::Result<Option<bool>> {
+pub(crate) fn alias_state_transition(
+    output_data: &OutputData,
+    outputs: &[Output],
+    burn: Option<&Burn>,
+) -> crate::Result<Option<bool>> {
     Ok(if let Output::Alias(alias_input) = &output_data.output {
         let alias_id = alias_input.alias_id_non_null(&output_data.output_id);
         // Check if alias exists in the outputs and get the required transition type
@@ -300,7 +267,7 @@ pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output
                 }
                 // if not find in the outputs, the alias gets burned which is a governance transaction
             })
-            .unwrap_or(None)
+            .unwrap_or(burn.map(|burn| !burn.aliases().contains(&alias_id)))
     } else {
         None
     })
