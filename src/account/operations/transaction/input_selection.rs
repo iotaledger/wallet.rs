@@ -45,7 +45,8 @@ impl AccountHandle {
         let current_time = self.client.get_time_checked().await?;
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
-        // still locked TODO should maybe be done in ISA directly ?
+        // still locked.
+        // TODO should maybe be done in ISA directly ?
         let available_outputs_signing_data = filter_inputs(
             &account,
             account.unspent_outputs.values(),
@@ -272,6 +273,7 @@ fn filter_inputs(
             alias_state_transition,
         )?);
     }
+
     Ok(available_outputs_signing_data)
 }
 
