@@ -939,7 +939,7 @@ Will also retry pending transactions if necessary.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `options?` | [`AccountSyncOptions`](../interfaces/AccountSyncOptions.md) | Optional synchronization options. |
+| `options?` | [`SyncOptions`](../interfaces/SyncOptions.md) | Optional synchronization options. |
 
 #### Returns
 
