@@ -5,8 +5,7 @@ use std::time::Instant;
 
 use iota_client::{
     api::{
-        input_selection::types::SelectedTransactionData, transaction::validate_regular_transaction_essence_length,
-        PreparedTransactionData,
+        input_selection::Selected, transaction::validate_regular_transaction_essence_length, PreparedTransactionData,
     },
     block::{
         input::{Input, UtxoInput},
@@ -25,7 +24,7 @@ impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
     pub(crate) async fn build_transaction_essence(
         &self,
-        selected_transaction_data: SelectedTransactionData,
+        selected_transaction_data: Selected,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] build_transaction");

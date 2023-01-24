@@ -18,7 +18,7 @@ fern-logger = { version = "0.5.0", default-features = false }
 futures = { version = "0.3.25", default-features = false }
 getset = { version = "0.1.2", default-features = false }
 # iota-client = { version = "2.0.1-rc.5", default-features = false, features = [ "message_interface", "tls" ] }
-iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea", default-features = false, features = [ "message_interface", "tls" ] }
+iota-client = { git = "https://github.com/iotaledger/iota.rs", rev = "5688a0686f9faae77e3c865a7867866f57bbb97c", default-features = false, features = [ "message_interface", "tls" ] }
 iota-crypto = { version = "0.15.3", default-features = false, features = [ "std", "chacha", "blake2b", "ed25519", "random", "slip10", "bip39", "bip39-en" ] }
 log = { version = "0.4.17", default-features = false }
 packable = { version = "0.7.0", default-features = false, features = [ "serde", "primitive-types" ] }

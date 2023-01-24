@@ -30,9 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Derive `Eq, PartialEq` for `Account` and `OutputData`;
 - `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
 - `SyncOptions::{account, alias, nft}` fields;
+- `{TransactionOptions, TransactionOptionsDto}::burn`;
 
 ### Changed
 
+- Use new Input Selection Algorithm;
 - Updated dependencies;
 - Message interface methods to accept `TransactionOptionsDto` instead of `TransactionOptions`;
 - `send_message` to return Option which is None when no message response is received;
@@ -50,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `clear_listeners` from the `WalletMessageHandler`;
 - `IncomingTransactionDataDto` type;
 - `SyncOptions::sync_aliases_and_nfts`;
+- `{TransactionOptions, TransactionOptionsDto}::allow_burning`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
