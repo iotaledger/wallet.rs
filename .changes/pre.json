@@ -3,6 +3,7 @@
   "changes": [
     ".changes/account-bech32-hrp.md",
     ".changes/account-recovery.md",
+    ".changes/align-transactions.md",
     ".changes/clearlistener-move.md",
     ".changes/downgrade-rocksb.md",
     ".changes/expose-participation-type.md",
@@ -36,11 +37,13 @@
     ".changes/retry-transaction-until-included.md",
     ".changes/revoting.md",
     ".changes/rocksdb-19.md",
+    ".changes/syncOptions.md",
     ".changes/syncing.md",
     ".changes/tagAndMetadataHex.md",
     ".changes/tagged-data-payload.md",
     ".changes/tx-len-validation.md",
     ".changes/uint8array-replace-number-array.md.md",
+    ".changes/use-new-isa.md",
     ".changes/voting-methods.md",
     ".changes/voting-power-not-available.md"
   ]
