@@ -21,10 +21,7 @@ use crate::storage::adapter::memory::Memory;
 #[cfg(feature = "storage")]
 use crate::{
     account::handle::AccountHandle,
-    storage::{
-        constants::default_storage_path,
-        manager::{default_storage, ManagerStorage},
-    },
+    storage::{constants::default_storage_path, manager::ManagerStorage},
 };
 use crate::{account_manager::AccountManager, ClientOptions};
 
@@ -55,7 +52,7 @@ impl Default for StorageOptions {
             storage_path: default_storage_path().into(),
             storage_file_name: None,
             storage_encryption_key: None,
-            manager_store: default_storage(),
+            manager_store: ManagerStorage::default(),
         }
     }
 }
