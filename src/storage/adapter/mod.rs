@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 /// RocksDB storage adapter.
-#[cfg(feature = "rocksdb")]
 pub mod memory;
+#[cfg(feature = "rocksdb")]
 pub mod rocksdb;
 
 use std::collections::HashMap;
