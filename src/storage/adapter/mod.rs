@@ -1,8 +1,8 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-/// RocksDB storage adapter.
 pub mod memory;
+/// RocksDB storage adapter.
 #[cfg(feature = "rocksdb")]
 pub mod rocksdb;
 
