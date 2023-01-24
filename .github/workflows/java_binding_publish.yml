@@ -3,14 +3,14 @@ name: Create Java release
 on: workflow_dispatch
 
 jobs:
-  release-java:
-    name: Create Java release
+
+  release-android:
+    name: Create Android releases
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-        java: ["11"]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v3
@@ -67,46 +67,37 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
             ${{ matrix.os }}-stable-cargo-index-
-
-      - name: Set Up Java ${{ matrix.java }}
-        uses: actions/setup-java@v3
-        with:
-          java-version: ${{ matrix.java }}
-          distribution: 'temurin'
-
-      - name: Build JAR for default target and an additional JAR that does not contain the native library
-        shell: bash
-        working-directory: bindings/java/
-        run: |
-          chmod +x gradlew
-          ./gradlew build jarWithoutNativeLibs
-
-      - name: Build JAR for aarch64-apple-darwin target
+            
+      - name: Install cargo-ndk
         if: matrix.os == 'macos-latest'
         shell: bash
         working-directory: bindings/java/
         run: |
-          rustup target add aarch64-apple-darwin
-          ./gradlew build -PbuildTarget=aarch64-apple-darwin
+          cargo add cargo-ndk@2.12.4
 
-      - name: Get filename for tag construction
+      - name: Add the Android targets
+        if: matrix.os == 'macos-latest'
         shell: bash
-        id: filename
         working-directory: bindings/java/
         run: |
-          cd lib/build/libs/
-          fileName="$(ls | grep -m 1 jar)"
-          echo "FILE_NAME=$fileName" >> $GITHUB_OUTPUT
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
-      - name: Construct tag
-        uses: actions-ecosystem/action-regex-match@v2
-        id: prepare-tag
+      - name: Build for the Android targets
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        working-directory: bindings/java/
+        run: |
+          cd lib/native
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./jniLibs build --release
+          
+      - name: Archive Release
+        uses: thedoctor0/zip-release@0.7.0
         with:
-          text: ${{ steps.filename.outputs.FILE_NAME }}
-          regex: '(.*)(\d.\d.\d(-rc.\d)?)'
-          flags: m
+          type: 'zip'
+          filename: 'jniLibs.zip'
+          directory: bindings/java/lib/native/jniLibs
 
-      - name: Upload JAR to Github
+      - name: Upload ZIP to Github
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -115,17 +106,3 @@ jobs:
           tag_name: ${{ steps.prepare-tag.outputs.group1 }}java-${{ steps.prepare-tag.outputs.group2 }}-new
           append_body: true
           prerelease: true
-
-      - name: Publish JAR to Maven Central
-        env:
-          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_USERNAME }}
-          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_PASSWORD }}
-          ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.ORG_GRADLE_PROJECT_BASE64_ENCODED_ASCII_ARMORED_SIGNING_KEY }}
-          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD }}
-        shell: bash
-        working-directory: bindings/java/
-        run: |
-          ./gradlew publishToSonatype
-          if [ "$RUNNER_OS" == "macOS" ];
-          then ./gradlew publishToSonatype -PbuildTarget=aarch64-apple-darwin
-          fi
