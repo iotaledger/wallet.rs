@@ -23,7 +23,7 @@ pub(crate) enum ManagerStorage {
     /// RocksDB storage.
     #[cfg(feature = "rocksdb")]
     Rocksdb,
-    /// Storage backed by a Map in memory, for testing
+    /// Storage backed by a Map in memory.
     Memory,
 }
 
