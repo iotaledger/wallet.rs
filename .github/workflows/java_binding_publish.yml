@@ -72,7 +72,7 @@ jobs:
         shell: bash
         working-directory: bindings/java/
         run: |
-          cargo add cargo-ndk@2.12.4
+          cargo install cargo-ndk@2.12.4
 
       - name: Add the Android targets
         shell: bash
