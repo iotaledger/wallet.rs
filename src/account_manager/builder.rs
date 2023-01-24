@@ -142,7 +142,7 @@ impl AccountManagerBuilder {
                 .and_then(|data| data.client_options.clone())
                 .ok_or(crate::Error::MissingParameter("client_options"))?;
 
-            // Update self so it get sused and stored again
+            // Update self so it gets used and stored again
             self.client_options.replace(loaded_client_options);
             false
         } else {
@@ -155,7 +155,7 @@ impl AccountManagerBuilder {
                 .and_then(|data| data.secret_manager.clone())
                 .ok_or(crate::Error::MissingParameter("secret_manager"))?;
 
-            // Update self so it get sused and stored again
+            // Update self so it gets used and stored again
             self.secret_manager.replace(secret_manager);
         }
 
@@ -164,7 +164,7 @@ impl AccountManagerBuilder {
                 .and_then(|data| data.coin_type)
                 .ok_or(crate::Error::MissingParameter("coin_type (IOTA: 4218, Shimmer: 4219)"))?;
 
-            // Update self so it get sused and stored again
+            // Update self so it gets used and stored again
             self.coin_type.replace(coin_type);
         }
 
@@ -202,7 +202,7 @@ impl AccountManagerBuilder {
             })
             .collect::<_>();
 
-        // If the manager builder is not set, it means the user provided it and we need to update the addresses.
+        // If they are new, we need to update the accounts because the bech32 HRP might have changed.
         // In the other case it was loaded from the database and addresses are up to date.
         if new_provided_client_options {
             for account in account_handles.iter_mut() {
