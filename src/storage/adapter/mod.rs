@@ -3,8 +3,8 @@
 
 /// RocksDB storage adapter.
 #[cfg(feature = "rocksdb")]
-pub mod rocksdb;
 pub mod memory;
+pub mod rocksdb;
 
 use std::collections::HashMap;
 
