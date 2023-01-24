@@ -11,14 +11,17 @@ use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::{OutputMetadataResponse, OutputWithMetadataResponse},
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::{dto::AddressDto, Address},
-        output::{dto::OutputDto, Output, OutputId},
+        output::{
+            dto::{OutputDto, OutputMetadataDto},
+            Output, OutputId, OutputMetadata,
+        },
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
-    secret::types::{InputSigningData, OutputMetadata},
+    secret::types::InputSigningData,
 };
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -37,7 +40,7 @@ pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
-    pub metadata: OutputMetadataResponse,
+    pub metadata: OutputMetadataDto,
     /// The actual Output
     pub output: Output,
     /// If an output is spent
@@ -106,7 +109,7 @@ pub struct OutputDataDto {
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
     /// The metadata of the output
-    pub metadata: OutputMetadataResponse,
+    pub metadata: OutputMetadataDto,
     /// The actual Output
     pub output: OutputDto,
     /// If an output is spent
