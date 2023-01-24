@@ -143,8 +143,12 @@ jobs:
         run: npm install typescript && npm ci
         working-directory: bindings/nodejs
       
-      - name: Build Node.js prebuild
-        run: npm run prebuild
+      - name: Build Node.js prebuild (x64)
+        run: npm run prebuild-x64
+        working-directory: bindings/nodejs
+
+      - name: Build Node.js prebuild (arm64)
+        run: npm run prebuild-arm64
         working-directory: bindings/nodejs
       
       - name: Upload prebuild to GitHub release
