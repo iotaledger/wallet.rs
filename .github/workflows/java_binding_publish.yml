@@ -69,21 +69,18 @@ jobs:
             ${{ matrix.os }}-stable-cargo-index-
             
       - name: Install cargo-ndk
-        if: matrix.os == 'macos-latest'
         shell: bash
         working-directory: bindings/java/
         run: |
           cargo add cargo-ndk@2.12.4
 
       - name: Add the Android targets
-        if: matrix.os == 'macos-latest'
         shell: bash
         working-directory: bindings/java/
         run: |
           rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
 
       - name: Build for the Android targets
-        if: matrix.os == 'macos-latest'
         shell: bash
         working-directory: bindings/java/
         run: |
