@@ -5,12 +5,19 @@ use std::collections::HashMap;
 
 use super::{storage_err, StorageAdapter};
 
+/// The storage id.
+pub const STORAGE_ID: &str = "Memory";
+
 /// A storage adapter that stores data in memory.
 #[derive(Debug, Default)]
 pub struct Memory(HashMap<String, String>);
 
 #[async_trait::async_trait]
 impl StorageAdapter for Memory {
+    fn id(&self) -> &'static str {
+        STORAGE_ID
+    }
+
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.0.get(key).ok_or_else(|| storage_err(key)).cloned()
     }

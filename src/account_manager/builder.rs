@@ -17,7 +17,7 @@ use tokio::sync::RwLock;
 #[cfg(feature = "events")]
 use crate::events::EventEmitter;
 #[cfg(all(feature = "storage", not(feature = "rocksdb")))]
-use crate::storage::adapter::Memory;
+use crate::storage::adapter::memory::Memory;
 #[cfg(feature = "storage")]
 use crate::{
     account::handle::AccountHandle,
