@@ -215,7 +215,6 @@ impl AccountManagerBuilder {
             background_syncing_status: Arc::new(AtomicUsize::new(0)),
             client_options: Arc::new(RwLock::new(
                 self.client_options
-                    .clone()
                     .ok_or(crate::Error::MissingParameter("client_options"))?,
             )),
             coin_type: Arc::new(AtomicU32::new(
