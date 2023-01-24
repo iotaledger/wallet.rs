@@ -104,7 +104,7 @@ impl AccountManagerBuilder {
         log::debug!("[AccountManagerBuilder]");
 
         #[cfg(feature = "storage")]
-            let storage_options = self.storage_options.clone().unwrap_or_default();
+        let storage_options = self.storage_options.clone().unwrap_or_default();
         #[cfg(feature = "storage")]
         // Check if the db exists and if not, return an error if one parameter is missing, because otherwise the db
         // would be created with an empty parameter which just leads to errors later
@@ -121,19 +121,19 @@ impl AccountManagerBuilder {
         }
 
         #[cfg(feature = "storage")]
-            let storage =
+        let storage =
             crate::storage::adapter::rocksdb::RocksdbStorageAdapter::new(storage_options.storage_path.clone())?;
         #[cfg(feature = "storage")]
-            let storage_manager = crate::storage::manager::new_storage_manager(
+        let storage_manager = crate::storage::manager::new_storage_manager(
             None,
             Box::new(storage) as Box<dyn crate::storage::adapter::StorageAdapter + Send + Sync>,
         )
-            .await?;
+        .await?;
 
         #[cfg(feature = "storage")]
-            let read_manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
+        let read_manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
         #[cfg(not(feature = "storage"))]
-            let read_manager_builder: Option<AccountManagerBuilder> = None;
+        let read_manager_builder: Option<AccountManagerBuilder> = None;
 
         // prioritise provided client_options and secret_manager over stored ones
         let new_provided_client_options = if self.client_options.is_none() {
@@ -179,12 +179,12 @@ impl AccountManagerBuilder {
             .finish()?;
 
         #[cfg(feature = "events")]
-            let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
+        let event_emitter = Arc::new(Mutex::new(EventEmitter::new()));
 
         #[cfg(feature = "storage")]
-            let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
+        let accounts = storage_manager.lock().await.get_accounts().await.unwrap_or_default();
         #[cfg(not(feature = "storage"))]
-            let accounts = Vec::new();
+        let accounts = Vec::new();
         let mut account_handles: Vec<AccountHandle> = accounts
             .into_iter()
             .map(|a| {
@@ -195,14 +195,14 @@ impl AccountManagerBuilder {
                         .clone()
                         .expect("secret_manager needs to be provided"),
                     #[cfg(feature = "events")]
-                        event_emitter.clone(),
+                    event_emitter.clone(),
                     #[cfg(feature = "storage")]
-                        storage_manager.clone(),
+                    storage_manager.clone(),
                 )
             })
             .collect::<_>();
 
-        // If they are new, we need to update the accounts because the bech32 HRP might have changed.
+        // If the manager builder is not set, it means the user provided it and we need to update the addresses.
         // In the other case it was loaded from the database and addresses are up to date.
         if new_provided_client_options {
             for account in account_handles.iter_mut() {
