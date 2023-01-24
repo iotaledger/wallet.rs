@@ -46,6 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountDto::incoming_transactions` from `(TransactionPayloadDto, Vec<OutputWithMetadataResponse>)` to `TransactionDto`;
 - `Response::{IncomingTransactionData, IncomingTransactionsData}` contain `TransactionDto` instead of `IncomingTransactionDataDto`;
 - Default `SyncOptions` don't sync alias and nft outputs anymore;
+- `{OutputData, OutputDataDto}::metadata` type from `OutputMetadataResponse` to `OutputMetadataDto`;
 
 ### Removed
 
