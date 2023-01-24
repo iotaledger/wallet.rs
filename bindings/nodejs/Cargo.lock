@@ -863,6 +863,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "43a3c133739dddd0d2990f9a4bdf8eb4b21ef50e4851ca85ab661199821d510e"
 dependencies = [
  "ahash 0.8.2",
+ "serde",
 ]
 
 [[package]]
@@ -1066,7 +1067,7 @@ dependencies = [
 [[package]]
 name = "iota-client"
 version = "2.0.1-rc.5"
-source = "git+https://github.com/iotaledger/iota.rs?rev=b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea#b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5688a0686f9faae77e3c865a7867866f57bbb97c#5688a0686f9faae77e3c865a7867866f57bbb97c"
 dependencies = [
  "async-trait",
  "backtrace",
@@ -1075,6 +1076,7 @@ dependencies = [
  "futures",
  "getset",
  "gloo-timers",
+ "hashbrown 0.13.2",
  "instant",
  "iota-crypto",
  "iota-ledger-nano",
@@ -1089,6 +1091,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "serde_repr",
  "thiserror",
  "tokio",
  "url",
@@ -1146,7 +1149,7 @@ dependencies = [
 [[package]]
 name = "iota-pow"
 version = "1.0.0-rc.2"
-source = "git+https://github.com/iotaledger/iota.rs?rev=b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea#b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5688a0686f9faae77e3c865a7867866f57bbb97c#5688a0686f9faae77e3c865a7867866f57bbb97c"
 dependencies = [
  "instant",
  "iota-crypto",
@@ -1157,7 +1160,7 @@ dependencies = [
 [[package]]
 name = "iota-types"
 version = "1.0.0-rc.4"
-source = "git+https://github.com/iotaledger/iota.rs?rev=b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea#b6bfcfb179c6aedbbd59877bff1c1ba3ddb711ea"
+source = "git+https://github.com/iotaledger/iota.rs?rev=5688a0686f9faae77e3c865a7867866f57bbb97c#5688a0686f9faae77e3c865a7867866f57bbb97c"
 dependencies = [
  "bech32 0.9.1",
  "bitflags",
@@ -2014,6 +2017,17 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "serde_repr"
+version = "0.1.10"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9a5ec9fa74a20ebbe5d9ac23dac1fc96ba0ecfe9f50f2843b52e537b10fbcb4e"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
