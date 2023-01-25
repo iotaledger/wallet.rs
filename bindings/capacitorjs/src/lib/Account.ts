@@ -1,6 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     AccountMetadata,
@@ -43,14 +44,15 @@ import type {
     INftOutput,
     OutputTypes,
 } from '@iota/types';
+type MessageHandlerType = Awaited<ReturnType<typeof MessageHandler>>
 
 /** The Account class. */
 export class Account {
     // private because the data isn't updated
     private meta: AccountMeta;
-    private messageHandler: any;
+    private messageHandler: MessageHandlerType;
 
-    constructor(accountMeta: AccountMeta, messageHandler: any) {
+    constructor(accountMeta: AccountMeta, messageHandler: MessageHandlerType) {
         this.meta = accountMeta;
         this.messageHandler = messageHandler;
     }
@@ -982,7 +984,7 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async vote(eventId?: string, answers?: number[]): Promise<Transaction> {
+    async vote(eventId: string, answers: number[]): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
