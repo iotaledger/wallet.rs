@@ -208,14 +208,14 @@ jobs:
         working-directory: bindings/java/
         run: |
           cd lib/native
-          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./jniLibs build --release
+          cargo ndk -t arm64-v8a -t armeabi-v7a -t x86 -t x86_64 -o ./cargo-ndk/jniLibs build --release
           
       - name: Archive Release
         uses: thedoctor0/zip-release@0.7.0
         with:
           type: 'zip'
           filename: 'jniLibs.zip'
-          directory: bindings/java/lib/native/jniLibs
+          directory: bindings/java/lib/native/cargo-ndk
 
       - name: Upload ZIP to Github
         uses: softprops/action-gh-release@v1
