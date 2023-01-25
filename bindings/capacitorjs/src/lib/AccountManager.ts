@@ -263,60 +263,7 @@ export async function AccountManager(options: AccountManagerOptions) {
         },
 
         /**
-         * Transform hex encoded address to bech32 e/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * 
-/**
-         * ncoded address. If no bech32Hrp
+         * Transform hex encoded address to bech32 encoded address. If no bech32Hrp
          * is provided, the AccountManager will attempt to retrieve it from the
          * NodeInfo. If this does not succeed, it will default to the Shimmer testnet bech32Hrp.
          */
