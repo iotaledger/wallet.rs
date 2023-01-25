@@ -125,6 +125,7 @@ jobs:
 
   release-android:
     name: Create Android releases
+    needs: release-desktop
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -221,6 +222,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
             bindings/java/lib/build/libs/*.jar
-          tag_name: ${{ jobs.release-desktop.outputs.tag }}
+          tag_name: ${{ needs.release-desktop.outputs.tag }}
           append_body: true
           prerelease: true
