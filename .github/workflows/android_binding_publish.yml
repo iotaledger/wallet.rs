@@ -1,4 +1,4 @@
-name: Create Java release
+name: Create Android release
 
 on: workflow_dispatch
 
@@ -11,6 +11,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        java: ["11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -67,6 +68,12 @@ jobs:
           restore-keys: |
             ${{ matrix.os }}-stable-cargo-index-${{ hashFiles('**/Cargo.lock') }}
             ${{ matrix.os }}-stable-cargo-index-
+
+      - name: Set Up Java ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
             
       - name: Install cargo-ndk
         shell: bash
@@ -93,6 +100,30 @@ jobs:
           type: 'zip'
           filename: 'jniLibs.zip'
           directory: bindings/java/lib/native/jniLibs
+
+      - name: Build JAR that does not contain the native library
+        shell: bash
+        working-directory: bindings/java/
+        run: |
+          chmod +x gradlew
+          ./gradlew build jarWithoutNativeLibs
+
+      - name: Get filename for tag construction
+        shell: bash
+        id: filename
+        working-directory: bindings/java/
+        run: |
+          cd lib/build/libs/
+          fileName="$(ls | grep -m 1 jar)"
+          echo "FILE_NAME=$fileName" >> $GITHUB_OUTPUT
+
+      - name: Construct tag
+        uses: actions-ecosystem/action-regex-match@v2
+        id: prepare-tag
+        with:
+          text: ${{ steps.filename.outputs.FILE_NAME }}
+          regex: '(.*)(\d.\d.\d(-rc.\d)?)'
+          flags: m
 
       - name: Upload ZIP to Github
         uses: softprops/action-gh-release@v1
