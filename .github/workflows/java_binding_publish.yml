@@ -109,6 +109,7 @@ jobs:
           flags: m
 
       - name: Construct tag
+        shell: bash
         id: construct-tag
         run: |
           echo "tag=${{ steps.prepare-tag.outputs.group1 }}java-${{ steps.prepare-tag.outputs.group2 }}-new" >> $GITHUB_OUTPUT   
