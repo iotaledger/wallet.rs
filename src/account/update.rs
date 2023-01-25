@@ -268,6 +268,7 @@ impl AccountHandle {
     }
 
     // Should only be called from the AccountManager so all accounts are on the same state
+    // Will update the addresses with a possible new Bech32 HRP and clear the inaccessible_incoming_transactions.
     pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> crate::Result<()> {
         self.client = client;
         let bech32_hrp = self.client.get_bech32_hrp().await?;
@@ -282,6 +283,8 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
+
+        account.inaccessible_incoming_transactions.clear();
         Ok(())
     }
 }

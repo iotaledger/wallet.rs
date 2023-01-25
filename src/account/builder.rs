@@ -188,6 +188,7 @@ impl AccountBuilder {
             transactions: HashMap::new(),
             pending_transactions: HashSet::new(),
             incoming_transactions: HashMap::new(),
+            inaccessible_incoming_transactions: HashSet::new(),
             native_token_foundries: HashMap::new(),
         };
 
