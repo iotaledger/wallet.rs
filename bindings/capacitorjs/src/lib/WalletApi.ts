@@ -1,56 +1,56 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+import { AccountId, CreateAccountPayload } from '../types/account';
+import { AccountManagerOptions } from '../types';
 import { Account } from './Account';
 import { AccountManager } from './AccountManager';
 
-const profileManagers = {}
+type ProfileManager = Awaited<ReturnType<typeof AccountManager>>
+type RecoverAccounts = ProfileManager['recoverAccounts']
+interface ProfileManagers {
+    [key: string]: ProfileManager
+}
+const profileManagers: ProfileManagers = {}
+
 const WalletApi = {
-    async createAccountManager(
-        id: number, // Account.AccountId,
-        options: unknown,  // Account.AccountManagerOptions
-    ) {
-        console.error({options})
+    async createAccountManager(id: AccountId, options: AccountManagerOptions) {
         const manager = await AccountManager(options)
         manager.id = id
-        console.error({manager})
         profileManagers[id] = manager
-        // bindMethodsAcrossContextBridge(WalletApi.AccountManager, manager)
         return manager
     },
-    async createAccount(managerId, payload) {
+    async createAccount(managerId: AccountId, payload: CreateAccountPayload) {
         const manager = profileManagers[managerId]
         const account = await manager.createAccount(payload)
         bindMethodsAcrossContextBridge(Account.prototype, account)
         return account
     },
-    deleteAccountManager(id) {
-        if (id && id in profileManagers) {
-            delete profileManagers[id]
+    deleteAccountManager(managerId: AccountId) {
+        if (managerId && managerId in profileManagers) {
+            delete profileManagers[managerId]
         }
     },
-    async getAccount(managerId, index) {
+    async getAccount(managerId: AccountId, index: number) {
         const manager = profileManagers[managerId]
-        console.error({manager})
         const account = await manager.getAccount(index)
         bindMethodsAcrossContextBridge(Account.prototype, account)
         return account
     },
-    async getAccounts(managerId) {
+    async getAccounts(managerId: AccountId) {
         const manager = profileManagers[managerId]
-        console.error({manager})
         const accounts = await manager.getAccounts()
         accounts.forEach((account) => bindMethodsAcrossContextBridge(Account.prototype, account))
         return accounts
     },
-    async recoverAccounts(managerId, payload) {
+    async recoverAccounts(managerId: AccountId, payload: RecoverAccounts) {
         const manager = profileManagers[managerId]
-        console.error({manager})
-        const accounts = await manager.recoverAccounts(...Object.values(payload))
+        const accounts = await manager.recoverAccounts(...Object.values(payload) as Parameters<RecoverAccounts>)
         accounts.forEach((account) => bindMethodsAcrossContextBridge(Account.prototype, account))
         return accounts
     },
 }
+
 function bindMethodsAcrossContextBridge(prototype, object) {
     const prototypeProperties = Object.getOwnPropertyNames(prototype)
     prototypeProperties.forEach((key) => {
