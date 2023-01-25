@@ -4,6 +4,8 @@
   "description": "Capacitor plugin binding to the wallet library",
   "homepage": "https://github.com/iotaledger/wallet.rs#readme",
   "main": "dist/api.js",
+  "module": "dist/api.js",
+  "types": "dist/esm/lib/index.d.ts",
   "files": [
     "android/src/main/",
     "android/build.gradle",
