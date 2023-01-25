@@ -16,7 +16,6 @@ async fn account_ordering() -> Result<()> {
     let storage_path = "test-storage/account_ordering";
     common::setup(storage_path)?;
 
-    // mnemonic without balance
     let manager = common::make_manager(storage_path, None, None).await?;
 
     for _ in 0..100 {

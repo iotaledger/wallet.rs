@@ -27,7 +27,6 @@ pub(crate) async fn make_manager(
     node: Option<&str>,
 ) -> Result<AccountManager> {
     let client_options = ClientOptions::new().with_node(node.unwrap_or(NODE_LOCAL))?;
-    // mnemonic without balance
     let secret_manager = MnemonicSecretManager::try_from_mnemonic(mnemonic.unwrap_or(DEFAULT_MNEMONIC))?;
 
     AccountManager::builder()

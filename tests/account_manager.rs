@@ -134,11 +134,7 @@ async fn iota_coin_type() -> Result<()> {
     common::setup(storage_path)?;
 
     let client_options = ClientOptions::new().with_node(common::NODE_LOCAL)?;
-
-    // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
+    let secret_manager = MnemonicSecretManager::try_from_mnemonic(common::DEFAULT_MNEMONIC)?;
 
     let manager = AccountManager::builder()
         .with_secret_manager(SecretManager::Mnemonic(secret_manager))
