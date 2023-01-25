@@ -25,7 +25,7 @@ import type {
 /** The AccountManager class. */
 export async function AccountManager(options: AccountManagerOptions) {
     
-    let id: AccountId = 0
+    let id: AccountId
     
     let messageHandler = await MessageHandler(options);
 
