@@ -14,7 +14,7 @@
     "prebuild-x64": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip --arch x64",
     "prebuild-arm64": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip --arch arm64",
     "rebuild": "node scripts/neon-build && tsc && node scripts/strip.js",
-    "install": "prebuild-install --runtime napi --tag-prefix nodejs-binding-v || npm run rebuild",
+    "install": "prebuild-install --runtime napi --tag-prefix='nodejs-binding-v' || npm run rebuild",
     "test": "cargo test"
   },
   "author": "IOTA Foundation <contact@iota.org>",
