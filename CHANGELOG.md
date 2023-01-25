@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
 - `SyncOptions::{account, alias, nft}` fields;
 - `{TransactionOptions, TransactionOptionsDto}::burn`;
+- `Memory` storage adapter;
 
 ### Changed
 
@@ -47,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Response::{IncomingTransactionData, IncomingTransactionsData}` contain `TransactionDto` instead of `IncomingTransactionDataDto`;
 - Default `SyncOptions` don't sync alias and nft outputs anymore;
 - `{OutputData, OutputDataDto}::metadata` type from `OutputMetadataResponse` to `OutputMetadataDto`;
+- `RocksDb` storage is now an optional storage adapter;
 
 ### Removed
 

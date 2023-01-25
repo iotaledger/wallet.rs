@@ -39,10 +39,10 @@ dotenv = { version =  "0.15.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure
-default = [ "mnemonic", "storage", "stronghold" ]
+default = [ "mnemonic", "storage", "rocksdb", "stronghold" ]
 ledger_nano = [ "iota-client/ledger_nano" ]
 stronghold = [ "iota-client/stronghold" ]
-storage = [ "rocksdb" ]
+storage = []
 message_interface = []
 events = []
 mnemonic = []
