@@ -26,8 +26,6 @@ export async function MessageHandler(options?: AccountManagerOptions) {
             secretManager: options?.secretManager
     };
     const { messageHandler } = await messageHandlerNew(messageOptions);
-    // messageHandler = messageHandler.messageHandler;
-    // console.error(messageHandler.messageHandler, 'received')
     
     async function sendMessage(message: __Message__): Promise<string> {
         return await sendMessageAsync(
