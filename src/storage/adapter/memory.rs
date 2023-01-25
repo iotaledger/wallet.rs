@@ -18,6 +18,7 @@ impl StorageAdapter for Memory {
         STORAGE_ID
     }
 
+    /// Gets a record from the storage.
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.0.get(key).ok_or_else(|| storage_err(key)).cloned()
     }
@@ -28,7 +29,7 @@ impl StorageAdapter for Memory {
         Ok(())
     }
 
-    /// Batch write.
+    /// Batch writes records to the storage.
     async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
         self.0.extend(records.into_iter());
         Ok(())
