@@ -7,29 +7,17 @@ use std::path::PathBuf;
 use iota_client::constants::SHIMMER_COIN_TYPE;
 #[cfg(feature = "stronghold")]
 use iota_client::secret::stronghold::StrongholdSecretManager;
-use iota_wallet::{
-    account_manager::AccountManager,
-    secret::{mnemonic::MnemonicSecretManager, SecretManager},
-    ClientOptions, Result,
-};
+use iota_wallet::{account_manager::AccountManager, secret::SecretManager, ClientOptions, Result};
+
+mod common;
 
 #[tokio::test]
 async fn account_ordering() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/account_ordering").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let storage_path = "test-storage/account_ordering";
+    common::setup(storage_path)?;
 
     // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path("test-storage/account_ordering")
-        .finish()
-        .await?;
+    let manager = common::make_manager(storage_path, None, None).await?;
 
     for _ in 0..100 {
         let _account = manager.create_account().finish().await?;
@@ -42,23 +30,11 @@ async fn account_ordering() -> Result<()> {
 
 #[tokio::test]
 async fn remove_latest_account() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
-
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let storage_path = "test-storage/remove_latest_account";
+    common::setup(storage_path)?;
 
     let recreated_account_index = {
-        // Mnemonic without balance.
-        let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-            "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-        )?;
-
-        let manager = AccountManager::builder()
-            .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-            .with_client_options(client_options.clone())
-            .with_coin_type(SHIMMER_COIN_TYPE)
-            .with_storage_path("test-storage/remove_latest_account")
-            .finish()
-            .await?;
+        let manager = common::make_manager(storage_path, None, None).await?;
 
         // Create two accounts.
         let first_account = manager.create_account().finish().await?;
@@ -108,17 +84,7 @@ async fn remove_latest_account() -> Result<()> {
     };
 
     // Restore dropped `AccountManager` from above.
-
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options.clone())
-        .with_storage_path("test-storage/remove_latest_account")
-        .finish()
-        .await?;
+    let manager = common::make_manager(storage_path, None, None).await?;
 
     let accounts = manager.get_accounts().await.unwrap();
 
@@ -129,27 +95,16 @@ async fn remove_latest_account() -> Result<()> {
     std::fs::remove_dir_all("test-storage/remove_latest_account").unwrap_or(());
     #[cfg(debug_assertions)]
     manager.verify_integrity().await?;
-    Ok(())
+
+    common::tear_down(storage_path)
 }
 
 #[tokio::test]
 async fn account_alias_already_exists() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let storage_path = "test-storage/account_alias_already_exists";
+    common::setup(storage_path)?;
 
-    // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path("test-storage/account_alias_already_exists")
-        .finish()
-        .await?;
-
+    let manager = common::make_manager(storage_path, None, None).await?;
     let _account = manager
         .create_account()
         .with_alias("Alice".to_string())
@@ -189,27 +144,15 @@ async fn account_alias_already_exists() -> Result<()> {
             .is_ok()
     );
 
-    std::fs::remove_dir_all("test-storage/account_alias_already_exists").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }
 
 #[tokio::test]
 async fn account_rename_alias() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/account_rename_alias").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
-    // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
+    let storage_path = "test-storage/account_rename_alias";
+    common::setup(storage_path)?;
 
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path("test-storage/account_rename_alias")
-        .finish()
-        .await?;
-
+    let manager = common::make_manager(storage_path, None, None).await?;
     let account = manager
         .create_account()
         .with_alias("Alice".to_string())
@@ -223,27 +166,15 @@ async fn account_rename_alias() -> Result<()> {
 
     assert_eq!(account.alias().await, "Bob".to_string());
 
-    std::fs::remove_dir_all("test-storage/account_rename_alias").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }
 
 #[tokio::test]
 async fn account_first_address_exists() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
-    // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
+    let storage_path = "test-storage/account_first_address_exists";
+    common::setup(storage_path)?;
 
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path("test-storage/account_first_address_exists")
-        .finish()
-        .await?;
-
+    let manager = common::make_manager(storage_path, None, None).await?;
     let account = manager
         .create_account()
         .with_alias("Alice".to_string())
@@ -255,21 +186,20 @@ async fn account_first_address_exists() -> Result<()> {
     // First address is a public address
     assert_eq!(account.addresses().await?.first().unwrap().internal(), &false);
 
-    std::fs::remove_dir_all("test-storage/account_first_address_exists").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }
 
 #[cfg(feature = "stronghold")]
 #[tokio::test]
 async fn account_creation_stronghold() -> Result<()> {
-    let folder_path = "test-storage/account_creation_stronghold";
-    std::fs::remove_dir_all(folder_path).unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let storage_path = "test-storage/account_creation_stronghold";
+    common::setup(storage_path)?;
 
+    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
     let mnemonic = "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak";
 
     // Create directory before, because stronghold would panic otherwise
-    std::fs::create_dir_all(folder_path).unwrap_or(());
+    std::fs::create_dir_all(storage_path).unwrap_or(());
     let mut stronghold_secret_manager = StrongholdSecretManager::builder()
         .password("some_hopefully_secure_password")
         .build(PathBuf::from(
@@ -282,12 +212,11 @@ async fn account_creation_stronghold() -> Result<()> {
         .with_secret_manager(secret_manager)
         .with_client_options(client_options)
         .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path(folder_path)
+        .with_storage_path(storage_path)
         .finish()
         .await?;
 
     let _account = manager.create_account().finish().await?;
 
-    std::fs::remove_dir_all(folder_path).unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }

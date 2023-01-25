@@ -105,7 +105,10 @@ pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Op
 
 #[cfg(test)]
 mod tests {
-    use std::fs;
+    use std::{
+        fs,
+        sync::{atomic::Ordering, Arc},
+    };
 
     use iota_client::{
         block::{
@@ -125,6 +128,91 @@ mod tests {
     use crate::message_interface::{self, AccountMethod, ManagerOptions, Message, Response};
 
     const TOKEN_SUPPLY: u64 = 1_813_620_509_061_365;
+
+    #[tokio::test]
+    #[cfg(feature = "events")]
+    async fn message_interface_emit_event() {
+        let storage_path = "test-storage/message_interface_emit_event";
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
+
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
+        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#;
+
+        let options = ManagerOptions {
+            #[cfg(feature = "storage")]
+            storage_path: Some(storage_path.to_string()),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
+            coin_type: Some(SHIMMER_COIN_TYPE),
+            secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
+        };
+
+        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+
+        let event_counter = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let event_counter_clone = Arc::clone(&event_counter);
+        wallet_handle
+            .listen(vec![], move |_name| {
+                // println!("Any event: {:?}", name);
+                event_counter_clone.fetch_add(1, Ordering::SeqCst);
+            })
+            .await;
+
+        for count in 1..11 {
+            let response = message_interface::send_message(
+                &wallet_handle,
+                Message::EmitTestEvent(WalletEvent::ConsolidationRequired),
+            )
+            .await
+            .expect("No send message response");
+            match response {
+                Response::Ok(()) => {
+                    assert_eq!(count, event_counter.load(Ordering::SeqCst))
+                }
+                response_type => panic!("Unexpected response type: {response_type:?}"),
+            }
+        }
+
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
+    }
+
+    #[tokio::test]
+    async fn message_interface_validate_mnemonic() {
+        let storage_path = "test-storage/message_interface_validate_mnemonic";
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
+
+        let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
+        let client_options = r#"{"nodes":["http://localhost:14265/"]}"#;
+
+        let options = ManagerOptions {
+            #[cfg(feature = "storage")]
+            storage_path: Some(storage_path.to_string()),
+            client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
+            coin_type: Some(SHIMMER_COIN_TYPE),
+            secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
+        };
+
+        let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+        let response = message_interface::send_message(&wallet_handle, Message::GenerateMnemonic)
+            .await
+            .expect("No send message response");
+
+        match response {
+            Response::GeneratedMnemonic(mnemonic) => {
+                let response =
+                    message_interface::send_message(&wallet_handle, Message::VerifyMnemonic(mnemonic.to_string()))
+                        .await
+                        .expect("No send message response");
+
+                match response {
+                    Response::Ok(()) => {}
+                    response_type => panic!("Unexpected response type: {response_type:?}"),
+                }
+            }
+            response_type => panic!("Unexpected response type: {response_type:?}"),
+        }
+
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
+    }
 
     #[tokio::test]
     async fn message_interface_create_account() {
@@ -244,6 +332,8 @@ mod tests {
         };
 
         let _response = message_interface::send_message(&wallet_handle, transaction).await;
+
+        let _ = message_interface::send_message(&wallet_handle, Message::ClearListeners(vec![])).await;
 
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }

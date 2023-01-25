@@ -93,3 +93,69 @@ pub struct Account {
     #[serde(rename = "nativeTokenFoundries", default)]
     native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }
+
+// #[cfg(test)]
+// mod tests {
+// use std::fs;
+//
+// use iota_client::{
+// block::{
+// address::Address,
+// output::{
+// dto::OutputDto,
+// unlock_condition::{AddressUnlockCondition, UnlockCondition},
+// BasicOutputBuilder,
+// },
+// },
+// constants::SHIMMER_COIN_TYPE,
+// ClientBuilder,
+// };
+//
+// const TOKEN_SUPPLY: u64 = 1_813_620_509_061_365;
+//
+// #[tokio::test]
+// async fn test_account_balance() {
+// std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
+// let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern
+// endless depend situate athlete pudding blame question genius transfer van random vast"}"#; let client_options = r#"{
+// "nodes":[
+// {
+// "url":"http://localhost:14265/",
+// "auth":null,
+// "disabled":false
+// }
+// ]
+// }"#;
+//
+// let options = ManagerOptions {
+// #[cfg(feature = "storage")]
+// storage_path: Some("test-storage/message_interface_create_account".to_string()),
+// client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
+// coin_type: Some(SHIMMER_COIN_TYPE),
+// secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
+// };
+//
+// let wallet_handle = super::create_message_handler(Some(options)).await.unwrap();
+//
+// create an account
+// let response = message_interface::send_message(
+// &wallet_handle,
+// Message::CreateAccount {
+// alias: None,
+// bech32_hrp: None,
+// },
+// )
+// .await
+// .expect("No send message response");
+//
+// match response {
+// Response::Account(account) => {
+// let id = account.index;
+// println!("Created account index: {id}")
+// }
+// _ => panic!("unexpected response {response:?}"),
+// }
+//
+// std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
+// }
+// }

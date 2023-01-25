@@ -15,27 +15,17 @@ use iota_wallet::{
     ClientOptions, Result, U256,
 };
 
+mod common;
+
 #[tokio::test]
 async fn output_preparation() -> Result<()> {
-    std::fs::remove_dir_all("test-storage/output_preparation").unwrap_or(());
-    let client_options = ClientOptions::new().with_node("http://localhost:14265")?;
+    let storage_path = "test-storage/output_preparation";
+    common::setup(storage_path)?;
 
-    // mnemonic without balance
-    let secret_manager = MnemonicSecretManager::try_from_mnemonic(
-        "inhale gorilla deny three celery song category owner lottery rent author wealth penalty crawl hobby obtain glad warm early rain clutch slab august bleak",
-    )?;
-
-    let manager = AccountManager::builder()
-        .with_secret_manager(SecretManager::Mnemonic(secret_manager))
-        .with_client_options(client_options)
-        .with_coin_type(SHIMMER_COIN_TYPE)
-        .with_storage_path("test-storage/output_preparation")
-        .finish()
-        .await?;
-
+    let manager = common::make_manager(storage_path, None, None).await?;
     let account = manager.create_account().finish().await?;
-    let recipient_address = String::from("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu");
 
+    let recipient_address = String::from("rms1qpszqzadsym6wpppd6z037dvlejmjuke7s24hm95s9fg9vpua7vluaw60xu");
     let output = account
         .prepare_output(
             OutputOptions {
@@ -385,6 +375,5 @@ async fn output_preparation() -> Result<()> {
     // address, sdr, expiration
     assert_eq!(output.unlock_conditions().unwrap().len(), 3);
 
-    std::fs::remove_dir_all("test-storage/output_preparation").unwrap_or(());
-    Ok(())
+    common::tear_down(storage_path)
 }

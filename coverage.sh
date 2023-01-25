@@ -7,7 +7,7 @@ mkdir coverage
 
 # Run tests with profiling instrumentation
 echo "Running instrumented unit tests..."
-RUSTFLAGS="-Zinstrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all --all-features
+RUSTFLAGS="-Zinstrument-coverage" LLVM_PROFILE_FILE="iota-wallet-%m.profraw" cargo +nightly test --tests --all --all-features -- --include-ignored
 
 # Merge all .profraw files into "iota-wallet.profdata"
 echo "Merging coverage data..."
@@ -20,7 +20,7 @@ BINARIES=""
 for file in \
   $( \
     RUSTFLAGS="-Zinstrument-coverage" \
-      cargo +nightly test --tests --all --all-features --no-run --message-format=json \
+      cargo +nightly test --tests --all --all-features --no-run --message-format=json -- --include-ignored \
         | jq -r "select(.profile.test == true) | .filenames[]" \
         | grep -v dSYM - \
   ); \
@@ -39,6 +39,6 @@ cargo +nightly cov -- export ${BINARIES} \
   
 
 # Ensure intermediate coverage files are deleted
-echo "Removing intermediate files..."
-find . -name "*.profraw" -type f -delete
-find . -name "*.profdata" -type f -delete
+# echo "Removing intermediate files..."
+# find . -name "*.profraw" -type f -delete 2>/dev/null
+# find . -name "*.profdata" -type f -delete 2>/dev/null
