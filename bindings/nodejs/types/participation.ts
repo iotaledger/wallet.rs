@@ -1,14 +1,14 @@
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
-    participations: Participations
+    participations: Participations;
 }
 
 export interface Participations {
     [eventId: ParticipationEventId]: {
         [outputId: OutputId]: TrackedParticipationOverview;
     };
-};
+}
 
 export interface TrackedParticipationOverview {
     amount: string;
@@ -41,7 +41,9 @@ export interface ParticipationEventData {
     additionalInfo: string;
 }
 
-export type ParticipationEventPayload = VotingEventPayload | StakingEventPayload;
+export type ParticipationEventPayload =
+    | VotingEventPayload
+    | StakingEventPayload;
 
 export interface VotingEventPayload {
     type: ParticipationEventType.Voting;
@@ -71,7 +73,7 @@ export interface Answer {
 }
 
 export interface QuestionStatus {
-    answers: AnswerStatus[]
+    answers: AnswerStatus[];
 }
 
 export interface AnswerStatus {

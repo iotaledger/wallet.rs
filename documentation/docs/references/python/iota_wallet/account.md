@@ -270,7 +270,7 @@ included (referenced by a milestone). Returns the included block id.
 ### sync\_account
 
 ```python
-def sync_account(options=None)
+def sync(options=None)
 ```
 
 Sync the account by fetching new information from the nodes.

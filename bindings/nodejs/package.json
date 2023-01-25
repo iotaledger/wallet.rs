@@ -1,6 +1,6 @@
 {
   "name": "@iota/wallet",
-  "version": "2.0.3-rc.13",
+  "version": "2.0.3-rc.17",
   "description": "Node.js binding to the wallet library",
   "main": "out/lib/index.js",
   "types": "out/lib/index.d.ts",
@@ -11,9 +11,10 @@
     "build": "node scripts/neon-build && tsc",
     "build:neon": "cargo-cp-artifact -nc ./index.node -- cargo build --release --message-format=json-render-diagnostics",
     "docs-wiki-build": "typedoc --githubPages false --disableSources --excludePrivate --excludeInternal --excludeNotDocumented --plugin typedoc-plugin-markdown --theme markdown --hideBreadcrumbs --entryDocument api_ref.md --readme none --hideGenerator --sort source-order --exclude ./**/src/index.ts --out ../../documentation/docs/references/nodejs ./lib/index.ts ",
-    "prebuild": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip",
+    "prebuild-x64": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip --arch x64",
+    "prebuild-arm64": "prebuild --runtime napi --target 6 --prepack scripts/neon-build.js --strip --arch arm64",
     "rebuild": "node scripts/neon-build && tsc && node scripts/strip.js",
-    "install": "prebuild-install --runtime napi --tag-prefix nodejs-binding-v || npm run rebuild",
+    "install": "prebuild-install --runtime napi --tag-prefix='nodejs-binding-v' || npm run rebuild",
     "test": "cargo test"
   },
   "author": "IOTA Foundation <contact@iota.org>",
@@ -22,7 +23,7 @@
     "@iota/types": "^1.0.0-beta.15",
     "cargo-cp-artifact": "^0.1.6",
     "prebuild-install": "^7.1.1",
-    "typescript": "^4.8.3"
+    "typescript": "^4.9.4"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.30.7",
@@ -32,9 +33,9 @@
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
     "prebuild": "^11.0.4",
-    "prettier": "^2.7.1",
-    "typedoc": "^0.23.14",
-    "typedoc-plugin-markdown": "^3.13.4"
+    "prettier": "^2.8.3",
+    "typedoc": "^0.23.24",
+    "typedoc-plugin-markdown": "^3.14.0"
   },
   "overrides": {
     "tar@<=4.4.17": "^4.4.19",

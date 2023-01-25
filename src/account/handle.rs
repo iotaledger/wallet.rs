@@ -4,10 +4,9 @@
 use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{FoundryId, Output, OutputId, TokenId},
-        payload::transaction::{TransactionId, TransactionPayload},
+        payload::transaction::TransactionId,
     },
     secret::SecretManager,
     Client,
@@ -128,10 +127,7 @@ impl AccountHandle {
 
     /// Get the transaction with inputs of an incoming transaction stored in the account
     /// List might not be complete, if the node pruned the data already
-    pub async fn get_incoming_transaction_data(
-        &self,
-        transaction_id: &TransactionId,
-    ) -> Option<(TransactionPayload, Vec<OutputWithMetadataResponse>)> {
+    pub async fn get_incoming_transaction_data(&self, transaction_id: &TransactionId) -> Option<Transaction> {
         let account = self.read().await;
         account.incoming_transactions().get(transaction_id).cloned()
     }
@@ -211,9 +207,7 @@ impl AccountHandle {
     }
 
     /// Returns all incoming transactions of the account
-    pub async fn incoming_transactions(
-        &self,
-    ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>> {
+    pub async fn incoming_transactions(&self) -> Result<HashMap<TransactionId, Transaction>> {
         let account = self.read().await;
         Ok(account.incoming_transactions.clone())
     }

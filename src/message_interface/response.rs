@@ -7,10 +7,9 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{dto::OutputDto, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        payload::transaction::TransactionId,
         BlockId,
     },
     NodeInfoWrapper,
@@ -31,8 +30,6 @@ use crate::{
     message_interface::dtos::{AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
-
-type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputWithMetadataResponse>);
 
 /// The response message.
 #[derive(Serialize)]
@@ -102,10 +99,10 @@ pub enum Response {
     LedgerNanoStatus(LedgerNanoStatus),
     /// Response for
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
-    IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
+    IncomingTransactionData(Option<Box<(TransactionId, TransactionDto)>>),
     /// Response for
     /// [`IncomingTransactions`](crate::message_interface::AccountMethod::IncomingTransactions),
-    IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
+    IncomingTransactionsData(Vec<(TransactionId, TransactionDto)>),
     /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)

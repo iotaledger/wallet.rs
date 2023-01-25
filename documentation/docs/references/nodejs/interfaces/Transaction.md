@@ -13,6 +13,7 @@ A Transaction with metadata
 - [transactionId](Transaction.md#transactionid)
 - [networkId](Transaction.md#networkid)
 - [incoming](Transaction.md#incoming)
+- [note](Transaction.md#note)
 
 ## Properties
 
@@ -69,3 +70,11 @@ ___
 • **incoming**: `boolean`
 
 If the transaction was created by the wallet or someone else
+
+___
+
+### note
+
+• `Optional` **note**: `string`
+
+Note that can be set when sending a transaction and is only stored locally
