@@ -97,6 +97,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,
@@ -166,6 +167,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,
