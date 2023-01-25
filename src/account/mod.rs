@@ -254,6 +254,7 @@ fn serialize() {
         transactions: HashMap::new(),
         pending_transactions: HashSet::new(),
         incoming_transactions,
+        inaccessible_incoming_transactions: HashSet::new(),
         native_token_foundries: HashMap::new(),
     };
 
