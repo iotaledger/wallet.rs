@@ -1,7 +1,7 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use std::time::Instant;
+use std::{collections::HashSet, time::Instant};
 
 use iota_client::{
     api::PreparedTransactionData,
@@ -9,13 +9,12 @@ use iota_client::{
         input::INPUT_COUNT_RANGE,
         output::{Output, OUTPUT_COUNT_RANGE},
     },
-    secret::types::InputSigningData,
 };
 use packable::bounded::TryIntoBoundedU16Error;
 
 use crate::account::{
     handle::AccountHandle,
-    operations::transaction::{input_selection::alias_state_transition, RemainderValueStrategy, TransactionOptions},
+    operations::transaction::{RemainderValueStrategy, TransactionOptions},
 };
 #[cfg(feature = "events")]
 use crate::events::types::{AddressData, TransactionProgressEvent, WalletEvent};
@@ -44,93 +43,23 @@ impl AccountHandle {
             ))?;
         }
 
-        let allow_burning = options.as_ref().map_or(false, |option| option.allow_burning);
-
-        let custom_inputs: Option<Vec<InputSigningData>> = {
-            if let Some(options) = &options {
-                // validate inputs amount
-                if let Some(inputs) = &options.custom_inputs {
-                    if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(iota_client::block::Error::InvalidInputCount(
-                            TryIntoBoundedU16Error::Truncated(inputs.len()),
-                        ))?;
-                    }
-                    let current_time = self.client.get_time_checked().await?;
-                    let bech32_hrp = self.client.get_bech32_hrp().await?;
-                    let account = self.read().await;
-                    let mut input_outputs = Vec::new();
-                    for output_id in inputs {
-                        match account.unspent_outputs().get(output_id) {
-                            Some(output) => {
-                                // If alias doesn't exist in the outputs, assume the transition type that allows burning
-                                // or not
-                                let alias_state_transition =
-                                    alias_state_transition(output, &outputs)?.unwrap_or(!allow_burning);
-                                input_outputs.push(output.input_signing_data(
-                                    &account,
-                                    current_time,
-                                    &bech32_hrp,
-                                    alias_state_transition,
-                                )?)
-                            }
-                            None => {
-                                return Err(crate::Error::CustomInputError(format!(
-                                    "custom input {output_id} not found in unspent outputs"
-                                )));
-                            }
-                        }
-                    }
-                    Some(input_outputs)
-                } else {
-                    None
-                }
-            } else {
-                None
+        if let Some(custom_inputs) = options.as_ref().and_then(|options| options.custom_inputs.as_ref()) {
+            // validate inputs amount
+            if !INPUT_COUNT_RANGE.contains(&(custom_inputs.len() as u16)) {
+                return Err(iota_client::block::Error::InvalidInputCount(
+                    TryIntoBoundedU16Error::Truncated(custom_inputs.len()),
+                ))?;
             }
-        };
+        }
 
-        let mandatory_inputs: Option<Vec<InputSigningData>> = {
-            if let Some(options) = &options {
-                // validate inputs amount
-                if let Some(inputs) = &options.mandatory_inputs {
-                    if !INPUT_COUNT_RANGE.contains(&(inputs.len() as u16)) {
-                        return Err(iota_client::block::Error::InvalidInputCount(
-                            TryIntoBoundedU16Error::Truncated(inputs.len()),
-                        ))?;
-                    }
-                    let current_time = self.client.get_time_checked().await?;
-                    let bech32_hrp = self.client.get_bech32_hrp().await?;
-                    let account = self.read().await;
-                    let mut input_outputs = Vec::new();
-                    for output_id in inputs {
-                        match account.unspent_outputs().get(output_id) {
-                            Some(output) => {
-                                // If alias doesn't exist in the outputs, assume the transition type that allows burning
-                                // or not
-                                let alias_state_transition =
-                                    alias_state_transition(output, &outputs)?.unwrap_or(!allow_burning);
-                                input_outputs.push(output.input_signing_data(
-                                    &account,
-                                    current_time,
-                                    &bech32_hrp,
-                                    alias_state_transition,
-                                )?)
-                            }
-                            None => {
-                                return Err(crate::Error::CustomInputError(format!(
-                                    "custom input {output_id} not found in unspent outputs"
-                                )));
-                            }
-                        }
-                    }
-                    Some(input_outputs)
-                } else {
-                    None
-                }
-            } else {
-                None
+        if let Some(mandatory_inputs) = options.as_ref().and_then(|options| options.mandatory_inputs.as_ref()) {
+            // validate inputs amount
+            if !INPUT_COUNT_RANGE.contains(&(mandatory_inputs.len() as u16)) {
+                return Err(iota_client::block::Error::InvalidInputCount(
+                    TryIntoBoundedU16Error::Truncated(mandatory_inputs.len()),
+                ))?;
             }
-        };
+        }
 
         let remainder_address = match &options {
             Some(options) => {
@@ -164,11 +93,16 @@ impl AccountHandle {
         let selected_transaction_data = self
             .select_inputs(
                 outputs,
-                custom_inputs,
-                mandatory_inputs,
+                options
+                    .as_ref()
+                    .and_then(|options| options.custom_inputs.as_ref())
+                    .map(|inputs| HashSet::from_iter(inputs.clone())),
+                options
+                    .as_ref()
+                    .and_then(|options| options.mandatory_inputs.as_ref())
+                    .map(|inputs| HashSet::from_iter(inputs.clone())),
                 remainder_address,
-                &rent_structure,
-                allow_burning,
+                options.as_ref().and_then(|options| options.burn.as_ref()),
             )
             .await?;
 

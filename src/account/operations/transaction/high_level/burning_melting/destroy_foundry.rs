@@ -1,7 +1,10 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme};
+use iota_client::{
+    api::input_selection::Burn,
+    block::output::{AliasId, AliasOutputBuilder, FoundryId, NativeTokensBuilder, Output, TokenScheme},
+};
 
 use crate::{
     account::{handle::AccountHandle, operations::transaction::Transaction, types::OutputData, TransactionOptions},
@@ -33,12 +36,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
-                options.allow_burning = true;
+                options.burn = Some(Burn::new().add_foundry(foundry_id));
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
-                allow_burning: true,
+                burn: Some(Burn::new().add_foundry(foundry_id)),
                 ..Default::default()
             }),
         };

@@ -7,7 +7,7 @@ wallet = IotaWallet('./alice-database')
 account = wallet.get_account('Alice')
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 print(f'Synced: {response}')
 
 wallet.set_stronghold_password("some_hopefully_secure_password")

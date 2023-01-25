@@ -1,14 +1,14 @@
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
-    participations: Participations
+    participations: Participations;
 }
 
 export interface Participations {
-    [eventId: EventId]: {
+    [eventId: ParticipationEventId]: {
         [outputId: OutputId]: TrackedParticipationOverview;
     };
-};
+}
 
 export interface TrackedParticipationOverview {
     amount: string;
@@ -18,30 +18,32 @@ export interface TrackedParticipationOverview {
     startMilestoneIndex: number;
 }
 
-export interface Event {
-    id: EventId;
-    data: EventData;
+export interface ParticipationEvent {
+    id: ParticipationEventId;
+    data: ParticipationEventData;
 }
 
-export type EventId = string;
+export type ParticipationEventId = string;
 
-export interface EventStatus {
+export interface ParticipationEventStatus {
     milestoneIndex: number;
     status: string;
     questions?: QuestionStatus[];
     checksum: string;
 }
 
-export interface EventData {
+export interface ParticipationEventData {
     name: string;
     milestoneIndexCommence: number;
     milestoneIndexStart: number;
     milestoneIndexEnd: number;
-    payload: EventPayload;
+    payload: ParticipationEventPayload;
     additionalInfo: string;
 }
 
-export type EventPayload = VotingEventPayload | StakingEventPayload;
+export type ParticipationEventPayload =
+    | VotingEventPayload
+    | StakingEventPayload;
 
 export interface VotingEventPayload {
     type: ParticipationEventType.Voting;
@@ -71,7 +73,7 @@ export interface Answer {
 }
 
 export interface QuestionStatus {
-    answers: AnswerStatus[]
+    answers: AnswerStatus[];
 }
 
 export interface AnswerStatus {

@@ -8,12 +8,9 @@ use std::{
     str::FromStr,
 };
 
-use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
-    block::{
-        output::{dto::FoundryOutputDto, FoundryId, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
-    },
+use iota_client::block::{
+    output::{dto::FoundryOutputDto, FoundryId, OutputId},
+    payload::transaction::TransactionId,
 };
 use serde::{Deserialize, Serialize};
 
@@ -137,7 +134,7 @@ pub struct AccountDto {
     pub pending_transactions: HashSet<TransactionId>,
     /// Incoming transactions
     #[serde(rename = "incomingTransactions")]
-    pub incoming_transactions: HashMap<TransactionId, (TransactionPayloadDto, Vec<OutputWithMetadataResponse>)>,
+    pub incoming_transactions: HashMap<TransactionId, TransactionDto>,
     /// Foundries for native tokens in outputs
     #[serde(rename = "nativeTokenFoundries", default)]
     pub native_token_foundries: HashMap<FoundryId, FoundryOutputDto>,
@@ -176,7 +173,7 @@ impl From<&Account> for AccountDto {
             incoming_transactions: value
                 .incoming_transactions()
                 .iter()
-                .map(|(id, (transaction, inputs))| (*id, (TransactionPayloadDto::from(transaction), inputs.clone())))
+                .map(|(id, transaction)| (*id, TransactionDto::from(transaction)))
                 .collect(),
             native_token_foundries: value
                 .native_token_foundries()

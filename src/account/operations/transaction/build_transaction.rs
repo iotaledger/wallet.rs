@@ -5,12 +5,11 @@ use std::time::Instant;
 
 use iota_client::{
     api::{
-        input_selection::types::SelectedTransactionData, transaction::validate_regular_transaction_essence_length,
-        PreparedTransactionData,
+        input_selection::Selected, transaction::validate_regular_transaction_essence_length, PreparedTransactionData,
     },
     block::{
         input::{Input, UtxoInput},
-        output::{unlock_condition::UnlockCondition, InputsCommitment, Output},
+        output::{InputsCommitment, Output},
         payload::{
             transaction::{RegularTransactionEssence, TransactionEssence},
             Payload,
@@ -25,7 +24,7 @@ impl AccountHandle {
     /// Function to build the transaction essence from the selected in and outputs
     pub(crate) async fn build_transaction_essence(
         &self,
-        selected_transaction_data: SelectedTransactionData,
+        selected_transaction_data: Selected,
         options: Option<TransactionOptions>,
     ) -> crate::Result<PreparedTransactionData> {
         log::debug!("[TRANSACTION] build_transaction");
@@ -52,18 +51,6 @@ impl AccountHandle {
         let mut essence_builder =
             RegularTransactionEssence::builder(protocol_parameters.network_id(), inputs_commitment);
         essence_builder = essence_builder.with_inputs(inputs_for_essence);
-
-        for output in &selected_transaction_data.outputs {
-            let mut address = None;
-            if let Output::Basic(basic_output) = output {
-                for unlock_condition in basic_output.unlock_conditions().iter() {
-                    if let UnlockCondition::Address(address_unlock_condition) = unlock_condition {
-                        address.replace(address_unlock_condition.address());
-                        break;
-                    }
-                }
-            }
-        }
         essence_builder = essence_builder.with_outputs(selected_transaction_data.outputs);
 
         // Optional add a tagged payload

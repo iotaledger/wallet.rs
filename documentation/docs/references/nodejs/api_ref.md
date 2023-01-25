@@ -7,10 +7,6 @@
 - [Account](classes/Account.md)
 - [AccountManager](classes/AccountManager.md)
 
-### Functions
-
-- [initLogger](api_ref.md#initlogger)
-
 ### Type Aliases
 
 - [AccountId](api_ref.md#accountid)
@@ -29,7 +25,10 @@
 - [BaseCoinBalance](interfaces/BaseCoinBalance.md)
 - [RequiredStorageDeposit](interfaces/RequiredStorageDeposit.md)
 - [NativeTokenBalance](interfaces/NativeTokenBalance.md)
+- [SyncOptions](interfaces/SyncOptions.md)
 - [AccountSyncOptions](interfaces/AccountSyncOptions.md)
+- [AliasSyncOptions](interfaces/AliasSyncOptions.md)
+- [NftSyncOptions](interfaces/NftSyncOptions.md)
 - [AccountMeta](interfaces/AccountMeta.md)
 - [AccountMetadata](interfaces/AccountMetadata.md)
 - [CreateAccountPayload](interfaces/CreateAccountPayload.md)
@@ -86,24 +85,6 @@
 - [ReturnStrategy](enums/ReturnStrategy.md)
 - [LedgerDeviceType](enums/LedgerDeviceType.md)
 - [InclusionState](enums/InclusionState.md)
-
-## Functions
-
-### initLogger
-
-▸ **initLogger**(`config`): `any`
-
-Function to create wallet logs
-
-#### Parameters
-
-| Name | Type |
-| :------ | :------ |
-| `config` | [`LoggerConfig`](interfaces/LoggerConfig.md) |
-
-#### Returns
-
-`any`
 
 ## Type Aliases
 

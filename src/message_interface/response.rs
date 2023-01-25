@@ -7,10 +7,9 @@ use std::fmt::{Debug, Formatter, Result};
 use iota_client::secret::LedgerNanoStatus;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
-    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{dto::OutputDto, OutputId},
-        payload::transaction::{dto::TransactionPayloadDto, TransactionId},
+        payload::transaction::TransactionId,
         BlockId,
     },
     NodeInfoWrapper,
@@ -19,7 +18,7 @@ use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
     crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{Event, EventId, EventStatus},
+    iota_client::node_api::participation::types::{ParticipationEvent, ParticipationEventId, ParticipationEventStatus},
 };
 
 use crate::{
@@ -31,8 +30,6 @@ use crate::{
     message_interface::dtos::{AccountDto, AddressWithUnspentOutputsDto},
     Error,
 };
-
-type IncomingTransactionDataDto = (TransactionPayloadDto, Vec<OutputWithMetadataResponse>);
 
 /// The response message.
 #[derive(Serialize)]
@@ -102,10 +99,10 @@ pub enum Response {
     LedgerNanoStatus(LedgerNanoStatus),
     /// Response for
     /// [`GetIncomingTransactionData`](crate::message_interface::AccountMethod::GetIncomingTransactionData),
-    IncomingTransactionData(Option<Box<(TransactionId, IncomingTransactionDataDto)>>),
+    IncomingTransactionData(Option<Box<(TransactionId, TransactionDto)>>),
     /// Response for
     /// [`IncomingTransactions`](crate::message_interface::AccountMethod::IncomingTransactions),
-    IncomingTransactionsData(Vec<(TransactionId, IncomingTransactionDataDto)>),
+    IncomingTransactionsData(Vec<(TransactionId, TransactionDto)>),
     /// Response for
     /// [`ConsolidateOutputs`](crate::message_interface::AccountMethod::ConsolidateOutputs)
     /// [`ClaimOutputs`](crate::message_interface::AccountMethod::ClaimOutputs)
@@ -141,19 +138,19 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
-    ParticipationEvent(Option<Event>),
+    ParticipationEvent(Option<ParticipationEvent>),
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]
-    ParticipationEventIds(Vec<EventId>),
+    ParticipationEventIds(Vec<ParticipationEventId>),
     /// Response for
     /// [`GetParticipationEventStatus`](crate::message_interface::GetParticipationEventStatus)
     #[cfg(feature = "participation")]
-    ParticipationEventStatus(EventStatus),
+    ParticipationEventStatus(ParticipationEventStatus),
     /// Response for
     /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
-    ParticipationEvents(Vec<Event>),
+    ParticipationEvents(Vec<ParticipationEvent>),
     /// Response for
     /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
     #[cfg(feature = "participation")]
@@ -238,7 +235,7 @@ impl Debug for Response {
             #[cfg(feature = "participation")]
             Response::ParticipationEvent(event) => write!(f, "ParticipationEvent({event:?})"),
             #[cfg(feature = "participation")]
-            Response::ParticipationEventStatus(event) => write!(f, "ParticipationEventStatus({event:?})"),
+            Response::ParticipationEventStatus(event_status) => write!(f, "ParticipationEventStatus({event_status:?})"),
             #[cfg(feature = "participation")]
             Response::ParticipationEvents(events) => write!(f, "ParticipationEvents({events:?})"),
             #[cfg(feature = "participation")]
