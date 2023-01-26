@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use iota_client::{
-    constants::{IOTA_COIN_TYPE, SHIMMER_COIN_TYPE},
+    constants::IOTA_COIN_TYPE,
     node_manager::node::{Node, NodeDto, Url},
 };
 use iota_wallet::{

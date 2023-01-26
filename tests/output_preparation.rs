@@ -6,13 +6,8 @@ use std::str::FromStr;
 use iota_client::block::address::Address;
 use iota_wallet::{
     account::{Assets, Features, OutputOptions, Unlocks},
-    account_manager::AccountManager,
-    iota_client::{
-        block::output::{NativeToken, NftId, TokenId},
-        constants::SHIMMER_COIN_TYPE,
-    },
-    secret::{mnemonic::MnemonicSecretManager, SecretManager},
-    ClientOptions, Result, U256,
+    iota_client::block::output::{NativeToken, NftId, TokenId},
+    Result, U256,
 };
 
 mod common;
