@@ -172,6 +172,17 @@ mod tests {
             }
         }
 
+        message_interface::send_message(&wallet_handle, Message::ClearListeners(vec![])).await;
+        message_interface::send_message(
+            &wallet_handle,
+            Message::EmitTestEvent(WalletEvent::ConsolidationRequired),
+        )
+        .await
+        .expect("No send message response");
+
+        // Event should not have fired, so we are still on 11
+        assert_eq!(11, event_counter.load(Ordering::SeqCst));
+
         std::fs::remove_dir_all(storage_path).unwrap_or(());
     }
 
@@ -216,7 +227,8 @@ mod tests {
 
     #[tokio::test]
     async fn message_interface_create_account() {
-        std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
+        let storage_path = "test-storage/message_interface_create_account";
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
         let secret_manager = r#"{"Mnemonic":"acoustic trophy damage hint search taste love bicycle foster cradle brown govern endless depend situate athlete pudding blame question genius transfer van random vast"}"#;
         let client_options = r#"{
             "nodes":[
@@ -240,7 +252,7 @@ mod tests {
 
         let options = ManagerOptions {
             #[cfg(feature = "storage")]
-            storage_path: Some("test-storage/message_interface_create_account".to_string()),
+            storage_path: Some(storage_path.to_string()),
             client_options: Some(ClientBuilder::new().from_json(client_options).unwrap()),
             coin_type: Some(SHIMMER_COIN_TYPE),
             secret_manager: Some(serde_json::from_str(secret_manager).unwrap()),
@@ -267,7 +279,7 @@ mod tests {
             _ => panic!("unexpected response {response:?}"),
         }
 
-        std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
+        std::fs::remove_dir_all(storage_path).unwrap_or(());
     }
 
     #[cfg(feature = "events")]
@@ -332,8 +344,6 @@ mod tests {
         };
 
         let _response = message_interface::send_message(&wallet_handle, transaction).await;
-
-        let _ = message_interface::send_message(&wallet_handle, Message::ClearListeners(vec![])).await;
 
         std::fs::remove_dir_all("test-storage/message_interface_events").unwrap_or(());
     }

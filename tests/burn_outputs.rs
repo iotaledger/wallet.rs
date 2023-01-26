@@ -7,7 +7,10 @@ use iota_client::{
     block::output::{NftId, OutputId},
     request_funds_from_faucet,
 };
-use iota_wallet::{account::{AccountHandle, SyncOptions}, NativeTokenOptions, NftOptions, Result, U256};
+use iota_wallet::{
+    account::{AccountHandle, SyncOptions},
+    NativeTokenOptions, NftOptions, Result, U256,
+};
 
 mod common;
 
@@ -99,7 +102,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let mut sync_options = SyncOptions::default();
     sync_options.account.nft_outputs = true;
     sync_options.account.alias_outputs = true;
-    
+
     account.sync(Some(sync_options.clone())).await?;
 
     let circulating_supply = U256::from(60i32);
@@ -166,7 +169,7 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
     let mut sync_options = SyncOptions::default();
     sync_options.account.nft_outputs = true;
     sync_options.account.alias_outputs = true;
-    
+
     let balance = account.sync(Some(sync_options.clone())).await?;
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
