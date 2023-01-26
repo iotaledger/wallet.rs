@@ -111,11 +111,10 @@ pub struct AccountSyncOptions {
 
 impl Default for AccountSyncOptions {
     fn default() -> Self {
-        // Sync only basic outputs
         Self {
             basic_outputs: true,
-            nft_outputs: false,
-            alias_outputs: false,
+            nft_outputs: true,
+            alias_outputs: true,
         }
     }
 }
