@@ -214,7 +214,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            bindings/java/lib/build/libs/*.jar
+            bindings/java/lib/native/cargo-ndk/jniLibs.zip
           tag_name: ${{ needs.release-desktop.outputs.tag }}
           append_body: true
           prerelease: true
