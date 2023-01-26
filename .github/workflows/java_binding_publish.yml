@@ -81,15 +81,7 @@ jobs:
         working-directory: bindings/java/
         run: |
           chmod +x gradlew
-          ./gradlew build jarWithoutNativeLibs
-
-      - name: Build JAR for aarch64-apple-darwin target
-        if: matrix.os == 'macos-latest'
-        shell: bash
-        working-directory: bindings/java/
-        run: |
-          rustup target add aarch64-apple-darwin
-          ./gradlew build -PbuildTarget=aarch64-apple-darwin
+          ./gradlew jarWithoutNativeLibs
 
       - name: Get filename for tag construction
         shell: bash
