@@ -1,8 +1,6 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-#[cfg(feature = "participation")]
-use iota_client::node_api::participation::types::EventId;
 use iota_client::{
     api::{PreparedTransactionDataDto, SignedTransactionDataDto},
     block::{
@@ -15,6 +13,11 @@ use iota_client::{
         },
         payload::transaction::TransactionId,
     },
+};
+#[cfg(feature = "participation")]
+use iota_client::{
+    node_api::participation::types::{ParticipationEventId, ParticipationEventType},
+    node_manager::node::Node,
 };
 use serde::{Deserialize, Serialize};
 
@@ -34,7 +37,7 @@ use crate::{
                     },
                 },
                 prepare_output::OutputOptionsDto,
-                TransactionOptions,
+                TransactionOptionsDto,
             },
         },
     },
@@ -125,7 +128,7 @@ pub enum AccountMethod {
         /// To be burned amount
         #[serde(rename = "burnAmount")]
         burn_amount: U256Dto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Burn an nft output. Outputs controlled by it will be swept before if they don't have a storage
     /// deposit return, timelock or expiration unlock condition. This should be preferred over burning, because after
@@ -134,7 +137,7 @@ pub enum AccountMethod {
     BurnNft {
         #[serde(rename = "nftId")]
         nft_id: NftIdDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Consolidate outputs.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
@@ -148,7 +151,7 @@ pub enum AccountMethod {
     CreateAliasOutput {
         #[serde(rename = "aliasOutputOptions")]
         alias_output_options: Option<AliasOutputOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Destroy an alias output. Outputs controlled by it will be swept before if they don't have a
     /// storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
@@ -157,7 +160,7 @@ pub enum AccountMethod {
     DestroyAlias {
         #[serde(rename = "aliasId")]
         alias_id: AliasIdDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Function to destroy a foundry output with a circulating supply of 0.
     /// Native tokens in the foundry (minted by other foundries) will be transacted to the controlling alias
@@ -165,7 +168,7 @@ pub enum AccountMethod {
     DestroyFoundry {
         #[serde(rename = "foundryId")]
         foundry_id: FoundryId,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Generate new unused addresses.
     /// Expected response: [`GeneratedAddress`](crate::message_interface::Response::GeneratedAddress)
@@ -242,7 +245,7 @@ pub enum AccountMethod {
         /// To be melted amount
         #[serde(rename = "meltAmount")]
         melt_amount: U256Dto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Calculate the minimum required storage deposit for an output.
     /// Expected response:
@@ -259,21 +262,21 @@ pub enum AccountMethod {
         mint_amount: U256Dto,
         #[serde(rename = "increaseNativeTokenSupplyOptions")]
         increase_native_token_supply_options: Option<IncreaseNativeTokenSupplyOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Mint native token.
     /// Expected response: [`MintTokenTransaction`](crate::message_interface::Response::MintTokenTransaction)
     MintNativeToken {
         #[serde(rename = "nativeTokenOptions")]
         native_token_options: NativeTokenOptionsDto,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Mint nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     MintNfts {
         #[serde(rename = "nftsOptions")]
         nfts_options: Vec<NftOptionsDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Get account balance information.
     /// Expected response: [`Balance`](crate::message_interface::Response::Balance)
@@ -282,20 +285,20 @@ pub enum AccountMethod {
     /// Expected response: [`OutputDto`](crate::message_interface::Response::OutputDto)
     PrepareOutput {
         options: OutputOptionsDto,
-        transaction_options: Option<TransactionOptions>,
+        transaction_options: Option<TransactionOptionsDto>,
     },
     /// Prepare transaction.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareTransaction {
         outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Prepare send amount.
     /// Expected response: [`PreparedTransactionData`](crate::message_interface::Response::PreparedTransactionData)
     PrepareSendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Retries (promotes or reattaches) a transaction sent from the account for a provided transaction id until it's
     /// included (referenced by a milestone). Returns the included block id.
@@ -322,28 +325,28 @@ pub enum AccountMethod {
     SendAmount {
         #[serde(rename = "addressesWithAmount")]
         addresses_with_amount: Vec<AddressWithAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send amount below minimum storage deposit.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendMicroTransaction {
         #[serde(rename = "addressesWithMicroAmount")]
         addresses_with_micro_amount: Vec<AddressWithMicroAmountDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send native tokens.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNativeTokens {
         #[serde(rename = "addressesNativeTokens")]
         addresses_native_tokens: Vec<AddressNativeTokens>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Send nft.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendNft {
         #[serde(rename = "addressesAndNftIds")]
         addresses_nft_ids: Vec<AddressAndNftId>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Set the alias of the account.
     /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
@@ -352,7 +355,7 @@ pub enum AccountMethod {
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     SendOutputs {
         outputs: Vec<OutputDto>,
-        options: Option<TransactionOptions>,
+        options: Option<TransactionOptionsDto>,
     },
     /// Sign a prepared transaction.
     /// Expected response: [`TransactionPayload`](crate::message_interface::Response::TransactionPayload)
@@ -377,15 +380,15 @@ pub enum AccountMethod {
     #[cfg(feature = "participation")]
     Vote {
         #[serde(rename = "eventId")]
-        event_id: EventId,
-        answers: Vec<u8>,
+        event_id: Option<ParticipationEventId>,
+        answers: Option<Vec<u8>>,
     },
-    /// Stop participation for an event.
+    /// Stop participating for an event.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     StopParticipating {
         #[serde(rename = "eventId")]
-        event_id: EventId,
+        event_id: ParticipationEventId,
     },
     /// Get the account's total voting power (voting or NOT voting).
     /// Expected response: [`VotingPower`](crate::message_interface::Response::VotingPower)
@@ -398,11 +401,51 @@ pub enum AccountMethod {
     GetParticipationOverview,
     /// Designates a given amount of tokens towards an account's "voting power" by creating a
     /// special output, which is really a basic one with some metadata.
-    /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
+    /// This will stop voting in most cases (if there is a remainder output), but the voting data isn't lost and
+    /// calling `Vote` without parameters will revote. Expected response:
+    /// [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     IncreaseVotingPower { amount: String },
     /// Reduces an account's "voting power" by a given amount.
+    /// This will stop voting, but the voting data isn't lost and calling `Vote` without parameters will revote.
     /// Expected response: [`SentTransaction`](crate::message_interface::Response::SentTransaction)
     #[cfg(feature = "participation")]
     DecreaseVotingPower { amount: String },
+    /// Stores participation information locally and returns the event.
+    ///
+    /// This will NOT store the node url and auth inside the client options.
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    RegisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+        nodes: Vec<Node>,
+    },
+    /// Removes a previously registered participation event from local storage.
+    /// Expected response: [`Ok`](crate::message_interface::Response::Ok)
+    #[cfg(feature = "participation")]
+    DeregisterParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEvent`](crate::message_interface::Response::ParticipationEvent)
+    #[cfg(feature = "participation")]
+    GetParticipationEvent {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEventIds`](crate::message_interface::Response::ParticipationEventIds)
+    #[cfg(feature = "participation")]
+    GetParticipationEventIds(Option<ParticipationEventType>),
+    /// Expected response: [`ParticipationEventStatus`](crate::message_interface::Response::ParticipationEventStatus)
+    #[cfg(feature = "participation")]
+    GetParticipationEventStatus {
+        #[serde(rename = "eventId")]
+        event_id: ParticipationEventId,
+    },
+    /// Expected response: [`ParticipationEvents`](crate::message_interface::Response::ParticipationEvents)
+    #[cfg(feature = "participation")]
+    GetParticipationEvents,
+    /// Expected response: [`Faucet`](crate::message_interface::Response::Faucet)
+    RequestFundsFromFaucet { url: String, address: String },
 }

@@ -25,6 +25,8 @@ public class Transaction extends AbstractObject {
     private boolean incoming;
     /// Note.
     private String note;
+    /// Inputs.
+    private OutputResponse[] inputs;
 
     public enum InclusionState {
         Pending,
@@ -64,5 +66,9 @@ public class Transaction extends AbstractObject {
 
     public String getNote() {
         return note;
+    }
+
+    public OutputResponse[] getInputs() {
+        return inputs;
     }
 }

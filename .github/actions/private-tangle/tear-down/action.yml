@@ -10,7 +10,5 @@ runs:
         #cd private_tangle
         
         # TODO: remove next line when a working hornet release is published
-        cd hornet/private_tangle
-        docker-compose down
-        cd ..
-        sudo rm -rf private_tangle
+        sudo ./cleanup.sh
+      working-directory: hornet/private_tangle

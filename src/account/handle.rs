@@ -4,10 +4,9 @@
 use std::{collections::HashMap, ops::Deref, sync::Arc};
 
 use iota_client::{
-    api_types::response::OutputWithMetadataResponse,
     block::{
         output::{FoundryId, Output, OutputId, TokenId},
-        payload::transaction::{TransactionId, TransactionPayload},
+        payload::transaction::TransactionId,
     },
     secret::SecretManager,
     Client,
@@ -31,7 +30,7 @@ use crate::{
 };
 
 /// Options to filter outputs
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Serialize, Deserialize, Eq, PartialEq, Hash)]
 pub struct FilterOptions {
     /// Filter all outputs where the booked milestone index is below the specified timestamp
     #[serde(rename = "lowerBoundBookedTimestamp")]
@@ -39,6 +38,9 @@ pub struct FilterOptions {
     /// Filter all outputs where the booked milestone index is above the specified timestamp
     #[serde(rename = "upperBoundBookedTimestamp")]
     pub upper_bound_booked_timestamp: Option<u32>,
+    /// Filter all outputs for the provided types (Basic = 3, Alias = 4, Foundry = 5, NFT = 6).
+    #[serde(rename = "outputTypes")]
+    pub output_types: Option<Vec<u8>>,
 }
 
 /// A thread guard over an account, so we can lock the account during operations.
@@ -125,10 +127,7 @@ impl AccountHandle {
 
     /// Get the transaction with inputs of an incoming transaction stored in the account
     /// List might not be complete, if the node pruned the data already
-    pub async fn get_incoming_transaction_data(
-        &self,
-        transaction_id: &TransactionId,
-    ) -> Option<(TransactionPayload, Vec<OutputWithMetadataResponse>)> {
+    pub async fn get_incoming_transaction_data(&self, transaction_id: &TransactionId) -> Option<Transaction> {
         let account = self.read().await;
         account.incoming_transactions().get(transaction_id).cloned()
     }
@@ -158,7 +157,7 @@ impl AccountHandle {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.outputs.values() {
-            if let Some(filter_options) = filter {
+            if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
                     if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
                         continue;
@@ -166,6 +165,11 @@ impl AccountHandle {
                 }
                 if let Some(upper_bound_booked_timestamp) = filter_options.upper_bound_booked_timestamp {
                     if output.metadata.milestone_timestamp_booked > upper_bound_booked_timestamp {
+                        continue;
+                    }
+                }
+                if let Some(output_types) = &filter_options.output_types {
+                    if !output_types.contains(&output.output.kind()) {
                         continue;
                     }
                 }
@@ -180,7 +184,7 @@ impl AccountHandle {
         let account = self.read().await;
         let mut outputs = Vec::new();
         for output in account.unspent_outputs.values() {
-            if let Some(filter_options) = filter {
+            if let Some(filter_options) = &filter {
                 if let Some(lower_bound_booked_timestamp) = filter_options.lower_bound_booked_timestamp {
                     if output.metadata.milestone_timestamp_booked < lower_bound_booked_timestamp {
                         continue;
@@ -191,6 +195,11 @@ impl AccountHandle {
                         continue;
                     }
                 }
+                if let Some(output_types) = &filter_options.output_types {
+                    if !output_types.contains(&output.output.kind()) {
+                        continue;
+                    }
+                }
             }
             outputs.push(output.clone());
         }
@@ -198,9 +207,7 @@ impl AccountHandle {
     }
 
     /// Returns all incoming transactions of the account
-    pub async fn incoming_transactions(
-        &self,
-    ) -> Result<HashMap<TransactionId, (TransactionPayload, Vec<OutputWithMetadataResponse>)>> {
+    pub async fn incoming_transactions(&self) -> Result<HashMap<TransactionId, Transaction>> {
         let account = self.read().await;
         Ok(account.incoming_transactions.clone())
     }

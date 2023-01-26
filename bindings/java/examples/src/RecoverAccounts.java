@@ -12,13 +12,13 @@ import org.iota.types.secret.StrongholdSecretManager;
 
 public class RecoverAccounts {
     public static void main(String[] args) throws WalletException, InitializeWalletException {
-        // This example assumes that a wallet has already been created using the ´CreateWallet.java´ example.
-        // If you have not run the ´CreateAccount.java´ example yet, run it first to ensure that the wallet can be loaded correctly.
+        // This example assumes that a wallet has already been created using the ´SetupWallet.java´ example.
+        // If you haven't run the ´SetupWallet.java´ example yet, you must run it first to be able to load the wallet as shown below:
         Wallet wallet = new Wallet(new WalletConfig()
                 .withClientOptions(new ClientConfig().withNodes(Env.NODE))
-                .withSecretManager(
-                        new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_SNAPSHOT_PATH))
+                .withSecretManager(new StrongholdSecretManager(Env.STRONGHOLD_PASSWORD, null, Env.STRONGHOLD_VAULT_PATH))
                 .withCoinType(CoinType.Shimmer)
+                .withStoragePath(Env.STORAGE_PATH)
         );
 
         // Search for accounts with unspent outputs
@@ -34,5 +34,8 @@ public class RecoverAccounts {
         SyncOptions syncOptions = null;
 
         wallet.recoverAccounts(accountStartIndex, accountGapLimit, addressGapLimit, syncOptions);
+
+        // In case you are done and don't need the wallet instance anymore you can destroy the instance to clean up memory.
+        // For this, check out the ´DestroyWallet.java´ example.
     }
 }

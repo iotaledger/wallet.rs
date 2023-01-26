@@ -6,11 +6,14 @@ use std::{
     collections::{HashMap, HashSet},
 };
 
-use iota_client::block::{
-    input::INPUT_COUNT_MAX,
-    output::{
-        AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NativeTokensBuilder,
-        NftOutputBuilder, Output, OutputId, TokenId, OUTPUT_COUNT_MAX,
+use iota_client::{
+    api::input_selection::Burn,
+    block::{
+        input::INPUT_COUNT_MAX,
+        output::{
+            AliasId, AliasOutputBuilder, BasicOutputBuilder, FoundryOutputBuilder, NativeToken, NativeTokensBuilder,
+            NftOutputBuilder, Output, OutputId, TokenId, OUTPUT_COUNT_MAX,
+        },
     },
 };
 use primitive_types::U256;
@@ -65,12 +68,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
-                options.allow_burning = true;
+                options.burn = Some(Burn::new().add_native_token(token_id, burn_amount));
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
-                allow_burning: true,
+                burn: Some(Burn::new().add_native_token(token_id, burn_amount)),
                 ..Default::default()
             }),
         };

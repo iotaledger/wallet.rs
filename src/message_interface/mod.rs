@@ -7,6 +7,7 @@ mod message;
 mod message_handler;
 mod response;
 
+use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_client::secret::{SecretManager, SecretManagerDto};
 use serde::{Deserialize, Serialize, Serializer};
 use tokio::sync::mpsc::unbounded_channel;
@@ -49,12 +50,18 @@ where
                 let mut stronghold_dto = stronghold.clone();
                 // Remove password
                 stronghold_dto.password = None;
-                s.serialize_str(&format!("{:?}", stronghold_dto))
+                s.serialize_str(&format!("{stronghold_dto:?}"))
             }
         }
     } else {
         s.serialize_str("null")
     }
+}
+
+pub fn init_logger(config: String) -> Result<(), fern_logger::Error> {
+    let output_config: LoggerOutputConfigBuilder = serde_json::from_str(&config).expect("invalid logger config");
+    let config = LoggerConfig::build().with_output(output_config).finish();
+    logger_init(config)
 }
 
 pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::Result<WalletMessageHandler> {
@@ -90,10 +97,10 @@ pub async fn create_message_handler(options: Option<ManagerOptions>) -> crate::R
     Ok(WalletMessageHandler::with_manager(manager))
 }
 
-pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Response {
+pub async fn send_message(handle: &WalletMessageHandler, message: Message) -> Option<Response> {
     let (message_tx, mut message_rx) = unbounded_channel();
     handle.handle(message, message_tx).await;
-    message_rx.recv().await.unwrap()
+    message_rx.recv().await
 }
 
 #[cfg(test)]
@@ -161,13 +168,15 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
+
         match response {
             Response::Account(account) => {
                 let id = account.index;
                 println!("Created account index: {id}")
             }
-            _ => panic!("unexpected response {:?}", response),
+            _ => panic!("unexpected response {response:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/message_interface_create_account").unwrap_or(());
@@ -201,7 +210,7 @@ mod tests {
         wallet_handle
             .listen(vec![], |event| {
                 if let WalletEvent::TransactionProgress(event) = &event.event {
-                    println!("Received event....: {:?}", event);
+                    println!("Received event....: {event:?}");
                 }
             })
             .await;
@@ -213,7 +222,8 @@ mod tests {
                 alias: Some("alias".to_string()),
                 bech32_hrp: None,
             },
-        );
+        )
+        .await;
 
         // send transaction
         let outputs = vec![OutputDto::from(
@@ -243,7 +253,7 @@ mod tests {
     async fn message_interface_stronghold() {
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
         let snapshot_path = "message_interface.stronghold";
-        let secret_manager = format!("{{\"Stronghold\": {{\"snapshotPath\": \"{}\"}}}}", snapshot_path);
+        let secret_manager = format!("{{\"Stronghold\": {{\"snapshotPath\": \"{snapshot_path}\"}}}}");
 
         let client_options = r#"{
             "nodes":[
@@ -283,14 +293,15 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Account(account) => {
                 let id = account.index;
                 println!("Created account index: {id}")
             }
-            _ => panic!("unexpected response {:?}", response),
+            _ => panic!("unexpected response {response:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/message_interface_stronghold").unwrap_or(());
@@ -316,14 +327,15 @@ mod tests {
         let bech32_address = "rms1qqk4svqpc89lxx89w7vksv9jgjjm2vwnrhad2j3cds9ev4cu434wjapdsxs";
         let hex_address = "0x2d583001c1cbf318e577996830b244a5b531d31dfad54a386c0b96571cac6ae9";
 
-        let response =
-            message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into())).await;
+        let response = message_interface::send_message(&wallet_handle, Message::Bech32ToHex(bech32_address.into()))
+            .await
+            .expect("No send message response");
 
         match response {
             Response::HexAddress(hex) => {
                 assert_eq!(hex, hex_address);
             }
-            response_type => panic!("Unexpected response type: {:?}", response_type),
+            response_type => panic!("Unexpected response type: {response_type:?}"),
         }
 
         let response = message_interface::send_message(
@@ -333,13 +345,14 @@ mod tests {
                 bech32_hrp: None,
             },
         )
-        .await;
+        .await
+        .expect("No send message response");
 
         match response {
             Response::Bech32Address(bech32) => {
                 assert_eq!(bech32, bech32_address);
             }
-            response_type => panic!("Unexpected response type: {:?}", response_type),
+            response_type => panic!("Unexpected response type: {response_type:?}"),
         }
 
         std::fs::remove_dir_all("test-storage/address_conversion_methods").unwrap_or(());

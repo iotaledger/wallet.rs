@@ -11,7 +11,7 @@ use iota_client::{
     },
     node_api::participation::types::{
         participation::{Participation, Participations},
-        EventId, PARTICIPATION_TAG,
+        ParticipationEventId, PARTICIPATION_TAG,
     },
 };
 
@@ -34,12 +34,14 @@ impl AccountHandle {
     ///
     /// This is an add OR update function, not just add.
     /// This should use regular client options, NOT specific node for the event.
-    pub async fn vote(&self, event_id: EventId, answers: Vec<u8>) -> Result<Transaction> {
-        let event_status = self.get_participation_event_status(&event_id).await?;
+    pub async fn vote(&self, event_id: Option<ParticipationEventId>, answers: Option<Vec<u8>>) -> Result<Transaction> {
+        if let Some(event_id) = event_id {
+            let event_status = self.get_participation_event_status(&event_id).await?;
 
-        // Checks if voting event is still running.
-        if event_status.status() == "ended" {
-            return Err(crate::Error::Voting(format!("event {event_id} already ended")));
+            // Checks if voting event is still running.
+            if event_status.status() == "ended" {
+                return Err(crate::Error::Voting(format!("event {event_id} already ended")));
+            }
         }
 
         // TODO check if answers match the questions ?
@@ -58,13 +60,27 @@ impl AccountHandle {
                 // Removes ended participations.
                 self.remove_ended_participation_events(&mut participations).await?;
 
-                participations.add_or_replace(Participation { event_id, answers });
+                if let Some(event_id) = event_id {
+                    participations.add_or_replace(Participation {
+                        event_id,
+                        answers: answers.unwrap_or_default(),
+                    });
+                }
 
                 participations
             }
-            None => Participations {
-                participations: vec![Participation { event_id, answers }],
-            },
+            None => {
+                if let Some(event_id) = event_id {
+                    Participations {
+                        participations: vec![Participation {
+                            event_id,
+                            answers: answers.unwrap_or_default(),
+                        }],
+                    }
+                } else {
+                    return Err(crate::Error::Voting("No event to vote for".to_string()));
+                }
+            }
         }
         .to_bytes()?;
 
@@ -81,6 +97,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,
@@ -99,7 +116,7 @@ impl AccountHandle {
     /// TODO: is it really doing that ?
     /// If multiple outputs contain metadata for this event, removes all of them.
     /// If NOT already voting for this event, throws an error (e.g. output with this event ID not found).
-    pub async fn stop_participating(&self, event_id: EventId) -> Result<Transaction> {
+    pub async fn stop_participating(&self, event_id: ParticipationEventId) -> Result<Transaction> {
         let voting_output = self
             .get_voting_output()
             .await?
@@ -150,6 +167,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,

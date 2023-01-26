@@ -68,7 +68,7 @@ fn write_addresses_to_file<P: AsRef<Path>>(path: P, addresses: Vec<AccountAddres
     let json = serde_json::to_string_pretty(&addresses)?;
     let mut file = BufWriter::new(File::create(path)?);
 
-    println!("{}", json);
+    println!("{json}");
 
     file.write_all(json.as_bytes())?;
 

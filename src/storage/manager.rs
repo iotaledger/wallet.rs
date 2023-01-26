@@ -17,11 +17,23 @@ use crate::{
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) enum ManagerStorage {
-    #[cfg(feature = "stronghold")]
     /// Stronghold storage.
+    #[cfg(feature = "stronghold")]
     Stronghold,
     /// RocksDB storage.
+    #[cfg(feature = "rocksdb")]
     Rocksdb,
+    /// Storage backed by a Map in memory.
+    Memory,
+}
+
+impl Default for ManagerStorage {
+    fn default() -> ManagerStorage {
+        #[cfg(feature = "rocksdb")]
+        return ManagerStorage::Rocksdb;
+        #[cfg(not(feature = "rocksdb"))]
+        ManagerStorage::Memory
+    }
 }
 
 pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;
@@ -63,8 +75,8 @@ pub(crate) async fn new_storage_manager(
     Ok(Arc::new(Mutex::new(storage_manager)))
 }
 
-#[derive(Debug)]
 /// Storage manager
+#[derive(Debug)]
 pub struct StorageManager {
     pub(crate) storage: Storage,
     // account indexes for accounts in the database
@@ -112,10 +124,10 @@ impl StorageManager {
     pub async fn get_account_manager_data(&self) -> crate::Result<AccountManagerBuilder> {
         log::debug!("get_account_manager_data");
         let data = self.storage.get(ACCOUNT_MANAGER_INDEXATION_KEY).await?;
-        log::debug!("get_account_manager_data {}", data);
+        log::debug!("get_account_manager_data {data}");
         let mut builder: AccountManagerBuilder = serde_json::from_str(&data)?;
         if let Ok(data) = self.storage.get(SECRET_MANAGER_KEY).await {
-            log::debug!("get_secret_manager {}", data);
+            log::debug!("get_secret_manager {data}");
             let secret_manager_dto: SecretManagerDto = serde_json::from_str(&data)?;
             // Only secret_managers that aren't SecretManagerDto::Mnemonic can be restored, because there the Seed can't
             // be serialized, so we can't create the SecretManager again
@@ -139,10 +151,7 @@ impl StorageManager {
 
         let mut accounts = Vec::new();
         for account_index in self.account_indexes.clone() {
-            accounts.push(
-                self.get(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
-                    .await?,
-            );
+            accounts.push(self.get(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}")).await?);
         }
         parse_accounts(&accounts, &self.storage.encryption_key)
     }
@@ -157,13 +166,13 @@ impl StorageManager {
             .set(ACCOUNTS_INDEXATION_KEY, self.account_indexes.clone())
             .await?;
         self.storage
-            .set(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account.index()), account)
+            .set(&format!("{ACCOUNT_INDEXATION_KEY}{}", account.index()), account)
             .await
     }
 
     pub async fn remove_account(&mut self, account_index: u32) -> crate::Result<()> {
         self.storage
-            .remove(&format!("{}{}", ACCOUNT_INDEXATION_KEY, account_index))
+            .remove(&format!("{ACCOUNT_INDEXATION_KEY}{account_index}"))
             .await?;
         self.account_indexes.retain(|a| a != &account_index);
         self.storage

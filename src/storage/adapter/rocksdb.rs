@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path, sync::Arc};
 use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use tokio::sync::Mutex;
 
-use super::StorageAdapter;
+use super::{storage_err, StorageAdapter};
 
 /// The storage id.
 pub const STORAGE_ID: &str = "RocksDB";
@@ -15,10 +15,6 @@ pub const STORAGE_ID: &str = "RocksDB";
 #[derive(Debug)]
 pub struct RocksdbStorageAdapter {
     db: Arc<Mutex<DB>>,
-}
-
-fn storage_err<E: ToString>(error: E) -> crate::Error {
-    crate::Error::Storage(error.to_string())
 }
 
 impl RocksdbStorageAdapter {

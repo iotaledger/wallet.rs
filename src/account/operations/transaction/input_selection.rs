@@ -4,11 +4,11 @@
 use std::collections::{hash_map::Values, HashSet};
 
 use iota_client::{
-    api::input_selection::{try_select_inputs, types::SelectedTransactionData},
+    api::input_selection::{Burn, InputSelection, Selected},
     block::{
         address::Address,
         input::INPUT_COUNT_MAX,
-        output::{Output, OutputId, RentStructure},
+        output::{Output, OutputId},
     },
     secret::types::InputSigningData,
 };
@@ -23,19 +23,18 @@ impl AccountHandle {
     pub(crate) async fn select_inputs(
         &self,
         outputs: Vec<Output>,
-        custom_inputs: Option<Vec<InputSigningData>>,
-        mandatory_inputs: Option<Vec<InputSigningData>>,
+        custom_inputs: Option<HashSet<OutputId>>,
+        mandatory_inputs: Option<HashSet<OutputId>>,
         remainder_address: Option<Address>,
-        rent_structure: &RentStructure,
-        allow_burning: bool,
-    ) -> crate::Result<SelectedTransactionData> {
+        burn: Option<&Burn>,
+    ) -> crate::Result<Selected> {
         log::debug!("[TRANSACTION] select_inputs");
         // Voting output needs to be requested before to prevent a deadlock
         #[cfg(feature = "participation")]
         let voting_output = self.get_voting_output().await?;
         // lock so the same inputs can't be selected in multiple transactions
         let mut account = self.write().await;
-        let token_supply = self.client.get_token_supply().await?;
+        let protocol_parameters = self.client.get_protocol_parameters().await?;
 
         #[cfg(feature = "events")]
         self.event_emitter.lock().await.emit(
@@ -44,32 +43,70 @@ impl AccountHandle {
         );
 
         let current_time = self.client.get_time_checked().await?;
-        let bech32_hrp = self.client.get_bech32_hrp().await?;
+        #[allow(unused_mut)]
+        let mut forbidden_inputs = account.locked_outputs.clone();
+
+        let addresses = account
+            .public_addresses()
+            .iter()
+            .chain(account.internal_addresses().iter())
+            .map(|address| *address.address.as_ref())
+            .collect();
+
+        // Prevent consuming the voting output if not actually wanted
+        #[cfg(feature = "participation")]
+        if let Some(voting_output) = &voting_output {
+            let required = if let Some(ref mandatory_inputs) = mandatory_inputs {
+                mandatory_inputs.contains(&voting_output.output_id)
+            } else {
+                false
+            };
+            if !required {
+                forbidden_inputs.insert(voting_output.output_id);
+            }
+        }
+
+        // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
+        // still locked.
+        let available_outputs_signing_data = filter_inputs(
+            &account,
+            account.unspent_outputs.values(),
+            current_time,
+            protocol_parameters.bech32_hrp(),
+            &outputs,
+            burn,
+        )?;
 
         // if custom inputs are provided we should only use them (validate if we have the outputs in this account and
         // that the amount is enough)
         if let Some(custom_inputs) = custom_inputs {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
-                if account.locked_outputs.contains(input.output_id()) {
+                if account.locked_outputs.contains(input) {
                     return Err(crate::Error::CustomInputError(format!(
-                        "provided custom input {} is already used in another transaction",
-                        input.output_id()
+                        "provided custom input {input} is already used in another transaction",
                     )));
                 }
             }
 
-            let selected_transaction_data = try_select_inputs(
-                custom_inputs,
-                // don't add any other outputs when custom inputs are provided
-                Vec::new(),
+            let mut input_selection = InputSelection::new(
+                available_outputs_signing_data,
                 outputs,
-                remainder_address,
-                rent_structure,
-                allow_burning,
-                current_time,
-                token_supply,
-            )?;
+                addresses,
+                protocol_parameters.clone(),
+            )
+            .required_inputs(custom_inputs)
+            .forbidden_inputs(forbidden_inputs);
+
+            if let Some(address) = remainder_address {
+                input_selection = input_selection.remainder_address(address);
+            }
+
+            if let Some(burn) = burn {
+                input_selection = input_selection.burn(burn.clone());
+            }
+
+            let selected_transaction_data = input_selection.select()?;
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -80,37 +117,36 @@ impl AccountHandle {
         } else if let Some(mandatory_inputs) = mandatory_inputs {
             // Check that no input got already locked
             for input in mandatory_inputs.iter() {
-                if account.locked_outputs.contains(input.output_id()) {
+                if account.locked_outputs.contains(input) {
                     return Err(crate::Error::CustomInputError(format!(
-                        "provided custom input {} is already used in another transaction",
-                        input.output_id()
+                        "provided custom input {input} is already used in another transaction",
                     )));
                 }
             }
 
-            let available_outputs_signing_data = filter_inputs(
-                &account,
-                account.unspent_outputs.values(),
-                current_time,
-                &bech32_hrp,
-                &outputs,
-                &account.locked_outputs,
-                allow_burning,
-                #[cfg(feature = "participation")]
-                voting_output,
-            )?;
-
-            let selected_transaction_data = try_select_inputs(
-                mandatory_inputs,
-                // add also available outputs when mandatory inputs are provided
+            let mut input_selection = InputSelection::new(
                 available_outputs_signing_data,
                 outputs,
-                remainder_address,
-                rent_structure,
-                allow_burning,
-                current_time,
-                token_supply,
-            )?;
+                addresses,
+                protocol_parameters.clone(),
+            )
+            .required_inputs(mandatory_inputs)
+            .forbidden_inputs(forbidden_inputs);
+
+            if let Some(address) = remainder_address {
+                input_selection = input_selection.remainder_address(address);
+            }
+
+            if let Some(burn) = burn {
+                input_selection = input_selection.burn(burn.clone());
+            }
+
+            let selected_transaction_data = input_selection.select()?;
+
+            // lock outputs so they don't get used by another transaction
+            for output in &selected_transaction_data.inputs {
+                account.locked_outputs.insert(*output.output_id());
+            }
 
             // lock outputs so they don't get used by another transaction
             for output in &selected_transaction_data.inputs {
@@ -120,38 +156,35 @@ impl AccountHandle {
             return Ok(selected_transaction_data);
         }
 
-        // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
-        // still locked
-        let available_outputs_signing_data = filter_inputs(
-            &account,
-            account.unspent_outputs.values(),
-            current_time,
-            &bech32_hrp,
-            &outputs,
-            &account.locked_outputs,
-            allow_burning,
-            #[cfg(feature = "participation")]
-            voting_output,
-        )?;
-
-        let selected_transaction_data = match try_select_inputs(
-            Vec::new(),
+        let mut input_selection = InputSelection::new(
             available_outputs_signing_data,
             outputs,
-            remainder_address,
-            rent_structure,
-            allow_burning,
-            current_time,
-            token_supply,
-        ) {
+            addresses,
+            protocol_parameters.clone(),
+        )
+        .forbidden_inputs(forbidden_inputs);
+
+        if let Some(address) = remainder_address {
+            input_selection = input_selection.remainder_address(address);
+        }
+
+        if let Some(burn) = burn {
+            input_selection = input_selection.burn(burn.clone());
+        }
+
+        let selected_transaction_data = match input_selection.select() {
             Ok(r) => r,
+            // TODO this error doesn't exist with the new ISA
             Err(iota_client::Error::ConsolidationRequired(output_count)) => {
                 #[cfg(feature = "events")]
                 self.event_emitter
                     .lock()
                     .await
                     .emit(account.index, WalletEvent::ConsolidationRequired);
-                return Err(crate::Error::ConsolidationRequired(output_count, INPUT_COUNT_MAX));
+                return Err(crate::Error::ConsolidationRequired {
+                    output_count,
+                    output_count_max: INPUT_COUNT_MAX,
+                });
             }
             Err(e) => return Err(e.into()),
         };
@@ -161,6 +194,7 @@ impl AccountHandle {
             log::debug!("[TRANSACTION] locking: {}", output.output_id());
             account.locked_outputs.insert(*output.output_id());
         }
+
         Ok(selected_transaction_data)
     }
 }
@@ -190,48 +224,11 @@ fn filter_inputs(
     current_time: u32,
     bech32_hrp: &str,
     outputs: &[Output],
-    locked_outputs: &HashSet<OutputId>,
-    allow_burning: bool,
-    #[cfg(feature = "participation")] voting_output: Option<OutputData>,
+    burn: Option<&Burn>,
 ) -> crate::Result<Vec<InputSigningData>> {
     let mut available_outputs_signing_data = Vec::new();
+
     for output_data in available_outputs {
-        // Don't use outputs that are already used in other transactions
-        if locked_outputs.contains(&output_data.output_id) {
-            continue;
-        }
-        #[cfg(feature = "participation")]
-        if let Some(ref voting_output) = voting_output {
-            // Remove voting output from inputs, so it doesn't get spent when not calling a function related to it.
-            if output_data.output_id == voting_output.output_id {
-                continue;
-            }
-        }
-
-        if let Output::Foundry(foundry_input) = &output_data.output {
-            // Don't add if output has not the same FoundryId, because it's the not needed unless for burning, but
-            // then it should be provided in the mandatory inputs
-            if !outputs.iter().any(|output| {
-                if let Output::Foundry(foundry_output) = output {
-                    foundry_input.id() == foundry_output.id()
-                } else {
-                    false
-                }
-            }) {
-                continue;
-            }
-        }
-
-        let unlock_conditions = output_data
-            .output
-            .unlock_conditions()
-            .expect("output needs to have unlock_conditions");
-
-        // If still time locked, don't include it
-        if unlock_conditions.is_time_locked(current_time) {
-            continue;
-        }
-
         let output_can_be_unlocked_now_and_in_future = can_output_be_unlocked_forever_from_now_on(
             // We use the addresses with unspent outputs, because other addresses of the
             // account without unspent outputs can't be related to this output
@@ -245,15 +242,9 @@ fn filter_inputs(
             continue;
         }
 
-        // If there is a StorageDepositReturnUnlockCondition and it's not expired, then don't include it
-        // If the expiration is some and not expired, we would have continued already before when we check
-        // output_can_be_unlocked_now_and_in_future
-        if unlock_conditions.expiration().is_none() && unlock_conditions.storage_deposit_return().is_some() {
-            continue;
-        }
+        // Defaults to state transition if it is not explicitly a governance transition or a burn.
+        let alias_state_transition = alias_state_transition(output_data, outputs, burn)?.unwrap_or(true);
 
-        // If alias doesn't exist in the outputs, assume the transition type that allows burning or not
-        let alias_state_transition = alias_state_transition(output_data, outputs)?.unwrap_or(!allow_burning);
         available_outputs_signing_data.push(output_data.input_signing_data(
             account,
             current_time,
@@ -261,11 +252,16 @@ fn filter_inputs(
             alias_state_transition,
         )?);
     }
+
     Ok(available_outputs_signing_data)
 }
 
 // Returns if alias transition is a state transition with the provided outputs for a given input.
-pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output]) -> crate::Result<Option<bool>> {
+pub(crate) fn alias_state_transition(
+    output_data: &OutputData,
+    outputs: &[Output],
+    burn: Option<&Burn>,
+) -> crate::Result<Option<bool>> {
     Ok(if let Output::Alias(alias_input) = &output_data.output {
         let alias_id = alias_input.alias_id_non_null(&output_data.output_id);
         // Check if alias exists in the outputs and get the required transition type
@@ -287,7 +283,7 @@ pub(crate) fn alias_state_transition(output_data: &OutputData, outputs: &[Output
                 }
                 // if not find in the outputs, the alias gets burned which is a governance transaction
             })
-            .unwrap_or(None)
+            .unwrap_or_else(|| burn.map(|burn| !burn.aliases().contains(&alias_id)))
     } else {
         None
     })

@@ -4,9 +4,12 @@ import type {
     CreateAccountPayload,
 } from '../account';
 import type { GenerateAddressOptions } from '../address';
-import type { WalletEvent } from '../event';
-import type { Auth, ClientOptions, Node } from '../network';
-import type { EventId } from '../participation';
+import type { EventType, WalletEvent } from '../event';
+import type { Auth, ClientOptions } from '../network';
+import type {
+    ParticipationEventId,
+    ParticipationEventType,
+} from '../participation';
 
 export type __BackupMessage__ = {
     cmd: 'backup';
@@ -33,16 +36,14 @@ export type __ClearStrongholdPasswordMessage__ = {
     cmd: 'clearStrongholdPassword';
 };
 
+export type __ClearListenersMessage__ = {
+    cmd: 'clearListeners';
+    payload: EventType[];
+};
+
 export type __CreateAccountMessage__ = {
     cmd: 'createAccount';
     payload: CreateAccountPayload;
-};
-
-export type __DeregisterParticipationEvent__ = {
-    cmd: 'deregisterParticipationEvent';
-    payload: {
-        eventId: EventId;
-    };
 };
 
 export type __EmitTestEventMessage__ = {
@@ -90,24 +91,6 @@ export type __GetNodeInfoMessage__ = {
     };
 };
 
-export type __GetParticipationEventMessage__ = {
-    cmd: 'getParticipationEvent';
-    payload: {
-        eventId: EventId;
-    };
-};
-
-export type __GetParticipationEventsMessage__ = {
-    cmd: 'getParticipationEvents';
-};
-
-export type __GetParticipationEventStatusMessage__ = {
-    cmd: 'getParticipationEventStatus';
-    payload: {
-        eventId: EventId;
-    };
-};
-
 export type __HexToBech32__ = {
     cmd: 'hexToBech32';
     payload: {
@@ -127,14 +110,6 @@ export type __RecoverAccountsMessage__ = {
         accountGapLimit: number;
         addressGapLimit: number;
         syncOptions?: AccountSyncOptions;
-    };
-};
-
-export type __RegisterParticipationEventMessage__ = {
-    cmd: 'registerParticipationEvent';
-    payload: {
-        eventId: EventId;
-        nodes: Node[];
     };
 };
 

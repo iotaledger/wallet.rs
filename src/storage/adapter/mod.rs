@@ -1,10 +1,16 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+pub mod memory;
 /// RocksDB storage adapter.
+#[cfg(feature = "rocksdb")]
 pub mod rocksdb;
 
 use std::collections::HashMap;
+
+fn storage_err<E: ToString>(error: E) -> crate::Error {
+    crate::Error::Storage(error.to_string())
+}
 
 /// The storage adapter.
 #[async_trait::async_trait]

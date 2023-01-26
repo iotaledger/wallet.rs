@@ -12,6 +12,7 @@ import type {
     __DecreaseNativeTokenSupplyMethod__,
     __DestroyAliasMethod__,
     __DestroyFoundryMethod__,
+    __DeregisterParticipationEventMethod__,
     __GenerateAddressesMethod__,
     __GetBalanceMethod__,
     __GetOutputMethod__,
@@ -32,6 +33,8 @@ import type {
     __PrepareOutputMethod__,
     __PrepareSendAmountMethod__,
     __PrepareTransactionMethod__,
+    __RegisterParticipationEventMethod__,
+    __RequestFundsFromFaucetMethod__,
     __RetryTransactionUntilIncludedMethod__,
     __SendAmountMethod__,
     __SendMicroTransactionMethod__,
@@ -44,17 +47,22 @@ import type {
     __SyncAccountMethod__,
     __GetIncomingTransactionDataMethod__,
     __VoteMethod__,
-    __StopParticipatingMethod__,
     __GetVotingPowerMethod__,
     __GetParticipationOverviewMethod__,
+    __GetParticipationEventMethod__,
+    __GetParticipationEventsMethod__,
+    __GetParticipationEventStatusMethod__,
+    __GetParticipationEventIdsMethod__,
     __IncreaseVotingPowerMethod__,
     __DecreaseVotingPowerMethod__,
+    __StopParticipatingMethod__,
 } from './account';
 import type {
     __BackupMessage__,
     __Bech32ToHex__,
     __ChangeStrongholdPasswordMessage__,
     __ClearStrongholdPasswordMessage__,
+    __ClearListenersMessage__,
     __CreateAccountMessage__,
     __EmitTestEventMessage__,
     __GenerateMnemonicMessage__,
@@ -76,11 +84,6 @@ import type {
     __StopBackgroundSyncMessage__,
     __StoreMnemonicMessage__,
     __VerifyMnemonicMessage__,
-    __DeregisterParticipationEvent__,
-    __RegisterParticipationEventMessage__,
-    __GetParticipationEventMessage__,
-    __GetParticipationEventsMessage__,
-    __GetParticipationEventStatusMessage__,
 } from './accountManager';
 
 export type __AccountMethod__ =
@@ -93,6 +96,7 @@ export type __AccountMethod__ =
     | __ClaimOutputsMethod__
     | __ConsolidateOutputsMethod__
     | __CreateAliasOutputMethod__
+    | __DeregisterParticipationEventMethod__
     | __DestroyAliasMethod__
     | __DestroyFoundryMethod__
     | __GenerateAddressesMethod__
@@ -101,6 +105,10 @@ export type __AccountMethod__ =
     | __GetIncomingTransactionDataMethod__
     | __GetFoundryOutputMethod__
     | __GetOutputsWithAdditionalUnlockConditionsMethod__
+    | __GetParticipationEventMethod__
+    | __GetParticipationEventIdsMethod__
+    | __GetParticipationEventsMethod__
+    | __GetParticipationEventStatusMethod__
     | __GetTransactionMethod__
     | __AddressesMethod__
     | __AddressesWithUnspentOutputsMethod__
@@ -117,6 +125,8 @@ export type __AccountMethod__ =
     | __PrepareOutputMethod__
     | __PrepareSendAmountMethod__
     | __PrepareTransactionMethod__
+    | __RegisterParticipationEventMethod__
+    | __RequestFundsFromFaucetMethod__
     | __RetryTransactionUntilIncludedMethod__
     | __SendAmountMethod__
     | __SendMicroTransactionMethod__
@@ -147,9 +157,9 @@ export type __Message__ =
     | __Bech32ToHex__
     | __CallAccountMethodMessage__
     | __ChangeStrongholdPasswordMessage__
+    | __ClearListenersMessage__
     | __ClearStrongholdPasswordMessage__
     | __CreateAccountMessage__
-    | __DeregisterParticipationEvent__
     | __EmitTestEventMessage__
     | __GenerateMnemonicMessage__
     | __GetAccountMessage__
@@ -158,13 +168,9 @@ export type __Message__ =
     | __GetLedgerNanoStatusMessage__
     | __GenerateAddressMessage__
     | __GetNodeInfoMessage__
-    | __GetParticipationEventMessage__
-    | __GetParticipationEventsMessage__
-    | __GetParticipationEventStatusMessage__
     | __HexToBech32__
     | __IsStrongholdPasswordAvailableMessage__
     | __RecoverAccountsMessage__
-    | __RegisterParticipationEventMessage__
     | __RemoveLatestAccountMessage__
     | __RestoreBackupMessage__
     | __SetClientOptionsMessage__

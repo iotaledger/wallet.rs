@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 use iota_client::block::{
     dto::U256Dto,
-    output::{dto::TokenIdDto, AliasId, FoundryId, NftId, OutputId, TokenId},
+    output::{dto::TokenIdDto, feature::MetadataFeature, AliasId, FoundryId, NftId, OutputId, TokenId},
 };
 use primitive_types::U256;
 use serde::{Deserialize, Serialize};
@@ -119,6 +119,22 @@ impl RequiredStorageDeposit {
     pub fn new() -> RequiredStorageDeposit {
         RequiredStorageDeposit::default()
     }
+
+    pub fn alias(&self) -> u64 {
+        self.alias
+    }
+
+    pub fn basic(&self) -> u64 {
+        self.basic
+    }
+
+    pub fn foundry(&self) -> u64 {
+        self.foundry
+    }
+
+    pub fn nft(&self) -> u64 {
+        self.nft
+    }
 }
 
 impl std::ops::AddAssign for RequiredStorageDeposit {
@@ -156,6 +172,8 @@ pub struct NativeTokensBalance {
     /// Token id
     #[serde(rename = "tokenId")]
     pub token_id: TokenId,
+    /// Token foundry immutable metadata
+    pub metadata: Option<MetadataFeature>,
     /// Total amount
     pub total: U256,
     /// Balance that can currently be spent
@@ -166,6 +184,7 @@ impl Default for NativeTokensBalance {
     fn default() -> Self {
         Self {
             token_id: TokenId::null(),
+            metadata: None,
             total: U256::from(0u8),
             available: U256::from(0u8),
         }
@@ -178,6 +197,8 @@ pub struct NativeTokensBalanceDto {
     /// Token id
     #[serde(rename = "tokenId")]
     pub token_id: TokenIdDto,
+    /// Token foundry immutable metadata
+    pub metadata: Option<String>,
     /// Total amount
     pub total: U256Dto,
     /// Balance that can currently be spent
@@ -188,6 +209,7 @@ impl From<&NativeTokensBalance> for NativeTokensBalanceDto {
     fn from(value: &NativeTokensBalance) -> Self {
         Self {
             token_id: TokenIdDto::from(&value.token_id),
+            metadata: value.metadata.as_ref().map(|m| prefix_hex::encode(m.data())),
             total: U256Dto::from(&value.total),
             available: U256Dto::from(&value.available),
         }

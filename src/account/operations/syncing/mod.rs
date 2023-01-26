@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 pub(crate) mod addresses;
+pub(crate) mod foundries;
 pub mod options;
 pub(crate) mod outputs;
 pub(crate) mod transactions;
@@ -11,12 +12,9 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-use iota_client::{
-    api_types::response::OutputMetadataResponse,
-    block::{
-        address::{Address, AliasAddress, NftAddress},
-        output::{Output, OutputId},
-    },
+use iota_client::block::{
+    address::{Address, AliasAddress, NftAddress},
+    output::{dto::OutputMetadataDto, FoundryId, Output, OutputId},
 };
 
 pub use self::options::SyncOptions;
@@ -35,19 +33,19 @@ impl AccountHandle {
         log::debug!("[SYNC] start syncing with {:?}", options);
         let syc_start_time = Instant::now();
 
-        // prevent syncing the account multiple times simultaneously
+        // Prevent syncing the account multiple times simultaneously
         let time_now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("time went backwards")
             .as_millis();
         let mut last_synced = self.last_synced.lock().await;
         log::debug!("[SYNC] last time synced before {}ms", time_now - *last_synced);
-        if time_now - *last_synced < MIN_SYNC_INTERVAL && !options.force_syncing {
+        if !options.force_syncing && time_now - *last_synced < MIN_SYNC_INTERVAL {
             log::debug!(
                 "[SYNC] synced within the latest {} ms, only calculating balance",
                 MIN_SYNC_INTERVAL
             );
-            // calculate the balance because if we created a transaction in the meantime, the amount for the inputs is
+            // Calculate the balance because if we created a transaction in the meantime, the amount for the inputs is
             // not available anymore
             return self.balance().await;
         }
@@ -61,7 +59,7 @@ impl AccountHandle {
             Vec<OutputData>,
         ) = self.request_outputs_recursively(addresses_to_sync, &options).await?;
 
-        // request possible spent outputs
+        // Request possible spent outputs
         log::debug!("[SYNC] spent_or_not_synced_outputs: {spent_or_not_synced_output_ids:?}");
         let spent_or_unsynced_output_metadata_responses = self
             .client
@@ -70,7 +68,7 @@ impl AccountHandle {
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>> =
+        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_metadata_response in spent_or_unsynced_output_metadata_responses {
             let output_id = output_metadata_response.output_id()?;
@@ -86,7 +84,22 @@ impl AccountHandle {
             self.request_incoming_transaction_data(transaction_ids).await?;
         }
 
-        // updates account with balances, output ids, outputs
+        if options.sync_native_token_foundries {
+            let native_token_foundry_ids = outputs_data
+                .iter()
+                .filter_map(|output| output.output.native_tokens())
+                .flat_map(|native_tokens| {
+                    native_tokens
+                        .iter()
+                        .map(|native_token| FoundryId::from(*native_token.token_id()))
+                })
+                .collect::<HashSet<_>>();
+
+            // Request and store foundry outputs
+            self.request_and_store_foundry_outputs(native_token_foundry_ids).await?;
+        }
+
+        // Updates account with balances, output ids, outputs
         self.update_account(
             addresses_with_unspent_outputs,
             outputs_data,
@@ -101,7 +114,7 @@ impl AccountHandle {
         };
 
         let account_balance = self.balance().await?;
-        // update last_synced mutex
+        // Update last_synced mutex
         let time_now = SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("time went backwards")
@@ -127,12 +140,12 @@ impl AccountHandle {
 
         loop {
             let new_outputs_data = if new_alias_and_nft_addresses.is_empty() {
-                // get outputs for addresses and add them also the the addresses_with_unspent_outputs
+                // Get outputs for addresses and add them also the the addresses_with_unspent_outputs
                 let (addresses_with_output_ids, spent_or_not_synced_output_ids_inner) = self
                     .get_output_ids_for_addresses(options, addresses_to_sync.clone())
                     .await?;
                 spent_or_not_synced_output_ids = spent_or_not_synced_output_ids_inner;
-                // get outputs for addresses and add them also the the addresses_with_unspent_outputs
+                // Get outputs for addresses and add them also the the addresses_with_unspent_outputs
                 let (addresses_with_unspent_outputs_inner, outputs_data_inner) = self
                     .get_outputs_from_address_output_ids(addresses_with_output_ids)
                     .await?;

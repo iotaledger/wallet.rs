@@ -380,7 +380,7 @@ class Account:
             }
         )
 
-    def sync_account(self, options=None):
+    def sync(self, options=None):
         """Sync the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """
@@ -478,5 +478,15 @@ class Account:
             'sendOutputs', {
                 'outputs': outputs,
                 'options': options,
+            }
+        )
+
+    def request_funds_from_faucet(self, url=None, address=None):
+        """Requests funds from the faucet
+        """
+        return self._call_account_method(
+            'requestFundsFromFaucet', {
+                'url': url,
+                'address': address,
             }
         )

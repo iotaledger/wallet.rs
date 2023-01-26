@@ -8,7 +8,7 @@ wallet = IotaWallet('./alice-database')
 account = wallet.get_account('Alice')
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 print(f'Synced: {response}')
 
 wallet.set_stronghold_password("some_hopefully_secure_password")
@@ -18,7 +18,7 @@ transaction = account.create_alias_output(None, None)
 # Wait a few seconds for the transaction to get confirmed
 time.sleep(7)
 
-account.sync_account()
+account.sync()
 
 native_token_options = {
     # 1000 hex encoded

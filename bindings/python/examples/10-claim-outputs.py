@@ -9,7 +9,7 @@ account = wallet.get_account('Alice')
 wallet.set_stronghold_password("some_hopefully_secure_password")
 
 # Sync account with the node
-response = account.sync_account()
+response = account.sync()
 
 # Only the unspent outputs in the account
 output_ids = account.get_outputs_with_additional_unlock_conditions('All')

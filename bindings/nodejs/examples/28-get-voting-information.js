@@ -10,26 +10,28 @@ async function run() {
     try {
         const manager = await getUnlockedManager();
 
+        const account = await manager.getAccount('0');
+
         // store the event information from a node locally
-        await manager.registerParticipationEvent(
+        await account.registerParticipationEvent(
             EVENT_ID,
-            [{url: 'https://api.testnet.shimmer.network'}]
+            [{ url: 'https://api.testnet.shimmer.network' }]
         )
-        
+
         // get the participation events that are stored in wallet.rs
-        const events = await manager.getParticipationEvents()
+        const events = await account.getParticipationEvents()
         console.log('List of registered events:', events)
-        
+
         // get the participation event with a specific id that is stored in wallet.rs
-        const event = await manager.getParticipationEvent(EVENT_ID)
+        const event = await account.getParticipationEvent(EVENT_ID)
         console.log(`Event ${EVENT_ID}:`, event)
-        
+
         // get the status of a participation event that is stored in wallet.rs
-        const eventStatus = await manager.getParticipationEventStatus(EVENT_ID)
+        const eventStatus = await account.getParticipationEventStatus(EVENT_ID)
         console.log('Event Status:', eventStatus)
-        
+
         // removes the participation events from a manager
-        await manager.deregisterParticipationEvent(EVENT_ID)
+        await account.deregisterParticipationEvent(EVENT_ID)
 
         process.exit(0)
     } catch (error) {

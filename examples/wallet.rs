@@ -55,7 +55,7 @@ async fn main() -> Result<()> {
     let now = Instant::now();
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     let addresses_with_unspent_outputs = account.addresses_with_unspent_outputs().await?;
     println!("Addresses with balance: {}", addresses_with_unspent_outputs.len());
@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
     let now = Instant::now();
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     // // switch to mainnet
     // let client_options = ClientOptions::new()

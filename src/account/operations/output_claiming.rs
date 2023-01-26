@@ -283,12 +283,7 @@ impl AccountHandle {
 
         // Check if the new amount is enough for the storage deposit, otherwise increase it to this
         let mut required_amount = required_amount_for_nfts
-            + minimum_storage_deposit_basic_output(
-                &rent_structure,
-                &first_account_address.address.inner,
-                &option_native_token,
-                token_supply,
-            )?;
+            + minimum_storage_deposit_basic_output(&rent_structure, &option_native_token, token_supply)?;
 
         let mut additional_inputs = Vec::new();
         if available_amount < required_amount {
@@ -305,12 +300,7 @@ impl AccountHandle {
                 // Recalculate every time, because new inputs can also add more native tokens, which would increase
                 // the required storage deposit
                 required_amount = required_amount_for_nfts
-                    + minimum_storage_deposit_basic_output(
-                        &rent_structure,
-                        &first_account_address.address.inner,
-                        &option_native_token,
-                        token_supply,
-                    )?;
+                    + minimum_storage_deposit_basic_output(&rent_structure, &option_native_token, token_supply)?;
                 if available_amount < required_amount {
                     if !additional_inputs_used.contains(&output_data.output_id) {
                         if let Some(native_tokens) = output_data.output.native_tokens() {
@@ -338,7 +328,10 @@ impl AccountHandle {
 
         // If we still don't have enough amount we can't create the output
         if available_amount < required_amount {
-            return Err(crate::Error::InsufficientFunds(available_amount, required_amount));
+            return Err(crate::Error::InsufficientFunds {
+                available: available_amount,
+                required: required_amount,
+            });
         }
 
         for (return_address, return_amount) in required_address_returns {

@@ -50,13 +50,13 @@ async fn main() -> Result<()> {
     for address in addresses {
         bech32_addresses.push(address.address().to_bech32());
     }
-    println!("Generated new addresses: {:#?}", bech32_addresses);
+    println!("Generated new addresses: {bech32_addresses:#?}");
 
     println!("addresses: {:?}", account.addresses().await?.len());
     let now = Instant::now();
     let balance = account.sync(None).await?;
     println!("Syncing took: {:.2?}", now.elapsed());
-    println!("Balance: {:?}", balance);
+    println!("Balance: {balance:?}");
 
     #[cfg(debug_assertions)]
     manager.verify_integrity().await?;
