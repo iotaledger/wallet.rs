@@ -12,7 +12,7 @@ jobs:
         os: [windows-latest, macos-latest, ubuntu-latest]
         java: ["11"]
     outputs:
-      tag: ${{ steps.step1.outputs.test }}
+      tag: ${{ steps.construct-tag.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v3
