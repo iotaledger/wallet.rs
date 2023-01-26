@@ -1,13 +1,19 @@
 // Copyright 2021 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-import { AccountId, CreateAccountPayload } from '../types/account';
+import { AccountId, AccountSyncOptions, CreateAccountPayload } from '../types/account';
 import { AccountManagerOptions } from '../types';
 import { Account } from './Account';
 import { AccountManager } from './AccountManager';
 
 type ProfileManager = Awaited<ReturnType<typeof AccountManager>>
-type RecoverAccounts = ProfileManager['recoverAccounts']
+type RecoverAccounts = Parameters<ProfileManager['recoverAccounts']>
+interface RecoverAccountsPayload {
+    accountStartIndex: number, 
+    accountGapLimit: number, 
+    addressGapLimit: number, 
+    syncOptions?: AccountSyncOptions
+}
 interface ProfileManagers {
     [key: string]: ProfileManager
 }
@@ -43,9 +49,9 @@ const WalletApi = {
         accounts.forEach((account) => bindMethodsAcrossContextBridge(Account.prototype, account))
         return accounts
     },
-    async recoverAccounts(managerId: AccountId, payload: RecoverAccounts) {
+    async recoverAccounts(managerId: AccountId, payload: RecoverAccountsPayload) {
         const manager = profileManagers[managerId]
-        const accounts = await manager.recoverAccounts(...Object.values(payload) as Parameters<RecoverAccounts>)
+        const accounts = await manager.recoverAccounts(...Object.values(payload) as RecoverAccounts)
         accounts.forEach((account) => bindMethodsAcrossContextBridge(Account.prototype, account))
         return accounts
     },
