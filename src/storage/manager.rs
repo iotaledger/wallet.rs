@@ -17,9 +17,6 @@ use crate::{
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) enum ManagerStorage {
-    /// Stronghold storage.
-    #[cfg(feature = "stronghold")]
-    Stronghold,
     /// RocksDB storage.
     #[cfg(feature = "rocksdb")]
     Rocksdb,
