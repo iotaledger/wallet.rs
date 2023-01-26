@@ -18,7 +18,7 @@ impl StorageAdapter for Memory {
         STORAGE_ID
     }
 
-    /// Gets a record from the storage.
+    /// Gets the record associated with the given key from the storage.
     async fn get(&self, key: &str) -> crate::Result<String> {
         self.0.get(key).ok_or_else(|| storage_err(key)).cloned()
     }
