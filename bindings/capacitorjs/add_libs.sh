@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -e
 rm -rf tmp && mkdir tmp && cd tmp
