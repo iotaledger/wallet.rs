@@ -1,6 +1,8 @@
 // Copyright 2023 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+use std::collections::HashMap;
+
 use iota_client::{
     node_api::participation::types::{
         ParticipationEvent, ParticipationEventId, ParticipationEventStatus, ParticipationEventType,
@@ -65,16 +67,14 @@ impl AccountHandle {
     }
 
     /// Retrieves information for all registered participation events.
-    pub async fn get_participation_events(&self) -> crate::Result<Vec<ParticipationEvent>> {
-        Ok(self
-            .storage_manager
+    pub async fn get_participation_events(
+        &self,
+    ) -> crate::Result<HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)>> {
+        self.storage_manager
             .lock()
             .await
             .get_participation_events(self.read().await.index)
-            .await?
-            .values()
-            .map(|(event, _nodes)| event.clone())
-            .collect())
+            .await
     }
 
     /// Retrieves IDs of all events tracked by the client options node.

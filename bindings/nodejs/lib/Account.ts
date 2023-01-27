@@ -441,7 +441,9 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
-    async getParticipationEvents(): Promise<ParticipationEvent[]> {
+    async getParticipationEvents(): Promise<{
+        [eventId: ParticipationEventId]: [ParticipationEvent[], Node[]];
+    }> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

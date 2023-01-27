@@ -19,6 +19,8 @@ use serde::Serialize;
 use {
     crate::account::operations::participation::AccountParticipationOverview,
     iota_client::node_api::participation::types::{ParticipationEvent, ParticipationEventId, ParticipationEventStatus},
+    iota_client::node_manager::node::Node,
+    std::collections::HashMap,
 };
 
 use crate::{
@@ -150,7 +152,7 @@ pub enum Response {
     /// Response for
     /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
-    ParticipationEvents(Vec<ParticipationEvent>),
+    ParticipationEvents(HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)>),
     /// Response for
     /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
     #[cfg(feature = "participation")]
