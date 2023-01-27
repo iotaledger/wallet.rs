@@ -18,7 +18,7 @@
     "verify:ios": "cd ios && pod install && xcodebuild -workspace Plugin.xcworkspace -scheme Plugin && cd ..",
     "verify:android": "cd android && ./gradlew clean build test && cd ..",
     "build": "npm run clean && tsc && rollup -c rollup.config.js",
-    "clean": "rm -rf ./dist",
+    "clean": "rimraf -rf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build",
     "preinstall": "npm run build && ./add_libs.sh"
