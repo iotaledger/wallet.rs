@@ -274,6 +274,13 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
+
+        #[cfg(feature = "storage")]
+        {
+            log::debug!("[SYNC] storing account {} with new synced data", account.alias());
+            self.save(Some(&account)).await?;
+        }
+
         Ok(())
     }
 }
