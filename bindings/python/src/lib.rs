@@ -44,7 +44,7 @@ pub fn create_message_handler(options: Option<String>) -> Result<WalletMessageHa
         Some(ops) => match serde_json::from_str::<ManagerOptions>(&ops) {
             Ok(options) => Some(options),
             Err(e) => {
-                panic!("Wrong options input! {:?}", e);
+                panic!("Wrong options input! {e:?}");
             }
         },
         _ => None,
@@ -63,7 +63,7 @@ pub fn send_message(handle: &WalletMessageHandler, message: String) -> Result<St
     let message = match serde_json::from_str::<Message>(&message) {
         Ok(message) => message,
         Err(e) => {
-            panic!("Wrong message! {:?}", e);
+            panic!("Wrong message! {e:?}");
         }
     };
     let response = crate::block_on(async {
