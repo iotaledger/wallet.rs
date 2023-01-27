@@ -21,7 +21,7 @@
     "clean": "rimraf -rf ./dist",
     "watch": "tsc --watch",
     "prepublishOnly": "npm run build",
-    "preinstall": "npm run build && ./add_libs.sh"
+    "preinstall": "npm run build && sh ./add_libs.sh"
   },
   "author": "IOTA Stiftung",
   "license": "Apache-2.0",
