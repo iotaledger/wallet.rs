@@ -87,7 +87,7 @@ pub fn listen(handle: &WalletMessageHandler, events: Vec<String>, handler: PyObj
         let event = match serde_json::from_str::<WalletEventType>(&event) {
             Ok(event) => event,
             Err(e) => {
-                panic!("Wrong event to listen! {:?}", e);
+                panic!("Wrong event to listen! {e:?}");
             }
         };
         rust_events.push(event);

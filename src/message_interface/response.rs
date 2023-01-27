@@ -140,7 +140,7 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
-    ParticipationEvent(Option<ParticipationEvent>),
+    ParticipationEvent(Option<(ParticipationEvent, Vec<Node>)>),
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]

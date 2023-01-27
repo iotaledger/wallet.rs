@@ -21,7 +21,7 @@ impl AccountHandle {
         &self,
         id: ParticipationEventId,
         nodes: Vec<Node>,
-    ) -> crate::Result<ParticipationEvent> {
+    ) -> crate::Result<(ParticipationEvent, Vec<Node>)> {
         let mut client_builder = Client::builder().with_ignore_node_health();
         for node in &nodes {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
@@ -35,10 +35,10 @@ impl AccountHandle {
         self.storage_manager
             .lock()
             .await
-            .insert_participation_event(self.read().await.index, id, event.clone(), nodes)
+            .insert_participation_event(self.read().await.index, id, event.clone(), nodes.clone())
             .await?;
 
-        Ok(event)
+        Ok((event, nodes))
     }
 
     /// Removes a previously registered participation event from local storage.
