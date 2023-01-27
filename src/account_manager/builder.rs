@@ -23,7 +23,7 @@ use crate::{
     account::handle::AccountHandle,
     storage::{constants::default_storage_path, manager::ManagerStorage},
 };
-use crate::{account_manager::AccountManager, ClientOptions};
+use crate::{account_manager::AccountManager, ClientOptions, Error};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.
@@ -136,7 +136,11 @@ impl AccountManagerBuilder {
         .await?;
 
         #[cfg(feature = "storage")]
-        let read_manager_builder = Some(storage_manager.lock().await.get_account_manager_data().await?);
+        let read_manager_builder = match storage_manager.lock().await.get_account_manager_data().await {
+            Ok(x) => Some(x),
+            Err(Error::RecordNotFound(_)) => None,
+            Err(e) => return Err(e),
+        };
         #[cfg(not(feature = "storage"))]
         let read_manager_builder: Option<AccountManagerBuilder> = None;
 

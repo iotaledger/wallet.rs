@@ -21,6 +21,8 @@ public class CreateAccount {
                 .withStoragePath(Env.STORAGE_PATH)
         );
 
+        wallet.storeMnemonic(Env.MNEMONIC);
+
         // Create an account.
         AccountHandle a = wallet.createAccount(Env.ACCOUNT_NAME);
 
