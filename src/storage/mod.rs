@@ -749,7 +749,8 @@ pub(crate) async fn set<P: AsRef<Path>>(
     Ok(())
 }
 
-pub(crate) async fn remove(storage_path: &Path) -> Option<String> {
+/// Removes the storage instance
+pub async fn remove(storage_path: &Path) -> Option<String> {
     let mut instances = INSTANCES.get_or_init(Default::default).write().await;
     let storage = instances.remove(storage_path);
     if let Some(s) = storage {

@@ -473,7 +473,7 @@ impl AccountInitialiser {
                     &self.addresses,
                     &account_initialiser.client_options,
                 ))
-                .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {:?} is invalid", msg))
+                .unwrap_or_else(|msg| panic!("AccountInitialiser: Message {msg:?} is invalid"))
             })
             .collect();
         account_initialiser = account_initialiser.messages(messages);
@@ -493,7 +493,7 @@ impl AccountInitialiser {
                     .map(|address| {
                         address
                             .try_into()
-                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Address {:?} is invalid", msg))
+                            .unwrap_or_else(|msg| panic!("AccountInitialiser: Address {msg:?} is invalid"))
                     })
                     .collect(),
             ),

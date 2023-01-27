@@ -26,7 +26,7 @@ use std::{
 
 #[pyclass]
 pub struct AccountManager {
-    pub account_manager: RustAccountManager,
+    pub account_manager: Option<RustAccountManager>,
 }
 
 #[pyclass]
