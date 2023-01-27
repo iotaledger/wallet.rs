@@ -285,7 +285,10 @@ impl AccountHandle {
 
         #[cfg(feature = "storage")]
         {
-            log::debug!("[SYNC] storing account {} with new synced data", account.alias());
+            log::debug!(
+                "[SYNC] storing account {} after updating it with new client options",
+                account.alias()
+            );
             self.save(Some(&account)).await?;
         }
 
