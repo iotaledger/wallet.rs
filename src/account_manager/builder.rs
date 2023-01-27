@@ -136,7 +136,7 @@ impl AccountManagerBuilder {
         .await?;
 
         #[cfg(feature = "storage")]
-        let read_manager_builder = storage_manager.lock().await.get_account_manager_data().await.ok();
+        let read_manager_builder = Some(storage_manager.lock().await.get_account_manager_data().await?);
         #[cfg(not(feature = "storage"))]
         let read_manager_builder: Option<AccountManagerBuilder> = None;
 
@@ -173,8 +173,8 @@ impl AccountManagerBuilder {
             self.coin_type.replace(coin_type);
         }
 
-        #[cfg(feature = "storage")]
         // Store account manager data in storage
+        #[cfg(feature = "storage")]
         storage_manager.lock().await.save_account_manager_data(&self).await?;
 
         let client = self
