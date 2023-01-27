@@ -34,7 +34,7 @@ public class Account extends AbstractObject {
     /// Pending transactions.
     private Set<TransactionId> pendingTransactions;
     /// Incoming transactions.
-    private Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> incomingTransactions;
+    private Map<TransactionId, Transaction> incomingTransactions;
 
     public int getIndex() {
         return index;
@@ -80,7 +80,7 @@ public class Account extends AbstractObject {
         return pendingTransactions;
     }
 
-    public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() {
+    public Map<TransactionId, Transaction> getIncomingTransactions() {
         return incomingTransactions;
     }
 

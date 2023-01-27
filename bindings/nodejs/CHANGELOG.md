@@ -1,5 +1,53 @@
 # Changelog
 
+## \[2.0.3-rc.17]
+
+- Make the voting output mandatory in input selection for voting functions.
+  - [4f246a09](https://github.com/iotaledger/wallet.rs/commit/4f246a09408eb5a1b79dd4362f06ea74ef6591bc) Make the voting output mandatory in input selection for voting functions ([#1753](https://github.com/iotaledger/wallet.rs/pull/1753)) on 2023-01-25
+
+## \[2.0.3-rc.16]
+
+- Allow voting output in inputs if required.
+  - [f0e049a3](https://github.com/iotaledger/wallet.rs/commit/f0e049a3da2d2fbad2c8ae0639059366500b6f8a) Allow voting output in inputs if required ([#1748](https://github.com/iotaledger/wallet.rs/pull/1748)) on 2023-01-24
+
+## \[2.0.3-rc.15]
+
+- Return `Transaction` for incoming transactions.
+  Add inputs field to `Transaction`.
+  Remove `IncomingTransactionData`.
+  - [b74768e2](https://github.com/iotaledger/wallet.rs/commit/b74768e2b78c2bd227ab57bcd0014d0bfc37dc47) Add inputs to transaction to align incoming transactions ([#1722](https://github.com/iotaledger/wallet.rs/pull/1722)) on 2023-01-20
+- Renamed AccountSyncOptions to SyncOptions;
+  Added AccountSyncOptions, AliasSyncOptions and NftSyncOptions;
+  Replaced SyncOptions::syncAliasesAndNfts with SyncOptions::{account, alias, nft};
+  - [e5415470](https://github.com/iotaledger/wallet.rs/commit/e5415470647aaab6c01ff2a6ff03ec6697267de6) Change sync options ([#1737](https://github.com/iotaledger/wallet.rs/pull/1737)) on 2023-01-23
+- Use new Input Selection Algorithm.
+  - [480a88c2](https://github.com/iotaledger/wallet.rs/commit/480a88c2cf893ce638c08a782c6ba87bffc1d602) Use new Input Selection ([#1744](https://github.com/iotaledger/wallet.rs/pull/1744)) on 2023-01-24
+
+## \[2.0.3-rc.14]
+
+- Moved clearListeners internally from a direct method call to using the messaging interface
+  - [90756184](https://github.com/iotaledger/wallet.rs/commit/907561840d5819a5ba0d7e3229949fa34472f4d5) Bindings: reuse methods + consistency ([#1671](https://github.com/iotaledger/wallet.rs/pull/1671)) on 2023-01-13
+
+- `Account::getParticipationOverview` sends requests now in parallel.
+  - [0981686b](https://github.com/iotaledger/wallet.rs/commit/0981686b0fadedd304a241fabe0a28fa097e39c9) Send requests in parallel, check participation output unlock conditions ([#1740](https://github.com/iotaledger/wallet.rs/pull/1740)) on 2023-01-19
+
+- Move AccountManager participation methods to the Account.
+  - [a4f897e4](https://github.com/iotaledger/wallet.rs/commit/a4f897e436c2994664eb06dc1f04a4bed9ec62c6) Move all participation methods from the AccountManager to the Account ([#1736](https://github.com/iotaledger/wallet.rs/pull/1736)) on 2023-01-18
+
+- Rename:
+
+- `Event` to `ParticipationEvent`;
+
+- `EventId` to `ParticipationEventId`;
+
+- `EventData` to `ParticipationEventData`;
+
+- `EventStatus` to `ParticipationEventStatus`;
+
+- `EventPayload` to `ParticipationEventPayload`;
+
+- [c0c08915](https://github.com/iotaledger/wallet.rs/commit/c0c08915e54f3c5382c73ea4d5a98a66d44df885) chore: add more alignment for participation code ([#1727](https://github.com/iotaledger/wallet.rs/pull/1727)) on 2023-01-16
+
 ## \[2.0.3-rc.13]
 
 - Add method to retrieve IDs of all participation events being tracked by a node.
@@ -584,7 +632,7 @@
 - Fixes `setStrongholdPassword` accepting a wrong password after a few tries.
   - [991c2e6](https://github.com/iotaledger/wallet.rs/commit/991c2e68c1f88f0c327d1cd37a1275089aaf0ed3) fix(stronghold): mark client as loaded if the snapshot decrypt succeeded ([#357](https://github.com/iotaledger/wallet.rs/pull/357)) on 2021-03-01
 - Adds the `options: SyncOptions` parameter on the `AccountManager#syncAccounts` method.
-  - [9855cfa](https://github.com/iotaledger/wallet.rs/commit/9855cfa4ce7296d04d1c647c7f6ca1722784eb33) refactor(manager): `sync_accounts` gap_limit and address_index options ([#346](https://github.com/iotaledger/wallet.rs/pull/346)) on 2021-02-24
+  - [9855cfa](https://github.com/iotaledger/wallet.rs/commit/9855cfa4ce7296d04d1c647c7f6ca1722784eb33) refactor(manager): `syncs` gap_limit and address_index options ([#346](https://github.com/iotaledger/wallet.rs/pull/346)) on 2021-02-24
 - Move `transfer`, `retry`, `reattach`, `promote` APIs to the account object.
   - [8b808c8](https://github.com/iotaledger/wallet.rs/commit/8b808c80bbb7bc1e6b9858551880684a0400ab0c) refactor(sync): automatic sync before transfer/retry/reattach/promote ([#365](https://github.com/iotaledger/wallet.rs/pull/365)) on 2021-03-02
 - Added a `TransferProgress` event type, triggered on transfer steps progress.

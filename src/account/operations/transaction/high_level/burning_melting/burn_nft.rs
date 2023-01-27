@@ -1,9 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
-use iota_client::block::{
-    address::{Address, NftAddress},
-    output::{unlock_condition::UnlockCondition, BasicOutputBuilder, NftId, Output, OutputId},
+use iota_client::{
+    api::input_selection::Burn,
+    block::{
+        address::{Address, NftAddress},
+        output::{unlock_condition::UnlockCondition, BasicOutputBuilder, NftId, Output, OutputId},
+    },
 };
 
 use crate::{
@@ -52,12 +55,12 @@ impl AccountHandle {
         let options = match options {
             Some(mut options) => {
                 options.custom_inputs.replace(custom_inputs);
-                options.allow_burning = true;
+                options.burn = Some(Burn::new().add_nft(nft_id));
                 Some(options)
             }
             None => Some(TransactionOptions {
                 custom_inputs: Some(custom_inputs),
-                allow_burning: true,
+                burn: Some(Burn::new().add_nft(nft_id)),
                 ..Default::default()
             }),
         };

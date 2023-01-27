@@ -47,7 +47,7 @@ Returns all locked outputs of the account.
 
 * **Returns:** A set of OutputIds
 
-## `public Map<TransactionId, Map.Entry<TransactionPayload, OutputResponse[]>> getIncomingTransactions() throws WalletException`
+## `public Map<TransactionId, Transaction> getIncomingTransactions() throws WalletException`
 
 Returns all incoming transactions for the account.
 

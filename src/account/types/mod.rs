@@ -11,14 +11,17 @@ use std::str::FromStr;
 
 use crypto::keys::slip10::Chain;
 use iota_client::{
-    api_types::response::OutputMetadataResponse,
+    api_types::response::OutputWithMetadataResponse,
     block::{
         address::{dto::AddressDto, Address},
-        output::{dto::OutputDto, Output, OutputId},
+        output::{
+            dto::{OutputDto, OutputMetadataDto},
+            Output, OutputId, OutputMetadata,
+        },
         payload::transaction::{dto::TransactionPayloadDto, TransactionId, TransactionPayload},
         BlockId,
     },
-    secret::types::{InputSigningData, OutputMetadata},
+    secret::types::InputSigningData,
 };
 use serde::{Deserialize, Deserializer, Serialize};
 
@@ -32,12 +35,12 @@ pub use self::{
 use crate::account::Account;
 
 /// An output with metadata
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 pub struct OutputData {
     /// The output id
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
-    pub metadata: OutputMetadataResponse,
+    pub metadata: OutputMetadataDto,
     /// The actual Output
     pub output: Output,
     /// If an output is spent
@@ -106,7 +109,7 @@ pub struct OutputDataDto {
     #[serde(rename = "outputId")]
     pub output_id: OutputId,
     /// The metadata of the output
-    pub metadata: OutputMetadataResponse,
+    pub metadata: OutputMetadataDto,
     /// The actual Output
     pub output: OutputDto,
     /// If an output is spent
@@ -156,6 +159,11 @@ pub struct Transaction {
     // set if the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
     pub note: Option<String>,
+    /// Outputs that are used as input in the transaction. May not be all, because some may have already been deleted
+    /// from the node.
+    // serde(default) is needed so it doesn't break with old dbs
+    #[serde(default)]
+    pub inputs: Vec<OutputWithMetadataResponse>,
 }
 
 /// Dto for a transaction with metadata
@@ -179,6 +187,7 @@ pub struct TransactionDto {
     /// If the transaction was created by the wallet or if it was sent by someone else and is incoming
     pub incoming: bool,
     pub note: Option<String>,
+    pub inputs: Vec<OutputWithMetadataResponse>,
 }
 
 impl From<&Transaction> for TransactionDto {
@@ -192,6 +201,7 @@ impl From<&Transaction> for TransactionDto {
             network_id: value.network_id.to_string(),
             incoming: value.incoming,
             note: value.note.clone(),
+            inputs: value.inputs.clone(),
         }
     }
 }

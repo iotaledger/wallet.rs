@@ -25,4 +25,4 @@ neon = { version = "0.10.1", default-features = false, features = [ "napi-6", "e
 once_cell = { version = "1.17.0", default-features = false }
 serde = { version = "1.0.152", default-features = false }
 serde_json = { version = "1.0.91", default-features = false }
-tokio = { version = "1.24.1", default-features = false }
+tokio = { version = "1.24.2", default-features = false }

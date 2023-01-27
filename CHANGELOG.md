@@ -23,21 +23,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `AccountManager::get_participation_event_ids` method;
+- `Account::get_participation_event_ids` method;
 - `RequiredStorageDeposit::{alias(), basic(), foundry(), nft()}` getters;
 - `TransactionOptionsDto`;
+- `Transaction::inputs` and `TransactionDto::inputs` fields;
+- Derive `Eq, PartialEq` for `Account` and `OutputData`;
+- `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
+- `SyncOptions::{account, alias, nft}` fields;
+- `{TransactionOptions, TransactionOptionsDto}::burn`;
+- `Memory` storage adapter;
 
 ### Changed
 
+- Use new Input Selection Algorithm;
 - Updated dependencies;
 - Message interface methods to accept `TransactionOptionsDto` instead of `TransactionOptions`;
 - `send_message` to return Option which is None when no message response is received;
 - Moved `init_logger` to message interface mod;
 - Limit max parallel requests for incoming transactions;
+- Move all participation methods from the AccountManager to the Account;
+- `Account::get_participation_overview` sends requests now in parallel;
+- `Account::{get_incoming_transaction_data(), incoming_transactions()}` return now `Transaction` instead of `(TransactionPayload, Vec<OutputWithMetadataResponse>)`;
+- `AccountDto::incoming_transactions` from `(TransactionPayloadDto, Vec<OutputWithMetadataResponse>)` to `TransactionDto`;
+- `Response::{IncomingTransactionData, IncomingTransactionsData}` contain `TransactionDto` instead of `IncomingTransactionDataDto`;
+- Default `SyncOptions` don't sync alias and nft outputs anymore;
+- `{OutputData, OutputDataDto}::metadata` type from `OutputMetadataResponse` to `OutputMetadataDto`;
+- `RocksDb` storage is now an optional storage adapter;
 
 ### Removed
 
 - `clear_listeners` from the `WalletMessageHandler`;
+- `IncomingTransactionDataDto` type;
+- `SyncOptions::sync_aliases_and_nfts`;
+- `{TransactionOptions, TransactionOptionsDto}::allow_burning`;
 
 ## 1.0.0-rc.4 - 2022-12-23
 
