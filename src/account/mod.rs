@@ -59,23 +59,21 @@ use crate::account::types::InclusionState;
 /// An Account.
 #[derive(Clone, Debug, Eq, PartialEq, Getters, Setters, Serialize, Deserialize)]
 #[getset(get = "pub")]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     /// The account index
     index: u32,
     /// The coin type
-    #[serde(rename = "coinType")]
     coin_type: u32,
     /// The account alias.
     alias: String,
     /// Public addresses
-    #[serde(rename = "publicAddresses")]
     pub(crate) public_addresses: Vec<AccountAddress>,
     /// Internal addresses
-    #[serde(rename = "internalAddresses")]
     pub(crate) internal_addresses: Vec<AccountAddress>,
     /// Addresses with unspent outputs
-    // used to improve performance for syncing and get balance because it's in most cases only a subset of all addresses
-    #[serde(rename = "addressesWithUnspentOutputs")]
+    // used to improve performance for syncing and get balance because it's in most cases only a subset of all
+    // addresses
     addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
     /// Outputs
     // stored separated from the account for performance?
@@ -83,11 +81,9 @@ pub struct Account {
     /// Unspent outputs that are currently used as input for transactions
     // outputs used in transactions should be locked here so they don't get used again, which would result in a
     // conflicting transaction
-    #[serde(rename = "lockedOutputs")]
     locked_outputs: HashSet<OutputId>,
     /// Unspent outputs
     // have unspent outputs in a separated hashmap so we don't need to iterate over all outputs we have
-    #[serde(rename = "unspentOutputs")]
     unspent_outputs: HashMap<OutputId, OutputData>,
     /// Sent transactions
     // stored separated from the account for performance and only the transaction id here? where to add the network id?
@@ -95,15 +91,18 @@ pub struct Account {
     transactions: HashMap<TransactionId, types::Transaction>,
     /// Pending transactions
     // Maybe pending transactions even additionally separated?
-    #[serde(rename = "pendingTransactions")]
     pending_transactions: HashSet<TransactionId>,
     /// Transaction payloads for received outputs with inputs when not pruned before syncing, can be used to determine
     /// the sender address/es
-    #[serde(rename = "incomingTransactions")]
     #[serde(deserialize_with = "deserialize_or_convert")]
     incoming_transactions: HashMap<TransactionId, Transaction>,
+    /// Some incoming transactions can be pruned by the node before we requested them, then this node can never return
+    /// it. To avoid useless requestes these transaction ids are stored here and cleared when new client options are
+    /// set, because another node might still have them.
+    #[serde(default)]
+    inaccessible_incoming_transactions: HashSet<TransactionId>,
     /// Foundries for native tokens in outputs
-    #[serde(rename = "nativeTokenFoundries", default)]
+    #[serde(default)]
     native_token_foundries: HashMap<FoundryId, FoundryOutput>,
 }
 
@@ -255,6 +254,7 @@ fn serialize() {
         transactions: HashMap::new(),
         pending_transactions: HashSet::new(),
         incoming_transactions,
+        inaccessible_incoming_transactions: HashSet::new(),
         native_token_foundries: HashMap::new(),
     };
 
