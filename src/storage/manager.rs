@@ -17,11 +17,20 @@ use crate::{
 /// The storage used by the manager.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) enum ManagerStorage {
-    #[cfg(feature = "stronghold")]
-    /// Stronghold storage.
-    Stronghold,
     /// RocksDB storage.
+    #[cfg(feature = "rocksdb")]
     Rocksdb,
+    /// Storage backed by a Map in memory.
+    Memory,
+}
+
+impl Default for ManagerStorage {
+    fn default() -> ManagerStorage {
+        #[cfg(feature = "rocksdb")]
+        return ManagerStorage::Rocksdb;
+        #[cfg(not(feature = "rocksdb"))]
+        ManagerStorage::Memory
+    }
 }
 
 pub(crate) type StorageManagerHandle = Arc<Mutex<StorageManager>>;
@@ -63,8 +72,8 @@ pub(crate) async fn new_storage_manager(
     Ok(Arc::new(Mutex::new(storage_manager)))
 }
 
-#[derive(Debug)]
 /// Storage manager
+#[derive(Debug)]
 pub struct StorageManager {
     pub(crate) storage: Storage,
     // account indexes for accounts in the database

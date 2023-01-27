@@ -424,18 +424,13 @@ pub struct StorageDeposit {
     pub use_excess_if_low: Option<bool>,
 }
 
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, Serialize, Deserialize)]
 pub enum ReturnStrategy {
     // A storage deposit return unlock condition will be added with the required minimum storage deposit
+    #[default]
     Return,
     // The recipient address will get the additional amount to reach the minimum storage deposit gifted
     Gift,
-}
-
-impl Default for ReturnStrategy {
-    fn default() -> Self {
-        ReturnStrategy::Return
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]

@@ -88,6 +88,16 @@ jobs:
         with:
           toolchain: stable
           override: true
+
+      # This step can be removed as soon as official Windows arm64 builds are published:
+      # https://github.com/nodejs/build/issues/2450#issuecomment-705853342
+      - name: Install Windows arm64 node.lib
+        if: ${{ matrix.os == 'windows-2019' }}
+        run: |
+          $NodeVersion = (node --version) -replace '^.'
+          $NodeFallbackVersion = "16.19.0"
+          & .\script\download-node-lib-win-arm64.ps1 $NodeVersion $NodeFallbackVersion
+        working-directory: bindings/nodejs
       
       - name: Install LLVM and Clang (Windows) # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
         uses: KyleMayes/install-llvm-action@32c4866ebb71e0949e8833eb49beeebed48532bd
@@ -143,8 +153,12 @@ jobs:
         run: npm install typescript && npm ci
         working-directory: bindings/nodejs
       
-      - name: Build Node.js prebuild
-        run: npm run prebuild
+      - name: Build Node.js prebuild (x64)
+        run: npm run prebuild-x64
+        working-directory: bindings/nodejs
+
+      - name: Build Node.js prebuild (arm64)
+        run: npm run prebuild-arm64
         working-directory: bindings/nodejs
       
       - name: Upload prebuild to GitHub release

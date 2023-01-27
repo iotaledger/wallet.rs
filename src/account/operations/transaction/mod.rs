@@ -14,9 +14,12 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use iota_client::{
     api::{verify_semantic, PreparedTransactionData, SignedTransactionData},
-    api_types::response::{OutputMetadataResponse, OutputWithMetadataResponse},
+    api_types::response::OutputWithMetadataResponse,
     block::{
-        output::{dto::OutputDto, Output},
+        output::{
+            dto::{OutputDto, OutputMetadataDto},
+            Output,
+        },
         payload::transaction::{TransactionId, TransactionPayload},
         semantic::ConflictReason,
     },
@@ -154,7 +157,7 @@ impl AccountHandle {
             .inputs_data
             .into_iter()
             .map(|input| OutputWithMetadataResponse {
-                metadata: OutputMetadataResponse::from(&input.output_metadata),
+                metadata: OutputMetadataDto::from(&input.output_metadata),
                 output: OutputDto::from(&input.output),
             })
             .collect();

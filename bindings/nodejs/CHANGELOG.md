@@ -1,5 +1,28 @@
 # Changelog
 
+## \[2.0.3-rc.17]
+
+- Make the voting output mandatory in input selection for voting functions.
+  - [4f246a09](https://github.com/iotaledger/wallet.rs/commit/4f246a09408eb5a1b79dd4362f06ea74ef6591bc) Make the voting output mandatory in input selection for voting functions ([#1753](https://github.com/iotaledger/wallet.rs/pull/1753)) on 2023-01-25
+
+## \[2.0.3-rc.16]
+
+- Allow voting output in inputs if required.
+  - [f0e049a3](https://github.com/iotaledger/wallet.rs/commit/f0e049a3da2d2fbad2c8ae0639059366500b6f8a) Allow voting output in inputs if required ([#1748](https://github.com/iotaledger/wallet.rs/pull/1748)) on 2023-01-24
+
+## \[2.0.3-rc.15]
+
+- Return `Transaction` for incoming transactions.
+  Add inputs field to `Transaction`.
+  Remove `IncomingTransactionData`.
+  - [b74768e2](https://github.com/iotaledger/wallet.rs/commit/b74768e2b78c2bd227ab57bcd0014d0bfc37dc47) Add inputs to transaction to align incoming transactions ([#1722](https://github.com/iotaledger/wallet.rs/pull/1722)) on 2023-01-20
+- Renamed AccountSyncOptions to SyncOptions;
+  Added AccountSyncOptions, AliasSyncOptions and NftSyncOptions;
+  Replaced SyncOptions::syncAliasesAndNfts with SyncOptions::{account, alias, nft};
+  - [e5415470](https://github.com/iotaledger/wallet.rs/commit/e5415470647aaab6c01ff2a6ff03ec6697267de6) Change sync options ([#1737](https://github.com/iotaledger/wallet.rs/pull/1737)) on 2023-01-23
+- Use new Input Selection Algorithm.
+  - [480a88c2](https://github.com/iotaledger/wallet.rs/commit/480a88c2cf893ce638c08a782c6ba87bffc1d602) Use new Input Selection ([#1744](https://github.com/iotaledger/wallet.rs/pull/1744)) on 2023-01-24
+
 ## \[2.0.3-rc.14]
 
 - Moved clearListeners internally from a direct method call to using the messaging interface
