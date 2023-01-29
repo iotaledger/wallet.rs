@@ -3,10 +3,7 @@
 
 package org.iota;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.iota.api.WalletCommand;
 import org.iota.api.CustomGson;
 import org.iota.api.NativeApi;
@@ -196,7 +193,9 @@ public class Wallet extends NativeApi {
      * @param config A ClientConfig object that contains the options to set.
      */
     public void setClientOptions(ClientConfig config) throws WalletException {
-        callBaseApi(new WalletCommand("setClientOptions", CustomGson.get().toJsonTree(config)));
+        // Must use a new Gson instance to not serialize null values.
+        // CustomGson.get() would serialize null values and doesn't work here
+        callBaseApi(new WalletCommand("setClientOptions", new Gson().toJsonTree(config)));
     }
 
     /**

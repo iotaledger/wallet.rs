@@ -285,6 +285,16 @@ impl AccountHandle {
         }
 
         account.inaccessible_incoming_transactions.clear();
+
+        #[cfg(feature = "storage")]
+        {
+            log::debug!(
+                "[SYNC] storing account {} after updating it with new client options",
+                account.alias()
+            );
+            self.save(Some(&account)).await?;
+        }
+
         Ok(())
     }
 }
