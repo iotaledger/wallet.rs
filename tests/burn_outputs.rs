@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 use std::time::Duration;
 
 use iota_client::{
@@ -8,11 +10,9 @@ use iota_client::{
     request_funds_from_faucet,
 };
 use iota_wallet::{
-    account::{AccountHandle, SyncOptions},
+    account::AccountHandle,
     NativeTokenOptions, NftOptions, Result, U256,
 };
-
-mod common;
 
 #[ignore]
 #[tokio::test]
@@ -31,13 +31,9 @@ async fn mint_and_burn_nft() -> Result<()> {
     )
     .await?;
 
-    let mut sync_options = SyncOptions::default();
-    sync_options.account.nft_outputs = true;
-    sync_options.account.alias_outputs = true;
-
     // Wait for faucet transaction
     tokio::time::sleep(Duration::new(5, 0)).await;
-    account.sync(Some(sync_options.clone())).await?;
+    account.sync(None).await?;
 
     let nft_options = vec![NftOptions {
         address: Some(account_addresses[0].address().to_bech32()),
@@ -54,14 +50,14 @@ async fn mint_and_burn_nft() -> Result<()> {
     let nft_id = NftId::from(&output_id);
 
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options.clone())).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     let search = balance.nfts.iter().find(|&balance_nft_id| *balance_nft_id == nft_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_some());
 
     let _ = account.burn_nft(nft_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options.clone())).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     let search = balance.nfts.iter().find(|&balance_nft_id| *balance_nft_id == nft_id);
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
     assert!(search.is_none());
@@ -99,11 +95,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
 
     tokio::time::sleep(Duration::new(5, 0)).await;
 
-    let mut sync_options = SyncOptions::default();
-    sync_options.account.nft_outputs = true;
-    sync_options.account.alias_outputs = true;
-
-    account.sync(Some(sync_options.clone())).await?;
+    account.sync(None).await?;
 
     let circulating_supply = U256::from(60i32);
     let native_token_options = NativeTokenOptions {
@@ -116,7 +108,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
     let transaction = account.mint_native_token(native_token_options, None).await.unwrap();
 
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options.clone())).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
 
     let search = balance
         .native_tokens
@@ -133,7 +125,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
         .unwrap();
 
     tokio::time::sleep(Duration::new(10, 0)).await;
-    let balance = account.sync(Some(sync_options.clone())).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     let search = balance.native_tokens.iter().find(|token| {
@@ -149,7 +141,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
         .unwrap();
 
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options)).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     let search = balance
@@ -166,11 +158,7 @@ async fn mint_and_decrease_native_token_supply() -> Result<()> {
 }
 
 async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
-    let mut sync_options = SyncOptions::default();
-    sync_options.account.nft_outputs = true;
-    sync_options.account.alias_outputs = true;
-
-    let balance = account.sync(Some(sync_options.clone())).await?;
+    let balance = account.sync(None).await?;
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's burn the first foundry we can find, although we may not find the required alias output so maybe not a good
@@ -179,7 +167,7 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
 
     let _ = account.destroy_foundry(foundry_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options)).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     let search = balance
         .foundries
         .iter()
@@ -191,11 +179,7 @@ async fn destroy_foundry(account: &AccountHandle) -> Result<()> {
 }
 
 async fn destroy_alias(account: &AccountHandle) -> Result<()> {
-    let mut sync_options = SyncOptions::default();
-    sync_options.account.nft_outputs = true;
-    sync_options.account.alias_outputs = true;
-
-    let balance = account.sync(Some(sync_options.clone())).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     println!("account balance -> {}", serde_json::to_string(&balance).unwrap());
 
     // Let's destroy the first alias we can find
@@ -203,7 +187,7 @@ async fn destroy_alias(account: &AccountHandle) -> Result<()> {
     println!("alias_id -> {alias_id}");
     let _ = account.destroy_alias(alias_id, None).await.unwrap();
     tokio::time::sleep(Duration::new(5, 0)).await;
-    let balance = account.sync(Some(sync_options)).await.unwrap();
+    let balance = account.sync(None).await.unwrap();
     let search = balance
         .aliases
         .iter()

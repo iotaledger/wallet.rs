@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 use std::str::FromStr;
 
 use iota_client::block::address::Address;
@@ -9,8 +11,6 @@ use iota_wallet::{
     iota_client::block::output::{NativeToken, NftId, TokenId},
     Result, U256,
 };
-
-mod common;
 
 #[tokio::test]
 async fn output_preparation() -> Result<()> {

@@ -24,6 +24,7 @@ pub use constants::*;
 /// Returns:
 ///
 /// An AccountManager
+#[allow(dead_code)]
 pub(crate) async fn make_manager(
     storage_path: &str,
     mnemonic: Option<&str>,

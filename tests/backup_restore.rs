@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 use std::path::PathBuf;
 
 use iota_client::{
@@ -9,8 +11,6 @@ use iota_client::{
     secret::{mnemonic::MnemonicSecretManager, stronghold::StrongholdSecretManager, SecretManager},
 };
 use iota_wallet::{account_manager::AccountManager, ClientOptions, Result};
-
-mod common;
 
 #[tokio::test]
 #[cfg(all(feature = "stronghold", feature = "storage"))]

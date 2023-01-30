@@ -1,12 +1,12 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 // Tests for recovering accounts from mnemonic without a backup
 use std::time::Duration;
 
 use iota_wallet::Result;
-
-mod common;
 
 #[ignore]
 #[tokio::test]

@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+mod common;
+
 use iota_client::{
     constants::IOTA_COIN_TYPE,
     node_manager::node::{Node, NodeDto, Url},
@@ -10,8 +12,6 @@ use iota_wallet::{
     secret::{mnemonic::MnemonicSecretManager, SecretManager},
     ClientOptions, Result,
 };
-
-mod common;
 
 #[tokio::test]
 async fn update_client_options() -> Result<()> {
