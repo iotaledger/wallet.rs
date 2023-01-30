@@ -34,7 +34,7 @@ use crate::{
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AccountParticipationOverview {
     /// Output participations for events.
-    participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>>,
+    pub participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>>,
 }
 
 /// A participation event with the provided client nodes.
@@ -44,8 +44,8 @@ pub struct ParticipationEventWithNodes {
     pub id: ParticipationEventId,
     /// Information about a voting or staking event.
     pub data: ParticipationEventData,
-    /// Output participations for events.
-    nodes: Vec<Node>,
+    /// Provided client nodes for this event.
+    pub nodes: Vec<Node>,
 }
 
 impl AccountHandle {

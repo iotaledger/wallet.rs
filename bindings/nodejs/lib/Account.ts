@@ -414,7 +414,7 @@ export class Account {
 
     async getParticipationEvent(
         eventId: ParticipationEventId,
-    ): Promise<[ParticipationEventWithNodes]> {
+    ): Promise<ParticipationEventWithNodes> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -847,7 +847,7 @@ export class Account {
     async registerParticipationEvent(
         eventId: ParticipationEventId,
         nodes: Node[],
-    ): Promise<[ParticipationEventWithNodes]> {
+    ): Promise<ParticipationEventWithNodes> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

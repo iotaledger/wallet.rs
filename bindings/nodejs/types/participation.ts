@@ -23,7 +23,7 @@ export interface ParticipationEvent {
     data: ParticipationEventData;
 }
 
-export interface ParticipationEventWithNodes { 
+export interface ParticipationEventWithNodes {
     id: ParticipationEventId;
     data: ParticipationEventData;
     nodes: Node[];
