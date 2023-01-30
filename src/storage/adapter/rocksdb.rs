@@ -6,7 +6,7 @@ use std::{collections::HashMap, path::Path, sync::Arc};
 use rocksdb::{DBCompressionType, Options, WriteBatch, DB};
 use tokio::sync::Mutex;
 
-use super::StorageAdapter;
+use super::{storage_err, StorageAdapter};
 
 /// The storage id.
 pub const STORAGE_ID: &str = "RocksDB";
@@ -15,10 +15,6 @@ pub const STORAGE_ID: &str = "RocksDB";
 #[derive(Debug)]
 pub struct RocksdbStorageAdapter {
     db: Arc<Mutex<DB>>,
-}
-
-fn storage_err<E: ToString>(error: E) -> crate::Error {
-    crate::Error::Storage(error.to_string())
 }
 
 impl RocksdbStorageAdapter {
@@ -41,6 +37,7 @@ impl StorageAdapter for RocksdbStorageAdapter {
         STORAGE_ID
     }
 
+    /// Gets the record associated with the given key from the storage.
     async fn get(&self, key: &str) -> crate::Result<String> {
         match self.db.lock().await.get(key.as_bytes()) {
             Ok(Some(r)) => Ok(String::from_utf8_lossy(&r).to_string()),
@@ -49,6 +46,7 @@ impl StorageAdapter for RocksdbStorageAdapter {
         }
     }
 
+    /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()> {
         self.db
             .lock()
@@ -58,6 +56,7 @@ impl StorageAdapter for RocksdbStorageAdapter {
         Ok(())
     }
 
+    /// Batch writes records to the storage.
     async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()> {
         let mut batch = WriteBatch::default();
         for (key, value) in records {
@@ -67,6 +66,7 @@ impl StorageAdapter for RocksdbStorageAdapter {
         Ok(())
     }
 
+    /// Removes a record from the storage.
     async fn remove(&mut self, key: &str) -> crate::Result<()> {
         self.db.lock().await.delete(key.as_bytes()).map_err(storage_err)?;
         Ok(())

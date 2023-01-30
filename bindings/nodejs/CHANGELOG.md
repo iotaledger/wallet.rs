@@ -1,5 +1,15 @@
 # Changelog
 
+## \[2.0.3-rc.17]
+
+- Make the voting output mandatory in input selection for voting functions.
+  - [4f246a09](https://github.com/iotaledger/wallet.rs/commit/4f246a09408eb5a1b79dd4362f06ea74ef6591bc) Make the voting output mandatory in input selection for voting functions ([#1753](https://github.com/iotaledger/wallet.rs/pull/1753)) on 2023-01-25
+
+## \[2.0.3-rc.16]
+
+- Allow voting output in inputs if required.
+  - [f0e049a3](https://github.com/iotaledger/wallet.rs/commit/f0e049a3da2d2fbad2c8ae0639059366500b6f8a) Allow voting output in inputs if required ([#1748](https://github.com/iotaledger/wallet.rs/pull/1748)) on 2023-01-24
+
 ## \[2.0.3-rc.15]
 
 - Return `Transaction` for incoming transactions.

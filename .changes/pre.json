@@ -45,6 +45,8 @@
     ".changes/uint8array-replace-number-array.md.md",
     ".changes/use-new-isa.md",
     ".changes/voting-methods.md",
+    ".changes/voting-output-input-selection.md",
+    ".changes/voting-output-mandatory.md",
     ".changes/voting-power-not-available.md"
   ]
 }

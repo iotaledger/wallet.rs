@@ -12,12 +12,9 @@ use std::{
     time::{Instant, SystemTime, UNIX_EPOCH},
 };
 
-use iota_client::{
-    api_types::response::OutputMetadataResponse,
-    block::{
-        address::{Address, AliasAddress, NftAddress},
-        output::{FoundryId, Output, OutputId},
-    },
+use iota_client::block::{
+    address::{Address, AliasAddress, NftAddress},
+    output::{dto::OutputMetadataDto, FoundryId, Output, OutputId},
 };
 
 pub use self::options::SyncOptions;
@@ -71,7 +68,7 @@ impl AccountHandle {
 
         // Add the output response to the output ids, the output response is optional, because an output could be pruned
         // and then we can't get the metadata
-        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>> =
+        let mut spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>> =
             spent_or_not_synced_output_ids.into_iter().map(|o| (o, None)).collect();
         for output_metadata_response in spent_or_unsynced_output_metadata_responses {
             let output_id = output_metadata_response.output_id()?;

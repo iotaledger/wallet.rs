@@ -53,9 +53,17 @@ impl AccountHandle {
             .map(|address| *address.address.as_ref())
             .collect();
 
+        // Prevent consuming the voting output if not actually wanted
         #[cfg(feature = "participation")]
         if let Some(voting_output) = &voting_output {
-            forbidden_inputs.insert(voting_output.output_id);
+            let required = if let Some(ref mandatory_inputs) = mandatory_inputs {
+                mandatory_inputs.contains(&voting_output.output_id)
+            } else {
+                false
+            };
+            if !required {
+                forbidden_inputs.insert(voting_output.output_id);
+            }
         }
 
         // Filter inputs to not include inputs that require additional outputs for storage deposit return or could be
