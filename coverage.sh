@@ -42,3 +42,5 @@ cargo +nightly cov -- export ${BINARIES} \
 echo "Removing intermediate files..."
 find . -name "*.profraw" -type f -delete &> /dev/null
 find . -name "*.profdata" -type f -delete &> /dev/null
+
+exit 0
