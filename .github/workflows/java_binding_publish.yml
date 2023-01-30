@@ -81,7 +81,15 @@ jobs:
         working-directory: bindings/java/
         run: |
           chmod +x gradlew
-          ./gradlew jarWithoutNativeLibs
+          ./gradlew build jarWithoutNativeLibs
+
+      - name: Build JAR for aarch64-apple-darwin target
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        working-directory: bindings/java/
+        run: |
+          rustup target add aarch64-apple-darwin
+          ./gradlew build -PbuildTarget=aarch64-apple-darwin
 
       - name: Get filename for tag construction
         shell: bash
@@ -115,6 +123,13 @@ jobs:
           tag_name: ${{ steps.construct-tag.outputs.tag }}
           append_body: true
           prerelease: true
+
+      - name: Publish JAR to Maven Central
+        env:
+          ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_USERNAME }}
+          ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_PASSWORD }}
+          ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.ORG_GRADLE_PROJECT_BASE64_ENCODED_ASCII_ARMORED_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD }}
 
   release-android:
     name: Create Android releases
