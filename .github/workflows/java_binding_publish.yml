@@ -189,6 +189,13 @@ jobs:
         run: |
           cargo install cargo-ndk@2.12.4
 
+      - name: Echo paths
+        shell: bash
+        working-directory: bindings/java/
+        run: |
+          echo $ANDROID_NDK_HOME
+          find $ANDROID_NDK_HOME -name "libc++_shared.so"
+
       - name: Add the Android targets
         shell: bash
         working-directory: bindings/java/
