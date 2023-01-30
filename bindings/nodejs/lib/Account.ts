@@ -28,7 +28,6 @@ import type {
     Transaction,
     TransactionOptions,
     ParticipationOverview,
-    ParticipationEvent,
     ParticipationEventId,
     ParticipationEventStatus,
     ParticipationEventType,
