@@ -43,4 +43,5 @@ echo "Removing intermediate files..."
 find . -name "*.profraw" -type f -delete &> /dev/null
 find . -name "*.profdata" -type f -delete &> /dev/null
 
+echo "Coverage done"
 exit 0
