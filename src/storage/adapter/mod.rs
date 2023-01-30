@@ -19,12 +19,16 @@ pub trait StorageAdapter: std::fmt::Debug {
     fn id(&self) -> &'static str {
         "custom-adapter"
     }
+
     /// Gets the record associated with the given key from the storage.
     async fn get(&self, key: &str) -> crate::Result<String>;
+
     /// Saves or updates a record on the storage.
     async fn set(&mut self, key: &str, record: String) -> crate::Result<()>;
-    /// Batch write.
+
+    /// Batch writes records to the storage.
     async fn batch_set(&mut self, records: HashMap<String, String>) -> crate::Result<()>;
+
     /// Removes a record from the storage.
     async fn remove(&mut self, key: &str) -> crate::Result<()>;
 }

@@ -57,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SyncOptions::sync_aliases_and_nfts`;
 - `{TransactionOptions, TransactionOptionsDto}::allow_burning`;
 
+### Fixed
+
+- Stop endlessly requesting inaccessible incoming trasactions;
+- Update addresses when a client config with a different HRP is passed;
+
 ## 1.0.0-rc.4 - 2022-12-23
 
 ### Added

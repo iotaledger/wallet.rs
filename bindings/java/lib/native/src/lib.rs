@@ -73,7 +73,8 @@ macro_rules! env_assert {
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
     // This is a safety check to make sure that the JNIEnv is not in an exception state.
     env_assert!(env,());
-    jni_err_assert!(env, init_logger(string_from_jni!(env, command, ())), ());
+    let ret = init_logger(string_from_jni!(env, command, ()));
+    jni_err_assert!(env, ret, ());
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
