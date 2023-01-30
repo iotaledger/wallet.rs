@@ -967,8 +967,8 @@ impl WalletMessageHandler {
             #[cfg(feature = "participation")]
             AccountMethod::RegisterParticipationEvent { event_id, nodes } => {
                 convert_async_panics(|| async {
-                    let event = account_handle.register_participation_event(event_id, nodes).await?;
-                    Ok(Response::ParticipationEvent(Some(event)))
+                    let event_and_nodes = account_handle.register_participation_event(event_id, nodes).await?;
+                    Ok(Response::ParticipationEvent(Some(event_and_nodes)))
                 })
                 .await
             }
@@ -983,8 +983,8 @@ impl WalletMessageHandler {
             #[cfg(feature = "participation")]
             AccountMethod::GetParticipationEvent { event_id } => {
                 convert_async_panics(|| async {
-                    let event = account_handle.get_participation_event(event_id).await?.map(|(e, _)| e);
-                    Ok(Response::ParticipationEvent(event))
+                    let event_and_nodes = account_handle.get_participation_event(event_id).await?;
+                    Ok(Response::ParticipationEvent(event_and_nodes))
                 })
                 .await
             }

@@ -23,6 +23,12 @@ export interface ParticipationEvent {
     data: ParticipationEventData;
 }
 
+export interface ParticipationEventWithNodes {
+    id: ParticipationEventId;
+    data: ParticipationEventData;
+    nodes: Node[];
+}
+
 export type ParticipationEventId = string;
 
 export interface ParticipationEventStatus {

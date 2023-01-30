@@ -3,25 +3,22 @@
 
 use std::collections::HashMap;
 
-use iota_client::{
-    node_api::participation::types::{ParticipationEvent, ParticipationEventId},
-    node_manager::node::Node,
-};
+use iota_client::node_api::participation::types::ParticipationEventId;
 
 use super::manager::StorageManager;
-use crate::storage::constants::PARTICIPATION_EVENTS;
+use crate::{
+    account::operations::participation::ParticipationEventWithNodes, storage::constants::PARTICIPATION_EVENTS,
+};
 
 impl StorageManager {
     pub(crate) async fn insert_participation_event(
         &mut self,
         account_index: u32,
-        id: ParticipationEventId,
-        event: ParticipationEvent,
-        nodes: Vec<Node>,
+        event_with_nodes: ParticipationEventWithNodes,
     ) -> crate::Result<()> {
-        log::debug!("insert_participation_event {id}");
+        log::debug!("insert_participation_event {}", event_with_nodes.id);
 
-        let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> = match self
+        let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await
@@ -31,7 +28,7 @@ impl StorageManager {
             Err(err) => return Err(err),
         };
 
-        events.insert(id, (event, nodes));
+        events.insert(event_with_nodes.id, event_with_nodes);
 
         self.storage
             .set(&format!("{PARTICIPATION_EVENTS}{account_index}"), &events)
@@ -47,7 +44,7 @@ impl StorageManager {
     ) -> crate::Result<()> {
         log::debug!("remove_participation_event {id}");
 
-        let mut events: HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)> = match self
+        let mut events: HashMap<ParticipationEventId, ParticipationEventWithNodes> = match self
             .storage
             .get(&format!("{PARTICIPATION_EVENTS}{account_index}"))
             .await
@@ -69,7 +66,7 @@ impl StorageManager {
     pub(crate) async fn get_participation_events(
         &self,
         account_index: u32,
-    ) -> crate::Result<HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)>> {
+    ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
         log::debug!("get_participation_events");
 
         match self

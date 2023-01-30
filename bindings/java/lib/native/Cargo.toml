@@ -15,7 +15,7 @@ name = "iota_wallet"
 crate-type = [ "cdylib" ]
 
 [dependencies]
-iota-wallet = { path = "../../../..", features = [ "message_interface", "events"] }
+iota-wallet = { path = "../../../..", features = [ "message_interface", "events", "rocksdb"] }
 
 futures = { version = "0.3.25", default-features = false }
 jni = { version = "0.20.0", default-features = false }

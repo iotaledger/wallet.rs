@@ -17,8 +17,9 @@ use iota_client::{
 use serde::Serialize;
 #[cfg(feature = "participation")]
 use {
-    crate::account::operations::participation::AccountParticipationOverview,
-    iota_client::node_api::participation::types::{ParticipationEvent, ParticipationEventId, ParticipationEventStatus},
+    crate::account::operations::participation::{AccountParticipationOverview, ParticipationEventWithNodes},
+    iota_client::node_api::participation::types::{ParticipationEventId, ParticipationEventStatus},
+    std::collections::HashMap,
 };
 
 use crate::{
@@ -138,7 +139,7 @@ pub enum Response {
     /// [`GetParticipationEvent`](crate::message_interface::GetParticipationEvent)
     /// [`RegisterParticipationEvent`](crate::message_interface::RegisterParticipationEvent)
     #[cfg(feature = "participation")]
-    ParticipationEvent(Option<ParticipationEvent>),
+    ParticipationEvent(Option<ParticipationEventWithNodes>),
     /// Response for
     /// [`GetParticipationEventIds`](crate::message_interface::GetParticipationEventIds)
     #[cfg(feature = "participation")]
@@ -150,7 +151,7 @@ pub enum Response {
     /// Response for
     /// [`GetParticipationEvents`](crate::message_interface::GetParticipationEvents)
     #[cfg(feature = "participation")]
-    ParticipationEvents(Vec<ParticipationEvent>),
+    ParticipationEvents(HashMap<ParticipationEventId, ParticipationEventWithNodes>),
     /// Response for
     /// [`GetVotingPower`](crate::message_interface::AccountMethod::GetVotingPower)
     #[cfg(feature = "participation")]
