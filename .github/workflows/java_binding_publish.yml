@@ -226,13 +226,13 @@ jobs:
 
       - name: Copy libc++_shared.so to the correct location
         shell: bash
-        working-directory: bindings/java/
+        working-directory: bindings/java/lib/native/cargo-ndk/jniLibs
         run: |
           echo $ANDROID_NDK_HOME
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so cargo-ndk/jniLibs/arm64-v8a/libc++_shared.so
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so cargo-ndk/jniLibs/armeabi-v7a/libc++_shared.so
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so cargo-ndk/jniLibs/x86_64/libc++_shared.so
-          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so cargo-ndk/jniLibs/x86/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so arm64-v8a/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/arm-linux-androideabi/libc++_shared.so armeabi-v7a/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/x86_64-linux-android/libc++_shared.so x86_64/libc++_shared.so
+          cp $ANDROID_NDK_HOME/toolchains/llvm/prebuilt/darwin-x86_64/sysroot/usr/lib/i686-linux-android/libc++_shared.so x86/libc++_shared.so
           
       - name: Archive Release
         uses: thedoctor0/zip-release@0.7.0
