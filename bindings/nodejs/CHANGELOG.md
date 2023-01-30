@@ -1,5 +1,17 @@
 # Changelog
 
+## \[2.0.3-rc.18]
+
+- Return new `ParticipationEventWithNodes` interface instead of `ParticipationEvent, Node[]`.
+  This was also changed in the db, old events will not be loaded.
+  - [db6a8363](https://github.com/iotaledger/wallet.rs/commit/db6a836310d6afb74807a9caf5182cf682857e49) Update participation events methods to return also the nodes ([#1775](https://github.com/iotaledger/wallet.rs/pull/1775)) on 2023-01-30
+- Change `AccountSyncOptions` default values to all true.
+  - [7ce31c65](https://github.com/iotaledger/wallet.rs/commit/7ce31c652f73cca77acba2359c515a2059afe34d) Change AccountSyncOptions default values to all true ([#1763](https://github.com/iotaledger/wallet.rs/pull/1763)) on 2023-01-26
+- Stop endlessly requesting inaccessible incoming trasactions.
+  - [88a39a06](https://github.com/iotaledger/wallet.rs/commit/88a39a0639e92f866f0e9da6bb835c69041e12c7) Stop endlessly requesting inaccessible incoming transactions ([#1756](https://github.com/iotaledger/wallet.rs/pull/1756)) on 2023-01-27
+- Update getParticipationEvents(), getParticipationEvent() and registerParticipationEvent() to return also the nodes.
+  - [db6a8363](https://github.com/iotaledger/wallet.rs/commit/db6a836310d6afb74807a9caf5182cf682857e49) Update participation events methods to return also the nodes ([#1775](https://github.com/iotaledger/wallet.rs/pull/1775)) on 2023-01-30
+
 ## \[2.0.3-rc.17]
 
 - Make the voting output mandatory in input selection for voting functions.

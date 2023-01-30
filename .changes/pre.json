@@ -1,8 +1,10 @@
 {
   "tag": "rc",
   "changes": [
+    ".changes/ParticipationEventWithNodes.md",
     ".changes/account-bech32-hrp.md",
     ".changes/account-recovery.md",
+    ".changes/account-sync-options-default.md",
     ".changes/align-transactions.md",
     ".changes/clearlistener-move.md",
     ".changes/downgrade-rocksb.md",
@@ -17,6 +19,7 @@
     ".changes/getParticipationOverview.md",
     ".changes/improve-consolidation-logic.md",
     ".changes/improve-output-type.md",
+    ".changes/incoming-txs-requests.md",
     ".changes/incomingtransactions-type.md",
     ".changes/move-participation-functions.md",
     ".changes/nft-options-features.md",
@@ -28,6 +31,7 @@
     ".changes/participation-on-account-manager.md",
     ".changes/participation-rename.md",
     ".changes/participation-types.md",
+    ".changes/participationEvents.md",
     ".changes/prebuild.md",
     ".changes/private-account-meta.md",
     ".changes/query-all-participation-events-from-node.md",
