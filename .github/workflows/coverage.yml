@@ -6,6 +6,7 @@ on:
       - main
       - dev
       - develop
+      - feat/coverall
 
 concurrency: 
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
