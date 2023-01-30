@@ -130,6 +130,12 @@ jobs:
           ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPE_PASSWORD }}
           ORG_GRADLE_PROJECT_base64EncodedAsciiArmoredSigningKey: ${{ secrets.ORG_GRADLE_PROJECT_BASE64_ENCODED_ASCII_ARMORED_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNING_PASSWORD }}
+        working-directory: bindings/java/
+        run: |
+          ./gradlew publishToSonatype
+          if [ "$RUNNER_OS" == "macOS" ];
+          then ./gradlew publishToSonatype -PbuildTarget=aarch64-apple-darwin
+          fi
 
   release-android:
     name: Create Android releases
