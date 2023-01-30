@@ -9,10 +9,7 @@ use iota_client::{
     block::output::{NftId, OutputId},
     request_funds_from_faucet,
 };
-use iota_wallet::{
-    account::AccountHandle,
-    NativeTokenOptions, NftOptions, Result, U256,
-};
+use iota_wallet::{account::AccountHandle, NativeTokenOptions, NftOptions, Result, U256};
 
 #[ignore]
 #[tokio::test]

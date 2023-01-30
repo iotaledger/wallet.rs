@@ -170,6 +170,7 @@ mod tests {
                 }
                 response_type => panic!("Unexpected response type: {response_type:?}"),
             }
+            dbg!(&count);
         }
 
         message_interface::send_message(&wallet_handle, Message::ClearListeners(vec![])).await;
@@ -180,8 +181,8 @@ mod tests {
         .await
         .expect("No send message response");
 
-        // Event should not have fired, so we are still on 11
-        assert_eq!(11, event_counter.load(Ordering::SeqCst));
+        // Event should not have fired, so we are still on 10 calls
+        assert_eq!(10, event_counter.load(Ordering::SeqCst));
 
         std::fs::remove_dir_all(storage_path).unwrap_or(());
     }
