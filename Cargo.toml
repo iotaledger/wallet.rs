@@ -35,7 +35,7 @@ zeroize = { version = "1.5.7", default-features = false, features = [ "zeroize_d
 gloo-timers = { version = "0.2.6", default-features = false, features = [ "futures" ] }
 
 [dev-dependencies]
-dotenv = { version =  "0.15.0", default-features = false }
+dotenv = { version = "0.15.0", default-features = false }
 
 [features]
 # only default for now, should later be replaced by stronghold since stronghold is more secure

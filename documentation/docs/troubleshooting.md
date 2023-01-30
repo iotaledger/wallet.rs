@@ -1,5 +1,5 @@
 ---
-description: Troubleshooting the IOTA Wallet Library.  
+description: Troubleshooting the IOTA Wallet Library.
 image: /img/logo/wallet_light.png
 keywords:
 - discussion

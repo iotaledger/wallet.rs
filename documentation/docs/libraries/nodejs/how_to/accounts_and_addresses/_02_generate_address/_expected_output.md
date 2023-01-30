@@ -22,6 +22,6 @@ New address: {
   internal: false,
   used: false
 }
-Fill your address with the Faucet:  https://faucet.testnet.shimmer.network
+Fill your address with the Faucet: https://faucet.testnet.shimmer.network
 
 ```
