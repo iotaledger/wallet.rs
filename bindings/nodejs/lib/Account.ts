@@ -32,6 +32,7 @@ import type {
     ParticipationEventId,
     ParticipationEventStatus,
     ParticipationEventType,
+    ParticipationEventWithNodes,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -413,7 +414,7 @@ export class Account {
 
     async getParticipationEvent(
         eventId: ParticipationEventId,
-    ): Promise<[ParticipationEvent, Node[]]> {
+    ): Promise<[ParticipationEventWithNodes]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -442,7 +443,7 @@ export class Account {
     }
 
     async getParticipationEvents(): Promise<{
-        [eventId: ParticipationEventId]: [ParticipationEvent[], Node[]];
+        [eventId: ParticipationEventId]: ParticipationEventWithNodes;
     }> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
@@ -846,7 +847,7 @@ export class Account {
     async registerParticipationEvent(
         eventId: ParticipationEventId,
         nodes: Node[],
-    ): Promise<[ParticipationEvent, Node[]]> {
+    ): Promise<[ParticipationEventWithNodes]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

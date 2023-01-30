@@ -4,14 +4,12 @@
 use std::collections::HashMap;
 
 use iota_client::{
-    node_api::participation::types::{
-        ParticipationEvent, ParticipationEventId, ParticipationEventStatus, ParticipationEventType,
-    },
+    node_api::participation::types::{ParticipationEventId, ParticipationEventStatus, ParticipationEventType},
     node_manager::node::Node,
     Client,
 };
 
-use crate::account::AccountHandle;
+use crate::account::{operations::participation::ParticipationEventWithNodes, AccountHandle};
 
 impl AccountHandle {
     /// Stores participation information locally and returns the event.
@@ -21,7 +19,7 @@ impl AccountHandle {
         &self,
         id: ParticipationEventId,
         nodes: Vec<Node>,
-    ) -> crate::Result<(ParticipationEvent, Vec<Node>)> {
+    ) -> crate::Result<ParticipationEventWithNodes> {
         let mut client_builder = Client::builder().with_ignore_node_health();
         for node in &nodes {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
@@ -30,15 +28,19 @@ impl AccountHandle {
 
         let event_data = client.event(&id).await?;
 
-        let event = ParticipationEvent { id, data: event_data };
+        let event_with_nodes = ParticipationEventWithNodes {
+            id,
+            data: event_data,
+            nodes,
+        };
 
         self.storage_manager
             .lock()
             .await
-            .insert_participation_event(self.read().await.index, id, event.clone(), nodes.clone())
+            .insert_participation_event(self.read().await.index, event_with_nodes.clone())
             .await?;
 
-        Ok((event, nodes))
+        Ok(event_with_nodes)
     }
 
     /// Removes a previously registered participation event from local storage.
@@ -55,7 +57,7 @@ impl AccountHandle {
     pub async fn get_participation_event(
         &self,
         id: ParticipationEventId,
-    ) -> crate::Result<Option<(ParticipationEvent, Vec<Node>)>> {
+    ) -> crate::Result<Option<ParticipationEventWithNodes>> {
         Ok(self
             .storage_manager
             .lock()
@@ -69,7 +71,7 @@ impl AccountHandle {
     /// Retrieves information for all registered participation events.
     pub async fn get_participation_events(
         &self,
-    ) -> crate::Result<HashMap<ParticipationEventId, (ParticipationEvent, Vec<Node>)>> {
+    ) -> crate::Result<HashMap<ParticipationEventId, ParticipationEventWithNodes>> {
         self.storage_manager
             .lock()
             .await

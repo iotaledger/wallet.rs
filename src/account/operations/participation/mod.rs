@@ -18,8 +18,9 @@ use iota_client::{
     block::output::{unlock_condition::UnlockCondition, Output, OutputId},
     node_api::participation::{
         responses::TrackedParticipation,
-        types::{participation::Participations, ParticipationEventId, PARTICIPATION_TAG},
+        types::{participation::Participations, ParticipationEventData, ParticipationEventId, PARTICIPATION_TAG},
     },
+    node_manager::node::Node,
     Client,
 };
 use serde::{Deserialize, Serialize};
@@ -34,6 +35,17 @@ use crate::{
 pub struct AccountParticipationOverview {
     /// Output participations for events.
     participations: HashMap<ParticipationEventId, HashMap<OutputId, TrackedParticipation>>,
+}
+
+/// A participation event with the provided client nodes.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ParticipationEventWithNodes {
+    /// The event id.
+    pub id: ParticipationEventId,
+    /// Information about a voting or staking event.
+    pub data: ParticipationEventData,
+    /// Output participations for events.
+    nodes: Vec<Node>,
 }
 
 impl AccountHandle {
@@ -126,13 +138,13 @@ impl AccountHandle {
             .get_participation_events(self.read().await.index)
             .await?;
 
-        let event = match events.get(id) {
-            Some(event) => event,
+        let event_with_nodes = match events.get(id) {
+            Some(event_with_nodes) => event_with_nodes,
             None => return Ok(self.client().clone()),
         };
 
         let mut client_builder = Client::builder().with_ignore_node_health();
-        for node in &event.1 {
+        for node in &event_with_nodes.nodes {
             client_builder = client_builder.with_node_auth(node.url.as_str(), node.auth.clone())?;
         }
 
@@ -155,8 +167,8 @@ impl AccountHandle {
 
         // TODO try to remove this clone
         for participation in participations.participations.clone().iter() {
-            if let Some((event, _nodes)) = events.get(&participation.event_id) {
-                if event.data.milestone_index_end() < &latest_milestone_index {
+            if let Some(event_with_nodes) = events.get(&participation.event_id) {
+                if event_with_nodes.data.milestone_index_end() < &latest_milestone_index {
                     participations.remove(&participation.event_id);
                 }
             } else {
