@@ -58,7 +58,7 @@ jobs:
           sudo apt-get install libudev-dev libusb-1.0-0-dev
           DOCFLAGS="--cfg docsrs" cargo +stable doc --all-features --document-private-items --no-deps --release
           mkdir -p ./documentation/build/rust
-          cp -r target/doc  ./documentation/build/rust
+          cp -r target/doc ./documentation/build/rust
       - name: Release to GitHub Pages
         uses: iotaledger/actions-gh-pages@v3
         with:

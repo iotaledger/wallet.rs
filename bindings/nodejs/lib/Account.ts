@@ -5,7 +5,7 @@ import type { MessageHandler } from './MessageHandler';
 import type {
     AccountBalance,
     AccountMetadata,
-    AccountSyncOptions,
+    SyncOptions,
     AccountMeta,
     Address,
     AddressWithAmount,
@@ -20,14 +20,18 @@ import type {
     MintTokenTransaction,
     NativeTokenOptions,
     NftOptions,
+    Node,
     OutputData,
     OutputOptions,
     OutputsToClaim,
     PreparedTransactionData,
     Transaction,
     TransactionOptions,
-    IncomingTransactionData,
     ParticipationOverview,
+    ParticipationEventId,
+    ParticipationEventStatus,
+    ParticipationEventType,
+    ParticipationEventWithNodes,
 } from '../types';
 import type { SignedTransactionEssence } from '../types/signedTransactionEssence';
 import type {
@@ -273,6 +277,21 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
+    async deregisterParticipationEvent(
+        eventId: ParticipationEventId,
+    ): Promise<void> {
+        const resp = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'deregisterParticipationEvent',
+                data: {
+                    eventId,
+                },
+            },
+        );
+        return JSON.parse(resp).payload;
+    }
+
     /**
      * Destroy an alias output. Outputs controlled by it will be sweeped before if they don't have a
      * storage deposit return, timelock or expiration unlock condition. The amount and possible native tokens will be
@@ -392,6 +411,63 @@ export class Account {
         return JSON.parse(response).payload;
     }
 
+    async getParticipationEvent(
+        eventId: ParticipationEventId,
+    ): Promise<ParticipationEventWithNodes> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationEvent',
+                data: {
+                    eventId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEventIds(
+        eventType?: ParticipationEventType,
+    ): Promise<ParticipationEventId[]> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationEventIds',
+                data: {
+                    eventType,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEvents(): Promise<{
+        [eventId: ParticipationEventId]: ParticipationEventWithNodes;
+    }> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationEvents',
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async getParticipationEventStatus(
+        eventId: ParticipationEventId,
+    ): Promise<ParticipationEventStatus> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'getParticipationEventStatus',
+                data: {
+                    eventId,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
     /**
      * Get a `FoundryOutput` by native token ID. It will try to get the foundry from
      * the account, if it isn't in the account it will try to get it from the node.
@@ -457,7 +533,7 @@ export class Account {
      */
     async getIncomingTransactionData(
         transactionId: string,
-    ): Promise<IncomingTransactionData> {
+    ): Promise<Transaction> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -535,7 +611,7 @@ export class Account {
      * List all incoming transactions of the account.
      * @returns The incoming transactions with their inputs.
      */
-    async incomingTransactions(): Promise<[string, IncomingTransactionData][]> {
+    async incomingTransactions(): Promise<[string, Transaction][]> {
         const response = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -695,7 +771,7 @@ export class Account {
      * below the minimum required storage deposit, by default the remaining
      * amount will automatically be added with a `StorageDepositReturn` `UnlockCondition`,
      * when setting the `ReturnStrategy` to `gift`, the full minimum required
-     * storage deposit will be sent  to the recipient. When the assets contain
+     * storage deposit will be sent to the recipient. When the assets contain
      * an nft id, the data from the existing `NftOutput` will be used, just with
      * the address unlock conditions replaced.
      * @param transactionOptions The options to define a `RemainderValueStrategy`
@@ -761,6 +837,23 @@ export class Account {
                 data: {
                     outputs,
                     options,
+                },
+            },
+        );
+        return JSON.parse(response).payload;
+    }
+
+    async registerParticipationEvent(
+        eventId: ParticipationEventId,
+        nodes: Node[],
+    ): Promise<ParticipationEventWithNodes> {
+        const response = await this.messageHandler.callAccountMethod(
+            this.meta.index,
+            {
+                name: 'registerParticipationEvent',
+                data: {
+                    eventId,
+                    nodes,
                 },
             },
         );
@@ -987,7 +1080,7 @@ export class Account {
      * @param options Optional synchronization options.
      * @returns The account balance.
      */
-    async sync(options?: AccountSyncOptions): Promise<AccountBalance> {
+    async sync(options?: SyncOptions): Promise<AccountBalance> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -1000,7 +1093,10 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async vote(eventId?: string, answers?: number[]): Promise<Transaction> {
+    async vote(
+        eventId?: ParticipationEventId,
+        answers?: number[],
+    ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {
@@ -1014,7 +1110,9 @@ export class Account {
         return JSON.parse(resp).payload;
     }
 
-    async stopParticipating(eventId: string): Promise<Transaction> {
+    async stopParticipating(
+        eventId: ParticipationEventId,
+    ): Promise<Transaction> {
         const resp = await this.messageHandler.callAccountMethod(
             this.meta.index,
             {

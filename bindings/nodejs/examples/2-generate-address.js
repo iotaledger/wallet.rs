@@ -18,7 +18,7 @@ async function run() {
         // console.log('New addresses:', addresses);
 
         // Use the Faucet to send testnet tokens to your address:
-        console.log("Fill your address with the Faucet:  https://faucet.testnet.shimmer.network")
+        console.log("Fill your address with the Faucet: https://faucet.testnet.shimmer.network")
     } catch (error) {
         console.log('Error: ', error);
     }

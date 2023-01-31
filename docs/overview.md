@@ -45,4 +45,4 @@ We want to provide an easy interface for [Firefly](https://github.com/iotaledger
 
 With cargo watch `cargo watch -x "doc --document-private-items --no-deps --all-features"`.
 
-Build the rust docs with `cargo doc --document-private-items --no-deps --open --all-features --release` and copy the result to the docs folder with `cp target/doc/*.*  ./docs` and `cp -r target/doc/iota_wallet  ./docs/iota_wallet`.
+Build the rust docs with `cargo doc --document-private-items --no-deps --open --all-features --release` and copy the result to the docs folder with `cp target/doc/*.* ./docs` and `cp -r target/doc/iota_wallet ./docs/iota_wallet`.

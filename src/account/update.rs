@@ -3,7 +3,10 @@
 
 use std::collections::HashMap;
 
-use iota_client::{api_types::response::OutputMetadataResponse, block::output::OutputId, Client};
+use iota_client::{
+    block::output::{dto::OutputMetadataDto, OutputId},
+    Client,
+};
 
 use crate::account::{
     handle::AccountHandle,
@@ -15,6 +18,7 @@ use crate::account::{
 use crate::{
     account::types::OutputDataDto,
     events::types::{NewOutputEvent, SpentOutputEvent, TransactionInclusionEvent, WalletEvent},
+    iota_client::api_types::response::OutputWithMetadataResponse,
     iota_client::block::payload::transaction::dto::TransactionPayloadDto,
 };
 
@@ -33,7 +37,7 @@ impl AccountHandle {
         &self,
         addresses_with_unspent_outputs: Vec<AddressWithUnspentOutputs>,
         unspent_outputs: Vec<OutputData>,
-        spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataResponse>>,
+        spent_or_unsynced_output_metadata_map: HashMap<OutputId, Option<OutputMetadataDto>>,
         options: &SyncOptions,
     ) -> crate::Result<()> {
         log::debug!("[SYNC] Update account with new synced transactions");
@@ -147,10 +151,14 @@ impl AccountHandle {
                         account_index,
                         WalletEvent::NewOutput(Box::new(NewOutputEvent {
                             output: OutputDataDto::from(&output_data),
-                            transaction: transaction
-                                .as_ref()
-                                .map(|(tx, _inputs)| TransactionPayloadDto::from(tx)),
-                            transaction_inputs: transaction.as_ref().map(|(_tx, inputs)| inputs).cloned(),
+                            transaction: transaction.as_ref().map(|tx| TransactionPayloadDto::from(&tx.payload)),
+                            transaction_inputs: transaction.as_ref().map(|tx| {
+                                tx.inputs
+                                    .clone()
+                                    .into_iter()
+                                    .map(OutputWithMetadataResponse::from)
+                                    .collect()
+                            }),
                         })),
                     );
                 }
@@ -260,6 +268,7 @@ impl AccountHandle {
     }
 
     // Should only be called from the AccountManager so all accounts are on the same state
+    // Will update the addresses with a possible new Bech32 HRP and clear the inaccessible_incoming_transactions.
     pub(crate) async fn update_account_with_new_client(&mut self, client: Client) -> crate::Result<()> {
         self.client = client;
         let bech32_hrp = self.client.get_bech32_hrp().await?;
@@ -274,6 +283,18 @@ impl AccountHandle {
         for address in &mut account.internal_addresses {
             address.address.bech32_hrp = bech32_hrp.clone();
         }
+
+        account.inaccessible_incoming_transactions.clear();
+
+        #[cfg(feature = "storage")]
+        {
+            log::debug!(
+                "[SYNC] storing account {} after updating it with new client options",
+                account.alias()
+            );
+            self.save(Some(&account)).await?;
+        }
+
         Ok(())
     }
 }

@@ -15,7 +15,7 @@ export type AccountId = number | string;
 
 /** The balance of an account */
 export interface AccountBalance {
-    /**  The balance of the base coin */
+    /** The balance of the base coin */
     baseCoin: BaseCoinBalance;
     /** The required storage deposit for the outputs */
     requiredStorageDeposit: RequiredStorageDeposit;
@@ -59,7 +59,7 @@ export interface NativeTokenBalance {
 }
 
 /** Sync options for an account */
-export interface AccountSyncOptions {
+export interface SyncOptions {
     /**
      * Specific Bech32 encoded addresses of the account to sync, if addresses are provided,
      * then `address_start_index` will be ignored
@@ -84,15 +84,40 @@ export interface AccountSyncOptions {
     /// Try to sync transactions from incoming outputs with their inputs. Some data may not be obtained if it has been
     /// pruned.
     syncIncomingTransactions?: boolean;
-    /** Checks pending transactions and promotes/reattaches them if necessary.  Default: true. */
+    /** Checks pending transactions and promotes/reattaches them if necessary. Default: true. */
     syncPendingTransactions?: boolean;
-    /** Specifies if only basic outputs should be synced or also alias and nft outputs. Default: true. */
-    syncAliasesAndNfts?: boolean;
-    /** Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
-     * `syncAliasesAndNfts`. Default: false. */
+    /** Specifies what outputs should be synced for the ed25519 addresses from the account. */
+    account?: AccountSyncOptions;
+    /** Specifies what outputs should be synced for the address of an alias output. */
+    alias?: AliasSyncOptions;
+    /** Specifies what outputs should be synced for the address of an nft output. */
+    nft?: NftSyncOptions;
+    /** Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite `account`, `alias` and `nft` options. Default: false. */
     syncOnlyMostBasicOutputs?: boolean;
     /** Sync native token foundries, so their metadata can be returned in the balance. Default: false. */
     syncNativeTokenFoundries?: boolean;
+}
+
+/** Specifies what outputs should be synced for the ed25519 addresses from the account. */
+export interface AccountSyncOptions {
+    basicOutputs?: boolean;
+    aliasOutputs?: boolean;
+    nftOutputs?: boolean;
+}
+
+/** Specifies what outputs should be synced for the address of an alias output. */
+export interface AliasSyncOptions {
+    basicOutputs?: boolean;
+    aliasOutputs?: boolean;
+    nftOutputs?: boolean;
+    foundryOutputs?: boolean;
+}
+
+/** Specifies what outputs should be synced for the address of an nft output. */
+export interface NftSyncOptions {
+    basicOutputs?: boolean;
+    aliasOutputs?: boolean;
+    nftOutputs?: boolean;
 }
 
 /** The account object */

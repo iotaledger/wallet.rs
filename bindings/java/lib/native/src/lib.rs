@@ -3,10 +3,9 @@
 
 use std::{convert::TryFrom, sync::Mutex};
 
-use fern_logger::{logger_init, LoggerConfig, LoggerOutputConfigBuilder};
 use iota_wallet::{
     events::types::{Event, WalletEventType},
-    message_interface::{ManagerOptions, Message, WalletMessageHandler},
+    message_interface::{create_message_handler, init_logger, send_message, ManagerOptions, Message, WalletMessageHandler},
 };
 use jni::{
     objects::{GlobalRef, JClass, JObject, JStaticMethodID, JString, JValue},
@@ -14,11 +13,10 @@ use jni::{
     sys::{jclass, jobject, jobjectArray, jstring},
     JNIEnv, JavaVM,
 };
-use lazy_static::lazy_static;
 use once_cell::sync::OnceCell;
-use tokio::{runtime::Runtime, sync::mpsc::unbounded_channel};
+use tokio::runtime::Runtime;
 
-lazy_static! {
+lazy_static::lazy_static! {
     static ref MESSAGE_HANDLER: Mutex<Option<WalletMessageHandler>> = Mutex::new(None);
 
     // Cache VM ref for callback
@@ -75,13 +73,8 @@ macro_rules! env_assert {
 pub extern "system" fn Java_org_iota_api_NativeApi_initLogger(env: JNIEnv, _class: JClass, command: JString) {
     // This is a safety check to make sure that the JNIEnv is not in an exception state.
     env_assert!(env,());
-
-    let config_builder = string_from_jni!(env, command, ());
-
-    let output_config: LoggerOutputConfigBuilder =
-        serde_json::from_str(&config_builder).expect("invalid logger config");
-    let config = LoggerConfig::build().with_output(output_config).finish();
-    logger_init(config).expect("failed to init logger");
+    let ret = init_logger(string_from_jni!(env, command, ()));
+    jni_err_assert!(env, ret, ());
 }
 
 // This keeps rust from "mangling" the name and making it unique for this crate.
@@ -100,7 +93,7 @@ pub extern "system" fn Java_org_iota_api_NativeApi_createMessageHandler(
     if let Ok(mut message_handler_store) = MESSAGE_HANDLER.lock() {
         message_handler_store.replace(jni_err_assert!(
             env,
-            crate::block_on(iota_wallet::message_interface::create_message_handler(Some(
+            crate::block_on(create_message_handler(Some(
                 jni_from_json_make!(env, config, ManagerOptions, ()),
             ))),
             ()
@@ -149,13 +142,11 @@ pub extern "system" fn Java_org_iota_api_NativeApi_sendMessage(
         Ok(message_handler_store) => {
             match message_handler_store.as_ref() {
                 Some(message_handler) => {
-                    let (sender, mut receiver) = unbounded_channel();
-
-                    crate::block_on(message_handler.handle(message, sender));
-                    let response = crate::block_on(receiver.recv());
-
-                    // We assume response is valid json from our own client
-                    return make_jni_string(&env, serde_json::to_string(&response).unwrap());
+                    match crate::block_on(send_message(message_handler, message)) {
+                        // We assume response is valid json from our own client
+                        Some(res) => return make_jni_string(&env, serde_json::to_string(&res).unwrap()),
+                        None => throw_nullpointer(&env, "No send message response"),
+                    }
                 }
                 _ => throw_nullpointer(&env, "Wallet not initialised."),
             }
@@ -182,7 +173,7 @@ pub unsafe extern "system" fn Java_org_iota_api_NativeApi_listen(
 
     let string_count = jni_err_assert!(env, env.get_array_length(events), std::ptr::null_mut());
 
-    // Save cast as we dont have that many events
+    // Safe cast as we dont have that many events
     let mut events_list: Vec<WalletEventType> = Vec::with_capacity(string_count as usize);
 
     for i in 0..string_count {

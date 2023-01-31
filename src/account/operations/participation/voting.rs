@@ -11,7 +11,7 @@ use iota_client::{
     },
     node_api::participation::types::{
         participation::{Participation, Participations},
-        EventId, PARTICIPATION_TAG,
+        ParticipationEventId, PARTICIPATION_TAG,
     },
 };
 
@@ -34,7 +34,7 @@ impl AccountHandle {
     ///
     /// This is an add OR update function, not just add.
     /// This should use regular client options, NOT specific node for the event.
-    pub async fn vote(&self, event_id: Option<EventId>, answers: Option<Vec<u8>>) -> Result<Transaction> {
+    pub async fn vote(&self, event_id: Option<ParticipationEventId>, answers: Option<Vec<u8>>) -> Result<Transaction> {
         if let Some(event_id) = event_id {
             let event_status = self.get_participation_event_status(&event_id).await?;
 
@@ -97,6 +97,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,
@@ -115,7 +116,7 @@ impl AccountHandle {
     /// TODO: is it really doing that ?
     /// If multiple outputs contain metadata for this event, removes all of them.
     /// If NOT already voting for this event, throws an error (e.g. output with this event ID not found).
-    pub async fn stop_participating(&self, event_id: EventId) -> Result<Transaction> {
+    pub async fn stop_participating(&self, event_id: ParticipationEventId) -> Result<Transaction> {
         let voting_output = self
             .get_voting_output()
             .await?
@@ -166,6 +167,7 @@ impl AccountHandle {
             Some(TransactionOptions {
                 // Only use previous voting output as input.
                 custom_inputs: Some(vec![voting_output.output_id]),
+                mandatory_inputs: Some(vec![voting_output.output_id]),
                 tagged_data_payload: Some(TaggedDataPayload::new(
                     PARTICIPATION_TAG.as_bytes().to_vec(),
                     participation_bytes,

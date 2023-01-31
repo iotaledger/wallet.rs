@@ -63,10 +63,6 @@ export class MessageHandler {
         return listen(eventTypes, callback, this.messageHandler);
     }
 
-    clearListeners(eventTypes: EventType[]): void {
-        return clearListeners(eventTypes, this.messageHandler);
-    }
-
     destroy(): void {
         return destroy(this.messageHandler);
     }

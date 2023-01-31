@@ -126,7 +126,7 @@ class Account:
             'burnNativeToken', {
                 'tokenId': token_id,
                 'burnAmount': burn_amount,
-                'options':  options
+                'options': options
             }
         )
 
@@ -140,7 +140,7 @@ class Account:
         return self._call_account_method(
             'burnNft', {
                 'nftId': nft_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -152,7 +152,7 @@ class Account:
         return self._call_account_method(
             'consolidateOutputs', {
                 'force': force,
-                'outputConsolidationThreshold':  output_consolidation_threshold
+                'outputConsolidationThreshold': output_consolidation_threshold
             }
         )
 
@@ -164,7 +164,7 @@ class Account:
         return self._call_account_method(
             'createAliasOutput', {
                 'aliasOutputOptions': alias_output_options,
-                'options':  options
+                'options': options
             }
         )
 
@@ -178,7 +178,7 @@ class Account:
         return self._call_account_method(
             'destroyAlias', {
                 'aliasId': alias_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -191,7 +191,7 @@ class Account:
         return self._call_account_method(
             'destroyFoundry', {
                 'foundryId': foundry_id,
-                'options':  options
+                'options': options
             }
         )
 
@@ -296,7 +296,7 @@ class Account:
             'decreaseNativeTokenSupply', {
                 'tokenId': token_id,
                 'meltAmount': melt_amount,
-                'options':  options
+                'options': options
             }
         )
 
@@ -380,7 +380,7 @@ class Account:
             }
         )
 
-    def sync_account(self, options=None):
+    def sync(self, options=None):
         """Sync the account by fetching new information from the nodes.
            Will also retry pending transactions and consolidate outputs if necessary.
         """

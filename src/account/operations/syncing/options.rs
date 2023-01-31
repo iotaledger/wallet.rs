@@ -5,14 +5,13 @@ use serde::{Deserialize, Serialize};
 
 const DEFAULT_ADDRESS_START_INDEX: u32 = 0;
 const DEFAULT_FORCE_SYNCING: bool = false;
-const DEFAULT_SYNC_ALIASES_AND_NFTS: bool = true;
 const DEFAULT_SYNC_INCOMING_TRANSACTIONS: bool = false;
 const DEFAULT_SYNC_ONLY_MOST_BASIC_OUTPUTS: bool = false;
 const DEFAULT_SYNC_PENDING_TRANSACTIONS: bool = true;
 const DEFAULT_SYNC_NATIVE_TOKEN_FOUNDRIES: bool = false;
 
 /// The synchronization options
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
 pub struct SyncOptions {
     /// Specific Bech32 encoded addresses of the account to sync, if addresses are provided, then `address_start_index`
     /// will be ignored
@@ -38,11 +37,17 @@ pub struct SyncOptions {
     /// Checks pending transactions and promotes/reattaches them if necessary.
     #[serde(rename = "syncPendingTransactions", default = "default_sync_pending_transactions")]
     pub sync_pending_transactions: bool,
-    /// Specifies if only basic outputs should be synced or also alias and nft outputs
-    #[serde(rename = "syncAliasesAndNfts", default = "default_sync_aliases_and_nfts")]
-    pub sync_aliases_and_nfts: bool,
+    /// Specifies what outputs should be synced for the ed25519 addresses from the account.
+    #[serde(default)]
+    pub account: AccountSyncOptions,
+    /// Specifies what outputs should be synced for the address of an alias output.
+    #[serde(default)]
+    pub alias: AliasSyncOptions,
+    /// Specifies what outputs should be synced for the address of an nft output.
+    #[serde(default)]
+    pub nft: NftSyncOptions,
     /// Specifies if only basic outputs with an AddressUnlockCondition alone should be synced, will overwrite
-    /// `sync_aliases_and_nfts`
+    /// `account`, `alias` and `nft` options.
     #[serde(
         rename = "syncOnlyMostBasicOutputs",
         default = "default_sync_only_most_basic_outputs"
@@ -59,10 +64,6 @@ fn default_address_start_index() -> u32 {
 
 fn default_force_syncing() -> bool {
     DEFAULT_FORCE_SYNCING
-}
-
-fn default_sync_aliases_and_nfts() -> bool {
-    DEFAULT_SYNC_ALIASES_AND_NFTS
 }
 
 fn default_sync_incoming_transactions() -> bool {
@@ -89,10 +90,62 @@ impl Default for SyncOptions {
             address_start_index_internal: default_address_start_index(),
             sync_incoming_transactions: default_sync_incoming_transactions(),
             sync_pending_transactions: default_sync_pending_transactions(),
-            sync_aliases_and_nfts: default_sync_aliases_and_nfts(),
+            account: AccountSyncOptions::default(),
+            alias: AliasSyncOptions::default(),
+            nft: NftSyncOptions::default(),
             sync_only_most_basic_outputs: default_sync_only_most_basic_outputs(),
             sync_native_token_foundries: default_sync_native_token_foundries(),
             force_syncing: default_force_syncing(),
         }
     }
+}
+
+/// Sync options for Ed25519 addresses from the account
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct AccountSyncOptions {
+    pub basic_outputs: bool,
+    pub nft_outputs: bool,
+    pub alias_outputs: bool,
+}
+
+impl Default for AccountSyncOptions {
+    fn default() -> Self {
+        Self {
+            basic_outputs: true,
+            nft_outputs: true,
+            alias_outputs: true,
+        }
+    }
+}
+
+/// Sync options for addresses from alias outputs
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct AliasSyncOptions {
+    pub basic_outputs: bool,
+    pub nft_outputs: bool,
+    pub alias_outputs: bool,
+    pub foundry_outputs: bool,
+}
+
+impl Default for AliasSyncOptions {
+    // Sync only foundries
+    fn default() -> Self {
+        Self {
+            basic_outputs: false,
+            nft_outputs: false,
+            alias_outputs: false,
+            foundry_outputs: true,
+        }
+    }
+}
+
+/// Sync options for addresses from NFT outputs
+#[derive(Debug, Default, Clone, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[serde(default, rename_all = "camelCase")]
+pub struct NftSyncOptions {
+    pub basic_outputs: bool,
+    pub nft_outputs: bool,
+    pub alias_outputs: bool,
 }

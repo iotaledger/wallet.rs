@@ -1,0 +1,154 @@
+---
+title: Use Shimmer Python library together with IOTA Library
+description: How to use the Python Shimmer Library together with the IOTA library
+keywords:
+- Python
+- IOTA
+- Shimmer
+---
+
+:::info
+
+As Python doesn't support using multiple versions of the same library, if you want to use both the Shimmer and IOTA version, you need to build one of them yourself and rename it.
+
+:::
+
+In this guide we will show you an Example on how you can install both the IOTA and Shimmer wallet library for usage in the same application.
+For that we will build the IOTA wallet library ourselfes and rename it.
+
+### Install Shimmer Version
+
+First install the Shimmer version following the [installation guide](/getting_started/python.mdx#install-the-library).
+
+### Install IOTA Version
+
+To install the IOTA version you need to follow the [Install from source](https://wiki.iota.org/wallet.rs/getting_started/python#install-from-source) guide.
+Before you continue with the steps after having cloned the repo, we need to apply some changes to the repo first. 
+
+:::info
+
+In this guide we will rename the `iota-wallet` to `iota-wallet-production`, but you can use whatever you want.
+
+:::
+
+In `bindings/python/native/Cargo.toml` change both names:
+
+ ```diff
+[package]
+- name = "iota-wallet-python"
++ name = "iota-wallet-production"
+   version = "0.2.0"
+   authors = ["IOTA Stiftung"]
+   edition = "2021"
+   description = "Python bindings for the IOTA wallet library"
+   documentation = "https://wiki.iota.org/wallet.rs/welcome"
+   homepage = "https://www.iota.org/"
+   repository = "https://github.com/iotaledger/wallet.rs"
+   license = "Apache-2.0"
+   keywords = ["iota", "wallet", "transaction", "python"]
+   categories = ["cryptography::cryptocurrencies"]
+
+[lib]
+- name = "iota_wallet"
++ name = "iota_wallet_production"
+   crate-type = ["cdylib"]
+
+[dependencies]
+   .
+   .
+   .
+ ```
+
+In `bindings/python/native/setup.py`:
+```diff
+setup(
+-   name="iota_wallet",
++   name="iota_wallet_production",
+    version="0.2.0",
+    .
+    .
+    .
+```
+
+And in `bindings/python/native/src/lib.rs`:
+```diff
+/// IOTA Wallet implemented in Rust and binded by Python.
+#[pymodule]
+- fn iota_wallet(_py: Python, m: &PyModule) -> PyResult<()> {
++ fn iota_wallet_production(_py: Python, m: &PyModule) -> PyResult<()> {
+      m.add_class::<AccountInitialiser>()?;
+      m.add_class::<AccountHandle>()?;
+      m.add_class::<SyncedAccount>()?;
+      .
+      .
+      .
+```
+
+ Now you can continue the installation from [here](https://wiki.iota.org/wallet.rs/getting_started/python#change-to-the-python-binding-directory).
+
+ ### Usage
+
+ With both libraries installed you can now use them for example like this:
+
+ ```python
+ import json
+from dotenv import load_dotenv
+
+from iota_wallet import IotaWallet as ShimmerWallet, StrongholdSecretManager
+import iota_wallet_production as iota_wallet
+
+# Load the env variables
+load_dotenv()
+
+# Get the stronghold password
+STRONGHOLD_PASSWORD = os.getenv('STRONGHOLD_PASSWORD')
+
+shimmer_client_options = {
+    'nodes': ['https://api.testnet.shimmer.network'],
+}
+
+# Shimmer coin type
+coin_type = 4219
+
+shimmer_secret_manager = StrongholdSecretManager("shimmer-wallet.stronghold", STRONGHOLD_PASSWORD)
+
+shimmer_wallet = ShimmerWallet('./shimmer-database', shimmer_client_options, coin_type, shimmer_secret_manager)
+
+# Store the mnemonic in the Stronghold snapshot, this only needs to be done once
+shimmer_account = shimmer_wallet.store_mnemonic("flame fever pig forward exact dash body idea link scrub tennis minute " +
+          "surge unaware prosper over waste kitten ceiling human knife arch situate civil")
+
+shimmer_account = shimmer_wallet.create_account('Shimmer')
+print(f'{shimmer_account["alias"]} account created.')
+
+iota_account_manager = iota_wallet.AccountManager(
+    storage_path='./iota-database'
+) # note: `storage` and `storage_path` have to be declared together
+
+iota_account_manager.set_stronghold_password(STRONGHOLD_PASSWORD)
+
+# mnemonic (seed) should be set only for new storage
+# once the storage has been initialized earlier then you should omit this step
+iota_account_manager.store_mnemonic("Stronghold")
+
+# general Tangle specific options
+iota_client_options = {
+    "nodes": [
+        {
+            "url": "https://api.lb-0.h.chrysalis-devnet.iota.cafe/",
+            "auth": None,
+            "disabled": False
+        }
+    ],
+    "local_pow": True
+}
+
+# an account is generated with the given alias via `iota_account_initialiser`
+iota_account_initialiser = iota_account_manager.create_account(iota_client_options)
+iota_account_initialiser.alias('IOTA')
+
+# initialise account based via `iota_account_initialiser`
+# store it to db and sync with Tangle
+iota_account = iota_account_initialiser.initialise()
+print(f'{iota_account.alias()} account created.')
+ ```

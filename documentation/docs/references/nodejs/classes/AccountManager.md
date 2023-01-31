@@ -314,7 +314,7 @@ ___
 
 ### clearListeners
 
-▸ **clearListeners**(`eventTypes`): `void`
+▸ **clearListeners**(`eventTypes`): `Promise`<`void`\>
 
 Clear the callbacks for provided events. An empty array will clear all listeners.
 
@@ -326,7 +326,7 @@ Clear the callbacks for provided events. An empty array will clear all listeners
 
 #### Returns
 
-`void`
+`Promise`<`void`\>
 
 ___
 

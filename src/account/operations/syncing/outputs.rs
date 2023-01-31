@@ -17,7 +17,9 @@ use iota_client::{
     Client,
 };
 
-use crate::account::{handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs};
+use crate::account::{
+    build_transaction_from_payload_and_inputs, handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs,
+};
 
 impl AccountHandle {
     /// Convert OutputWithMetadataResponse to OutputData with the network_id added
@@ -96,7 +98,7 @@ impl AccountHandle {
             }
         }
         // known output is unspent, so insert it to the unspent outputs again, because if it was an
-        // alias/nft/foundry output it could have been removed when syncing without `sync_aliases_and_nfts`
+        // alias/nft/foundry output it could have been removed when syncing without them
         for (output_id, output_data) in unspent_outputs {
             account.unspent_outputs.insert(output_id, output_data);
         }
@@ -119,43 +121,67 @@ impl AccountHandle {
         &self,
         transaction_ids: Vec<TransactionId>,
     ) -> crate::Result<()> {
-        let transactions = self.read().await.transactions.clone();
-        let incoming_transactions = self.read().await.incoming_transactions.clone();
+        log::debug!("[SYNC] request_incoming_transaction_data");
 
-        let mut tasks = Vec::new();
+        // Limit parallel requests to 100, to avoid timeouts
+        for transaction_ids_chunk in transaction_ids.chunks(100).map(|x: &[TransactionId]| x.to_vec()) {
+            let mut tasks = Vec::new();
+            let account = self.read().await;
 
-        for transaction_id in transaction_ids {
-            // Don't request known transactions again
-            if transactions.contains_key(&transaction_id) || incoming_transactions.contains_key(&transaction_id) {
-                continue;
+            for transaction_id in transaction_ids_chunk {
+                // Don't request known or inaccessible transactions again
+                if account.transactions.contains_key(&transaction_id)
+                    || account.incoming_transactions.contains_key(&transaction_id)
+                    || account.inaccessible_incoming_transactions.contains(&transaction_id)
+                {
+                    continue;
+                }
+
+                let client = self.client.clone();
+                tasks.push(async move {
+                    tokio::spawn(async move {
+                        match client.get_included_block(&transaction_id).await {
+                            Ok(block) => {
+                                if let Some(Payload::Transaction(transaction_payload)) = block.payload() {
+                                    let inputs =
+                                        get_inputs_for_transaction_payload(&client, transaction_payload).await?;
+
+                                    let transaction = build_transaction_from_payload_and_inputs(
+                                        transaction_id,
+                                        *transaction_payload.clone(),
+                                        inputs,
+                                    )?;
+
+                                    Ok((transaction_id, Some(transaction)))
+                                } else {
+                                    Ok((transaction_id, None))
+                                }
+                            }
+                            Err(iota_client::Error::NotFound(_)) => Ok((transaction_id, None)),
+                            Err(e) => Err(crate::Error::Client(e.into())),
+                        }
+                    })
+                    .await
+                });
             }
 
-            let client = self.client.clone();
-            tasks.push(async move {
-                tokio::spawn(async move {
-                    match client.get_included_block(&transaction_id).await {
-                        Ok(block) => {
-                            if let Some(Payload::Transaction(transaction_payload)) = block.payload().as_ref() {
-                                let inputs = get_inputs_for_transaction_payload(&client, transaction_payload).await?;
-                                Ok(Some((transaction_id, (*transaction_payload.clone(), inputs))))
-                            } else {
-                                Ok(None)
-                            }
-                        }
-                        Err(iota_client::Error::NotFound(_)) => Ok(None),
-                        Err(e) => Err(crate::Error::Client(e.into())),
-                    }
-                })
-                .await
-            });
-        }
+            drop(account);
 
-        let results = futures::future::try_join_all(tasks).await?;
-        // Update account with new transactions
-        let mut account = self.write().await;
-        for res in results {
-            if let Some((transaction_id, transaction_data)) = res? {
-                account.incoming_transactions.insert(transaction_id, transaction_data);
+            let results = futures::future::try_join_all(tasks).await?;
+            // Update account with new transactions
+            let mut account = self.write().await;
+            for res in results {
+                match res? {
+                    (transaction_id, Some(transaction)) => {
+                        account.incoming_transactions.insert(transaction_id, transaction);
+                    }
+                    (transaction_id, None) => {
+                        log::debug!("[SYNC] adding {transaction_id} to inaccessible_incoming_transactions");
+                        // Save transactions that weren't found by the node to avoid requesting them endlessly.
+                        // Will be cleared when new client options are provided.
+                        account.inaccessible_incoming_transactions.insert(transaction_id);
+                    }
+                }
             }
         }
 

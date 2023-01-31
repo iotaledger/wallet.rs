@@ -63,6 +63,8 @@ public class NativeApi {
 
     protected NativeApi(WalletConfig walletConfig) throws InitializeWalletException {
         try {
+            // Must use a new Gson instance to not serialize null values.
+            // CustomGson.get() would serialize null values and doesn't work here
             createMessageHandler(new Gson().toJsonTree(walletConfig).toString());
         } catch (Exception e) {
             throw new InitializeWalletException(e.getMessage());
