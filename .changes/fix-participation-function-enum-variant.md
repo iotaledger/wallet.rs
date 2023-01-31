@@ -2,4 +2,4 @@
 "nodejs-binding": patch
 ---
 
-Fix mistyped enum variant for participation function.
+Fix mistyped `GetParticipationEventIds` enum variant.
