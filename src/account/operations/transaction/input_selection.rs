@@ -83,7 +83,7 @@ impl AccountHandle {
             // Check that no input got already locked
             for input in custom_inputs.iter() {
                 if account.locked_outputs.contains(input) {
-                    return Err(crate::Error::CustomInputError(format!(
+                    return Err(crate::Error::CustomInput(format!(
                         "provided custom input {input} is already used in another transaction",
                     )));
                 }
@@ -118,7 +118,7 @@ impl AccountHandle {
             // Check that no input got already locked
             for input in mandatory_inputs.iter() {
                 if account.locked_outputs.contains(input) {
-                    return Err(crate::Error::CustomInputError(format!(
+                    return Err(crate::Error::CustomInput(format!(
                         "provided custom input {input} is already used in another transaction",
                     )));
                 }
