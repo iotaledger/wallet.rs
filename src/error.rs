@@ -21,7 +21,7 @@ pub enum Error {
     AddressNotFoundInAccount(String),
     /// Errors during backup creation or restoring
     #[error("backup failed {0}")]
-    BackupError(&'static str),
+    Backup(&'static str),
     /// Error from block crate.
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
@@ -29,7 +29,7 @@ pub enum Error {
     /// Block dtos error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    BlockDtoError(#[from] iota_client::block::DtoError),
+    BlockDto(#[from] iota_client::block::DtoError),
     /// Burning or melting failed
     #[error("burning or melting failed: {0}")]
     BurningOrMeltingFailed(String),
@@ -43,10 +43,10 @@ pub enum Error {
     /// Crypto.rs error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    CryptoError(#[from] crypto::Error),
+    Crypto(#[from] crypto::Error),
     /// Custom input error
     #[error("custom input error {0}")]
-    CustomInputError(String),
+    CustomInput(String),
     /// Failed to get remainder
     #[error("failed to get remainder address")]
     FailedToGetRemainder,
@@ -68,11 +68,11 @@ pub enum Error {
     /// IO error. (storage, backup, restore)
     #[error("`{0}`")]
     #[serde(serialize_with = "display_string")]
-    IoError(#[from] std::io::Error),
+    Io(#[from] std::io::Error),
     /// serde_json error.
     #[error("`{0}`")]
     #[serde(serialize_with = "display_string")]
-    JsonError(#[from] serde_json::error::Error),
+    Json(#[from] serde_json::error::Error),
     /// Minting failed
     #[error("minting failed {0}")]
     MintingFailed(String),
@@ -111,7 +111,7 @@ pub enum Error {
     /// Tokio task join error
     #[error("{0}")]
     #[serde(serialize_with = "display_string")]
-    TaskJoinError(#[from] tokio::task::JoinError),
+    TaskJoin(#[from] tokio::task::JoinError),
     /// Transaction not found
     #[error("transaction {0} not found")]
     TransactionNotFound(TransactionId),

@@ -52,6 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RocksDb` storage is now an optional storage adapter;
 - `Account::{register_participation_event(), get_participation_event(), get_participation_events()}` have `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)` in their return type;
 - `Response::{ParticipationEvents, ParticipationEvents}` contain `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)`;
+- Remove `Error` suffix on some `Error` variants;
 
 ### Removed
 
@@ -62,7 +63,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Stop endlessly requesting inaccessible incoming trasactions;
+- Stop endlessly requesting inaccessible incoming transactions;
 - Update addresses when a client config with a different HRP is passed;
 
 ## 1.0.0-rc.4 - 2022-12-23
