@@ -7,6 +7,7 @@
     ".changes/account-sync-options-default.md",
     ".changes/align-transactions.md",
     ".changes/clearlistener-move.md",
+    ".changes/dont-filter-custom-mandatory-inputs.md",
     ".changes/downgrade-rocksb.md",
     ".changes/expose-participation-type.md",
     ".changes/faucet.md",
