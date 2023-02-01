@@ -1,3 +1,4 @@
+import type { Node } from './network';
 import type { OutputId } from './output';
 
 export interface ParticipationOverview {
