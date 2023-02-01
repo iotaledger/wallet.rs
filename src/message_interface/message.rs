@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use std::fmt::{Debug, Formatter, Result};
-
 #[cfg(feature = "stronghold")]
 use std::path::PathBuf;
 
@@ -258,7 +257,7 @@ impl Debug for Message {
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
                 write!(f, "SetStrongholdPassword({interval_in_milliseconds:?})")
             }
-            
+
             #[cfg(feature = "stronghold")]
             Message::StoreMnemonic(_) => write!(f, "StoreMnemonic(<omitted>)"),
             Message::StartBackgroundSync {

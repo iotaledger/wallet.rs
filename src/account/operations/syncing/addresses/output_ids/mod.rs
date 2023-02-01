@@ -169,14 +169,15 @@ impl AccountHandle {
             .chunks(PARALLEL_REQUESTS_AMOUNT)
             .map(|x: &[AddressWithUnspentOutputs]| x.to_vec())
         {
-            let mut results;
+            let results;
             #[cfg(target_family = "wasm")]
             {
-                results = vec![];
+                let mut tasks = Vec::new();
                 for address in addresses_chunk {
                     let output_ids = self.get_output_ids_for_address(address.address.inner, &options).await?;
-                    results.push(crate::Result::Ok((address, output_ids)));
+                    tasks.push(crate::Result::Ok((address, output_ids)));
                 }
+                results = tasks;
             }
 
             #[cfg(not(target_family = "wasm"))]
@@ -198,6 +199,7 @@ impl AccountHandle {
 
                 results = futures::future::try_join_all(tasks).await?;
             }
+
             for res in results {
                 let (mut address, output_ids): (AddressWithUnspentOutputs, Vec<OutputId>) = res?;
                 // only return addresses with outputs

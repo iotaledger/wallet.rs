@@ -1,6 +1,8 @@
 // Copyright 2022 IOTA Stiftung
 // SPDX-License-Identifier: Apache-2.0
 
+#[cfg(feature = "stronghold")]
+use std::path::PathBuf;
 #[cfg(feature = "participation")]
 use std::str::FromStr;
 use std::{
@@ -8,9 +10,6 @@ use std::{
     panic::{catch_unwind, AssertUnwindSafe},
     time::Duration,
 };
-
-#[cfg(feature = "stronghold")]
-use std::path::PathBuf;
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};

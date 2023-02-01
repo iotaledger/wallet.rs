@@ -26,7 +26,7 @@ use iota_client::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, OutputData, operations::helpers::task},
+    account::{handle::AccountHandle, operations::helpers::task, OutputData},
     Result,
 };
 
