@@ -89,7 +89,7 @@ jobs:
         id: prepare-tag
         with:
           text: ${{ steps.read-build-gradle.outputs.build-gradle }}
-          regex: 'version = '(.*?)''
+          regex: "version = '(.*?)'"
           flags: m
 
       - name: Construct tag
@@ -238,7 +238,7 @@ jobs:
         id: prepare-tag
         with:
           text: ${{ steps.read-build-gradle.outputs.build-gradle }}
-          regex: 'version = '(.*?)''
+          regex: "version = '(.*?)'"
           flags: m
 
       - name: Construct tag
