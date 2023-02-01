@@ -26,7 +26,7 @@ use iota_client::{
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    account::{handle::AccountHandle, OutputData},
+    account::{handle::AccountHandle, OutputData, operations::helpers::task},
     Result,
 };
 
@@ -90,7 +90,7 @@ impl AccountHandle {
                 };
 
                 tasks.push(async move {
-                    tokio::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
+                    task::spawn(async move { (event_client.output_status(&output_data.output_id).await, output_data) })
                         .await
                 });
             }

@@ -6,9 +6,11 @@ use std::str::FromStr;
 use std::{
     any::Any,
     panic::{catch_unwind, AssertUnwindSafe},
-    path::PathBuf,
     time::Duration,
 };
+
+#[cfg(feature = "stronghold")]
+use std::path::PathBuf;
 
 use backtrace::Backtrace;
 use futures::{Future, FutureExt};
@@ -257,6 +259,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "stronghold")]
             Message::SetStrongholdPassword(mut password) => {
                 convert_async_panics(|| async {
                     self.account_manager.set_stronghold_password(&password).await?;
@@ -265,6 +268,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "stronghold")]
             Message::SetStrongholdPasswordClearInterval(interval_in_milliseconds) => {
                 convert_async_panics(|| async {
                     let duration = interval_in_milliseconds.map(Duration::from_millis);
@@ -275,6 +279,7 @@ impl WalletMessageHandler {
                 })
                 .await
             }
+            #[cfg(feature = "stronghold")]
             Message::StoreMnemonic(mnemonic) => {
                 convert_async_panics(|| async {
                     self.account_manager.store_mnemonic(mnemonic).await?;
