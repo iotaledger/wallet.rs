@@ -20,7 +20,7 @@ use crate::events::EventEmitter;
 use crate::storage::adapter::memory::Memory;
 #[cfg(feature = "storage")]
 use crate::storage::{constants::default_storage_path, manager::ManagerStorage};
-use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions, Error};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.
