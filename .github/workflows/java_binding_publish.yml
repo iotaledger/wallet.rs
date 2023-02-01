@@ -82,7 +82,7 @@ jobs:
         working-directory: bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
-          "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
 
       - name: Extract version from build.gradle
         uses: actions-ecosystem/action-regex-match@v2
@@ -148,7 +148,6 @@ jobs:
 
   release-android:
     name: Create Android releases
-    needs: release-desktop
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -231,7 +230,7 @@ jobs:
         working-directory: bindings/java/
         run: |
           buildGradle="$(cat build.gradle)"
-          "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
+          echo "build-gradle=$buildGradle" >> $GITHUB_OUTPUT   
 
       - name: Extract version from build.gradle
         uses: actions-ecosystem/action-regex-match@v2
