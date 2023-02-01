@@ -31,8 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `AccountSyncOptions, AliasSyncOptions, NftSyncOptions`;
 - `SyncOptions::{account, alias, nft}` fields;
 - `{TransactionOptions, TransactionOptionsDto}::burn`;
-- `Memory` storage adapter;
+- `Memory` and `Wasm` storage adapter;
 - `ParticipationEventWithNodes`;
+- Support for target `wasm32-unknown-unknown`;
 
 ### Changed
 
@@ -54,6 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Response::{ParticipationEvents, ParticipationEvents}` contain `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)`;
 - Remove `Error` suffix on some `Error` variants;
 - Exposed `FilterOptions` so it can be imported from `account::FilterOptions`;
+- Only expose `MessageHandler` methods `SetStrongholdPassword`, `SetStrongholdPasswordClearInterval` and `StoreMnemonic` when `feature = "stronghold` is enabled; 
 
 ### Removed
 
