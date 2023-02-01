@@ -1,5 +1,10 @@
 # Changelog
 
+## \[2.0.3-rc.19]
+
+- Don't filter out custom/mandatory inputs.
+  - [4072a083](https://github.com/iotaledger/wallet.rs/commit/4072a083df0dc1421cd5c00842fb11cd68c148b6) Don't filter out custom/mandatory inputs ([#1782](https://github.com/iotaledger/wallet.rs/pull/1782)) on 2023-01-31
+
 ## \[2.0.3-rc.18]
 
 - Return new `ParticipationEventWithNodes` interface instead of `ParticipationEvent, Node[]`.

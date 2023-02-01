@@ -22,7 +22,7 @@ async function run() {
         console.log(response);
 
         console.log(
-            `Check your block on http://localhost:14265/api/core/v2/blocks/${response.blockId}`,
+            `Check your block on ${process.env.NODE_URL}/api/core/v2/blocks/${response.blockId}`,
         );
     } catch (error) {
         console.log('Error: ', error);

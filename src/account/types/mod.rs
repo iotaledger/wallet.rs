@@ -84,7 +84,7 @@ impl OutputData {
                     address.key_index,
                 ]))
             } else {
-                return Err(crate::Error::CustomInputError(
+                return Err(crate::Error::CustomInput(
                     "unlock address not found in account addresses".to_string(),
                 ));
             }

@@ -993,7 +993,7 @@ impl WalletMessageHandler {
                 .await
             }
             #[cfg(feature = "participation")]
-            AccountMethod::GetParticipationEventIds(event_type) => {
+            AccountMethod::GetParticipationEventIds { event_type } => {
                 convert_async_panics(|| async {
                     let event_ids = account_handle.get_participation_event_ids(event_type).await?;
                     Ok(Response::ParticipationEventIds(event_ids))
