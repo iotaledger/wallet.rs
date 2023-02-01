@@ -39,7 +39,7 @@ use self::types::{
     AccountBalance, OutputData, Transaction,
 };
 pub use self::{
-    handle::AccountHandle,
+    handle::{AccountHandle, FilterOptions},
     operations::{
         address_generation::AddressGenerationOptions,
         output_claiming::OutputsToClaim,

@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Account::{register_participation_event(), get_participation_event(), get_participation_events()}` have `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)` in their return type;
 - `Response::{ParticipationEvents, ParticipationEvents}` contain `ParticipationEventWithNodes` instead of `(ParticipationEvent, Vec<Node>)`;
 - Remove `Error` suffix on some `Error` variants;
+- Exposed `FilterOptions` so it can be imported from `account::FilterOptions`;
 
 ### Removed
 
