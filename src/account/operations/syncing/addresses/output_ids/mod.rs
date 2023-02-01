@@ -7,6 +7,7 @@ mod nft;
 
 use std::{collections::HashSet, time::Instant};
 
+#[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
 use iota_client::block::{address::Address, output::OutputId};
 
@@ -34,6 +35,10 @@ impl AccountHandle {
             return Ok(output_ids);
         }
 
+        #[cfg(target_family = "wasm")]
+        let mut results = vec![];
+
+        #[cfg(not(target_family = "wasm"))]
         let mut tasks = vec![];
 
         if (address.is_ed25519() && sync_options.account.basic_outputs)
@@ -41,19 +46,31 @@ impl AccountHandle {
             || (address.is_alias() && sync_options.alias.basic_outputs)
         {
             // basic outputs
-            tasks.push(
-                async move {
-                    let account_handle = self.clone();
-                    let bech32_address_ = bech32_address.clone();
-                    tokio::spawn(async move {
-                        account_handle
-                            .get_basic_output_ids_with_any_unlock_condition(&bech32_address_)
-                            .await
-                    })
-                    .await
-                }
-                .boxed(),
-            );
+            #[cfg(target_family = "wasm")]
+            {
+                results.push(
+                    self.clone()
+                        .get_basic_output_ids_with_any_unlock_condition(&bech32_address)
+                        .await,
+                )
+            }
+
+            #[cfg(not(target_family = "wasm"))]
+            {
+                tasks.push(
+                    async move {
+                        let account_handle = self.clone();
+                        let bech32_address = bech32_address.clone();
+                        tokio::spawn(async move {
+                            account_handle
+                                .get_basic_output_ids_with_any_unlock_condition(&bech32_address)
+                                .await
+                        })
+                        .await
+                    }
+                    .boxed(),
+                );
+            }
         }
 
         if (address.is_ed25519() && sync_options.account.nft_outputs)
@@ -61,19 +78,31 @@ impl AccountHandle {
             || (address.is_alias() && sync_options.alias.nft_outputs)
         {
             // nfts
-            tasks.push(
-                async move {
-                    let bech32_address_ = bech32_address.clone();
-                    let account_handle = self.clone();
-                    tokio::spawn(async move {
-                        account_handle
-                            .get_nft_output_ids_with_any_unlock_condition(&bech32_address_)
-                            .await
-                    })
-                    .await
-                }
-                .boxed(),
-            );
+            #[cfg(target_family = "wasm")]
+            {
+                results.push(
+                    self.clone()
+                        .get_nft_output_ids_with_any_unlock_condition(&bech32_address)
+                        .await,
+                )
+            }
+
+            #[cfg(not(target_family = "wasm"))]
+            {
+                tasks.push(
+                    async move {
+                        let bech32_address_ = bech32_address.clone();
+                        let account_handle = self.clone();
+                        tokio::spawn(async move {
+                            account_handle
+                                .get_nft_output_ids_with_any_unlock_condition(&bech32_address_)
+                                .await
+                        })
+                        .await
+                    }
+                    .boxed(),
+                );
+            }
         }
 
         if (address.is_ed25519() && sync_options.account.alias_outputs)
@@ -81,25 +110,39 @@ impl AccountHandle {
             || (address.is_alias() && sync_options.alias.alias_outputs)
         {
             // aliases and foundries
-            tasks.push(
-                async move {
-                    let bech32_address = bech32_address.clone();
-                    let sync_options = sync_options.clone();
-                    let account_handle = self.clone();
-                    tokio::spawn(async move {
-                        account_handle
-                            .get_alias_and_foundry_output_ids(&bech32_address, sync_options)
-                            .await
-                    })
-                    .await
-                }
-                .boxed(),
-            );
+            #[cfg(target_family = "wasm")]
+            {
+                results.push(
+                    self.clone()
+                        .get_alias_and_foundry_output_ids(&bech32_address, sync_options.clone())
+                        .await,
+                )
+            }
+
+            #[cfg(not(target_family = "wasm"))]
+            {
+                tasks.push(
+                    async move {
+                        let bech32_address = bech32_address.clone();
+                        let sync_options = sync_options.clone();
+                        let account_handle = self.clone();
+                        tokio::spawn(async move {
+                            account_handle
+                                .get_alias_and_foundry_output_ids(&bech32_address, sync_options)
+                                .await
+                        })
+                        .await
+                    }
+                    .boxed(),
+                );
+            }
         }
+
+        #[cfg(not(target_family = "wasm"))]
+        let results = futures::future::try_join_all(tasks).await?;
 
         // Get all results
         let mut output_ids = HashSet::new();
-        let results = futures::future::try_join_all(tasks).await?;
         for res in results {
             let found_output_ids = res?;
             output_ids.extend(found_output_ids.into_iter());
@@ -126,21 +169,35 @@ impl AccountHandle {
             .chunks(PARALLEL_REQUESTS_AMOUNT)
             .map(|x: &[AddressWithUnspentOutputs]| x.to_vec())
         {
-            let mut tasks = Vec::new();
-            for address in addresses_chunk {
-                let account_handle = self.clone();
-                let sync_options = options.clone();
-                tasks.push(async move {
-                    tokio::spawn(async move {
-                        let output_ids = account_handle
-                            .get_output_ids_for_address(address.address.inner, &sync_options)
-                            .await?;
-                        crate::Result::Ok((address, output_ids))
-                    })
-                    .await
-                });
+            let mut results;
+            #[cfg(target_family = "wasm")]
+            {
+                results = vec![];
+                for address in addresses_chunk {
+                    let output_ids = self.get_output_ids_for_address(address.address.inner, &options).await?;
+                    results.push(crate::Result::Ok((address, output_ids)));
+                }
             }
-            let results = futures::future::try_join_all(tasks).await?;
+
+            #[cfg(not(target_family = "wasm"))]
+            {
+                let mut tasks = Vec::new();
+                for address in addresses_chunk {
+                    let account_handle = self.clone();
+                    let sync_options = options.clone();
+                    tasks.push(async move {
+                        tokio::spawn(async move {
+                            let output_ids = account_handle
+                                .get_output_ids_for_address(address.address.inner, &sync_options)
+                                .await?;
+                            crate::Result::Ok((address, output_ids))
+                        })
+                        .await
+                    });
+                }
+
+                results = futures::future::try_join_all(tasks).await?;
+            }
             for res in results {
                 let (mut address, output_ids): (AddressWithUnspentOutputs, Vec<OutputId>) = res?;
                 // only return addresses with outputs

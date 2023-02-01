@@ -4,7 +4,7 @@
 use std::time::Instant;
 
 use crate::{
-    account::handle::AccountHandle,
+    account::{handle::AccountHandle, operations::helpers::task},
     account_manager::{AccountManager, SyncOptions},
 };
 
@@ -123,7 +123,7 @@ impl AccountManager {
                 let mut new_account = self.create_account();
                 let sync_options_ = sync_options.clone();
                 tasks.push(async move {
-                    tokio::spawn(async move {
+                    task::spawn(async move {
                         let new_account = new_account.finish().await?;
                         let account_outputs_count = new_account
                             .search_addresses_with_outputs(address_gap_limit, sync_options_)

@@ -4,9 +4,6 @@
 // TODO: remove in the future: https://github.com/iotaledger/wallet.rs/issues/1453
 #![allow(dead_code)]
 
-use std::pin::Pin;
-
-use futures::{Future, FutureExt};
 use iota_client::{
     api::ClientBlockBuilder,
     api_types::response::OutputWithMetadataResponse,
@@ -100,95 +97,92 @@ impl AccountHandle {
 
     // Enable in the future: https://github.com/iotaledger/wallet.rs/issues/1453
     // Will send outputs owned by the provided address to a remainder address of the account
-    pub(crate) fn sweep_basic_outputs<'a>(
+    pub(crate) async fn sweep_basic_outputs<'a>(
         &'a self,
         address: Address,
         options: &'a Option<TransactionOptions>,
-    ) -> Pin<Box<dyn Future<Output = crate::Result<Transaction>> + Send + 'a>> {
-        async move {
-            let token_supply = self.client.get_token_supply().await?;
-            let bech32_hrp = self.client().get_bech32_hrp().await?;
-            let address = AddressWrapper::new(address, bech32_hrp);
-            let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
+    ) -> crate::Result<Transaction> {
+        let token_supply = self.client.get_token_supply().await?;
+        let bech32_hrp = self.client().get_bech32_hrp().await?;
+        let address = AddressWrapper::new(address, bech32_hrp);
+        let remainder_address = self.get_sweep_remainder_address(&address, options).await?;
 
-            // TODO: get outputs from unspent outputs
-            let basic_outputs: Vec<OutputWithMetadataResponse> = Vec::new();
-            // maybe something like below
-            // let mut outputs_to_sweep = Vec::new();
-            // let mut other_owned_outputs = Vec::new();
+        // TODO: get outputs from unspent outputs
+        let basic_outputs: Vec<OutputWithMetadataResponse> = Vec::new();
+        // maybe something like below
+        // let mut outputs_to_sweep = Vec::new();
+        // let mut other_owned_outputs = Vec::new();
 
-            // for output_data in self.list_unspent_outputs(None).await? {
-            //     // Ignore outputs with a single [UnlockCondition], because then it's an
-            //     // [AddressUnlockCondition] and we own it already without
-            //     // further restrictions
-            //     if output_data
-            //         .output
-            //         .unlock_conditions()
-            //         .expect("output needs to have unlock_conditions")
-            //         .len()
-            //         != 1
-            //     {
-            //         if can_output_be_unlocked_now(
-            //             // We use the addresses with unspent outputs, because other addresses of the
-            //             // account without unspent outputs can't be related to this output
-            //             &addresses_with_unspent_outputs,
-            //             &[Address::Nft(NftAddress::new(nft_id))],
-            //             &output_data,
-            //             current_time,
-            //         ) {
-            //             outputs_to_sweep.push(output_data);
-            //         } else {
-            //     // do we care about them?
-            //             other_owned_outputs.push(output_data);
-            //         }
-            //     } else {
-            //         outputs_to_sweep.push(output_data);
-            //     }
-            // }
+        // for output_data in self.list_unspent_outputs(None).await? {
+        //     // Ignore outputs with a single [UnlockCondition], because then it's an
+        //     // [AddressUnlockCondition] and we own it already without
+        //     // further restrictions
+        //     if output_data
+        //         .output
+        //         .unlock_conditions()
+        //         .expect("output needs to have unlock_conditions")
+        //         .len()
+        //         != 1
+        //     {
+        //         if can_output_be_unlocked_now(
+        //             // We use the addresses with unspent outputs, because other addresses of the
+        //             // account without unspent outputs can't be related to this output
+        //             &addresses_with_unspent_outputs,
+        //             &[Address::Nft(NftAddress::new(nft_id))],
+        //             &output_data,
+        //             current_time,
+        //         ) {
+        //             outputs_to_sweep.push(output_data);
+        //         } else {
+        //     // do we care about them?
+        //             other_owned_outputs.push(output_data);
+        //         }
+        //     } else {
+        //         outputs_to_sweep.push(output_data);
+        //     }
+        // }
 
-            let mut output_ids = Vec::new();
-            let mut outputs = Vec::new();
+        let mut output_ids = Vec::new();
+        let mut outputs = Vec::new();
 
-            let network_id = self.client.get_network_id().await?;
+        let network_id = self.client.get_network_id().await?;
 
-            for mut output_response in basic_outputs {
-                if output_response.metadata.is_spent {
+        for mut output_response in basic_outputs {
+            if output_response.metadata.is_spent {
+                continue;
+            }
+
+            let output_id = output_response.metadata.output_id()?;
+            self.update_unspent_output(output_response.clone(), output_id, network_id)
+                .await?;
+
+            // TODO don't mutate the output response, but use the output builder instead.
+            match &mut output_response.output {
+                OutputDto::Basic(output_dto) => {
+                    replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
+                }
+                // Didn't ask for treasury and foundry outputs
+                OutputDto::Alias(_) | OutputDto::Nft(_) | OutputDto::Treasury(_) | OutputDto::Foundry(_) => {
                     continue;
                 }
-
-                let output_id = output_response.metadata.output_id()?;
-                self.update_unspent_output(output_response.clone(), output_id, network_id)
-                    .await?;
-
-                // TODO don't mutate the output response, but use the output builder instead.
-                match &mut output_response.output {
-                    OutputDto::Basic(output_dto) => {
-                        replace_unlock_conditions(&mut output_dto.unlock_conditions, &remainder_address.inner);
-                    }
-                    // Didn't ask for treasury and foundry outputs
-                    OutputDto::Alias(_) | OutputDto::Nft(_) | OutputDto::Treasury(_) | OutputDto::Foundry(_) => {
-                        continue;
-                    }
-                }
-
-                let output = Output::try_from_dto(&output_response.output, token_supply)?;
-
-                output_ids.push(output_id);
-                outputs.push(output);
             }
 
-            if !output_ids.is_empty() {
-                self.send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
-                    .await
-            } else {
-                // TODO: Other error message?
-                Err(crate::Error::NoOutputsToConsolidate {
-                    available_outputs: 0,
-                    consolidation_threshold: 0,
-                })
-            }
+            let output = Output::try_from_dto(&output_response.output, token_supply)?;
+
+            output_ids.push(output_id);
+            outputs.push(output);
         }
-        .boxed()
+
+        if !output_ids.is_empty() {
+            self.send_sweep_transaction(address.clone(), output_ids.drain(..), outputs.drain(..))
+                .await
+        } else {
+            // TODO: Other error message?
+            Err(crate::Error::NoOutputsToConsolidate {
+                available_outputs: 0,
+                consolidation_threshold: 0,
+            })
+        }
     }
 
     pub(crate) async fn send_sweep_transaction(

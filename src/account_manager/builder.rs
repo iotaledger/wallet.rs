@@ -19,11 +19,8 @@ use crate::events::EventEmitter;
 #[cfg(all(feature = "storage", not(feature = "rocksdb")))]
 use crate::storage::adapter::memory::Memory;
 #[cfg(feature = "storage")]
-use crate::{
-    account::handle::AccountHandle,
-    storage::{constants::default_storage_path, manager::ManagerStorage},
-};
-use crate::{account_manager::AccountManager, ClientOptions, Error};
+use crate::storage::{constants::default_storage_path, manager::ManagerStorage};
+use crate::{account::handle::AccountHandle, account_manager::AccountManager, ClientOptions, Error};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 /// Builder for the account manager.

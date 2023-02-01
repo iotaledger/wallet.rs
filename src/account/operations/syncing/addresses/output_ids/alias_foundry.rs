@@ -3,6 +3,7 @@
 
 use std::collections::HashSet;
 
+#[cfg(not(target_family = "wasm"))]
 use futures::FutureExt;
 use iota_client::{
     block::{
@@ -12,7 +13,7 @@ use iota_client::{
     node_api::indexer::query_parameters::QueryParameter,
 };
 
-use crate::account::{handle::AccountHandle, SyncOptions};
+use crate::account::{handle::AccountHandle, operations::helpers::task, SyncOptions};
 
 impl AccountHandle {
     /// Returns output ids of alias outputs
@@ -23,46 +24,64 @@ impl AccountHandle {
     ) -> crate::Result<Vec<OutputId>> {
         log::debug!("[SYNC] get_alias_and_foundry_output_ids");
         let client = self.client();
-        let tasks = vec![
-            // Get outputs where the address is in the governor address unlock condition
-            async move {
-                let bech32_address_ = bech32_address.to_string();
-                let client = client.clone();
-                tokio::spawn(async move {
-                    client
-                        .alias_output_ids(vec![QueryParameter::Governor(bech32_address_)])
-                        .await
-                        .map_err(From::from)
-                })
-                .await
-            }
-            .boxed(),
-            // Get outputs where the address is in the state controller unlock condition
-            async move {
-                let bech32_address_ = bech32_address.to_string();
-                let client = client.clone();
-                tokio::spawn(async move {
-                    client
-                        .alias_output_ids(vec![QueryParameter::StateController(bech32_address_)])
-                        .await
-                        .map_err(From::from)
-                })
-                .await
-            }
-            .boxed(),
-        ];
 
-        // Get all results
         let mut output_ids = HashSet::new();
-        let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
-        for res in results {
-            let found_output_ids = res?;
-            output_ids.extend(found_output_ids.into_iter());
+
+        #[cfg(target_family = "wasm")]
+        {
+            output_ids.extend(
+                client
+                    .alias_output_ids(vec![QueryParameter::Governor(bech32_address.to_string())])
+                    .await?,
+            );
+            output_ids.extend(
+                client
+                    .alias_output_ids(vec![QueryParameter::StateController(bech32_address.to_string())])
+                    .await?,
+            );
         }
 
+        #[cfg(not(target_family = "wasm"))]
+        {
+            let tasks = vec![
+                // Get outputs where the address is in the governor address unlock condition
+                async move {
+                    let bech32_address_ = bech32_address.to_string();
+                    let client = client.clone();
+                    task::spawn(async move {
+                        client
+                            .alias_output_ids(vec![QueryParameter::Governor(bech32_address_)])
+                            .await
+                            .map_err(From::from)
+                    })
+                    .await
+                }
+                .boxed(),
+                // Get outputs where the address is in the state controller unlock condition
+                async move {
+                    let bech32_address_ = bech32_address.to_string();
+                    let client = client.clone();
+                    task::spawn(async move {
+                        client
+                            .alias_output_ids(vec![QueryParameter::StateController(bech32_address_)])
+                            .await
+                            .map_err(From::from)
+                    })
+                    .await
+                }
+                .boxed(),
+            ];
+            let results: Vec<crate::Result<Vec<OutputId>>> = futures::future::try_join_all(tasks).await?;
+            for res in results {
+                let found_output_ids = res?;
+                output_ids.extend(found_output_ids);
+            }
+        }
+
+        // Get all results
         if sync_options.alias.foundry_outputs {
             let foundry_output_ids = self.get_foundry_output_ids(&output_ids).await?;
-            output_ids.extend(foundry_output_ids.into_iter());
+            output_ids.extend(foundry_output_ids);
         }
 
         Ok(output_ids.into_iter().collect())
@@ -89,18 +108,12 @@ impl AccountHandle {
                 let alias_address = AliasAddress::from(alias_output.alias_id_non_null(&output_id));
                 let alias_bech32_address = Address::Alias(alias_address).to_bech32(bech32_hrp.clone());
                 let client = self.client.clone();
-                tasks.push(
-                    async move {
-                        tokio::spawn(async move {
-                            client
-                                .foundry_output_ids(vec![QueryParameter::AliasAddress(alias_bech32_address)])
-                                .await
-                                .map_err(From::from)
-                        })
+                tasks.push(Box::pin(task::spawn(async move {
+                    client
+                        .foundry_output_ids(vec![QueryParameter::AliasAddress(alias_bech32_address)])
                         .await
-                    }
-                    .boxed(),
-                );
+                        .map_err(From::from)
+                })));
             }
         }
 

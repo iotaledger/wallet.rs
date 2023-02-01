@@ -30,6 +30,7 @@ pub use self::options::{RemainderValueStrategy, TransactionOptions, TransactionO
 use crate::{
     account::{
         handle::AccountHandle,
+        operations::helpers::task,
         types::{InclusionState, Transaction},
     },
     iota_client::Error,
@@ -208,7 +209,7 @@ impl AccountHandle {
     fn monitor_tx_confirmation(&self, transaction_id: TransactionId) {
         // spawn a task which tries to get the block confirmed
         let account = self.clone();
-        tokio::spawn(async move {
+        task::spawn(async move {
             if let Ok(block_id) = account
                 .retry_transaction_until_included(&transaction_id, None, None)
                 .await

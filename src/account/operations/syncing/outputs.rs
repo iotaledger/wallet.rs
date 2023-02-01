@@ -18,7 +18,8 @@ use iota_client::{
 };
 
 use crate::account::{
-    build_transaction_from_payload_and_inputs, handle::AccountHandle, types::OutputData, AddressWithUnspentOutputs,
+    build_transaction_from_payload_and_inputs, handle::AccountHandle, operations::helpers::task, types::OutputData,
+    AddressWithUnspentOutputs,
 };
 
 impl AccountHandle {
@@ -139,7 +140,7 @@ impl AccountHandle {
 
                 let client = self.client.clone();
                 tasks.push(async move {
-                    tokio::spawn(async move {
+                    task::spawn(async move {
                         match client.get_included_block(&transaction_id).await {
                             Ok(block) => {
                                 if let Some(Payload::Transaction(transaction_payload)) = block.payload() {
